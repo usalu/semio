@@ -93,9 +93,7 @@
             "edge",
             "wire",
             "face",
-            "surface",
-            "cell",
-            "part"
+            "cell"
           ],
           "multiple": true,
           "prompt": "Select objects to split"
@@ -161,8 +159,7 @@
           "accept": [
             "edge",
             "wire",
-            "face",
-            "surface"
+            "face"
           ],
           "multiple": true,
           "prompt": "Select cutting objects"

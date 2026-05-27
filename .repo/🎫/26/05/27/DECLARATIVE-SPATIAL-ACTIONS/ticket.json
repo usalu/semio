@@ -1,0 +1,13 @@
+{
+  "title": "Declarative Spatial Actions",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement declarative spatial actions: action definitions are JSON data only, runtime interprets action documents, and built-in actions call named kernel capabilities instead of registering code-backed run functions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1491"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪6d4a3e6244ea4574bb61f29ecd94e16c"
+  ]
+}

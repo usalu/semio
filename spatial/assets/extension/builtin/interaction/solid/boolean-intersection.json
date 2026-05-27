@@ -90,10 +90,8 @@
         "name": "select_first_set_of_surfaces_or_polysurfaces",
         "selection": {
           "accept": [
-            "surface",
             "shell",
-            "cell",
-            "part"
+            "cell"
           ],
           "multiple": true,
           "prompt": "Select first set of surfaces or polysurfaces"
@@ -157,10 +155,8 @@
         "name": "select_second_set",
         "selection": {
           "accept": [
-            "surface",
             "shell",
-            "cell",
-            "part"
+            "cell"
           ],
           "multiple": true,
           "prompt": "Select second set"

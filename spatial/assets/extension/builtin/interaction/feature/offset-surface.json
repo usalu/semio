@@ -20,7 +20,7 @@
   "requires": {
     "kernel": {
       "operations": [
-        "surface.resolveFaces",
+        "face.resolveIds",
         "face.offset",
         "entity.tessellate"
       ]
@@ -85,11 +85,10 @@
         "name": "selectSurface",
         "selection": {
           "accept": [
-            "surface",
             "face"
           ],
           "multiple": false,
-          "prompt": "Pick surface"
+          "prompt": "Pick face"
         },
         "on": [
           {
@@ -132,7 +131,7 @@
                   },
                   {
                     "op": "kernel.query",
-                    "query": "surface.resolveFaces",
+                    "query": "face.resolveIds",
                     "assignTo": {
                       "root": "context",
                       "segments": [
@@ -143,8 +142,8 @@
                       ]
                     },
                     "params": {
-                      "kind": "surface.resolveFaces",
-                      "surfaceId": {
+                      "kind": "face.resolveIds",
+                      "faceId": {
                         "kind": "path",
                         "root": "event",
                         "segments": [
@@ -254,7 +253,7 @@
             "kind": "entity-highlight",
             "id": "surface",
             "role": "semantic-selection",
-            "geometryEntityKind": "surface",
+            "geometryEntityKind": "face",
             "entityId": {
               "kind": "path",
               "root": "context",

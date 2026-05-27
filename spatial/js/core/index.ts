@@ -89,14 +89,15 @@ import structureSolidFemViewJson from "../../assets/extension/structure/view/sol
 import structureSolidFemViewTypologySolidElementJson from "../../assets/extension/structure/view/solidfem/typology/solidelement.json" with { type: "json" };
 import structureSurfaceFemViewJson from "../../assets/extension/structure/view/surfacefem/view.json" with { type: "json" };
 import structureSurfaceFemViewTypologySurfaceElementJson from "../../assets/extension/structure/view/surfacefem/typology/surfaceelement.json" with { type: "json" };
-import structureViewJson from "../../assets/extension/structure/view/structure/view.json" with { type: "json" };
-import structureViewTypologyLineElementJson from "../../assets/extension/structure/view/structure/typology/lineelement.json" with { type: "json" };
-import structureViewTypologyOneWayReinforcedConcreteSlabJson from "../../assets/extension/structure/view/structure/typology/onewayreinforcedconcreteslab.json" with { type: "json" };
-import structureViewTypologyReinforcedConcreteColumnJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcretecolumn.json" with { type: "json" };
-import structureViewTypologyReinforcedConcreteExternalWallJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcreteexternalwall.json" with { type: "json" };
-import structureViewTypologyReinforcedConcreteInternalWallJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcreteinternalwall.json" with { type: "json" };
-import structureViewTypologySolidElementJson from "../../assets/extension/structure/view/structure/typology/solidelement.json" with { type: "json" };
-import structureViewTypologySurfaceElementJson from "../../assets/extension/structure/view/structure/typology/surfaceelement.json" with { type: "json" };
+import structureViewJson from "../../assets/extension/structure/view/classic/view.json" with { type: "json" };
+import structureViewTypologyLineElementJson from "../../assets/extension/structure/view/classic/typology/lineelement.json" with { type: "json" };
+import structureViewTypologyOneWayReinforcedConcreteSlabJson from "../../assets/extension/structure/view/classic/typology/onewayreinforcedconcreteslab.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteColumnJson from "../../assets/extension/structure/view/classic/typology/reinforcedconcretecolumn.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteExternalWallJson from "../../assets/extension/structure/view/classic/typology/reinforcedconcreteexternalwall.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteInternalWallJson from "../../assets/extension/structure/view/classic/typology/reinforcedconcreteinternalwall.json" with { type: "json" };
+import structureViewTypologySolidElementJson from "../../assets/extension/structure/view/classic/typology/solidelement.json" with { type: "json" };
+import structureViewTypologySurfaceElementJson from "../../assets/extension/structure/view/classic/typology/surfaceelement.json" with { type: "json" };
+import builtinActionsJson from "../../assets/extension/builtin/action/builtin-actions.json" with { type: "json" };
 // #endregion 📥InteractionAssets
 
 // #region 🧮Vec
@@ -433,6 +434,7 @@ export type Expr =
 	| ExprNot
 	| ExprAbs
 	| ExprDistance
+	| ExprKernelCall
 	| ExprBinop
 	| ExprFold;
 
@@ -488,6 +490,11 @@ export interface ExprDistance {
 	readonly a: Expr;
 	readonly b: Expr;
 }
+export interface ExprKernelCall {
+	readonly kind: "kernel.call";
+	readonly function: string;
+	readonly args?: Record<string, Expr>;
+}
 export interface ExprBinop {
 	readonly kind: "binop";
 	readonly op: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/";
@@ -503,11 +510,14 @@ export interface ExprFold {
 export interface ExprEnv {
 	readonly context: Record<string, unknown>;
 	readonly event?: Record<string, unknown>;
+	readonly params?: Record<string, unknown>;
 	readonly vars?: Record<string, unknown>;
 	readonly model?: Model;
 	readonly metadata?: AttributeStore;
 	readonly views?: ExtensionViewService;
 	readonly activeViewId?: string | null;
+	readonly kernel?: SpatialKernel;
+	readonly actionId?: string;
 	readonly preview: SpatialPreviewKernel;
 }
 
@@ -515,10 +525,13 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
 	return {
 		context: base.context,
 		event: base.event,
+		params: base.params,
 		vars: { ...base.vars, ...vars },
 		model: base.model,
 		views: base.views,
 		activeViewId: base.activeViewId,
+		kernel: base.kernel,
+		actionId: base.actionId,
 		metadata: base.metadata,
 		preview: base.preview,
 	};
@@ -1346,7 +1359,7 @@ function parseViewSpec(extensionId: string, raw: unknown): ViewSpec | null {
 
 const extensionViewJsons: readonly { readonly extensionId: string; readonly raw: unknown }[] = [
 	{ extensionId: "energy", raw: energyViewJson },
-	{ extensionId: "structure", raw: structureViewJson },
+	{ extensionId: "structure", raw: structureClassicViewJson },
 	{ extensionId: "structure", raw: structureLineFemViewJson },
 	{ extensionId: "structure", raw: structureSurfaceFemViewJson },
 	{ extensionId: "structure", raw: structureSolidFemViewJson },
@@ -1361,13 +1374,13 @@ const extensionViewTypologyJsons = [
 	structureLineFemViewTypologyLineElementJson,
 	structureSolidFemViewTypologySolidElementJson,
 	structureSurfaceFemViewTypologySurfaceElementJson,
-	structureViewTypologyLineElementJson,
-	structureViewTypologyOneWayReinforcedConcreteSlabJson,
-	structureViewTypologyReinforcedConcreteColumnJson,
-	structureViewTypologyReinforcedConcreteExternalWallJson,
-	structureViewTypologyReinforcedConcreteInternalWallJson,
-	structureViewTypologySolidElementJson,
-	structureViewTypologySurfaceElementJson,
+	structureClassicViewTypologyLineElementJson,
+	structureClassicViewTypologyOneWayReinforcedConcreteSlabJson,
+	structureClassicViewTypologyReinforcedConcreteColumnJson,
+	structureClassicViewTypologyReinforcedConcreteExternalWallJson,
+	structureClassicViewTypologyReinforcedConcreteInternalWallJson,
+	structureClassicViewTypologySolidElementJson,
+	structureClassicViewTypologySurfaceElementJson,
 ] as const;
 
 function extensionViewTypologyCatalog(): readonly TypologySpec[] {
@@ -1378,7 +1391,7 @@ function loadExtensionViewTypology(typologyId: string): TypologySpec | null {
 	return extensionViewTypologyCatalog().find((t) => t.id === typologyId) ?? null;
 }
 
-/** @emoji 📚 Lists view assets from shipped extensions (`spatial/assets/extension/*/view/**/view.json`). */
+/** @emoji 📚 Lists view assets from shipped extensions (`spatial/assets/extension/<extension>/view/<view-id>/view.json`). */
 export function listExtensionViews(): readonly ViewSpec[] {
 	return extensionViewJsons
 		.map(({ extensionId, raw }) => parseViewSpec(extensionId, raw))
@@ -1686,6 +1699,17 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	volume(cell: CellRef): Promise<number>;
 	tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer>;
 	query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
+	executeAction?(
+		actionId: string,
+		params: Record<string, unknown>,
+		args: Record<string, unknown>,
+		ctx: {
+			readonly model: Model;
+			readonly preview: SpatialPreviewKernel;
+			readonly views?: ExtensionViewService;
+			readonly activeViewId?: string | null;
+		},
+	): Promise<ActionResult> | ActionResult;
 	executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }>;
 	extrudeWire(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<CellRef>;
 	offsetFaces(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<void>;
@@ -3134,11 +3158,13 @@ export async function applyEffectAsync(
 		}
 	} else if (a.op === "kernel.query") {
 		const queryCtx: KernelQueryContext = { model, views: env.views };
-		if (a.query === "face.resolveIds" && views) {
+		if (a.query === "face.resolveIds") {
 			const target = (event as SelectionEvent).targets?.[0];
 			const kind = target?.kind ?? "face";
 			const id = target?.id ?? "";
-			writePathTarget(a.assignTo, env, views.resolveFaceIds(model, kind, id));
+			const faceIds =
+				views?.resolveFaceIds(model, kind, id) ?? (kind === "face" && id ? [id as FaceRef] : []);
+			writePathTarget(a.assignTo, env, faceIds);
 		} else if (kernel?.query) {
 			const params: Record<string, unknown> = {};
 			const res = await kernel.query(a.query, params, queryCtx);
@@ -4511,7 +4537,7 @@ if (import.meta.vitest) {
 		it("lists shipped extension views", () => {
 			const views = listExtensionViews();
 			expect(views.some((v) => qualifiedViewId(v.extensionId, v.id) === "energy.energy")).toBe(true);
-			expect(views.some((v) => qualifiedViewId(v.extensionId, v.id) === "structure.structure")).toBe(true);
+			expect(views.some((v) => qualifiedViewId(v.extensionId, v.id) === "structure.classic")).toBe(true);
 		});
 		it("refresh yields energy derived objects for a box model", async () => {
 			const kernel = new BrepjsKernel();
@@ -4555,16 +4581,9 @@ if (import.meta.vitest) {
 			});
 			expect(views.resolveFaceIds(model, "object", "object-box").length).toBeGreaterThan(0);
 		});
-			});
-			await rt.send({
-				kind: "selection.changed",
-				targets: [{ kind: "cell", id: "c0", editable: true }],
-				modifiers: {},
-			});
-			expect(rt.getSnapshot().state).toBe("select_objects_to_move");
-			await rt.send({ kind: "confirm", modifiers: {} });
-			expect(rt.getSnapshot().state).toBe("point_to_move_from");
-		});
+	});
+
+	describe("@spatial/js-core interactions", () => {
 		it("auto-commits curve.arc as one arc edge between start and end", async () => {
 			const model = new Model();
 			class ArcKernel extends BrepjsKernel {

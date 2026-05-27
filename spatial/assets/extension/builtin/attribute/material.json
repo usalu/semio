@@ -28,7 +28,7 @@
   "geometrySelector": {
     "kinds": [
       "curve",
-      "surface",
+      "object",
       "solid"
     ]
   }

@@ -2524,6 +2524,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
 	}, [poseKey]);
+	const lodCtx = useLod();
 	const resolvedMeshUrl = useResolvedSceneMeshUrl({
 		origin: props.origin,
 		meshByLod: props.meshByLod,

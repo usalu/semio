@@ -92,8 +92,7 @@
           "accept": [
             "edge",
             "wire",
-            "face",
-            "surface"
+            "face"
           ],
           "multiple": true,
           "prompt": "Select cutting objects"
@@ -159,8 +158,7 @@
           "accept": [
             "edge",
             "wire",
-            "face",
-            "surface"
+            "face"
           ],
           "multiple": true,
           "prompt": "Select object to trim"

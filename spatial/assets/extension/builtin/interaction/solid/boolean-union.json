@@ -90,10 +90,8 @@
         "name": "select_surfaces_or_polysurfaces_to_union",
         "selection": {
           "accept": [
-            "surface",
             "shell",
-            "cell",
-            "part"
+            "cell"
           ],
           "multiple": true,
           "prompt": "Select surfaces or polysurfaces to union"

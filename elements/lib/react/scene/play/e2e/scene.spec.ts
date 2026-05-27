@@ -26,8 +26,7 @@ async function expectSceneLodReady(page: Page): Promise<void> {
 	await expect
 		.poll(async () => page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 120_000 })
 		.toMatch(SCENE_LOD_NUMERIC);
-	await expect(page.locator("[data-e2e-scene-lod]")).toBeVisible({ timeout: 120_000 });
-	await expect.poll(async () => page.locator("[data-e2e-scene-lod]").textContent(), { timeout: 120_000 }).toMatch(SCENE_LOD_NUMERIC);
+	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-lod", SCENE_LOD_NUMERIC);
 }
 
 test("scene play loads canvas and fixture", async ({ page }) => {

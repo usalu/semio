@@ -92,8 +92,7 @@
           "accept": [
             "edge",
             "wire",
-            "face",
-            "surface"
+            "face"
           ],
           "multiple": true,
           "prompt": "Select object for join"

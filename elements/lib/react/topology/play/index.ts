@@ -232,7 +232,8 @@ export class TopologyPlayShellController extends Controller {
 				const lod = (args as { lod: number }).lod;
 				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
 					this.sceneLodTag = lod;
-				} else changed = false;
+				}
+				changed = false;
 				break;
 			}
 			case "setBoardSelection": {

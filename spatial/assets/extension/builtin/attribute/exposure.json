@@ -17,7 +17,7 @@
   },
   "geometrySelector": {
     "kinds": [
-      "surface"
+      "object"
     ]
   }
 }

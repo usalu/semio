@@ -169,9 +169,7 @@
             "wire",
             "face",
             "shell",
-            "cell",
-            "surface",
-            "part"
+            "cell"
           ],
           "multiple": true,
           "prompt": "Select objects to copy"
