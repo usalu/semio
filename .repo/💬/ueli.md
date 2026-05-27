@@ -2573,7 +2573,7 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
-Get rid of all the extra legacy topologic entities such as Vertext, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster.
+Get rid of all the extra legacy topologic entities such as Vertext, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster, Part, Surface, Volume.
 The new editable entities are just: Object, Geometry, Attribute
 For geometry use the entities that brepjs is using for the kernel. Dont add any new terms, wrapper structures etc
 
