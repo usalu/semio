@@ -177,7 +177,7 @@
         "faceIds": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "cellSolid": {
+    "solidPrimitive": {
       "oneOf": [
         {
           "type": "object",
@@ -221,25 +221,7 @@
       "properties": {
         "id": { "type": "string" },
         "shellIds": { "type": "array", "items": { "type": "string" } },
-        "solid": { "$ref": "#/$defs/cellSolid" }
-      }
-    },
-    "cellComplex": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "cellIds"],
-      "properties": {
-        "id": { "type": "string" },
-        "cellIds": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "cluster": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "memberIds"],
-      "properties": {
-        "id": { "type": "string" },
-        "memberIds": { "type": "array", "items": { "type": "string" } }
+        "solid": { "$ref": "#/$defs/solidPrimitive" }
       }
     }
   }

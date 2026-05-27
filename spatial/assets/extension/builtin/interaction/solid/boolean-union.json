@@ -91,7 +91,7 @@
         "selection": {
           "accept": [
             "shell",
-            "cell"
+            "solid"
           ],
           "multiple": true,
           "prompt": "Select surfaces or polysurfaces to union"

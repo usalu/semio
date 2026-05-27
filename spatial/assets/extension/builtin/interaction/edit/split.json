@@ -93,7 +93,7 @@
             "edge",
             "wire",
             "face",
-            "cell"
+            "solid"
           ],
           "multiple": true,
           "prompt": "Select objects to split"

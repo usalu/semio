@@ -3127,7 +3127,7 @@ export function replPruneSelectionByKind(
 ): SelectionTarget[] {
 	if (!spatialPickKindsForActiveView(activeViewId).has(kind)) return [...selection];
 	if (kind === "object") {
-		return selection.filter((target) => (activeViewId ? target.kind !== "object" : target.kind !== "cell"));
+		return selection.filter((target) => (activeViewId ? target.kind !== "object" : target.kind !== "solid"));
 	}
 	const geometryKind =
 		kind === "objectVertex"

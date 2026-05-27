@@ -11,6 +11,7 @@ import {
 	buildDistanceInteractionSpec,
 	solidRef,
 	createInteractionRuntime,
+	emptyMeshTransfer,
 	initialContextForSpec,
 	isEmptyModelDiff,
 	listSpatialInteractions,
@@ -316,19 +317,20 @@ if (import.meta.vitest) {
 
 	class StubKernel extends BrepjsKernel {
 		readonly id = "stub-parity";
-		readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+		readonly operations = ["solid.createBox", "entity.tessellate"] as const;
 		lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
 		async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
 			this.lastBox = input;
-			return solidRef("stub-cell");
+			return solidRef("stub-solid");
 		}
 		async volume() {
 			return 0;
 		}
 		async tessellate() {
 			return {
-				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				indices: new Uint32Array([0, 1, 2]),
+				...emptyMeshTransfer(),
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				index: new Uint32Array([0, 1, 2]),
 			};
 		}
 	}
@@ -344,9 +346,7 @@ if (import.meta.vitest) {
 		stamp(clone.wires?.added, "__wire__");
 		stamp(clone.faces?.added, "__face__");
 		stamp(clone.shells?.added, "__shell__");
-		stamp(clone.solids?.added, "__cell__");
-		stamp(clone.____cellComplexRemovedesRemoved?.added, "____cellComplexRemoved__");
-		stamp(clone.____clusterRemovedsRemoved?.added, "____clusterRemoved__");
+		stamp(clone.solids?.added, "__solid__");
 		for (const w of clone.wires?.added ?? []) {
 			(w as { edgeIds: string[] }).edgeIds = (w as { edgeIds: string[] }).edgeIds.map(() => "__edge__");
 		}
@@ -374,7 +374,7 @@ if (import.meta.vitest) {
 			return 0;
 		}
 		async tessellate() {
-			return { positions: new Float32Array(), indices: new Uint32Array() };
+			return emptyMeshTransfer();
 		}
 		async query(name: string, params: Record<string, unknown>) {
 			if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];

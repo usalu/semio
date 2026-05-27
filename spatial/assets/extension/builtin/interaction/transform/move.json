@@ -185,7 +185,7 @@
             "wire",
             "face",
             "shell",
-            "cell"
+            "solid"
           ],
           "multiple": true,
           "prompt": "Select objects to move"

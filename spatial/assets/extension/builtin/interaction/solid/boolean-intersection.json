@@ -91,7 +91,7 @@
         "selection": {
           "accept": [
             "shell",
-            "cell"
+            "solid"
           ],
           "multiple": true,
           "prompt": "Select first set of surfaces or polysurfaces"
@@ -156,7 +156,7 @@
         "selection": {
           "accept": [
             "shell",
-            "cell"
+            "solid"
           ],
           "multiple": true,
           "prompt": "Select second set"

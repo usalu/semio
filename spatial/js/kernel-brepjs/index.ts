@@ -735,14 +735,14 @@ export function meshFaceModelDiff(mesh: MeshTransfer, idTag: string): ModelDiff 
 }
 
 /** @emoji 📦 Full axis-aligned box model: 8 vertices, 12 edges, 6 wires, 6 faces, one shell, one solid. */
-export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: SolidRef): ModelDiff {
+export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, solid: SolidRef): ModelDiff {
 	const ax = Math.min(input.cornerA[0], input.cornerB[0]);
 	const ay = Math.min(input.cornerA[1], input.cornerB[1]);
 	const bx = Math.max(input.cornerA[0], input.cornerB[0]);
 	const by = Math.max(input.cornerA[1], input.cornerB[1]);
 	const z0 = Math.min(input.cornerA[2], input.cornerB[2]);
 	const z1 = z0 + Math.max(Math.abs(input.height), 1e-9);
-	const pfx = `box-${cell}`;
+	const pfx = `box-${solid}`;
 	const v000 = `${pfx}-v000` as VertexRef;
 	const v100 = `${pfx}-v100` as VertexRef;
 	const v110 = `${pfx}-v110` as VertexRef;
@@ -820,7 +820,7 @@ export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: numb
 		solids: {
 			added: [
 				{
-					id: cell,
+					id: solid,
 					shellIds: [shell],
 					solid: { kind: "box", cornerA: [ax, ay, z0], cornerB: [bx, by, z0], height: z1 - z0 } satisfies SolidPrimitive,
 				},
@@ -829,7 +829,7 @@ export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: numb
 	};
 }
 
-export function SolidPrimitiveAabb(solid: SolidPrimitive): { readonly min: Vec3; readonly max: Vec3 } {
+export function solidPrimitiveAabb(solid: SolidPrimitive): { readonly min: Vec3; readonly max: Vec3 } {
 	if (solid.kind === "box") {
 		const ax = Math.min(solid.cornerA[0], solid.cornerB[0]);
 		const ay = Math.min(solid.cornerA[1], solid.cornerB[1]);
@@ -864,10 +864,10 @@ export function SolidPrimitiveAabb(solid: SolidPrimitive): { readonly min: Vec3;
 	};
 }
 
-/** @emoji 📐 Axis-aligned bounds of a cell from shell vertices when present, else analytic `SolidPrimitive`. */
-export function modelObjectAabb(model: Model, cell: SolidRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
-	const points = derivedSolidPoints(model, cell);
-	if (points.length === 0) return cell.solid ? SolidPrimitiveAabb(cell.solid) : null;
+/** @emoji 📐 Axis-aligned bounds of a solid from shell vertices when present, else analytic `SolidPrimitive`. */
+export function modelObjectAabb(model: Model, solid: SolidRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
+	const points = derivedSolidPoints(model, solid);
+	if (points.length === 0) return solid.solid ? solidPrimitiveAabb(solid.solid) : null;
 	let minX = Infinity;
 	let minY = Infinity;
 	let minZ = Infinity;
@@ -1263,10 +1263,128 @@ function extrudeDirection(direction: Vec3, distance: number): Vec3 {
 	}
 }
 
-function collectFaceInfos(shape: ValidSolid): FaceInfo[] {
+// #region 🗺️BrepEntityMaps
+type BrepEntityMaps = { readonly faceByHash: ReadonlyMap<number, FaceRef>; readonly edgeByHash: ReadonlyMap<number, EdgeRef> };
+
+function modelFaceIdsForSolid(model: Model, solid: SolidRecord): readonly FaceRef[] {
+	const out: FaceRef[] = [];
+	const seen = new Set<string>();
+	for (const sid of solid.shellIds) {
+		const sh = geom(model).shells[sid];
+		if (!sh) continue;
+		for (const fid of sh.faceIds) {
+			const key = String(fid);
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push(fid);
+		}
+	}
+	return out;
+}
+
+function modelEdgeIdsForSolid(model: Model, solid: SolidRecord): readonly EdgeRef[] {
+	const out: EdgeRef[] = [];
+	const seen = new Set<string>();
+	for (const fid of modelFaceIdsForSolid(model, solid)) {
+		const face = geom(model).faces[fid];
+		if (!face) continue;
+		for (const wid of face.wireIds) {
+			const wire = geom(model).wires[wid];
+			if (!wire) continue;
+			for (const eid of wire.edgeIds) {
+				const key = String(eid);
+				if (seen.has(key)) continue;
+				seen.add(key);
+				out.push(eid);
+			}
+		}
+	}
+	return out;
+}
+
+/** @emoji 🗺️ Maps brepjs `getHashCode` handles to spatial `FaceRef`/`EdgeRef`; brepjs has no geometry userData. */
+function buildBrepEntityMaps(
+	brepSolid: ValidSolid,
+	context: { readonly solidRef: SolidRef; readonly model?: Model; readonly solidRecord?: SolidRecord },
+): BrepEntityMaps {
+	const faceByHash = new Map<number, FaceRef>();
+	const edgeByHash = new Map<number, EdgeRef>();
+	let brepFaces: Face[] = [];
+	let brepEdges: Edge[] = [];
+	try {
+		brepFaces = getFaces(brepSolid);
+	} catch {
+		/* empty */
+	}
+	try {
+		brepEdges = getEdges(brepSolid);
+	} catch {
+		/* empty */
+	}
+
+	const unmatchedFaces = [...brepFaces];
+	if (context.model && context.solidRecord) {
+		for (const fid of modelFaceIdsForSolid(context.model, context.solidRecord)) {
+			const fr = geom(context.model).faces[fid];
+			const wireId = fr?.wireIds[0];
+			if (!wireId) continue;
+			const oriented = geomWireToOrientedFace(context.model, wireId);
+			if (!oriented) continue;
+			const h = getHashCode(oriented);
+			const idx = unmatchedFaces.findIndex((f) => getHashCode(f) === h);
+			if (idx >= 0) {
+				faceByHash.set(getHashCode(unmatchedFaces[idx]!), fid);
+				unmatchedFaces.splice(idx, 1);
+			}
+		}
+		const unmatchedEdges = [...brepEdges];
+		for (const eid of modelEdgeIdsForSolid(context.model, context.solidRecord)) {
+			const er = geom(context.model).edges[eid];
+			if (!er) continue;
+			const brepEdge = geomEdgeToBrepEdge(context.model, er);
+			if (!brepEdge) continue;
+			const h = getHashCode(brepEdge);
+			const idx = unmatchedEdges.findIndex((e) => getHashCode(e) === h);
+			if (idx >= 0) {
+				edgeByHash.set(getHashCode(unmatchedEdges[idx]!), eid);
+				unmatchedEdges.splice(idx, 1);
+			}
+		}
+		let ei = 0;
+		for (const edge of unmatchedEdges) {
+			edgeByHash.set(getHashCode(edge), `${context.solidRef}-brep-e-${ei++}` as EdgeRef);
+		}
+	}
+	let fi = 0;
+	for (const face of unmatchedFaces) {
+		faceByHash.set(getHashCode(face), `${context.solidRef}-brep-f-${fi++}` as FaceRef);
+	}
+	for (const face of brepFaces) {
+		if (!faceByHash.has(getHashCode(face))) {
+			faceByHash.set(getHashCode(face), `${context.solidRef}-brep-f-${fi++}` as FaceRef);
+		}
+	}
+	if (edgeByHash.size === 0) {
+		let ei = 0;
+		for (const edge of brepEdges) {
+			edgeByHash.set(getHashCode(edge), `${context.solidRef}-brep-e-${ei++}` as EdgeRef);
+		}
+	}
+	return { faceByHash, edgeByHash };
+}
+
+function faceEntityId(maps: BrepEntityMaps, brepHash: number, solidRef: SolidRef): FaceRef {
+	return maps.faceByHash.get(brepHash) ?? (`${solidRef}-brep-f-unknown` as FaceRef);
+}
+
+function edgeEntityId(maps: BrepEntityMaps, brepHash: number, solidRef: SolidRef): EdgeRef {
+	return maps.edgeByHash.get(brepHash) ?? (`${solidRef}-brep-e-unknown` as EdgeRef);
+}
+
+function collectFaceInfos(brepSolid: ValidSolid, maps: BrepEntityMaps, solidRef: SolidRef): FaceInfo[] {
 	let faces: Face[];
 	try {
-		faces = getFaces(shape);
+		faces = getFaces(brepSolid);
 	} catch {
 		return [];
 	}
@@ -1278,7 +1396,12 @@ function collectFaceInfos(shape: ValidSolid): FaceInfo[] {
 			const normal = normalAt(face) as [number, number, number];
 			const areaResult = measureArea(face);
 			const area = isOk(areaResult) ? (areaResult.value as number) : Number.NaN;
-			infos.push({ faceId: getHashCode(face), surfaceType, area, normal });
+			infos.push({
+				entityId: faceEntityId(maps, getHashCode(face), solidRef),
+				surfaceType,
+				area,
+				normal,
+			});
 		} catch {
 			/* skip degenerate face */
 		}
@@ -1286,17 +1409,21 @@ function collectFaceInfos(shape: ValidSolid): FaceInfo[] {
 	return infos;
 }
 
-function collectEdgeInfos(shape: ValidSolid): EdgeInfo[] {
+function collectEdgeInfos(brepSolid: ValidSolid, maps: BrepEntityMaps, solidRef: SolidRef): EdgeInfo[] {
 	let edges: Edge[];
 	try {
-		edges = getEdges(shape);
+		edges = getEdges(brepSolid);
 	} catch {
 		return [];
 	}
 	const infos: EdgeInfo[] = [];
 	for (const edge of edges) {
 		try {
-			infos.push({ edgeId: getHashCode(edge), curveType: String(getCurveType(edge)), length: curveLength(edge) });
+			infos.push({
+				entityId: edgeEntityId(maps, getHashCode(edge), solidRef),
+				curveType: String(getCurveType(edge)),
+				length: curveLength(edge),
+			});
 		} catch {
 			/* skip degenerate edge */
 		}
@@ -1305,9 +1432,15 @@ function collectEdgeInfos(shape: ValidSolid): EdgeInfo[] {
 }
 
 /** @emoji 🖼️ Tessellates a solid to grouped buffers + B-Rep edge polylines (caller owns solid lifetime). */
-function meshTransferFromBrep(solid: ValidSolid, tolerance: number, collectInspection = true): MeshTransfer {
-	const shapeMesh = mesh(solid, { tolerance, cache: true, angularTolerance: 0.2 });
-	const edgeMesh = meshEdges(solid, { tolerance, cache: true, angularTolerance: 0.2 });
+function meshTransferFromBrep(
+	brepSolid: ValidSolid,
+	tolerance: number,
+	context: { readonly solidRef: SolidRef; readonly model?: Model; readonly solidRecord?: SolidRecord },
+	collectInspection = true,
+): MeshTransfer {
+	const maps = buildBrepEntityMaps(brepSolid, context);
+	const shapeMesh = mesh(brepSolid, { tolerance, cache: true, angularTolerance: 0.2 });
+	const edgeMesh = meshEdges(brepSolid, { tolerance, cache: true, angularTolerance: 0.2 });
 	const grouped = toGroupedBufferGeometryData(shapeMesh);
 	const lineData = toLineGeometryData(edgeMesh);
 	const transfer: MeshTransfer = {
@@ -1316,20 +1449,25 @@ function meshTransferFromBrep(solid: ValidSolid, tolerance: number, collectInspe
 		index: grouped.index,
 		edges: lineData.position,
 		faceGroups: collectInspection
-			? grouped.groups.map((g) => ({ start: g.start, count: g.count, faceId: g.faceId }))
+			? grouped.groups.map((g) => ({
+					start: g.start,
+					count: g.count,
+					entityId: faceEntityId(maps, g.faceId, context.solidRef),
+				}))
 			: [],
 		edgeGroups: collectInspection
 			? (edgeMesh.edgeGroups as { start: number; count: number; edgeId: number }[]).map((g) => ({
 					start: g.start,
 					count: g.count,
-					edgeId: g.edgeId,
+					entityId: edgeEntityId(maps, g.edgeId, context.solidRef),
 				}))
 			: [],
-		faceInfos: collectInspection ? collectFaceInfos(solid) : [],
-		edgeInfos: collectInspection ? collectEdgeInfos(solid) : [],
+		faceInfos: collectInspection ? collectFaceInfos(brepSolid, maps, context.solidRef) : [],
+		edgeInfos: collectInspection ? collectEdgeInfos(brepSolid, maps, context.solidRef) : [],
 	};
 	return transfer;
 }
+// #endregion 🗺️BrepEntityMaps
 
 function meshTransferTransferables(mesh: MeshTransfer): Transferable[] {
 	return [mesh.position.buffer, mesh.normal.buffer, mesh.index.buffer, mesh.edges.buffer];
@@ -1341,8 +1479,8 @@ function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 		normal: new Float32Array(mesh.normal),
 		index: new Uint32Array(mesh.index),
 		edges: new Float32Array(mesh.edges),
-		faceGroups: mesh.faceGroups.map((g) => ({ ...g })),
-		edgeGroups: mesh.edgeGroups.map((g) => ({ ...g })),
+		faceGroups: mesh.faceGroups.map((g) => ({ ...g, entityId: g.entityId })),
+		edgeGroups: mesh.edgeGroups.map((g) => ({ ...g, entityId: g.entityId })),
 		faceInfos: mesh.faceInfos.map((f) => ({ ...f, normal: [...f.normal] as [number, number, number] })),
 		edgeInfos: mesh.edgeInfos.map((e) => ({ ...e })),
 		color: mesh.color,
@@ -1484,35 +1622,36 @@ class BrepjsWasmEngine {
 		return ref;
 	}
 
-	async volume(cell: SolidRef): Promise<number> {
+	async volume(solid: SolidRef): Promise<number> {
 		await this.ensureInit();
-		const s = this.solids.get(cell);
+		const s = this.solids.get(solid);
 		if (!s) return 0;
 		return unwrap(measureVolume(s));
 	}
 
 	private readonly meshCache = new Map<string, MeshTransfer>();
 
-	private meshCacheKey(cell: SolidRef, tolerance: number): string {
-		return `${String(cell)}:${tolerance}`;
+	private meshCacheKey(solid: SolidRef, tolerance: number): string {
+		return `${String(solid)}:${tolerance}`;
 	}
 
-	disposeSolid(cell: SolidRef): void {
-		const prefix = `${String(cell)}:`;
+	disposeSolid(solid: SolidRef): void {
+		const prefix = `${String(solid)}:`;
 		for (const key of [...this.meshCache.keys()]) {
 			if (key.startsWith(prefix)) this.meshCache.delete(key);
 		}
-		this.solids.delete(cell);
+		this.solids.delete(solid);
 	}
 
-	async tessellate(cell: SolidRef, tolerance: number): Promise<MeshTransfer> {
+	async tessellate(solid: SolidRef, tolerance: number, model?: Model): Promise<MeshTransfer> {
 		await this.ensureInit();
-		const s = this.solids.get(cell);
+		const s = this.solids.get(solid);
 		if (!s) return emptyMeshTransfer();
-		const key = this.meshCacheKey(cell, tolerance);
+		const key = this.meshCacheKey(solid, tolerance);
 		const cached = this.meshCache.get(key);
 		if (cached) return cloneMeshTransfer(cached);
-		const transfer = meshTransferFromBrep(s, tolerance);
+		const solidRecord = model ? geom(model).solids[solid] : undefined;
+		const transfer = meshTransferFromBrep(s, tolerance, { solidRef: solid, model, solidRecord });
 		if (this.meshCache.size >= MESH_TRANSFER_CACHE_MAX) {
 			const first = this.meshCache.keys().next().value;
 			if (first) this.meshCache.delete(first);
@@ -1521,17 +1660,17 @@ class BrepjsWasmEngine {
 		return transfer;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a cell: analytic `SolidPrimitive`, then cache, then model-graph hull. */
-	solidForSolidRecord(model: Model, cell: SolidRecord): ValidSolid | null {
-		if (cell.solid) return this.solidFromSolidPrimitive(cell.solid);
-		const cached = this.solids.get(cell.id);
+	/** @emoji 🧊 Authoritative brep for a solid: analytic `SolidPrimitive`, then cache, then model-graph hull. */
+	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
+		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
+		const cached = this.solids.get(solid.id);
 		if (cached) return cached;
-		const points = derivedSolidPoints(model, cell);
+		const points = derivedSolidPoints(model, solid);
 		if (points.length > 0) {
 			const aabb = aabbFromPoints(points, 0);
 			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
 		}
-		const aabb = modelObjectAabb(model, cell);
+		const aabb = modelObjectAabb(model, solid);
 		if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
 		return null;
 	}
@@ -1972,8 +2111,8 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 		return this.wasm.rpc("volume", [cell]);
 	}
 
-	async tessellate(cell: SolidRef, tolerance: number): Promise<MeshTransfer> {
-		return this.wasm.rpc("tessellate", [cell, tolerance]);
+	async tessellate(solid: SolidRef, tolerance: number, model?: Model): Promise<MeshTransfer> {
+		return this.wasm.rpc("tessellate", [solid, tolerance, model]);
 	}
 
 	/** @emoji 🧪 Clears worker solids cache between vitest cases. */

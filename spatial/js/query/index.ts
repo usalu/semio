@@ -33,7 +33,6 @@ import {
 } from "@spatial/js-core";
 
 type SolidRef = kernelGeometry.SolidRef;
-type CellComplexRef = kernelGeometry.CellComplexRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
 // #endregion 📥Imports
@@ -905,9 +904,7 @@ const TYPOLOGY_TO_KIND: Record<string, ModelEntityKind> = {
 	"builtin.kernel.wire": "wire",
 	"builtin.kernel.face": "face",
 	"builtin.kernel.shell": "shell",
-	"builtin.kernel.cell": "solid",
-	"builtin.kernel.__cellComplexRemoved": "__cellComplexRemoved",
-	"builtin.kernel.__clusterRemoved": "__clusterRemoved",
+	"builtin.kernel.solid": "solid",
 };
 
 function patternEntityKind(node: NodePatternAst): ModelEntityKind | undefined {
@@ -920,14 +917,14 @@ function patternEntityKind(node: NodePatternAst): ModelEntityKind | undefined {
 export class KernelIndex {
 	private revisionAt = -1;
 	private readonly byKind = new Map<ModelEntityKind, Set<string>>();
-	private readonly faceToCells = new Map<string, Set<string>>();
+	private readonly faceToSolids = new Map<string, Set<string>>();
 	private readonly edgeToFaces = new Map<string, Set<string>>();
 
 	constructor(private readonly model: Model) {}
 
 	private rebuild(): void {
 		this.byKind.clear();
-		this.faceToCells.clear();
+		this.faceToSolids.clear();
 		this.edgeToFaces.clear();
 		const add = (k: ModelEntityKind, id: string) => {
 			let s = this.byKind.get(k);
@@ -943,19 +940,17 @@ export class KernelIndex {
 		for (const id of Object.keys(this.model.faces)) add("face", id);
 		for (const id of Object.keys(this.model.shells)) add("shell", id);
 		for (const id of Object.keys(this.model.solids)) add("solid", id);
-		for (const id of Object.keys(this.model.____cellComplexRemovedesRemoved)) add("__cellComplexRemoved", id);
-		for (const id of Object.keys(this.model.____clusterRemovedsRemoved)) add("__clusterRemoved", id);
-		for (const [cid, cell] of Object.entries(this.model.solids)) {
-			for (const sid of cell.shellIds) {
-				const sh = this.model.shells[sid];
+		for (const [sid, solid] of Object.entries(this.model.solids)) {
+			for (const shellId of solid.shellIds) {
+				const sh = this.model.shells[shellId];
 				if (!sh) continue;
 				for (const fid of sh.faceIds) {
-					let xs = this.faceToCells.get(fid);
+					let xs = this.faceToSolids.get(fid);
 					if (!xs) {
 						xs = new Set();
-						this.faceToCells.set(fid, xs);
+						this.faceToSolids.set(fid, xs);
 					}
-					xs.add(cid);
+					xs.add(sid);
 				}
 			}
 		}
@@ -999,20 +994,20 @@ export class KernelIndex {
 		return 2;
 	}
 
-	adjacentCellIds(solidId: string): Set<string> {
+	adjacentSolidIds(solidId: string): Set<string> {
 		this.ensure();
 		const out = new Set<string>();
-		const cell = this.model.solids[solidId];
-		if (!cell) return out;
+		const solid = this.model.solids[solidId];
+		if (!solid) return out;
 		const faces = new Set<string>();
-		for (const sid of cell.shellIds) {
-			const sh = this.model.shells[sid];
+		for (const shellId of solid.shellIds) {
+			const sh = this.model.shells[shellId];
 			if (!sh) continue;
 			for (const f of sh.faceIds) faces.add(f);
 		}
 		for (const f of faces) {
-			for (const oc of this.faceToCells.get(f) ?? []) {
-				if (oc !== solidId) out.add(oc);
+			for (const other of this.faceToSolids.get(f) ?? []) {
+				if (other !== solidId) out.add(other);
 			}
 		}
 		return out;
@@ -1038,7 +1033,7 @@ function* iterateBoundedBy(model: Model, from: EntityHandle): Generator<EntityHa
 		const f = model.faces[from.id];
 		if (!f) return;
 		for (const w of f.wireIds) yield { kind: "wire", id: w };
-	} else if (from.kind === "cell") {
+	} else if (from.kind === "solid") {
 		const c = model.solids[from.id];
 		if (!c) return;
 		for (const s of c.shellIds) yield { kind: "shell", id: s };
@@ -1078,22 +1073,14 @@ function* iterateContainsInverse(model: Model, from: EntityHandle): Generator<En
 		for (const [eid, e] of Object.entries(model.edges)) {
 			if (e.vertexIds.includes(from.id)) yield { kind: "edge", id: eid };
 		}
-	} else if (from.kind === "cell") {
-		for (const [ccid, cc] of Object.entries(model.____cellComplexRemovedesRemoved)) {
-			if (cc.solidIds.includes(from.id)) yield { kind: "__cellComplexRemoved", id: ccid };
-		}
 	}
 }
 
 function* iterateContainsForward(model: Model, from: EntityHandle): Generator<EntityHandle> {
-	if (from.kind === "cell") {
+	if (from.kind === "solid") {
 		const c = model.solids[from.id];
 		if (!c) return;
-		for (const sid of c.shellIds) yield { kind: "shell", id: sid };
-	} else if (from.kind === "__cellComplexRemoved") {
-		const cc = model.____cellComplexRemovedesRemoved[from.id];
-		if (!cc) return;
-		for (const cid of cc.solidIds) yield { kind: "solid", id: cid };
+		for (const shellId of c.shellIds) yield { kind: "shell", id: shellId };
 	} else if (from.kind === "shell") {
 		const s = model.shells[from.id];
 		if (!s) return;
@@ -1106,13 +1093,6 @@ function* iterateContainsForward(model: Model, from: EntityHandle): Generator<En
 		const w = model.wires[from.id];
 		if (!w) return;
 		for (const eid of w.edgeIds) yield { kind: "edge", id: eid };
-	} else if (from.kind === "__clusterRemoved") {
-		const c = model.____clusterRemovedsRemoved[from.id];
-		if (!c) return;
-		for (const mid of c.memberIds) {
-			const hit = lookupAnyEntity(model, mid);
-			if (hit) yield hit;
-		}
 	}
 }
 
@@ -1123,8 +1103,6 @@ function lookupAnyEntity(model: Model, id: string): EntityHandle | null {
 	if (model.faces[id]) return { kind: "face", id };
 	if (model.shells[id]) return { kind: "shell", id };
 	if (model.solids[id]) return { kind: "solid", id };
-	if (model.____cellComplexRemovedesRemoved[id]) return { kind: "__cellComplexRemoved", id };
-	if (model.____clusterRemovedsRemoved[id]) return { kind: "__clusterRemoved", id };
 	return null;
 }
 
@@ -1157,9 +1135,9 @@ function* traverseRel(
 					: iterateContainsInverse(model, from)
 				: rel === "SHARES"
 					? iterateShares(model, index, from)
-					: rel === "ADJACENT_TO" && from.kind === "cell"
+					: rel === "ADJACENT_TO" && from.kind === "solid"
 							? (function* () {
-									for (const id of index.adjacentCellIds(from.id)) yield { kind: "solid", id };
+									for (const id of index.adjacentSolidIds(from.id)) yield { kind: "solid", id };
 								})()
 							: rel === "HAS_VERTEX"
 								? (function* () {
@@ -1458,7 +1436,7 @@ if (import.meta.vitest) {
 		}
 		override async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
 			const cell = await this.createBoxFromCorners(input);
-			return { cell, diff: this.boxModelDiff(input, cell) };
+			return { solid: cell, diff: this.boxModelDiff(input, cell) };
 		}
 		override async volume() {
 			return 0;
@@ -1472,7 +1450,7 @@ if (import.meta.vitest) {
 		return new QueryTestKernel();
 	}
 
-	function seedCellShellFaces(model: Model): { cell: string; shell: string; faces: string[] } {
+	function seedSolidShellFaces(model: Model): { solid: string; shell: string; faces: string[] } {
 		const f0 = "f0" as FaceRef;
 		const f1 = "f1" as FaceRef;
 		const sh = "s0" as ShellRef;
@@ -1481,7 +1459,7 @@ if (import.meta.vitest) {
 		model.faces[f1] = { id: f1, wireIds: [] };
 		model.shells[sh] = { id: sh, faceIds: [f0, f1] };
 		model.solids[c0] = { id: c0, shellIds: [sh] };
-		return { cell: c0, shell: sh, faces: [f0, f1] };
+		return { solid: c0, shell: sh, faces: [f0, f1] };
 	}
 
 	describe("@spatial/js-query parse", () => {
@@ -1534,10 +1512,10 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-query execute", () => {
-		it("MATCH cell shell face chain returns face ids", async () => {
+		it("MATCH solid shell face chain returns face ids", async () => {
 			const model = new Model();
-			seedCellShellFaces(model);
-			const q = `MATCH (c:Object {typology: 'builtin.kernel.cell'})-[:BOUNDED_BY]->(:Object {typology: 'builtin.kernel.shell'})-[:CONTAINS]->(f:Object {typology: 'builtin.kernel.face'}) RETURN f.id`;
+			seedSolidShellFaces(model);
+			const q = `MATCH (c:Object {typology: 'builtin.kernel.solid'})-[:BOUNDED_BY]->(:Object {typology: 'builtin.kernel.shell'})-[:CONTAINS]->(f:Object {typology: 'builtin.kernel.face'}) RETURN f.id`;
 			const res = await runConstruct(q, {
 				model: model,
 				kernel: mkKernelStub(),
@@ -1545,25 +1523,6 @@ if (import.meta.vitest) {
 			});
 			const ids = res.rows.map((r) => r.c0).sort();
 			expect(ids).toEqual(["f0", "f1"]);
-		});
-
-		it("CONTAINS walks __cellComplexRemoved to cells", async () => {
-			const model = new Model();
-			const c0 = "c0" as SolidRef;
-			const c1 = "c1" as SolidRef;
-			const cc = "cc0" as CellComplexRef;
-			model.solids[c0] = { id: c0, shellIds: [] };
-			model.solids[c1] = { id: c1, shellIds: [] };
-			model.____cellComplexRemovedesRemoved[cc] = { id: cc, solidIds: [c0, c1] };
-			const res = await runConstruct(
-				`MATCH (cc:Object {typology: 'builtin.kernel.__cellComplexRemoved'})-[:CONTAINS]->(c:Object {typology: 'builtin.kernel.cell'}) RETURN c.id`,
-				{
-					model: model,
-					kernel: mkKernelStub(),
-					actions: ActionRegistry.withBuiltins(),
-				},
-			);
-			expect(res.rows.map((r) => r.c0).sort()).toEqual(["c0", "c1"]);
 		});
 
 		it("ADJACENT_TO finds solids sharing a face", async () => {
@@ -1577,7 +1536,7 @@ if (import.meta.vitest) {
 			model.solids["c0" as SolidRef] = { id: "c0" as SolidRef, shellIds: [sh0] };
 			model.solids["c1" as SolidRef] = { id: "c1" as SolidRef, shellIds: [sh1] };
 			const res = await runConstruct(
-				"MATCH (a:Object {typology: 'builtin.kernel.cell'})-[:ADJACENT_TO]-(b:Object {typology: 'builtin.kernel.cell'}) RETURN a.id, b.id",
+				"MATCH (a:Object {typology: 'builtin.kernel.solid'})-[:ADJACENT_TO]-(b:Object {typology: 'builtin.kernel.solid'}) RETURN a.id, b.id",
 				{
 					model: model,
 					kernel: mkKernelStub(),
@@ -1625,10 +1584,10 @@ if (import.meta.vitest) {
 			).rejects.toThrow(/unknown action view\.surfaces/);
 		});
 
-		it("CALL createBoxFromCorners yields diff and data.cell", async () => {
+		it("CALL createBoxFromCorners yields diff and data.solid", async () => {
 			const model = new Model();
 			const res = await runConstruct(
-				"CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [2,3,0], height: 4 }) YIELD diff, data.cell AS cell",
+				"CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [2,3,0], height: 4 }) YIELD diff, data.solid AS solid",
 				{
 					model: model,
 					kernel: new QueryTestKernel(),
@@ -1637,7 +1596,7 @@ if (import.meta.vitest) {
 			);
 			expect(res.diff).toBeDefined();
 			expect(res.diff?.solids?.added?.length).toBeGreaterThan(0);
-			expect(res.rows[0]?.cell).toBeDefined();
+			expect(res.rows[0]?.solid).toBeDefined();
 		});
 
 		it("CALL selection.selectAll YIELD targets returns every box model kind", async () => {
@@ -1653,7 +1612,7 @@ if (import.meta.vitest) {
 			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
 			expect(Array.isArray(targets)).toBe(true);
 			expect(targets!.length).toBeGreaterThan(8);
-			expect(targets!.some((t) => t.kind === "cell" && t.id === "box")).toBe(true);
+			expect(targets!.some((t) => t.kind === "solid" && t.id === "box")).toBe(true);
 		});
 
 		it("CALL selection.apply invert uses construct selectionTargets seed", async () => {
@@ -1670,7 +1629,7 @@ if (import.meta.vitest) {
 				},
 			);
 			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
-			expect(targets!.some((t) => t.kind === "cell" && t.id === "box")).toBe(false);
+			expect(targets!.some((t) => t.kind === "solid" && t.id === "box")).toBe(false);
 			expect(targets!.length).toBeGreaterThan(0);
 		});
 

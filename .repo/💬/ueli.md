@@ -2573,6 +2573,10 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+The core mechanism
+
+---
+
 The brepjs kernel doesnt support user data on geometry. this is a core feature from our geometry kernel.
 Hence when implementing our interface make sure that this fact doesnt leak into our layer. keep internal maps for attributes, etc
 

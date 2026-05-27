@@ -189,9 +189,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	const faces = new Set<string>();
 	const shells = new Set<string>();
 	const solids = new Set<string>();
-	const ____cellComplexRemovedesRemoved = new Set<string>();
-	const ____clusterRemovedsRemoved = new Set<string>();
-
 	const visitById = (id: string): void => {
 		if (model.anchors[id]) {
 			visitAnchor(id);
@@ -221,11 +218,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 			visitSolid(id);
 			return;
 		}
-		if (model.____cellComplexRemovedesRemoved[id]) {
-			visitSolidComplex(id);
-			return;
-		}
-		if (model.____clusterRemovedsRemoved[id]) visitCluster(id);
 	};
 
 	const visitAnchor = (id: string): void => {
@@ -281,22 +273,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 		for (const shellId of rec.shellIds) visitShell(shellId);
 	};
 
-	const visitSolidComplex = (id: string): void => {
-		if (____cellComplexRemovedesRemoved.has(id)) return;
-		const rec = model.____cellComplexRemovedesRemoved[id];
-		if (!rec) return;
-		____cellComplexRemovedesRemoved.add(id);
-		for (const solidId of rec.solidIds) visitSolid(solidId);
-	};
-
-	const visitCluster = (id: string): void => {
-		if (____clusterRemovedsRemoved.has(id)) return;
-		const rec = model.____clusterRemovedsRemoved[id];
-		if (!rec) return;
-		____clusterRemovedsRemoved.add(id);
-		for (const memberId of rec.memberIds) visitById(memberId);
-	};
-
 	for (const target of selection) {
 		switch (target.kind) {
 			case "anchor":
@@ -320,12 +296,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 			case "solid":
 				visitSolid(target.id);
 				break;
-			case "__cellComplexRemoved":
-				visitSolidComplex(target.id);
-				break;
-			case "__clusterRemoved":
-				visitCluster(target.id);
-				break;
 			default:
 				break;
 		}
@@ -342,8 +312,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 		faces: sortIds(faces).map((id) => model.faces[id]!),
 		shells: sortIds(shells).map((id) => model.shells[id]!),
 		solids: sortIds(solids).map((id) => model.solids[id]!),
-		____cellComplexRemovedesRemoved: sortIds(____cellComplexRemovedesRemoved).map((id) => model.____cellComplexRemovedesRemoved[id]!),
-		____clusterRemovedsRemoved: sortIds(____clusterRemovedsRemoved).map((id) => model.____clusterRemovedsRemoved[id]!),
 	};
 }
 

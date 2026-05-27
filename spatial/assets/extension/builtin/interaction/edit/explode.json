@@ -92,10 +92,7 @@
           "accept": [
             "wire",
             "shell",
-            "cell",
-            "cellComplex",
-            "cluster"
-          ],
+            "solid"],
           "multiple": true,
           "prompt": "Select objects to explode"
         },

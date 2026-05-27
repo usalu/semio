@@ -239,7 +239,7 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "feature.extrudeWireToCell",
+      "action": "feature.extrudeWireToSolid",
       "params": {
         "wireId": {
           "kind": "path",

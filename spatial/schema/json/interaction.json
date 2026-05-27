@@ -455,7 +455,7 @@
             "role": { "type": "string" },
             "geometryEntityKind": {
               "type": "string",
-              "enum": ["vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster", "surface", "part"]
+              "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]
             },
             "entityId": { "$ref": "expression.json" }
           }

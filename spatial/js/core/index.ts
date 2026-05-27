@@ -1601,7 +1601,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   readonly operations: readonly string[];
   createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef>;
   volume(solid: SolidRef): Promise<number>;
-  tessellate(solid: SolidRef, tolerance: number): Promise<MeshTransfer>;
+  tessellate(solid: SolidRef, tolerance: number, model?: Model): Promise<MeshTransfer>;
   query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
   executeAction?(
     actionId: string,
@@ -1632,19 +1632,19 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 export interface FaceGroup {
   readonly start: number;
   readonly count: number;
-  readonly faceId: number;
+  readonly entityId: FaceRef;
 }
 
 /** @emoji 🧩 Line index range for one B-Rep edge (Three.js edge pick). */
 export interface EdgeGroup {
   readonly start: number;
   readonly count: number;
-  readonly edgeId: number;
+  readonly entityId: EdgeRef;
 }
 
 /** @emoji 🧩 Face metadata for kernel→renderer picking and tooltips. */
 export interface FaceInfo {
-  readonly faceId: number;
+  readonly entityId: FaceRef;
   readonly surfaceType: string;
   readonly area: number;
   readonly normal: readonly [number, number, number];
@@ -1652,7 +1652,7 @@ export interface FaceInfo {
 
 /** @emoji 🧩 Edge metadata for kernel→renderer picking and tooltips. */
 export interface EdgeInfo {
-  readonly edgeId: number;
+  readonly entityId: EdgeRef;
   readonly curveType: string;
   readonly length: number;
 }
@@ -1887,6 +1887,24 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
     { id: "box.aabbFromDiagonalCorners", run: runCreateBox },
     { id: "entity.createAnchor", run: anchorAction },
     {
+      id: "command.addPoint",
+      run: (params) => {
+        const ctx = (params.__context as Record<string, unknown>) ?? {};
+        const field = String(params.field ?? "points");
+        const key = params.key != null ? String(params.key) : null;
+        const point = vec3Param(params, "point");
+        const cur = ctx[field];
+        if (key) {
+          const base = cur && typeof cur === "object" && !Array.isArray(cur) ? { ...(cur as Record<string, unknown>) } : {};
+          base[key] = point;
+          return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: base } } };
+        }
+        const arr = Array.isArray(cur) ? [...(cur as Vec3[])] : [];
+        arr.push(point);
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: arr } } };
+      },
+    },
+    {
       id: "command.addSelection",
       run: (params) => selectionCommandActionResult(selectionTargetsWithMode(parseSelectionTargetsFromUnknown(params.current), parseSelectionTargetsFromUnknown(params.targets), (params.modifiers ?? {}) as InteractionEvent["modifiers"])),
     },
@@ -1920,9 +1938,9 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
     },
     {
       id: "measure.solidVolume",
-      run: async (params, ctx) => ({ data: await ctx.kernel.solidVolume(String(params.solidId ?? params.cellId) as SolidRef) }),
+      run: async (params, ctx) => ({ data: await ctx.kernel.solidVolume(String(params.solidId ?? params.solid) as SolidRef) }),
     },
-    { id: "feature.extrudeWireToCell", run: async (params, ctx) => ctx.kernel.extrudeWireDiff ? ctx.kernel.extrudeWireDiff({ wireId: String(params.wireId ?? params.wire ?? ""), distance: numericParam(params, "distance", 1), direction: vec3Param(params, "direction", [0, 0, 1]), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
+    { id: "feature.extrudeWireToSolid", run: async (params, ctx) => ctx.kernel.extrudeWireDiff ? ctx.kernel.extrudeWireDiff({ wireId: String(params.wireId ?? params.wire ?? ""), distance: numericParam(params, "distance", 1), direction: vec3Param(params, "direction", [0, 0, 1]), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
     { id: "feature.offsetFaces", run: async (params, ctx) => ctx.kernel.offsetFacesDiff ? ctx.kernel.offsetFacesDiff({ faceIds: Array.isArray(params.faceIds) ? params.faceIds.map(String) : [String(params.faceId ?? "")], distance: numericParam(params, "distance", 1), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
   ];
 }
@@ -4409,13 +4427,13 @@ if (import.meta.vitest) {
 
     it("boxModelDiff creates selectable boundary and volume records", () => {
       const g = new Model();
-      applyModelDiff(g, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, solidRef("box-cell")));
+      applyModelDiff(g, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, solidRef("box-solid")));
       expect(Object.keys(g.vertices).length).toBe(8);
       expect(Object.keys(g.edges).length).toBe(12);
       expect(Object.keys(g.wires).length).toBe(6);
       expect(Object.keys(g.faces).length).toBe(6);
       expect(Object.keys(g.shells).length).toBe(1);
-      expect(Object.keys(g.solids)).toEqual(["box-cell"]);
+      expect(Object.keys(g.solids)).toEqual(["box-solid"]);
     });
   });
   describe("@spatial/js-core selection filter", () => {
@@ -4510,7 +4528,7 @@ if (import.meta.vitest) {
         }
         async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef> {
           this.lastBox = input;
-          return solidRef("stub-cell");
+          return solidRef("stub-solid");
         }
         async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
           const solid = await this.createBoxFromCorners(input);
@@ -4534,7 +4552,7 @@ if (import.meta.vitest) {
       const res = snap.lastResponse!;
       expect(snap.state).toBe("committed");
       expect(res.ok).toBe(true);
-      expect(res.data).toEqual({ solid: "stub-cell" });
+      expect(res.data).toEqual({ solid: "stub-solid" });
       expect(res.archiveContext).not.toBeNull();
       expect(res.archiveContext!.origin).toEqual([0, 0, 0]);
       expect(res.archiveContext!.corner).toEqual([2, 3, 0]);
@@ -4544,7 +4562,7 @@ if (import.meta.vitest) {
       expect(Object.keys(model.wires).length).toBe(6);
       expect(Object.keys(model.faces).length).toBe(6);
       expect(Object.keys(model.shells).length).toBe(1);
-      expect(Object.keys(model.solids)).toEqual(["stub-cell"]);
+      expect(Object.keys(model.solids)).toEqual(["stub-solid"]);
       expect(kernel.lastBox).toEqual({
         cornerA: [0, 0, 0],
         cornerB: [2, 3, 0],
