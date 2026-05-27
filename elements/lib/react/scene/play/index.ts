@@ -188,6 +188,7 @@ export class ScenePlayShellController extends Controller {
 	}
 
 	override run(command: string, args?: unknown): void {
+		let syncShell = true;
 		switch (command) {
 			case "setAutoLod": {
 				const pressed = (args as { pressed?: boolean }).pressed;
@@ -211,8 +212,8 @@ export class ScenePlayShellController extends Controller {
 				const lod = (args as { lod: number }).lod;
 				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
 					this.lodTag = lod;
-					this.lodSlider = sliderValueFromLod(lod);
 				}
+				syncShell = false;
 				break;
 			}
 			case "setRelocateMode": {
@@ -240,8 +241,10 @@ export class ScenePlayShellController extends Controller {
 			default:
 				break;
 		}
-		this.rebuildShellMode();
-		this.emit();
+		if (syncShell) {
+			this.rebuildShellMode();
+			this.emit();
+		}
 	}
 
 	getSnapshot(): ScenePlaySnapshot {

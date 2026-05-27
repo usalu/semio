@@ -503,11 +503,83 @@ export interface LodContextValue {
 
 const LodContext = createContext<LodContextValue | null>(null);
 
-/** @emoji ­ƒôÂ Reads the live scene LOD band and grid snap step from canvas context. */
+/** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
 export function useLod(): LodContextValue {
 	const v = useContext(LodContext);
 	if (!v) throw new Error("Scene LOD missing");
 	return v;
+}
+
+interface LodRuntimeCells {
+	sceneLod: number;
+	depthVariable: boolean;
+	distanceReference: number;
+	camera: Camera | null;
+	tmpWorld: Vector3;
+}
+
+function resolveMeshUrlForLod(
+	meshByLod: readonly LodMeshEntry[] | undefined,
+	fallbackMeshUrl: string,
+	lod: number,
+): string {
+	if (fallbackMeshUrl === PLACEHOLDER_MESH_URL) return fallbackMeshUrl;
+	return pickClosestMeshUrl(meshByLod, lod, fallbackMeshUrl) ?? fallbackMeshUrl;
+}
+
+/** @emoji 🎨 Resolves per-object mesh URL; useFrame only when depth-variable or per-LOD meshes exist, and setState only when URL changes. */
+function useResolvedSceneMeshUrl(opts: {
+	readonly origin: Vec3;
+	readonly meshByLod?: readonly LodMeshEntry[];
+	readonly fallbackMeshUrl: string;
+}): string {
+	const lodCtx = useLod();
+	const trackLod = lodCtx.depthVariable || (opts.meshByLod?.length ?? 0) > 0;
+	const meshByLodRef = useRef(opts.meshByLod);
+	meshByLodRef.current = opts.meshByLod;
+	const fallbackRef = useRef(opts.fallbackMeshUrl);
+	fallbackRef.current = opts.fallbackMeshUrl;
+	const originRef = useRef(opts.origin);
+	originRef.current = opts.origin;
+	const [url, setUrl] = useState(() =>
+		resolveMeshUrlForLod(
+			opts.meshByLod,
+			opts.fallbackMeshUrl,
+			lodCtx.depthVariable ? lodCtx.lodForWorldPosition(opts.origin) : lodCtx.lod,
+		),
+	);
+	useFrame(() => {
+		if (!trackLod) return;
+		const lod = lodCtx.depthVariable ? lodCtx.lodForWorldPosition(originRef.current) : lodCtx.lod;
+		const next = resolveMeshUrlForLod(meshByLodRef.current, fallbackRef.current, lod);
+		setUrl((prev) => (prev === next ? prev : next));
+	});
+	if (!trackLod) {
+		return resolveMeshUrlForLod(opts.meshByLod, opts.fallbackMeshUrl, lodCtx.lod);
+	}
+	return url;
+}
+
+interface VortexLodVisual {
+	readonly drawHandleBody: boolean;
+	readonly pickProxy: boolean;
+	readonly meshUrl: string | undefined;
+}
+
+function vortexLodVisual(
+	lod: number,
+	linger: boolean,
+	handleMeshByLod: readonly LodMeshEntry[] | undefined,
+	handleMeshUrl: string | undefined,
+): VortexLodVisual {
+	const drawHandleBody = lodHandlePrimaryVisible(lod) || linger;
+	const pickProxy = lodHandlePickProxy(lod) && !drawHandleBody;
+	const meshUrl = drawHandleBody ? pickClosestMeshUrl(handleMeshByLod, lod, handleMeshUrl) : undefined;
+	return { drawHandleBody, pickProxy, meshUrl };
+}
+
+function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
+	return a.drawHandleBody === b.drawHandleBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
 }
 
 function LodGridHelper() {
@@ -531,23 +603,25 @@ function LodGridHelper() {
 
 function LodFrameRunner(props: {
 	readonly lodRef: MutableRefObject<number>;
+	readonly lodRuntimeRef: MutableRefObject<LodRuntimeCells>;
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly automaticLod: boolean;
 	readonly depthVariableLod: boolean;
 	readonly manualLod: number;
-	readonly onCtx: (next: LodContextValue) => void;
+	readonly onSceneLod: (patch: {
+		readonly sceneLod: number;
+		readonly depthVariable: boolean;
+		readonly gridStepWorld: number | null;
+	}) => void;
 	readonly onLodChange?: (lod: number) => void;
 }) {
 	const cam = useThree((s) => s.camera);
 	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
 	const tmpT = useMemo(() => new Vector3(), []);
-	const tmpWorld = useMemo(() => new Vector3(), []);
 	const prevLod = useRef<number | null>(null);
 	const ctxSig = useRef("");
-	const depthVariable = props.depthVariableLod;
-	const lodForWorldPositionRef = useRef<(position: Vec3) => number>(() => props.manualLod);
 	useFrame(() => {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
@@ -558,26 +632,16 @@ function LodFrameRunner(props: {
 				? autoLod
 				: props.manualLod;
 		props.lodRef.current = sceneLod;
+		const runtime = props.lodRuntimeRef.current;
+		runtime.sceneLod = sceneLod;
+		runtime.depthVariable = props.depthVariableLod;
+		runtime.distanceReference = props.distanceReference;
+		runtime.camera = cam;
 		const gridStep = lodGridStepWorld(sceneLod, props.gridFactor);
-		lodForWorldPositionRef.current = (position: Vec3) => {
-			if (!depthVariable) return sceneLod;
-			tmpWorld.set(position[0], position[1], position[2]);
-			const objectDist = cam.position.distanceTo(tmpWorld);
-			return lodFromCameraDistance(objectDist, props.distanceReference);
-		};
-		const sig = depthVariable
-			? `${sceneLod}|depth|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}|${dist}`
-			: `${sceneLod}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+		const sig = `${sceneLod}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
 		if (ctxSig.current !== sig) {
 			ctxSig.current = sig;
-			props.onCtx({
-				lod: sceneLod,
-				depthVariable,
-				lodForWorldPosition: lodForWorldPositionRef.current,
-				gridStepWorld: gridStep,
-				gridFactor: props.gridFactor,
-				gridSnapEnabled: props.gridSnapEnabled,
-			});
+			props.onSceneLod({ sceneLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
 		}
 		if (prevLod.current === null || Math.abs(prevLod.current - sceneLod) > SCENE_LOD_EPSILON) {
 			prevLod.current = sceneLod;
@@ -599,43 +663,56 @@ function LodBridge(props: {
 	readonly manualLod: number;
 	readonly onLodChange?: (lod: number) => void;
 }) {
-	const [lodCtx, setLodCtx] = useState<LodContextValue>(() => ({
-		lod: DEFAULT_MANUAL_LOD,
+	const tmpWorld = useMemo(() => new Vector3(), []);
+	const lodRuntimeRef = useRef<LodRuntimeCells>({
+		sceneLod: DEFAULT_MANUAL_LOD,
 		depthVariable: false,
-		lodForWorldPosition: () => DEFAULT_MANUAL_LOD,
-		gridStepWorld: lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor),
-		gridFactor: props.gridFactor,
-		gridSnapEnabled: props.gridSnapEnabled,
-	}));
-	const onCtx = useCallback(
-		(next: LodContextValue) => {
-			setLodCtx((prev) => {
-				if (
-					Math.abs(prev.lod - next.lod) <= SCENE_LOD_EPSILON &&
-					prev.depthVariable === next.depthVariable &&
-					prev.gridStepWorld === next.gridStepWorld &&
-					prev.gridFactor === next.gridFactor &&
-					prev.gridSnapEnabled === next.gridSnapEnabled
-				) {
-					return prev;
-				}
-				return next;
-			});
+		distanceReference: props.distanceReference,
+		camera: null,
+		tmpWorld,
+	});
+	const lodForWorldPosition = useCallback((position: Vec3) => {
+		const r = lodRuntimeRef.current;
+		if (!r.depthVariable || !r.camera) return r.sceneLod;
+		r.tmpWorld.set(position[0], position[1], position[2]);
+		return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);
+	}, []);
+	const [sceneLod, setSceneLod] = useState(DEFAULT_MANUAL_LOD);
+	const [depthVariable, setDepthVariable] = useState(false);
+	const [gridStepWorld, setGridStepWorld] = useState<number | null>(() =>
+		lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor),
+	);
+	const onSceneLod = useCallback(
+		(patch: { readonly sceneLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
+			setSceneLod((prev) => (Math.abs(prev - patch.sceneLod) > SCENE_LOD_EPSILON ? patch.sceneLod : prev));
+			setDepthVariable((prev) => (prev === patch.depthVariable ? prev : patch.depthVariable));
+			setGridStepWorld((prev) => (prev === patch.gridStepWorld ? prev : patch.gridStepWorld));
 		},
 		[],
 	);
-	const v = useMemo(() => lodCtx, [lodCtx]);
+	const lodCtx = useMemo<LodContextValue>(
+		() => ({
+			lod: sceneLod,
+			depthVariable,
+			lodForWorldPosition,
+			gridStepWorld,
+			gridFactor: props.gridFactor,
+			gridSnapEnabled: props.gridSnapEnabled,
+		}),
+		[sceneLod, depthVariable, lodForWorldPosition, gridStepWorld, props.gridFactor, props.gridSnapEnabled],
+	);
 	return (
-		<LodContext.Provider value={v}>
+		<LodContext.Provider value={lodCtx}>
 			<LodFrameRunner
 				lodRef={props.lodRef}
+				lodRuntimeRef={lodRuntimeRef}
 				distanceReference={props.distanceReference}
 				gridFactor={props.gridFactor}
 				gridSnapEnabled={props.gridSnapEnabled}
 				automaticLod={props.automaticLod}
 				depthVariableLod={props.depthVariableLod}
 				manualLod={props.manualLod}
-				onCtx={onCtx}
+				onSceneLod={onSceneLod}
 				onLodChange={props.onLodChange}
 			/>
 			{props.showLodGrid ? <LodGridHelper /> : null}
@@ -2447,16 +2524,11 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
 	}, [poseKey]);
-	const lodCtx = useLod();
-	const [effectiveLod, setEffectiveLod] = useState(() => lodCtx.lodForWorldPosition(props.origin));
-	useFrame(() => {
-		const next = lodCtx.lodForWorldPosition(props.origin);
-		setEffectiveLod((prev) => (Math.abs(prev - next) > SCENE_LOD_EPSILON ? next : prev));
+	const resolvedMeshUrl = useResolvedSceneMeshUrl({
+		origin: props.origin,
+		meshByLod: props.meshByLod,
+		fallbackMeshUrl: props.meshUrl,
 	});
-	const resolvedMeshUrl =
-		props.meshUrl === PLACEHOLDER_MESH_URL
-			? props.meshUrl
-			: (pickClosestMeshUrl(props.meshByLod, effectiveLod, props.meshUrl) ?? props.meshUrl);
 	const mode = props.relocate ?? relocateMode;
 	const transSnap =
 		mode === "translate" &&
@@ -2608,14 +2680,15 @@ export const Vortex = memo(function Vortex(
 
 	const lodCtx = useLod();
 	const worldPosRef = useRef(new Vector3());
-	const [effectiveLod, setEffectiveLod] = useState(() => lodCtx.lod);
-	useFrame(() => {
-		if (!root.current) return;
-		updateWorldMatrixChain(root.current);
-		root.current.getWorldPosition(worldPosRef.current);
-		const next = lodCtx.lodForWorldPosition(worldPosRef.current.toArray() as Vec3);
-		setEffectiveLod((prev) => (Math.abs(prev - next) > SCENE_LOD_EPSILON ? next : prev));
-	});
+	const handleMeshByLodRef = useRef(props.handleMeshByLod);
+	handleMeshByLodRef.current = props.handleMeshByLod;
+	const handleMeshUrlRef = useRef(props.handleMeshUrl);
+	handleMeshUrlRef.current = props.handleMeshUrl;
+	const trackVortexLod =
+		lodCtx.depthVariable || (props.handleMeshByLod?.length ?? 0) > 0;
+	const [lodVisual, setLodVisual] = useState<VortexLodVisual>(() =>
+		vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl),
+	);
 	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
 		? "attracting"
 		: reg.attractionHoverRingFullId === fullId
@@ -2652,9 +2725,29 @@ export const Vortex = memo(function Vortex(
 				reg.attractionHoverRingFullId === fullId ||
 				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
-	const drawHandleBody = lodHandlePrimaryVisible(effectiveLod) || linger;
-	const pickProxy = lodHandlePickProxy(effectiveLod) && !drawHandleBody;
-	const meshUrl = pickClosestMeshUrl(props.handleMeshByLod, effectiveLod, props.handleMeshUrl);
+	const lingerRef = useRef(linger);
+	lingerRef.current = linger;
+	useFrame(() => {
+		if (!trackVortexLod) return;
+		const lod = lodCtx.depthVariable
+			? (() => {
+					if (!root.current) return lodCtx.lod;
+					updateWorldMatrixChain(root.current);
+					root.current.getWorldPosition(worldPosRef.current);
+					return lodCtx.lodForWorldPosition(worldPosRef.current.toArray() as Vec3);
+				})()
+			: lodCtx.lod;
+		const next = vortexLodVisual(lod, lingerRef.current, handleMeshByLodRef.current, handleMeshUrlRef.current);
+		setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
+	});
+	const drawHandleBody = trackVortexLod
+		? lodVisual.drawHandleBody || linger
+		: lodHandlePrimaryVisible(lodCtx.lod) || linger;
+	const pickProxy =
+		(drawHandleBody ? false : trackVortexLod ? lodVisual.pickProxy : lodHandlePickProxy(lodCtx.lod)) && !linger;
+	const meshUrl = trackVortexLod
+		? lodVisual.meshUrl
+		: pickClosestMeshUrl(props.handleMeshByLod, lodCtx.lod, props.handleMeshUrl);
 
 	const handleMeshStyle = vortexHighlightMeshStyle(highlight);
 	const vis = props.visible !== false;
@@ -4003,7 +4096,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					onSelect={(selection) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteSelection", selection)}
 					onIndirectConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteIndirect")}
 					onProximityConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteProximity")}
-					onLodChange={(lod) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
+					onLodChange={undefined}
 				/>
 			</SceneObjectStateProvider>
 		</div>
@@ -4127,7 +4220,7 @@ class PlaySceneCanvas extends React.Component<{
 	readonly onSelect: (snap: { objectIds: readonly string[] }) => void;
 	readonly onIndirectConnect: () => void;
 	readonly onProximityConnect: () => void;
-	readonly onLodChange: (lod: number) => void;
+	readonly onLodChange?: (lod: number) => void;
 }> {
 	static contextType = SceneObjectStateContext;
 	declare context: React.ContextType<typeof SceneObjectStateContext>;

@@ -77,8 +77,26 @@ import typologyTransformScale1dJson from "../../assets/extension/builtin/typolog
 import typologyTransformScale3dJson from "../../assets/extension/builtin/typology/transform/scale3d.json" with { type: "json" };
 import energyExtensionManifestJson from "../../assets/extension/energy/extension.json" with { type: "json" };
 import energyViewJson from "../../assets/extension/energy/view/energy/view.json" with { type: "json" };
+import energyViewTypologyBaseplateJson from "../../assets/extension/energy/view/energy/typology/baseplate.json" with { type: "json" };
+import energyViewTypologyExternalWallJson from "../../assets/extension/energy/view/energy/typology/externalwall.json" with { type: "json" };
+import energyViewTypologyHullJson from "../../assets/extension/energy/view/energy/typology/hull.json" with { type: "json" };
+import energyViewTypologyRoofJson from "../../assets/extension/energy/view/energy/typology/roof.json" with { type: "json" };
+import energyViewTypologyWindowsJson from "../../assets/extension/energy/view/energy/typology/windows.json" with { type: "json" };
 import structureExtensionManifestJson from "../../assets/extension/structure/extension.json" with { type: "json" };
+import structureLineFemViewJson from "../../assets/extension/structure/view/linefem/view.json" with { type: "json" };
+import structureLineFemViewTypologyLineElementJson from "../../assets/extension/structure/view/linefem/typology/lineelement.json" with { type: "json" };
+import structureSolidFemViewJson from "../../assets/extension/structure/view/solidfem/view.json" with { type: "json" };
+import structureSolidFemViewTypologySolidElementJson from "../../assets/extension/structure/view/solidfem/typology/solidelement.json" with { type: "json" };
+import structureSurfaceFemViewJson from "../../assets/extension/structure/view/surfacefem/view.json" with { type: "json" };
+import structureSurfaceFemViewTypologySurfaceElementJson from "../../assets/extension/structure/view/surfacefem/typology/surfaceelement.json" with { type: "json" };
 import structureViewJson from "../../assets/extension/structure/view/structure/view.json" with { type: "json" };
+import structureViewTypologyLineElementJson from "../../assets/extension/structure/view/structure/typology/lineelement.json" with { type: "json" };
+import structureViewTypologyOneWayReinforcedConcreteSlabJson from "../../assets/extension/structure/view/structure/typology/onewayreinforcedconcreteslab.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteColumnJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcretecolumn.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteExternalWallJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcreteexternalwall.json" with { type: "json" };
+import structureViewTypologyReinforcedConcreteInternalWallJson from "../../assets/extension/structure/view/structure/typology/reinforcedconcreteinternalwall.json" with { type: "json" };
+import structureViewTypologySolidElementJson from "../../assets/extension/structure/view/structure/typology/solidelement.json" with { type: "json" };
+import structureViewTypologySurfaceElementJson from "../../assets/extension/structure/view/structure/typology/surfaceelement.json" with { type: "json" };
 // #endregion 📥InteractionAssets
 
 // #region 🧮Vec
@@ -499,7 +517,8 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
 		event: base.event,
 		vars: { ...base.vars, ...vars },
 		model: base.model,
-		derived: base.derived,
+		views: base.views,
+		activeViewId: base.activeViewId,
 		metadata: base.metadata,
 		preview: base.preview,
 	};
@@ -529,7 +548,8 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 			const model = env.model;
 			if (model && isModelEntityRef(o)) {
 				return readModelEntityProperty(model, env.metadata, o.kind, o.id, expr.name, {
-					derived: env.derived,
+					views: env.views,
+					activeViewId: env.activeViewId,
 					preview: env.preview,
 				});
 			}
@@ -638,11 +658,6 @@ export interface TransitionSpec {
 	readonly label?: string;
 }
 
-export type KernelQueryParams = {
-	readonly kind: "surface.resolveFaces";
-	readonly surfaceId: Expr;
-};
-
 export type EffectSpec =
 	| { readonly op: "assign"; readonly target: PathTarget; readonly value: Expr }
 	| { readonly op: "clear"; readonly target: PathTarget }
@@ -653,7 +668,7 @@ export type EffectSpec =
 	| { readonly op: "commitTransaction" }
 	| { readonly op: "rollbackTransaction" }
 	| { readonly op: "requestPreview" }
-	| { readonly op: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params: KernelQueryParams }
+	| { readonly op: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params?: Record<string, Expr> }
 	| { readonly op: "resolveEditable" }
 	| { readonly op: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
 	| { readonly op: "clearDiagnostic"; readonly code: string }
@@ -1281,15 +1296,7 @@ export function typologyForInteraction(interactionId: string): TypologySpec | nu
 	return builtinTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
 }
 
-/** @emoji 👁️ Parsed extension view asset (`spatial.view/v1`). */
-export interface ViewDerivedObjectSpec {
-	readonly id: string;
-	readonly label: string;
-	readonly description?: string;
-	readonly properties?: readonly string[];
-}
-
-/** @emoji 👁️ Extension view definition with readonly derived object slots. */
+/** @emoji 👁️ Extension view definition with readonly derived typology ids. */
 export interface ViewSpec {
 	readonly schema: "spatial.view/v1";
 	readonly extensionId: string;
@@ -1297,7 +1304,7 @@ export interface ViewSpec {
 	readonly version: string;
 	readonly label: string;
 	readonly description?: string;
-	readonly derivedObjects: readonly ViewDerivedObjectSpec[];
+	readonly typologies: readonly string[];
 }
 
 /** @emoji 👁️ Qualified view id (`extensionId.viewId`, e.g. `energy.energy`). */
@@ -1314,24 +1321,18 @@ export interface ViewDerivedObject {
 	readonly regionPoints?: readonly Vec3[];
 }
 
+function localTypologyId(typologyId: string): string {
+	const parts = typologyId.split(".");
+	return parts[parts.length - 1] ?? typologyId;
+}
+
 function parseViewSpec(extensionId: string, raw: unknown): ViewSpec | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
 	if (r.schema !== "spatial.view/v1") return null;
 	if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
-	if (!Array.isArray(r.derivedObjects)) return null;
-	const derivedObjects: ViewDerivedObjectSpec[] = [];
-	for (const row of r.derivedObjects) {
-		if (!row || typeof row !== "object") continue;
-		const d = row as Record<string, unknown>;
-		if (typeof d.id !== "string" || typeof d.label !== "string") continue;
-		derivedObjects.push({
-			id: d.id,
-			label: d.label,
-			description: typeof d.description === "string" ? d.description : undefined,
-			properties: Array.isArray(d.properties) ? (d.properties as string[]) : undefined,
-		});
-	}
+	if (!Array.isArray(r.typologies)) return null;
+	const typologies = r.typologies.filter((row): row is string => typeof row === "string");
 	return {
 		schema: "spatial.view/v1",
 		extensionId,
@@ -1339,14 +1340,43 @@ function parseViewSpec(extensionId: string, raw: unknown): ViewSpec | null {
 		version: r.version,
 		label: r.label,
 		description: typeof r.description === "string" ? r.description : undefined,
-		derivedObjects,
+		typologies,
 	};
 }
 
 const extensionViewJsons: readonly { readonly extensionId: string; readonly raw: unknown }[] = [
 	{ extensionId: "energy", raw: energyViewJson },
 	{ extensionId: "structure", raw: structureViewJson },
+	{ extensionId: "structure", raw: structureLineFemViewJson },
+	{ extensionId: "structure", raw: structureSurfaceFemViewJson },
+	{ extensionId: "structure", raw: structureSolidFemViewJson },
 ];
+
+const extensionViewTypologyJsons = [
+	energyViewTypologyBaseplateJson,
+	energyViewTypologyExternalWallJson,
+	energyViewTypologyHullJson,
+	energyViewTypologyRoofJson,
+	energyViewTypologyWindowsJson,
+	structureLineFemViewTypologyLineElementJson,
+	structureSolidFemViewTypologySolidElementJson,
+	structureSurfaceFemViewTypologySurfaceElementJson,
+	structureViewTypologyLineElementJson,
+	structureViewTypologyOneWayReinforcedConcreteSlabJson,
+	structureViewTypologyReinforcedConcreteColumnJson,
+	structureViewTypologyReinforcedConcreteExternalWallJson,
+	structureViewTypologyReinforcedConcreteInternalWallJson,
+	structureViewTypologySolidElementJson,
+	structureViewTypologySurfaceElementJson,
+] as const;
+
+function extensionViewTypologyCatalog(): readonly TypologySpec[] {
+	return extensionViewTypologyJsons.map((raw) => parseTypologySpec(raw)).filter((spec): spec is TypologySpec => spec !== null);
+}
+
+function loadExtensionViewTypology(typologyId: string): TypologySpec | null {
+	return extensionViewTypologyCatalog().find((t) => t.id === typologyId) ?? null;
+}
 
 /** @emoji 📚 Lists view assets from shipped extensions (`spatial/assets/extension/*/view/**/view.json`). */
 export function listExtensionViews(): readonly ViewSpec[] {
@@ -1369,21 +1399,17 @@ export function listExtensionManifests(): readonly ExtensionManifest[] {
 
 async function computeViewDerivedObjects(spec: ViewSpec, model: Model, _kernel: SpatialKernel): Promise<ViewDerivedObject[]> {
 	const qid = qualifiedViewId(spec.extensionId, spec.id);
-	if (qid !== "energy.energy") {
-		return spec.derivedObjects.map((d) => ({
-			id: `${qid}.${d.id}` as ObjectRef,
-			typologyId: `${spec.extensionId}.derived.${d.id}`,
-			label: d.label,
-			sourceObjectIds: model.objects.map((o) => o.id),
-		}));
-	}
 	const sourceObjectIds = model.objects.map((o) => o.id);
-	return spec.derivedObjects.map((d) => ({
-		id: `${qid}.${d.id}` as ObjectRef,
-		typologyId: `${spec.extensionId}.derived.${d.id}`,
-		label: d.label,
-		sourceObjectIds,
-	}));
+	return spec.typologies.map((typologyId) => {
+		const typology = loadExtensionViewTypology(typologyId);
+		const localId = localTypologyId(typologyId);
+		return {
+			id: `${qid}.${localId}` as ObjectRef,
+			typologyId,
+			label: typology?.label ?? localId,
+			sourceObjectIds,
+		};
+	});
 }
 
 /** @emoji 👁️ Computes and caches readonly objects for one active extension view. */
@@ -1392,20 +1418,25 @@ export class ExtensionViewService {
 	private activeQualifiedViewId: string | null = null;
 	private objects: ViewDerivedObject[] = [];
 
+	/** @emoji 👁️ Qualified view id last passed to `refresh` (`null` when cleared). */
+	get activeViewId(): string | null {
+		return this.activeQualifiedViewId;
+	}
+
 	constructor(
-		readonly viewCatalog: readonly ViewSpec[] = listExtensionViews(),
 		private readonly kernel: SpatialKernel,
+		readonly viewCatalog: readonly ViewSpec[] = listExtensionViews(),
 	) {}
 
-	/** @emoji 👁️ Recomputes derived objects for `qualifiedViewId` (`null` clears the active view). */
-	async refresh(model: Model, qualifiedViewId: string | null): Promise<void> {
-		this.activeQualifiedViewId = qualifiedViewId;
-		if (!qualifiedViewId) {
+	/** @emoji 👁️ Recomputes derived objects for `activeViewId` (`null` clears the active view). */
+	async refresh(model: Model, activeViewId: string | null): Promise<void> {
+		this.activeQualifiedViewId = activeViewId;
+		if (!activeViewId) {
 			this.objects = [];
 			this.revision = model.revision;
 			return;
 		}
-		const spec = this.viewCatalog.find((v) => qualifiedViewId(v.extensionId, v.id) === qualifiedViewId) ?? null;
+		const spec = this.viewCatalog.find((v) => qualifiedViewId(v.extensionId, v.id) === activeViewId) ?? null;
 		this.objects = spec ? await computeViewDerivedObjects(spec, model, this.kernel) : [];
 		this.revision = model.revision;
 	}
@@ -1422,7 +1453,7 @@ export class ExtensionViewService {
 
 	/** @emoji 🔌 Builds an `ExtensionViewService` wired to `kernel` and shipped view assets. */
 	static forKernel(kernel: SpatialKernel): ExtensionViewService {
-		return new ExtensionViewService(listExtensionViews(), kernel);
+		return new ExtensionViewService(kernel);
 	}
 
 	/** @emoji 🧭 Resolves brep `FaceRef` ids for a geometry `face` pick or a source `object` row. */
@@ -3058,7 +3089,7 @@ export interface StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		derived?: ExtensionViewService,
+		views?: ExtensionViewService,
 		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult>;
 }
@@ -3073,14 +3104,6 @@ function lookupGuard(spec: InteractionSpec, name: string): Expr | undefined {
 	return spec.guards?.find((g) => g.name === name)?.expr;
 }
 
-/** @emoji 🧮 Serializes `KernelQueryParams` into the loose record shape expected by `SpatialKernel.query`. */
-function kernelQueryParamsToRecord(p: KernelQueryParams, env: ExprEnv): Record<string, unknown> {
-	if (p.kind === "surface.resolveFaces") {
-		return { surfaceId: evalExpr(p.surfaceId, env) };
-	}
-	return {};
-}
-
 /** @emoji 🎬 Applies one declarative transition `EffectSpec` (async kernel queries + registered `ActionRegistry` calls). */
 export async function applyEffectAsync(
 	a: EffectSpec,
@@ -3089,12 +3112,13 @@ export async function applyEffectAsync(
 	kernel: SpatialKernel | undefined,
 	model: Model,
 	actions?: ActionRegistry,
-	derived?: ExtensionViewService,
+	views?: ExtensionViewService,
 	preview?: SpatialPreviewKernel,
+	activeViewId?: string | null,
 ): Promise<void> {
 	const math = preview ?? kernel;
 	if (!math) return;
-	const env: ExprEnv = { context: ctx, event, model, derived, preview: math };
+	const env: ExprEnv = { context: ctx, event, model, views, activeViewId, preview: math };
 	const reg = actions ?? ActionRegistry.withBuiltins();
 	if (a.op === "assign") {
 		const v = evalExpr(a.value, env);
@@ -3109,12 +3133,14 @@ export async function applyEffectAsync(
 			writePathTarget(a.target, env, next);
 		}
 	} else if (a.op === "kernel.query") {
-		const params = kernelQueryParamsToRecord(a.params, env);
-		const queryCtx: KernelQueryContext = { model, derived: env.derived as ExtensionViewService | undefined };
-		if (a.query === "surface.resolveFaces" && derived) {
-			const sid = String(params.surfaceId ?? "");
-			writePathTarget(a.assignTo, env, derived.resolveSurface(sid as SurfaceRef, model));
+		const queryCtx: KernelQueryContext = { model, views: env.views };
+		if (a.query === "face.resolveIds" && views) {
+			const target = (event as SelectionEvent).targets?.[0];
+			const kind = target?.kind ?? "face";
+			const id = target?.id ?? "";
+			writePathTarget(a.assignTo, env, views.resolveFaceIds(model, kind, id));
 		} else if (kernel?.query) {
+			const params: Record<string, unknown> = {};
 			const res = await kernel.query(a.query, params, queryCtx);
 			writePathTarget(a.assignTo, env, res);
 		}
@@ -3140,7 +3166,7 @@ export async function applyTransition(
 	kernel?: SpatialKernel,
 	actions?: ActionRegistry,
 	model?: Model,
-	derived?: ExtensionViewService,
+	views?: ExtensionViewService,
 	preview?: SpatialPreviewKernel,
 ): Promise<ApplyTransitionResult> {
 	const graph = model ?? new Model();
@@ -3157,7 +3183,7 @@ export async function applyTransition(
 			if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
 		}
 		for (const eff of tr.effects ?? []) {
-			await applyEffectAsync(eff, context, event, kernel, graph, actions, derived, preview);
+			await applyEffectAsync(eff, context, event, kernel, graph, actions, views, preview, views?.activeViewId ?? null);
 		}
 		let nextState = state;
 		if (tr.target) {
@@ -3265,10 +3291,10 @@ export class StatechartRuntime implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		derived?: ExtensionViewService,
+		views?: ExtensionViewService,
 		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult> {
-		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, derived, preview);
+		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, views, preview);
 		if (r.ok) this.state = r.nextState;
 		return { ok: r.ok, transient: r.transient };
 	}
@@ -3624,13 +3650,13 @@ export class InteractionRuntime {
 		const selectionEvent = this.selectionEventFromStart(event, sel);
 		if (!selectionEvent || !selectionEventMatches(sel, selectionEvent)) return;
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.model, this.actions, this.opts.derived, this.previewKernel());
+		const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
 		if (!r.ok) return;
 		if (!r.transient) this.snapUndoStack.push({ state: stateBeforeSelection, context: JSON.stringify(beforeCtx) });
 		const stateAfterSelection = this.sm.getState();
 		if (stateAfterSelection === stateBeforeSelection && this.stateHasEvent(stateAfterSelection, "confirm")) {
 			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
-			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.model, this.actions, this.opts.derived, this.previewKernel());
+			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
 			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: stateAfterSelection, context: JSON.stringify(beforeConfirmCtx) });
 		}
 	}
@@ -3648,7 +3674,8 @@ export class InteractionRuntime {
 			model: this.opts.document.model,
 			kernel: this.opts.kernel,
 			actions: this.actions,
-			derived: this.opts.derived,
+			views: this.opts.views,
+			activeViewId: this.opts.activeViewId ?? null,
 		});
 	}
 
@@ -3709,7 +3736,7 @@ export class InteractionRuntime {
 			if (this.stateHasEvent(this.sm.getState(), "start")) {
 				const beforeState = this.sm.getState();
 				const beforeCtx = this.cloneCtx(this.sm.getContext());
-				const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.derived, this.previewKernel());
+				const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
 				if (!r.ok) return;
 				if (!r.transient) {
 					this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
@@ -3743,7 +3770,7 @@ export class InteractionRuntime {
 		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.derived, this.previewKernel());
+		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
 		if (!r.ok) return;
 		if (!r.transient) {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
@@ -3858,7 +3885,13 @@ export class InteractionRuntime {
 				paramBag[key] = evalExpr(ex, env);
 			}
 			const ar = await Promise.resolve(
-				def.run(paramBag, { kernel: k, preview: this.previewKernel(), model: model, derived: this.opts.derived }),
+				def.run(paramBag, {
+					kernel: k,
+					preview: this.previewKernel(),
+					model: model,
+					views: this.opts.views,
+					activeViewId: this.opts.activeViewId ?? null,
+				}),
 			);
 			if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
 			diff = ar.diff ?? EMPTY_MODEL_DIFF;
@@ -3875,7 +3908,7 @@ export class InteractionRuntime {
 		}
 		const inverse = applyModelDiff(model, diff);
 		const archiveContext = this.cloneCtx(this.sm.getContext());
-		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.opts.derived, this.previewKernel());
+		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.opts.views, this.previewKernel());
 		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
 		this.lastResponse = res;
 		this.snapUndoStack.length = 0;
@@ -3914,11 +3947,11 @@ export async function runSelectionOperationInteraction(
 	if (!defn) throw new Error(`Not a selection operation interaction: ${interactionId}`);
 	const spec = loadSpatialInteraction(interactionId);
 	if (!spec) throw new Error(`Unknown interaction: ${interactionId}`);
-	const derived =
-		opts.derived ??
-		(selectionOperationUsesViewObjects(defn) ? new ExtensionViewService(opts.kernel) : undefined);
-	if (derived) await derived.refresh(opts.document.model);
-	const rt = createInteractionRuntime(spec, { ...opts, derived });
+	const views =
+		opts.views ??
+		(selectionOperationUsesViewObjects(defn) ? ExtensionViewService.forKernel(opts.kernel) : undefined);
+	if (views) await views.refresh(opts.document.model, opts.activeViewId ?? qualifiedViewId("energy", "energy"));
+	const rt = createInteractionRuntime(spec, { ...opts, views });
 	const seedTargets = opts.seedTargets ?? [];
 	await rt.send({ kind: "start", targets: seedTargets, modifiers: {} });
 	const response = rt.getSnapshot().lastResponse;
@@ -4073,6 +4106,7 @@ const SELECTION_OPERATION_INTERACTION_DEFS = [
 	{ id: "selection.selectCells", label: "SelectCells", key: "xc", operation: "selectKinds", kinds: ["cell"] },
 	{ id: "selection.selectCellComplexes", label: "SelectCellComplexes", key: "xl", operation: "selectKinds", kinds: ["cellComplex"] },
 	{ id: "selection.selectClusters", label: "SelectClusters", key: "xk", operation: "selectKinds", kinds: ["cluster"] },
+	{ id: "selection.selectObjects", label: "SelectObjects", key: "xo", operation: "selectKinds", kinds: ["object"] },
 ] as const satisfies readonly SelectionOperationInteractionDef[];
 
 function buildSelectionOperationInteractionJson(defn: SelectionOperationInteractionDef): BuiltinInteractionFixture {
@@ -4343,14 +4377,7 @@ const __spatialCoreTestKernel = import.meta.vitest
 	: null;
 
 if (import.meta.vitest) {
-	const {
-		BrepjsKernel,
-		computePartViewsFromModel,
-		computeSurfaceViewsFromModel,
-		computeVolumeViewsFromModel,
-		preciseSpatialKernelMath,
-	} =
-		__spatialCoreTestKernel!;
+	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialCoreTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -4480,477 +4507,54 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core derived views", () => {
-		it("merges coplanar faces into one surface", () => {
-			const model = new Model();
-			const v0 = "v0" as VertexRef;
-			const v1 = "v1" as VertexRef;
-			const v2 = "v2" as VertexRef;
-			const v3 = "v3" as VertexRef;
-			const e0 = "e0" as EdgeRef;
-			const e1 = "e1" as EdgeRef;
-			const e2 = "e2" as EdgeRef;
-			const e3 = "e3" as EdgeRef;
-			const w0 = "w0" as WireRef;
-			const w1 = "w1" as WireRef;
-			const f0 = "f0" as FaceRef;
-			const f1 = "f1" as FaceRef;
-			model.vertices[v0] = { id: v0, position: [0, 0, 0] };
-			model.vertices[v1] = { id: v1, position: [1, 0, 0] };
-			model.vertices[v2] = { id: v2, position: [1, 1, 0] };
-			model.vertices[v3] = { id: v3, position: [0, 1, 0] };
-			model.edges[e0] = { id: e0, vertexIds: [v0, v1] };
-			model.edges[e1] = { id: e1, vertexIds: [v1, v2] };
-			model.edges[e2] = { id: e2, vertexIds: [v2, v3] };
-			model.edges[e3] = { id: e3, vertexIds: [v3, v0] };
-			model.wires[w0] = { id: w0, edgeIds: [e0, e1, e2, e3] };
-			model.wires[w1] = { id: w1, edgeIds: [e0, e1, e2, e3] };
-			model.faces[f0] = { id: f0, wireIds: [w0] };
-			model.faces[f1] = { id: f1, wireIds: [w1] };
-			const surfaces = computeSurfaceViewsFromModel(model);
-			expect(surfaces).toHaveLength(1);
-			expect(surfaces[0]!.id).toBe("surface-external-horizontal");
-			expect(surfaces[0]!.sourceFaceIds.sort()).toEqual([f0, f1].sort());
+	describe("@spatial/js-core extension views", () => {
+		it("lists shipped extension views", () => {
+			const views = listExtensionViews();
+			expect(views.some((v) => qualifiedViewId(v.extensionId, v.id) === "energy.energy")).toBe(true);
+			expect(views.some((v) => qualifiedViewId(v.extensionId, v.id) === "structure.structure")).toBe(true);
 		});
-
-		it("omits volumetric intersection when cells only share a face", () => {
-			const model = new Model();
-			const f = "fs" as FaceRef;
-			model.faces[f] = { id: f, wireIds: [] };
-			const s0 = "s0" as ShellRef;
-			const s1 = "s1" as ShellRef;
-			model.shells[s0] = { id: s0, faceIds: [f] };
-			model.shells[s1] = { id: s1, faceIds: [f] };
-			model.cells["c0" as CellRef] = { id: "c0" as CellRef, shellIds: [s0] };
-			model.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [s1] };
-			const parts = computePartViewsFromModel(model);
-			expect(parts.some((p) => p.overlap === "intersection")).toBe(false);
-			expect(parts.filter((p) => p.overlap === "difference").length).toBe(0);
-		});
-
-		it("splits overlapping box faces into four unioned exposure×stance surfaces", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const surfaces = computeSurfaceViewsFromModel(model);
-			expect(surfaces.some((s) => s.exposure === "internal")).toBe(true);
-			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
-			expect(surfaces.length).toBeLessThanOrEqual(4);
-			const topInternal = surfaces.find((s) => s.id === "surface-internal-horizontal");
-			expect(topInternal).toBeDefined();
-			expect((topInternal!.regionPoints?.length ?? 0) >= 4).toBe(true);
-			const xs = topInternal!.regionPoints!.filter((p) => M.abs(p[2] - 2) < 1e-5).map((p) => p[0]);
-			expect(M.maxN(xs) - M.minN(xs)).toBeCloseTo(1, 4);
-			const topExternal = surfaces.find((s) => s.id === "surface-external-horizontal");
-			expect(topExternal).toBeDefined();
-			expect(topExternal!.area).toBeGreaterThan(3);
-		});
-
-		it("splits vertical faces where overlap cuts through the face height", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [4, 1, 0], height: 1 }, cellRef("slab")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 3 }, cellRef("tower")));
-			const surfaces = computeSurfaceViewsFromModel(model);
-			const extVert = surfaces.find((s) => s.id === "surface-external-vertical");
-			expect(extVert).toBeDefined();
-			expect(extVert!.sourceFaceIds.some((id) => String(id).includes("box-tower-face-x0"))).toBe(true);
-			const zs = extVert!.regionPoints!.map((p) => p[2]);
-			expect(M.maxN(zs)).toBeGreaterThan(1 + 1e-5);
-			expect(extVert!.area).toBeGreaterThan(2);
-		});
-
-		it("partitions overlapping box cells by intersection volume", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const parts = computePartViewsFromModel(model);
-			const inter = parts.find((p) => p.overlap === "intersection");
-			expect(inter?.volume).toBeCloseTo(2, 4);
-			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
-			expect(parts.find((p) => p.id === "part-a-difference")?.volume).toBeCloseTo(6, 4);
-			expect(parts.find((p) => p.id === "part-b-difference")?.volume).toBeCloseTo(6, 4);
-		});
-
-		it("L-arrangement three boxes yields cluster intersection and four surfaces", async () => {
+		it("refresh yields energy derived objects for a box model", async () => {
 			const kernel = new BrepjsKernel();
 			const model = new Model();
-			const a = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
-			const b = await kernel.createBoxFromCornersDiff({ cornerA: [1, 0, 0], cornerB: [3, 2, 0], height: 2 });
-			const c = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [2, 3, 0], height: 2 });
-			applyModelDiff(model, a.diff);
-			applyModelDiff(model, b.diff);
-			applyModelDiff(model, c.diff);
-			const derived = new ExtensionViewService(kernel);
-			await derived.refresh(model);
-			const parts = derived.computeParts(model);
-			const surfaces = derived.computeSurfaces(model);
-			expect(parts.filter((p) => p.overlap === "intersection").length).toBeLessThanOrEqual(1);
-			expect(parts.filter((p) => p.overlap === "difference").length).toBe(3);
-			expect(surfaces.length).toBeLessThanOrEqual(4);
-			expect(surfaces.some((s) => s.exposure === "internal")).toBe(true);
-			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
-			const extVert = surfaces.find((s) => s.id === "surface-external-vertical");
-			expect(extVert?.area ?? 0).toBeGreaterThan(0);
-		});
-
-		it("keeps part volumes shape-invariant for two overlapping boxes", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const parts = computePartViewsFromModel(model);
-			const volA = 8;
-			const volB = 8;
-			const inter = parts.find((p) => p.overlap === "intersection");
-			const interVol = inter?.volume ?? 0;
-			const sum = parts.reduce((acc, p) => acc + p.volume, 0);
-			const diffA = parts.find((p) => p.id === "part-a-difference");
-			const diffB = parts.find((p) => p.id === "part-b-difference");
-			expect(interVol).toBeCloseTo(2, 3);
-			expect(sum).toBeGreaterThan(0);
-			expect(sum).toBeLessThan(volA + volB);
-			expect(sum).toBeCloseTo(volA + volB - interVol, 3);
-			expect(diffA?.volume).toBeCloseTo(volA - interVol, 3);
-			expect(diffB?.volume).toBeCloseTo(volB - interVol, 3);
-			expect((diffA?.volume ?? 0) + interVol).toBeCloseTo(volA, 3);
-			expect((diffB?.volume ?? 0) + interVol).toBeCloseTo(volB, 3);
-			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
-			const inInterInterior = (p: Vec3) =>
-				p[0] > interBox.min[0] + 1e-5 &&
-				p[0] < interBox.max[0] - 1e-5 &&
-				p[1] > interBox.min[1] + 1e-5 &&
-				p[1] < interBox.max[1] - 1e-5 &&
-				p[2] > interBox.min[2] + 1e-5 &&
-				p[2] < interBox.max[2] - 1e-5;
-			for (const diff of parts.filter((p) => p.overlap === "difference")) {
-				expect(diff.regionPoints?.every((p) => !inInterInterior(p))).toBe(true);
-			}
-		});
-
-		it("computeParts returns empty until refresh matches model revision", async () => {
-			const kernel = new BrepjsKernel();
-			const model = new Model();
-			const derived = new ExtensionViewService(kernel);
-			expect(derived.computeParts(model)).toEqual([]);
 			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
 			applyModelDiff(model, r.diff);
-			expect(derived.computeParts(model)).toEqual([]);
-			await derived.refresh(model);
-			expect(derived.computeParts(model).length).toBeGreaterThan(0);
+			model.objects.push({
+				id: "object-box" as ObjectRef,
+				typologyId: "builtin.primitive.box",
+				geometryRef: String(r.cell),
+			});
+			const views = ExtensionViewService.forKernel(kernel);
+			await views.refresh(model, "energy.energy");
+			const objs = views.computeObjects(model, "energy.energy");
+			expect(objs.length).toBe(5);
+			expect(objs.some((o) => String(o.id).endsWith(".hull"))).toBe(true);
 		});
-
-		it("derived refresh exposes surfaces and parts at the same model revision", async () => {
+		it("computeObjects empty until refresh matches model revision", async () => {
 			const kernel = new BrepjsKernel();
 			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const derived = new ExtensionViewService(kernel);
-			await derived.refresh(model);
-			const rev = model.revision;
-			expect(derived.computeSurfaces(model).length).toBeGreaterThan(0);
-			expect(derived.computeParts(model).length).toBeGreaterThan(0);
-			expect(derived.computeSurfaces(model).some((s) => s.exposure === "internal")).toBe(true);
-			model.bump();
-			expect(derived.computeSurfaces(model)).toEqual([]);
-			expect(derived.computeParts(model)).toEqual([]);
-			await derived.refresh(model);
-			expect(derived.computeSurfaces(model).length).toBeGreaterThan(0);
-			expect(model.revision).toBe(rev + 1);
-		});
-
-		it("play commit punch through shorter box yields one unioned difference per cell", async () => {
-			const kernel = new BrepjsKernel();
-			const model = new Model();
-			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 });
-			applyModelDiff(model, host.diff);
-			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 });
-			applyModelDiff(model, punch.diff);
-			const derived = new ExtensionViewService(kernel);
-			await derived.refresh(model);
-			const parts = derived.computeParts(model);
-			expect(parts.filter((p) => p.overlap === "intersection")).toHaveLength(1);
-			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
-			expect(parts).toHaveLength(3);
-			expect(parts.find((p) => p.id === `part-${host.cell}-difference`)?.volume).toBeGreaterThan(0);
-			expect(parts.find((p) => p.id === `part-${punch.cell}-difference`)).toBeDefined();
-			expect(parts.filter((p) => String(p.id).includes("difference-before"))).toHaveLength(0);
-			expect(parts.filter((p) => String(p.id).includes("difference-after"))).toHaveLength(0);
-			const hostVol = await kernel.volume(host.cell);
-			const punchVol = await kernel.volume(punch.cell);
-			const interVol = parts.find((p) => p.overlap === "intersection")?.volume ?? 0;
-			const hostDiff = parts.find((p) => p.id === `part-${host.cell}-difference`)?.volume ?? 0;
-			const punchDiff = parts.find((p) => p.id === `part-${punch.cell}-difference`)?.volume ?? 0;
-			expect(hostDiff + interVol).toBeCloseTo(hostVol, 2);
-			expect(punchDiff + interVol).toBeCloseTo(punchVol, 2);
-			expect(parts.reduce((acc, p) => acc + p.volume, 0)).toBeCloseTo(hostVol + punchVol - interVol, 2);
-		});
-
-		it("keeps surface areas shape-invariant for two overlapping boxes", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const surfaces = computeSurfaceViewsFromModel(model);
-			const surfaceArea = surfaces.reduce((acc, s) => acc + s.area, 0);
-			expect(surfaceArea).toBeGreaterThan(44);
-			expect(surfaceArea).toBeLessThanOrEqual(48);
-		});
-
-		it("computeVolumeViewsFromModel unions overlapping box AABBs into one volume", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const volumes = computeVolumeViewsFromModel(model);
-			expect(volumes).toHaveLength(1);
-			expect(volumes[0]!.sourceCellIds.sort()).toEqual(["a", "b"].sort());
-			expect(volumes[0]!.volume).toBeGreaterThan(8);
-			expect(volumes[0]!.volume).toBeLessThan(16);
-		});
-
-		it("computeVolumes returns empty until refresh matches model revision", async () => {
-			const kernel = new BrepjsKernel();
-			const model = new Model();
-			const derived = new ExtensionViewService(kernel);
-			expect(derived.computeVolumes(model)).toEqual([]);
+			const views = ExtensionViewService.forKernel(kernel);
+			expect(views.computeObjects(model, "energy.energy")).toEqual([]);
 			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
 			applyModelDiff(model, r.diff);
-			await derived.refresh(model);
-			expect(derived.computeVolumes(model).length).toBeGreaterThan(0);
+			expect(views.computeObjects(model, "energy.energy")).toEqual([]);
+			await views.refresh(model, "energy.energy");
+			expect(views.computeObjects(model, "energy.energy").length).toBeGreaterThan(0);
 		});
-	});
-
-	describe("@spatial/js-core typologies", () => {
-		it("lists builtin typologies from extension assets", () => {
-			const manifest = builtinExtensionManifest();
-			expect(manifest?.id).toBe("builtin");
-			expect(manifest?.kinds).toContain("typology");
-			const typologies = listBuiltinTypologies();
-			expect(typologies.length).toBe(34);
-			expect(typologies.some((t) => t.id === "builtin.primitive.box")).toBe(true);
-		});
-		it("resolves typology for primitive.box interaction", () => {
-			const t = typologyForInteraction("primitive.box");
-			expect(t?.id).toBe("builtin.primitive.box");
-			expect(t?.interactions).toContain("primitive.box");
-		});
-	});
-
-	describe("@spatial/js-core interactions", () => {
-		const DEFAULT_KERNEL = new BrepjsKernel();
-
-		it("lists stable mnemonic keys for each built-in interaction", () => {
-			const ps = listSpatialInteractions();
-			expect(ps.find((p) => p.id === "entity.createAnchor")?.key).toBe("cr");
-			expect(ps.find((p) => p.id === "selection.selectAll")?.key).toBe("sa");
-			expect(ps.find((p) => p.id === "primitive.box")?.key).toBe("b");
-			expect(ps.length).toBeGreaterThanOrEqual(49);
-			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
-		});
-		it("uses PascalCase interaction labels without spaces", () => {
-			for (const row of listSpatialInteractions()) {
-				expect(row.label).toMatch(/^[A-Z][A-Za-z0-9]*$/);
-				expect(row.label).not.toContain(" ");
-			}
-		});
-		it("commits createAnchor directly from a hit-point selection", async () => {
-			class AnchorKernel extends BrepjsKernel {
-				readonly id = "anchor-test";
-				readonly operations = [] as const;
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-			}
+		it("resolveFaceIds maps face pick and source object", async () => {
+			const kernel = new BrepjsKernel();
 			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const edgeId = Object.keys(model.edges)[0]! as EdgeRef;
-			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { model: model, nodes: [] } });
-			await rt.send({
-				kind: "selection.changed",
-				targets: [{ kind: "edge", id: edgeId, editable: true }],
-				point: [0.4, 0, 0],
-				modifiers: {},
-			});
-			const snap = rt.getSnapshot();
-			expect(snap.state).toBe("committed");
-			expect(snap.lastResponse?.ok).toBe(true);
-			const anchors = Object.values(model.anchors);
-			expect(anchors).toHaveLength(1);
-			expect(anchors[0]!.attachment).toEqual({ kind: "edge", id: edgeId, t: 0.4 });
-			expect(anchors[0]!.position).toEqual([0.4, 0, 0]);
-		});
-		it("commits createAnchor after selecting a host then placing a point", async () => {
-			class AnchorKernel extends BrepjsKernel {
-				readonly id = "anchor-test";
-				readonly operations = [] as const;
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-			}
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const faceId = Object.keys(model.faces)[0]! as FaceRef;
-			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { model: model, nodes: [] } });
-			await rt.send({
-				kind: "selection.changed",
-				targets: [{ kind: "face", id: faceId, editable: true }],
-				modifiers: {},
-			});
-			expect(rt.getSnapshot().state).toBe("placeAnchor");
-			await rt.send({ kind: "pointer.down", point: [0.25, 0.75, 0], modifiers: {} });
-			const snap = rt.getSnapshot();
-			expect(snap.state).toBe("committed");
-			expect(snap.lastResponse?.ok).toBe(true);
-			const anchors = Object.values(model.anchors);
-			expect(anchors).toHaveLength(1);
-			expect(anchors[0]!.attachment.kind).toBe("face");
-			expect(anchors[0]!.attachment.id).toBe(faceId);
-			expect(anchors[0]!.position).toEqual([0.25, 0.75, 0]);
-		});
-		it("resolves interaction tokens by key, id, and label slug", () => {
-			expect(resolveSpatialInteractionKey("b")?.id).toBe("primitive.box");
-			expect(resolveSpatialInteractionKey("cr")?.id).toBe("entity.createAnchor");
-			expect(resolveSpatialInteractionKey("primitive.box")?.key).toBe("b");
-			expect(resolveSpatialInteractionKey("extrudewire")?.id).toBe("feature.extrudeWire");
-			expect(resolveSpatialInteractionKey("d")?.id).toBe("measure.distance");
-			expect(resolveSpatialInteractionKey("curve.line")?.id).toBe("curve.line");
-			expect(resolveSpatialInteractionKey("sa")?.id).toBe("selection.selectAll");
-			expect(resolveSpatialInteractionKey("xv")?.id).toBe("selection.selectVertices");
-		});
-		it("loads every built-in interaction spec", () => {
-			for (const row of listSpatialInteractions()) {
-				const spec = loadSpatialInteraction(row.id);
-				expect(spec?.id).toBe(row.id);
-			}
-		});
-		it("does not expose finalize transitions for scripted point commands", () => {
-			const spec = loadSpatialInteraction("curve.line")!;
-			const labels = spec.machine.states.flatMap((state) => state.on?.flatMap((handler) => handler.transitions.map((t) => t.label)) ?? []);
-			expect(labels).not.toContain("Finalize");
-		});
-		it("auto-finalizes scripted commands when the terminal input is done", async () => {
-			class CommandKernel extends BrepjsKernel {
-				readonly id = "command";
-				readonly operations = [] as const;
-				lastCmd: Record<string, unknown> | null = null;
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-				async executeCommandDiff(commandId: string, params: Record<string, unknown>) {
-					this.lastCmd = params;
-					return { diff: EMPTY_MODEL_DIFF };
-				}
-			}
-			const spec = loadSpatialInteraction("curve.arc")!;
-			const kernel = new CommandKernel();
-			const rt = createInteractionRuntime(spec, { kernel, document: { model: new Model(), nodes: [] } });
-			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
-			await rt.send({ kind: "pointer.down", point: [2, 0, 0] as Vec3, modifiers: {} });
-			await rt.send({ kind: "pointer.down", point: [0, 2, 0] as Vec3, modifiers: {} });
-			const snap = rt.getSnapshot();
-			expect(snap.state).toBe("committed");
-			expect(snap.lastResponse?.ok).toBe(true);
-			expect(kernel.lastCmd?.center).toEqual([0, 0, 0]);
-			expect(kernel.lastCmd?.start).toEqual([2, 0, 0]);
-			expect(kernel.lastCmd?.end).toEqual([0, 2, 0]);
-		});
-		it("abortActiveInteractionSession hard-resets an in-progress session", async () => {
-			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-abort";
-				readonly operations = [] as const;
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-				async executeCommandDiff() {
-					return { diff: EMPTY_MODEL_DIFF };
-				}
-			}
-			const spec = loadSpatialInteraction("curve.line")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { model: new Model(), nodes: [] } });
-			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
-			expect(rt.getSnapshot().capabilities.canCancel).toBe(true);
-			expect(abortActiveInteractionSession(rt)).toBe(true);
-			const snap = rt.getSnapshot();
-			expect(snap.state).toBe(spec.machine.initial);
-			expect(snap.capabilities.canCancel).toBe(false);
-			expect(abortActiveInteractionSession(rt)).toBe(false);
-		});
-		it("collectTargetVertices expands face selection to boundary vertices", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
+			applyModelDiff(model, r.diff);
+			const views = ExtensionViewService.forKernel(kernel);
 			const faceId = Object.keys(model.faces)[0]!;
-			const vIds = collectTargetVertices(model, [{ kind: "face", id: faceId, editable: true }]);
-			expect(vIds.size).toBe(4);
-		});
-		it("uses initial selection to skip selection-first command states", async () => {
-			class CommandKernel extends BrepjsKernel {
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-				async executeCommandDiff() {
-					return { diff: EMPTY_MODEL_DIFF };
-				}
-			}
-			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, {
-				kernel: new CommandKernel() as unknown as SpatialKernel,
-				document: { model: new Model(), nodes: [] },
+			expect(views.resolveFaceIds(model, "face", faceId).length).toBeGreaterThan(0);
+			model.objects.push({
+				id: "object-box" as ObjectRef,
+				typologyId: "builtin.primitive.box",
+				geometryRef: String(r.cell),
 			});
-			await rt.send({
-				kind: "start",
-				targets: [{ kind: "cell", id: "c0", editable: true }],
-				modifiers: {},
-			});
-			const snap = rt.getSnapshot();
-			expect(snap.state).toBe("point_to_move_from");
-			expect((snap.context.targets as SelectionTarget[]).map((target) => target.id)).toEqual(["c0"]);
+			expect(views.resolveFaceIds(model, "object", "object-box").length).toBeGreaterThan(0);
 		});
-		it("keeps transform.move in object selection until confirm", async () => {
-			class CommandKernel extends BrepjsKernel {
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-				async executeCommandDiff() {
-					return { diff: EMPTY_MODEL_DIFF };
-				}
-			}
-			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, {
-				kernel: new CommandKernel() as unknown as SpatialKernel,
-				document: { model: new Model(), nodes: [] },
 			});
 			await rt.send({
 				kind: "selection.changed",
@@ -5404,14 +5008,16 @@ if (import.meta.vitest) {
 				applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
 				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 				const seed = selectionSeedTargetsForOperation(defn.operation);
-				const derived = selectionOperationUsesViewObjects(defn) ? new ExtensionViewService(kernel) : undefined;
-				if (derived) await derived.refresh(model);
+				const views = selectionOperationUsesViewObjects(defn) ? ExtensionViewService.forKernel(kernel) : undefined;
+				const activeViewId = views ? qualifiedViewId("energy", "energy") : null;
+				if (views) await views.refresh(model, activeViewId);
 				const params = selectionApplyParamsForInteraction(defn, seed);
-				const headless = await runSelectionApply(params, { kernel, preview: M, model: model, derived });
+				const headless = await runSelectionApply(params, { kernel, preview: M, model: model, views, activeViewId });
 				const interactive = await runSelectionOperationInteraction(defn.id, {
 					kernel,
 					document: { model: model, nodes: [] },
-					derived,
+					views,
+					activeViewId,
 					seedTargets: seed,
 				});
 				expect(interactive.targets).toEqual(headless);
@@ -5581,15 +5187,6 @@ if (import.meta.vitest) {
 				}
 				async tessellate(): Promise<MeshTransfer> {
 					return stubMesh;
-				}
-				async computeSurfaceViews(model: Model): Promise<SurfaceView[]> {
-					return computeSurfaceViewsFromModel(model);
-				}
-				async computePartViews(model: Model): Promise<PartView[]> {
-					return computePartViewsFromModel(model);
-				}
-				async computeVolumeViews(model: Model): Promise<VolumeView[]> {
-					return computeVolumeViewsFromModel(model);
 				}
 			}
 			const spec = buildBoxInteractionSpec();
@@ -6044,7 +5641,7 @@ if (import.meta.vitest) {
 			defn: SelectionOperationInteractionDef,
 			targets: readonly SelectionTarget[],
 			model: Model,
-			derived?: ExtensionViewService,
+			views?: ExtensionViewService,
 		): void => {
 			switch (defn.operation) {
 				case "deselectAll":
@@ -6063,11 +5660,9 @@ if (import.meta.vitest) {
 				case "selectKinds": {
 					const kinds = defn.kinds ?? [];
 					expect(targets.every((t) => kinds.includes(t.kind))).toBe(true);
-					const expected = collectGeometrySelectionTargets(model, kinds, derived ?? null);
+					const expected = collectGeometrySelectionTargets(model, kinds, views ?? null, activeViewId ?? null);
 					expect(targets).toEqual(expected);
-					if (defn.id === "selection.selectVolumes") {
-						expect(targets.every((t) => t.kind === "volume")).toBe(true);
-					} else if (
+					if (
 						defn.id === "selection.selectAnchors" ||
 						defn.id === "selection.selectCellComplexes" ||
 						defn.id === "selection.selectClusters"
@@ -6086,7 +5681,7 @@ if (import.meta.vitest) {
 			readonly fixture: InteractionE2EFixtureKind;
 			readonly steps: readonly InteractionEvent[];
 			readonly seedBox?: boolean;
-			readonly derived?: boolean;
+			readonly useView?: boolean;
 			readonly spec?: InteractionSpec;
 			readonly assert?: (ctx: {
 				readonly snap: InteractionSnapshot;
@@ -6094,7 +5689,7 @@ if (import.meta.vitest) {
 				readonly before: ReturnType<typeof entityCounts>;
 				readonly after: ReturnType<typeof entityCounts>;
 				readonly views?: ExtensionViewService;
-	readonly activeViewId?: string | null;
+				readonly activeViewId?: string | null;
 			}) => void;
 		}[] = [
 			{
@@ -6473,11 +6068,11 @@ if (import.meta.vitest) {
 				id: defn.id,
 				fixture: "empty" as const,
 				seedBox: true,
-				derived: selectionOperationUsesViewObjects(defn as SelectionOperationInteractionDef),
+				useView: selectionOperationUsesViewObjects(defn as SelectionOperationInteractionDef),
 				steps: [{ kind: "start", targets: selectionSeedTargetsForOperation(defn.operation), modifiers: MOD }] as const,
-				assert: ({ snap, model, derived }: { snap: InteractionSnapshot; model: Model; derived?: ExtensionViewService }) => {
+				assert: ({ snap, model, views, activeViewId }) => {
 					expect(isEmptyModelDiff(snap.lastResponse?.diff ?? EMPTY_MODEL_DIFF)).toBe(true);
-					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), model, derived);
+					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), model, views, activeViewId);
 				},
 			})),
 		];
@@ -6493,13 +6088,15 @@ if (import.meta.vitest) {
 			const model = topoFromFixture(row.fixture);
 			if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(model);
 			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-			const derived = row.derived ? new ExtensionViewService(kernel) : undefined;
-			if (derived) await derived.refresh(model);
+			const views = row.useView ? ExtensionViewService.forKernel(kernel) : undefined;
+			const activeViewId = views ? qualifiedViewId("energy", "energy") : null;
+			if (views) await views.refresh(model, activeViewId);
 			const before = entityCounts(model);
 			const rt = createInteractionRuntime(spec!, {
 				kernel,
 				document: { model: model, nodes: [] },
-				derived,
+				views,
+				activeViewId,
 			});
 			for (const step of row.steps) {
 				await rt.send(step);
@@ -6511,7 +6108,7 @@ if (import.meta.vitest) {
 			expect(snap.state, row.id).toBe("committed");
 			expect(snap.lastResponse?.ok, row.id).toBe(true);
 			expect(snap.lastResponse?.errors ?? [], row.id).toEqual([]);
-			row.assert?.({ snap, model, before, after: entityCounts(model), derived });
+			row.assert?.({ snap, model, before, after: entityCounts(model), views, activeViewId });
 		});
 	});
 }

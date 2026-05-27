@@ -1,0 +1,13 @@
+{
+	"schema": "spatial.typology/v1",
+	"id": "energy.energy.hull",
+	"version": "1.0.0",
+	"label": "Hull",
+	"description": "All external surfaces joined to a closed shell.",
+	"actions": [],
+	"interactions": [],
+	"properties": [
+		"builtin.volume",
+		"energy.heatedvolume"
+	]
+}

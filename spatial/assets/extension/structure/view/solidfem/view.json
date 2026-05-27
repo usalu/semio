@@ -7,11 +7,7 @@
   "allows": [
     "solids"
   ],
-  "derivedObjects": [
-    {
-      "id": "solidelement",
-      "label": "Solid Element",
-      "description": "Derived structural element represented with solid mesh."
-    }
+  "typologies": [
+    "structure.solidfem.solidelement"
   ]
 }

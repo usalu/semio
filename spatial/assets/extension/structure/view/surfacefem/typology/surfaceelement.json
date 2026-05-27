@@ -1,0 +1,9 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.surfacefem.surfaceelement",
+  "version": "1.0.0",
+  "label": "Surface Element",
+  "description": "Derived structural element represented with surface mesh.",
+  "actions": [],
+  "interactions": []
+}

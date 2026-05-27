@@ -4,37 +4,13 @@
   "version": "1.0.0",
   "label": "Structure",
   "description": "Computed views used for structural analysis.",
-  "derivedObjects": [
-    {
-      "id": "reinforcedconcretecolumn",
-      "label": "Reinforced Concrete Column"
-    },
-    {
-      "id": "onewayreinforcedconcreteslab",
-      "label": "One Way Reinforced Concrete Slab"
-    },
-    {
-      "id": "reinforcedconcreteinternalwall",
-      "label": "Reinforced Concrete Internal Wall"
-    },
-    {
-      "id": "reinforcedconcreteexternalwall",
-      "label": "Reinforced Concrete External Wall"
-    },
-    {
-      "id": "lineelement",
-      "label": "Line Element",
-      "description": "Derived structural element represented with line mesh."
-    },
-    {
-      "id": "surfaceelement",
-      "label": "Surface Element",
-      "description": "Derived structural element represented with surface mesh."
-    },
-    {
-      "id": "solidelement",
-      "label": "Solid Element",
-      "description": "Derived structural element represented with solid mesh."
-    }
+  "typologies": [
+    "structure.structure.reinforcedconcretecolumn",
+    "structure.structure.onewayreinforcedconcreteslab",
+    "structure.structure.reinforcedconcreteinternalwall",
+    "structure.structure.reinforcedconcreteexternalwall",
+    "structure.structure.lineelement",
+    "structure.structure.surfaceelement",
+    "structure.structure.solidelement"
   ]
 }

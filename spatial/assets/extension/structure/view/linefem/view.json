@@ -7,11 +7,7 @@
   "allows": [
     "lines"
   ],
-  "derivedObjects": [
-    {
-      "id": "lineelement",
-      "label": "Line Element",
-      "description": "Derived structural element represented with line mesh."
-    }
+  "typologies": [
+    "structure.linefem.lineelement"
   ]
 }

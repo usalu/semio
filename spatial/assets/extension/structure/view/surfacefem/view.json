@@ -7,11 +7,7 @@
   "allows": [
     "surfaces"
   ],
-  "derivedObjects": [
-    {
-      "id": "surfaceelement",
-      "label": "Surface Element",
-      "description": "Derived structural element represented with surface mesh."
-    }
+  "typologies": [
+    "structure.surfacefem.surfaceelement"
   ]
 }

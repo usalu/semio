@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🔍 `@spatial/js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `CALL view.<viewId>.<derivedObjectId>({})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query`. */
+/** @emoji 🔍 `@spatial/js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `CALL view.<extension>.<view>.<derivedObjectId>({})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -9,7 +9,8 @@ import {
 	ActionRegistry,
 	type ActionResult,
 	Model,
-	DerivedViewService,
+	ExtensionViewService,
+	qualifiedViewId,
 	applyModelDiff,
 	cellRef,
 	isSelectionConstructActionId,
@@ -528,17 +529,7 @@ export interface ReturnClauseAst {
 
 export type ConstructClauseAst = MatchClauseAst | WithClauseAst | CallClauseAst | UnwindClauseAst;
 
-const ANALYTIC_TYPOLOGIES = new Set<string>([
-	"builtin.derived.surface",
-	"builtin.derived.part",
-	"builtin.derived.volume",
-]);
-
-const ANALYTIC_CALL_HINT: Record<"surface" | "part" | "volume", string> = {
-	surface: "CALL view.analytic.surfaces({}) YIELD data AS surfaces UNWIND surfaces AS s",
-	part: "CALL view.analytic.parts({}) YIELD data AS parts UNWIND parts AS p",
-	volume: "CALL view.analytic.volumes({}) YIELD data AS volumes UNWIND volumes AS v",
-};
+const VIEW_OBJECT_TYPOLOGY_PREFIX = "energy.derived.";
 
 function assertConstructAst(ast: ConstructAst): void {
 	for (const cl of ast.clauses) {
@@ -550,9 +541,8 @@ function assertConstructAst(ast: ConstructAst): void {
 					throw new Error(`unknown node label ${el.label}; use Object {typology: '…'}`);
 				}
 				const typology = el.props?.typology;
-				if (typeof typology === "string" && ANALYTIC_TYPOLOGIES.has(typology)) {
-					const key = typology.split(".").pop() as "surface" | "part" | "volume";
-					throw new Error(`${typology} is analytic; use ${ANALYTIC_CALL_HINT[key]}`);
+				if (typeof typology === "string" && typology.includes(".derived.")) {
+					throw new Error(`${typology} is view-derived; use CALL view.<extension>.<viewId>.<derivedObjectId>({})`);
 				}
 			}
 		}
@@ -1229,45 +1219,32 @@ function rowVarsToEnv(
 	model: Model,
 	meta: import("@spatial/js-core").AttributeStore,
 	preview: SpatialKernel,
-	derived?: import("@spatial/js-core").DerivedViewService,
+	views?: ExtensionViewService,
+	activeViewId?: string | null,
 ): ExprEnv {
 	const vars: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(row)) {
 		if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
 		else vars[k] = v;
 	}
-	return { context: {}, vars, model, metadata: meta, derived, preview };
+	return { context: {}, vars, model, metadata: meta, views, activeViewId, preview };
 }
 
-/** @emoji 🪞 Runs `CALL view.<viewId>.<derivedObjectId>({})` against kernel derived-view APIs. */
+/** @emoji 🪞 Runs `CALL view.<extensionId>.<viewId>.<derivedObjectId>({})` via `ExtensionViewService`. */
 async function runViewDerivedCall(actionId: string, ctx: ConstructQueryContext): Promise<ActionResult> {
 	const parts = actionId.split(".");
-	if (parts.length !== 3 || parts[0] !== "view") {
-		throw new Error(`expected view.<viewId>.<derivedObjectId>, got ${actionId}`);
+	if (parts[0] !== "view" || parts.length !== 4) {
+		throw new Error(`expected view.<extensionId>.<viewId>.<derivedObjectId>, got ${actionId}`);
 	}
-	const viewId = parts[1]!;
-	const derivedObjectId = parts[2]!;
-	const { model, kernel, derived } = ctx;
-	const load = async (): Promise<unknown> => {
-		if (derivedObjectId === "surfaces") {
-			const cached = derived?.computeSurfaces(model);
-			if (cached && cached.length > 0) return cached;
-			return Promise.resolve(kernel.computeSurfaceViews(model));
-		}
-		if (derivedObjectId === "parts") {
-			const cached = derived?.computeParts(model);
-			if (cached && cached.length > 0) return cached;
-			return Promise.resolve(kernel.computePartViews(model));
-		}
-		if (derivedObjectId === "volumes") {
-			const cached = derived?.computeVolumes(model);
-			if (cached && cached.length > 0) return cached;
-			return Promise.resolve(kernel.computeVolumeViews(model));
-		}
-		throw new Error(`unknown view derived object ${derivedObjectId}`);
-	};
-	if (viewId === "analytic") return { data: await load() };
-	throw new Error(`unknown view derived call ${actionId}`);
+	const qid = qualifiedViewId(parts[1]!, parts[2]!);
+	const derivedObjectId = parts[3]!;
+	const views = ctx.views ?? ExtensionViewService.forKernel(ctx.kernel);
+	await views.refresh(ctx.model, qid);
+	const rows = views.computeObjects(ctx.model, qid);
+	if (derivedObjectId === "objects") return { data: rows };
+	const hit = rows.find((o) => String(o.id) === `${qid}.${derivedObjectId}`);
+	if (!hit) throw new Error(`unknown view derived object ${derivedObjectId} in ${qid}`);
+	return { data: hit };
 }
 
 function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
@@ -1332,7 +1309,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				for (const row of expandPattern(ctx.model, ctx.kernel, index, st.pattern)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views, ctx.activeViewId));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1342,21 +1319,21 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "with") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived);
+				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
 				const out: Row = { ...r };
 				for (const p of st.projections) {
 					const v = evalExpr(p.expr, env);
 					if (p.alias) out[p.alias] = v;
 				}
 				if (st.where) {
-					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived));
+					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views));
 					if (!ok) continue;
 				}
 				next.push(out);
 			}
 			rows = next;
 		} else if (st.kind === "call") {
-			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 3;
+			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 4;
 			const def = viewDerived ? null : ctx.actions.get(st.actionId);
 			if (!viewDerived && !def) throw new Error(`unknown action ${st.actionId}`);
 			const next: Row[] = [];
@@ -1377,7 +1354,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 								kernel: ctx.kernel,
 								preview: ctx.kernel,
 								model: ctx.model,
-								derived: ctx.derived,
+								views: ctx.views,
 							}),
 						);
 				const nr = { ...r };
@@ -1391,13 +1368,13 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "unwind") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived);
+				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
 				const src = evalExpr(st.source, env);
 				if (!Array.isArray(src)) continue;
 				for (const item of src) {
 					const merged: Row = { ...r, [st.alias]: item };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views, ctx.activeViewId));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1414,7 +1391,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 	let out = rows;
 	if (ret.limit !== undefined) out = out.slice(0, ret.limit);
 	for (const r of out) {
-		const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.derived);
+		const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
 		const o: ConstructQueryRow = {};
 		for (let i = 0; i < ret.projections.length; i++) {
 			const p = ret.projections[i]!;
@@ -1471,7 +1448,7 @@ export class ConstructEngine {
 const __spatialQueryTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
-	const { BrepjsKernel, computeSurfaceViewsFromModel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
+	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -1490,9 +1467,6 @@ if (import.meta.vitest) {
 		}
 		override async tessellate() {
 			return { positions: new Float32Array(), indices: new Uint32Array() };
-		}
-		override async computeSurfaceViews(model: Model) {
-			return computeSurfaceViewsFromModel(model);
 		}
 	}
 
@@ -1537,12 +1511,12 @@ if (import.meta.vitest) {
 			}
 		});
 		it("parses CALL YIELD with AS alias", () => {
-			const a = parseConstruct("CALL view.analytic.surfaces({}) YIELD data AS surfaces");
+			const a = parseConstruct("CALL view.energy.energy.hull({}) YIELD data AS hull");
 			const c = a.clauses[0];
 			expect(c?.kind).toBe("call");
 			if (c?.kind === "call") {
-				expect(c.actionId).toBe("view.analytic.surfaces");
-				expect(c.yieldItems[0]).toEqual({ key: "data", alias: "surfaces" });
+				expect(c.actionId).toBe("view.energy.energy.hull");
+				expect(c.yieldItems[0]).toEqual({ key: "data", alias: "hull" });
 			}
 		});
 		it("parses UNWIND with WHERE", () => {
@@ -1554,9 +1528,9 @@ if (import.meta.vitest) {
 			expect(() => parseConstruct("MATCH (m:Model) RETURN m.id")).toThrow(/unknown node label Model/);
 			expect(() => parseConstruct("MATCH (s:Surface) RETURN s.id")).toThrow(/unknown node label Surface/);
 		});
-		it("rejects MATCH on analytic typology property", () => {
-			expect(() => parseConstruct("MATCH (o:Object {typology: 'builtin.derived.surface'}) RETURN o.id")).toThrow(
-				/builtin\.derived\.surface is analytic/,
+		it("rejects MATCH on view-derived typology property", () => {
+			expect(() => parseConstruct("MATCH (o:Object {typology: 'energy.derived.hull'}) RETURN o.id")).toThrow(
+				/is view-derived/,
 			);
 		});
 	});
@@ -1617,48 +1591,29 @@ if (import.meta.vitest) {
 			expect(pair).toBeDefined();
 		});
 
-		it("Surface metadata filter via CALL UNWIND WHERE", async () => {
+		it("CALL view.energy.energy.hull returns derived hull object", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
-			const external = (await kernel.computeSurfaceViews(model)).find((s) => s.exposure === "external");
-			expect(external).toBeDefined();
-			const res = await runConstruct(
-				"CALL view.analytic.surfaces({}) YIELD data AS surfaces UNWIND surfaces AS s WHERE s.exposure = 'external' RETURN s.id",
-				{
-					model: model,
-					kernel,
-					actions: ActionRegistry.withBuiltins(),
-				},
-			);
-			expect(res.rows.some((r) => String(r.c0) === String(external!.id))).toBe(true);
+			const res = await runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
+				model: model,
+				kernel,
+				actions: ActionRegistry.withBuiltins(),
+			});
+			const row = res.rows[0]?.data as { id: string; label: string }[] | undefined;
+			expect(Array.isArray(row)).toBe(true);
+			expect(row!.some((o) => String(o.id).endsWith(".hull"))).toBe(true);
 		});
 
-		it("CALL view.analytic.parts UNWIND returns overlap intersection", async () => {
+		it("CALL view.energy.energy.hulls UNWIND lists all energy derived slots", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct(
-				"CALL view.analytic.parts({}) YIELD data AS parts UNWIND parts AS p WHERE p.overlap = 'intersection' RETURN p.id",
+				"CALL view.energy.energy.hulls({}) YIELD data AS hulls UNWIND hulls AS h RETURN h.id",
 				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
 			);
-			expect(res.rows.length).toBeGreaterThan(0);
-			expect(res.rows.every((r) => String(r.c0).includes("intersection") || r.c0 !== undefined)).toBe(true);
-		});
-
-		it("CALL view.analytic.volumes UNWIND returns one union volume for overlapping boxes", async () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const kernel = new QueryTestKernel();
-			const res = await runConstruct(
-				"CALL view.analytic.volumes({}) YIELD data AS volumes UNWIND volumes AS v RETURN v.id, v.volume",
-				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
-			);
-			expect(res.rows.length).toBe(1);
-			expect(Number(res.rows[0]?.c1)).toBeGreaterThan(8);
+			expect(res.rows.length).toBeGreaterThanOrEqual(5);
 		});
 
 		it("unknown CALL action throws", async () => {
@@ -1734,21 +1689,23 @@ if (import.meta.vitest) {
 			expect(targets?.every((t) => t.kind === "vertex")).toBe(true);
 		});
 
-		it("CALL selection.selectSurfaces YIELD targets with derived refresh", async () => {
+		it("CALL selection.selectObjects YIELD targets with extension view refresh", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const kernel = new QueryTestKernel();
-			const derived = new DerivedViewService(kernel);
-			await derived.refresh(model);
-			const res = await runConstruct("CALL selection.selectSurfaces({}) YIELD targets", {
+			const views = ExtensionViewService.forKernel(kernel);
+			const activeViewId = qualifiedViewId("energy", "energy");
+			await views.refresh(model, activeViewId);
+			const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {
 				model: model,
 				kernel,
 				actions: ActionRegistry.withBuiltins(),
-				derived,
+				views,
+				activeViewId,
 			});
 			const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
 			expect(targets!.length).toBeGreaterThan(0);
-			expect(targets!.every((t) => t.kind === "surface")).toBe(true);
+			expect(targets!.every((t) => t.kind === "object")).toBe(true);
 		});
 	});
 }

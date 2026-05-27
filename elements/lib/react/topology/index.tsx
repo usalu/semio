@@ -753,7 +753,7 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
 		onSceneSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
 		onBoardCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
 		onSceneCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
-		onSceneLodChange: (lod) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneLodTag", { lod }),
+		onSceneLodChange: undefined,
 		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
 		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
 	});
@@ -786,7 +786,7 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 		onSceneSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
 		onBoardCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
 		onSceneCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
-		onSceneLodChange: (lod) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneLodTag", { lod }),
+		onSceneLodChange: undefined,
 		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
 		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
 	});

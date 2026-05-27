@@ -230,9 +230,8 @@ export class TopologyPlayShellController extends Controller {
 			}
 			case "setSceneLodTag": {
 				const lod = (args as { lod: number }).lod;
-				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0 && this.sceneLodTag !== lod) {
+				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
 					this.sceneLodTag = lod;
-					this.sceneLodSlider = sliderValueFromLod(lod);
 				} else changed = false;
 				break;
 			}
