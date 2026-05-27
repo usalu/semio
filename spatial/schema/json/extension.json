@@ -15,7 +15,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["action", "attribute", "interaction", "property", "typology", "view"]
+        "enum": ["action", "attribute", "interaction", "property", "transformation", "typology"]
       },
       "minItems": 1
     }

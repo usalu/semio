@@ -3,9 +3,11 @@
 	"id": "structure",
 	"version": "1.0.0",
 	"label": "Structure",
-	"description": "Structural analysis extension assets.",
+	"description": "Structural analysis base attribute assets.",
 	"kinds": [
-		"typology",
-		"view"
+		"attribute",
+		"property",
+		"transformation",
+		"typology"
 	]
 }

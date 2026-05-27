@@ -1,0 +1,19 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "classic",
+  "version": "1.0.0",
+  "label": "Structure Classic",
+  "description": "Derives structure classic typology objects from builtin geometry.",
+  "source": {
+    "modelDefinition": "builtin"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "typologies": [
+    "structure.structure.reinforcedconcretecolumn",
+    "structure.structure.onewayreinforcedconcreteslab",
+    "structure.structure.reinforcedconcreteinternalwall",
+    "structure.structure.reinforcedconcreteexternalwall"
+  ]
+}

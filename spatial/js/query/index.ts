@@ -564,6 +564,9 @@ export function resolveActionYield(result: ActionResult, key: string): unknown {
 			const data = result.data as { targets?: unknown } | undefined;
 			return data?.targets;
 		}
+		if (result.data && typeof result.data === "object" && key in (result.data as object)) {
+			return (result.data as Record<string, unknown>)[key];
+		}
 		return (result as Record<string, unknown>)[key];
 	}
 	const [head, ...rest] = key.split(".");
@@ -1566,6 +1569,24 @@ if (import.meta.vitest) {
 					actions: ActionRegistry.withBuiltins(),
 				}),
 			).rejects.toThrow(/not available in the model-definition runtime/);
+		});
+
+		it("CALL transformation derives energy typology objects from geometry", async () => {
+			const model = new Model();
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+			model.objects["geom-box"] = {
+				id: "geom-box" as import("@spatial/js-core").ObjectRef,
+				typologyId: "builtin.primitive.box",
+				geometryRef: "box",
+			};
+			const res = await runConstruct("CALL aec.building.energy.from_geometry({}) YIELD objects", {
+				model: model,
+				kernel: new QueryTestKernel(),
+				actions: ActionRegistry.withBuiltins(),
+			});
+			const objects = res.rows[0]?.objects as { typologyId: string }[] | undefined;
+			expect(objects?.some((row) => row.typologyId === "energy.energy.hull")).toBe(true);
+			expect(objects?.length).toBe(5);
 		});
 
 		it("unknown CALL action throws", async () => {

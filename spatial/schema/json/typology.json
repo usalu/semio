@@ -4,13 +4,21 @@
   "title": "SpatialTypology",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "version", "label", "actions", "interactions"],
+  "required": ["schema", "id", "version", "label", "primitiveKinds", "actions", "interactions"],
   "properties": {
     "schema": { "const": "spatial.typology/v1" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },
     "description": { "type": "string" },
+    "primitiveKinds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "compSolid", "compound"]
+      },
+      "minItems": 0
+    },
     "actions": { "type": "array", "items": { "type": "string" } },
     "interactions": { "type": "array", "items": { "type": "string" } },
     "properties": { "type": "array", "items": { "type": "string" } },

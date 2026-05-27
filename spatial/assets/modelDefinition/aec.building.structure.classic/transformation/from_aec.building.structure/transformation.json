@@ -1,0 +1,19 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "from_aec.building.structure",
+  "version": "1.0.0",
+  "label": "From Aec Building Structure",
+  "description": "Derives a classic structural object model from an aec.building.structure source model.",
+  "source": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure.classic"
+  },
+  "typologies": [
+    "structure.structure.reinforcedconcretecolumn",
+    "structure.structure.onewayreinforcedconcreteslab",
+    "structure.structure.reinforcedconcreteinternalwall",
+    "structure.structure.reinforcedconcreteexternalwall"
+  ]
+}

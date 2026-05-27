@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "solidfem",
+  "version": "1.0.0",
+  "label": "Solid Fem",
+  "description": "Derives solid FEM typology objects from builtin geometry.",
+  "source": {
+    "modelDefinition": "builtin"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "typologies": [
+    "structure.solidfem.solidelement"
+  ]
+}

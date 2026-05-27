@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.extension/v1",
+  "id": "aec.building.structure.classic",
+  "version": "1.0.0",
+  "label": "Building Structure Classic",
+  "description": "Classic structural model definition assets.",
+  "kinds": [
+    "transformation",
+    "typology"
+  ]
+}
