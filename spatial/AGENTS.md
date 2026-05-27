@@ -12,18 +12,17 @@ An object is an instance of a typology.
 
 ## Attribute
 
-An attribute is attachable authored metadata to geometry.
+An attribute is attachable authored metadata to objects.
 
 ## Property
 
 A property is a derived attribute that is not authored.
 
-# Extension
+# ModelDefinition
 
-An extension is a data-only namespace packaged by `extension.json`. It groups declarative assets such as actions, interactions, views, attributes, and properties. Extensions do not ship executable code; the runtime interprets their data against predefined capabilities.
+An model definition is a data-only namespace packaged by `modelDefinition.json`. It groups declarative assets such as actions, interactions, transformations, attribute definitions, and property definitions. Extensions do not ship executable code; the runtime interprets their data against predefined capabilities.
 
-All concrete actions, interactions, views, attributes, and properties live as JSON extension assets under `spatial/assets/extension`.
-Each extension has `extension.json` manifest.
+All assets are under `spatial/assets/extension`.
 Each view lives in a `<view-id>` folder with a `view.json` file.
 Extension-level typologies are stored in `typology/<categoryFolders..>/<typology-id>.json`.
 Extension-level Actions are stored in `action/<categoryFolders..>/<action-id>.json`. View-level actions are stored in `<view-id>/action/<categoryFolders..>/<action-id>.json`. Same for interactions, attributes and properties.

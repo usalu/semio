@@ -1,0 +1,35 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "builtin.material",
+  "version": "1.0.0",
+  "label": "Material",
+  "description": "Authored material metadata attachable to curve, surface, or solid geometry.",
+  "field": "material",
+  "targets": [
+    "object"
+  ],
+  "value": {
+    "kind": "oneOf",
+    "variants": [
+      {
+        "kind": "string"
+      },
+      {
+        "kind": "record",
+        "keys": {
+          "kind": "string"
+        },
+        "values": {
+          "kind": "string"
+        }
+      }
+    ]
+  },
+  "geometrySelector": {
+    "kinds": [
+      "curve",
+      "object",
+      "solid"
+    ]
+  }
+}

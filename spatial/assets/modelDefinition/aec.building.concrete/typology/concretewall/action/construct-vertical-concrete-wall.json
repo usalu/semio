@@ -1,0 +1,32 @@
+{
+	"schema": "spatial.action/v1",
+	"id": "building.wall.constructVerticalConcreteWall",
+	"version": "1.0.0",
+	"label": "Construct Vertical Concrete Wall",
+	"args": {
+		"height": 2.7,
+		"curve": null
+	},
+	"parameters": {
+		"height": {
+			"kind": "number"
+		},
+		"curve": {
+			"kind": "unknown"
+		}
+	},
+	"steps": [
+		{
+			"op": "kernel.call",
+			"function": "spatial.action.execute",
+			"assignTo": "result"
+		},
+		{
+			"op": "return",
+			"result": {
+				"kind": "var",
+				"name": "result"
+			}
+		}
+	]
+}
