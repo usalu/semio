@@ -3,6 +3,6 @@
   "emoji": "🧭",
   "status": "closed",
   "description": "elements.scene.fixture/v1 extension data in CAD (Z-up); GLB meshes stay glTF Y-up; runtime maps CAD↔Three.js at render boundary.",
-  "summary": "Scene fixtures and extension state use CAD Z-up (x right, y front, z up). Runtime converts CAD↔Three.js at the R3F boundary (sketchpad −90° X); GLB meshes stay glTF Y-up without per-mesh rotation. Nakagin fixture rebaked to CAD; relocate/camera report CAD coords. Fixed vitest @elements/framework-react alias.",
+  "summary": "Scene fixtures use CAD Z-up; runtime CAD↔Three at pose groups (sketchpad −90° X). glTF kit meshes get inner +90° X GlbMeshFrame so file Y-up aligns with CAD object Z-up. Nakagin fixture in CAD; relocate/camera in CAD.",
   "goal": "🎯r2602"
 }

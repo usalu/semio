@@ -1022,18 +1022,9 @@ export function aabbDifferencePieces(cell: Aabb, cutters: readonly Aabb[], volEp
 	}
 	return pieces;
 }
-function solidAabbFromBounds(solid: ValidSolid): Aabb | null {
-	const b = getBounds(solid);
-	if (!b) return null;
-	return { min: [b.xMin, b.yMin, b.zMin], max: [b.xMax, b.yMax, b.zMax] };
-}
 function readVec3(v: unknown): Vec3 | null {
 	if (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number")) return v as unknown as Vec3;
 	return null;
-}
-
-function readNumber(v: unknown): number | null {
-	return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
 function readVec3Array(v: unknown): readonly Vec3[] {

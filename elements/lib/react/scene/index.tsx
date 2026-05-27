@@ -2227,6 +2227,9 @@ export function cadObjectLocalToThreeGroupLocal(
 	const out = worldThree.sub(originThree).applyQuaternion(qThree.invert());
 	return [out.x, out.y, out.z];
 }
+
+/** @emoji 🧭 +90° X: glTF Y-up mesh → CAD object-local Z-up inside the pose group (metabolism kit meshes). */
+export const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
 //#endregion 🧭Coordinates
 
 //#region ­ƒºèHelpers
@@ -2393,6 +2396,11 @@ export interface MeshProps {
 	readonly scale?: number | [number, number, number];
 }
 
+/** @emoji 🧭 Inner group: glTF Y-up mesh geometry → CAD object-local Z-up (fixture pose stays CAD). */
+function GlbMeshFrame(props: { readonly children: ReactNode }) {
+	return <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>{props.children}</group>;
+}
+
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
 export const MeshBody = memo(function MeshBody(props: MeshProps) {
 	const style = props.style ?? DEFAULT_MESH_STYLE;
@@ -2402,18 +2410,20 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 	}
 	const scale = props.scale;
 	return (
-		<Clone
-			object={renderRoot}
-			{...(scale !== undefined
-				? {
-						scale:
-							typeof scale === "number"
-								? ([scale, scale, scale] as [number, number, number])
-								: (scale as [number, number, number]),
-					}
-				: {})}
-			userData={props.userData}
-		/>
+		<GlbMeshFrame>
+			<Clone
+				object={renderRoot}
+				{...(scale !== undefined
+					? {
+							scale:
+								typeof scale === "number"
+									? ([scale, scale, scale] as [number, number, number])
+									: (scale as [number, number, number]),
+						}
+					: {})}
+				userData={props.userData}
+			/>
+		</GlbMeshFrame>
 	);
 });
 
@@ -2422,16 +2432,18 @@ const PlaceholderMesh = memo(function PlaceholderMesh(props: { readonly style: M
 	const meshColor = colors?.meshColor ?? "#cbd5e1";
 	const opacity = colors?.opacity ?? 1;
 	return (
-		<mesh>
-			<boxGeometry args={[1, 1, 1]} />
-			<meshStandardMaterial
-				color={meshColor}
-				metalness={0.05}
-				roughness={0.85}
-				transparent={opacity < 1}
-				opacity={opacity}
-			/>
-		</mesh>
+		<GlbMeshFrame>
+			<mesh>
+				<boxGeometry args={[1, 1, 1]} />
+				<meshStandardMaterial
+					color={meshColor}
+					metalness={0.05}
+					roughness={0.85}
+					transparent={opacity < 1}
+					opacity={opacity}
+				/>
+			</mesh>
+		</GlbMeshFrame>
 	);
 });
 //#endregion ­ƒºèMesh

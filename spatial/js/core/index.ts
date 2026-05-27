@@ -157,9 +157,7 @@ export type EdgeRef = string & { readonly __brand: "EdgeRef" };
 export type WireRef = string & { readonly __brand: "WireRef" };
 export type FaceRef = string & { readonly __brand: "FaceRef" };
 export type ShellRef = string & { readonly __brand: "ShellRef" };
-export type CellRef = string & { readonly __brand: "CellRef" };
-export type CellComplexRef = string & { readonly __brand: "CellComplexRef" };
-export type ClusterRef = string & { readonly __brand: "ClusterRef" };
+export type SolidRef = string & { readonly __brand: "SolidRef" };
 
 /** @emoji 🧱 Kernel-private geometry entity kinds for selection and query adapters. */
 export type EditableEntityKind =
@@ -169,13 +167,11 @@ export type EditableEntityKind =
 	| "wire"
 	| "face"
 	| "shell"
-	| "cell"
-	| "cellComplex"
-	| "cluster";
+	| "solid";
 
-/** @emoji 🪪 Builds a branded `CellRef` from an opaque id string. */
-export function cellRef(id: string): CellRef {
-	return id as CellRef;
+/** @emoji 🪪 Builds a branded `SolidRef` from an opaque id string. */
+export function solidRef(id: string): SolidRef {
+	return id as SolidRef;
 }
 
 }
@@ -186,12 +182,8 @@ type EdgeRef = kernelGeometry.EdgeRef;
 type WireRef = kernelGeometry.WireRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
-type CellRef = kernelGeometry.CellRef;
-type CellComplexRef = kernelGeometry.CellComplexRef;
-type ClusterRef = kernelGeometry.ClusterRef;
+type SolidRef = kernelGeometry.SolidRef;
 type EditableEntityKind = kernelGeometry.EditableEntityKind;
-
-export const cellRef = kernelGeometry.cellRef;
 
 /** @emoji 🧭 Selection kinds: kernel geometry entities or extension view `object` rows. */
 export type ModelEntityKind = EditableEntityKind | "object";
@@ -210,9 +202,7 @@ const MODEL_ENTITY_KINDS = new Set<string>([
 	"wire",
 	"face",
 	"shell",
-	"cell",
-	"cellComplex",
-	"cluster",
+	"solid",
 	"object",
 ]);
 
@@ -928,7 +918,7 @@ export type AnchorAttachment =
 	| { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
 	| { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
 	| { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
-	| { readonly kind: "cell"; readonly id: CellRef; readonly u: number; readonly v: number; readonly w: number };
+	| { readonly kind: "solid"; readonly id: SolidRef; readonly u: number; readonly v: number; readonly w: number };
 
 /** @emoji 🧱 Anchor payload: parametric point attached to kernel geometry. */
 export interface AnchorRecord {
@@ -978,30 +968,18 @@ export interface ShellRecord {
 	readonly faceIds: readonly FaceRef[];
 }
 
-/** @emoji 🧊 Analytic cell solid (`BRepPrimAPI` / `Geom` analog under topologic `Cell`). */
-export type CellSolid =
+/** @emoji 🧊 Analytic solid primitive (`BRepPrimAPI` / `Geom` brepjs payload). */
+export type SolidPrimitive =
 	| { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
 	| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
 	| { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
 	| { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
 
-/** @emoji 🧱 Cell payload: bounded volume via closed shells and/or analytic solid. */
-export interface CellRecord {
-	readonly id: CellRef;
+/** @emoji 🧱 Solid payload: bounded volume via closed shells and/or analytic primitive. */
+export interface SolidRecord {
+	readonly id: SolidRef;
 	readonly shellIds: readonly ShellRef[];
-	readonly solid?: CellSolid;
-}
-
-/** @emoji 🧱 Cell complex payload: member cells. */
-export interface CellComplexRecord {
-	readonly id: CellComplexRef;
-	readonly cellIds: readonly CellRef[];
-}
-
-/** @emoji 🧱 Cluster payload: arbitrary nested membership. */
-export interface ClusterRecord {
-	readonly id: ClusterRef;
-	readonly memberIds: readonly string[];
+	readonly solid?: SolidPrimitive;
 }
 
 export interface KernelGeometryJson {
@@ -1011,9 +989,7 @@ export interface KernelGeometryJson {
 	readonly wires: readonly WireRecord[];
 	readonly faces: readonly FaceRecord[];
 	readonly shells: readonly ShellRecord[];
-	readonly cells: readonly CellRecord[];
-	readonly cellComplexes: readonly CellComplexRecord[];
-	readonly clusters: readonly ClusterRecord[];
+	readonly solids: readonly SolidRecord[];
 }
 }
 
@@ -1025,10 +1001,8 @@ type WireRecord = kernelGeometry.WireRecord;
 type FaceSurface = kernelGeometry.FaceSurface;
 type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
-type CellSolid = kernelGeometry.CellSolid;
-type CellRecord = kernelGeometry.CellRecord;
-type CellComplexRecord = kernelGeometry.CellComplexRecord;
-type ClusterRecord = kernelGeometry.ClusterRecord;
+type SolidPrimitive = kernelGeometry.SolidPrimitive;
+type SolidRecord = kernelGeometry.SolidRecord;
 type KernelGeometryJson = kernelGeometry.KernelGeometryJson;
 
 /** @emoji 🪪 Opaque object id in a model. */
