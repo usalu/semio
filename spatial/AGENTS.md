@@ -76,7 +76,7 @@ An attribute is attachable authored metadata to primitives.
 
 ## ModelSpace
 
-A model space is a container for logically the same model but different model definitions.
+A model space is a container for logically the same but has a different model for every model definitions.
 In a model space, editing models is as much linked as possible.
 When a primitive is edited inside a model space, then all primitives withe same hash, are also edited.
 

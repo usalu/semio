@@ -16,6 +16,7 @@ import {
 	modelDefinitionSelectionEntityKinds,
 	modelDefinitionUsesGeometryPicking,
 	parseModelJson,
+	parseModelSpaceJson,
 	qualifiedTransformationId,
 	resolveModelDefinitionScope,
 	type InteractionSnapshot,
@@ -179,9 +180,12 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 };
 
 type ModelJsonSnapshot = ReturnType<Model["toJSON"]>;
+type ModelSpaceJsonSnapshot = ReturnType<ModelSpace["toJSON"]>;
 
 interface SpatialExchangeBundle {
 	readonly model?: ModelJsonSnapshot;
+	readonly modelSpace?: ModelSpaceJsonSnapshot;
+	readonly activeModelDefinitionId?: string;
 }
 
 interface SaveFilePickerTypeOption {
@@ -210,6 +214,10 @@ interface SavePickerWindow extends Window {
 
 function emptyModelJson(): ModelJsonSnapshot {
 	return new Model().toJSON();
+}
+
+function emptyModelSpaceJson(): ModelSpaceJsonSnapshot {
+	return new ModelSpace().toJSON();
 }
 
 function fileStem(name: string): string {

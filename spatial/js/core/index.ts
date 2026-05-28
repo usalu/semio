@@ -631,8 +631,14 @@ export type EffectSpec =
       readonly op: "interaction.call";
       readonly interaction: string;
       readonly inputs?: Record<string, Expr>;
-      readonly outputs?: Record<string, string>;
+      readonly outputs?: readonly InteractionOutputBinding[];
     };
+
+/** @emoji 📞 Maps host context paths from expressions evaluated against the child session context. */
+export interface InteractionOutputBinding {
+  readonly target: PathTarget;
+  readonly value: Expr;
+}
 
 export interface EventHandlerSpec {
   readonly event: string;
@@ -698,7 +704,12 @@ export interface InteractionSpec {
     readonly outputDataPath?: PathTarget;
     readonly operation: CommitOperationSpec;
   };
+  /** @emoji 📞 `standalone` (default) for hosts; `callable` only via `interaction.call`. */
+  readonly invocation?: InteractionInvocation;
 }
+
+/** @emoji 📞 How hosts may start an interaction (`standalone` vs nested-only `callable`). */
+export type InteractionInvocation = "standalone" | "callable";
 
 /** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction). */
 export interface InteractionSpatialConfig {
@@ -708,13 +719,17 @@ export interface InteractionSpatialConfig {
   readonly heightDragStates?: readonly string[];
   readonly verticalRodStates?: readonly string[];
   readonly heightConfirmState?: string | null;
-  /** @emoji 📞 When true, only invoked via `interaction.call` (excluded from standalone e2e catalog). */
-  readonly callableOnly?: boolean;
 }
 
-/** @emoji 📞 True when an interaction is nested-only (`interaction.callableOnly`). */
+/** @emoji 📞 Resolved invocation for an interaction document. */
+export function interactionInvocation(spec: InteractionSpec): InteractionInvocation {
+  if (spec.invocation === "callable" || spec.invocation === "standalone") return spec.invocation;
+  return "standalone";
+}
+
+/** @emoji 📞 True when an interaction must not be started standalone by hosts. */
 export function isCallableOnlyInteraction(spec: InteractionSpec): boolean {
-  return Boolean(spec.interaction?.callableOnly);
+  return interactionInvocation(spec) === "callable";
 }
 
 function guardNames(spec: InteractionSpec): Set<string> {
@@ -811,6 +826,7 @@ function staticInitialContext(spec: InteractionSpec, transition: TransitionSpec 
   if (!transition?.effects) return context;
   const env: ExprEnv = { context, event: { kind: "start" } };
   for (const effect of transition.effects) {
+    if (effect.op === "interaction.call") continue;
     if (effect.op === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
     else if (effect.op === "clear") clearPathTarget(effect.target, env);
     else if (effect.op === "append") {
@@ -3612,8 +3628,9 @@ export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Prom
 export interface InteractionChildCallSpec {
   readonly interactionId: string;
   readonly inputs?: Record<string, Expr>;
-  readonly outputs?: Record<string, string>;
+  readonly outputs?: readonly InteractionOutputBinding[];
   readonly resumeTarget: string;
+  readonly rollback: { readonly state: string; readonly context: Record<string, unknown> };
 }
 
 /** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
@@ -3727,6 +3744,8 @@ export async function applyTransition(
       const math = preview ?? kernel;
       if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
     }
+    const rollbackState = state;
+    const rollbackContext = structuredClone(context) as Record<string, unknown>;
     let childCall: InteractionChildCallSpec | undefined;
     const resumeTarget = tr.target ?? state;
     for (const eff of tr.effects ?? []) {
@@ -3736,6 +3755,7 @@ export async function applyTransition(
           inputs: eff.inputs,
           outputs: eff.outputs,
           resumeTarget,
+          rollback: { state: rollbackState, context: rollbackContext },
         };
         continue;
       }
