@@ -214,7 +214,7 @@
                           "segments": [
                             {
                               "kind": "field",
-                              "name": "surfaceConstructMode"
+                              "name": "constructMode"
                             }
                           ]
                         }

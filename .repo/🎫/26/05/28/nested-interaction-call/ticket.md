@@ -5,19 +5,27 @@
 
 ## Summary
 
-Interactions can invoke other interactions with the `interaction.call` transition effect. The host statechart pauses (no target advance) until the child completes and commits or the user aborts (Escape). Events, selection accept, undo/redo, and cancel route to the active child. `getSnapshot()` surfaces the child with `nested: { hostInteractionId, hostState, hostContext }`.
+General nested interaction mechanism:
 
-Surface construct mode (`mode.surface`) assigns `constructMode` then calls shared `pick.face`; on success the host resumes at `committed` and runs its construct commit.
+- **`interaction.call` effect** — `interaction`, optional `inputs` (Expr map → child context), optional `outputs` (`PathTarget` + `Expr` bindings evaluated in child context), host pauses until child settles.
+- **Rollback** — `rollback` snapshot captured before transition effects; abort restores it (cancels partial branch).
+- **Resume** — on success, `mergeInteractionCallOutputs` + advance to `resumeTarget`, then normal host commit flow.
+- **`invocation: "callable"`** — excluded from standalone host catalogs; `listSpatialInteractionsForModelDefinition` filters by default.
+- **`InteractionRuntimeOptions.interactions`** + **`resolveInteractionSpecForCall`** — registry override for tests/custom hosts.
+- **Deep nesting** — each runtime delegates `send`/`cancel`/`undo`/`redo`/`query`/`commit` to active child; snapshots delegate with `nested` chain (`outer`).
+- **Shape hubs** — `surface.construct` / `curve.construct` callable interactions; typology construct calls `surface.construct` with full output map.
 
 ## Tests
 
-- `@spatial/js-core`: **298/298**
+- `@spatial/js-core`: **306/306**
 - `@spatial/js-machine-stately`: **4/4**
 
 ## Files
 
 - `spatial/js/core/index.ts`
+- `spatial/js/core/shape-construct-codegen.ts`
 - `spatial/js/core/typology-construct-codegen.ts`
 - `spatial/js/machine-stately/index.ts`
 - `spatial/assets/modelDefinition/spatial.shape/interaction/pickFace.json`
-- `spatial/assets/modelDefinition/aec.building.*/interaction/construct*.json` (12 typology construct interactions regenerated)
+- `spatial/assets/modelDefinition/spatial.shape/interaction/constructSurface.json`
+- `spatial/assets/modelDefinition/spatial.shape/interaction/constructCurve.json`

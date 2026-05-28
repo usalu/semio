@@ -2607,6 +2607,18 @@ There should be a general selection state outside the interaction. Every interac
 
 ---
 
+Add Save/Load functionality.
+Export a _.spatial.json with both "raw": ... and "analytic": ...
+_.raw.spatial.json with just both "raw"
+\*.analytic.spatial.json with just "analytic": ...
+
+On play add buttons with file pickers:
+Save (Selected) which only saves the selected from the current view (raw or analytic)
+Save (View) which saves everything from the current view (raw or analytic)
+Save (All) which saves everything from both views (raw or analytic)
+
+---
+
 Introduce selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso

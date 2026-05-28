@@ -1689,7 +1689,7 @@ if (import.meta.vitest) {
 					actions: ActionRegistry.withModelDefinitionActions(),
 					activeModelDefinitionId: "aec.building.energy",
 				}),
-			).rejects.toThrow(/unknown typology spatial\\.shape\\.primitive\.box for model definition aec\.building\.energy/);
+			).rejects.toThrow(/unknown typology spatial\.shape\.primitive\.box for model definition aec\.building\.energy/);
 		});
 
 		it("MATCH energy typology resolves to object rows", async () => {

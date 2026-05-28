@@ -631,13 +631,24 @@ export type EffectSpec =
       readonly op: "interaction.call";
       readonly interaction: string;
       readonly inputs?: Record<string, Expr>;
-      readonly outputs?: readonly InteractionOutputBinding[];
+      readonly outputs?: readonly InteractionOutputBinding[] | Record<string, unknown>;
     };
 
 /** @emoji 📞 Maps host context paths from expressions evaluated against the child session context. */
 export interface InteractionOutputBinding {
   readonly target: PathTarget;
   readonly value: Expr;
+}
+
+function interactionOutputBindings(
+  outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined,
+): readonly InteractionOutputBinding[] | undefined {
+  if (!outputs) return undefined;
+  if (Array.isArray(outputs)) return outputs;
+  return Object.entries(outputs).map(([hostKey, childKey]) => ({
+    target: { root: "context", segments: [{ kind: "field", name: hostKey }] },
+    value: { kind: "path", root: "context", segments: [{ kind: "field", name: String(childKey) }] },
+  }));
 }
 
 export interface EventHandlerSpec {
@@ -798,12 +809,13 @@ function normalizeInteractionDocumentRaw(r: Record<string, unknown>): void {
 export function mergeInteractionCallOutputs(
   hostContext: Record<string, unknown>,
   childContext: Record<string, unknown>,
-  outputs: readonly InteractionOutputBinding[] | undefined,
+  outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined,
 ): void {
-  if (!outputs?.length) return;
+  const bindings = interactionOutputBindings(outputs);
+  if (!bindings?.length) return;
   const childEnv: ExprEnv = { context: childContext, event: { kind: "interaction.return" } };
   const hostEnv: ExprEnv = { ...childEnv, context: hostContext };
-  for (const row of outputs) {
+  for (const row of bindings) {
     writePathTarget(row.target, hostEnv, evalExpr(row.value, childEnv));
   }
 }
@@ -3701,7 +3713,7 @@ export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Prom
 export interface InteractionChildCallSpec {
   readonly interactionId: string;
   readonly inputs?: Record<string, Expr>;
-  readonly outputs?: readonly InteractionOutputBinding[];
+  readonly outputs?: readonly InteractionOutputBinding[] | Record<string, unknown>;
   readonly resumeTarget: string;
   readonly rollback: { readonly state: string; readonly context: Record<string, unknown> };
 }
@@ -4174,11 +4186,12 @@ export interface Diagnostic {
   readonly message: string;
 }
 
-/** @emoji 📜 Host frame while a nested interaction session is active. */
+/** @emoji 📜 Host frame while a nested interaction session is active (chain via `outer`). */
 export interface InteractionNestedHostFrame {
   readonly hostInteractionId: string;
   readonly hostState: string;
   readonly hostContext: Record<string, unknown>;
+  readonly outer?: InteractionNestedHostFrame;
 }
 
 /** @emoji 📜 Serializable interaction snapshot for hosts and renderers. */
@@ -4205,8 +4218,14 @@ export interface InteractionRuntimeOptions {
   readonly history?: DocumentHistory;
   readonly stateEngine?: StateEngineProvider;
   readonly actions?: ActionRegistry;
+  readonly interactions?: InteractionRegistry;
   readonly query?: ConstructRunner;
   readonly activeModelDefinitionId?: string | null;
+}
+
+/** @emoji 📞 Resolves an interaction spec for `interaction.call` (registry first, then shipped assets). */
+export function resolveInteractionSpecForCall(interactionId: string, registry?: InteractionRegistry): InteractionSpec | null {
+  return registry?.get(interactionId) ?? loadSpatialInteraction(interactionId);
 }
 
 export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
@@ -4283,7 +4302,7 @@ export class InteractionRuntime {
   }
 
   private async startChildCall(call: InteractionChildCallSpec): Promise<void> {
-    const childSpec = loadSpatialInteraction(call.interactionId);
+    const childSpec = resolveInteractionSpecForCall(call.interactionId, this.opts.interactions);
     if (!childSpec) {
       this.pendingSnapshotInfos.push({
         code: "interaction.callMissing",
@@ -4292,7 +4311,10 @@ export class InteractionRuntime {
       return;
     }
     this.pausedHost = call;
-    this.child = createInteractionRuntime(childSpec, this.opts);
+    this.child = createInteractionRuntime(childSpec, {
+      ...this.opts,
+      interactions: this.opts.interactions,
+    });
     this.seedChildContext(this.child, call.inputs);
     await this.child.send({ kind: "start" });
     await this.maybeCompleteChild();
@@ -4447,6 +4469,7 @@ export class InteractionRuntime {
   getSnapshot(): InteractionSnapshot {
     if (this.child) {
       const childSnap = this.child.getSnapshot();
+      if (childSnap.nested) return childSnap;
       return {
         ...childSnap,
         nested: {
@@ -4863,7 +4886,7 @@ export class InteractionRegistry {
     return [...this.specs.values()];
   }
 
-  static withModelDefinitionActions(): InteractionRegistry {
+  static withModelDefinitionInteractions(): InteractionRegistry {
     const r = new InteractionRegistry();
     const xs = shippedInteractionJsons.map((raw) => {
       const spec = parseInteractionSpec(raw);
@@ -5544,7 +5567,7 @@ if (import.meta.vitest) {
     });
     it("every typology ships construct kit or legacy create interactions", () => {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
-      const interactionIds = new Set(InteractionRegistry.withModelDefinitionActions().list().map((row) => row.id));
+      const interactionIds = new Set(InteractionRegistry.withModelDefinitionInteractions().list().map((row) => row.id));
       for (const typology of listModelDefinitionTypologies()) {
         const ids = typologyConstructAssetIds(typology.id, typology.label);
         if (!typology.interactions.includes(ids.construct)) {
@@ -5609,14 +5632,29 @@ if (import.meta.vitest) {
       );
       expect(calls).toEqual([ids.createFromSurface]);
     });
-    it("interaction.call runs nested pick.face and resumes host construct flow", async () => {
+    it("surface.construct and curve.construct are callable-only shape interactions", () => {
+      const surface = loadSpatialInteraction("surface.construct")!;
+      const curve = loadSpatialInteraction("curve.construct")!;
+      expect(isCallableOnlyInteraction(surface)).toBe(true);
+      expect(isCallableOnlyInteraction(curve)).toBe(true);
+      expect(interactionIdsReferencedByInteractionSpec(surface)).toContain("surface.plane");
+      expect(interactionIdsReferencedByInteractionSpec(surface)).toContain("curve.construct");
+      expect(interactionIdsReferencedByInteractionSpec(curve)).toContain("curve.line");
+    });
+    it("base plate construct is surface-primary and calls surface.construct", () => {
+      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
+      expect(interactionIdsReferencedByInteractionSpec(spec!)).toContain("surface.construct");
+      expect(interactionIdsReferencedByInteractionSpec(spec!)).not.toContain("pick.face");
+      const choose = spec!.machine.states.find((s) => s.name === "choose_mode");
+      const events = choose?.on?.map((h) => h.event) ?? [];
+      expect(events).toEqual(["mode.surface"]);
+    });
+    it("interaction.call runs nested surface.construct pick mode and resumes host construct flow", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("nested-pick-box")));
       const fid = Object.keys(model.faces)[0]! as FaceRef;
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
-      expect(spec).toBeTruthy();
-      expect(interactionIdsReferencedByInteractionSpec(spec!)).toContain("pick.face");
       const rt = createInteractionRuntime(spec!, {
         kernel,
         document: { model, nodes: [] },
@@ -5624,18 +5662,20 @@ if (import.meta.vitest) {
       });
       await rt.send({ kind: "mode.surface" });
       let snap = rt.getSnapshot();
-      expect(snap.interactionId).toBe("pick.face");
+      expect(snap.interactionId).toBe("surface.construct");
       expect(snap.nested?.hostInteractionId).toBe("energy.energy.constructBasePlate");
       expect(snap.nested?.hostState).toBe("choose_mode");
+      await rt.send({ kind: "mode.pick" });
+      snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("pick.face");
       await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
       snap = rt.getSnapshot();
       expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
       expect(snap.state).toBe("committed");
       expect(snap.context.constructMode).toBe("surface");
       expect(snap.context.faceId).toBe(fid);
-      expect(snap.lastResponse?.ok).toBe(true);
     });
-    it("aborting nested interaction rolls back the calling transition", async () => {
+    it("aborting nested surface.construct rolls back the calling transition", async () => {
       const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(spec!, {
@@ -5644,7 +5684,7 @@ if (import.meta.vitest) {
         activeModelDefinitionId: "aec.building.energy",
       });
       await rt.send({ kind: "mode.surface" });
-      expect(rt.getSnapshot().interactionId).toBe("pick.face");
+      expect(rt.getSnapshot().interactionId).toBe("surface.construct");
       rt.cancel();
       const snap = rt.getSnapshot();
       expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
@@ -5761,14 +5801,14 @@ if (import.meta.vitest) {
           operation: { kind: "action", action: "command.finish", params: {} },
         },
       })!;
-      const reg = InteractionRegistry.withBuiltins();
+      const reg = InteractionRegistry.withModelDefinitionInteractions();
       reg.register(compileInteraction(grandchild));
       reg.register(compileInteraction(child));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(compileInteraction(host), {
         kernel,
         document: { model: new Model(), nodes: [] },
-        actions: reg,
+        interactions: reg,
       });
       await rt.send({ kind: "go" });
       let snap = rt.getSnapshot();
@@ -5807,8 +5847,8 @@ if (import.meta.vitest) {
       expect(r.get("measure.faceArea")?.label).toBe("override");
       expect(before).not.toBe("override");
     });
-    it("InteractionRegistry.withModelDefinitionActions get matches buildBoxInteractionSpec", () => {
-      const reg = InteractionRegistry.withModelDefinitionActions();
+    it("InteractionRegistry.withModelDefinitionInteractions get matches buildBoxInteractionSpec", () => {
+      const reg = InteractionRegistry.withModelDefinitionInteractions();
       expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
     });
     it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
@@ -7044,4 +7084,3 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Tests
-

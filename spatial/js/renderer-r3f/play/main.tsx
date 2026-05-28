@@ -701,7 +701,7 @@ function PlayApp() {
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return modelsFromGeometryJson(asset?.json ?? emptyModelJson());
+		return modelsFromSpatialJson(asset?.json ?? emptyModelSpaceJson());
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -744,8 +744,9 @@ function PlayApp() {
 		setLoadedRawName("");
 		setFileStatus("");
 		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
-		setModelsByDefinitionId(modelsFromGeometryJson(asset?.json ?? emptyModelJson()));
-		setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
+		const raw = asset?.json ?? emptyModelSpaceJson();
+`t`tsetModelsByDefinitionId(modelsFromSpatialJson(raw));
+`t`tsetActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(raw));
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
@@ -892,9 +893,12 @@ function PlayApp() {
 	);
 
 	const handleSaveSelected = useCallback(async () => {
-		await saveBundle(
+`t`tconst selectedModel = Model.fromJSON(selectRawModel(liveModel, selectionInScope));
+`t`tconst selectedModelSpace = new ModelSpace();
+`t`tselectedModelSpace.link(activeModelDefinitionId, selectedModel);
+`t`tawait saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
-			{ model: selectRawModel(liveModel, selectionInScope) },
+			{ model: selectedModel.toJSON(), modelSpace: selectedModelSpace.toJSON(), activeModelDefinitionId },
 			`Saved ${selectionInScope.length} selected item(s) for ${activeModelDefinitionId}.`,
 		);
 	}, [activeModelDefinitionId, exportBaseName, liveModel, saveBundle, selectionInScope]);
@@ -932,16 +936,32 @@ function PlayApp() {
 			const parsed = JSON.parse(await file.text()) as unknown;
 			const envelope = parsed as Record<string, unknown>;
 			const snapshot =
-				envelope && typeof envelope === "object" && "model" in envelope
-					? envelope.model
-					: envelope && typeof envelope === "object" && "raw" in envelope
-						? envelope.raw
-						: parsed;
-			const model = parseModelJson(snapshot);
-			if (!model) throw new Error("No spatial model found in file.");
+`t`t`tenvelope && typeof envelope === "object" && "modelSpace" in envelope
+`t`t`t? envelope.modelSpace
+`t`t`t: envelope && typeof envelope === "object" && "model" in envelope
+`t`t`t? envelope.model
+`t`t`t: envelope && typeof envelope === "object" && "raw" in envelope
+`t`t`t? envelope.raw
+`t`t`t: parsed;
+			const modelSpace = parseModelSpaceJson(snapshot);
+`t`t`tif (modelSpace) {
+`t`t`t`tconst nextActiveModelDefinitionId =
+`t`t`t`t`ttypeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId)
+`t`t`t`t`t`t? envelope.activeModelDefinitionId
+`t`t`t`t`t`t: activeModelDefinitionIdFromSpatialJson(snapshot);
+`t`t`t`tsetGeometryAssetId("");
+`t`t`t`tsetLoadedRawName(file.name);
+`t`t`t`tsetModelsByDefinitionId(recordFromModelSpace(modelSpace));
+`t`t`t`tsetActiveModelDefinitionId(nextActiveModelDefinitionId);
+`t`t`t`tsetModelDefinitionRevision((r) => r + 1);
+`t`t`t`tsetFileStatus(`Loaded model space from ${file.name}.`);
+`t`t`t`treturn;
+`t`t`t}
+`t`t`tconst model = parseModelJson(snapshot);
+`t`t`tif (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
-			setModelsByDefinitionId(modelsFromGeometryJson(model.toJSON()));
+			setModelsByDefinitionId(modelsFromSpatialJson(model.toJSON()));
 			setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
 			setModelDefinitionRevision((r) => r + 1);
 			setFileStatus(`Loaded model from ${file.name}.`);
@@ -1097,3 +1117,7 @@ if (el) {
 		</StrictMode>,
 	);
 }
+
+
+
+
