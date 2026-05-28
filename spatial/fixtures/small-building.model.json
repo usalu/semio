@@ -11,2079 +11,3213 @@
           {
             "id": "object-small-building-cell-123052045",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-123052045"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1027259450",
+                "position": [
+                  -64.506666,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1412665337",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-354458280",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-560960189",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-566043311",
+                "position": [
+                  -64.506666,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-584100920",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-834828749",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1660152326",
+                "vertexIds": [
+                  "small-building-vertex-354458280",
+                  "small-building-vertex-1412665337"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1943812986",
+                "vertexIds": [
+                  "small-building-vertex-566043311",
+                  "small-building-vertex-584100920"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2004107109",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2075229525",
+                "vertexIds": [
+                  "small-building-vertex-1027259450",
+                  "small-building-vertex-566043311"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-224238197",
+                "vertexIds": [
+                  "small-building-vertex-584100920",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-229106015",
+                "vertexIds": [
+                  "small-building-vertex-1027259450",
+                  "small-building-vertex-834828749"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278123677",
+                "vertexIds": [
+                  "small-building-vertex-584100920",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278867947",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-332998341",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-757634469",
+                "vertexIds": [
+                  "small-building-vertex-1412665337",
+                  "small-building-vertex-834828749"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-779379499",
+                "vertexIds": [
+                  "small-building-vertex-1412665337",
+                  "small-building-vertex-566043311"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-951546977",
+                "vertexIds": [
+                  "small-building-vertex-560960189",
+                  "small-building-vertex-1027259450"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1366152152",
+                "edgeIds": [
+                  "small-building-edge-278123677",
+                  "small-building-edge-1943812986",
+                  "small-building-edge-779379499",
+                  "small-building-edge-1660152326"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1559546061",
+                "edgeIds": [
+                  "small-building-edge-2075229525",
+                  "small-building-edge-229106015",
+                  "small-building-edge-757634469",
+                  "small-building-edge-779379499"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1742634236",
+                "edgeIds": [
+                  "small-building-edge-278867947",
+                  "small-building-edge-332998341",
+                  "small-building-edge-1660152326",
+                  "small-building-edge-757634469"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-456551683",
+                "edgeIds": [
+                  "small-building-edge-1943812986",
+                  "small-building-edge-224238197",
+                  "small-building-edge-951546977",
+                  "small-building-edge-2075229525"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-515231130",
+                "edgeIds": [
+                  "small-building-edge-224238197",
+                  "small-building-edge-278123677",
+                  "small-building-edge-332998341",
+                  "small-building-edge-2004107109"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-978200956",
+                "edgeIds": [
+                  "small-building-edge-951546977",
+                  "small-building-edge-2004107109",
+                  "small-building-edge-278867947",
+                  "small-building-edge-229106015"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1071813579",
+                "wireIds": [
+                  "small-building-wire-1559546061"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1198070201",
+                "wireIds": [
+                  "small-building-wire-456551683"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1321487947",
+                "wireIds": [
+                  "small-building-wire-1742634236"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1833451572",
+                "wireIds": [
+                  "small-building-wire-1366152152"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-383803774",
+                "wireIds": [
+                  "small-building-wire-515231130"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-624717229",
+                "wireIds": [
+                  "small-building-wire-978200956"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-319815043",
+                "faceIds": [
+                  "small-building-face-1198070201",
+                  "small-building-face-1833451572",
+                  "small-building-face-383803774",
+                  "small-building-face-624717229",
+                  "small-building-face-1071813579",
+                  "small-building-face-1321487947"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-123052045",
+                "shellIds": [
+                  "small-building-shell-319815043"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-1278694563",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-1278694563"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1052483923",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1078954806",
+                "position": [
+                  -64.506666,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1417750768",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1487235108",
+                "position": [
+                  -64.506666,
+                  -57.126666,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1653716766",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1928378833",
+                "position": [
+                  -64.506666,
+                  -7.926666,
+                  62.752777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-551332595",
+                "position": [
+                  -18.586667,
+                  -7.926666,
+                  62.752777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-560960189",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-945778871",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1070453701",
+                "vertexIds": [
+                  "small-building-vertex-945778871",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1108121009",
+                "vertexIds": [
+                  "small-building-vertex-945778871",
+                  "small-building-vertex-1487235108"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1261178177",
+                "vertexIds": [
+                  "small-building-vertex-560960189",
+                  "small-building-vertex-1653716766"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1422159112",
+                "vertexIds": [
+                  "small-building-vertex-1078954806",
+                  "small-building-vertex-1487235108"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1567786765",
+                "vertexIds": [
+                  "small-building-vertex-551332595",
+                  "small-building-vertex-945778871"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1705326756",
+                "vertexIds": [
+                  "small-building-vertex-1928378833",
+                  "small-building-vertex-551332595"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2004107109",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2102926252",
+                "vertexIds": [
+                  "small-building-vertex-1928378833",
+                  "small-building-vertex-1653716766"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-349583852",
+                "vertexIds": [
+                  "small-building-vertex-1052483923",
+                  "small-building-vertex-1078954806"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-354613623",
+                "vertexIds": [
+                  "small-building-vertex-1487235108",
+                  "small-building-vertex-1928378833"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432705901",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432807106",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-467629952",
+                "vertexIds": [
+                  "small-building-vertex-1078954806",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-49481349",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-551332595"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-508083477",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-1653716766"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1095357825",
+                "edgeIds": [
+                  "small-building-edge-467629952",
+                  "small-building-edge-1422159112",
+                  "small-building-edge-354613623",
+                  "small-building-edge-2102926252",
+                  "small-building-edge-1261178177"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1399618711",
+                "edgeIds": [
+                  "small-building-edge-349583852",
+                  "small-building-edge-432705901",
+                  "small-building-edge-2004107109",
+                  "small-building-edge-467629952"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1676387167",
+                "edgeIds": [
+                  "small-building-edge-1070453701",
+                  "small-building-edge-432705901",
+                  "small-building-edge-432807106",
+                  "small-building-edge-49481349",
+                  "small-building-edge-1567786765"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1755121565",
+                "edgeIds": [
+                  "small-building-edge-2004107109",
+                  "small-building-edge-432807106",
+                  "small-building-edge-508083477",
+                  "small-building-edge-1261178177"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-285005499",
+                "edgeIds": [
+                  "small-building-edge-349583852",
+                  "small-building-edge-1070453701",
+                  "small-building-edge-1108121009",
+                  "small-building-edge-1422159112"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-311748032",
+                "edgeIds": [
+                  "small-building-edge-354613623",
+                  "small-building-edge-1108121009",
+                  "small-building-edge-1567786765",
+                  "small-building-edge-1705326756"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-924227310",
+                "edgeIds": [
+                  "small-building-edge-49481349",
+                  "small-building-edge-508083477",
+                  "small-building-edge-2102926252",
+                  "small-building-edge-1705326756"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1144073303",
+                "wireIds": [
+                  "small-building-wire-1755121565"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1382526041",
+                "wireIds": [
+                  "small-building-wire-1095357825"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1891411219",
+                "wireIds": [
+                  "small-building-wire-1399618711"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-2019874201",
+                "wireIds": [
+                  "small-building-wire-311748032"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-2129815768",
+                "wireIds": [
+                  "small-building-wire-924227310"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-512606747",
+                "wireIds": [
+                  "small-building-wire-285005499"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-816291467",
+                "wireIds": [
+                  "small-building-wire-1676387167"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-115098816",
+                "faceIds": [
+                  "small-building-face-816291467",
+                  "small-building-face-512606747",
+                  "small-building-face-1891411219",
+                  "small-building-face-1144073303",
+                  "small-building-face-2129815768",
+                  "small-building-face-2019874201",
+                  "small-building-face-1382526041"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-1278694563",
+                "shellIds": [
+                  "small-building-shell-115098816"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-1726958126",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-1726958126"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1052483923",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1690047670",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-198843528",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-354458280",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-385090140",
+                "position": [
+                  66.693333,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-924737164",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-935545497",
+                "position": [
+                  66.693333,
+                  -57.126666,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-943996510",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1246638018",
+                "vertexIds": [
+                  "small-building-vertex-935545497",
+                  "small-building-vertex-385090140"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1254229480",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-198843528"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1336202142",
+                "vertexIds": [
+                  "small-building-vertex-385090140",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1400646396",
+                "vertexIds": [
+                  "small-building-vertex-943996510",
+                  "small-building-vertex-935545497"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1565678408",
+                "vertexIds": [
+                  "small-building-vertex-1690047670",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-172877525",
+                "vertexIds": [
+                  "small-building-vertex-1690047670",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1875256078",
+                "vertexIds": [
+                  "small-building-vertex-385090140",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1914903829",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2062007036",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2101307748",
+                "vertexIds": [
+                  "small-building-vertex-943996510",
+                  "small-building-vertex-198843528"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-332998341",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432705901",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-51009478",
+                "vertexIds": [
+                  "small-building-vertex-924737164",
+                  "small-building-vertex-943996510"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-598826215",
+                "vertexIds": [
+                  "small-building-vertex-1690047670",
+                  "small-building-vertex-935545497"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-657827535",
+                "vertexIds": [
+                  "small-building-vertex-198843528",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1098242493",
+                "edgeIds": [
+                  "small-building-edge-1254229480",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-332998341",
+                  "small-building-edge-657827535"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1316372424",
+                "edgeIds": [
+                  "small-building-edge-1875256078",
+                  "small-building-edge-172877525",
+                  "small-building-edge-598826215",
+                  "small-building-edge-1246638018"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1590398748",
+                "edgeIds": [
+                  "small-building-edge-172877525",
+                  "small-building-edge-1565678408",
+                  "small-building-edge-332998341",
+                  "small-building-edge-432705901"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1673128573",
+                "edgeIds": [
+                  "small-building-edge-1875256078",
+                  "small-building-edge-1336202142",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-432705901"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1847165922",
+                "edgeIds": [
+                  "small-building-edge-51009478",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-1254229480",
+                  "small-building-edge-2101307748"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-256701055",
+                "edgeIds": [
+                  "small-building-edge-1246638018",
+                  "small-building-edge-1400646396",
+                  "small-building-edge-51009478",
+                  "small-building-edge-1336202142"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-646169955",
+                "edgeIds": [
+                  "small-building-edge-598826215",
+                  "small-building-edge-1565678408",
+                  "small-building-edge-2101307748",
+                  "small-building-edge-657827535",
+                  "small-building-edge-1400646396"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1366698037",
+                "wireIds": [
+                  "small-building-wire-1590398748"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1631560793",
+                "wireIds": [
+                  "small-building-wire-256701055"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1652633605",
+                "wireIds": [
+                  "small-building-wire-1847165922"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1973958103",
+                "wireIds": [
+                  "small-building-wire-646169955"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-578295541",
+                "wireIds": [
+                  "small-building-wire-1316372424"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-611087225",
+                "wireIds": [
+                  "small-building-wire-1673128573"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-700285324",
+                "wireIds": [
+                  "small-building-wire-1098242493"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-1731270073",
+                "faceIds": [
+                  "small-building-face-578295541",
+                  "small-building-face-611087225",
+                  "small-building-face-1366698037",
+                  "small-building-face-1973958103",
+                  "small-building-face-1631560793",
+                  "small-building-face-1652633605",
+                  "small-building-face-700285324"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-1726958126",
+                "shellIds": [
+                  "small-building-shell-1731270073"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-177644683",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-177644683"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1539396315",
+                "position": [
+                  66.693333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-468571430",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-55304137",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-568544779",
+                "position": [
+                  66.693333,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-595232246",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-696914248",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-924737164",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1087294237",
+                "vertexIds": [
+                  "small-building-vertex-696914248",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1129968473",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-468571430"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1181976793",
+                "vertexIds": [
+                  "small-building-vertex-1539396315",
+                  "small-building-vertex-568544779"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1526088265",
+                "vertexIds": [
+                  "small-building-vertex-468571430",
+                  "small-building-vertex-696914248"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1546619411",
+                "vertexIds": [
+                  "small-building-vertex-696914248",
+                  "small-building-vertex-595232246"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2062007036",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-216560696",
+                "vertexIds": [
+                  "small-building-vertex-595232246",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-258854128",
+                "vertexIds": [
+                  "small-building-vertex-568544779",
+                  "small-building-vertex-595232246"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-492289368",
+                "vertexIds": [
+                  "small-building-vertex-468571430",
+                  "small-building-vertex-568544779"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-53081364",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-1539396315"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-814507104",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-894079751",
+                "vertexIds": [
+                  "small-building-vertex-1539396315",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1184681038",
+                "edgeIds": [
+                  "small-building-edge-814507104",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-894079751",
+                  "small-building-edge-53081364"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1300391340",
+                "edgeIds": [
+                  "small-building-edge-53081364",
+                  "small-building-edge-1129968473",
+                  "small-building-edge-492289368",
+                  "small-building-edge-1181976793"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1553478650",
+                "edgeIds": [
+                  "small-building-edge-2062007036",
+                  "small-building-edge-216560696",
+                  "small-building-edge-1546619411",
+                  "small-building-edge-1087294237"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1737456781",
+                "edgeIds": [
+                  "small-building-edge-216560696",
+                  "small-building-edge-894079751",
+                  "small-building-edge-1181976793",
+                  "small-building-edge-258854128"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1817346002",
+                "edgeIds": [
+                  "small-building-edge-1526088265",
+                  "small-building-edge-1546619411",
+                  "small-building-edge-258854128",
+                  "small-building-edge-492289368"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-2038755520",
+                "edgeIds": [
+                  "small-building-edge-1087294237",
+                  "small-building-edge-814507104",
+                  "small-building-edge-1129968473",
+                  "small-building-edge-1526088265"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1457969424",
+                "wireIds": [
+                  "small-building-wire-1817346002"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1570704954",
+                "wireIds": [
+                  "small-building-wire-2038755520"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1880838606",
+                "wireIds": [
+                  "small-building-wire-1300391340"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-646282419",
+                "wireIds": [
+                  "small-building-wire-1184681038"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-807614999",
+                "wireIds": [
+                  "small-building-wire-1737456781"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-976303559",
+                "wireIds": [
+                  "small-building-wire-1553478650"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-431204894",
+                "faceIds": [
+                  "small-building-face-807614999",
+                  "small-building-face-976303559",
+                  "small-building-face-646282419",
+                  "small-building-face-1880838606",
+                  "small-building-face-1457969424",
+                  "small-building-face-1570704954"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-177644683",
+                "shellIds": [
+                  "small-building-shell-431204894"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-346474455",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-346474455"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1027259450",
+                "position": [
+                  -64.506666,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1393258689",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1417750768",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1653716766",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-2126675359",
+                "position": [
+                  -64.506666,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-560960189",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-834828749",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1176603989",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-1393258689"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1221590728",
+                "vertexIds": [
+                  "small-building-vertex-2126675359",
+                  "small-building-vertex-1027259450"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1261178177",
+                "vertexIds": [
+                  "small-building-vertex-560960189",
+                  "small-building-vertex-1653716766"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1293562955",
+                "vertexIds": [
+                  "small-building-vertex-1393258689",
+                  "small-building-vertex-1417750768"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2004107109",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-229106015",
+                "vertexIds": [
+                  "small-building-vertex-1027259450",
+                  "small-building-vertex-834828749"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278867947",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432807106",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-508083477",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-1653716766"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-829530808",
+                "vertexIds": [
+                  "small-building-vertex-2126675359",
+                  "small-building-vertex-1393258689"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-905942567",
+                "vertexIds": [
+                  "small-building-vertex-1653716766",
+                  "small-building-vertex-2126675359"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-951546977",
+                "vertexIds": [
+                  "small-building-vertex-560960189",
+                  "small-building-vertex-1027259450"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1114708436",
+                "edgeIds": [
+                  "small-building-edge-905942567",
+                  "small-building-edge-508083477",
+                  "small-building-edge-1293562955",
+                  "small-building-edge-829530808"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-164476126",
+                "edgeIds": [
+                  "small-building-edge-229106015",
+                  "small-building-edge-1221590728",
+                  "small-building-edge-829530808",
+                  "small-building-edge-1176603989"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1664100031",
+                "edgeIds": [
+                  "small-building-edge-432807106",
+                  "small-building-edge-278867947",
+                  "small-building-edge-1176603989",
+                  "small-building-edge-1293562955"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1748227933",
+                "edgeIds": [
+                  "small-building-edge-951546977",
+                  "small-building-edge-1261178177",
+                  "small-building-edge-905942567",
+                  "small-building-edge-1221590728"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1755121565",
+                "edgeIds": [
+                  "small-building-edge-2004107109",
+                  "small-building-edge-432807106",
+                  "small-building-edge-508083477",
+                  "small-building-edge-1261178177"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-978200956",
+                "edgeIds": [
+                  "small-building-edge-951546977",
+                  "small-building-edge-2004107109",
+                  "small-building-edge-278867947",
+                  "small-building-edge-229106015"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1144073303",
+                "wireIds": [
+                  "small-building-wire-1755121565"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1382216532",
+                "wireIds": [
+                  "small-building-wire-164476126"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-145599241",
+                "wireIds": [
+                  "small-building-wire-1748227933"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-620157701",
+                "wireIds": [
+                  "small-building-wire-1114708436"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-624717229",
+                "wireIds": [
+                  "small-building-wire-978200956"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-820822656",
+                "wireIds": [
+                  "small-building-wire-1664100031"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-1482876550",
+                "faceIds": [
+                  "small-building-face-820822656",
+                  "small-building-face-1144073303",
+                  "small-building-face-624717229",
+                  "small-building-face-1382216532",
+                  "small-building-face-620157701",
+                  "small-building-face-145599241"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-346474455",
+                "shellIds": [
+                  "small-building-shell-1482876550"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-509251538",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-509251538"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1412665337",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-198843528",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-354458280",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-55304137",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-700015011",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-834828749",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1135198732",
+                "vertexIds": [
+                  "small-building-vertex-198843528",
+                  "small-building-vertex-700015011"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1254229480",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-198843528"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1660152326",
+                "vertexIds": [
+                  "small-building-vertex-354458280",
+                  "small-building-vertex-1412665337"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1914903829",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278867947",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-295162881",
+                "vertexIds": [
+                  "small-building-vertex-700015011",
+                  "small-building-vertex-1412665337"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-332998341",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-608733341",
+                "vertexIds": [
+                  "small-building-vertex-700015011",
+                  "small-building-vertex-55304137"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-657827535",
+                "vertexIds": [
+                  "small-building-vertex-198843528",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-757634469",
+                "vertexIds": [
+                  "small-building-vertex-1412665337",
+                  "small-building-vertex-834828749"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-814507104",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-936303582",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-55304137"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1098242493",
+                "edgeIds": [
+                  "small-building-edge-1254229480",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-332998341",
+                  "small-building-edge-657827535"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1390110645",
+                "edgeIds": [
+                  "small-building-edge-278867947",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-814507104",
+                  "small-building-edge-936303582"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1592230924",
+                "edgeIds": [
+                  "small-building-edge-757634469",
+                  "small-building-edge-936303582",
+                  "small-building-edge-608733341",
+                  "small-building-edge-295162881"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1632492423",
+                "edgeIds": [
+                  "small-building-edge-657827535",
+                  "small-building-edge-1660152326",
+                  "small-building-edge-295162881",
+                  "small-building-edge-1135198732"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1742634236",
+                "edgeIds": [
+                  "small-building-edge-278867947",
+                  "small-building-edge-332998341",
+                  "small-building-edge-1660152326",
+                  "small-building-edge-757634469"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-36314266",
+                "edgeIds": [
+                  "small-building-edge-814507104",
+                  "small-building-edge-1254229480",
+                  "small-building-edge-1135198732",
+                  "small-building-edge-608733341"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1049102882",
+                "wireIds": [
+                  "small-building-wire-1592230924"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1321487947",
+                "wireIds": [
+                  "small-building-wire-1742634236"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1336622373",
+                "wireIds": [
+                  "small-building-wire-36314266"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1577063820",
+                "wireIds": [
+                  "small-building-wire-1632492423"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-2114497508",
+                "wireIds": [
+                  "small-building-wire-1390110645"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-700285324",
+                "wireIds": [
+                  "small-building-wire-1098242493"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-851607366",
+                "faceIds": [
+                  "small-building-face-1321487947",
+                  "small-building-face-1577063820",
+                  "small-building-face-700285324",
+                  "small-building-face-2114497508",
+                  "small-building-face-1049102882",
+                  "small-building-face-1336622373"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-509251538",
+                "shellIds": [
+                  "small-building-shell-851607366"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-531581172",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-531581172"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1539396315",
+                "position": [
+                  66.693333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-198843528",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-55304137",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-700015011",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-861462044",
+                "position": [
+                  66.693333,
+                  41.273333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-924737164",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-943996510",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1135198732",
+                "vertexIds": [
+                  "small-building-vertex-198843528",
+                  "small-building-vertex-700015011"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1254229480",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-198843528"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1434101711",
+                "vertexIds": [
+                  "small-building-vertex-943996510",
+                  "small-building-vertex-861462044"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2062007036",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2101307748",
+                "vertexIds": [
+                  "small-building-vertex-943996510",
+                  "small-building-vertex-198843528"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-225319834",
+                "vertexIds": [
+                  "small-building-vertex-861462044",
+                  "small-building-vertex-1539396315"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-305839019",
+                "vertexIds": [
+                  "small-building-vertex-861462044",
+                  "small-building-vertex-700015011"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-51009478",
+                "vertexIds": [
+                  "small-building-vertex-924737164",
+                  "small-building-vertex-943996510"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-53081364",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-1539396315"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-608733341",
+                "vertexIds": [
+                  "small-building-vertex-700015011",
+                  "small-building-vertex-55304137"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-814507104",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-894079751",
+                "vertexIds": [
+                  "small-building-vertex-1539396315",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1184681038",
+                "edgeIds": [
+                  "small-building-edge-814507104",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-894079751",
+                  "small-building-edge-53081364"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1368161050",
+                "edgeIds": [
+                  "small-building-edge-2101307748",
+                  "small-building-edge-1135198732",
+                  "small-building-edge-305839019",
+                  "small-building-edge-1434101711"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1404785392",
+                "edgeIds": [
+                  "small-building-edge-608733341",
+                  "small-building-edge-53081364",
+                  "small-building-edge-225319834",
+                  "small-building-edge-305839019"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1847165922",
+                "edgeIds": [
+                  "small-building-edge-51009478",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-1254229480",
+                  "small-building-edge-2101307748"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-36314266",
+                "edgeIds": [
+                  "small-building-edge-814507104",
+                  "small-building-edge-1254229480",
+                  "small-building-edge-1135198732",
+                  "small-building-edge-608733341"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-516983686",
+                "edgeIds": [
+                  "small-building-edge-894079751",
+                  "small-building-edge-51009478",
+                  "small-building-edge-1434101711",
+                  "small-building-edge-225319834"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1333043829",
+                "wireIds": [
+                  "small-building-wire-516983686"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1336622373",
+                "wireIds": [
+                  "small-building-wire-36314266"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1652633605",
+                "wireIds": [
+                  "small-building-wire-1847165922"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-2078803802",
+                "wireIds": [
+                  "small-building-wire-1368161050"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-646282419",
+                "wireIds": [
+                  "small-building-wire-1184681038"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-930164148",
+                "wireIds": [
+                  "small-building-wire-1404785392"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-729436001",
+                "faceIds": [
+                  "small-building-face-1336622373",
+                  "small-building-face-2078803802",
+                  "small-building-face-1652633605",
+                  "small-building-face-646282419",
+                  "small-building-face-930164148",
+                  "small-building-face-1333043829"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-531581172",
+                "shellIds": [
+                  "small-building-shell-729436001"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-548248443",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-548248443"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1052483923",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1417750768",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-190344958",
+                "position": [
+                  66.693333,
+                  -7.926666,
+                  62.752777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-385090140",
+                "position": [
+                  66.693333,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-428254027",
+                "position": [
+                  66.693333,
+                  -57.126666,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-551332595",
+                "position": [
+                  -18.586667,
+                  -7.926666,
+                  62.752777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-595232246",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-696914248",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-924737164",
+                "position": [
+                  66.693333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-945778871",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1070453701",
+                "vertexIds": [
+                  "small-building-vertex-945778871",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1087294237",
+                "vertexIds": [
+                  "small-building-vertex-696914248",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1336202142",
+                "vertexIds": [
+                  "small-building-vertex-385090140",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1546619411",
+                "vertexIds": [
+                  "small-building-vertex-696914248",
+                  "small-building-vertex-595232246"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1567786765",
+                "vertexIds": [
+                  "small-building-vertex-551332595",
+                  "small-building-vertex-945778871"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1803358123",
+                "vertexIds": [
+                  "small-building-vertex-190344958",
+                  "small-building-vertex-428254027"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1875256078",
+                "vertexIds": [
+                  "small-building-vertex-385090140",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1884754140",
+                "vertexIds": [
+                  "small-building-vertex-595232246",
+                  "small-building-vertex-190344958"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1905736256",
+                "vertexIds": [
+                  "small-building-vertex-428254027",
+                  "small-building-vertex-945778871"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1914903829",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2062007036",
+                "vertexIds": [
+                  "small-building-vertex-990488970",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-216560696",
+                "vertexIds": [
+                  "small-building-vertex-595232246",
+                  "small-building-vertex-924737164"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-219287551",
+                "vertexIds": [
+                  "small-building-vertex-551332595",
+                  "small-building-vertex-190344958"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432705901",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432807106",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-49481349",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-551332595"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-601106960",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-696914248"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-858566927",
+                "vertexIds": [
+                  "small-building-vertex-385090140",
+                  "small-building-vertex-428254027"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1172378877",
+                "edgeIds": [
+                  "small-building-edge-49481349",
+                  "small-building-edge-219287551",
+                  "small-building-edge-1884754140",
+                  "small-building-edge-601106960",
+                  "small-building-edge-1546619411"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1398946955",
+                "edgeIds": [
+                  "small-building-edge-1567786765",
+                  "small-building-edge-1905736256",
+                  "small-building-edge-1803358123",
+                  "small-building-edge-219287551"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1553478650",
+                "edgeIds": [
+                  "small-building-edge-2062007036",
+                  "small-building-edge-216560696",
+                  "small-building-edge-1546619411",
+                  "small-building-edge-1087294237"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1597372722",
+                "edgeIds": [
+                  "small-building-edge-858566927",
+                  "small-building-edge-1336202142",
+                  "small-building-edge-216560696",
+                  "small-building-edge-1884754140",
+                  "small-building-edge-1803358123"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1673128573",
+                "edgeIds": [
+                  "small-building-edge-1875256078",
+                  "small-building-edge-1336202142",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-2062007036",
+                  "small-building-edge-432705901"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1676387167",
+                "edgeIds": [
+                  "small-building-edge-1070453701",
+                  "small-building-edge-432705901",
+                  "small-building-edge-432807106",
+                  "small-building-edge-49481349",
+                  "small-building-edge-1567786765"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1745669744",
+                "edgeIds": [
+                  "small-building-edge-1087294237",
+                  "small-building-edge-601106960",
+                  "small-building-edge-432807106",
+                  "small-building-edge-1914903829"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-510979431",
+                "edgeIds": [
+                  "small-building-edge-1905736256",
+                  "small-building-edge-1070453701",
+                  "small-building-edge-1875256078",
+                  "small-building-edge-858566927"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-123273386",
+                "wireIds": [
+                  "small-building-wire-1745669744"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1457506915",
+                "wireIds": [
+                  "small-building-wire-1172378877"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1722928574",
+                "wireIds": [
+                  "small-building-wire-510979431"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-257952373",
+                "wireIds": [
+                  "small-building-wire-1597372722"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-611087225",
+                "wireIds": [
+                  "small-building-wire-1673128573"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-816291467",
+                "wireIds": [
+                  "small-building-wire-1676387167"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-824333506",
+                "wireIds": [
+                  "small-building-wire-1398946955"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-976303559",
+                "wireIds": [
+                  "small-building-wire-1553478650"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-564953133",
+                "faceIds": [
+                  "small-building-face-123273386",
+                  "small-building-face-976303559",
+                  "small-building-face-611087225",
+                  "small-building-face-816291467",
+                  "small-building-face-1457506915",
+                  "small-building-face-257952373",
+                  "small-building-face-1722928574",
+                  "small-building-face-824333506"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-548248443",
+                "shellIds": [
+                  "small-building-shell-564953133"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-916435296",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-916435296"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1052483923",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1078954806",
+                "position": [
+                  -64.506666,
+                  -57.126666,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1198540561",
+                "position": [
+                  -64.506666,
+                  -57.126666,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1690047670",
+                "position": [
+                  -18.586667,
+                  -57.126666,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-354458280",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-560960189",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-584100920",
+                "position": [
+                  -64.506666,
+                  3.553333,
+                  -43.847222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1114968992",
+                "vertexIds": [
+                  "small-building-vertex-584100920",
+                  "small-building-vertex-1198540561"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1565678408",
+                "vertexIds": [
+                  "small-building-vertex-1690047670",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-172877525",
+                "vertexIds": [
+                  "small-building-vertex-1690047670",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2004107109",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-2106132793",
+                "vertexIds": [
+                  "small-building-vertex-1198540561",
+                  "small-building-vertex-1690047670"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-224238197",
+                "vertexIds": [
+                  "small-building-vertex-584100920",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278123677",
+                "vertexIds": [
+                  "small-building-vertex-584100920",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-332998341",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-354458280"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-349583852",
+                "vertexIds": [
+                  "small-building-vertex-1052483923",
+                  "small-building-vertex-1078954806"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432705901",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-1052483923"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-467629952",
+                "vertexIds": [
+                  "small-building-vertex-1078954806",
+                  "small-building-vertex-560960189"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-666672115",
+                "vertexIds": [
+                  "small-building-vertex-1078954806",
+                  "small-building-vertex-1198540561"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1399618711",
+                "edgeIds": [
+                  "small-building-edge-349583852",
+                  "small-building-edge-432705901",
+                  "small-building-edge-2004107109",
+                  "small-building-edge-467629952"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1590398748",
+                "edgeIds": [
+                  "small-building-edge-172877525",
+                  "small-building-edge-1565678408",
+                  "small-building-edge-332998341",
+                  "small-building-edge-432705901"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1714825002",
+                "edgeIds": [
+                  "small-building-edge-666672115",
+                  "small-building-edge-467629952",
+                  "small-building-edge-224238197",
+                  "small-building-edge-1114968992"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-403059999",
+                "edgeIds": [
+                  "small-building-edge-1565678408",
+                  "small-building-edge-2106132793",
+                  "small-building-edge-1114968992",
+                  "small-building-edge-278123677"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-515231130",
+                "edgeIds": [
+                  "small-building-edge-224238197",
+                  "small-building-edge-278123677",
+                  "small-building-edge-332998341",
+                  "small-building-edge-2004107109"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-715609103",
+                "edgeIds": [
+                  "small-building-edge-2106132793",
+                  "small-building-edge-172877525",
+                  "small-building-edge-349583852",
+                  "small-building-edge-666672115"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1366698037",
+                "wireIds": [
+                  "small-building-wire-1590398748"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1375822498",
+                "wireIds": [
+                  "small-building-wire-715609103"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1891411219",
+                "wireIds": [
+                  "small-building-wire-1399618711"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1944355059",
+                "wireIds": [
+                  "small-building-wire-1714825002"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-205984231",
+                "wireIds": [
+                  "small-building-wire-403059999"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-383803774",
+                "wireIds": [
+                  "small-building-wire-515231130"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-582028949",
+                "faceIds": [
+                  "small-building-face-1375822498",
+                  "small-building-face-205984231",
+                  "small-building-face-1366698037",
+                  "small-building-face-1891411219",
+                  "small-building-face-1944355059",
+                  "small-building-face-383803774"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-916435296",
+                "shellIds": [
+                  "small-building-shell-582028949"
+                ]
+              }
+            ]
           },
           {
             "id": "object-small-building-cell-920901709",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "small-building-cell-920901709"
-            }
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1393258689",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-1417750768",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-200778251",
+                "position": [
+                  -18.586667,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-468571430",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  25.852777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-55304137",
+                "position": [
+                  27.333333,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-696914248",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  54.142777
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-834828749",
+                "position": [
+                  -18.586667,
+                  41.273333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "small-building-vertex-990488970",
+                "position": [
+                  27.333333,
+                  3.553333,
+                  -9.407222
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1087294237",
+                "vertexIds": [
+                  "small-building-vertex-696914248",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1129968473",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-468571430"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1176603989",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-1393258689"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1293562955",
+                "vertexIds": [
+                  "small-building-vertex-1393258689",
+                  "small-building-vertex-1417750768"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1526088265",
+                "vertexIds": [
+                  "small-building-vertex-468571430",
+                  "small-building-vertex-696914248"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-1914903829",
+                "vertexIds": [
+                  "small-building-vertex-200778251",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-278867947",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-432807106",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-200778251"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-589906933",
+                "vertexIds": [
+                  "small-building-vertex-1393258689",
+                  "small-building-vertex-468571430"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-601106960",
+                "vertexIds": [
+                  "small-building-vertex-1417750768",
+                  "small-building-vertex-696914248"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-814507104",
+                "vertexIds": [
+                  "small-building-vertex-55304137",
+                  "small-building-vertex-990488970"
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "small-building-edge-936303582",
+                "vertexIds": [
+                  "small-building-vertex-834828749",
+                  "small-building-vertex-55304137"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1096443527",
+                "edgeIds": [
+                  "small-building-edge-936303582",
+                  "small-building-edge-1176603989",
+                  "small-building-edge-589906933",
+                  "small-building-edge-1129968473"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1390110645",
+                "edgeIds": [
+                  "small-building-edge-278867947",
+                  "small-building-edge-1914903829",
+                  "small-building-edge-814507104",
+                  "small-building-edge-936303582"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1502734446",
+                "edgeIds": [
+                  "small-building-edge-1293562955",
+                  "small-building-edge-601106960",
+                  "small-building-edge-1526088265",
+                  "small-building-edge-589906933"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1664100031",
+                "edgeIds": [
+                  "small-building-edge-432807106",
+                  "small-building-edge-278867947",
+                  "small-building-edge-1176603989",
+                  "small-building-edge-1293562955"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-1745669744",
+                "edgeIds": [
+                  "small-building-edge-1087294237",
+                  "small-building-edge-601106960",
+                  "small-building-edge-432807106",
+                  "small-building-edge-1914903829"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "small-building-wire-2038755520",
+                "edgeIds": [
+                  "small-building-edge-1087294237",
+                  "small-building-edge-814507104",
+                  "small-building-edge-1129968473",
+                  "small-building-edge-1526088265"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-123273386",
+                "wireIds": [
+                  "small-building-wire-1745669744"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1542409550",
+                "wireIds": [
+                  "small-building-wire-1096443527"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-1570704954",
+                "wireIds": [
+                  "small-building-wire-2038755520"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-2114497508",
+                "wireIds": [
+                  "small-building-wire-1390110645"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-566674442",
+                "wireIds": [
+                  "small-building-wire-1502734446"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "small-building-face-820822656",
+                "wireIds": [
+                  "small-building-wire-1664100031"
+                ]
+              },
+              {
+                "kind": "shell",
+                "id": "small-building-shell-1021196941",
+                "faceIds": [
+                  "small-building-face-1570704954",
+                  "small-building-face-123273386",
+                  "small-building-face-2114497508",
+                  "small-building-face-1542409550",
+                  "small-building-face-566674442",
+                  "small-building-face-820822656"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "small-building-cell-920901709",
+                "shellIds": [
+                  "small-building-shell-1021196941"
+                ]
+              }
+            ]
           }
-        ],
-        "geometry": {
-          "anchors": [],
-          "vertices": [
-            {
-              "id": "small-building-vertex-1027259450",
-              "position": [
-                -64.506666,
-                41.273333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1052483923",
-              "position": [
-                -18.586667,
-                -57.126666,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1078954806",
-              "position": [
-                -64.506666,
-                -57.126666,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1198540561",
-              "position": [
-                -64.506666,
-                -57.126666,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1393258689",
-              "position": [
-                -18.586667,
-                41.273333,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-1412665337",
-              "position": [
-                -18.586667,
-                41.273333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1417750768",
-              "position": [
-                -18.586667,
-                3.553333,
-                54.142777
-              ]
-            },
-            {
-              "id": "small-building-vertex-1487235108",
-              "position": [
-                -64.506666,
-                -57.126666,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-1539396315",
-              "position": [
-                66.693333,
-                41.273333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-1653716766",
-              "position": [
-                -64.506666,
-                3.553333,
-                54.142777
-              ]
-            },
-            {
-              "id": "small-building-vertex-1690047670",
-              "position": [
-                -18.586667,
-                -57.126666,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-190344958",
-              "position": [
-                66.693333,
-                -7.926666,
-                62.752777
-              ]
-            },
-            {
-              "id": "small-building-vertex-1928378833",
-              "position": [
-                -64.506666,
-                -7.926666,
-                62.752777
-              ]
-            },
-            {
-              "id": "small-building-vertex-198843528",
-              "position": [
-                27.333333,
-                3.553333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-200778251",
-              "position": [
-                -18.586667,
-                3.553333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-2126675359",
-              "position": [
-                -64.506666,
-                41.273333,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-354458280",
-              "position": [
-                -18.586667,
-                3.553333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-385090140",
-              "position": [
-                66.693333,
-                -57.126666,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-428254027",
-              "position": [
-                66.693333,
-                -57.126666,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-468571430",
-              "position": [
-                27.333333,
-                41.273333,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-551332595",
-              "position": [
-                -18.586667,
-                -7.926666,
-                62.752777
-              ]
-            },
-            {
-              "id": "small-building-vertex-55304137",
-              "position": [
-                27.333333,
-                41.273333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-560960189",
-              "position": [
-                -64.506666,
-                3.553333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-566043311",
-              "position": [
-                -64.506666,
-                41.273333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-568544779",
-              "position": [
-                66.693333,
-                41.273333,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-584100920",
-              "position": [
-                -64.506666,
-                3.553333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-595232246",
-              "position": [
-                66.693333,
-                3.553333,
-                54.142777
-              ]
-            },
-            {
-              "id": "small-building-vertex-696914248",
-              "position": [
-                27.333333,
-                3.553333,
-                54.142777
-              ]
-            },
-            {
-              "id": "small-building-vertex-700015011",
-              "position": [
-                27.333333,
-                41.273333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-834828749",
-              "position": [
-                -18.586667,
-                41.273333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-861462044",
-              "position": [
-                66.693333,
-                41.273333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-924737164",
-              "position": [
-                66.693333,
-                3.553333,
-                -9.407222
-              ]
-            },
-            {
-              "id": "small-building-vertex-935545497",
-              "position": [
-                66.693333,
-                -57.126666,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-943996510",
-              "position": [
-                66.693333,
-                3.553333,
-                -43.847222
-              ]
-            },
-            {
-              "id": "small-building-vertex-945778871",
-              "position": [
-                -18.586667,
-                -57.126666,
-                25.852777
-              ]
-            },
-            {
-              "id": "small-building-vertex-990488970",
-              "position": [
-                27.333333,
-                3.553333,
-                -9.407222
-              ]
-            }
-          ],
-          "edges": [
-            {
-              "id": "small-building-edge-1070453701",
-              "vertexIds": [
-                "small-building-vertex-945778871",
-                "small-building-vertex-1052483923"
-              ]
-            },
-            {
-              "id": "small-building-edge-1087294237",
-              "vertexIds": [
-                "small-building-vertex-696914248",
-                "small-building-vertex-990488970"
-              ]
-            },
-            {
-              "id": "small-building-edge-1108121009",
-              "vertexIds": [
-                "small-building-vertex-945778871",
-                "small-building-vertex-1487235108"
-              ]
-            },
-            {
-              "id": "small-building-edge-1114968992",
-              "vertexIds": [
-                "small-building-vertex-584100920",
-                "small-building-vertex-1198540561"
-              ]
-            },
-            {
-              "id": "small-building-edge-1129968473",
-              "vertexIds": [
-                "small-building-vertex-55304137",
-                "small-building-vertex-468571430"
-              ]
-            },
-            {
-              "id": "small-building-edge-1135198732",
-              "vertexIds": [
-                "small-building-vertex-198843528",
-                "small-building-vertex-700015011"
-              ]
-            },
-            {
-              "id": "small-building-edge-1176603989",
-              "vertexIds": [
-                "small-building-vertex-834828749",
-                "small-building-vertex-1393258689"
-              ]
-            },
-            {
-              "id": "small-building-edge-1181976793",
-              "vertexIds": [
-                "small-building-vertex-1539396315",
-                "small-building-vertex-568544779"
-              ]
-            },
-            {
-              "id": "small-building-edge-1221590728",
-              "vertexIds": [
-                "small-building-vertex-2126675359",
-                "small-building-vertex-1027259450"
-              ]
-            },
-            {
-              "id": "small-building-edge-1246638018",
-              "vertexIds": [
-                "small-building-vertex-935545497",
-                "small-building-vertex-385090140"
-              ]
-            },
-            {
-              "id": "small-building-edge-1254229480",
-              "vertexIds": [
-                "small-building-vertex-990488970",
-                "small-building-vertex-198843528"
-              ]
-            },
-            {
-              "id": "small-building-edge-1261178177",
-              "vertexIds": [
-                "small-building-vertex-560960189",
-                "small-building-vertex-1653716766"
-              ]
-            },
-            {
-              "id": "small-building-edge-1293562955",
-              "vertexIds": [
-                "small-building-vertex-1393258689",
-                "small-building-vertex-1417750768"
-              ]
-            },
-            {
-              "id": "small-building-edge-1336202142",
-              "vertexIds": [
-                "small-building-vertex-385090140",
-                "small-building-vertex-924737164"
-              ]
-            },
-            {
-              "id": "small-building-edge-1400646396",
-              "vertexIds": [
-                "small-building-vertex-943996510",
-                "small-building-vertex-935545497"
-              ]
-            },
-            {
-              "id": "small-building-edge-1422159112",
-              "vertexIds": [
-                "small-building-vertex-1078954806",
-                "small-building-vertex-1487235108"
-              ]
-            },
-            {
-              "id": "small-building-edge-1434101711",
-              "vertexIds": [
-                "small-building-vertex-943996510",
-                "small-building-vertex-861462044"
-              ]
-            },
-            {
-              "id": "small-building-edge-1526088265",
-              "vertexIds": [
-                "small-building-vertex-468571430",
-                "small-building-vertex-696914248"
-              ]
-            },
-            {
-              "id": "small-building-edge-1546619411",
-              "vertexIds": [
-                "small-building-vertex-696914248",
-                "small-building-vertex-595232246"
-              ]
-            },
-            {
-              "id": "small-building-edge-1565678408",
-              "vertexIds": [
-                "small-building-vertex-1690047670",
-                "small-building-vertex-354458280"
-              ]
-            },
-            {
-              "id": "small-building-edge-1567786765",
-              "vertexIds": [
-                "small-building-vertex-551332595",
-                "small-building-vertex-945778871"
-              ]
-            },
-            {
-              "id": "small-building-edge-1660152326",
-              "vertexIds": [
-                "small-building-vertex-354458280",
-                "small-building-vertex-1412665337"
-              ]
-            },
-            {
-              "id": "small-building-edge-1705326756",
-              "vertexIds": [
-                "small-building-vertex-1928378833",
-                "small-building-vertex-551332595"
-              ]
-            },
-            {
-              "id": "small-building-edge-172877525",
-              "vertexIds": [
-                "small-building-vertex-1690047670",
-                "small-building-vertex-1052483923"
-              ]
-            },
-            {
-              "id": "small-building-edge-1803358123",
-              "vertexIds": [
-                "small-building-vertex-190344958",
-                "small-building-vertex-428254027"
-              ]
-            },
-            {
-              "id": "small-building-edge-1875256078",
-              "vertexIds": [
-                "small-building-vertex-385090140",
-                "small-building-vertex-1052483923"
-              ]
-            },
-            {
-              "id": "small-building-edge-1884754140",
-              "vertexIds": [
-                "small-building-vertex-595232246",
-                "small-building-vertex-190344958"
-              ]
-            },
-            {
-              "id": "small-building-edge-1905736256",
-              "vertexIds": [
-                "small-building-vertex-428254027",
-                "small-building-vertex-945778871"
-              ]
-            },
-            {
-              "id": "small-building-edge-1914903829",
-              "vertexIds": [
-                "small-building-vertex-200778251",
-                "small-building-vertex-990488970"
-              ]
-            },
-            {
-              "id": "small-building-edge-1943812986",
-              "vertexIds": [
-                "small-building-vertex-566043311",
-                "small-building-vertex-584100920"
-              ]
-            },
-            {
-              "id": "small-building-edge-2004107109",
-              "vertexIds": [
-                "small-building-vertex-200778251",
-                "small-building-vertex-560960189"
-              ]
-            },
-            {
-              "id": "small-building-edge-2062007036",
-              "vertexIds": [
-                "small-building-vertex-990488970",
-                "small-building-vertex-924737164"
-              ]
-            },
-            {
-              "id": "small-building-edge-2075229525",
-              "vertexIds": [
-                "small-building-vertex-1027259450",
-                "small-building-vertex-566043311"
-              ]
-            },
-            {
-              "id": "small-building-edge-2101307748",
-              "vertexIds": [
-                "small-building-vertex-943996510",
-                "small-building-vertex-198843528"
-              ]
-            },
-            {
-              "id": "small-building-edge-2102926252",
-              "vertexIds": [
-                "small-building-vertex-1928378833",
-                "small-building-vertex-1653716766"
-              ]
-            },
-            {
-              "id": "small-building-edge-2106132793",
-              "vertexIds": [
-                "small-building-vertex-1198540561",
-                "small-building-vertex-1690047670"
-              ]
-            },
-            {
-              "id": "small-building-edge-216560696",
-              "vertexIds": [
-                "small-building-vertex-595232246",
-                "small-building-vertex-924737164"
-              ]
-            },
-            {
-              "id": "small-building-edge-219287551",
-              "vertexIds": [
-                "small-building-vertex-551332595",
-                "small-building-vertex-190344958"
-              ]
-            },
-            {
-              "id": "small-building-edge-224238197",
-              "vertexIds": [
-                "small-building-vertex-584100920",
-                "small-building-vertex-560960189"
-              ]
-            },
-            {
-              "id": "small-building-edge-225319834",
-              "vertexIds": [
-                "small-building-vertex-861462044",
-                "small-building-vertex-1539396315"
-              ]
-            },
-            {
-              "id": "small-building-edge-229106015",
-              "vertexIds": [
-                "small-building-vertex-1027259450",
-                "small-building-vertex-834828749"
-              ]
-            },
-            {
-              "id": "small-building-edge-258854128",
-              "vertexIds": [
-                "small-building-vertex-568544779",
-                "small-building-vertex-595232246"
-              ]
-            },
-            {
-              "id": "small-building-edge-278123677",
-              "vertexIds": [
-                "small-building-vertex-584100920",
-                "small-building-vertex-354458280"
-              ]
-            },
-            {
-              "id": "small-building-edge-278867947",
-              "vertexIds": [
-                "small-building-vertex-834828749",
-                "small-building-vertex-200778251"
-              ]
-            },
-            {
-              "id": "small-building-edge-295162881",
-              "vertexIds": [
-                "small-building-vertex-700015011",
-                "small-building-vertex-1412665337"
-              ]
-            },
-            {
-              "id": "small-building-edge-305839019",
-              "vertexIds": [
-                "small-building-vertex-861462044",
-                "small-building-vertex-700015011"
-              ]
-            },
-            {
-              "id": "small-building-edge-332998341",
-              "vertexIds": [
-                "small-building-vertex-200778251",
-                "small-building-vertex-354458280"
-              ]
-            },
-            {
-              "id": "small-building-edge-349583852",
-              "vertexIds": [
-                "small-building-vertex-1052483923",
-                "small-building-vertex-1078954806"
-              ]
-            },
-            {
-              "id": "small-building-edge-354613623",
-              "vertexIds": [
-                "small-building-vertex-1487235108",
-                "small-building-vertex-1928378833"
-              ]
-            },
-            {
-              "id": "small-building-edge-432705901",
-              "vertexIds": [
-                "small-building-vertex-200778251",
-                "small-building-vertex-1052483923"
-              ]
-            },
-            {
-              "id": "small-building-edge-432807106",
-              "vertexIds": [
-                "small-building-vertex-1417750768",
-                "small-building-vertex-200778251"
-              ]
-            },
-            {
-              "id": "small-building-edge-467629952",
-              "vertexIds": [
-                "small-building-vertex-1078954806",
-                "small-building-vertex-560960189"
-              ]
-            },
-            {
-              "id": "small-building-edge-492289368",
-              "vertexIds": [
-                "small-building-vertex-468571430",
-                "small-building-vertex-568544779"
-              ]
-            },
-            {
-              "id": "small-building-edge-49481349",
-              "vertexIds": [
-                "small-building-vertex-1417750768",
-                "small-building-vertex-551332595"
-              ]
-            },
-            {
-              "id": "small-building-edge-508083477",
-              "vertexIds": [
-                "small-building-vertex-1417750768",
-                "small-building-vertex-1653716766"
-              ]
-            },
-            {
-              "id": "small-building-edge-51009478",
-              "vertexIds": [
-                "small-building-vertex-924737164",
-                "small-building-vertex-943996510"
-              ]
-            },
-            {
-              "id": "small-building-edge-53081364",
-              "vertexIds": [
-                "small-building-vertex-55304137",
-                "small-building-vertex-1539396315"
-              ]
-            },
-            {
-              "id": "small-building-edge-589906933",
-              "vertexIds": [
-                "small-building-vertex-1393258689",
-                "small-building-vertex-468571430"
-              ]
-            },
-            {
-              "id": "small-building-edge-598826215",
-              "vertexIds": [
-                "small-building-vertex-1690047670",
-                "small-building-vertex-935545497"
-              ]
-            },
-            {
-              "id": "small-building-edge-601106960",
-              "vertexIds": [
-                "small-building-vertex-1417750768",
-                "small-building-vertex-696914248"
-              ]
-            },
-            {
-              "id": "small-building-edge-608733341",
-              "vertexIds": [
-                "small-building-vertex-700015011",
-                "small-building-vertex-55304137"
-              ]
-            },
-            {
-              "id": "small-building-edge-657827535",
-              "vertexIds": [
-                "small-building-vertex-198843528",
-                "small-building-vertex-354458280"
-              ]
-            },
-            {
-              "id": "small-building-edge-666672115",
-              "vertexIds": [
-                "small-building-vertex-1078954806",
-                "small-building-vertex-1198540561"
-              ]
-            },
-            {
-              "id": "small-building-edge-757634469",
-              "vertexIds": [
-                "small-building-vertex-1412665337",
-                "small-building-vertex-834828749"
-              ]
-            },
-            {
-              "id": "small-building-edge-779379499",
-              "vertexIds": [
-                "small-building-vertex-1412665337",
-                "small-building-vertex-566043311"
-              ]
-            },
-            {
-              "id": "small-building-edge-814507104",
-              "vertexIds": [
-                "small-building-vertex-55304137",
-                "small-building-vertex-990488970"
-              ]
-            },
-            {
-              "id": "small-building-edge-829530808",
-              "vertexIds": [
-                "small-building-vertex-2126675359",
-                "small-building-vertex-1393258689"
-              ]
-            },
-            {
-              "id": "small-building-edge-858566927",
-              "vertexIds": [
-                "small-building-vertex-385090140",
-                "small-building-vertex-428254027"
-              ]
-            },
-            {
-              "id": "small-building-edge-894079751",
-              "vertexIds": [
-                "small-building-vertex-1539396315",
-                "small-building-vertex-924737164"
-              ]
-            },
-            {
-              "id": "small-building-edge-905942567",
-              "vertexIds": [
-                "small-building-vertex-1653716766",
-                "small-building-vertex-2126675359"
-              ]
-            },
-            {
-              "id": "small-building-edge-936303582",
-              "vertexIds": [
-                "small-building-vertex-834828749",
-                "small-building-vertex-55304137"
-              ]
-            },
-            {
-              "id": "small-building-edge-951546977",
-              "vertexIds": [
-                "small-building-vertex-560960189",
-                "small-building-vertex-1027259450"
-              ]
-            }
-          ],
-          "wires": [
-            {
-              "id": "small-building-wire-1095357825",
-              "edgeIds": [
-                "small-building-edge-467629952",
-                "small-building-edge-1422159112",
-                "small-building-edge-354613623",
-                "small-building-edge-2102926252",
-                "small-building-edge-1261178177"
-              ]
-            },
-            {
-              "id": "small-building-wire-1096443527",
-              "edgeIds": [
-                "small-building-edge-936303582",
-                "small-building-edge-1176603989",
-                "small-building-edge-589906933",
-                "small-building-edge-1129968473"
-              ]
-            },
-            {
-              "id": "small-building-wire-1098242493",
-              "edgeIds": [
-                "small-building-edge-1254229480",
-                "small-building-edge-1914903829",
-                "small-building-edge-332998341",
-                "small-building-edge-657827535"
-              ]
-            },
-            {
-              "id": "small-building-wire-1114708436",
-              "edgeIds": [
-                "small-building-edge-905942567",
-                "small-building-edge-508083477",
-                "small-building-edge-1293562955",
-                "small-building-edge-829530808"
-              ]
-            },
-            {
-              "id": "small-building-wire-1172378877",
-              "edgeIds": [
-                "small-building-edge-49481349",
-                "small-building-edge-219287551",
-                "small-building-edge-1884754140",
-                "small-building-edge-601106960",
-                "small-building-edge-1546619411"
-              ]
-            },
-            {
-              "id": "small-building-wire-1184681038",
-              "edgeIds": [
-                "small-building-edge-814507104",
-                "small-building-edge-2062007036",
-                "small-building-edge-894079751",
-                "small-building-edge-53081364"
-              ]
-            },
-            {
-              "id": "small-building-wire-1300391340",
-              "edgeIds": [
-                "small-building-edge-53081364",
-                "small-building-edge-1129968473",
-                "small-building-edge-492289368",
-                "small-building-edge-1181976793"
-              ]
-            },
-            {
-              "id": "small-building-wire-1316372424",
-              "edgeIds": [
-                "small-building-edge-1875256078",
-                "small-building-edge-172877525",
-                "small-building-edge-598826215",
-                "small-building-edge-1246638018"
-              ]
-            },
-            {
-              "id": "small-building-wire-1366152152",
-              "edgeIds": [
-                "small-building-edge-278123677",
-                "small-building-edge-1943812986",
-                "small-building-edge-779379499",
-                "small-building-edge-1660152326"
-              ]
-            },
-            {
-              "id": "small-building-wire-1368161050",
-              "edgeIds": [
-                "small-building-edge-2101307748",
-                "small-building-edge-1135198732",
-                "small-building-edge-305839019",
-                "small-building-edge-1434101711"
-              ]
-            },
-            {
-              "id": "small-building-wire-1390110645",
-              "edgeIds": [
-                "small-building-edge-278867947",
-                "small-building-edge-1914903829",
-                "small-building-edge-814507104",
-                "small-building-edge-936303582"
-              ]
-            },
-            {
-              "id": "small-building-wire-1398946955",
-              "edgeIds": [
-                "small-building-edge-1567786765",
-                "small-building-edge-1905736256",
-                "small-building-edge-1803358123",
-                "small-building-edge-219287551"
-              ]
-            },
-            {
-              "id": "small-building-wire-1399618711",
-              "edgeIds": [
-                "small-building-edge-349583852",
-                "small-building-edge-432705901",
-                "small-building-edge-2004107109",
-                "small-building-edge-467629952"
-              ]
-            },
-            {
-              "id": "small-building-wire-1404785392",
-              "edgeIds": [
-                "small-building-edge-608733341",
-                "small-building-edge-53081364",
-                "small-building-edge-225319834",
-                "small-building-edge-305839019"
-              ]
-            },
-            {
-              "id": "small-building-wire-1502734446",
-              "edgeIds": [
-                "small-building-edge-1293562955",
-                "small-building-edge-601106960",
-                "small-building-edge-1526088265",
-                "small-building-edge-589906933"
-              ]
-            },
-            {
-              "id": "small-building-wire-1553478650",
-              "edgeIds": [
-                "small-building-edge-2062007036",
-                "small-building-edge-216560696",
-                "small-building-edge-1546619411",
-                "small-building-edge-1087294237"
-              ]
-            },
-            {
-              "id": "small-building-wire-1559546061",
-              "edgeIds": [
-                "small-building-edge-2075229525",
-                "small-building-edge-229106015",
-                "small-building-edge-757634469",
-                "small-building-edge-779379499"
-              ]
-            },
-            {
-              "id": "small-building-wire-1590398748",
-              "edgeIds": [
-                "small-building-edge-172877525",
-                "small-building-edge-1565678408",
-                "small-building-edge-332998341",
-                "small-building-edge-432705901"
-              ]
-            },
-            {
-              "id": "small-building-wire-1592230924",
-              "edgeIds": [
-                "small-building-edge-757634469",
-                "small-building-edge-936303582",
-                "small-building-edge-608733341",
-                "small-building-edge-295162881"
-              ]
-            },
-            {
-              "id": "small-building-wire-1597372722",
-              "edgeIds": [
-                "small-building-edge-858566927",
-                "small-building-edge-1336202142",
-                "small-building-edge-216560696",
-                "small-building-edge-1884754140",
-                "small-building-edge-1803358123"
-              ]
-            },
-            {
-              "id": "small-building-wire-1632492423",
-              "edgeIds": [
-                "small-building-edge-657827535",
-                "small-building-edge-1660152326",
-                "small-building-edge-295162881",
-                "small-building-edge-1135198732"
-              ]
-            },
-            {
-              "id": "small-building-wire-164476126",
-              "edgeIds": [
-                "small-building-edge-229106015",
-                "small-building-edge-1221590728",
-                "small-building-edge-829530808",
-                "small-building-edge-1176603989"
-              ]
-            },
-            {
-              "id": "small-building-wire-1664100031",
-              "edgeIds": [
-                "small-building-edge-432807106",
-                "small-building-edge-278867947",
-                "small-building-edge-1176603989",
-                "small-building-edge-1293562955"
-              ]
-            },
-            {
-              "id": "small-building-wire-1673128573",
-              "edgeIds": [
-                "small-building-edge-1875256078",
-                "small-building-edge-1336202142",
-                "small-building-edge-1914903829",
-                "small-building-edge-2062007036",
-                "small-building-edge-432705901"
-              ]
-            },
-            {
-              "id": "small-building-wire-1676387167",
-              "edgeIds": [
-                "small-building-edge-1070453701",
-                "small-building-edge-432705901",
-                "small-building-edge-432807106",
-                "small-building-edge-49481349",
-                "small-building-edge-1567786765"
-              ]
-            },
-            {
-              "id": "small-building-wire-1714825002",
-              "edgeIds": [
-                "small-building-edge-666672115",
-                "small-building-edge-467629952",
-                "small-building-edge-224238197",
-                "small-building-edge-1114968992"
-              ]
-            },
-            {
-              "id": "small-building-wire-1737456781",
-              "edgeIds": [
-                "small-building-edge-216560696",
-                "small-building-edge-894079751",
-                "small-building-edge-1181976793",
-                "small-building-edge-258854128"
-              ]
-            },
-            {
-              "id": "small-building-wire-1742634236",
-              "edgeIds": [
-                "small-building-edge-278867947",
-                "small-building-edge-332998341",
-                "small-building-edge-1660152326",
-                "small-building-edge-757634469"
-              ]
-            },
-            {
-              "id": "small-building-wire-1745669744",
-              "edgeIds": [
-                "small-building-edge-1087294237",
-                "small-building-edge-601106960",
-                "small-building-edge-432807106",
-                "small-building-edge-1914903829"
-              ]
-            },
-            {
-              "id": "small-building-wire-1748227933",
-              "edgeIds": [
-                "small-building-edge-951546977",
-                "small-building-edge-1261178177",
-                "small-building-edge-905942567",
-                "small-building-edge-1221590728"
-              ]
-            },
-            {
-              "id": "small-building-wire-1755121565",
-              "edgeIds": [
-                "small-building-edge-2004107109",
-                "small-building-edge-432807106",
-                "small-building-edge-508083477",
-                "small-building-edge-1261178177"
-              ]
-            },
-            {
-              "id": "small-building-wire-1817346002",
-              "edgeIds": [
-                "small-building-edge-1526088265",
-                "small-building-edge-1546619411",
-                "small-building-edge-258854128",
-                "small-building-edge-492289368"
-              ]
-            },
-            {
-              "id": "small-building-wire-1847165922",
-              "edgeIds": [
-                "small-building-edge-51009478",
-                "small-building-edge-2062007036",
-                "small-building-edge-1254229480",
-                "small-building-edge-2101307748"
-              ]
-            },
-            {
-              "id": "small-building-wire-2038755520",
-              "edgeIds": [
-                "small-building-edge-1087294237",
-                "small-building-edge-814507104",
-                "small-building-edge-1129968473",
-                "small-building-edge-1526088265"
-              ]
-            },
-            {
-              "id": "small-building-wire-256701055",
-              "edgeIds": [
-                "small-building-edge-1246638018",
-                "small-building-edge-1400646396",
-                "small-building-edge-51009478",
-                "small-building-edge-1336202142"
-              ]
-            },
-            {
-              "id": "small-building-wire-285005499",
-              "edgeIds": [
-                "small-building-edge-349583852",
-                "small-building-edge-1070453701",
-                "small-building-edge-1108121009",
-                "small-building-edge-1422159112"
-              ]
-            },
-            {
-              "id": "small-building-wire-311748032",
-              "edgeIds": [
-                "small-building-edge-354613623",
-                "small-building-edge-1108121009",
-                "small-building-edge-1567786765",
-                "small-building-edge-1705326756"
-              ]
-            },
-            {
-              "id": "small-building-wire-36314266",
-              "edgeIds": [
-                "small-building-edge-814507104",
-                "small-building-edge-1254229480",
-                "small-building-edge-1135198732",
-                "small-building-edge-608733341"
-              ]
-            },
-            {
-              "id": "small-building-wire-403059999",
-              "edgeIds": [
-                "small-building-edge-1565678408",
-                "small-building-edge-2106132793",
-                "small-building-edge-1114968992",
-                "small-building-edge-278123677"
-              ]
-            },
-            {
-              "id": "small-building-wire-456551683",
-              "edgeIds": [
-                "small-building-edge-1943812986",
-                "small-building-edge-224238197",
-                "small-building-edge-951546977",
-                "small-building-edge-2075229525"
-              ]
-            },
-            {
-              "id": "small-building-wire-510979431",
-              "edgeIds": [
-                "small-building-edge-1905736256",
-                "small-building-edge-1070453701",
-                "small-building-edge-1875256078",
-                "small-building-edge-858566927"
-              ]
-            },
-            {
-              "id": "small-building-wire-515231130",
-              "edgeIds": [
-                "small-building-edge-224238197",
-                "small-building-edge-278123677",
-                "small-building-edge-332998341",
-                "small-building-edge-2004107109"
-              ]
-            },
-            {
-              "id": "small-building-wire-516983686",
-              "edgeIds": [
-                "small-building-edge-894079751",
-                "small-building-edge-51009478",
-                "small-building-edge-1434101711",
-                "small-building-edge-225319834"
-              ]
-            },
-            {
-              "id": "small-building-wire-646169955",
-              "edgeIds": [
-                "small-building-edge-598826215",
-                "small-building-edge-1565678408",
-                "small-building-edge-2101307748",
-                "small-building-edge-657827535",
-                "small-building-edge-1400646396"
-              ]
-            },
-            {
-              "id": "small-building-wire-715609103",
-              "edgeIds": [
-                "small-building-edge-2106132793",
-                "small-building-edge-172877525",
-                "small-building-edge-349583852",
-                "small-building-edge-666672115"
-              ]
-            },
-            {
-              "id": "small-building-wire-924227310",
-              "edgeIds": [
-                "small-building-edge-49481349",
-                "small-building-edge-508083477",
-                "small-building-edge-2102926252",
-                "small-building-edge-1705326756"
-              ]
-            },
-            {
-              "id": "small-building-wire-978200956",
-              "edgeIds": [
-                "small-building-edge-951546977",
-                "small-building-edge-2004107109",
-                "small-building-edge-278867947",
-                "small-building-edge-229106015"
-              ]
-            }
-          ],
-          "faces": [
-            {
-              "id": "small-building-face-1049102882",
-              "wireIds": [
-                "small-building-wire-1592230924"
-              ]
-            },
-            {
-              "id": "small-building-face-1071813579",
-              "wireIds": [
-                "small-building-wire-1559546061"
-              ]
-            },
-            {
-              "id": "small-building-face-1144073303",
-              "wireIds": [
-                "small-building-wire-1755121565"
-              ]
-            },
-            {
-              "id": "small-building-face-1198070201",
-              "wireIds": [
-                "small-building-wire-456551683"
-              ]
-            },
-            {
-              "id": "small-building-face-123273386",
-              "wireIds": [
-                "small-building-wire-1745669744"
-              ]
-            },
-            {
-              "id": "small-building-face-1321487947",
-              "wireIds": [
-                "small-building-wire-1742634236"
-              ]
-            },
-            {
-              "id": "small-building-face-1333043829",
-              "wireIds": [
-                "small-building-wire-516983686"
-              ]
-            },
-            {
-              "id": "small-building-face-1336622373",
-              "wireIds": [
-                "small-building-wire-36314266"
-              ]
-            },
-            {
-              "id": "small-building-face-1366698037",
-              "wireIds": [
-                "small-building-wire-1590398748"
-              ]
-            },
-            {
-              "id": "small-building-face-1375822498",
-              "wireIds": [
-                "small-building-wire-715609103"
-              ]
-            },
-            {
-              "id": "small-building-face-1382216532",
-              "wireIds": [
-                "small-building-wire-164476126"
-              ]
-            },
-            {
-              "id": "small-building-face-1382526041",
-              "wireIds": [
-                "small-building-wire-1095357825"
-              ]
-            },
-            {
-              "id": "small-building-face-145599241",
-              "wireIds": [
-                "small-building-wire-1748227933"
-              ]
-            },
-            {
-              "id": "small-building-face-1457506915",
-              "wireIds": [
-                "small-building-wire-1172378877"
-              ]
-            },
-            {
-              "id": "small-building-face-1457969424",
-              "wireIds": [
-                "small-building-wire-1817346002"
-              ]
-            },
-            {
-              "id": "small-building-face-1542409550",
-              "wireIds": [
-                "small-building-wire-1096443527"
-              ]
-            },
-            {
-              "id": "small-building-face-1570704954",
-              "wireIds": [
-                "small-building-wire-2038755520"
-              ]
-            },
-            {
-              "id": "small-building-face-1577063820",
-              "wireIds": [
-                "small-building-wire-1632492423"
-              ]
-            },
-            {
-              "id": "small-building-face-1631560793",
-              "wireIds": [
-                "small-building-wire-256701055"
-              ]
-            },
-            {
-              "id": "small-building-face-1652633605",
-              "wireIds": [
-                "small-building-wire-1847165922"
-              ]
-            },
-            {
-              "id": "small-building-face-1722928574",
-              "wireIds": [
-                "small-building-wire-510979431"
-              ]
-            },
-            {
-              "id": "small-building-face-1833451572",
-              "wireIds": [
-                "small-building-wire-1366152152"
-              ]
-            },
-            {
-              "id": "small-building-face-1880838606",
-              "wireIds": [
-                "small-building-wire-1300391340"
-              ]
-            },
-            {
-              "id": "small-building-face-1891411219",
-              "wireIds": [
-                "small-building-wire-1399618711"
-              ]
-            },
-            {
-              "id": "small-building-face-1944355059",
-              "wireIds": [
-                "small-building-wire-1714825002"
-              ]
-            },
-            {
-              "id": "small-building-face-1973958103",
-              "wireIds": [
-                "small-building-wire-646169955"
-              ]
-            },
-            {
-              "id": "small-building-face-2019874201",
-              "wireIds": [
-                "small-building-wire-311748032"
-              ]
-            },
-            {
-              "id": "small-building-face-205984231",
-              "wireIds": [
-                "small-building-wire-403059999"
-              ]
-            },
-            {
-              "id": "small-building-face-2078803802",
-              "wireIds": [
-                "small-building-wire-1368161050"
-              ]
-            },
-            {
-              "id": "small-building-face-2114497508",
-              "wireIds": [
-                "small-building-wire-1390110645"
-              ]
-            },
-            {
-              "id": "small-building-face-2129815768",
-              "wireIds": [
-                "small-building-wire-924227310"
-              ]
-            },
-            {
-              "id": "small-building-face-257952373",
-              "wireIds": [
-                "small-building-wire-1597372722"
-              ]
-            },
-            {
-              "id": "small-building-face-383803774",
-              "wireIds": [
-                "small-building-wire-515231130"
-              ]
-            },
-            {
-              "id": "small-building-face-512606747",
-              "wireIds": [
-                "small-building-wire-285005499"
-              ]
-            },
-            {
-              "id": "small-building-face-566674442",
-              "wireIds": [
-                "small-building-wire-1502734446"
-              ]
-            },
-            {
-              "id": "small-building-face-578295541",
-              "wireIds": [
-                "small-building-wire-1316372424"
-              ]
-            },
-            {
-              "id": "small-building-face-611087225",
-              "wireIds": [
-                "small-building-wire-1673128573"
-              ]
-            },
-            {
-              "id": "small-building-face-620157701",
-              "wireIds": [
-                "small-building-wire-1114708436"
-              ]
-            },
-            {
-              "id": "small-building-face-624717229",
-              "wireIds": [
-                "small-building-wire-978200956"
-              ]
-            },
-            {
-              "id": "small-building-face-646282419",
-              "wireIds": [
-                "small-building-wire-1184681038"
-              ]
-            },
-            {
-              "id": "small-building-face-700285324",
-              "wireIds": [
-                "small-building-wire-1098242493"
-              ]
-            },
-            {
-              "id": "small-building-face-807614999",
-              "wireIds": [
-                "small-building-wire-1737456781"
-              ]
-            },
-            {
-              "id": "small-building-face-816291467",
-              "wireIds": [
-                "small-building-wire-1676387167"
-              ]
-            },
-            {
-              "id": "small-building-face-820822656",
-              "wireIds": [
-                "small-building-wire-1664100031"
-              ]
-            },
-            {
-              "id": "small-building-face-824333506",
-              "wireIds": [
-                "small-building-wire-1398946955"
-              ]
-            },
-            {
-              "id": "small-building-face-930164148",
-              "wireIds": [
-                "small-building-wire-1404785392"
-              ]
-            },
-            {
-              "id": "small-building-face-976303559",
-              "wireIds": [
-                "small-building-wire-1553478650"
-              ]
-            }
-          ],
-          "shells": [
-            {
-              "id": "small-building-shell-1021196941",
-              "faceIds": [
-                "small-building-face-1570704954",
-                "small-building-face-123273386",
-                "small-building-face-2114497508",
-                "small-building-face-1542409550",
-                "small-building-face-566674442",
-                "small-building-face-820822656"
-              ]
-            },
-            {
-              "id": "small-building-shell-115098816",
-              "faceIds": [
-                "small-building-face-816291467",
-                "small-building-face-512606747",
-                "small-building-face-1891411219",
-                "small-building-face-1144073303",
-                "small-building-face-2129815768",
-                "small-building-face-2019874201",
-                "small-building-face-1382526041"
-              ]
-            },
-            {
-              "id": "small-building-shell-1482876550",
-              "faceIds": [
-                "small-building-face-820822656",
-                "small-building-face-1144073303",
-                "small-building-face-624717229",
-                "small-building-face-1382216532",
-                "small-building-face-620157701",
-                "small-building-face-145599241"
-              ]
-            },
-            {
-              "id": "small-building-shell-1731270073",
-              "faceIds": [
-                "small-building-face-578295541",
-                "small-building-face-611087225",
-                "small-building-face-1366698037",
-                "small-building-face-1973958103",
-                "small-building-face-1631560793",
-                "small-building-face-1652633605",
-                "small-building-face-700285324"
-              ]
-            },
-            {
-              "id": "small-building-shell-319815043",
-              "faceIds": [
-                "small-building-face-1198070201",
-                "small-building-face-1833451572",
-                "small-building-face-383803774",
-                "small-building-face-624717229",
-                "small-building-face-1071813579",
-                "small-building-face-1321487947"
-              ]
-            },
-            {
-              "id": "small-building-shell-431204894",
-              "faceIds": [
-                "small-building-face-807614999",
-                "small-building-face-976303559",
-                "small-building-face-646282419",
-                "small-building-face-1880838606",
-                "small-building-face-1457969424",
-                "small-building-face-1570704954"
-              ]
-            },
-            {
-              "id": "small-building-shell-564953133",
-              "faceIds": [
-                "small-building-face-123273386",
-                "small-building-face-976303559",
-                "small-building-face-611087225",
-                "small-building-face-816291467",
-                "small-building-face-1457506915",
-                "small-building-face-257952373",
-                "small-building-face-1722928574",
-                "small-building-face-824333506"
-              ]
-            },
-            {
-              "id": "small-building-shell-582028949",
-              "faceIds": [
-                "small-building-face-1375822498",
-                "small-building-face-205984231",
-                "small-building-face-1366698037",
-                "small-building-face-1891411219",
-                "small-building-face-1944355059",
-                "small-building-face-383803774"
-              ]
-            },
-            {
-              "id": "small-building-shell-729436001",
-              "faceIds": [
-                "small-building-face-1336622373",
-                "small-building-face-2078803802",
-                "small-building-face-1652633605",
-                "small-building-face-646282419",
-                "small-building-face-930164148",
-                "small-building-face-1333043829"
-              ]
-            },
-            {
-              "id": "small-building-shell-851607366",
-              "faceIds": [
-                "small-building-face-1321487947",
-                "small-building-face-1577063820",
-                "small-building-face-700285324",
-                "small-building-face-2114497508",
-                "small-building-face-1049102882",
-                "small-building-face-1336622373"
-              ]
-            }
-          ],
-          "solids": [
-            {
-              "id": "small-building-cell-123052045",
-              "shellIds": [
-                "small-building-shell-319815043"
-              ]
-            },
-            {
-              "id": "small-building-cell-1278694563",
-              "shellIds": [
-                "small-building-shell-115098816"
-              ]
-            },
-            {
-              "id": "small-building-cell-1726958126",
-              "shellIds": [
-                "small-building-shell-1731270073"
-              ]
-            },
-            {
-              "id": "small-building-cell-177644683",
-              "shellIds": [
-                "small-building-shell-431204894"
-              ]
-            },
-            {
-              "id": "small-building-cell-346474455",
-              "shellIds": [
-                "small-building-shell-1482876550"
-              ]
-            },
-            {
-              "id": "small-building-cell-509251538",
-              "shellIds": [
-                "small-building-shell-851607366"
-              ]
-            },
-            {
-              "id": "small-building-cell-531581172",
-              "shellIds": [
-                "small-building-shell-729436001"
-              ]
-            },
-            {
-              "id": "small-building-cell-548248443",
-              "shellIds": [
-                "small-building-shell-564953133"
-              ]
-            },
-            {
-              "id": "small-building-cell-916435296",
-              "shellIds": [
-                "small-building-shell-582028949"
-              ]
-            },
-            {
-              "id": "small-building-cell-920901709",
-              "shellIds": [
-                "small-building-shell-1021196941"
-              ]
-            }
-          ]
-        }
+        ]
       }
     }
-  ],
-  "vertexHashesByModel": {
-    "spatial.shape": {
-      "small-building-vertex-1027259450": "v:4c450288",
-      "small-building-vertex-1052483923": "v:2cb58ad0",
-      "small-building-vertex-1078954806": "v:7eeebf7a",
-      "small-building-vertex-1198540561": "v:a12d3fa4",
-      "small-building-vertex-1393258689": "v:18ed425c",
-      "small-building-vertex-1412665337": "v:ddad69c4",
-      "small-building-vertex-1417750768": "v:9033bedf",
-      "small-building-vertex-1487235108": "v:1c4fcf3c",
-      "small-building-vertex-1539396315": "v:701f77ed",
-      "small-building-vertex-1653716766": "v:5f71c955",
-      "small-building-vertex-1690047670": "v:1e1dc7da",
-      "small-building-vertex-190344958": "v:98829622",
-      "small-building-vertex-1928378833": "v:f5fb9e4b",
-      "small-building-vertex-198843528": "v:cece5176",
-      "small-building-vertex-200778251": "v:4fe4192b",
-      "small-building-vertex-2126675359": "v:16c22e76",
-      "small-building-vertex-354458280": "v:aab9805f",
-      "small-building-vertex-385090140": "v:a0241de5",
-      "small-building-vertex-428254027": "v:6ad3b7c7",
-      "small-building-vertex-468571430": "v:4eae3935",
-      "small-building-vertex-551332595": "v:9b3d91b1",
-      "small-building-vertex-55304137": "v:96119f67",
-      "small-building-vertex-560960189": "v:115b5989",
-      "small-building-vertex-566043311": "v:3ca5cb42",
-      "small-building-vertex-568544779": "v:b5b2971f",
-      "small-building-vertex-584100920": "v:e477cd2d",
-      "small-building-vertex-595232246": "v:54897cee",
-      "small-building-vertex-696914248": "v:f5a38d58",
-      "small-building-vertex-700015011": "v:a822310b",
-      "small-building-vertex-834828749": "v:bfe3e89a",
-      "small-building-vertex-861462044": "v:8ce93681",
-      "small-building-vertex-924737164": "v:8645962a",
-      "small-building-vertex-935545497": "v:900c8d89",
-      "small-building-vertex-943996510": "v:8ba24754",
-      "small-building-vertex-945778871": "v:6e6cb80e",
-      "small-building-vertex-990488970": "v:e2421f7c"
-    }
-  },
-  "geometryHashesByModel": {
-    "spatial.shape": {
-      "vertex": {
-        "small-building-vertex-1027259450": "v:4c450288",
-        "small-building-vertex-1052483923": "v:2cb58ad0",
-        "small-building-vertex-1078954806": "v:7eeebf7a",
-        "small-building-vertex-1198540561": "v:a12d3fa4",
-        "small-building-vertex-1393258689": "v:18ed425c",
-        "small-building-vertex-1412665337": "v:ddad69c4",
-        "small-building-vertex-1417750768": "v:9033bedf",
-        "small-building-vertex-1487235108": "v:1c4fcf3c",
-        "small-building-vertex-1539396315": "v:701f77ed",
-        "small-building-vertex-1653716766": "v:5f71c955",
-        "small-building-vertex-1690047670": "v:1e1dc7da",
-        "small-building-vertex-190344958": "v:98829622",
-        "small-building-vertex-1928378833": "v:f5fb9e4b",
-        "small-building-vertex-198843528": "v:cece5176",
-        "small-building-vertex-200778251": "v:4fe4192b",
-        "small-building-vertex-2126675359": "v:16c22e76",
-        "small-building-vertex-354458280": "v:aab9805f",
-        "small-building-vertex-385090140": "v:a0241de5",
-        "small-building-vertex-428254027": "v:6ad3b7c7",
-        "small-building-vertex-468571430": "v:4eae3935",
-        "small-building-vertex-551332595": "v:9b3d91b1",
-        "small-building-vertex-55304137": "v:96119f67",
-        "small-building-vertex-560960189": "v:115b5989",
-        "small-building-vertex-566043311": "v:3ca5cb42",
-        "small-building-vertex-568544779": "v:b5b2971f",
-        "small-building-vertex-584100920": "v:e477cd2d",
-        "small-building-vertex-595232246": "v:54897cee",
-        "small-building-vertex-696914248": "v:f5a38d58",
-        "small-building-vertex-700015011": "v:a822310b",
-        "small-building-vertex-834828749": "v:bfe3e89a",
-        "small-building-vertex-861462044": "v:8ce93681",
-        "small-building-vertex-924737164": "v:8645962a",
-        "small-building-vertex-935545497": "v:900c8d89",
-        "small-building-vertex-943996510": "v:8ba24754",
-        "small-building-vertex-945778871": "v:6e6cb80e",
-        "small-building-vertex-990488970": "v:e2421f7c"
-      },
-      "edge": {
-        "small-building-edge-1070453701": "e:c293a6a5",
-        "small-building-edge-1087294237": "e:6b3d3bfd",
-        "small-building-edge-1108121009": "e:54059419",
-        "small-building-edge-1114968992": "e:29d865b6",
-        "small-building-edge-1129968473": "e:52a9f7d8",
-        "small-building-edge-1135198732": "e:283316e4",
-        "small-building-edge-1176603989": "e:20556dfb",
-        "small-building-edge-1181976793": "e:f0dfa322",
-        "small-building-edge-1221590728": "e:1af14de7",
-        "small-building-edge-1246638018": "e:70518afb",
-        "small-building-edge-1254229480": "e:87df4b5c",
-        "small-building-edge-1261178177": "e:d3194558",
-        "small-building-edge-1293562955": "e:c95f1ac5",
-        "small-building-edge-1336202142": "e:b6dd2464",
-        "small-building-edge-1400646396": "e:f57d5d0c",
-        "small-building-edge-1422159112": "e:0791b2b7",
-        "small-building-edge-1434101711": "e:078adaa4",
-        "small-building-edge-1526088265": "e:609577b2",
-        "small-building-edge-1546619411": "e:1c5ebdc1",
-        "small-building-edge-1565678408": "e:c71e19d0",
-        "small-building-edge-1567786765": "e:46fc3545",
-        "small-building-edge-1660152326": "e:c95b62b6",
-        "small-building-edge-1705326756": "e:5bd12052",
-        "small-building-edge-172877525": "e:3a60248f",
-        "small-building-edge-1803358123": "e:a45915a2",
-        "small-building-edge-1875256078": "e:cc74a7a4",
-        "small-building-edge-1884754140": "e:59ab522b",
-        "small-building-edge-1905736256": "e:5b3c6573",
-        "small-building-edge-1914903829": "e:ca87f26b",
-        "small-building-edge-1943812986": "e:24493937",
-        "small-building-edge-2004107109": "e:66633368",
-        "small-building-edge-2062007036": "e:d0f2bef7",
-        "small-building-edge-2075229525": "e:7d054244",
-        "small-building-edge-2101307748": "e:efd7c9ca",
-        "small-building-edge-2102926252": "e:818ac7ae",
-        "small-building-edge-2106132793": "e:c371515a",
-        "small-building-edge-216560696": "e:31142273",
-        "small-building-edge-219287551": "e:c73bdfec",
-        "small-building-edge-224238197": "e:db97a16d",
-        "small-building-edge-225319834": "e:97916ffa",
-        "small-building-edge-229106015": "e:2112ecb8",
-        "small-building-edge-258854128": "e:c80a6a1e",
-        "small-building-edge-278123677": "e:efa016a2",
-        "small-building-edge-278867947": "e:ecd573e6",
-        "small-building-edge-295162881": "e:fe781d1a",
-        "small-building-edge-305839019": "e:cc8543d4",
-        "small-building-edge-332998341": "e:7706d95f",
-        "small-building-edge-349583852": "e:decb6b49",
-        "small-building-edge-354613623": "e:09c09ef0",
-        "small-building-edge-432705901": "e:e416e686",
-        "small-building-edge-432807106": "e:2e29ddd4",
-        "small-building-edge-467629952": "e:e81519e1",
-        "small-building-edge-492289368": "e:9d8a546d",
-        "small-building-edge-49481349": "e:252926a8",
-        "small-building-edge-508083477": "e:c20343e8",
-        "small-building-edge-51009478": "e:fc3d2213",
-        "small-building-edge-53081364": "e:501f20f3",
-        "small-building-edge-589906933": "e:1b91554f",
-        "small-building-edge-598826215": "e:d9e00ef6",
-        "small-building-edge-601106960": "e:9b5313c8",
-        "small-building-edge-608733341": "e:251b6d5d",
-        "small-building-edge-657827535": "e:bdf8ad98",
-        "small-building-edge-666672115": "e:ad75fe6c",
-        "small-building-edge-757634469": "e:470d826f",
-        "small-building-edge-779379499": "e:763c24d5",
-        "small-building-edge-814507104": "e:0a8c69b9",
-        "small-building-edge-829530808": "e:c07948fe",
-        "small-building-edge-858566927": "e:6949950e",
-        "small-building-edge-894079751": "e:4fbaaaed",
-        "small-building-edge-905942567": "e:629d73bd",
-        "small-building-edge-936303582": "e:263f9122",
-        "small-building-edge-951546977": "e:c7c80e80"
-      },
-      "wire": {
-        "small-building-wire-1095357825": "w:c5511543",
-        "small-building-wire-1096443527": "w:59a8c918",
-        "small-building-wire-1098242493": "w:8b46a3e0",
-        "small-building-wire-1114708436": "w:f22a6a14",
-        "small-building-wire-1172378877": "w:7490305d",
-        "small-building-wire-1184681038": "w:5c0ce31d",
-        "small-building-wire-1300391340": "w:e0d48768",
-        "small-building-wire-1316372424": "w:7efe829b",
-        "small-building-wire-1366152152": "w:a9b390e7",
-        "small-building-wire-1368161050": "w:bdd15349",
-        "small-building-wire-1390110645": "w:f083f076",
-        "small-building-wire-1398946955": "w:a60c3a65",
-        "small-building-wire-1399618711": "w:3e5e4765",
-        "small-building-wire-1404785392": "w:f11dde93",
-        "small-building-wire-1502734446": "w:e8ea7924",
-        "small-building-wire-1553478650": "w:fb772775",
-        "small-building-wire-1559546061": "w:febbaf97",
-        "small-building-wire-1590398748": "w:e9d5163e",
-        "small-building-wire-1592230924": "w:24503b04",
-        "small-building-wire-1597372722": "w:22a81581",
-        "small-building-wire-1632492423": "w:524c794f",
-        "small-building-wire-164476126": "w:251ee97b",
-        "small-building-wire-1664100031": "w:eb1541f5",
-        "small-building-wire-1673128573": "w:01cb2aa0",
-        "small-building-wire-1676387167": "w:769bee2c",
-        "small-building-wire-1714825002": "w:6c491fcf",
-        "small-building-wire-1737456781": "w:15cabfdd",
-        "small-building-wire-1742634236": "w:3f4d07ae",
-        "small-building-wire-1745669744": "w:807d72a6",
-        "small-building-wire-1748227933": "w:a07dc543",
-        "small-building-wire-1755121565": "w:1ff1c911",
-        "small-building-wire-1817346002": "w:09291a8a",
-        "small-building-wire-1847165922": "w:cc2e4aeb",
-        "small-building-wire-2038755520": "w:65549a67",
-        "small-building-wire-256701055": "w:ae7dd333",
-        "small-building-wire-285005499": "w:ee1d6029",
-        "small-building-wire-311748032": "w:dcd70fd7",
-        "small-building-wire-36314266": "w:a524fe8f",
-        "small-building-wire-403059999": "w:c7ec4450",
-        "small-building-wire-456551683": "w:0635800a",
-        "small-building-wire-510979431": "w:42d056ee",
-        "small-building-wire-515231130": "w:f74dfa36",
-        "small-building-wire-516983686": "w:a7db7019",
-        "small-building-wire-646169955": "w:79ec829a",
-        "small-building-wire-715609103": "w:3e8dfbbe",
-        "small-building-wire-924227310": "w:9e63a90c",
-        "small-building-wire-978200956": "w:26234c70"
-      },
-      "face": {
-        "small-building-face-1049102882": "f:4ca62509",
-        "small-building-face-1071813579": "f:7e3af6c2",
-        "small-building-face-1144073303": "f:b57c9cb6",
-        "small-building-face-1198070201": "f:d7a18459",
-        "small-building-face-123273386": "f:958efbb1",
-        "small-building-face-1321487947": "f:0561efca",
-        "small-building-face-1333043829": "f:56691c52",
-        "small-building-face-1336622373": "f:57167ae9",
-        "small-building-face-1366698037": "f:0dc7baae",
-        "small-building-face-1375822498": "f:6223c702",
-        "small-building-face-1382216532": "f:37d72e87",
-        "small-building-face-1382526041": "f:cf524ae3",
-        "small-building-face-145599241": "f:5e198cce",
-        "small-building-face-1457506915": "f:05b0da85",
-        "small-building-face-1457969424": "f:3bb9789a",
-        "small-building-face-1542409550": "f:49d8b437",
-        "small-building-face-1570704954": "f:03cf91e7",
-        "small-building-face-1577063820": "f:085d079c",
-        "small-building-face-1631560793": "f:2bd1642f",
-        "small-building-face-1652633605": "f:87fd0517",
-        "small-building-face-1722928574": "f:ae976ed9",
-        "small-building-face-1833451572": "f:bb965968",
-        "small-building-face-1880838606": "f:486b6da0",
-        "small-building-face-1891411219": "f:44ccfee4",
-        "small-building-face-1944355059": "f:84d31b94",
-        "small-building-face-1973958103": "f:066bcf61",
-        "small-building-face-2019874201": "f:a8df063f",
-        "small-building-face-205984231": "f:dfa34eba",
-        "small-building-face-2078803802": "f:922991d3",
-        "small-building-face-2114497508": "f:6ee20c92",
-        "small-building-face-2129815768": "f:5190340e",
-        "small-building-face-257952373": "f:e36a8a65",
-        "small-building-face-383803774": "f:024f041d",
-        "small-building-face-512606747": "f:304e0f2a",
-        "small-building-face-566674442": "f:301a9300",
-        "small-building-face-578295541": "f:c19b2643",
-        "small-building-face-611087225": "f:b9e1a331",
-        "small-building-face-620157701": "f:d603ae9b",
-        "small-building-face-624717229": "f:d0bda6d6",
-        "small-building-face-646282419": "f:f0d66726",
-        "small-building-face-700285324": "f:0b0fcb54",
-        "small-building-face-807614999": "f:35f63c5f",
-        "small-building-face-816291467": "f:713befca",
-        "small-building-face-820822656": "f:3fff75c0",
-        "small-building-face-824333506": "f:b6d8b321",
-        "small-building-face-930164148": "f:a68f3ef3",
-        "small-building-face-976303559": "f:b0c253f0"
-      },
-      "shell": {
-        "small-building-shell-1021196941": "s:eebfb0e7",
-        "small-building-shell-115098816": "s:ce8f790e",
-        "small-building-shell-1482876550": "s:43ff793c",
-        "small-building-shell-1731270073": "s:9b938788",
-        "small-building-shell-319815043": "s:17ffca2c",
-        "small-building-shell-431204894": "s:ff4e3d80",
-        "small-building-shell-564953133": "s:9ab1adfc",
-        "small-building-shell-582028949": "s:d929dc4e",
-        "small-building-shell-729436001": "s:da1f22da",
-        "small-building-shell-851607366": "s:3028003b"
-      },
-      "solid": {
-        "small-building-cell-123052045": "s:a218b125",
-        "small-building-cell-1278694563": "s:e650da22",
-        "small-building-cell-1726958126": "s:9701e550",
-        "small-building-cell-177644683": "s:2517265c",
-        "small-building-cell-346474455": "s:45995ccd",
-        "small-building-cell-509251538": "s:70fac837",
-        "small-building-cell-531581172": "s:12381309",
-        "small-building-cell-548248443": "s:2399a846",
-        "small-building-cell-916435296": "s:337dafa0",
-        "small-building-cell-920901709": "s:36a13243"
-      }
-    }
-  },
-  "objectPropertyIdsByModel": {
-    "spatial.shape": {
-      "object-small-building-cell-123052045": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-1278694563": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-1726958126": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-177644683": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-346474455": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-509251538": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-531581172": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-548248443": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-916435296": [
-        "spatial.shape.volume"
-      ],
-      "object-small-building-cell-920901709": [
-        "spatial.shape.volume"
-      ]
-    }
-  }
+  ]
 }

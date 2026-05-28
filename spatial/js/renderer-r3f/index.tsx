@@ -5104,17 +5104,9 @@ if (import.meta.vitest) {
 		});
 
 		it("creates snap and selection metadata for geometry targets", () => {
-			const targets = createSpatialPickTargets({
-				schema: "spatial.model/v1",
-				revision: 1,
-				anchors: [],
-				vertices: [{ id: "v0", position: [1, 2, 3] }],
-				edges: [],
-				wires: [],
-				faces: [],
-				shells: [],
-				solids: [],
-			} as unknown as ModelJson);
+			const model = new Model();
+			model.vertices.v0 = { id: "v0" as VertexRef, position: [1, 2, 3] };
+			const targets = createSpatialPickTargets(model.toJSON());
 			expect(targets).toEqual([{ kind: "vertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",

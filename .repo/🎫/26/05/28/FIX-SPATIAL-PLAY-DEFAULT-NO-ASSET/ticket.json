@@ -1,8 +1,9 @@
 {
   "title": "Fix Spatial Play Default No Asset",
   "emoji": "🎮",
-  "status": "open",
+  "status": "closed",
   "description": "Spatial play must start with no shape asset loaded and must not throw when clearing or selecting shape assets.",
+  "summary": "Default shape asset is empty; emptyPlayModels/ensurePlayShapeModel always seed spatial.shape. handleShapeAssetChange uses empty model not empty model space. ensureDerivedModelInSpace no longer skips shape when record is empty. activeModel falls back instead of throw. Vitest 14/14.",
   "goal": "🎯r2602",
   "client": "cursor-chat",
   "llm": "gpt-5-4"

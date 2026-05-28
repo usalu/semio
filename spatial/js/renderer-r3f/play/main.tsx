@@ -141,6 +141,10 @@ function ConstructQueryPanel({
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
+	const modelSpace = parseModelSpaceJson(json);
+	if (modelSpace) return Object.values(modelSpace.models).reduce((count, model) => count + Object.keys(model.vertices).length, 0);
+	const model = parseModelJson(json);
+	if (model) return Object.keys(model.vertices).length;
 	const geo = json.geometry;
 	if (geo && typeof geo === "object") {
 		const nested = (geo as Record<string, unknown>).vertices;
@@ -210,10 +214,6 @@ interface SavePickerWindow extends Window {
 	showSaveFilePicker?: (options?: SaveFilePickerOptionsLike) => Promise<FileSystemFileHandleLike>;
 }
 
-function emptyModelJson(): ModelJsonSnapshot {
-	return new Model().toJSON();
-}
-
 function emptyPlayModels(): Record<string, Model> {
 	return { [SHAPE_MODEL_DEFINITION_ID]: new Model() };
 }
@@ -243,6 +243,8 @@ function fileStem(name: string): string {
 }
 
 function selectRawModel(model: Model, selection: readonly SelectionTarget[]): ModelJsonSnapshot {
+	const selectedModel = new Model();
+	selectedModel.revision = model.revision;
 	const anchors = new Set<string>();
 	const vertices = new Set<string>();
 	const edges = new Set<string>();
@@ -336,6 +338,13 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 
 	for (const target of selection) {
 		switch (target.kind) {
+			case "object": {
+				const object = model.objects[target.id];
+				if (!object) break;
+				selectedModel.objects[object.id] = object;
+				for (const primitiveId of Object.values(object.primitives)) visitById(primitiveId);
+				break;
+			}
 			case "anchor":
 				visitAnchor(target.id);
 				break;
@@ -363,20 +372,15 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	}
 
 	const sortIds = (ids: Set<string>) => [...ids].sort((a, b) => a.localeCompare(b));
-	return {
-		schema: "spatial.model/v1",
-		revision: model.revision,
-		objects: [],
-		geometry: {
-			anchors: sortIds(anchors).map((id) => model.anchors[id]!),
-			vertices: sortIds(vertices).map((id) => model.vertices[id]!),
-			edges: sortIds(edges).map((id) => model.edges[id]!),
-			wires: sortIds(wires).map((id) => model.wires[id]!),
-			faces: sortIds(faces).map((id) => model.faces[id]!),
-			shells: sortIds(shells).map((id) => model.shells[id]!),
-			solids: sortIds(solids).map((id) => model.solids[id]!),
-		},
-	};
+	selectedModel.anchors = Object.fromEntries(sortIds(anchors).map((id) => [id, model.anchors[id]!])) as typeof selectedModel.anchors;
+	selectedModel.vertices = Object.fromEntries(sortIds(vertices).map((id) => [id, model.vertices[id]!])) as typeof selectedModel.vertices;
+	selectedModel.edges = Object.fromEntries(sortIds(edges).map((id) => [id, model.edges[id]!])) as typeof selectedModel.edges;
+	selectedModel.wires = Object.fromEntries(sortIds(wires).map((id) => [id, model.wires[id]!])) as typeof selectedModel.wires;
+	selectedModel.faces = Object.fromEntries(sortIds(faces).map((id) => [id, model.faces[id]!])) as typeof selectedModel.faces;
+	selectedModel.shells = Object.fromEntries(sortIds(shells).map((id) => [id, model.shells[id]!])) as typeof selectedModel.shells;
+	selectedModel.solids = Object.fromEntries(sortIds(solids).map((id) => [id, model.solids[id]!])) as typeof selectedModel.solids;
+	selectedModel.metadata.loadSnapshot(model.metadata.toJSON(), false);
+	return selectedModel.toJSON();
 }
 
 async function writeTextFile(
@@ -709,11 +713,8 @@ function PlayApp() {
 	);
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [shapeAssetId, setShapeAssetId] = useState("small-building");
-	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
-		const asset = SHAPE_ASSETS.find((g) => g.id === "small-building");
-		return modelsFromSpatialJson(asset?.json ?? emptyModelJson());
-	});
+	const [shapeAssetId, setShapeAssetId] = useState("");
+	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(emptyPlayModels);
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
 	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
@@ -775,9 +776,7 @@ function PlayApp() {
 		const resolved = modelsForActiveDefinition[activeModelDefinitionId];
 		if (resolved) return resolved;
 		if (isShapeModelDefinition(activeModelDefinitionId)) {
-			const shape = modelsForActiveDefinition[SHAPE_MODEL_DEFINITION_ID];
-			if (!shape) throw new Error("Play model space missing spatial.shape model.");
-			return shape;
+			return modelsForActiveDefinition[SHAPE_MODEL_DEFINITION_ID] ?? new Model();
 		}
 		throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
 	}, [activeModelDefinitionId, modelsForActiveDefinition]);
@@ -1121,8 +1120,35 @@ function PlayApp() {
 }
 //#endregion
 
+//#region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, it, expect } = import.meta.vitest;
+
+	describe("spatial play model bootstrap", () => {
+		it("emptyPlayModels always seeds spatial.shape", () => {
+			expect(emptyPlayModels()[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+		});
+
+		it("modelsFromSpatialJson on empty model space still seeds spatial.shape", () => {
+			const models = modelsFromSpatialJson(new ModelSpace().toJSON());
+			expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+		});
+
+		it("modelsFromSpatialJson loads fixture models under spatial.shape", () => {
+			const models = modelsFromSpatialJson(geometrySmallBuilding);
+			expect(models[SHAPE_MODEL_DEFINITION_ID]?.objects).not.toEqual({});
+		});
+
+		it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
+			const models = ensureDerivedModelInSpace({}, SHAPE_MODEL_DEFINITION_ID);
+			expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+		});
+	});
+}
+//#endregion
+
 const el = document.getElementById("root");
-if (el) {
+if (el && !import.meta.vitest) {
 	createRoot(el).render(
 		<StrictMode>
 			<PlayApp />

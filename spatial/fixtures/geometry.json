@@ -11,129 +11,147 @@
           {
             "id": "object-capsule-0",
             "typology": "spatial.shape.primitive.box",
-            "primitives": {
-              "solid": "capsule-0"
-            }
+            "primitives": [
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "capsule-0",
+                "shellIds": [
+                  "shell-0"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v0",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v0",
+                "position": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v1",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v1",
+                "position": [
+                  2.4,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v2",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v2",
+                "position": [
+                  2.4,
+                  8,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v3",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v3",
+                "position": [
+                  0,
+                  8,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v4",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v4",
+                "position": [
+                  0,
+                  0,
+                  3.3
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v5",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v5",
+                "position": [
+                  2.4,
+                  0,
+                  3.3
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v6",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v6",
+                "position": [
+                  2.4,
+                  8,
+                  3.3
+                ]
+              }
+            ]
+          },
+          {
+            "id": "object-vertex-v7",
+            "typology": "spatial.shape.kernel.vertex",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "slot": "vertex",
+                "id": "v7",
+                "position": [
+                  0,
+                  8,
+                  3.3
+                ]
+              }
+            ]
           }
-        ],
-        "geometry": {
-          "anchors": [],
-          "vertices": [
-            {
-              "id": "v0",
-              "position": [
-                0,
-                0,
-                0
-              ]
-            },
-            {
-              "id": "v1",
-              "position": [
-                2.4,
-                0,
-                0
-              ]
-            },
-            {
-              "id": "v2",
-              "position": [
-                2.4,
-                8,
-                0
-              ]
-            },
-            {
-              "id": "v3",
-              "position": [
-                0,
-                8,
-                0
-              ]
-            },
-            {
-              "id": "v4",
-              "position": [
-                0,
-                0,
-                3.3
-              ]
-            },
-            {
-              "id": "v5",
-              "position": [
-                2.4,
-                0,
-                3.3
-              ]
-            },
-            {
-              "id": "v6",
-              "position": [
-                2.4,
-                8,
-                3.3
-              ]
-            },
-            {
-              "id": "v7",
-              "position": [
-                0,
-                8,
-                3.3
-              ]
-            }
-          ],
-          "edges": [],
-          "wires": [],
-          "faces": [],
-          "shells": [],
-          "solids": [
-            {
-              "id": "capsule-0",
-              "shellIds": [
-                "shell-0"
-              ]
-            }
-          ]
-        }
+        ]
       }
     }
-  ],
-  "vertexHashesByModel": {
-    "spatial.shape": {
-      "v0": "v:9638e46f",
-      "v1": "v:ede7834f",
-      "v2": "v:163b5a07",
-      "v3": "v:3fc92627",
-      "v4": "v:ab5fb055",
-      "v5": "v:96d69b35",
-      "v6": "v:537482bd",
-      "v7": "v:89857cdd"
-    }
-  },
-  "geometryHashesByModel": {
-    "spatial.shape": {
-      "vertex": {
-        "v0": "v:9638e46f",
-        "v1": "v:ede7834f",
-        "v2": "v:163b5a07",
-        "v3": "v:3fc92627",
-        "v4": "v:ab5fb055",
-        "v5": "v:96d69b35",
-        "v6": "v:537482bd",
-        "v7": "v:89857cdd"
-      },
-      "solid": {
-        "capsule-0": "s:de244012"
-      }
-    }
-  },
-  "objectPropertyIdsByModel": {
-    "spatial.shape": {
-      "object-capsule-0": [
-        "spatial.shape.volume"
-      ]
-    }
-  }
+  ]
 }

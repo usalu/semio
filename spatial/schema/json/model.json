@@ -4,12 +4,11 @@
   "title": "SpatialModel",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "revision", "objects", "geometry"],
+  "required": ["schema", "revision", "objects"],
   "properties": {
     "schema": { "const": "spatial.model/v1" },
     "revision": { "type": "integer", "minimum": 0 },
-    "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } },
-    "geometry": { "$ref": "#/$defs/kernelGeometry" }
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } }
   },
   "$defs": {
     "object": {
@@ -20,9 +19,25 @@
         "id": { "type": "string" },
         "typology": { "type": "string" },
         "primitives": {
-          "type": "object",
-          "additionalProperties": { "type": "string" }
+          "type": "array",
+          "items": { "$ref": "#/$defs/primitive" }
         },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "primitive": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]
+        },
+        "slot": { "type": "string" },
         "attributes": {
           "type": "object",
           "additionalProperties": true
