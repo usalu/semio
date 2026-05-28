@@ -270,7 +270,7 @@
                           "segments": [
                             {
                               "kind": "field",
-                              "name": "constructMode"
+                              "name": "surfaceConstructMode"
                             }
                           ]
                         }
@@ -970,7 +970,7 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "structure.linefem.constructLineElement",
+      "action": "structure.linefem.constructLineElementFrom2PointsAndHeight",
       "params": {
         "typology": {
           "kind": "const",

@@ -7,6 +7,7 @@ import {
 	capabilityActionSpecJson,
 	legacyTypologyConstructActionBasenames,
 	typologyConstructAssetIds,
+	typologyConstructIsSurfacePrimary,
 	typologyConstructModeActionIds,
 } from "./typology-construct-codegen.ts";
 
@@ -42,20 +43,28 @@ function removeLegacyActions(actionDir: string, label: string, interactionId: st
 	}
 }
 
+function removeModeActionIfPresent(actionDir: string, actionId: string): void {
+	const path = join(actionDir, `${actionId.split(".").pop()}.json`);
+	if (existsSync(path)) unlinkSync(path);
+}
+
 function writeModeActions(actionDir: string, typologyId: string, label: string): void {
 	const ids = typologyConstructAssetIds(typologyId, label);
-	writeJson(
-		join(actionDir, `${ids.constructFrom2PointsAndHeight.split(".").pop()}.json`),
-		capabilityActionSpecJson(ids.constructFrom2PointsAndHeight, `Construct ${label} From 2 Points And Height`),
-	);
-	writeJson(
-		join(actionDir, `${ids.constructFromCurveAndHeight.split(".").pop()}.json`),
-		capabilityActionSpecJson(ids.constructFromCurveAndHeight, `Construct ${label} From Curve And Height`),
-	);
-	writeJson(
-		join(actionDir, `${ids.constructFromSurface.split(".").pop()}.json`),
-		capabilityActionSpecJson(ids.constructFromSurface, `Construct ${label} From Surface`),
-	);
+	const surfacePrimary = typologyConstructIsSurfacePrimary(typologyId);
+	const modeActions: { id: string; title: string }[] = surfacePrimary
+		? [{ id: ids.constructFromSurface, title: `Construct ${label} From Surface` }]
+		: [
+				{ id: ids.constructFrom2PointsAndHeight, title: `Construct ${label} From 2 Points And Height` },
+				{ id: ids.constructFromCurveAndHeight, title: `Construct ${label} From Curve And Height` },
+				{ id: ids.constructFromSurface, title: `Construct ${label} From Surface` },
+			];
+	if (surfacePrimary) {
+		removeModeActionIfPresent(actionDir, ids.constructFrom2PointsAndHeight);
+		removeModeActionIfPresent(actionDir, ids.constructFromCurveAndHeight);
+	}
+	for (const row of modeActions) {
+		writeJson(join(actionDir, `${row.id.split(".").pop()}.json`), capabilityActionSpecJson(row.id, row.title));
+	}
 }
 
 let synced = 0;

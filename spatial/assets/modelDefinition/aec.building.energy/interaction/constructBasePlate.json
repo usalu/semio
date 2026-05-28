@@ -214,7 +214,7 @@
                           "segments": [
                             {
                               "kind": "field",
-                              "name": "constructMode"
+                              "name": "surfaceConstructMode"
                             }
                           ]
                         }
@@ -914,7 +914,7 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "energy.energy.constructBasePlate",
+      "action": "energy.energy.constructBasePlateFromSurface",
       "params": {
         "typology": {
           "kind": "const",

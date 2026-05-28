@@ -270,7 +270,7 @@
                           "segments": [
                             {
                               "kind": "field",
-                              "name": "constructMode"
+                              "name": "surfaceConstructMode"
                             }
                           ]
                         }
@@ -970,7 +970,7 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "structure.structure.constructReinforcedConcreteInternalWall",
+      "action": "structure.structure.constructReinforcedConcreteInternalWallFrom2PointsAndHeight",
       "params": {
         "typology": {
           "kind": "const",

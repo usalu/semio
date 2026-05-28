@@ -714,6 +714,27 @@ The extension must be written in cad-coordinate system but all e.g. glb imports 
 Generalize the concept of lod from a set of domain-driven 6 fixed lods to a open list and domain-neutral list of float. e.g. 50000 stands for 1to50000, 200 for 1to200, 0.5 for 2to1, etc
 Add automatic zoom driven lod, add depth-variable lod (the closer to the camera the more detailed) and a slider for forcing a specific lod.
 If an object doesnt have a representation for a specific lod, take the closest one. On equal distance pick the lower number lod.
+e.g. common ones are:
+1to50000
+1to25000
+1to10000
+1to5000
+1to2500
+1to1000
+1to1000
+1to500
+1to333
+1to200
+1to100
+1to50
+1to50
+1to33
+1to25
+1to10
+1to5
+1to1
+1to0.5
+1to0.25
 
 ---
 
@@ -2573,7 +2594,7 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
- There are many construct* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions. Make sure this pattern is applied strictly.
+There are many construct\* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions. Make sure this pattern is applied strictly.
 
 ---
 
@@ -2668,6 +2689,11 @@ Interactions must work headless and inside a renderer.
 Interactions can use actions.
 Every interaction keeps track of the history of all state transitions and supports undo/redo for all states.
 Both actions and interactions are extendable at runtime.
+
+---
+
+The render should have snapping options: End, Mid, Cent, Int, Perp, Tan
+Depending on mode, the snapping points are calculated on the kernel or directly in the renderer.
 
 ---
 

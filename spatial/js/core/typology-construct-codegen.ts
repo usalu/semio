@@ -7,7 +7,7 @@ const SURFACE_CONSTRUCT_OUTPUTS = {
 	curves: "curves",
 	points: "points",
 	targets: "targets",
-	surfaceConstructMode: "constructMode",
+	surfaceConstructMode: "surfaceConstructMode",
 } as const;
 
 function nestedCall(interaction: string, outputs: Readonly<Record<string, string>>): Record<string, unknown> {
@@ -21,8 +21,9 @@ function nestedCall(interaction: string, outputs: Readonly<Record<string, string
 	};
 }
 
-function typologyConstructIsSurfacePrimary(typology: string): boolean {
-	return typology.toLowerCase().endsWith(".baseplate");
+/** @emoji 🏷️ True when typology construct should expose surface-only workflow (e.g. base plate). */
+export function typologyConstructIsSurfacePrimary(typologyId: string): boolean {
+	return typologyId.endsWith(".baseplate");
 }
 
 /** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
@@ -455,7 +456,7 @@ export function buildTypologyConstructInteractionSpec(
 			fromStates: ["committed"],
 			operation: {
 				kind: "action",
-				action: interactionId,
+				action: typologyConstructModeActionIds(typology, label)[0],
 				params: typologyConstructCommitParams(typology),
 			},
 		},

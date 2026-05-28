@@ -2525,12 +2525,6 @@ import {
   type TypologyConstructKit,
   type TypologyConstructMode,
 } from "./typology-construct-codegen.ts";
-import {
-  buildConstructSurfaceInteractionSpec,
-  buildConstructCurveInteractionSpec,
-  typologyConstructIsSurfacePrimary,
-} from "./shape-construct-codegen.ts";
-
 export {
   typologyObjectPascalFromLabel,
   typologyConstructAssetIds,
@@ -2540,9 +2534,6 @@ export {
   buildTypologyConstructInteractionSpec,
   type TypologyConstructKit,
   type TypologyConstructMode,
-  buildConstructSurfaceInteractionSpec,
-  buildConstructCurveInteractionSpec,
-  typologyConstructIsSurfacePrimary,
 };
 
 let typologyConstructKitByInteractionCache: ReadonlyMap<string, TypologyConstructKit> | null = null;
@@ -5527,7 +5518,9 @@ if (import.meta.vitest) {
           expect(actionIds.has(actionId)).toBe(true);
         }
         expect(interactionIds.has(ids.interaction)).toBe(true);
-        expect(loadSpatialInteraction(ids.interaction)?.commit.operation.action).toBe(ids.interaction);
+        const commitAction = loadSpatialInteraction(ids.interaction)?.commit.operation.action;
+        expect(typologyConstructModeActionIds(typology.id, typology.label)).toContain(commitAction);
+        expect(commitAction).not.toBe(ids.interaction);
       }
     });
     it("every model-definition typology is constructable with native assets in its folder", () => {
@@ -5830,6 +5823,13 @@ if (import.meta.vitest) {
     it("InteractionRegistry.withModelDefinitionInteractions get matches buildBoxInteractionSpec", () => {
       const reg = InteractionRegistry.withModelDefinitionInteractions();
       expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
+    });
+    it("loadSpatialInteraction resolves callable surface.construct hub from shipped assets", () => {
+      const spec = loadSpatialInteraction("surface.construct");
+      expect(spec?.id).toBe("surface.construct");
+      expect(spec?.invocation).toBe("callable");
+      expect(isCallableOnlyInteraction(spec!)).toBe(true);
+      expect(loadSpatialInteraction("curve.construct")?.invocation).toBe("callable");
     });
     it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
       class StubKernel extends BrepjsKernel {

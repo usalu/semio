@@ -147,7 +147,7 @@ A state can call another interaction, then the current interaction is paused unt
 When an interaction only affects one typologie it is part of that typology.
 When an interaction affects more than one typologe then it is part of the model defintion.
 
-### Construct
+### Create
 
 There are many construct\* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions.
 
