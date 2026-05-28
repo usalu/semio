@@ -134,6 +134,11 @@ Actions can call other actions.
 When an action only affects one typologie it is part of that typology.
 When an action affects more than one typologe then it is part of the model defintion.
 
+### Construct
+
+A construct action is reponsible for creating an object of a specific typology in a certain way by a set of matching args.
+Every typology has a general construct<TypologName> for the most general constructor and more specific ones.
+
 ## Interaction
 
 An interaction is a declarative static state machine for the renderer for a typology. It describes prompts, picks, transient state, previews, and transitions that usually resolve into one or more actions.
@@ -141,6 +146,10 @@ Interactions can call other actions.
 A state can call another interaction, then the current interaction is paused until the called interaction finishes.
 When an interaction only affects one typologie it is part of that typology.
 When an interaction affects more than one typologe then it is part of the model defintion.
+
+### Construct
+
+There are many construct\* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions.
 
 ## AttributeDefinition
 

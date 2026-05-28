@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "label": "Reinforced Concrete Internal Wall",
   "actions": [
-    "structure.structure.createReinforcedConcreteInternalWallFrom2PointsAndHeight",
-    "structure.structure.createReinforcedConcreteInternalWallFromCurveAndHeight",
-    "structure.structure.createReinforcedConcreteInternalWallFromSurface",
-    "structure.structure.constructReinforcedConcreteInternalWall"
+    "structure.structure.constructReinforcedConcreteInternalWallFrom2PointsAndHeight",
+    "structure.structure.constructReinforcedConcreteInternalWallFromCurveAndHeight",
+    "structure.structure.constructReinforcedConcreteInternalWallFromSurface"
   ],
   "interactions": [
     "structure.structure.constructReinforcedConcreteInternalWall"

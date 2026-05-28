@@ -5,10 +5,9 @@
   "label": "Surface Element",
   "description": "Derived structural element represented with surface mesh.",
   "actions": [
-    "structure.surfacefem.createSurfaceElementFrom2PointsAndHeight",
-    "structure.surfacefem.createSurfaceElementFromCurveAndHeight",
-    "structure.surfacefem.createSurfaceElementFromSurface",
-    "structure.surfacefem.constructSurfaceElement"
+    "structure.surfacefem.constructSurfaceElementFrom2PointsAndHeight",
+    "structure.surfacefem.constructSurfaceElementFromCurveAndHeight",
+    "structure.surfacefem.constructSurfaceElementFromSurface"
   ],
   "interactions": [
     "structure.surfacefem.constructSurfaceElement"

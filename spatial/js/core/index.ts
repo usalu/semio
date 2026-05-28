@@ -30,11 +30,6 @@ const modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefin
   import: "default",
 }) as Record<string, unknown>;
 
-const geometryModelDefinitionManifestModule = import.meta.glob("../../assets/modelDefinition/geometry/extension.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
 const modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
   eager: true,
   import: "default",
@@ -82,7 +77,6 @@ function modelDefinitionManifestCatalog(): readonly unknown[] {
   return [
     ...Object.values(modelDefinitionManifestModules),
     ...Object.values(modelDefinitionExtensionManifestModules),
-    ...Object.values(geometryModelDefinitionManifestModule),
   ];
 }
 
@@ -1748,12 +1742,6 @@ function shippedTypologyCatalog(): readonly TypologySpec[] {
   );
 }
 
-/** @emoji 📚 Geometry model-definition manifest (`spatial/assets/modelDefinition/geometry/extension.json`). */
-export function geometryModelDefinitionManifest(): ModelDefinitionManifest | null {
-  const raw = Object.values(geometryModelDefinitionManifestModule)[0];
-  return raw ? parseModelDefinitionManifest(raw) : null;
-}
-
 /** @emoji 📚 Lists typologies from shipped spatial/assets/modelDefinition assets. */
 export function listModelDefinitionTypologies(): readonly TypologySpec[] {
   return shippedTypologyCatalog();
@@ -2183,7 +2171,6 @@ function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   const modules = {
     ...modelDefinitionManifestModules,
     ...modelDefinitionExtensionManifestModules,
-    ...geometryModelDefinitionManifestModule,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -2371,7 +2358,16 @@ export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec)
 /** @emoji 🧭 Action ids referenced by one interaction spec (transition effects + commit + nested interactions). */
 export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
   const ids = new Set<string>();
-  if (spec.commit.operation.kind === "action") ids.add(spec.commit.operation.action);
+  if (spec.commit.operation.kind === "action") {
+    const kit = typologyConstructKitByInteraction().get(spec.id);
+    if (kit) {
+      ids.add(kit.constructFrom2PointsAndHeight);
+      ids.add(kit.constructFromCurveAndHeight);
+      ids.add(kit.constructFromSurface);
+    } else {
+      ids.add(spec.commit.operation.action);
+    }
+  }
   for (const st of spec.machine.states) {
     for (const h of st.on ?? []) {
       for (const tr of h.transitions) {
@@ -2522,8 +2518,11 @@ export function applyTransformation(spec: TransformationSpec, source: Model): Mo
 import {
   typologyObjectPascalFromLabel,
   typologyConstructAssetIds,
+  typologyConstructCommitActionForMode,
+  typologyConstructModeActionIds,
   capabilityActionSpecJson,
   buildTypologyConstructInteractionSpec,
+  type TypologyConstructKit,
   type TypologyConstructMode,
 } from "./typology-construct-codegen.ts";
 import {
@@ -2535,67 +2534,43 @@ import {
 export {
   typologyObjectPascalFromLabel,
   typologyConstructAssetIds,
+  typologyConstructCommitActionForMode,
+  typologyConstructModeActionIds,
   capabilityActionSpecJson,
   buildTypologyConstructInteractionSpec,
+  type TypologyConstructKit,
   type TypologyConstructMode,
   buildConstructSurfaceInteractionSpec,
   buildConstructCurveInteractionSpec,
   typologyConstructIsSurfacePrimary,
 };
 
-let typologyConstructRoutesCache: ReadonlyMap<
-  string,
-  {
-    readonly typology: string;
-    readonly createFrom2PointsAndHeight: string;
-    readonly createFromCurveAndHeight: string;
-    readonly createFromSurface: string;
-  }
-> | null = null;
+let typologyConstructKitByInteractionCache: ReadonlyMap<string, TypologyConstructKit> | null = null;
 
-/** @emoji 🧭 Maps construct interaction/dispatch action ids to their three create actions. */
-export function typologyConstructRoutes(): ReadonlyMap<
-  string,
-  {
-    readonly typology: string;
-    readonly createFrom2PointsAndHeight: string;
-    readonly createFromCurveAndHeight: string;
-    readonly createFromSurface: string;
-  }
-> {
-  if (typologyConstructRoutesCache) return typologyConstructRoutesCache;
-  const map = new Map<
-    string,
-    {
-      readonly typology: string;
-      readonly createFrom2PointsAndHeight: string;
-      readonly createFromCurveAndHeight: string;
-      readonly createFromSurface: string;
-    }
-  >();
+/** @emoji 🧭 Maps each typology construct interaction id to its mode actions (not the interaction id). */
+export function typologyConstructKitByInteraction(): ReadonlyMap<string, TypologyConstructKit> {
+  if (typologyConstructKitByInteractionCache) return typologyConstructKitByInteractionCache;
+  const map = new Map<string, TypologyConstructKit>();
   for (const typology of listModelDefinitionTypologies()) {
     const ids = typologyConstructAssetIds(typology.id, typology.label);
-    map.set(ids.construct, {
+    map.set(ids.interaction, {
       typology: ids.typology,
-      createFrom2PointsAndHeight: ids.createFrom2PointsAndHeight,
-      createFromCurveAndHeight: ids.createFromCurveAndHeight,
-      createFromSurface: ids.createFromSurface,
+      interaction: ids.interaction,
+      constructFrom2PointsAndHeight: ids.constructFrom2PointsAndHeight,
+      constructFromCurveAndHeight: ids.constructFromCurveAndHeight,
+      constructFromSurface: ids.constructFromSurface,
     });
   }
-  typologyConstructRoutesCache = map;
+  typologyConstructKitByInteractionCache = map;
   return map;
 }
 
-/** @emoji 🏗️ True when a typology ships the native three-create + construct interaction kit. */
+/** @emoji 🏗️ True when a typology ships exactly one construct interaction and its mode `construct*` actions. */
 export function typologyHasNativeConstructKit(typology: TypologySpec): boolean {
   const ids = typologyConstructAssetIds(typology.id, typology.label);
-  return (
-    typology.interactions.includes(ids.construct) &&
-    typology.actions.includes(ids.createFrom2PointsAndHeight) &&
-    typology.actions.includes(ids.createFromCurveAndHeight) &&
-    typology.actions.includes(ids.createFromSurface) &&
-    typology.actions.includes(ids.construct)
-  );
+  const expectedActions = [...typologyConstructModeActionIds(typology.id, typology.label)].sort();
+  const actualActions = [...typology.actions].sort();
+  return typology.interactions.length === 1 && typology.interactions[0] === ids.interaction && actualActions.join() === expectedActions.join();
 }
 
 /** @emoji 🏗️ Typologies in a model definition that expose the native construct interaction. */
@@ -2620,34 +2595,6 @@ export function ensureTypologyObjectFromCreateDiff(model: Model, typology: strin
   return objectId;
 }
 
-async function runTypologyConstructDispatch(
-  constructActionId: string,
-  params: Record<string, unknown>,
-  ctx: {
-    readonly kernel: SpatialKernel;
-    readonly preview: SpatialPreviewKernel;
-    readonly model: Model;
-    readonly activeModelDefinitionId?: string | null;
-  },
-): Promise<unknown> {
-  const routes = typologyConstructRoutes().get(constructActionId);
-  if (!routes) throw new Error(`Unknown typology construct action: ${constructActionId}`);
-  const mode = String(params.constructMode ?? "") as import("./typology-construct-codegen.ts").TypologyConstructMode;
-  const target =
-    mode === "2PointsAndHeight"
-      ? routes.createFrom2PointsAndHeight
-      : mode === "curveAndHeight"
-        ? routes.createFromCurveAndHeight
-        : mode === "surface"
-          ? routes.createFromSurface
-          : null;
-  if (!target) throw new Error(`Unknown constructMode ${mode} for ${constructActionId}`);
-  const spec = listModelDefinitionActionSpecs().find((row) => row.id === target);
-  if (!spec) throw new Error(`Missing create action spec: ${target}`);
-  const result = await new DeclarativeActionRuntime(spec).run({ ...params, typology: routes.typology }, ctx);
-  if (result.diff && !isEmptyModelDiff(result.diff)) ensureTypologyObjectFromCreateDiff(ctx.model, routes.typology, result.diff);
-  return result;
-}
 // #endregion 🏗️TypologyConstruct
 
 // #region 🧮Diff
@@ -3242,7 +3189,6 @@ export async function executeActionCapability(
     readonly activeModelDefinitionId?: string | null;
   },
 ): Promise<unknown> {
-  if (typologyConstructRoutes().has(actionId)) return runTypologyConstructDispatch(actionId, params, ctx);
   const def = modelDefinitionActionCapabilityDefs().find((d) => d.id === actionId);
   if (def?.run) return def.run(params, ctx);
   if (ctx.kernel.executeCommandDiff) {
@@ -4693,7 +4639,9 @@ export class InteractionRuntime {
       for (const [key, ex] of Object.entries(op.params ?? {})) {
         paramBag[key] = evalExpr(ex, env);
       }
-      const ar = await this.actions.run(op.action, paramBag, {
+      const kit = typologyConstructKitByInteraction().get(this.spec.id);
+      const actionId = kit ? typologyConstructCommitActionForMode(kit, String(paramBag.constructMode ?? ctx.constructMode ?? "")) : op.action;
+      const ar = await this.actions.run(actionId, paramBag, {
         kernel: k,
         preview: this.previewKernel(),
         model: model,
@@ -4937,10 +4885,6 @@ export function buildAreaInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("measure.area");
 }
 
-/** @emoji 📦 Compiled `pick.face` nested surface-pick helper from model-definition assets. */
-export function buildPickFaceInteractionSpec(): InteractionSpec {
-  return requireSpatialInteraction("pick.face");
-}
 // #endregion 📦Interactions
 
 // #region 🧪Tests
@@ -5576,14 +5520,14 @@ if (import.meta.vitest) {
           continue;
         }
         expect(typologyHasNativeConstructKit(typology)).toBe(true);
-        expect(typology.actions).toContain(ids.createFrom2PointsAndHeight);
-        expect(typology.actions).toContain(ids.createFromCurveAndHeight);
-        expect(typology.actions).toContain(ids.createFromSurface);
-        expect(typology.actions).toContain(ids.construct);
-        expect(actionIds.has(ids.createFrom2PointsAndHeight)).toBe(true);
-        expect(actionIds.has(ids.construct)).toBe(true);
-        expect(interactionIds.has(ids.construct)).toBe(true);
-        expect(loadSpatialInteraction(ids.construct)?.commit.operation.action).toBe(ids.construct);
+        expect(typology.interactions).toEqual([ids.interaction]);
+        expect(typology.actions).not.toContain(ids.interaction);
+        for (const actionId of typologyConstructModeActionIds(typology.id, typology.label)) {
+          expect(typology.actions).toContain(actionId);
+          expect(actionIds.has(actionId)).toBe(true);
+        }
+        expect(interactionIds.has(ids.interaction)).toBe(true);
+        expect(loadSpatialInteraction(ids.interaction)?.commit.operation.action).toBe(ids.interaction);
       }
     });
     it("every model-definition typology is constructable with native assets in its folder", () => {
@@ -5593,9 +5537,10 @@ if (import.meta.vitest) {
         for (const typology of listTypologiesForModelDefinition(mdId)) {
           expect(typologyHasNativeConstructKit(typology), `${mdId} → ${typology.id}`).toBe(true);
           const ids = typologyConstructAssetIds(typology.id, typology.label);
-          expect(actionOwnedByModelDefinition(ids.construct, mdId), `${mdId} → ${ids.construct}`).toBe(true);
-          expect(actionOwnedByModelDefinition(ids.createFrom2PointsAndHeight, mdId)).toBe(true);
-          expect(modelDefinitionIdForInteraction(ids.construct), `${mdId} → ${ids.construct}`).toBe(mdId);
+          expect(modelDefinitionIdForInteraction(ids.interaction), `${mdId} → ${ids.interaction}`).toBe(mdId);
+          for (const actionId of typologyConstructModeActionIds(typology.id, typology.label)) {
+            expect(actionOwnedByModelDefinition(actionId, mdId), `${mdId} → ${typology.id} → ${actionId}`).toBe(true);
+          }
           for (const actionId of typology.actions) {
             expect(actionOwnedByModelDefinition(actionId, mdId), `${mdId} → ${typology.id} → ${actionId}`).toBe(true);
           }
@@ -5603,91 +5548,126 @@ if (import.meta.vitest) {
         expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(listTypologiesForModelDefinition(mdId).length);
       }
     });
-    it("typology createFrom2PointsAndHeight adds an object row for the typology", async () => {
+    it("typology constructFrom2PointsAndHeight adds an object row for the typology", async () => {
       const model = new Model();
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const typology = "energy.energy.hull";
+      const ids = typologyConstructAssetIds(typology, "Hull");
       await ActionRegistry.withModelDefinitionActions().run(
-        "energy.energy.createHullFrom2PointsAndHeight",
-        { typology, pointA: [0, 0, 0], pointB: [3, 2, 0], height: 2.5 },
+        ids.constructFrom2PointsAndHeight,
+        { typology, constructMode: "2PointsAndHeight", pointA: [0, 0, 0], pointB: [3, 2, 0], height: 2.5 },
         { kernel, preview: kernel as unknown as SpatialPreviewKernel, model, activeModelDefinitionId: "aec.building.energy" },
       );
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
-    it("construct dispatch action delegates to the selected create action", async () => {
-      const ids = typologyConstructAssetIds("energy.energy.externalwall", "External Wall");
-      const calls: string[] = [];
-      const kernel = {
-        executeAction: async (actionId: string) => {
-          calls.push(actionId);
-          return { diff: EMPTY_MODEL_DIFF };
+    it("typologyConstructCommitActionForMode resolves exactly one mode construct action", () => {
+      const ids = typologyConstructAssetIds("energy.energy.hull", "Hull");
+      const kit = typologyConstructKitByInteraction().get(ids.interaction)!;
+      expect(typologyConstructCommitActionForMode(kit, "2PointsAndHeight")).toBe(ids.constructFrom2PointsAndHeight);
+      expect(typologyConstructCommitActionForMode(kit, "curveAndHeight")).toBe(ids.constructFromCurveAndHeight);
+      expect(typologyConstructCommitActionForMode(kit, "surface")).toBe(ids.constructFromSurface);
+    });
+    it("base plate typology lists only constructFromSurface among mode actions", () => {
+      const typology = loadTypology("energy.energy.baseplate")!;
+      const ids = typologyConstructAssetIds(typology.id, typology.label);
+      expect(typologyConstructModeActionIds(typology.id, typology.label)).toEqual([ids.constructFromSurface]);
+      expect(typologyHasNativeConstructKit(typology)).toBe(true);
+    });
+    it("aborting nested interaction.call rolls back the calling transition", async () => {
+      const pickChild = parseInteractionSpec({
+        schema: "spatial.interaction/v1",
+        id: "test.nested.pick",
+        version: "1",
+        invocation: "callable",
+        machine: {
+          initial: "pick",
+          states: [
+            {
+              name: "pick",
+              selection: { accept: ["face"], multiple: false, prompt: "Pick surface" },
+              on: [
+                {
+                  event: "selection.changed",
+                  transitions: [
+                    {
+                      target: "committed",
+                      effects: [
+                        {
+                          op: "assign",
+                          target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
+                          value: {
+                            kind: "path",
+                            root: "event",
+                            segments: [
+                              { kind: "field", name: "targets" },
+                              { kind: "index", index: 0 },
+                              { kind: "field", name: "id" },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            { name: "committed", final: true },
+          ],
         },
-      } as unknown as SpatialKernel;
-      await executeActionCapability(
-        ids.construct,
-        { constructMode: "surface", faceId: "f0" },
-        {},
-        { kernel, preview: kernel as unknown as SpatialPreviewKernel, model: new Model() },
-      );
-      expect(calls).toEqual([ids.createFromSurface]);
-    });
-    it("surface.construct and curve.construct are callable-only shape interactions", () => {
-      const surface = loadSpatialInteraction("surface.construct")!;
-      const curve = loadSpatialInteraction("curve.construct")!;
-      expect(isCallableOnlyInteraction(surface)).toBe(true);
-      expect(isCallableOnlyInteraction(curve)).toBe(true);
-      expect(interactionIdsReferencedByInteractionSpec(surface)).toContain("surface.plane");
-      expect(interactionIdsReferencedByInteractionSpec(surface)).toContain("curve.construct");
-      expect(interactionIdsReferencedByInteractionSpec(curve)).toContain("curve.line");
-    });
-    it("base plate construct is surface-primary and calls surface.construct", () => {
-      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
-      expect(interactionIdsReferencedByInteractionSpec(spec!)).toContain("surface.construct");
-      expect(interactionIdsReferencedByInteractionSpec(spec!)).not.toContain("pick.face");
-      const choose = spec!.machine.states.find((s) => s.name === "choose_mode");
-      const events = choose?.on?.map((h) => h.event) ?? [];
-      expect(events).toEqual(["mode.surface"]);
-    });
-    it("interaction.call runs nested surface.construct pick mode and resumes host construct flow", async () => {
-      const model = new Model();
-      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("nested-pick-box")));
-      const fid = Object.keys(model.faces)[0]! as FaceRef;
+        commit: { fromStates: ["committed"], operation: { kind: "action", action: "command.finish", params: {} } },
+      })!;
+      const host = parseInteractionSpec({
+        schema: "spatial.interaction/v1",
+        id: "test.nested.host",
+        version: "1",
+        machine: {
+          initial: "choose_mode",
+          states: [
+            {
+              name: "choose_mode",
+              on: [
+                {
+                  event: "mode.surface",
+                  transitions: [
+                    {
+                      target: "committed",
+                      effects: [
+                        { op: "assign", target: { root: "context", segments: [{ kind: "field", name: "constructMode" }] }, value: { kind: "const", value: "surface" } },
+                        {
+                          op: "interaction.call",
+                          interaction: "test.nested.pick",
+                          outputs: [
+                            {
+                              target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
+                              value: { kind: "path", root: "context", segments: [{ kind: "field", name: "faceId" }] },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            { name: "committed", final: true },
+          ],
+        },
+        commit: { fromStates: ["committed"], operation: { kind: "action", action: "command.finish", params: {} } },
+      })!;
+      const interactions = InteractionRegistry.withModelDefinitionInteractions();
+      interactions.register(compileInteraction(pickChild));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
-      const rt = createInteractionRuntime(spec!, {
-        kernel,
-        document: { model, nodes: [] },
-        activeModelDefinitionId: "aec.building.energy",
-      });
-      await rt.send({ kind: "mode.surface" });
-      let snap = rt.getSnapshot();
-      expect(snap.interactionId).toBe("surface.construct");
-      expect(snap.nested?.hostInteractionId).toBe("energy.energy.constructBasePlate");
-      expect(snap.nested?.hostState).toBe("choose_mode");
-      await rt.send({ kind: "mode.pick" });
-      snap = rt.getSnapshot();
-      expect(snap.interactionId).toBe("pick.face");
-      await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
-      snap = rt.getSnapshot();
-      expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
-      expect(snap.state).toBe("committed");
-      expect(snap.context.constructMode).toBe("surface");
-      expect(snap.context.faceId).toBe(fid);
-    });
-    it("aborting nested surface.construct rolls back the calling transition", async () => {
-      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
-      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-      const rt = createInteractionRuntime(spec!, {
+      const rt = createInteractionRuntime(compileInteraction(host), {
         kernel,
         document: { model: new Model(), nodes: [] },
-        activeModelDefinitionId: "aec.building.energy",
+        interactions,
       });
       await rt.send({ kind: "mode.surface" });
-      expect(rt.getSnapshot().interactionId).toBe("surface.construct");
+      expect(rt.getSnapshot().interactionId).toBe("test.nested.pick");
       rt.cancel();
       const snap = rt.getSnapshot();
-      expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
+      expect(snap.interactionId).toBe("test.nested.host");
       expect(snap.state).toBe("choose_mode");
       expect(snap.context.constructMode).toBeUndefined();
       expect(snap.context.faceId).toBeUndefined();

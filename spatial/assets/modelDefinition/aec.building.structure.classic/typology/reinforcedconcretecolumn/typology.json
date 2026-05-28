@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "label": "Reinforced Concrete Column",
   "actions": [
-    "structure.structure.createReinforcedConcreteColumnFrom2PointsAndHeight",
-    "structure.structure.createReinforcedConcreteColumnFromCurveAndHeight",
-    "structure.structure.createReinforcedConcreteColumnFromSurface",
-    "structure.structure.constructReinforcedConcreteColumn"
+    "structure.structure.constructReinforcedConcreteColumnFrom2PointsAndHeight",
+    "structure.structure.constructReinforcedConcreteColumnFromCurveAndHeight",
+    "structure.structure.constructReinforcedConcreteColumnFromSurface"
   ],
   "interactions": [
     "structure.structure.constructReinforcedConcreteColumn"

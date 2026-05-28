@@ -5,10 +5,9 @@
   "label": "Hull",
   "description": "All external surfaces joined to a closed shell.",
   "actions": [
-    "energy.energy.createHullFrom2PointsAndHeight",
-    "energy.energy.createHullFromCurveAndHeight",
-    "energy.energy.createHullFromSurface",
-    "energy.energy.constructHull"
+    "energy.energy.constructHullFrom2PointsAndHeight",
+    "energy.energy.constructHullFromCurveAndHeight",
+    "energy.energy.constructHullFromSurface"
   ],
   "interactions": [
     "energy.energy.constructHull"

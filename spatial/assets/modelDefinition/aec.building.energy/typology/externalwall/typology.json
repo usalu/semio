@@ -5,10 +5,9 @@
   "label": "External Wall",
   "description": "Joined touching external surfaces of the same material with openings cut out.",
   "actions": [
-    "energy.energy.createExternalWallFrom2PointsAndHeight",
-    "energy.energy.createExternalWallFromCurveAndHeight",
-    "energy.energy.createExternalWallFromSurface",
-    "energy.energy.constructExternalWall"
+    "energy.energy.constructExternalWallFrom2PointsAndHeight",
+    "energy.energy.constructExternalWallFromCurveAndHeight",
+    "energy.energy.constructExternalWallFromSurface"
   ],
   "interactions": [
     "energy.energy.constructExternalWall"

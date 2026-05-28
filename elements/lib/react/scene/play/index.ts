@@ -333,7 +333,7 @@ if (import.meta.vitest) {
 			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
 			wb.addApp(buildScenePlayAppRuntime(ctrl));
 			const tree = buildScenePlayDeclarativeBody({
-				workbench: wb,
+				runtime: wb,
 				windowKindId: SCENE_PLAY_WINDOW_ID,
 				bodyKey: SCENE_PLAY_BODY_KEY,
 				activeModeId: "main",

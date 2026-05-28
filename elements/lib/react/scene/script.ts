@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** ­ƒº¡ Scene package task router: `bun ./script.ts <dev|build|test> [argsÔÇª]` ÔÇö `test` runs Vitest then Playwright against the play harness. */
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync, rmSync } from "node:fs";
+import path from "node:path";
 
 const cwd = import.meta.dir;
 const segs = process.argv.slice(2);
@@ -47,6 +49,10 @@ function runSync(args: string[], options: { cwd?: string } = {}): void {
 }
 
 if (command === "dev") {
+	const viteCache = path.join(cwd, "node_modules", ".vite");
+	if (existsSync(viteCache)) {
+		rmSync(viteCache, { recursive: true, force: true });
+	}
 	const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 	const port = process.env.SCENE_PLAY_PORT ?? "6013";
 	run(["run", "vite", "--config", "play/vite.config.ts", "--host", host, "--port", port, ...extra]);

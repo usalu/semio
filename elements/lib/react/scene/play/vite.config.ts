@@ -7,6 +7,8 @@ import { defineConfig } from "vite";
 const repoRoot = path.resolve(__dirname, "../../../../../");
 const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
+const threeModule = path.resolve(__dirname, "../../core/node_modules/three/build/three.module.js");
+const threePackageRoot = path.resolve(__dirname, "../../core/node_modules/three");
 
 export default defineConfig({
 	root: __dirname,
@@ -55,8 +57,23 @@ export default defineConfig({
 			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../core/index.tsx") },
 			{ find: "@elements/framework", replacement: path.resolve(__dirname, "../../../framework/core/index.ts") },
 			{ find: "@elements/framework-react", replacement: path.resolve(__dirname, "../../../framework/renderer/react/index.tsx") },
-			{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },
+			{ find: /^three$/, replacement: threeModule },
+			{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 		],
-		dedupe: ["three"],
+		dedupe: ["react", "react-dom", "three"],
+	},
+	optimizeDeps: {
+		include: [
+			"react",
+			"react-dom",
+			"react/jsx-runtime",
+			"react/jsx-dev-runtime",
+			"three",
+			"@react-three/fiber",
+			"@react-three/drei",
+		],
+		esbuildOptions: {
+			target: "esnext",
+		},
 	},
 });

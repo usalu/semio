@@ -3814,7 +3814,7 @@ if (import.meta.vitest) {
 		const available = [50, 200, 1000] as const;
 		it("prefers log-closest and ties toward smaller lod", () => {
 			expect(pickClosestLod(available, 100)).toBe(50);
-			expect(pickClosestLod(available, 500)).toBe(200);
+			expect(pickClosestLod(available, 500)).toBe(1000);
 			expect(pickClosestLod(available, 5000)).toBe(1000);
 		});
 	});
@@ -3855,9 +3855,10 @@ if (import.meta.vitest) {
 		});
 	});
 	describe("sliderValueFromLod", () => {
-		it("round-trips through lodFromSliderValue", () => {
-			const slider = sliderValueFromLod(200);
-			expect(lodFromSliderValue(slider)).toBeCloseTo(200, 0);
+		it("round-trips integer slider positions through lodFromSliderValue", () => {
+			for (const slider of [0, 250, 500, 750, 1000] as const) {
+				expect(sliderValueFromLod(lodFromSliderValue(slider))).toBe(slider);
+			}
 		});
 	});
 	describe("objectPoseKey", () => {

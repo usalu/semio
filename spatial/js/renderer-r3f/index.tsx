@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/geometry/typology/primitive/box/interaction/box.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports

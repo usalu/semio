@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "label": "One Way Reinforced Concrete Slab",
   "actions": [
-    "structure.structure.createOneWayReinforcedConcreteSlabFrom2PointsAndHeight",
-    "structure.structure.createOneWayReinforcedConcreteSlabFromCurveAndHeight",
-    "structure.structure.createOneWayReinforcedConcreteSlabFromSurface",
-    "structure.structure.constructOneWayReinforcedConcreteSlab"
+    "structure.structure.constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight",
+    "structure.structure.constructOneWayReinforcedConcreteSlabFromCurveAndHeight",
+    "structure.structure.constructOneWayReinforcedConcreteSlabFromSurface"
   ],
   "interactions": [
     "structure.structure.constructOneWayReinforcedConcreteSlab"

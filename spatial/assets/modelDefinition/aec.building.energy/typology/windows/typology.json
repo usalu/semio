@@ -5,10 +5,9 @@
   "label": "Windows",
   "description": "All external window surfaces.",
   "actions": [
-    "energy.energy.createWindowsFrom2PointsAndHeight",
-    "energy.energy.createWindowsFromCurveAndHeight",
-    "energy.energy.createWindowsFromSurface",
-    "energy.energy.constructWindows"
+    "energy.energy.constructWindowsFrom2PointsAndHeight",
+    "energy.energy.constructWindowsFromCurveAndHeight",
+    "energy.energy.constructWindowsFromSurface"
   ],
   "interactions": [
     "energy.energy.constructWindows"

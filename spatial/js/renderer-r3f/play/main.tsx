@@ -1,4 +1,4 @@
-/** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
+/** @emoji 🎮 Vite entry: spatial.shape catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -143,13 +143,6 @@ function ConstructQueryPanel({
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
-	const space = parseModelSpaceJson(json);
-	if (space) {
-		const preferred = space.get(SHAPE_MODEL_DEFINITION_ID);
-		if (preferred) return Object.keys(preferred.vertices).length;
-		const firstId = Object.keys(space.models).sort()[0];
-		return firstId ? Object.keys(space.models[firstId]?.vertices ?? {}).length : 0;
-	}
 	const geo = json.geometry;
 	if (geo && typeof geo === "object") {
 		const nested = (geo as Record<string, unknown>).vertices;
@@ -159,7 +152,7 @@ function modelVertexCount(json: Record<string, unknown>): number {
 	return Array.isArray(verts) ? verts.length : 0;
 }
 
-const GEOMETRY_ASSETS = [
+const SHAPE_ASSETS = [
 	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule", json: geometryNakagin as Record<string, unknown> },
 	{ id: "geometry-loom", key: "l", label: "Loom deck + pent loop + rail", json: geometryLoom as Record<string, unknown> },
 	{ id: "geometry-routes", key: "r", label: "Multi-route lattice", json: geometryRoutes as Record<string, unknown> },
@@ -418,16 +411,7 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 }
 
 function modelsFromSpatialJson(json: unknown): Record<string, Model> {
-	const space = parseModelSpaceJson(json);
-	if (space) return recordFromModelSpace(space);
 	return { [SHAPE_MODEL_DEFINITION_ID]: parseModelJson(json) ?? new Model() };
-}
-
-function activeModelDefinitionIdFromSpatialJson(json: unknown): string {
-	const space = parseModelSpaceJson(json);
-	if (!space) return SHAPE_MODEL_DEFINITION_ID;
-	if (space.get(SHAPE_MODEL_DEFINITION_ID)) return SHAPE_MODEL_DEFINITION_ID;
-	return Object.keys(space.models).sort()[0] ?? SHAPE_MODEL_DEFINITION_ID;
 }
 
 function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
@@ -459,7 +443,7 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
 	return { ...models, [definitionId]: applyTransformation(fromShape, geometry) };
 }
 
-function pickGeometryForModelDefinition(
+function pickShapeForModelDefinition(
 	models: Readonly<Record<string, Model>>,
 	activeModelDefinitionId: string,
 	liveModel: Model,
@@ -698,10 +682,10 @@ function PlayApp() {
 	);
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
+	const [shapeAssetId, setShapeAssetId] = useState("small-building");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
-		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return modelsFromSpatialJson(asset?.json ?? emptyModelSpaceJson());
+		const asset = SHAPE_ASSETS.find((g) => g.id === "small-building");
+		return modelsFromSpatialJson(asset?.json ?? emptyModelJson());
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -739,14 +723,13 @@ function PlayApp() {
 		[interactionId],
 	);
 
-	const handleGeometryAssetChange = useCallback((id: string) => {
-		setGeometryAssetId(id);
+	const handleShapeAssetChange = useCallback((id: string) => {
+		setShapeAssetId(id);
 		setLoadedRawName("");
 		setFileStatus("");
-		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
-		const raw = asset?.json ?? emptyModelSpaceJson();
-`t`tsetModelsByDefinitionId(modelsFromSpatialJson(raw));
-`t`tsetActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(raw));
+		const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
+		setModelsByDefinitionId(modelsFromSpatialJson(asset?.json ?? emptyModelJson()));
+		setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
@@ -788,7 +771,7 @@ function PlayApp() {
 	);
 
 	const pickGeometry = useMemo(
-		() => pickGeometryForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel),
+		() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel),
 		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
 	);
 
@@ -846,15 +829,15 @@ function PlayApp() {
 		[currentSelection, selectionKinds],
 	);
 
-	const selectedGeometry = useMemo(
+	const selectedShapeTargets = useMemo(
 		() => selectionInScope.filter((target) => target.kind !== "object" || target.editable !== false),
 		[selectionInScope],
 	);
 	const exportBaseName = useMemo(() => {
 		if (loadedRawName) return fileStem(loadedRawName);
-		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId);
+		const asset = SHAPE_ASSETS.find((g) => g.id === shapeAssetId);
 		return fileStem(asset?.id ?? "spatial");
-	}, [geometryAssetId, loadedRawName]);
+	}, [shapeAssetId, loadedRawName]);
 
 	const handleApplyTransformation = useCallback(
 		(spec: TransformationSpec) => {
@@ -893,10 +876,10 @@ function PlayApp() {
 	);
 
 	const handleSaveSelected = useCallback(async () => {
-`t`tconst selectedModel = Model.fromJSON(selectRawModel(liveModel, selectionInScope));
-`t`tconst selectedModelSpace = new ModelSpace();
-`t`tselectedModelSpace.link(activeModelDefinitionId, selectedModel);
-`t`tawait saveBundle(
+		const selectedModel = Model.fromJSON(selectRawModel(liveModel, selectionInScope));
+		const selectedModelSpace = new ModelSpace();
+		selectedModelSpace.link(activeModelDefinitionId, selectedModel);
+		await saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
 			{ model: selectedModel.toJSON(), modelSpace: selectedModelSpace.toJSON(), activeModelDefinitionId },
 			`Saved ${selectionInScope.length} selected item(s) for ${activeModelDefinitionId}.`,
@@ -936,30 +919,30 @@ function PlayApp() {
 			const parsed = JSON.parse(await file.text()) as unknown;
 			const envelope = parsed as Record<string, unknown>;
 			const snapshot =
-`t`t`tenvelope && typeof envelope === "object" && "modelSpace" in envelope
-`t`t`t? envelope.modelSpace
-`t`t`t: envelope && typeof envelope === "object" && "model" in envelope
-`t`t`t? envelope.model
-`t`t`t: envelope && typeof envelope === "object" && "raw" in envelope
-`t`t`t? envelope.raw
-`t`t`t: parsed;
+				envelope && typeof envelope === "object" && "modelSpace" in envelope
+					? envelope.modelSpace
+					: envelope && typeof envelope === "object" && "model" in envelope
+					? envelope.model
+					: envelope && typeof envelope === "object" && "raw" in envelope
+						? envelope.raw
+						: parsed;
 			const modelSpace = parseModelSpaceJson(snapshot);
-`t`t`tif (modelSpace) {
-`t`t`t`tconst nextActiveModelDefinitionId =
-`t`t`t`t`ttypeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId)
-`t`t`t`t`t`t? envelope.activeModelDefinitionId
-`t`t`t`t`t`t: activeModelDefinitionIdFromSpatialJson(snapshot);
-`t`t`t`tsetGeometryAssetId("");
-`t`t`t`tsetLoadedRawName(file.name);
-`t`t`t`tsetModelsByDefinitionId(recordFromModelSpace(modelSpace));
-`t`t`t`tsetActiveModelDefinitionId(nextActiveModelDefinitionId);
-`t`t`t`tsetModelDefinitionRevision((r) => r + 1);
-`t`t`t`tsetFileStatus(`Loaded model space from ${file.name}.`);
-`t`t`t`treturn;
-`t`t`t}
-`t`t`tconst model = parseModelJson(snapshot);
-`t`t`tif (!model) throw new Error("No spatial model found in file.");
-			setGeometryAssetId("");
+			if (modelSpace) {
+				const nextActiveModelDefinitionId =
+					typeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId)
+						? envelope.activeModelDefinitionId
+						: activeModelDefinitionIdFromSpatialJson(snapshot);
+				setShapeAssetId("");
+				setLoadedRawName(file.name);
+				setModelsByDefinitionId(recordFromModelSpace(modelSpace));
+				setActiveModelDefinitionId(nextActiveModelDefinitionId);
+				setModelDefinitionRevision((r) => r + 1);
+				setFileStatus(`Loaded model space from ${file.name}.`);
+				return;
+			}
+			const model = parseModelJson(snapshot);
+			if (!model) throw new Error("No spatial model found in file.");
+			setShapeAssetId("");
 			setLoadedRawName(file.name);
 			setModelsByDefinitionId(modelsFromSpatialJson(model.toJSON()));
 			setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
@@ -1023,14 +1006,14 @@ function PlayApp() {
 			</div>
 			{isShapeModelDefinition(activeModelDefinitionId) ? (
 				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Geometry asset</span>
+					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Shape asset</span>
 					<select
-						value={geometryAssetId}
-						onChange={(e) => handleGeometryAssetChange(e.target.value)}
+						value={shapeAssetId}
+						onChange={(e) => handleShapeAssetChange(e.target.value)}
 						style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
 					>
 						<option value="">No asset</option>
-						{GEOMETRY_ASSETS.map((g) => (
+						{SHAPE_ASSETS.map((g) => (
 							<option key={g.id} value={g.id}>
 								[{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
 							</option>
@@ -1039,8 +1022,8 @@ function PlayApp() {
 				</label>
 			) : (
 				<span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>spatial.shape</code>. Switch model definition to spatial.shape to
-					change source geometry; derived models share it via transforms.
+					Shape assets apply to <code style={{ color: "#e8e8f0" }}>builtin</code>. Switch model definition to builtin to
+					change source shape; derived models share it via transforms.
 				</span>
 			)}
 			<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
@@ -1117,7 +1100,20 @@ if (el) {
 		</StrictMode>,
 	);
 }
+			onApplyTransformation={handleApplyTransformation}
+			pickGeometry={pickGeometry}
+			onDocumentModelChange={handleModelAttributesChange}
+			onSnapshot={handleSnapshotChange}
+		/>
+	);
+}
+//#endregion
 
-
-
-
+const el = document.getElementById("root");
+if (el) {
+	createRoot(el).render(
+		<StrictMode>
+			<PlayApp />
+		</StrictMode>,
+	);
+}

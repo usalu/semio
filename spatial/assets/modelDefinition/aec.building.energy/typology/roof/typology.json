@@ -5,10 +5,9 @@
   "label": "Roof",
   "description": "Highest external horizontal surface.",
   "actions": [
-    "energy.energy.createRoofFrom2PointsAndHeight",
-    "energy.energy.createRoofFromCurveAndHeight",
-    "energy.energy.createRoofFromSurface",
-    "energy.energy.constructRoof"
+    "energy.energy.constructRoofFrom2PointsAndHeight",
+    "energy.energy.constructRoofFromCurveAndHeight",
+    "energy.energy.constructRoofFromSurface"
   ],
   "interactions": [
     "energy.energy.constructRoof"

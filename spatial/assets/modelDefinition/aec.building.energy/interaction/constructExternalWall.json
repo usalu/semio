@@ -270,7 +270,7 @@
                           "segments": [
                             {
                               "kind": "field",
-                              "name": "surfaceConstructMode"
+                              "name": "constructMode"
                             }
                           ]
                         }
@@ -904,22 +904,6 @@
                 1.55
               ]
             }
-          },
-          {
-            "kind": "entity-highlight",
-            "id": "wire-highlight",
-            "role": "preview",
-            "geometryEntityKind": "wire",
-            "entityId": {
-              "kind": "path",
-              "root": "context",
-              "segments": [
-                {
-                  "kind": "field",
-                  "name": "wireId"
-                }
-              ]
-            }
           }
         ]
       },
@@ -1042,6 +1026,46 @@
             }
           ]
         },
+        "wireIds": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "wireIds"
+            }
+          ]
+        },
+        "curves": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "curves"
+            }
+          ]
+        },
+        "points": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
+        },
         "faceId": {
           "kind": "path",
           "root": "context",
@@ -1049,6 +1073,16 @@
             {
               "kind": "field",
               "name": "faceId"
+            }
+          ]
+        },
+        "surfaceConstructMode": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "surfaceConstructMode"
             }
           ]
         }

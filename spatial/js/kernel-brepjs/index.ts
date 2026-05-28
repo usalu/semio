@@ -2779,8 +2779,8 @@ if (import.meta.vitest) {
 			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
 		});
 
-		it("executeCommandDiff typology createFrom2PointsAndHeight builds a solid", async () => {
-			const res = await kernel.executeCommandDiff("energy.energy.createExternalWallFrom2PointsAndHeight", {
+		it("executeCommandDiff typology constructFrom2PointsAndHeight builds a solid", async () => {
+			const res = await kernel.executeCommandDiff("energy.energy.constructExternalWallFrom2PointsAndHeight", {
 				pointA: [0, 0, 0],
 				pointB: [4, 3, 0],
 				height: 2.5,

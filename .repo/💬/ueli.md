@@ -2573,6 +2573,10 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+ There are many construct* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions. Make sure this pattern is applied strictly.
+
+---
+
 In order to deal with the problem that brepjs cant attach metdata directly, the kernel needs to be extended with a layer to track attributes and metadata. Further brepjs cant import/export json.
 We import and export with AP242 UDA STEP.
 Make sure that our framework cleanly roundtrips with step.

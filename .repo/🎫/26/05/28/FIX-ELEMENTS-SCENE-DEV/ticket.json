@@ -1,8 +1,9 @@
 {
   "title": "Fix Elements Scene Dev",
   "emoji": "🏙️",
-  "status": "open",
+  "status": "closed",
   "description": "Fix elements scene dev server: 504 Outdated Optimize Dep and failed dynamic import of index.tsx on port 6013.",
+  "summary": "Fixed elements scene dev 504 Outdated Optimize Dep by deduping Three.js to @elements/ui's 0.182 build (was split across root 0.180 and core 0.182), adding optimizeDeps prebundle for R3F stack, mapping three/addons to examples/jsm, clearing stale .vite cache on dev start, aligning scene three dep to ^0.182.0, and fixing vitest expectations for log-LOD and WindowBodyViewContext.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1492"
   },

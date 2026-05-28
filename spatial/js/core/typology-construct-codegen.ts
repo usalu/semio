@@ -1,7 +1,5 @@
 /** @emoji 🏗️ Pure helpers to generate typology construct actions and interactions (no asset glob). */
 
-import { nestedCall, typologyConstructIsSurfacePrimary } from "./shape-construct-codegen.ts";
-
 const SURFACE_CONSTRUCT_OUTPUTS = {
 	faceId: "faceId",
 	wireId: "wireId",
@@ -9,8 +7,23 @@ const SURFACE_CONSTRUCT_OUTPUTS = {
 	curves: "curves",
 	points: "points",
 	targets: "targets",
-	surfaceConstructMode: "surfaceConstructMode",
+	surfaceConstructMode: "constructMode",
 } as const;
+
+function nestedCall(interaction: string, outputs: Readonly<Record<string, string>>): Record<string, unknown> {
+	return {
+		op: "interaction.call",
+		interaction,
+		outputs: Object.entries(outputs).map(([target, source]) => ({
+			target: { root: "context", segments: [{ kind: "field", name: target }] },
+			value: { kind: "path", root: "context", segments: [{ kind: "field", name: source }] },
+		})),
+	};
+}
+
+function typologyConstructIsSurfacePrimary(typology: string): boolean {
+	return typology.toLowerCase().endsWith(".baseplate");
+}
 
 /** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
 export function typologyObjectPascalFromLabel(label: string): string {
@@ -23,27 +36,55 @@ export function typologyObjectPascalFromLabel(label: string): string {
 		.join("");
 }
 
-/** @emoji 🧭 Stable ids for the three create actions plus one construct interaction/dispatch action. */
-export function typologyConstructAssetIds(
-	typology: string,
-	label: string,
-): {
+export type TypologyConstructMode = "2PointsAndHeight" | "curveAndHeight" | "surface";
+
+/** @emoji 🧭 Per-typology construct kit: three mode actions + one interaction id. */
+export type TypologyConstructKit = {
 	readonly typology: string;
-	readonly createFrom2PointsAndHeight: string;
-	readonly createFromCurveAndHeight: string;
-	readonly createFromSurface: string;
-	readonly construct: string;
-} {
+	readonly interaction: string;
+	readonly constructFrom2PointsAndHeight: string;
+	readonly constructFromCurveAndHeight: string;
+	readonly constructFromSurface: string;
+};
+
+/** @emoji 🧭 Stable ids: three `construct*From*` actions and one `construct*` interaction (same interaction id string as before). */
+export function typologyConstructAssetIds(typology: string, label: string): TypologyConstructKit & { readonly construct: string } {
 	const parts = typology.split(".");
 	const prefix = parts.length > 1 ? `${parts.slice(0, -1).join(".")}.` : "";
 	const pascal = typologyObjectPascalFromLabel(label);
+	const interaction = `${prefix}construct${pascal}`;
 	return {
 		typology,
-		createFrom2PointsAndHeight: `${prefix}create${pascal}From2PointsAndHeight`,
-		createFromCurveAndHeight: `${prefix}create${pascal}FromCurveAndHeight`,
-		createFromSurface: `${prefix}create${pascal}FromSurface`,
-		construct: `${prefix}construct${pascal}`,
+		interaction,
+		construct: interaction,
+		constructFrom2PointsAndHeight: `${prefix}construct${pascal}From2PointsAndHeight`,
+		constructFromCurveAndHeight: `${prefix}construct${pascal}FromCurveAndHeight`,
+		constructFromSurface: `${prefix}construct${pascal}FromSurface`,
 	};
+}
+
+/** @emoji 🧭 `construct*` action ids declared on a typology (`surface`-primary typologies ship surface only). */
+export function typologyConstructModeActionIds(typologyId: string, label: string): readonly string[] {
+	const ids = typologyConstructAssetIds(typologyId, label);
+	if (typologyConstructIsSurfacePrimary(typologyId)) return [ids.constructFromSurface];
+	return [ids.constructFrom2PointsAndHeight, ids.constructFromCurveAndHeight, ids.constructFromSurface];
+}
+
+/** @emoji 🎯 Resolves the single mode action an interaction commit must run for `constructMode`. */
+export function typologyConstructCommitActionForMode(
+	kit: TypologyConstructKit,
+	mode: string,
+): string {
+	switch (mode as TypologyConstructMode) {
+		case "2PointsAndHeight":
+			return kit.constructFrom2PointsAndHeight;
+		case "curveAndHeight":
+			return kit.constructFromCurveAndHeight;
+		case "surface":
+			return kit.constructFromSurface;
+		default:
+			throw new Error(`Unknown constructMode ${mode} for ${kit.interaction}`);
+	}
 }
 
 /** @emoji 📄 Declarative capability action JSON for typology construction steps. */
@@ -60,22 +101,11 @@ export function capabilityActionSpecJson(id: string, label: string): Record<stri
 	};
 }
 
-export type TypologyConstructMode = "2PointsAndHeight" | "curveAndHeight" | "surface";
-
 const ctxField = (name: string) => ({
 	kind: "path" as const,
 	root: "context" as const,
 	segments: [{ kind: "field" as const, name }],
 });
-
-/** @emoji 📞 Shared `interaction.call` to `pick.face` with declarative output bindings. */
-export function pickFaceInteractionCallEffect(): Record<string, unknown> {
-	return {
-		op: "interaction.call",
-		interaction: "pick.face",
-		outputs: [{ target: { root: "context", segments: [{ kind: "field", name: "faceId" }] }, value: ctxField("faceId") }],
-	};
-}
 
 const promptLabel = (id: string, text: string, y = 0.25) => ({
 	kind: "label" as const,
@@ -109,6 +139,28 @@ const footprintBoxPreview = (id: string) => ({
 	cornerB: ctxField("pointB"),
 	height: ctxField("height"),
 });
+
+function typologyConstructCommitParams(typology: string): Record<string, unknown> {
+	const pathMode = (name: string) => ({
+		kind: "path" as const,
+		root: "context" as const,
+		segments: [{ kind: "field" as const, name }],
+	});
+	return {
+		typology: { kind: "const", value: typology },
+		constructMode: pathMode("constructMode"),
+		pointA: pathMode("pointA"),
+		pointB: pathMode("pointB"),
+		height: pathMode("height"),
+		wireId: pathMode("wireId"),
+		wireIds: pathMode("wireIds"),
+		curves: pathMode("curves"),
+		points: pathMode("points"),
+		targets: pathMode("targets"),
+		faceId: pathMode("faceId"),
+		surfaceConstructMode: pathMode("surfaceConstructMode"),
+	};
+}
 
 /** @emoji 🖼️ Display templates for typology construct workflow states. */
 function buildTypologyConstructDisplay(
@@ -163,16 +215,7 @@ function buildTypologyConstructDisplay(
 			},
 			{
 				state: "curve_height",
-				items: [
-					promptLabel("hint-curve-height", `Construct ${label}: set height (Apply height or Accept)`),
-					{
-						kind: "entity-highlight",
-						id: "wire-highlight",
-						role: "preview",
-						geometryEntityKind: "wire",
-						entityId: ctxField("wireId"),
-					},
-				],
+				items: [promptLabel("hint-curve-height", `Construct ${label}: set height (Apply height or Accept)`)],
 			},
 			{
 				state: "committed",
@@ -185,19 +228,14 @@ function buildTypologyConstructDisplay(
 	};
 }
 
-/** @emoji 🎮 Builds the shared multi-mode construct interaction for a typology. */
+/** @emoji 🎮 Builds the single construct interaction for a typology (commit resolves to one mode action). */
 export function buildTypologyConstructInteractionSpec(
 	typology: string,
 	label: string,
-	constructActionId: string,
+	interactionId: string,
 ): Record<string, unknown> {
 	const pascal = typologyObjectPascalFromLabel(label);
 	const key = pascal.replace(/[^a-zA-Z]/g, "").charAt(0).toLowerCase() || "c";
-	const pathMode = (name: string) => ({
-		kind: "path" as const,
-		root: "context" as const,
-		segments: [{ kind: "field" as const, name }],
-	});
 	const assignMode = (mode: TypologyConstructMode) => ({
 		op: "assign" as const,
 		target: { root: "context" as const, segments: [{ kind: "field" as const, name: "constructMode" }] },
@@ -266,14 +304,7 @@ export function buildTypologyConstructInteractionSpec(
 		? [
 				{
 					event: "mode.surface",
-					transitions: [
-						{
-							target: "committed",
-							key: "1",
-							label: "Surface",
-							effects: [assignMode("surface"), callSurfaceConstruct],
-						},
-					],
+					transitions: [{ target: "committed", key: "1", label: "Surface", effects: [assignMode("surface"), callSurfaceConstruct] }],
 				},
 			]
 		: [
@@ -289,19 +320,12 @@ export function buildTypologyConstructInteractionSpec(
 				},
 				{
 					event: "mode.surface",
-					transitions: [
-						{
-							target: "committed",
-							key: "3",
-							label: "Surface",
-							effects: [assignMode("surface"), callSurfaceConstruct],
-						},
-					],
+					transitions: [{ target: "committed", key: "3", label: "Surface", effects: [assignMode("surface"), callSurfaceConstruct] }],
 				},
 			];
 	return {
 		schema: "spatial.interaction/v1",
-		id: constructActionId,
+		id: interactionId,
 		version: "1.0.0",
 		label: `Construct ${label}`,
 		key,
@@ -425,24 +449,28 @@ export function buildTypologyConstructInteractionSpec(
 				{ name: "committed", final: true },
 			],
 		},
-		display: buildTypologyConstructDisplay(label),
+		display: buildTypologyConstructDisplay(label, surfacePrimary),
 		commit: {
 			when: "hasConstructMode",
 			fromStates: ["committed"],
 			operation: {
 				kind: "action",
-				action: constructActionId,
-				params: {
-					typology: { kind: "const", value: typology },
-					constructMode: pathMode("constructMode"),
-					pointA: pathMode("pointA"),
-					pointB: pathMode("pointB"),
-					height: pathMode("height"),
-					wireId: pathMode("wireId"),
-					faceId: pathMode("faceId"),
-				},
+				action: interactionId,
+				params: typologyConstructCommitParams(typology),
 			},
 		},
 		produces: { typology },
 	};
+}
+
+/** @emoji 🗑️ Legacy action asset basenames to remove when migrating typologies to the strict kit. */
+export function legacyTypologyConstructActionBasenames(label: string, interactionId: string): readonly string[] {
+	const pascal = typologyObjectPascalFromLabel(label);
+	const interactionBase = interactionId.split(".").pop() ?? interactionId;
+	return [
+		`create${pascal}From2PointsAndHeight.json`,
+		`create${pascal}FromCurveAndHeight.json`,
+		`create${pascal}FromSurface.json`,
+		`${interactionBase}.json`,
+	];
 }

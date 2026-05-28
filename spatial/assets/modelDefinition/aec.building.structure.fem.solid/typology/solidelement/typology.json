@@ -5,10 +5,9 @@
   "label": "Solid Element",
   "description": "Derived structural element represented with solid mesh.",
   "actions": [
-    "structure.solidfem.createSolidElementFrom2PointsAndHeight",
-    "structure.solidfem.createSolidElementFromCurveAndHeight",
-    "structure.solidfem.createSolidElementFromSurface",
-    "structure.solidfem.constructSolidElement"
+    "structure.solidfem.constructSolidElementFrom2PointsAndHeight",
+    "structure.solidfem.constructSolidElementFromCurveAndHeight",
+    "structure.solidfem.constructSolidElementFromSurface"
   ],
   "interactions": [
     "structure.solidfem.constructSolidElement"
