@@ -2785,8 +2785,8 @@ export function InteractionSpatialView({
 		() => geometryPreviewTransformFromDisplay(displayModel ?? snapshot.display),
 		[displayModel, snapshot.display],
 	);
-	const origin = vec3FromSnapshotContext(ctx, "origin");
-	const corner = vec3FromSnapshotContext(ctx, "corner");
+	const origin = vec3FromSnapshotContext(ctx, "origin") ?? vec3FromSnapshotContext(ctx, "pointA");
+	const corner = vec3FromSnapshotContext(ctx, "corner") ?? vec3FromSnapshotContext(ctx, "pointB");
 	const si = snapshot.spatialInteraction;
 	const groundMoveOn =
 		si.spatialGroundPick && si.groundPointerMoveStates.includes(snapshot.state) && Boolean(onScenePointerMove);

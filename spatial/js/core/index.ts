@@ -708,6 +708,13 @@ export interface InteractionSpatialConfig {
   readonly heightDragStates?: readonly string[];
   readonly verticalRodStates?: readonly string[];
   readonly heightConfirmState?: string | null;
+  /** @emoji 📞 When true, only invoked via `interaction.call` (excluded from standalone e2e catalog). */
+  readonly callableOnly?: boolean;
+}
+
+/** @emoji 📞 True when an interaction is nested-only (`interaction.callableOnly`). */
+export function isCallableOnlyInteraction(spec: InteractionSpec): boolean {
+  return Boolean(spec.interaction?.callableOnly);
 }
 
 function guardNames(spec: InteractionSpec): Set<string> {
@@ -5492,6 +5499,49 @@ if (import.meta.vitest) {
       );
       expect(calls).toEqual([ids.createFromSurface]);
     });
+    it("interaction.call runs nested pick.face and resumes host construct flow", async () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("nested-pick-box")));
+      const fid = Object.keys(model.faces)[0]! as FaceRef;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
+      expect(spec).toBeTruthy();
+      expect(interactionIdsReferencedByInteractionSpec(spec!)).toContain("pick.face");
+      const rt = createInteractionRuntime(spec!, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: "aec.building.energy",
+      });
+      await rt.send({ kind: "mode.surface" });
+      let snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("pick.face");
+      expect(snap.nested?.hostInteractionId).toBe("energy.energy.constructBasePlate");
+      expect(snap.nested?.hostState).toBe("choose_mode");
+      await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
+      snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
+      expect(snap.state).toBe("committed");
+      expect(snap.context.constructMode).toBe("surface");
+      expect(snap.context.faceId).toBe(fid);
+      expect(snap.lastResponse?.ok).toBe(true);
+    });
+    it("aborting nested interaction leaves host paused state unchanged", async () => {
+      const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec!, {
+        kernel,
+        document: { model: new Model(), nodes: [] },
+        activeModelDefinitionId: "aec.building.energy",
+      });
+      await rt.send({ kind: "mode.surface" });
+      expect(rt.getSnapshot().interactionId).toBe("pick.face");
+      rt.cancel();
+      const snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
+      expect(snap.state).toBe("choose_mode");
+      expect(snap.context.constructMode).toBe("surface");
+      expect(snap.context.faceId).toBeUndefined();
+    });
     it("ActionRegistry.withBuiltins registers declarative model-definition actions only", () => {
       const r = ActionRegistry.withBuiltins();
       const ids = new Set(r.list().map((d) => d.id));
@@ -6696,6 +6746,10 @@ if (import.meta.vitest) {
     it("covers every shipped interaction", () => {
       const ids = listSpatialInteractionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID)
         .map((row) => row.id)
+        .filter((id) => {
+          const spec = loadSpatialInteraction(id);
+          return spec && !isCallableOnlyInteraction(spec);
+        })
         .sort();
       expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
     });

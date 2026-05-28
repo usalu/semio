@@ -50,6 +50,116 @@ export function capabilityActionSpecJson(id: string, label: string): Record<stri
 
 export type TypologyConstructMode = "2PointsAndHeight" | "curveAndHeight" | "surface";
 
+const ctxField = (name: string) => ({
+	kind: "path" as const,
+	root: "context" as const,
+	segments: [{ kind: "field" as const, name }],
+});
+
+const promptLabel = (id: string, text: string, y = 0.25) => ({
+	kind: "label" as const,
+	id,
+	role: "prompt" as const,
+	text,
+	position: { kind: "const" as const, value: [0, y, 1.55] as const },
+});
+
+const ctxPoint = (id: string, field: string, role: string) => ({
+	kind: "point" as const,
+	id,
+	role,
+	position: ctxField(field),
+});
+
+const rubberBoxPreview = (id: string, cornerAField: string, cornerBField: string) => ({
+	kind: "box-preview" as const,
+	id,
+	role: "preview" as const,
+	cornerA: ctxField(cornerAField),
+	cornerB: ctxField(cornerBField),
+	height: { kind: "const" as const, value: 0.01 },
+});
+
+const footprintBoxPreview = (id: string) => ({
+	kind: "box-preview" as const,
+	id,
+	role: "preview" as const,
+	cornerA: ctxField("pointA"),
+	cornerB: ctxField("pointB"),
+	height: ctxField("height"),
+});
+
+/** @emoji 🖼️ Display templates for typology construct workflow states. */
+function buildTypologyConstructDisplay(label: string): { readonly states: readonly Record<string, unknown>[] } {
+	return {
+		states: [
+			{
+				state: "choose_mode",
+				items: [
+					promptLabel("choose-mode", `Construct ${label}: 1=2pts+height 2=curve+height 3=surface`),
+				],
+			},
+			{
+				state: "two_points_first",
+				items: [
+					promptLabel("hint-first", `Construct ${label}: click first footprint corner`),
+					ctxPoint("cursor", "cursor", "cursor"),
+				],
+			},
+			{
+				state: "two_points_second",
+				items: [
+					promptLabel("hint-second", `Construct ${label}: click opposite footprint corner`),
+					ctxPoint("anchor-a", "pointA", "anchor"),
+					ctxPoint("cursor", "cursor", "cursor"),
+					{
+						kind: "segment",
+						id: "footprint-rubber",
+						role: "preview",
+						from: ctxField("pointA"),
+						to: ctxField("cursor"),
+					},
+					rubberBoxPreview("preview", "pointA", "cursor"),
+				],
+			},
+			{
+				state: "two_points_height",
+				items: [
+					promptLabel(
+						"hint-height",
+						`Construct ${label}: height (Z) — drag teal wall, Apply height, or Accept`,
+					),
+					footprintBoxPreview("preview"),
+				],
+			},
+			{
+				state: "curve_wire",
+				items: [promptLabel("hint-wire", `Construct ${label}: pick path wire`)],
+			},
+			{
+				state: "curve_height",
+				items: [
+					promptLabel("hint-curve-height", `Construct ${label}: set height (Apply height or Accept)`),
+					{
+						kind: "entity-highlight",
+						id: "wire-highlight",
+						role: "preview",
+						geometryEntityKind: "wire",
+						entityId: ctxField("wireId"),
+					},
+				],
+			},
+			{
+				state: "committed",
+				items: [
+					promptLabel("hint-commit", `Construct ${label}: Accept to create`, 0.2),
+					footprintBoxPreview("preview-final"),
+				],
+			},
+		],
+	};
+}
+
 /** @emoji 🎮 Builds the shared multi-mode construct interaction for a typology. */
 export function buildTypologyConstructInteractionSpec(
 	typology: string,
@@ -73,6 +183,58 @@ export function buildTypologyConstructInteractionSpec(
 		target: { root: "context" as const, segments: [{ kind: "field" as const, name: field }] },
 		value: { kind: "path" as const, root: "event" as const, segments: [{ kind: "field" as const, name: "point" }] },
 	});
+	const assignConstHeight = (value: number) => ({
+		op: "assign" as const,
+		target: { root: "context" as const, segments: [{ kind: "field" as const, name: "height" }] },
+		value: { kind: "const" as const, value },
+	});
+	const assignHeightFromPointerZ = (baseField: string) => ({
+		op: "assign" as const,
+		target: { root: "context" as const, segments: [{ kind: "field" as const, name: "height" }] },
+		value: {
+			kind: "let" as const,
+			bindings: [
+				{
+					name: "z0",
+					value: {
+						kind: "path" as const,
+						root: "context" as const,
+						segments: [{ kind: "field" as const, name: baseField }, { kind: "index" as const, index: 2 }],
+					},
+				},
+				{
+					name: "z1",
+					value: {
+						kind: "path" as const,
+						root: "event" as const,
+						segments: [{ kind: "field" as const, name: "point" }, { kind: "index" as const, index: 2 }],
+					},
+				},
+			],
+			in: {
+				kind: "binop" as const,
+				op: "+" as const,
+				left: {
+					kind: "abs" as const,
+					arg: {
+						kind: "binop" as const,
+						op: "-" as const,
+						left: { kind: "var" as const, name: "z1" },
+						right: { kind: "var" as const, name: "z0" },
+					},
+				},
+				right: { kind: "const" as const, value: 0.01 },
+			},
+		},
+	});
+	const pointerMoveCursor = {
+		event: "pointer.move",
+		transitions: [{ transient: true, effects: [assignPoint("cursor")] }],
+	};
+	const pointerMoveHeight = {
+		event: "pointer.move",
+		transitions: [{ transient: true, effects: [assignHeightFromPointerZ("pointA")] }],
+	};
 	return {
 		schema: "spatial.interaction/v1",
 		id: constructActionId,
@@ -131,15 +293,30 @@ export function buildTypologyConstructInteractionSpec(
 				},
 				{
 					name: "two_points_first",
-					on: [{ event: "pointer.down", transitions: [{ target: "two_points_second", effects: [assignPoint("pointA")] }] }],
+					on: [
+						pointerMoveCursor,
+						{ event: "pointer.down", transitions: [{ target: "two_points_second", effects: [assignPoint("pointA")] }] },
+					],
 				},
 				{
 					name: "two_points_second",
-					on: [{ event: "pointer.down", transitions: [{ target: "two_points_height", effects: [assignPoint("pointB")] }] }],
+					on: [
+						pointerMoveCursor,
+						{
+							event: "pointer.down",
+							transitions: [
+								{
+									target: "two_points_height",
+									effects: [assignPoint("pointB"), assignConstHeight(0.25)],
+								},
+							],
+						},
+					],
 				},
 				{
 					name: "two_points_height",
 					on: [
+						pointerMoveHeight,
 						{
 							event: "set.height",
 							transitions: [
@@ -213,22 +390,7 @@ export function buildTypologyConstructInteractionSpec(
 				{ name: "committed", final: true },
 			],
 		},
-		display: {
-			states: [
-				{
-					state: "choose_mode",
-					items: [
-						{
-							kind: "label",
-							id: "choose-mode",
-							role: "prompt",
-							text: `Construct ${label}: 1=2pts+height 2=curve+height 3=surface`,
-							position: { kind: "const", value: [0, 0.25, 1.55] },
-						},
-					],
-				},
-			],
-		},
+		display: buildTypologyConstructDisplay(label),
 		commit: {
 			when: "hasConstructMode",
 			fromStates: ["committed"],
@@ -246,6 +408,6 @@ export function buildTypologyConstructInteractionSpec(
 				},
 			},
 		},
-					produces: { typology },
+		produces: { typology },
 	};
 }

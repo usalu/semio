@@ -141,6 +141,38 @@
         "name": "two_points_first",
         "on": [
           {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "event": "pointer.down",
             "transitions": [
               {
@@ -178,6 +210,38 @@
         "name": "two_points_second",
         "on": [
           {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "event": "pointer.down",
             "transitions": [
               {
@@ -204,6 +268,22 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
                   }
                 ]
               }
@@ -214,6 +294,90 @@
       {
         "name": "two_points_height",
         "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "let",
+                      "bindings": [
+                        {
+                          "name": "z0",
+                          "value": {
+                            "kind": "path",
+                            "root": "context",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "pointA"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "z1",
+                          "value": {
+                            "kind": "path",
+                            "root": "event",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "point"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "in": {
+                        "kind": "binop",
+                        "op": "+",
+                        "left": {
+                          "kind": "abs",
+                          "arg": {
+                            "kind": "binop",
+                            "op": "-",
+                            "left": {
+                              "kind": "var",
+                              "name": "z1"
+                            },
+                            "right": {
+                              "kind": "var",
+                              "name": "z0"
+                            }
+                          }
+                        },
+                        "right": {
+                          "kind": "const",
+                          "value": 0.01
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           {
             "event": "set.height",
             "transitions": [
@@ -363,6 +527,305 @@
                 0,
                 0.25,
                 1.55
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_first",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-first",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: click first footprint corner",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_second",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-second",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: click opposite footprint corner",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "anchor-a",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "footprint-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_height",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-height",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: height (Z) — drag teal wall, Apply height, or Accept",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointB"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "curve_wire",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-wire",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: pick path wire",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "curve_height",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-curve-height",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: set height (Apply height or Accept)",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "entity-highlight",
+            "id": "wire-highlight",
+            "role": "preview",
+            "geometryEntityKind": "wire",
+            "entityId": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "wireId"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "committed",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-commit",
+            "role": "prompt",
+            "text": "Construct Reinforced Concrete Column: Accept to create",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.2,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview-final",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointB"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
               ]
             }
           }
