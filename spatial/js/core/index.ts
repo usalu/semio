@@ -1958,6 +1958,216 @@ export function listTransformationsFromModelDefinition(modelDefinitionId: string
   return listModelDefinitionTransformations().filter((row) => row.source.modelDefinition === modelDefinitionId);
 }
 
+// #region 🧭ModelDefinitionScope
+function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
+  const normalized = assetPath.replace(/\\/g, "/");
+  const marker = "/assets/modelDefinition/";
+  const idx = normalized.indexOf(marker);
+  if (idx < 0) return null;
+  const rest = normalized.slice(idx + marker.length);
+  const folder = rest.split("/")[0];
+  return folder || null;
+}
+
+let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
+
+function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
+  if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
+  const map = new Map<string, string>();
+  const modules = {
+    ...modelDefinitionManifestModules,
+    ...modelDefinitionExtensionManifestModules,
+    ...geometryModelDefinitionManifestModule,
+  };
+  for (const [path, raw] of Object.entries(modules)) {
+    const folder = modelDefinitionFolderFromAssetPath(path);
+    const manifest = parseModelDefinitionManifest(raw);
+    if (!folder || !manifest) continue;
+    map.set(folder, manifest.id);
+  }
+  modelDefinitionFolderIdMapCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Resolves manifest `id` from an asset path under `spatial/assets/modelDefinition`. */
+export function modelDefinitionIdFromAssetPath(assetPath: string): string | null {
+  const folder = modelDefinitionFolderFromAssetPath(assetPath);
+  if (!folder) return null;
+  return modelDefinitionFolderIdMap().get(folder) ?? null;
+}
+
+let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+
+function typologyOwnerById(): ReadonlyMap<string, string> {
+  if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries(modelDefinitionTypologyModules)) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parseTypologySpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  typologyOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Typologies owned by a model-definition folder manifest. */
+export function listTypologiesForModelDefinition(modelDefinitionId: string): readonly TypologySpec[] {
+  const owners = typologyOwnerById();
+  return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
+}
+
+let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+
+function interactionOwnerById(): ReadonlyMap<string, string> {
+  if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries(modelDefinitionInteractionModules)) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parseInteractionSpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  interactionOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Interactions shipped for a model definition (folder assets + typology references). */
+export function listSpatialInteractionsForModelDefinition(modelDefinitionId: string): readonly SpatialInteraction[] {
+  const ids = new Set<string>();
+  for (const [id, owner] of interactionOwnerById()) {
+    if (owner === modelDefinitionId) ids.add(id);
+  }
+  for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
+    for (const interactionId of typology.interactions) ids.add(interactionId);
+  }
+  return listSpatialInteractions().filter((row) => ids.has(row.id));
+}
+
+let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+
+function attributeOwnerById(): ReadonlyMap<string, string> {
+  if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries(modelDefinitionAttributeModules)) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parseAttributeDefinitionSpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  attributeOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Attribute definitions owned by a model definition. */
+export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: string): readonly AttributeDefinitionSpec[] {
+  const owners = attributeOwnerById();
+  return shippedAttributeDefinitionCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
+}
+
+let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+
+function propertyOwnerById(): ReadonlyMap<string, string> {
+  if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries({
+    ...modelDefinitionPropertyDefinitionModules,
+    ...modelDefinitionPropertyModules,
+  })) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parsePropertyDefinitionSpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  propertyOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Property definitions referenced by typologies in a model definition. */
+export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: string): readonly PropertyDefinitionSpec[] {
+  const ids = new Set<string>();
+  for (const row of shippedPropertyDefinitionCatalog()) {
+    if (propertyOwnerById().get(row.id) === modelDefinitionId) ids.add(row.id);
+  }
+  for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
+    for (const propertyId of typology.properties ?? []) ids.add(propertyId);
+  }
+  return [...ids]
+    .map((id) => loadPropertyDefinition(id))
+    .filter((row): row is PropertyDefinitionSpec => row !== null);
+}
+
+/** @emoji 🧭 Action ids declared on typologies or model-definition action assets. */
+export function listActionsForModelDefinition(modelDefinitionId: string): readonly string[] {
+  const ids = new Set<string>();
+  for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
+    for (const actionId of typology.actions) ids.add(actionId);
+  }
+  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+    if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
+    const spec = parseActionSpec(raw);
+    if (spec) ids.add(spec.id);
+  }
+  return [...ids].sort((a, b) => a.localeCompare(b));
+}
+
+/** @emoji 🧭 True when `actionId` is declared in the active model definition (or is `selection.apply`). */
+export function actionAvailableInModelDefinition(actionId: string, modelDefinitionId: string): boolean {
+  if (actionId === "selection.apply") return true;
+  const transformation = loadTransformation(actionId);
+  if (transformation) {
+    return transformation.source.modelDefinition === modelDefinitionId || transformation.target.modelDefinition === modelDefinitionId;
+  }
+  return listActionsForModelDefinition(modelDefinitionId).includes(actionId);
+}
+
+/** @emoji 🧭 Selection command fixtures whose action assets belong to a model definition. */
+export function listSelectionOperationsForModelDefinition(modelDefinitionId: string): readonly SelectionOperationInteractionDef[] {
+  const actionIds = new Set(
+    listActionsForModelDefinition(modelDefinitionId).filter((id) => id.startsWith("selection.") && id !== "selection.apply"),
+  );
+  return listSelectionOperationInteractionDefs().filter((defn) => actionIds.has(defn.id));
+}
+
+/** @emoji 🧭 Selection entity kinds available while a model definition is active. */
+export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
+  if (isGeometryModelDefinition(modelDefinitionId)) {
+    const kinds = new Set<ModelEntityKind>();
+    for (const defn of listSelectionOperationsForModelDefinition(modelDefinitionId)) {
+      for (const kind of defn.kinds ?? []) kinds.add(kind);
+    }
+    return kinds.size > 0 ? [...kinds] : ALL_MODEL_SELECTION_KINDS.filter((kind) => kind !== "object");
+  }
+  return ["object"];
+}
+
+/** @emoji 🧭 Summarizes scoped catalogs for the active model definition (hosts + REPL). */
+export interface ModelDefinitionScope {
+  readonly modelDefinitionId: string;
+  readonly typologies: readonly TypologySpec[];
+  readonly interactions: readonly SpatialInteraction[];
+  readonly selectionOperations: readonly SelectionOperationInteractionDef[];
+  readonly attributeDefinitions: readonly AttributeDefinitionSpec[];
+  readonly propertyDefinitions: readonly PropertyDefinitionSpec[];
+  readonly actions: readonly string[];
+  readonly selectionEntityKinds: readonly ModelEntityKind[];
+}
+
+/** @emoji 🧭 Resolves everything available under one model definition manifest id. */
+export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDefinitionScope {
+  return {
+    modelDefinitionId,
+    typologies: listTypologiesForModelDefinition(modelDefinitionId),
+    interactions: listSpatialInteractionsForModelDefinition(modelDefinitionId),
+    selectionOperations: listSelectionOperationsForModelDefinition(modelDefinitionId),
+    attributeDefinitions: listAttributeDefinitionsForModelDefinition(modelDefinitionId),
+    propertyDefinitions: listPropertyDefinitionsForModelDefinition(modelDefinitionId),
+    actions: listActionsForModelDefinition(modelDefinitionId),
+    selectionEntityKinds: modelDefinitionSelectionEntityKinds(modelDefinitionId),
+  };
+}
+// #endregion 🧭ModelDefinitionScope
+
 /** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
 export function applyTransformation(spec: TransformationSpec, source: Model): Model {
   const target = new Model();
@@ -4182,6 +4392,18 @@ if (import.meta.vitest) {
       expect(manifests.some((row) => row.id === "aec.building.energy")).toBe(true);
       expect(listTransformationsIntoModelDefinition("aec.building.energy").some((row) => row.id === "from_geometry")).toBe(true);
       expect(listTransformationsFromModelDefinition("builtin").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
+    });
+    it("scopes catalogs to active model definition", () => {
+      const builtin = resolveModelDefinitionScope(GEOMETRY_MODEL_DEFINITION_ID);
+      const energy = resolveModelDefinitionScope("aec.building.energy");
+      expect(builtin.interactions.some((row) => row.id === "primitive.box")).toBe(true);
+      expect(energy.interactions.length).toBe(0);
+      expect(energy.typologies.some((row) => row.id === "energy.energy.hull")).toBe(true);
+      expect(energy.selectionEntityKinds).toEqual(["object"]);
+      expect(builtin.selectionEntityKinds).toContain("vertex");
+      expect(listAttributeDefinitionsForModelDefinition("aec.building.energy").some((row) => row.id === "energy.uvalue")).toBe(true);
+      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", GEOMETRY_MODEL_DEFINITION_ID)).toBe(true);
+      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
     });
     it("loads and applies from_geometry transformation", () => {
       const spec = loadTransformation("aec.building.energy.from_geometry");

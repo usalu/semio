@@ -15,6 +15,8 @@ import {
 	loadTransformation,
 	solidRef,
 	isSelectionConstructActionId,
+	actionAvailableInModelDefinition,
+	GEOMETRY_MODEL_DEFINITION_ID,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
@@ -1315,7 +1317,11 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "call") {
 			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 4;
 			const transformation = loadTransformation(st.actionId);
+			const modelDefinitionId = ctx.activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
 			if (!viewDerived && !transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
+			if (!viewDerived && !transformation && !actionAvailableInModelDefinition(st.actionId, modelDefinitionId)) {
+				throw new Error(`action ${st.actionId} is not available in model definition ${modelDefinitionId}`);
+			}
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
@@ -1637,6 +1643,18 @@ if (import.meta.vitest) {
 			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
 			expect(targets?.length).toBe(8);
 			expect(targets?.every((t) => t.kind === "vertex")).toBe(true);
+		});
+
+		it("rejects actions outside active model definition", async () => {
+			const model = new Model();
+			await expect(
+				runConstruct("CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [1,1,0], height: 1 })", {
+					model: model,
+					kernel: new QueryTestKernel(),
+					actions: ActionRegistry.withBuiltins(),
+					activeModelDefinitionId: "aec.building.energy",
+				}),
+			).rejects.toThrow(/not available in model definition aec\.building\.energy/);
 		});
 
 		it("MATCH builtin.primitive.box typology resolves to solids", async () => {

@@ -4,13 +4,14 @@ import { createRoot } from "react-dom/client";
 import {
 	DocumentHistory,
 	GEOMETRY_MODEL_DEFINITION_ID,
-	applyTransformation,
-	isGeometryModelDefinition,
 	isInteractionSessionActive,
+	listModelDefinitionManifests,
+	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
 	listSpatialInteractions,
 	loadSpatialInteraction,
 	parseModelJson,
+	qualifiedTransformationId,
 	type InteractionSnapshot,
 	type InteractionRuntime,
 	type InteractionSpec,
@@ -369,53 +370,117 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 	return modelDefinitionId.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "model";
 }
 
-function geometryModelForExport(derivedByDefinitionId: Readonly<Record<string, Model>>, liveModel: Model): Model {
-	return derivedByDefinitionId[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+function modelsFromGeometryJson(json: unknown): Record<string, Model> {
+	return { [GEOMETRY_MODEL_DEFINITION_ID]: parseModelJson(json) ?? new Model() };
 }
 
-function resolveExportModel(
-	modelDefinitionId: string,
-	derivedByDefinitionId: Readonly<Record<string, Model>>,
-	geometryModel: Model,
-	liveModel: Model,
-	activeModelDefinitionId: string,
-): Model {
-	if (isGeometryModelDefinition(modelDefinitionId)) return geometryModel;
-	const cached = derivedByDefinitionId[modelDefinitionId];
-	if (cached) return cached;
-	if (modelDefinitionId === activeModelDefinitionId && !isGeometryModelDefinition(activeModelDefinitionId)) return liveModel;
-	const transforms = listTransformationsIntoModelDefinition(modelDefinitionId).filter((row) =>
-		isGeometryModelDefinition(row.source.modelDefinition),
-	);
-	if (transforms[0]) return applyTransformation(transforms[0], geometryModel);
-	return liveModel;
+function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
+	return { ...models, [activeId]: Model.fromJSON(live.toJSON()) };
 }
 
-function buildPlayModelSpace(
-	derivedByDefinitionId: Readonly<Record<string, Model>>,
-	geometryModel: Model,
-	liveModel: Model,
-	activeModelDefinitionId: string,
-): ModelSpace {
+function modelSpaceFromRecord(models: Readonly<Record<string, Model>>): ModelSpace {
 	const space = new ModelSpace();
-	const linked = new Set<string>();
-	const link = (id: string, model: Model) => {
-		if (linked.has(id)) return;
-		linked.add(id);
-		space.link(id, model);
-	};
-	link(GEOMETRY_MODEL_DEFINITION_ID, geometryModel);
-	for (const [id, model] of Object.entries(derivedByDefinitionId)) {
-		if (id === GEOMETRY_MODEL_DEFINITION_ID) continue;
-		link(id, model);
-	}
-	if (!isGeometryModelDefinition(activeModelDefinitionId) && !linked.has(activeModelDefinitionId)) {
-		link(
-			activeModelDefinitionId,
-			resolveExportModel(activeModelDefinitionId, derivedByDefinitionId, geometryModel, liveModel, activeModelDefinitionId),
-		);
-	}
+	for (const id of Object.keys(models).sort()) space.link(id, models[id]!);
 	return space;
+}
+
+function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
+	const out: Record<string, Model> = {};
+	for (const id of Object.keys(space.models).sort()) {
+		const model = space.models[id];
+		if (model) out[id] = Model.fromJSON(model.toJSON());
+	}
+	return out;
+}
+
+const PLAY_SELECT_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" } as const;
+
+//#region 🔖PlayModelSpacePanel
+interface PlayModelSpacePanelProps {
+	readonly activeModelDefinitionId: string;
+	readonly onActiveModelDefinitionId: (value: string) => void;
+	readonly onApplyTransformation: (spec: TransformationSpec) => void;
+}
+
+/** @emoji 🌌 Play aside: active model definition + transform to/from dropdowns. */
+function PlayModelSpacePanel({
+	activeModelDefinitionId,
+	onActiveModelDefinitionId,
+	onApplyTransformation,
+}: PlayModelSpacePanelProps) {
+	const modelDefinitions = useMemo(() => listModelDefinitionManifests(), []);
+	const transformsTo = useMemo(
+		() => listTransformationsFromModelDefinition(activeModelDefinitionId),
+		[activeModelDefinitionId],
+	);
+	const transformsFrom = useMemo(
+		() => listTransformationsIntoModelDefinition(activeModelDefinitionId),
+		[activeModelDefinitionId],
+	);
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+			<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Model</span>
+				<select
+					value={activeModelDefinitionId}
+					onChange={(e) => onActiveModelDefinitionId(e.target.value || GEOMETRY_MODEL_DEFINITION_ID)}
+					style={PLAY_SELECT_STYLE}
+				>
+					{modelDefinitions.map((row) => (
+						<option key={row.id} value={row.id}>
+							{row.label} ({row.id})
+						</option>
+					))}
+				</select>
+			</label>
+			{transformsTo.length ? (
+				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Transform To</span>
+					<select
+						defaultValue=""
+						onChange={(e) => {
+							const qid = e.target.value;
+							if (!qid) return;
+							const spec = transformsTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+							if (spec) onApplyTransformation(spec);
+							e.target.value = "";
+						}}
+						style={PLAY_SELECT_STYLE}
+					>
+						<option value="">Select target model…</option>
+						{transformsTo.map((row) => (
+							<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+								{row.target.modelDefinition} — {row.label}
+							</option>
+						))}
+					</select>
+				</label>
+			) : null}
+			{transformsFrom.length ? (
+				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Transform From</span>
+					<select
+						defaultValue=""
+						onChange={(e) => {
+							const qid = e.target.value;
+							if (!qid) return;
+							const spec = transformsFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+							if (spec) onApplyTransformation(spec);
+							e.target.value = "";
+						}}
+						style={PLAY_SELECT_STYLE}
+					>
+						<option value="">Select source model…</option>
+						{transformsFrom.map((row) => (
+							<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+								{row.source.modelDefinition} — {row.label}
+							</option>
+						))}
+					</select>
+				</label>
+			) : null}
+		</div>
+	);
 }
 //#endregion
 
@@ -510,6 +575,7 @@ function PlaySession({
 			modelDefinitionRevision={modelDefinitionRevision}
 			onModelDefinitionRevisionChange={onModelDefinitionRevision}
 			onApplyTransformation={onApplyTransformation}
+			hideModelDefinitionControls
 			onSnapshotChange={onSnapshot}
 		/>
 	);
@@ -522,9 +588,9 @@ function PlayApp() {
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
-	const [modelJson, setModelJson] = useState<unknown>(() => {
+	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return asset?.json ?? emptyModelJson();
+		return modelsFromGeometryJson(asset?.json ?? emptyModelJson());
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -542,7 +608,6 @@ function PlayApp() {
 		() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"],
 		[brepjsKernel],
 	);
-	const [derivedModelsByDefinitionId, setDerivedModelsByDefinitionId] = useState<Record<string, Model>>({});
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -559,39 +624,45 @@ function PlayApp() {
 		setGeometryAssetId(id);
 		setLoadedRawName("");
 		setFileStatus("");
-		setDerivedModelsByDefinitionId({});
 		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
-		setModelJson(asset?.json ?? emptyModelJson());
+		setModelsByDefinitionId(modelsFromGeometryJson(asset?.json ?? emptyModelJson()));
+		setActiveModelDefinitionId(GEOMETRY_MODEL_DEFINITION_ID);
+		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
-	const interactionModel = useMemo(() => parseModelJson(modelJson) ?? new Model(), [modelJson]);
+	const activeModel = useMemo(
+		() => modelsByDefinitionId[activeModelDefinitionId] ?? modelsByDefinitionId[GEOMETRY_MODEL_DEFINITION_ID]!,
+		[activeModelDefinitionId, modelsByDefinitionId],
+	);
 
 	const documentModel = useMemo((): ModelDocument => {
-		const model = Model.fromJSON(interactionModel.toJSON());
+		const model = Model.fromJSON(activeModel.toJSON());
 		return { model: model, nodes: [] };
-	}, [interactionModel]);
+	}, [activeModel, modelDefinitionRevision]);
 	const liveModel = documentModel.model;
 
-	const geometryModel = useMemo(
-		() => geometryModelForExport(derivedModelsByDefinitionId, liveModel),
-		[derivedModelsByDefinitionId, liveModel],
+	const flushedModelsByDefinitionId = useMemo(
+		() => flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel),
+		[activeModelDefinitionId, liveModel, modelsByDefinitionId],
 	);
 
 	const playModelSpace = useMemo(
-		() => buildPlayModelSpace(derivedModelsByDefinitionId, geometryModel, liveModel, activeModelDefinitionId),
-		[activeModelDefinitionId, derivedModelsByDefinitionId, geometryModel, liveModel],
+		() => modelSpaceFromRecord(flushedModelsByDefinitionId),
+		[flushedModelsByDefinitionId],
 	);
 
 	const visibleExportModel = useMemo(
-		() =>
-			resolveExportModel(
-				activeModelDefinitionId,
-				derivedModelsByDefinitionId,
-				geometryModel,
-				liveModel,
-				activeModelDefinitionId,
-			),
-		[activeModelDefinitionId, derivedModelsByDefinitionId, geometryModel, liveModel],
+		() => flushedModelsByDefinitionId[activeModelDefinitionId] ?? liveModel,
+		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
+	);
+
+	const handleActiveModelDefinitionChange = useCallback(
+		(nextId: string) => {
+			setModelsByDefinitionId((prev) => flushModelsRecord(prev, activeModelDefinitionId, liveModel));
+			setActiveModelDefinitionId(nextId);
+			setModelDefinitionRevision((r) => r + 1);
+		},
+		[activeModelDefinitionId, liveModel],
 	);
 
 	const interactionActive = useMemo(
@@ -620,21 +691,19 @@ function PlayApp() {
 
 	const handleApplyTransformation = useCallback(
 		(spec: TransformationSpec) => {
-			const source = parseModelJson(modelJson) ?? new Model();
-			const target = applyTransformation(spec, source);
-			setDerivedModelsByDefinitionId((prev) => {
-				const next = { ...prev, [spec.target.modelDefinition]: target };
-				if (isGeometryModelDefinition(spec.source.modelDefinition)) {
-					next[GEOMETRY_MODEL_DEFINITION_ID] = source;
-				}
-				return next;
-			});
+			const space = modelSpaceFromRecord(flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel));
+			try {
+				space.transform(spec.source.modelDefinition, spec.target.modelDefinition, spec);
+			} catch (error) {
+				setFileStatus(`Transform failed: ${String(error)}`);
+				return;
+			}
+			setModelsByDefinitionId(recordFromModelSpace(space));
 			setActiveModelDefinitionId(spec.target.modelDefinition);
-			setModelJson(target.toJSON());
 			setModelDefinitionRevision((r) => r + 1);
-			setFileStatus(`Applied ${spec.label} (${spec.source.modelDefinition} → ${spec.target.modelDefinition}).`);
+			setFileStatus(`Transformed ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
 		},
-		[modelJson],
+		[activeModelDefinitionId, liveModel, modelsByDefinitionId],
 	);
 
 	useEffect(() => {
@@ -642,8 +711,7 @@ function PlayApp() {
 		setSnapshot(null);
 		setRendererSelection([]);
 		setInteractionSelection([]);
-		setModelDefinitionRevision(0);
-	}, [history, modelJson]);
+	}, [history, modelDefinitionRevision]);
 
 	const saveBundle = useCallback(
 		async (name: string, payload: SpatialExchangeBundle, message: string) => {
@@ -707,9 +775,9 @@ function PlayApp() {
 			if (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
-			setModelJson(model.toJSON());
-			setDerivedModelsByDefinitionId({});
+			setModelsByDefinitionId(modelsFromGeometryJson(model.toJSON()));
 			setActiveModelDefinitionId(GEOMETRY_MODEL_DEFINITION_ID);
+			setModelDefinitionRevision((r) => r + 1);
 			setFileStatus(`Loaded model from ${file.name}.`);
 		} catch (error) {
 			setFileStatus(`Load failed: ${String(error)}`);
@@ -720,6 +788,11 @@ function PlayApp() {
 
 	const asideExtra: ReactNode = (
 		<>
+			<PlayModelSpacePanel
+				activeModelDefinitionId={activeModelDefinitionId}
+				onActiveModelDefinitionId={handleActiveModelDefinitionChange}
+				onApplyTransformation={handleApplyTransformation}
+			/>
 			<div style={{ display: "flex", gap: 6, fontSize: 12 }}>
 				<span style={{ fontWeight: 600, color: "#c8c8e0", alignSelf: "center" }}>Compute</span>
 				<button
@@ -822,7 +895,7 @@ function PlayApp() {
 			asideExtra={asideExtra}
 			sessionRestartNonce={interactionBootId}
 			activeModelDefinitionId={activeModelDefinitionId}
-			onActiveModelDefinitionId={setActiveModelDefinitionId}
+			onActiveModelDefinitionId={handleActiveModelDefinitionChange}
 			rendererSelection={rendererSelection}
 			onRendererSelection={setRendererSelection}
 			interactionSelection={interactionSelection}

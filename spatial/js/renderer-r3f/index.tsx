@@ -41,15 +41,16 @@ import {
 	listModelDefinitionManifests,
 	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
+	listSpatialInteractionsForModelDefinition,
+	modelDefinitionSelectionEntityKinds,
+	resolveModelDefinitionScope,
 	applyTransformation,
 	qualifiedTransformationId,
-	listSelectionOperationInteractionDefs,
 	selectionOperationUsesModelObjects,
 	selectionSeedTargetsForOperation,
 	loadSpatialInteraction,
 	parseModelJson,
 	listKeyedInteractionTransitions,
-	resolveSpatialInteractionKey,
 	Model,
 	type InteractionEvent,
 	type InteractionKeybindRow,
@@ -639,6 +640,25 @@ export function intersectSpatialPickKindToggles(
 	return merged;
 }
 
+function modelDefinitionPickTargetKinds(modelDefinitionId: string | null): readonly SpatialPickTargetKind[] {
+	const entityKinds = modelDefinitionSelectionEntityKinds(modelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID);
+	const out = new Set<SpatialPickTargetKind>();
+	for (const kind of entityKinds) {
+		if (kind === "vertex") out.add("vertex");
+		else if (kind === "edge" || kind === "wire") out.add("edge");
+		else if (kind === "face") out.add("face");
+		else if (kind === "solid" || kind === "geometry" || kind === "object" || kind === "anchor") out.add("object");
+	}
+	if (out.size > 0) return [...out];
+	return isGeometryModelDefinition(modelDefinitionId) ? SPATIAL_PICK_TARGET_KINDS : ["object"];
+}
+
+/** @emoji 👁️ Default visibility/selection toggles for kinds allowed by the active model definition. */
+export function defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionId: string | null): Record<SpatialPickTargetKind, boolean> {
+	const allowed = new Set(modelDefinitionPickTargetKinds(modelDefinitionId));
+	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, allowed.has(kind)])) as Record<SpatialPickTargetKind, boolean>;
+}
+
 /** @emoji 👁️ Resolves which scene layers stay visible for geometry edit vs typology object picking. */
 export function resolveSpatialSceneVisibility(
 	activeModelDefinitionId: string | null,
@@ -664,9 +684,7 @@ export function resolveSpatialSceneVisibility(
 }
 
 function spatialPickKindsForActiveView(activeModelDefinitionId: string | null): ReadonlySet<SpatialPickTargetKind> {
-	return isGeometryModelDefinition(activeModelDefinitionId)
-		? new Set(SPATIAL_PICK_TARGET_KINDS)
-		: new Set<SpatialPickTargetKind>(["object"]);
+	return new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
 }
 
 /** @emoji 👁️ Keeps kernel geometry picks in builtin mode and typology `object` picks for other model definitions. */
@@ -2817,7 +2835,7 @@ export function InteractionSpatialView({
 // #endregion 🪩Canvas
 
 // #region 🪩Repl
-type ReplSuggestKind = "interaction" | "transition";
+type ReplSuggestKind = "interaction" | "transition" | "action" | "selection";
 
 interface ReplSuggestion {
 	readonly kind: ReplSuggestKind;
@@ -2827,6 +2845,18 @@ interface ReplSuggestion {
 	readonly transition?: InteractionKeybindRow;
 	readonly interactionId?: string;
 	readonly onRun: () => void;
+}
+
+function resolveScopedSpatialInteractionKey(token: string, allowed: readonly SpatialInteraction[]): SpatialInteraction | null {
+	const t = token.trim().toLowerCase();
+	if (!t) return null;
+	for (const p of allowed) {
+		if (p.key.toLowerCase() === t) return p;
+		if (p.id.toLowerCase() === t) return p;
+		const slug = p.label.toLowerCase().replace(/\s+/g, "");
+		if (slug === t) return p;
+	}
+	return null;
 }
 
 function replCommandTextWithoutSpaces(text: string): string {
@@ -3245,6 +3275,8 @@ export interface InteractionReplLayoutProps {
 	readonly rootStyle?: CSSProperties;
 	readonly asideStyle?: CSSProperties;
 	readonly showAside?: boolean;
+	/** @emoji 🙈 Hides model-definition and transformation dropdowns (e.g. play hosts them in `asideExtra`). */
+	readonly hideModelDefinitionControls?: boolean;
 	readonly frameloop?: InteractionCanvasProps["frameloop"];
 	readonly canvas?: Omit<InteractionCanvasProps, "children">;
 	/** @emoji 🖼️ Spread after REPL wiring; overrides win (use for theme/slots/face handlers, not session pick state). */
@@ -3396,6 +3428,7 @@ export function InteractionRepl({
 	rootStyle,
 	asideStyle,
 	showAside = true,
+	hideModelDefinitionControls = false,
 	frameloop = "always",
 	canvas: canvasOverrides,
 	spatialView: spatialViewOverrides,
@@ -3437,6 +3470,14 @@ export function InteractionRepl({
 	const transformsTo = useMemo(
 		() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId],
+	);
+	const modelDefinitionScope = useMemo(
+		() => resolveModelDefinitionScope(activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID),
+		[activeModelDefinitionId],
+	);
+	const scopedInteractions = useMemo(
+		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID),
+		[activeModelDefinitionId, modelDefinitionRevision],
 	);
 	const kernel = rt.kernel();
 	const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
@@ -3487,8 +3528,12 @@ export function InteractionRepl({
 		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
 	const viewFilterKindToggles = useMemo((): SpatialPickKindToggles => {
-		if (isGeometryModelDefinition(activeModelDefinitionId)) return filterKindToggles;
-		return filterKindToggles.object === false ? { object: false } : { object: true };
+		const allowed = new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
+		const merged: SpatialPickKindToggles = {};
+		for (const kind of SPATIAL_PICK_TARGET_KINDS) {
+			merged[kind] = allowed.has(kind) && filterKindToggles[kind] !== false;
+		}
+		return merged;
 	}, [filterKindToggles, activeModelDefinitionId]);
 	const effectiveSelectionKindToggles = useMemo(
 		() => intersectSpatialPickKindToggles(viewFilterKindToggles, selectionKindToggles),
@@ -3601,6 +3646,17 @@ export function InteractionRepl({
 	}, [geometry, snapshot.state, modelDefinitionRevision]);
 
 	useEffect(() => {
+		const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+		const defaults = defaultSpatialPickKindTogglesForModelDefinition(mdId);
+		setFilterKindToggles(defaults);
+		setSelectionKindToggles(defaults);
+		const allowed = listSpatialInteractionsForModelDefinition(mdId);
+		if (interactionId && !allowed.some((row) => row.id === interactionId)) onInteractionId("");
+		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
+		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
+	}, [activeModelDefinitionId, modelDefinitionRevision, interactionId, onInteractionId, setFilterKindToggles, setSelectionKindToggles, setRendererSelection, setInteractionSelection]);
+
+	useEffect(() => {
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 	}, [geometry, modelDefinitionRevision, setRendererSelection, setInteractionSelection]);
@@ -3631,10 +3687,18 @@ export function InteractionRepl({
 	}, [interactionActive, snapshot.revision, snapshot.context, setInteractionSelection]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
-	const activeSelectionAccept = useMemo(
-		() => (runtimeSelectionAccept.length > 0 ? runtimeSelectionAccept : interactionActive ? [] : SPATIAL_PICK_TARGET_KINDS),
-		[runtimeSelectionAccept, interactionActive],
+	const defaultSelectionAccept = useMemo(
+		() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID),
+		[activeModelDefinitionId],
 	);
+	const activeSelectionAccept = useMemo((): readonly ModelEntityKind[] => {
+		if (runtimeSelectionAccept.length > 0) {
+			const allowed = new Set(defaultSelectionAccept);
+			return runtimeSelectionAccept.filter((kind) => allowed.has(kind));
+		}
+		if (interactionActive) return [];
+		return defaultSelectionAccept;
+	}, [runtimeSelectionAccept, interactionActive, defaultSelectionAccept]);
 	const activePickKinds = useMemo(() => [...spatialPickKindsForActiveView(activeModelDefinitionId)], [activeModelDefinitionId]);
 	const viewObjectCount = useMemo(() => {
 		if (isGeometryModelDefinition(activeModelDefinitionId)) return 0;
@@ -3947,7 +4011,7 @@ export function InteractionRepl({
 
 	const allSuggestions = useMemo((): ReplSuggestion[] => {
 		const out: ReplSuggestion[] = [];
-		for (const p of interactions) {
+		for (const p of scopedInteractions) {
 			out.push({
 				kind: "interaction",
 				key: p.key,
@@ -3967,8 +4031,32 @@ export function InteractionRepl({
 				onRun: () => dispatchTransition(row),
 			});
 		}
+		for (const defn of modelDefinitionScope.selectionOperations) {
+			out.push({
+				kind: "selection",
+				key: defn.key,
+				label: defn.label,
+				detail: defn.id,
+				onRun: () => {
+					void rt.query(`CALL ${defn.id}({}) YIELD data.targets AS targets`);
+				},
+			});
+		}
+		for (const actionId of modelDefinitionScope.actions) {
+			if (actionId.startsWith("selection.")) continue;
+			const tail = actionId.includes(".") ? actionId.slice(actionId.lastIndexOf(".") + 1) : actionId;
+			out.push({
+				kind: "action",
+				key: tail,
+				label: actionId,
+				detail: "action",
+				onRun: () => {
+					void rt.query(`CALL ${actionId}({})`);
+				},
+			});
+		}
 		return out;
-	}, [interactions, transitionRows, onInteractionId, dispatchTransition]);
+	}, [scopedInteractions, transitionRows, modelDefinitionScope, onInteractionId, dispatchTransition, rt]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 	const interactionMatches = useMemo(() => replInteractionSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
@@ -4013,7 +4101,7 @@ export function InteractionRepl({
 			setCmdLine("");
 			return true;
 		}
-		const interactionHit = resolveSpatialInteractionKey(raw);
+		const interactionHit = resolveScopedSpatialInteractionKey(raw, scopedInteractions);
 		if (interactionHit) {
 			onInteractionId(interactionHit.id);
 			setCmdLine("");
@@ -4029,7 +4117,7 @@ export function InteractionRepl({
 			}
 		}
 		return false;
-	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine]);
+	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine, scopedInteractions]);
 
 	const runTransitionRow = useCallback(
 		(row: InteractionKeybindRow) => {
@@ -4515,72 +4603,85 @@ export function InteractionRepl({
 				</div>
 				{asideExtra}
 				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-					<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-						<span>Model definition</span>
-						<select
-							value={activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID}
-							onChange={(e) => {
-								const next = e.target.value || GEOMETRY_MODEL_DEFINITION_ID;
-								setActiveModelDefinitionId(next);
-								setModelDefinitionRevision((r) => r + 1);
-								setSelectionMenu(null);
-								setHoveredPickKey(null);
-							}}
-							style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-						>
-							{modelDefinitions.map((row) => (
-								<option key={row.id} value={row.id}>
-									{row.label} ({row.id})
-								</option>
-							))}
-						</select>
-					</label>
-					{transformsFrom.length ? (
-						<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<span>Transform from</span>
-							<select
-								defaultValue=""
-								onChange={(e) => {
-									const qid = e.target.value;
-									if (!qid) return;
-									const spec = transformsFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
-									if (spec) onApplyTransformation?.(spec);
-									e.target.value = "";
-								}}
-								style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-							>
-								<option value="">Select incoming transformation…</option>
-								{transformsFrom.map((row) => (
-									<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-										{row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
-									</option>
-								))}
-							</select>
-						</label>
-					) : null}
-					{transformsTo.length ? (
-						<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<span>Transform to</span>
-							<select
-								defaultValue=""
-								onChange={(e) => {
-									const qid = e.target.value;
-									if (!qid) return;
-									const spec = transformsTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
-									if (spec) onApplyTransformation?.(spec);
-									e.target.value = "";
-								}}
-								style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-							>
-								<option value="">Select outgoing transformation…</option>
-								{transformsTo.map((row) => (
-									<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-										{row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
-									</option>
-								))}
-							</select>
-						</label>
-					) : null}
+					{hideModelDefinitionControls ? null : (
+						<>
+							<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+								<span>Model definition</span>
+								<select
+									value={activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID}
+									onChange={(e) => {
+										const next = e.target.value || GEOMETRY_MODEL_DEFINITION_ID;
+										setActiveModelDefinitionId(next);
+										setModelDefinitionRevision((r) => r + 1);
+										setSelectionMenu(null);
+										setHoveredPickKey(null);
+									}}
+									style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+								>
+									{modelDefinitions.map((row) => (
+										<option key={row.id} value={row.id}>
+											{row.label} ({row.id})
+										</option>
+									))}
+								</select>
+							</label>
+							<span style={{ opacity: 0.75 }}>
+								{modelDefinitionScope.typologies.length} typolog{modelDefinitionScope.typologies.length === 1 ? "y" : "ies"}
+								{" · "}
+								{modelDefinitionScope.interactions.length} interaction{modelDefinitionScope.interactions.length === 1 ? "" : "s"}
+								{" · "}
+								{modelDefinitionScope.attributeDefinitions.length} attribute{modelDefinitionScope.attributeDefinitions.length === 1 ? "" : "s"}
+								{" · "}
+								{modelDefinitionScope.propertyDefinitions.length} propert{modelDefinitionScope.propertyDefinitions.length === 1 ? "y" : "ies"}
+							</span>
+							{transformsFrom.length ? (
+								<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+									<span>Transform from</span>
+									<select
+										defaultValue=""
+										onChange={(e) => {
+											const qid = e.target.value;
+											if (!qid) return;
+											const spec = transformsFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+											if (spec) onApplyTransformation?.(spec);
+											e.target.value = "";
+										}}
+										style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+									>
+										<option value="">Select incoming transformation…</option>
+										{transformsFrom.map((row) => (
+											<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+												{row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
+											</option>
+										))}
+									</select>
+								</label>
+							) : null}
+							{transformsTo.length ? (
+								<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+									<span>Transform to</span>
+									<select
+										defaultValue=""
+										onChange={(e) => {
+											const qid = e.target.value;
+											if (!qid) return;
+											const spec = transformsTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+											if (spec) onApplyTransformation?.(spec);
+											e.target.value = "";
+										}}
+										style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+									>
+										<option value="">Select outgoing transformation…</option>
+										{transformsTo.map((row) => (
+											<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+												{row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
+											</option>
+										))}
+									</select>
+								</label>
+							) : null}
+						</>
+					)}
 					{!isGeometryModelDefinition(activeModelDefinitionId) ? (
 						<span style={{ opacity: 0.75 }}>
 							{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"}
