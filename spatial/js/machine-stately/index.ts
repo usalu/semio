@@ -288,6 +288,7 @@ export class StatelyStateEngine implements StateEngine {
 			activeModelDefinitionId ?? null,
 		);
 		if (!r.ok) return { ok: false };
+		if (r.childCall) return { ok: true, transient: r.transient, childCall: r.childCall };
 		this.interactionState = r.nextState;
 		this.actor.send({ type: "__advance", interactionKind: event.kind, branch: r.branchIndex });
 		return { ok: true, transient: r.transient };

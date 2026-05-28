@@ -1,9 +1,9 @@
 {
   "schema": "spatial.interaction/v1",
-  "id": "structure.linefem.constructLineElement",
+  "id": "builtin.surface.constructNetworkSurface",
   "version": "1.0.0",
-  "label": "Construct Line Element",
-  "key": "l",
+  "label": "Construct Network Surface",
+  "key": "n",
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [
@@ -356,7 +356,7 @@
             "kind": "label",
             "id": "choose-mode",
             "role": "prompt",
-            "text": "Construct Line Element: 1=2pts+height 2=curve+height 3=surface",
+            "text": "Construct Network Surface: 1=2pts+height 2=curve+height 3=surface",
             "position": {
               "kind": "const",
               "value": [
@@ -377,11 +377,11 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "structure.linefem.constructLineElement",
+      "action": "builtin.surface.constructNetworkSurface",
       "params": {
         "typology": {
           "kind": "const",
-          "value": "structure.linefem.lineelement"
+          "value": "builtin.surface.network-srf"
         },
         "constructMode": {
           "kind": "path",
@@ -447,6 +447,6 @@
     }
   },
   "produces": {
-    "typology": "structure.linefem.lineelement"
+    "typology": "builtin.surface.network-srf"
   }
 }

@@ -104,7 +104,7 @@
             "event": "mode.surface",
             "transitions": [
               {
-                "target": "surface_face",
+                "target": "committed",
                 "key": "3",
                 "label": "Surface",
                 "effects": [
@@ -122,6 +122,13 @@
                     "value": {
                       "kind": "const",
                       "value": "surface"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "pick.face",
+                    "outputs": {
+                      "faceId": "faceId"
                     }
                   }
                 ]
@@ -335,58 +342,6 @@
         ]
       },
       {
-        "name": "surface_face",
-        "selection": {
-          "accept": [
-            "face"
-          ],
-          "multiple": false,
-          "prompt": "Pick surface"
-        },
-        "on": [
-          {
-            "event": "selection.changed",
-            "transitions": [
-              {
-                "target": "committed",
-                "effects": [
-                  {
-                    "op": "assign",
-                    "target": {
-                      "root": "context",
-                      "segments": [
-                        {
-                          "kind": "field",
-                          "name": "faceId"
-                        }
-                      ]
-                    },
-                    "value": {
-                      "kind": "path",
-                      "root": "event",
-                      "segments": [
-                        {
-                          "kind": "field",
-                          "name": "targets"
-                        },
-                        {
-                          "kind": "index",
-                          "index": 0
-                        },
-                        {
-                          "kind": "field",
-                          "name": "id"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "committed",
         "final": true
       }
@@ -495,4 +450,3 @@
     "typology": "energy.energy.roof"
   }
 }
-

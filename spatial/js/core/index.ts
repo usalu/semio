@@ -626,7 +626,13 @@ export type EffectSpec =
   | { readonly op: "resolveEditable" }
   | { readonly op: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
   | { readonly op: "clearDiagnostic"; readonly code: string }
-  | { readonly op: "action"; readonly action: string; readonly params?: Record<string, Expr> };
+  | { readonly op: "action"; readonly action: string; readonly params?: Record<string, Expr> }
+  | {
+      readonly op: "interaction.call";
+      readonly interaction: string;
+      readonly inputs?: Record<string, Expr>;
+      readonly outputs?: Record<string, string>;
+    };
 
 export interface EventHandlerSpec {
   readonly event: string;
@@ -2168,6 +2174,11 @@ function interactionOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
+/** @emoji 🧭 Model definition that owns an interaction asset. */
+export function modelDefinitionIdForInteraction(interactionId: string): string | null {
+  return interactionOwnerById().get(interactionId) ?? null;
+}
+
 /** @emoji 🧭 Interactions shipped for a model definition (folder assets + typology references). */
 export function listSpatialInteractionsForModelDefinition(modelDefinitionId: string): readonly SpatialInteraction[] {
   const ids = new Set<string>();
@@ -2237,7 +2248,22 @@ export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: str
     .filter((row): row is PropertyDefinitionSpec => row !== null);
 }
 
-/** @emoji 🧭 Action ids referenced by one interaction spec (transition effects + commit). */
+/** @emoji 🧭 Interaction ids invoked via `interaction.call` in one spec. */
+export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
+  const ids = new Set<string>();
+  for (const st of spec.machine.states) {
+    for (const h of st.on ?? []) {
+      for (const tr of h.transitions) {
+        for (const fx of tr.effects ?? []) {
+          if (fx.op === "interaction.call") ids.add(fx.interaction);
+        }
+      }
+    }
+  }
+  return [...ids];
+}
+
+/** @emoji 🧭 Action ids referenced by one interaction spec (transition effects + commit + nested interactions). */
 export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
   const ids = new Set<string>();
   if (spec.commit.operation.kind === "action") ids.add(spec.commit.operation.action);
@@ -2248,6 +2274,12 @@ export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): rea
           if (fx.op === "action") ids.add(fx.action);
         }
       }
+    }
+  }
+  for (const nestedId of interactionIdsReferencedByInteractionSpec(spec)) {
+    const nested = loadSpatialInteraction(nestedId);
+    if (nested) {
+      for (const actionId of actionIdsReferencedByInteractionSpec(nested)) ids.add(actionId);
     }
   }
   return [...ids];
@@ -2499,7 +2531,9 @@ async function runTypologyConstructDispatch(
   if (!target) throw new Error(`Unknown constructMode ${mode} for ${constructActionId}`);
   const spec = listBuiltinActionSpecs().find((row) => row.id === target);
   if (!spec) throw new Error(`Missing create action spec: ${target}`);
-  return new DeclarativeActionRuntime(spec).run({ ...params, typology: routes.typology }, ctx);
+  const result = await new DeclarativeActionRuntime(spec).run({ ...params, typology: routes.typology }, ctx);
+  if (result.diff && !isEmptyModelDiff(result.diff)) ensureTypologyObjectFromCreateDiff(ctx.model, routes.typology, result.diff);
+  return result;
 }
 // #endregion 🏗️TypologyConstruct
 
@@ -3103,7 +3137,12 @@ export async function executeBuiltinActionCapability(
   if (typologyConstructRoutes().has(actionId)) return runTypologyConstructDispatch(actionId, params, ctx);
   const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
   if (def?.run) return def.run(params, ctx);
-  if (ctx.kernel.executeCommandDiff) return ctx.kernel.executeCommandDiff(actionId, { ...params, model: ctx.model });
+  if (ctx.kernel.executeCommandDiff) {
+    const result = await ctx.kernel.executeCommandDiff(actionId, { ...params, model: ctx.model });
+    const typology = typeof params.typology === "string" ? params.typology : null;
+    if (typology && !isEmptyModelDiff(result.diff)) ensureTypologyObjectFromCreateDiff(ctx.model, typology, result.diff);
+    return result;
+  }
   throw new Error(`Unknown action capability: ${actionId}`);
 }
 
@@ -3562,10 +3601,19 @@ export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Prom
 // #endregion 🔍ConstructQuery
 
 // #region 🎬Statechart
+/** @emoji 📞 Pauses host statechart until nested interaction completes or aborts. */
+export interface InteractionChildCallSpec {
+  readonly interactionId: string;
+  readonly inputs?: Record<string, Expr>;
+  readonly outputs?: Record<string, string>;
+  readonly resumeTarget: string;
+}
+
 /** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
 export interface StateEngineSendResult {
   readonly ok: boolean;
   readonly transient?: boolean;
+  readonly childCall?: InteractionChildCallSpec;
 }
 
 /** @emoji 🎭 `applyTransition` output: next factory state + disambiguation index for XState routing. */
@@ -3672,8 +3720,22 @@ export async function applyTransition(
       const math = preview ?? kernel;
       if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
     }
+    let childCall: InteractionChildCallSpec | undefined;
+    const resumeTarget = tr.target ?? state;
     for (const eff of tr.effects ?? []) {
+      if (eff.op === "interaction.call") {
+        childCall = {
+          interactionId: eff.interaction,
+          inputs: eff.inputs,
+          outputs: eff.outputs,
+          resumeTarget,
+        };
+        continue;
+      }
       await applyEffectAsync(eff, context, event, kernel, graph, actions, preview, activeModelDefinitionId ?? null);
+    }
+    if (childCall) {
+      return { ok: true, transient: Boolean(tr.transient), nextState: state, childCall, branchIndex: i };
     }
     let nextState = state;
     if (tr.target) {
@@ -3778,8 +3840,10 @@ export class StatechartRuntime implements StateEngine {
   /** @emoji 🎬 Applies one external event; returns whether a transition fired. */
   async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
     const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, preview, activeModelDefinitionId ?? null);
-    if (r.ok) this.state = r.nextState;
-    return { ok: r.ok, transient: r.transient };
+    if (!r.ok) return { ok: false };
+    if (r.childCall) return { ok: true, transient: r.transient, childCall: r.childCall };
+    this.state = r.nextState;
+    return { ok: true, transient: r.transient };
   }
 }
 
@@ -4008,6 +4072,13 @@ export interface Diagnostic {
   readonly message: string;
 }
 
+/** @emoji 📜 Host frame while a nested interaction session is active. */
+export interface InteractionNestedHostFrame {
+  readonly hostInteractionId: string;
+  readonly hostState: string;
+  readonly hostContext: Record<string, unknown>;
+}
+
 /** @emoji 📜 Serializable interaction snapshot for hosts and renderers. */
 export interface InteractionSnapshot {
   readonly interactionId: string;
@@ -4019,6 +4090,7 @@ export interface InteractionSnapshot {
   readonly capabilities: { readonly canCommit: boolean; readonly canCancel: boolean; readonly canUndo: boolean; readonly canRedo: boolean };
   readonly diagnostics: readonly Diagnostic[];
   readonly lastResponse: InteractionResponse | null;
+  readonly nested?: InteractionNestedHostFrame;
 }
 
 export type SpatialComputeMode = "fast" | "precise";
@@ -4050,6 +4122,8 @@ export class InteractionRuntime {
   private snapshotCache: InteractionSnapshot | null = null;
   private lastResponse: InteractionResponse | null = null;
   private readonly pendingSnapshotInfos: InteractionMessage[] = [];
+  private child: InteractionRuntime | null = null;
+  private pausedHost: InteractionChildCallSpec | null = null;
 
   constructor(
     private readonly spec: InteractionSpec,
@@ -4093,7 +4167,82 @@ export class InteractionRuntime {
   }
 
   private inActiveInteraction(): boolean {
+    if (this.child) return true;
     return isInteractionSessionActive(this.spec, this.sm.getState());
+  }
+
+  private seedChildContext(child: InteractionRuntime, inputs?: Record<string, Expr>): void {
+    if (!inputs) return;
+    const ctx = child.sm.getContext();
+    const env: ExprEnv = { context: ctx, event: { kind: "start" } };
+    for (const [key, ex] of Object.entries(inputs)) {
+      ctx[key] = evalExpr(ex, env);
+    }
+  }
+
+  private async startChildCall(call: InteractionChildCallSpec): Promise<void> {
+    const childSpec = loadSpatialInteraction(call.interactionId);
+    if (!childSpec) {
+      this.pendingSnapshotInfos.push({
+        code: "interaction.callMissing",
+        message: `Nested interaction not found: ${call.interactionId}`,
+      });
+      return;
+    }
+    this.pausedHost = call;
+    this.child = createInteractionRuntime(childSpec, this.opts);
+    this.seedChildContext(this.child, call.inputs);
+    await this.child.send({ kind: "start" });
+    await this.maybeCompleteChild();
+  }
+
+  private mergeChildOutputs(call: InteractionChildCallSpec, childCtx: Record<string, unknown>): void {
+    const hostCtx = this.sm.getContext();
+    const outputs = call.outputs ?? {};
+    const keys = Object.keys(outputs).length > 0 ? Object.keys(outputs) : ["faceId"];
+    for (const hostKey of keys) {
+      const childKey = outputs[hostKey] ?? hostKey;
+      if (childCtx[childKey] !== undefined) hostCtx[hostKey] = childCtx[childKey];
+    }
+  }
+
+  private resumeHostAfterChild(success: boolean): void {
+    const call = this.pausedHost;
+    const child = this.child;
+    this.child = null;
+    this.pausedHost = null;
+    if (!call || !child) return;
+    if (success) {
+      this.mergeChildOutputs(call, child.sm.getContext());
+      const hostCtx = this.cloneCtx(this.sm.getContext());
+      this.sm.restore(call.resumeTarget, hostCtx);
+    }
+  }
+
+  private abortChildCall(): void {
+    if (!this.child) return;
+    this.child.cancel();
+    this.child = null;
+    this.pausedHost = null;
+  }
+
+  private async maybeCompleteChild(): Promise<void> {
+    if (!this.child || !this.pausedHost) return;
+    const child = this.child;
+    const snap = child.getSnapshot();
+    if (!isFinalInteractionState(child.spec, snap.state)) return;
+    if (snap.capabilities.canCommit && !snap.lastResponse?.ok) {
+      await child.commit();
+    }
+    const ok = Boolean(child.getSnapshot().lastResponse?.ok ?? true);
+    this.resumeHostAfterChild(ok);
+    if (ok && isFinalInteractionState(this.spec, this.sm.getState())) {
+      await this.runCommit(false);
+      return;
+    }
+    if (ok && this.canCommit()) {
+      await this.runCommit(true);
+    }
   }
 
   private canCommit(): boolean {
@@ -4145,6 +4294,7 @@ export class InteractionRuntime {
 
   /** @emoji 🧭 Accepted geometry entity kinds for the active machine state (`[]` when none). */
   listActiveSelectionAccept(): readonly ModelEntityKind[] {
+    if (this.child) return this.child.listActiveSelectionAccept();
     return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
   }
 
@@ -4161,6 +4311,17 @@ export class InteractionRuntime {
   }
 
   getSnapshot(): InteractionSnapshot {
+    if (this.child) {
+      const childSnap = this.child.getSnapshot();
+      return {
+        ...childSnap,
+        nested: {
+          hostInteractionId: this.spec.id,
+          hostState: this.sm.getState(),
+          hostContext: this.cloneCtx(this.sm.getContext()),
+        },
+      };
+    }
     if (this.snapshotCache) return this.snapshotCache;
     const ctx = this.sm.getContext();
     const st = this.sm.getState();
@@ -4212,6 +4373,12 @@ export class InteractionRuntime {
 
   /** @emoji 📜 Dispatches a typed interaction event through the statechart + optional kernel queries. */
   async send(event: InteractionEvent): Promise<void> {
+    if (this.child) {
+      await this.child.send(event);
+      await this.maybeCompleteChild();
+      this.emit();
+      return;
+    }
     if (event.kind === "start") {
       if (this.stateHasEvent(this.sm.getState(), "start")) {
         const beforeState = this.sm.getState();
@@ -4253,6 +4420,15 @@ export class InteractionRuntime {
     const beforeCtx = this.cloneCtx(this.sm.getContext());
     const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     if (!r.ok) return;
+    if (r.childCall) {
+      if (!r.transient) {
+        this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+        this.snapRedoStack.length = 0;
+      }
+      await this.startChildCall(r.childCall);
+      this.emit();
+      return;
+    }
     if (!r.transient) {
       this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
       this.snapRedoStack.length = 0;
@@ -4269,6 +4445,11 @@ export class InteractionRuntime {
   }
 
   undo(): void {
+    if (this.child) {
+      this.child.undo();
+      this.emit();
+      return;
+    }
     if (this.inActiveInteraction() && this.snapUndoStack.length > 0) {
       const snap = this.snapUndoStack.pop();
       if (!snap) return;
@@ -4297,6 +4478,11 @@ export class InteractionRuntime {
   }
 
   redo(): void {
+    if (this.child) {
+      this.child.redo();
+      this.emit();
+      return;
+    }
     if (this.inActiveInteraction() && this.snapRedoStack.length > 0) {
       const snap = this.snapRedoStack.pop();
       if (!snap) return;
@@ -4325,6 +4511,11 @@ export class InteractionRuntime {
   }
 
   cancel(): void {
+    if (this.child) {
+      this.abortChildCall();
+      this.emit();
+      return;
+    }
     this.snapUndoStack.length = 0;
     this.snapRedoStack.length = 0;
     this.sm.reset();
@@ -4604,6 +4795,11 @@ export function buildDistanceInteractionSpec(): InteractionSpec {
 /** @emoji 📦 Compiled `measure.area` interaction from model-definition assets. */
 export function buildAreaInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("measure.area");
+}
+
+/** @emoji 📦 Compiled `pick.face` nested surface-pick helper from model-definition assets. */
+export function buildPickFaceInteractionSpec(): InteractionSpec {
+  return requireSpatialInteraction("pick.face");
 }
 // #endregion 📦Interactions
 
@@ -5239,6 +5435,7 @@ if (import.meta.vitest) {
           expect(typology.interactions.length).toBeGreaterThan(0);
           continue;
         }
+        expect(typologyHasNativeConstructKit(typology)).toBe(true);
         expect(typology.actions).toContain(ids.createFrom2PointsAndHeight);
         expect(typology.actions).toContain(ids.createFromCurveAndHeight);
         expect(typology.actions).toContain(ids.createFromSurface);
@@ -5248,6 +5445,35 @@ if (import.meta.vitest) {
         expect(interactionIds.has(ids.construct)).toBe(true);
         expect(loadSpatialInteraction(ids.construct)?.commit.operation.action).toBe(ids.construct);
       }
+    });
+    it("every model-definition typology is constructable with native assets in its folder", () => {
+      for (const manifest of listModelDefinitionManifests()) {
+        const mdId = manifest.id;
+        if (isGeometryModelDefinition(mdId)) continue;
+        for (const typology of listTypologiesForModelDefinition(mdId)) {
+          expect(typologyHasNativeConstructKit(typology), `${mdId} → ${typology.id}`).toBe(true);
+          const ids = typologyConstructAssetIds(typology.id, typology.label);
+          expect(actionOwnedByModelDefinition(ids.construct, mdId), `${mdId} → ${ids.construct}`).toBe(true);
+          expect(actionOwnedByModelDefinition(ids.createFrom2PointsAndHeight, mdId)).toBe(true);
+          expect(modelDefinitionIdForInteraction(ids.construct), `${mdId} → ${ids.construct}`).toBe(mdId);
+          for (const actionId of typology.actions) {
+            expect(actionOwnedByModelDefinition(actionId, mdId), `${mdId} → ${typology.id} → ${actionId}`).toBe(true);
+          }
+        }
+        expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(listTypologiesForModelDefinition(mdId).length);
+      }
+    });
+    it("typology createFrom2PointsAndHeight adds an object row for the typology", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const typology = "energy.energy.hull";
+      await ActionRegistry.withBuiltins().run(
+        "energy.energy.createHullFrom2PointsAndHeight",
+        { typology, pointA: [0, 0, 0], pointB: [3, 2, 0], height: 2.5 },
+        { kernel, preview: kernel as unknown as SpatialPreviewKernel, model, activeModelDefinitionId: "aec.building.energy" },
+      );
+      expect(model.objects[typology]?.typology).toBe(typology);
+      expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
     it("construct dispatch action delegates to the selected create action", async () => {
       const ids = typologyConstructAssetIds("energy.energy.externalwall", "External Wall");

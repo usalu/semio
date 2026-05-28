@@ -111,7 +111,21 @@ export function buildTypologyConstructInteractionSpec(
 						},
 						{
 							event: "mode.surface",
-							transitions: [{ target: "surface_face", key: "3", label: "Surface", effects: [assignMode("surface")] }],
+							transitions: [
+								{
+									target: "committed",
+									key: "3",
+									label: "Surface",
+									effects: [
+										assignMode("surface"),
+										{
+											op: "interaction.call",
+											interaction: "pick.face",
+											outputs: { faceId: "faceId" },
+										},
+									],
+								},
+							],
 						},
 					],
 				},
@@ -189,35 +203,6 @@ export function buildTypologyConstructInteractionSpec(
 											op: "assign",
 											target: { root: "context", segments: [{ kind: "field", name: "height" }] },
 											value: { kind: "path", root: "event", segments: [{ kind: "field", name: "value" }] },
-										},
-									],
-								},
-							],
-						},
-					],
-				},
-				{
-					name: "surface_face",
-					selection: { accept: ["face"], multiple: false, prompt: "Pick surface" },
-					on: [
-						{
-							event: "selection.changed",
-							transitions: [
-								{
-									target: "committed",
-									effects: [
-										{
-											op: "assign",
-											target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
-											value: {
-												kind: "path",
-												root: "event",
-												segments: [
-													{ kind: "field", name: "targets" },
-													{ kind: "index", index: 0 },
-													{ kind: "field", name: "id" },
-												],
-											},
 										},
 									],
 								},
