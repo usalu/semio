@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Surface Element",
   "description": "Derived structural element represented with surface mesh.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "structure.surfacefem.createSurfaceElementFrom2PointsAndHeight",
+    "structure.surfacefem.createSurfaceElementFromCurveAndHeight",
+    "structure.surfacefem.createSurfaceElementFromSurface",
+    "structure.surfacefem.constructSurfaceElement"
+  ],
+  "interactions": [
+    "structure.surfacefem.constructSurfaceElement"
+  ],
   "primitiveKinds": [
     "solid"
   ]

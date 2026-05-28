@@ -3,8 +3,19 @@
   "id": "structure.structure.reinforcedconcreteinternalwall",
   "version": "1.0.0",
   "label": "Reinforced Concrete Internal Wall",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "building.wall.constructVerticalConcreteWall",
+    "building.wall.constructWallFromBottomAndTop",
+    "building.wall.constructWallFromHorizontalPathAndProfile",
+    "building.wall.constructWallFromHorizontalPathAndProfiles",
+    "structure.structure.createReinforcedConcreteInternalWallFrom2PointsAndHeight",
+    "structure.structure.createReinforcedConcreteInternalWallFromCurveAndHeight",
+    "structure.structure.createReinforcedConcreteInternalWallFromSurface",
+    "structure.structure.constructReinforcedConcreteInternalWall"
+  ],
+  "interactions": [
+    "structure.structure.constructReinforcedConcreteInternalWall"
+  ],
   "primitiveKinds": [
     "solid"
   ]

@@ -4,8 +4,19 @@
   "version": "1.0.0",
   "label": "External Wall",
   "description": "Joined touching external surfaces of the same material with openings cut out.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "building.wall.constructVerticalConcreteWall",
+    "building.wall.constructWallFromBottomAndTop",
+    "building.wall.constructWallFromHorizontalPathAndProfile",
+    "building.wall.constructWallFromHorizontalPathAndProfiles",
+    "energy.energy.createExternalWallFrom2PointsAndHeight",
+    "energy.energy.createExternalWallFromCurveAndHeight",
+    "energy.energy.createExternalWallFromSurface",
+    "energy.energy.constructExternalWall"
+  ],
+  "interactions": [
+    "energy.energy.constructExternalWall"
+  ],
   "primitiveKinds": [
     "solid"
   ]

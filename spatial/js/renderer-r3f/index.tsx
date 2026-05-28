@@ -42,8 +42,19 @@ import {
 	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
 	listSpatialInteractionsForModelDefinition,
+	resolveSpatialInteractionKeyForModelDefinition,
 	modelDefinitionSelectionEntityKinds,
+	modelDefinitionUsesGeometryPicking,
+	primaryAttributeSelectionTarget,
+	listAttributeDefinitionsForModelDefinitionEntity,
+	attributeDefinitionEditorKind,
+	attributeDefinitionValueOptions,
+	derivePropertyValue,
+	listApplicablePropertyDefinitionsForModelDefinition,
+	listTypologiesForModelDefinition,
+	validateAttributeValue,
 	resolveModelDefinitionScope,
+	type AttributeDefinitionSpec,
 	applyTransformation,
 	qualifiedTransformationId,
 	selectionOperationUsesModelObjects,
@@ -80,6 +91,9 @@ import {
 } from "@spatial/js-core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
+type AnchorRef = kernelGeometry.AnchorRef;
+type VertexRef = kernelGeometry.VertexRef;
+type ShellRef = kernelGeometry.ShellRef;
 type SolidRef = kernelGeometry.SolidRef;
 type SolidRecord = kernelGeometry.SolidRecord;
 type EdgeRecord = kernelGeometry.EdgeRecord;
@@ -640,14 +654,15 @@ export function intersectSpatialPickKindToggles(
 	return merged;
 }
 
-function modelDefinitionPickTargetKinds(modelDefinitionId: string | null): readonly SpatialPickTargetKind[] {
+/** @emoji 👁️ Maps active model-definition entity kinds to renderer pick-kind toggles. */
+export function modelDefinitionPickTargetKinds(modelDefinitionId: string | null): readonly SpatialPickTargetKind[] {
 	const entityKinds = modelDefinitionSelectionEntityKinds(modelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID);
 	const out = new Set<SpatialPickTargetKind>();
 	for (const kind of entityKinds) {
-		if (kind === "vertex") out.add("vertex");
+		if (kind === "vertex" || kind === "anchor") out.add("vertex");
 		else if (kind === "edge" || kind === "wire") out.add("edge");
-		else if (kind === "face") out.add("face");
-		else if (kind === "solid" || kind === "geometry" || kind === "object" || kind === "anchor") out.add("object");
+		else if (kind === "face" || kind === "shell") out.add("face");
+		else if (kind === "solid" || kind === "geometry" || kind === "object") out.add("object");
 	}
 	if (out.size > 0) return [...out];
 	return isGeometryModelDefinition(modelDefinitionId) ? SPATIAL_PICK_TARGET_KINDS : ["object"];
@@ -669,7 +684,8 @@ export function resolveSpatialSceneVisibility(
 	readonly showCommittedEdges: boolean;
 } {
 	const visible = (kind: SpatialPickTargetKind) => filterKindToggles[kind] !== false;
-	if (isGeometryModelDefinition(activeModelDefinitionId)) {
+	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	if (isGeometryModelDefinition(mdId) || modelDefinitionUsesGeometryPicking(mdId)) {
 		return {
 			showFactoryWireframe: visible("edge"),
 			showCommittedFaces: visible("face") || visible("object"),
@@ -687,15 +703,20 @@ function spatialPickKindsForActiveView(activeModelDefinitionId: string | null): 
 	return new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
 }
 
-/** @emoji 👁️ Keeps kernel geometry picks in builtin mode and typology `object` picks for other model definitions. */
+/** @emoji 👁️ Keeps pick targets allowed by the active model definition (topology + typology objects). */
 export function filterSpatialPickTargetsForActiveView(
 	targets: readonly SpatialPickTarget[],
 	activeModelDefinitionId: string | null,
 ): SpatialPickTarget[] {
-	if (isGeometryModelDefinition(activeModelDefinitionId)) {
-		return targets.filter((target) => target.kind !== "object" || target.geometryKind !== undefined);
-	}
-	return targets.filter((target) => target.kind === "object" && target.geometryKind === undefined);
+	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const allowedPickKinds = spatialPickKindsForActiveView(mdId);
+	const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
+	return targets.filter((target) => {
+		if (!allowedPickKinds.has(target.kind)) return false;
+		if (target.kind === "object" && !target.geometryKind) return entityKinds.has("object");
+		const geometryKind = target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind, undefined);
+		return entityKinds.has(geometryKind);
+	});
 }
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
@@ -896,14 +917,17 @@ export function collectGeometryEdgeSegments(
 
 function modelObjectPickPoints(model: Model, row: SpatialObjectRecord): readonly Vec3[] {
 	const buckets = geometryBuckets(model);
-	const cell = buckets.solids[row.geometryRef];
+	const cellRef = Object.values(row.primitives)[0];
+	const cell = cellRef ? buckets.solids[cellRef] : undefined;
 	if (!cell) return [];
 	return geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 }
 
-function createModelObjectSpatialPickTargets(model: Model): readonly SpatialPickTarget[] {
+function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: string): readonly SpatialPickTarget[] {
+	const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
 	const targets: SpatialPickTarget[] = [];
 	for (const row of Object.values(model.objects)) {
+		if (!typologyIds.has(row.typology)) continue;
 		const points = modelObjectPickPoints(model, row);
 		const point = geometryPointCentroid(points);
 		if (!point) continue;
@@ -917,7 +941,68 @@ function createModelObjectSpatialPickTargets(model: Model): readonly SpatialPick
 	return targets;
 }
 
-/** @emoji 🧲 Builds renderer-side snap/select targets from factory geometry or typology object rows. */
+function pickKindEnabledForSelectionAccept(accept: readonly ModelEntityKind[], pickKind: SpatialPickTargetKind): boolean {
+	if (accept.length === 0) return true;
+	const mapped = spatialPickKindsForSelectionAccept(accept);
+	return mapped ? mapped.has(pickKind) : true;
+}
+
+function appendTopologySpatialPickTargets(
+	targets: SpatialPickTarget[],
+	buckets: ReturnType<typeof geometryBuckets>,
+	entityKinds: ReadonlySet<ModelEntityKind>,
+): void {
+	if (entityKinds.has("anchor")) {
+		for (const anchor of geometryRecords(buckets.anchors)) {
+			targets.push({ kind: "vertex", geometryKind: "anchor", id: anchor.id, point: anchor.position });
+		}
+	}
+	if (entityKinds.has("vertex")) {
+		for (const vertex of geometryRecords(buckets.vertices)) {
+			targets.push({ kind: "vertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
+		}
+	}
+	if (entityKinds.has("edge")) {
+		for (const edge of geometryRecords(buckets.edges)) {
+			const points = geometryEdgePoints(buckets.vertices, edge);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "edge", geometryKind: "edge", id: edge.id, point, points });
+		}
+	}
+	if (entityKinds.has("wire")) {
+		for (const wire of geometryRecords(buckets.wires)) {
+			const points = geometryWirePoints(buckets.vertices, buckets.edges, wire);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "edge", geometryKind: "wire", id: wire.id, point, points });
+		}
+	}
+	if (entityKinds.has("face")) {
+		for (const face of geometryRecords(buckets.faces)) {
+			const points = geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "face", geometryKind: "face", id: face.id, point, points });
+		}
+	}
+	if (entityKinds.has("shell")) {
+		for (const shell of geometryRecords(buckets.shells)) {
+			const segments = geometryEntityWireSegments(buckets, "shell", shell.id);
+			const points = segments.flatMap(([a, b]) => [a, b]);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "face", geometryKind: "shell", id: shell.id, point, points: points.length ? points : undefined });
+		}
+	}
+	if (entityKinds.has("solid")) {
+		const all = geometryAllVertexPoints(buckets.vertices);
+		const allCenter = geometryPointCentroid(all);
+		for (const cell of geometryRecords(buckets.solids)) {
+			const points = geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
+			const point = geometryPointCentroid(points) ?? allCenter;
+			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
+		}
+	}
+}
+
+/** @emoji 🧲 Builds renderer-side snap/select targets from factory geometry and typology object rows. */
 export function createSpatialPickTargets(
 	geometry: SpatialPickGeometry | null | undefined,
 	activeModelDefinitionId?: string | null,
@@ -926,36 +1011,11 @@ export function createSpatialPickTargets(
 	const buckets = geometryBuckets(geometry);
 	const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
 	if (!model) return [];
+	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
 	const targets: SpatialPickTarget[] = [];
-	if (isGeometryModelDefinition(activeModelDefinitionId ?? null)) {
-		for (const vertex of geometryRecords(buckets.vertices)) {
-			targets.push({ kind: "vertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
-		}
-		for (const edge of geometryRecords(buckets.edges)) {
-			const points = geometryEdgePoints(buckets.vertices, edge);
-			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "edge", geometryKind: "edge", id: edge.id, point, points });
-		}
-		for (const wire of geometryRecords(buckets.wires)) {
-			const points = geometryWirePoints(buckets.vertices, buckets.edges, wire);
-			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "edge", geometryKind: "wire", id: wire.id, point, points });
-		}
-		for (const face of geometryRecords(buckets.faces)) {
-			const points = geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
-			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "face", geometryKind: "face", id: face.id, point, points });
-		}
-		const all = geometryAllVertexPoints(buckets.vertices);
-		const allCenter = geometryPointCentroid(all);
-		for (const cell of geometryRecords(buckets.solids)) {
-			const points = geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
-			const point = geometryPointCentroid(points) ?? allCenter;
-			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
-		}
-	} else {
-		targets.push(...createModelObjectSpatialPickTargets(model));
-	}
+	if (modelDefinitionUsesGeometryPicking(mdId)) appendTopologySpatialPickTargets(targets, buckets, entityKinds);
+	if (entityKinds.has("object") && !isGeometryModelDefinition(mdId)) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
 	return targets;
 }
 
@@ -2847,16 +2907,8 @@ interface ReplSuggestion {
 	readonly onRun: () => void;
 }
 
-function resolveScopedSpatialInteractionKey(token: string, allowed: readonly SpatialInteraction[]): SpatialInteraction | null {
-	const t = token.trim().toLowerCase();
-	if (!t) return null;
-	for (const p of allowed) {
-		if (p.key.toLowerCase() === t) return p;
-		if (p.id.toLowerCase() === t) return p;
-		const slug = p.label.toLowerCase().replace(/\s+/g, "");
-		if (slug === t) return p;
-	}
-	return null;
+function resolveScopedSpatialInteractionKey(token: string, modelDefinitionId: string): SpatialInteraction | null {
+	return resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId, token);
 }
 
 function replCommandTextWithoutSpaces(text: string): string {
@@ -3121,17 +3173,16 @@ function replSelectionLayerParts(
 	readonly outOfView: readonly SelectionTarget[];
 } {
 	const layer = interactionActive ? interactionSelection : rendererSelection;
-	const allowed = spatialPickKindsForActiveView(activeModelDefinitionId);
+	const entityKinds = new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID));
 	const inView: SelectionTarget[] = [];
 	const outOfView: SelectionTarget[] = [];
 	for (const target of layer) {
-		if (target.kind === "object") {
-			if (isGeometryModelDefinition(activeModelDefinitionId)) outOfView.push(target);
-			else inView.push(target);
+		if (target.kind === "object" && target.editable === false) {
+			if (entityKinds.has("object")) inView.push(target);
+			else outOfView.push(target);
 			continue;
 		}
-		const pickKind = selectionTargetPickKind(target);
-		if (pickKind && allowed.has(pickKind)) inView.push(target);
+		if (entityKinds.has(target.kind)) inView.push(target);
 		else outOfView.push(target);
 	}
 	return { layer, inView, outOfView };
@@ -3145,20 +3196,20 @@ export function replPruneSelectionByKind(
 ): SelectionTarget[] {
 	if (!spatialPickKindsForActiveView(activeModelDefinitionId).has(kind)) return [...selection];
 	if (kind === "object") {
-		return selection.filter((target) => (isGeometryModelDefinition(activeModelDefinitionId) ? target.kind !== "object" : target.kind !== "solid"));
+		return selection.filter((target) => target.kind !== "object" || target.editable !== false);
 	}
-	const geometryKind =
+	const geometryKinds: readonly ModelEntityKind[] =
 		kind === "vertex"
-			? "vertex"
+			? ["vertex", "anchor"]
 			: kind === "edge"
-				? "edge"
+				? ["edge", "wire"]
 				: kind === "face"
-					? "face"
-					: kind;
-	return selection.filter((target) => target.kind !== geometryKind && selectionTargetPickKind(target) !== kind);
+					? ["face", "shell"]
+					: ["solid", "geometry"];
+	return selection.filter((target) => !geometryKinds.includes(target.kind) && selectionTargetPickKind(target) !== kind);
 }
 
-/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to active view. */
+/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to active model definition. */
 export function replDisplayedSelectionTargets(
 	interactionActive: boolean,
 	activeModelDefinitionId: string | null,
@@ -3268,6 +3319,9 @@ export interface InteractionReplHostCallbacks {
 	readonly onSnapshotChange?: (snapshot: InteractionSnapshot) => void;
 	readonly onEscape?: () => void;
 	readonly onApplyTransformation?: (spec: TransformationSpec) => void;
+	/** @emoji 🧲 Geometry used for pick targets (defaults to `geometry`; use builtin geometry when the active model is typology-only). */
+	readonly pickGeometry?: SpatialPickGeometry | null;
+	readonly onDocumentModelChange?: (model: Model) => void;
 }
 
 /** @emoji 📐 Layout and partial canvas/spatial-view overrides for {@link InteractionRepl}. */
@@ -3327,8 +3381,8 @@ export function defaultInteractionReplChromeState(): Required<
 	return {
 		cmdLine: "",
 		activeSuggestionIndex: 0,
-		filterKindToggles: defaultSpatialPickKindToggles(),
-		selectionKindToggles: defaultSpatialPickKindToggles(),
+		filterKindToggles: defaultSpatialPickKindTogglesForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID),
+		selectionKindToggles: defaultSpatialPickKindTogglesForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID),
 		activeModelDefinitionId: GEOMETRY_MODEL_DEFINITION_ID,
 		selectionMethod: "rectangle",
 		modelDefinitionRevision: 0,
@@ -3343,7 +3397,6 @@ export function defaultInteractionReplChromeState(): Required<
 }
 
 export interface InteractionReplProps extends InteractionReplHostValues, InteractionReplHostCallbacks, InteractionReplLayoutProps {
-	readonly interactions: readonly SpatialInteraction[];
 	readonly interactionId: string;
 	readonly spec: InteractionSpec;
 	readonly onInteractionId: (id: string) => void;
@@ -3365,7 +3418,6 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
 
 /** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl({
-	interactions,
 	interactionId,
 	spec,
 	onInteractionId,
@@ -3411,6 +3463,8 @@ export function InteractionRepl({
 	onInteractionMenuOpenChange,
 	onLastFinalizedInteractionIdChange,
 	onApplyTransformation,
+	pickGeometry: pickGeometryProp,
+	onDocumentModelChange,
 	onCanvasReady,
 	onInteractionEvent: onInteractionEventProp,
 	onGroundPick: onGroundPickProp,
@@ -3542,13 +3596,14 @@ export function InteractionRepl({
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
 	const geometryPreviewTransform = useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
+	const pickGeometry = pickGeometryProp ?? geometry;
 	const pickGeometryRevision =
-		geometry && typeof geometry === "object" && "revision" in geometry
-			? Number((geometry as { revision?: unknown }).revision)
+		pickGeometry && typeof pickGeometry === "object" && "revision" in pickGeometry
+			? Number((pickGeometry as { revision?: unknown }).revision)
 			: 0;
 	const pickTargets = useMemo(
-		() => createSpatialPickTargets(geometry, activeModelDefinitionId),
-		[geometry, pickGeometryRevision, modelDefinitionRevision, activeModelDefinitionId],
+		() => createSpatialPickTargets(pickGeometry, activeModelDefinitionId),
+		[pickGeometry, pickGeometryRevision, modelDefinitionRevision, activeModelDefinitionId],
 	);
 	const scopedPickTargets = useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeModelDefinitionId), [pickTargets, activeModelDefinitionId]);
 	useEffect(() => {
@@ -3652,9 +3707,10 @@ export function InteractionRepl({
 		setSelectionKindToggles(defaults);
 		const allowed = listSpatialInteractionsForModelDefinition(mdId);
 		if (interactionId && !allowed.some((row) => row.id === interactionId)) onInteractionId("");
+		setLastFinalizedInteractionId("");
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [activeModelDefinitionId, modelDefinitionRevision, interactionId, onInteractionId, setFilterKindToggles, setSelectionKindToggles, setRendererSelection, setInteractionSelection]);
+	}, [activeModelDefinitionId, modelDefinitionRevision, interactionId, onInteractionId, setFilterKindToggles, setSelectionKindToggles, setRendererSelection, setInteractionSelection, setLastFinalizedInteractionId]);
 
 	useEffect(() => {
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
@@ -4101,7 +4157,7 @@ export function InteractionRepl({
 			setCmdLine("");
 			return true;
 		}
-		const interactionHit = resolveScopedSpatialInteractionKey(raw, scopedInteractions);
+		const interactionHit = resolveScopedSpatialInteractionKey(raw, activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID);
 		if (interactionHit) {
 			onInteractionId(interactionHit.id);
 			setCmdLine("");
@@ -4117,7 +4173,7 @@ export function InteractionRepl({
 			}
 		}
 		return false;
-	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine, scopedInteractions]);
+	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine, activeModelDefinitionId]);
 
 	const runTransitionRow = useCallback(
 		(row: InteractionKeybindRow) => {
@@ -4602,6 +4658,15 @@ export function InteractionRepl({
 					) : null}
 				</div>
 				{asideExtra}
+				{onDocumentModelChange ? (
+					<SelectionAttributesPanel
+						model={documentModel.model}
+						activeModelDefinitionId={activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID}
+						selection={displayedSelectionTargets}
+						selectionCount={displayedSelectionTargets.length}
+						onModelChange={onDocumentModelChange}
+					/>
+				) : null}
 				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
 					{hideModelDefinitionControls ? null : (
 						<>
@@ -4742,7 +4807,7 @@ export function InteractionRepl({
 					<span>Selection kinds</span>
 					<div role="group" aria-label="Selection kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{activePickKinds.map((kind) => {
-							const accepted = activeSelectionAccept.length === 0 || activeSelectionAccept.includes(kind);
+							const accepted = pickKindEnabledForSelectionAccept(activeSelectionAccept, kind);
 							return (
 								<label
 									key={`select-${kind}`}
@@ -4773,6 +4838,34 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
+					{modelDefinitionScope.selectionOperations.length ? (
+						<>
+							<span>Selection commands</span>
+							<div role="group" aria-label="Selection commands" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{modelDefinitionScope.selectionOperations.map((defn) => (
+									<button
+										key={defn.id}
+										type="button"
+										title={defn.id}
+										onClick={() => {
+											void rt.query(`CALL ${defn.id}({}) YIELD data.targets AS targets`);
+										}}
+										style={{
+											padding: "4px 8px",
+											borderRadius: 999,
+											border: "1px solid #2a2a3a",
+											background: "#12121c",
+											color: "#e8e8f0",
+											cursor: "pointer",
+											fontSize: 12,
+										}}
+									>
+										{defn.label}
+									</button>
+								))}
+							</div>
+						</>
+					) : null}
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
 					{interactionId ? (
@@ -4806,9 +4899,168 @@ export function InteractionRepl({
 	);
 }
 
-/** @emoji ­ƒû╝´©Å Canvas-only {@link InteractionRepl} (no built-in aside); full host props and `on*` callbacks. */
+/** @emoji ­ƒ╝´©Å Canvas-only {@link InteractionRepl} (no built-in aside); full host props and `on*` callbacks. */
 export function InteractionReplViewport(props: InteractionReplProps): ReactNode {
 	return <InteractionRepl {...props} showAside={false} />;
+}
+
+export interface SelectionAttributesPanelProps {
+	readonly model: Model;
+	readonly activeModelDefinitionId: string;
+	readonly selection: readonly SelectionTarget[];
+	readonly selectionCount?: number;
+	readonly onModelChange: (model: Model) => void;
+}
+
+const ATTRIBUTE_FIELD_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0", border: "1px solid #2a2a3c" } as const;
+
+/** @emoji 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
+export function SelectionAttributesPanel({
+	model,
+	activeModelDefinitionId,
+	selection,
+	selectionCount,
+	onModelChange,
+}: SelectionAttributesPanelProps): ReactNode {
+	const target = useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
+	const definitions = useMemo(
+		() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []),
+		[activeModelDefinitionId, target],
+	);
+	if (!target || !definitions.length) return null;
+	const fields = model.metadata.get(target.id) ?? {};
+	const count = selectionCount ?? selection.length;
+	const setField = (defn: AttributeDefinitionSpec, value: unknown) => {
+		if (!validateAttributeValue(defn, value)) return;
+		model.metadata.setField(target.id, defn.field, value);
+		onModelChange(model);
+	};
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+			<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Attributes</span>
+			<span style={{ opacity: 0.75, fontSize: 11 }}>
+				{target.kind} · <code style={{ color: "#e8e8f0" }}>{target.id}</code>
+				{count > 1 ? ` · ${count} selected` : ""}
+			</span>
+			{definitions.map((defn) => {
+				const editor = attributeDefinitionEditorKind(defn);
+				const current = fields[defn.field];
+				if (editor === "enum") {
+					const options = attributeDefinitionValueOptions(defn) ?? [];
+					return (
+						<label key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<span>{defn.label}</span>
+							<select
+								value={typeof current === "string" ? current : ""}
+								onChange={(e) => setField(defn, e.target.value)}
+								style={ATTRIBUTE_FIELD_STYLE}
+							>
+								<option value="">—</option>
+								{options.map((option) => (
+									<option key={option} value={option}>
+										{option}
+									</option>
+								))}
+							</select>
+						</label>
+					);
+				}
+				if (editor === "number") {
+					return (
+						<label key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<span>{defn.label}</span>
+							<input
+								type="number"
+								value={typeof current === "number" ? current : ""}
+								onChange={(e) => setField(defn, e.target.value === "" ? 0 : Number(e.target.value))}
+								style={ATTRIBUTE_FIELD_STYLE}
+							/>
+						</label>
+					);
+				}
+				if (editor === "boolean") {
+					return (
+						<label key={defn.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+							<input type="checkbox" checked={current === true} onChange={(e) => setField(defn, e.target.checked)} />
+							<span>{defn.label}</span>
+						</label>
+					);
+				}
+				return (
+					<label key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+						<span>{defn.label}</span>
+						<input
+							type="text"
+							value={typeof current === "string" ? current : current === undefined || current === null ? "" : JSON.stringify(current)}
+							onChange={(e) => setField(defn, e.target.value)}
+							style={ATTRIBUTE_FIELD_STYLE}
+						/>
+					</label>
+				);
+			})}
+		</div>
+	);
+}
+
+export interface SelectionPropertiesPanelProps {
+	readonly model: Model;
+	readonly kernel: SpatialKernel;
+	readonly activeModelDefinitionId: string;
+	readonly selection: readonly SelectionTarget[];
+	readonly selectionCount?: number;
+}
+
+/** @emoji 📐 Displays derived property values for the primary object selection using scoped property definitions. */
+export function SelectionPropertiesPanel({
+	model,
+	kernel,
+	activeModelDefinitionId,
+	selection,
+	selectionCount,
+}: SelectionPropertiesPanelProps): ReactNode {
+	const objectRow = useMemo(() => {
+		const objectTarget = selection.find((row) => row.kind === "object");
+		return objectTarget ? (model.objects[objectTarget.id] ?? null) : null;
+	}, [model, selection]);
+	const definitions = useMemo(
+		() => (objectRow ? listApplicablePropertyDefinitionsForModelDefinition(activeModelDefinitionId, model, objectRow) : []),
+		[activeModelDefinitionId, model, objectRow],
+	);
+	const [values, setValues] = useState<Readonly<Record<string, Record<string, unknown>>>>({});
+	useEffect(() => {
+		if (!objectRow || !definitions.length) {
+			setValues({});
+			return;
+		}
+		let cancelled = false;
+		void (async () => {
+			const next: Record<string, Record<string, unknown>> = {};
+			for (const defn of definitions) {
+				next[defn.id] = await derivePropertyValue(defn, { model, kernel, object: objectRow });
+			}
+			if (!cancelled) setValues(next);
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [definitions, kernel, model, objectRow]);
+	if (!objectRow || !definitions.length) return null;
+	const count = selectionCount ?? selection.length;
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+			<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Properties</span>
+			<span style={{ opacity: 0.75, fontSize: 11 }}>
+				object · <code style={{ color: "#e8e8f0" }}>{objectRow.id}</code>
+				{count > 1 ? ` · ${count} selected` : ""}
+			</span>
+			{definitions.map((defn) => (
+				<div key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+					<span>{defn.label}</span>
+					<pre style={{ margin: 0, fontSize: 11, opacity: 0.85, overflow: "auto" }}>{JSON.stringify(values[defn.id] ?? {}, null, 2)}</pre>
+				</div>
+			))}
+		</div>
+	);
 }
 // #endregion ­ƒ¬®Repl
 
@@ -4864,8 +5116,8 @@ if (import.meta.vitest) {
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
 			model.objects["object-c0"] = {
 				id: "object-c0" as ObjectRef,
-				typologyId: "builtin.primitive.box",
-				geometryRef: String(cell),
+				typology: "energy.energy.hull",
+				primitives: { solid: String(cell) },
 			};
 			const activeModelDefinitionId = "aec.building.energy";
 			const editTargets = createSpatialPickTargets(model, GEOMETRY_MODEL_DEFINITION_ID);
@@ -4873,15 +5125,26 @@ if (import.meta.vitest) {
 			expect(editTargets.some((t) => t.kind === "vertex")).toBe(true);
 			expect(objectTargets.every((t) => t.kind === "object")).toBe(true);
 			expect(objectTargets.length).toBeGreaterThan(0);
+			const structureTargets = createSpatialPickTargets(model, "aec.building.structure");
+			expect(structureTargets.some((t) => t.kind === "face")).toBe(true);
+			expect(structureTargets.some((t) => t.kind === "object")).toBe(true);
 		});
 
-		it("filterSpatialPickTargetsForActiveView scopes kernel vs typology objects", () => {
+		it("filterSpatialPickTargetsForActiveView scopes by model definition entity kinds", () => {
 			const targets: SpatialPickTarget[] = [
 				{ kind: "vertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "face", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0.5] },
 				{ kind: "object", id: "energy.energy.hull", point: [0.5, 0.5, 0.5] },
 			];
-			expect(filterSpatialPickTargetsForActiveView(targets, GEOMETRY_MODEL_DEFINITION_ID).map(spatialPickTargetKey)).toEqual(["vertex:v0"]);
+			expect(filterSpatialPickTargetsForActiveView(targets, GEOMETRY_MODEL_DEFINITION_ID).map(spatialPickTargetKey)).toEqual([
+				"vertex:v0",
+				"face:f0",
+			]);
 			expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.energy").map(spatialPickTargetKey)).toEqual([
+				"object:energy.energy.hull",
+			]);
+			expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.structure").map(spatialPickTargetKey)).toEqual([
+				"face:f0",
 				"object:energy.energy.hull",
 			]);
 		});
@@ -4914,6 +5177,28 @@ if (import.meta.vitest) {
 			expect(replDisplayedSelectionTargets(false, "aec.building.energy", renderer, [])).toEqual([
 				{ kind: "object", id: "o0", editable: false },
 			]);
+			expect(replDisplayedSelectionTargets(false, "aec.building.structure", renderer, [])).toEqual([
+				{ kind: "face", id: "f0", editable: true },
+				{ kind: "object", id: "o0", editable: false },
+			]);
+		});
+
+		it("creates anchor and shell pick targets for builtin geometry", () => {
+			const model = new Model();
+			model.anchors["a0"] = { id: "a0" as AnchorRef, position: [0, 0, 0], attachment: { kind: "vertex", id: "v0" } };
+			model.vertices["v0"] = { id: "v0" as VertexRef, position: [0, 0, 0] };
+			const cell = solidRef("c0");
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			const faceId = Object.keys(model.faces)[0]!;
+			model.shells["sh0"] = { id: "sh0" as ShellRef, faceIds: [faceId] };
+			const targets = createSpatialPickTargets(model, GEOMETRY_MODEL_DEFINITION_ID);
+			expect(targets.some((t) => t.geometryKind === "anchor")).toBe(true);
+			expect(targets.some((t) => t.geometryKind === "shell")).toBe(true);
+		});
+
+		it("modelDefinitionPickTargetKinds maps topology entity kinds to pick toggles", () => {
+			expect(modelDefinitionPickTargetKinds(GEOMETRY_MODEL_DEFINITION_ID).sort()).toEqual(["edge", "face", "object", "vertex"]);
+			expect(modelDefinitionPickTargetKinds("aec.building.structure").sort()).toEqual(["edge", "face", "object"]);
 		});
 
 		it("merges picks within active model definition without clearing out-of-scope targets", () => {

@@ -76,7 +76,7 @@ import {
 	assembleStepFile,
 	emitSpatialUdaProperty,
 	hashSolidRecord,
-	listApplicablePropertyDefinitions,
+	listApplicablePropertyDefinitionsForModelDefinition,
 	mergeStepDataChunk,
 	modelSpaceFromSpatialUda,
 	parseSpatialUdaPayloads,
@@ -85,6 +85,7 @@ import {
 	stepSpatialFileHeader,
 	StepEntityWriter,
 	derivePropertyValue,
+	GEOMETRY_MODEL_DEFINITION_ID,
 	type ObjectRef,
 	type TypologyRef,
 } from "@spatial/js-core";
@@ -2088,11 +2089,12 @@ class BrepjsWasmEngine {
 			}
 			for (const obj of Object.values(model.objects)) {
 				const objPdId = writer.emitNew(
-					`PRODUCT_DEFINITION(${stepEscape(String(obj.id))}, ${stepEscape(String(obj.typologyId))}, #${formationId}, #${contextId})`,
+					`PRODUCT_DEFINITION(${stepEscape(String(obj.id))}, ${stepEscape(String(obj.typology))}, #${formationId}, #${contextId})`,
 				);
 				writer.emitNew(`NEXT_ASSEMBLY_USAGE_OCCURRENCE(${stepEscape(`M_${obj.id}`)}, 'Link', $, #${modelPdId}, #${objPdId}, $)`);
 				const shapeId = writer.emitNew(`PRODUCT_DEFINITION_SHAPE('Object_Geometry', $, #${objPdId})`);
-				const solid = geom(model).solids[obj.geometryRef as SolidRef];
+				const solidRef = Object.values(obj.primitives)[0];
+				const solid = solidRef ? geom(model).solids[solidRef as SolidRef] : undefined;
 				if (solid) {
 					const hash = hashSolidRecord(solid);
 					let brepAnchor = hashToBrepRoot.get(hash);
@@ -2117,7 +2119,7 @@ class BrepjsWasmEngine {
 						writer.emitNew(`SHAPE_DEFINITION_REPRESENTATION(#${shapeId}, #${brepAnchor})`);
 					}
 				}
-				for (const defn of listApplicablePropertyDefinitions(model, obj)) {
+				for (const defn of listApplicablePropertyDefinitionsForModelDefinition(modelId, model, obj)) {
 					const derived = await derivePropertyValue(defn, { model, kernel: this as unknown as SpatialKernel, object: obj });
 					for (const [key, value] of Object.entries(derived)) {
 						emitSpatialUdaProperty(
@@ -2762,8 +2764,8 @@ if (import.meta.vitest) {
 			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, solid));
 			model.objects["obj-step"] = {
 				id: "obj-step" as ObjectRef,
-				typologyId: "builtin.primitive.box" as TypologyRef,
-				geometryRef: String(solid),
+				typology: "builtin.primitive.box" as TypologyRef,
+				primitives: { solid: String(solid) },
 			};
 			const faceId = Object.keys(geom(model).faces)[0]!;
 			model.metadata.setField(faceId, "exposure", "external");
@@ -2800,15 +2802,15 @@ if (import.meta.vitest) {
 			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 2 }, solid));
 			model.objects["obj-vol"] = {
 				id: "obj-vol" as ObjectRef,
-				typologyId: "builtin.primitive.box" as TypologyRef,
-				geometryRef: String(solid),
+				typology: "builtin.primitive.box" as TypologyRef,
+				primitives: { solid: String(solid) },
 			};
 			const stepText = await kernel.exportModelToStep(model, "props");
-			expect(stepText).toContain("spatial.property.");
+			expect(stepText).not.toContain("spatial.property.");
 			const space = await kernel.importStepToModelSpace(stepText);
 			const restored = space.models.props!;
 			const obj = restored.objects["obj-vol"]!;
-			const defns = listApplicablePropertyDefinitions(restored, obj);
+			const defns = listApplicablePropertyDefinitionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID, restored, obj);
 			const volumeDefn = defns.find((d) => d.id === "builtin.volume");
 			expect(volumeDefn).toBeDefined();
 			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });

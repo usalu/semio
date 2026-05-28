@@ -6,13 +6,11 @@
 import { createActor, setup } from "xstate";
 import {
 	applyTransition,
-	loadSpatialInteraction,
-	solidRef,
 	createInteractionRuntime,
-	emptyMeshTransfer,
+	GEOMETRY_MODEL_DEFINITION_ID,
 	initialContextForSpec,
 	isEmptyModelDiff,
-	listSpatialInteractions,
+	listSpatialInteractionsForModelDefinition,
 	loadSpatialInteraction,
 	pureTsStateEngineProvider,
 	type InteractionEvent,
@@ -196,20 +194,21 @@ export function buildSpatialStatelyMachineViewForSpec(
 	};
 }
 
-/** @emoji 📊 Full catalog from `listSpatialInteractions` (model-definition interaction JSON via core `compileInteraction`). */
-export function buildSpatialStatelyMachineCatalogView(opts?: {
+/** @emoji 📊 Model-definition-scoped interaction machines from shipped interaction JSON. */
+export function buildSpatialStatelyMachineCatalogView(opts: {
+	readonly modelDefinitionId: string;
 	readonly interactionIds?: readonly string[];
 	readonly generatedAt?: string;
 }): SpatialStatelyMachineCatalogView {
-	const want = opts?.interactionIds?.length ? new Set(opts.interactionIds) : null;
+	const want = opts.interactionIds?.length ? new Set(opts.interactionIds) : null;
 	const machines: SpatialStatelyMachineView[] = [];
-	for (const p of listSpatialInteractions()) {
+	for (const p of listSpatialInteractionsForModelDefinition(opts.modelDefinitionId)) {
 		if (want && !want.has(p.id)) continue;
 		const spec = loadSpatialInteraction(p.id);
 		if (!spec) continue;
 		machines.push(buildSpatialStatelyMachineViewForSpec(spec, { hostKey: p.key, interactionLabel: p.label }));
 	}
-	const generatedAt = opts?.generatedAt ?? new Date().toISOString();
+	const generatedAt = opts.generatedAt ?? new Date().toISOString();
 	return {
 		kind: "spatial.stately-machine-view/v1",
 		schemaVersion: "1.0",
@@ -390,10 +389,10 @@ if (import.meta.vitest) {
 	}
 
 	describe("@spatial/js-machine-stately", () => {
-		it("buildSpatialStatelyMachineCatalogView lists all interactions with edges and mermaid", () => {
-			const doc = buildSpatialStatelyMachineCatalogView();
+		it("buildSpatialStatelyMachineCatalogView lists scoped interactions with edges and mermaid", () => {
+			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: GEOMETRY_MODEL_DEFINITION_ID });
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
-			expect(doc.machines.length).toBe(listSpatialInteractions().length);
+			expect(doc.machines.length).toBe(listSpatialInteractionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID).length);
 			const box = doc.machines.find((m) => m.interactionId === "primitive.box");
 			expect(box?.edges.length).toBeGreaterThan(0);
 			expect(box?.mermaid).toContain("primitive_box");

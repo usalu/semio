@@ -3,8 +3,15 @@
   "id": "structure.structure.onewayreinforcedconcreteslab",
   "version": "1.0.0",
   "label": "One Way Reinforced Concrete Slab",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "structure.structure.createOneWayReinforcedConcreteSlabFrom2PointsAndHeight",
+    "structure.structure.createOneWayReinforcedConcreteSlabFromCurveAndHeight",
+    "structure.structure.createOneWayReinforcedConcreteSlabFromSurface",
+    "structure.structure.constructOneWayReinforcedConcreteSlab"
+  ],
+  "interactions": [
+    "structure.structure.constructOneWayReinforcedConcreteSlab"
+  ],
   "primitiveKinds": [
     "solid"
   ]

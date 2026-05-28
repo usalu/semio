@@ -3,8 +3,19 @@
   "id": "structure.structure.reinforcedconcretecolumn",
   "version": "1.0.0",
   "label": "Reinforced Concrete Column",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "building.mushroomcolumn.constructMushroomColumn",
+    "building.mushroomcolumn.constructExtrudedMushroomColumn",
+    "building.mushroomcolumn.constructFullyQuadraticMushroomColumn",
+    "building.mushroomcolumn.constructRectangularMushroomColumnWithQuadraticSlab",
+    "structure.structure.createReinforcedConcreteColumnFrom2PointsAndHeight",
+    "structure.structure.createReinforcedConcreteColumnFromCurveAndHeight",
+    "structure.structure.createReinforcedConcreteColumnFromSurface",
+    "structure.structure.constructReinforcedConcreteColumn"
+  ],
+  "interactions": [
+    "structure.structure.constructReinforcedConcreteColumn"
+  ],
   "primitiveKinds": [
     "solid"
   ]

@@ -15,7 +15,15 @@ if (command === "test") {
 		env: process.env,
 	});
 	process.exit(r.status ?? 1);
+} else if (command === "sync-typology-construct") {
+	const r = spawnSync("bun", ["./sync-typology-construct.ts"], {
+		cwd,
+		stdio: "inherit",
+		shell: true,
+		env: process.env,
+	});
+	process.exit(r.status ?? 1);
 } else {
-	console.error("usage: bun ./script.ts test [args…]");
+	console.error("usage: bun ./script.ts test|sync-typology-construct [args…]");
 	process.exit(1);
 }

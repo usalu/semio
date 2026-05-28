@@ -10,7 +10,7 @@ import {
 	type ActionResult,
 	Model,
 	applyModelDiff,
-	buildTypologyToEntityKindMap,
+	buildTypologyToEntityKindMapForModelDefinition,
 	applyTransformation,
 	loadTransformation,
 	solidRef,
@@ -532,8 +532,9 @@ export interface ReturnClauseAst {
 
 export type ConstructClauseAst = MatchClauseAst | WithClauseAst | CallClauseAst | UnwindClauseAst;
 
-function assertConstructAst(ast: ConstructAst): void {
-	const typologyKinds = buildTypologyToEntityKindMap();
+function assertConstructAst(ast: ConstructAst, activeModelDefinitionId?: string | null): void {
+	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const typologyKinds = buildTypologyToEntityKindMapForModelDefinition(mdId);
 	for (const cl of ast.clauses) {
 		if (cl.kind !== "match") continue;
 		for (const pat of cl.patterns) {
@@ -544,10 +545,10 @@ function assertConstructAst(ast: ConstructAst): void {
 				}
 				const typology = el.props?.typology;
 				if (typeof typology === "string" && (typology.includes(".derived.") || typology.startsWith("view."))) {
-					throw new Error(`${typology} is not a shipped model typology; use kernel topology or model-definition typology ids`);
+					throw new Error(`${typology} is not a shipped model typology`);
 				}
 				if (typeof typology === "string" && !(typology in typologyKinds)) {
-					throw new Error(`unknown typology ${typology}; see listModelDefinitionTypologies() or builtin.kernel.* ids`);
+					throw new Error(`unknown typology ${typology} for model definition ${mdId}; see listTypologiesForModelDefinition()`);
 				}
 			}
 		}
@@ -889,7 +890,7 @@ function cstToAst(cst: CstNode): ConstructAst {
 }
 
 /** @emoji 🔍 Parses `construct` source into `ConstructAst` (throws on syntax error). */
-export function parseConstruct(text: string): ConstructAst {
+export function parseConstruct(text: string, activeModelDefinitionId?: string | null): ConstructAst {
 	const lex = constructLexer.tokenize(text);
 	if (lex.errors.length) throw new Error(lex.errors.map((e) => e.message).join("; "));
 	parserSingleton.input = lex.tokens;
@@ -897,24 +898,28 @@ export function parseConstruct(text: string): ConstructAst {
 	const errs = parserSingleton.errors;
 	if (errs.length > 0) throw new Error(errs.map((e) => e.message).join("; "));
 	const ast = cstToAst(cst as unknown as CstNode);
-	assertConstructAst(ast);
+	assertConstructAst(ast, activeModelDefinitionId);
 	return ast;
 }
 // #endregion Ast
 
 // #region Index
-let typologyToKindCache: Readonly<Record<string, ModelEntityKind>> | null = null;
-
-function typologyToEntityKind(): Readonly<Record<string, ModelEntityKind>> {
-	typologyToKindCache ??= buildTypologyToEntityKindMap();
-	return typologyToKindCache;
+function typologyToEntityKindForConstruct(activeModelDefinitionId?: string | null): Readonly<Record<string, ModelEntityKind>> {
+	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	return buildTypologyToEntityKindMapForModelDefinition(mdId);
 }
 
-function patternEntityKind(node: NodePatternAst): ModelEntityKind | undefined {
+function patternEntityKind(node: NodePatternAst, activeModelDefinitionId?: string | null): ModelEntityKind | undefined {
 	if (node.label && node.label !== "Object") return undefined;
 	const typology = node.props?.typology;
 	if (typeof typology !== "string") return undefined;
-	return typologyToEntityKind()[typology];
+	return typologyToEntityKindForConstruct(activeModelDefinitionId)[typology];
+}
+
+function objectHandlesForTypology(model: Model, typology: string): EntityHandle[] {
+	return Object.values(model.objects)
+		.filter((row) => row.typology === typology)
+		.map((row) => ({ kind: "object" as ModelEntityKind, id: String(row.id) }));
 }
 
 export class KernelIndex {
@@ -1213,11 +1218,6 @@ function rowVarsToEnv(
 	return { context: {}, vars, model, metadata: meta, activeModelDefinitionId, preview };
 }
 
-/** @emoji 🪞 View-derived CALL targets are not shipped; use `transformation.*` qualified ids instead. */
-async function runViewDerivedCall(actionId: string, _ctx: ConstructQueryContext): Promise<ActionResult> {
-	throw new Error(`View-derived CALL is not available in the model-definition runtime (${actionId})`);
-}
-
 /** @emoji 🔄 Runs a shipped transformation against the construct context model. */
 function runTransformationCall(actionId: string, ctx: ConstructQueryContext): ActionResult {
 	const spec = loadTransformation(actionId);
@@ -1229,12 +1229,13 @@ function runTransformationCall(actionId: string, ctx: ConstructQueryContext): Ac
 	return { diff: EMPTY_MODEL_DIFF, data: { model, objects } };
 }
 
-function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
+function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst, activeModelDefinitionId?: string | null): Generator<Row> {
 	const els = pat.elements;
 	if (!els.length) return;
 	const first = els[0] as NodePatternAst;
 	const startVar = first.var ?? "__n0";
-	const startKind = patternEntityKind(first);
+	const startKind = patternEntityKind(first, activeModelDefinitionId);
+	const startTypology = first.props?.typology;
 	const idProp = first.props?.id;
 	index.ensure();
 	let seeds: EntityHandle[] = [];
@@ -1242,6 +1243,8 @@ function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex,
 	else if (typeof idProp === "string") {
 		const lk = index.lookupById(idProp);
 		if (lk) seeds = [lk];
+	} else if (typeof startTypology === "string" && startKind === "object") {
+		seeds = objectHandlesForTypology(model, startTypology);
 	} else if (startKind) seeds = index.idsForKind(startKind).map((id) => ({ kind: startKind, id }));
 	else seeds = [];
 
@@ -1253,12 +1256,17 @@ function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex,
 		const el = els[j]!;
 		if (el.kind === "node") {
 			const nm = el.var ?? `__n${j}`;
-			const kind = patternEntityKind(el);
+			const kind = patternEntityKind(el, activeModelDefinitionId);
 			const pid = el.props?.id;
+			const typology = el.props?.typology;
 			if (j === 0) {
 				for (const s of seeds) {
 					if (kind && s.kind !== kind) continue;
 					if (typeof pid === "string" && s.id !== pid) continue;
+					if (typeof typology === "string" && s.kind === "object") {
+						const obj = model.objects[s.id];
+						if (!obj || obj.typology !== typology) continue;
+					}
 					yield* expandFrom(j + 1, { ...row, [nm]: s });
 				}
 			}
@@ -1270,11 +1278,16 @@ function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex,
 		const from = row[prevName] as EntityHandle;
 		const nextNode = els[j + 1] as NodePatternAst;
 		const nm = nextNode.var ?? `__n${j + 1}`;
-		const kind = patternEntityKind(nextNode);
+		const kind = patternEntityKind(nextNode, activeModelDefinitionId);
 		const pid = nextNode.props?.id;
+		const typology = nextNode.props?.typology;
 		for (const x of traverseRel(model, kernel, index, from, rel.types, rel.direction)) {
 			if (kind && x.kind !== kind) continue;
 			if (typeof pid === "string" && x.id !== pid) continue;
+			if (typeof typology === "string" && x.kind === "object") {
+				const obj = model.objects[x.id];
+				if (!obj || obj.typology !== typology) continue;
+			}
 			yield* expandFrom(j + 2, { ...row, [nm]: x });
 		}
 	}
@@ -1288,7 +1301,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		if (st.kind === "match") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				for (const row of expandPattern(ctx.model, ctx.kernel, index, st.pattern)) {
+				for (const row of expandPattern(ctx.model, ctx.kernel, index, st.pattern, ctx.activeModelDefinitionId)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
 						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId));
@@ -1315,11 +1328,10 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			}
 			rows = next;
 		} else if (st.kind === "call") {
-			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 4;
 			const transformation = loadTransformation(st.actionId);
 			const modelDefinitionId = ctx.activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
-			if (!viewDerived && !transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
-			if (!viewDerived && !transformation && !actionAvailableInModelDefinition(st.actionId, modelDefinitionId)) {
+			if (!transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
+			if (!transformation && !actionAvailableInModelDefinition(st.actionId, modelDefinitionId)) {
 				throw new Error(`action ${st.actionId} is not available in model definition ${modelDefinitionId}`);
 			}
 			const next: Row[] = [];
@@ -1333,16 +1345,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				) {
 					paramBag.seedTargets = ctx.selectionTargets;
 				}
-				const res = viewDerived
-					? await runViewDerivedCall(st.actionId, ctx)
-					: transformation
-						? runTransformationCall(st.actionId, ctx)
-						: await ctx.actions.run(st.actionId, paramBag, {
-								kernel: ctx.kernel,
-								preview: ctx.kernel,
-								model: ctx.model,
-								activeModelDefinitionId: ctx.activeModelDefinitionId ?? null,
-							});
+				const res = transformation
+					? runTransformationCall(st.actionId, ctx)
+					: await ctx.actions.run(st.actionId, paramBag, {
+							kernel: ctx.kernel,
+							preview: ctx.kernel,
+							model: ctx.model,
+							activeModelDefinitionId: ctx.activeModelDefinitionId ?? null,
+						});
 				const nr = { ...r };
 				for (const y of st.yieldItems) {
 					const v = resolveActionYield(res, y.key);
@@ -1392,7 +1402,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 // #region Api
 /** @emoji 🔍 Materializes `executeConstruct` into `ConstructQueryResult`. */
 export async function runConstruct(text: string, ctx: ConstructQueryContext): Promise<ConstructQueryResult> {
-	const ast = parseConstruct(text);
+	const ast = parseConstruct(text, ctx.activeModelDefinitionId);
 	const plan = planConstruct(ast);
 	const rows: ConstructQueryRow[] = [];
 	let data: unknown;
@@ -1561,7 +1571,7 @@ if (import.meta.vitest) {
 			expect(pair).toBeDefined();
 		});
 
-		it("CALL view.* rejects (views removed from model-definition runtime)", async () => {
+		it("CALL view.* is unknown action", async () => {
 			const model = new Model();
 			await expect(
 				runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
@@ -1569,7 +1579,7 @@ if (import.meta.vitest) {
 					kernel: new QueryTestKernel(),
 					actions: ActionRegistry.withBuiltins(),
 				}),
-			).rejects.toThrow(/not available in the model-definition runtime/);
+			).rejects.toThrow(/unknown action/i);
 		});
 
 		it("unknown CALL action throws", async () => {
@@ -1657,6 +1667,49 @@ if (import.meta.vitest) {
 			).rejects.toThrow(/not available in model definition aec\.building\.energy/);
 		});
 
+		it("rejects geometry selection commands under energy model definition", async () => {
+			const model = new Model();
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+			await expect(
+				runConstruct("CALL selection.selectVertices({}) YIELD targets", {
+					model: model,
+					kernel: new QueryTestKernel(),
+					actions: ActionRegistry.withBuiltins(),
+					activeModelDefinitionId: "aec.building.energy",
+				}),
+			).rejects.toThrow(/not available in model definition aec\.building\.energy/);
+		});
+
+		it("rejects geometry typology MATCH under energy model definition", async () => {
+			const model = new Model();
+			await expect(
+				runConstruct("MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id", {
+					model: model,
+					kernel: mkKernelStub(),
+					actions: ActionRegistry.withBuiltins(),
+					activeModelDefinitionId: "aec.building.energy",
+				}),
+			).rejects.toThrow(/unknown typology builtin\.primitive\.box for model definition aec\.building\.energy/);
+		});
+
+		it("MATCH energy typology resolves to object rows", async () => {
+			const model = new Model();
+			const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
+			applyModelDiff(model, r);
+			model.objects["energy-hull"] = {
+				id: "energy-hull" as import("@spatial/js-core").ObjectRef,
+				typology: "energy.energy.hull",
+				primitives: { solid: String(r.solid ?? "box") },
+			};
+			const res = await runConstruct("MATCH (o:Object {typology: 'energy.energy.hull'}) RETURN o.id AS id", {
+				model: model,
+				kernel: mkKernelStub(),
+				actions: ActionRegistry.withBuiltins(),
+				activeModelDefinitionId: "aec.building.energy",
+			});
+			expect(res.rows.some((row) => row.id === "energy-hull")).toBe(true);
+		});
+
 		it("MATCH builtin.primitive.box typology resolves to solids", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
@@ -1675,8 +1728,8 @@ if (import.meta.vitest) {
 			applyModelDiff(model, r);
 			model.objects["object-box"] = {
 				id: "object-box" as import("@spatial/js-core").ObjectRef,
-				typologyId: "builtin.primitive.box",
-				geometryRef: String(r.solid ?? "box"),
+				typology: "builtin.primitive.box",
+				primitives: { solid: String(r.solid ?? "box") },
 			};
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {

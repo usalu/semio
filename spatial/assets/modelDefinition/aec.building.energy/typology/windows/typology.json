@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Windows",
   "description": "All external window surfaces.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "energy.energy.createWindowsFrom2PointsAndHeight",
+    "energy.energy.createWindowsFromCurveAndHeight",
+    "energy.energy.createWindowsFromSurface",
+    "energy.energy.constructWindows"
+  ],
+  "interactions": [
+    "energy.energy.constructWindows"
+  ],
   "primitiveKinds": [
     "solid"
   ]

@@ -6,7 +6,10 @@
   "description": "Marks geometry that may be unified with matching contacts.",
   "field": "bondable",
   "targets": [
-    "object"
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ],
   "value": {
     "kind": "boolean",
@@ -16,8 +19,9 @@
   },
   "geometrySelector": {
     "kinds": [
-      "curve",
-      "object",
+      "edge",
+      "wire",
+      "face",
       "solid"
     ]
   }

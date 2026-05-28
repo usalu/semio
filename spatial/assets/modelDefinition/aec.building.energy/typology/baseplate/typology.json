@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Base Plate",
   "description": "Lowest external horizontal surface.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "energy.energy.createBasePlateFrom2PointsAndHeight",
+    "energy.energy.createBasePlateFromCurveAndHeight",
+    "energy.energy.createBasePlateFromSurface",
+    "energy.energy.constructBasePlate"
+  ],
+  "interactions": [
+    "energy.energy.constructBasePlate"
+  ],
   "primitiveKinds": [
     "solid"
   ]

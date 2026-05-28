@@ -6,7 +6,7 @@
   "description": "Marks whether a surface is internal or external.",
   "field": "exposure",
   "targets": [
-    "object"
+    "face"
   ],
   "value": {
     "kind": "string",
@@ -17,7 +17,7 @@
   },
   "geometrySelector": {
     "kinds": [
-      "object"
+      "face"
     ]
   }
 }

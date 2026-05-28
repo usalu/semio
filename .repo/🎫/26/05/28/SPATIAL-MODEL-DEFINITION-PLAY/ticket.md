@@ -1,29 +1,63 @@
 # Spatial Model Definition Play
 
+**Status:** Closed  
 **Repo MCP:** unavailable in this session (`ticket_open` / `ticket_close` / `repo://goals` not registered).
 
 ## Summary
 
-Replaced the legacy view chrome with model-definition selection and transformation dropdowns so play matches the new spatial spec (model definitions + `from_*` / `to_*` transformations, no views).
+When a non-builtin model definition is active, the spatial stack scopes selection/filter kinds, interactions, actions, selection commands, attributes, properties, construct MATCH/CALL, and runtime action execution to that definition's asset catalog.
 
-## Changes
+## Scope layer (core)
 
-- **Core:** `GEOMETRY_MODEL_DEFINITION_ID`, `isGeometryModelDefinition`, manifest parsing for `spatial.modelDefinition/v1`, `listTransformationsIntoModelDefinition` / `listTransformationsFromModelDefinition`, removed `views` from runtime/query/effect paths, renamed `activeViewId` → `activeModelDefinitionId`, `selectionOperationUsesModelObjects`.
-- **Renderer:** InteractionRepl aside now lists model definitions, transform-from (incoming) and transform-to (outgoing) selectors; picking/scene visibility keyed off model definition instead of view id; `onApplyTransformation` callback.
-- **Play:** Wired controlled model definition state, transformation apply overwrites model + switches target definition; renamed Save (View) → Save (Model).
-- **Query / machine-stately / kernel-brepjs:** Thread `activeModelDefinitionId` through state engine send and construct query env (no views).
+- `resolveModelDefinitionScope`, `list*ForModelDefinition`, `modelDefinitionSelectionEntityKinds`, `modelDefinitionUsesGeometryPicking`
+- `buildTypologyToEntityKindMapForModelDefinition` — AEC typologies map to `object` for construct
+- `listApplicablePropertyDefinitionsForModelDefinition`
+- `assertActionAvailableInModelDefinition` — single guard used by `ActionRegistry.run`, `applyEffectAsync`, `runSelectionOperationInteraction`
+- Selection operations built from action assets per definition folder
 
-## Tests
+## Runtime enforcement
 
-- `@spatial/js-renderer-r3f` index vitest: **8/8 passed**
-- `@spatial/js-query` index vitest: **34/34 passed**
-- `@spatial/js-core`: transformation + manifest tests pass; other failures pre-exist in ongoing spatial refactor (typology catalog counts, transform.move interaction ids, etc.)
+- **ActionRegistry.run** — rejects out-of-scope actions (geometry actions under energy, etc.)
+- **applyEffectAsync** — guards transition effect actions + passes `activeModelDefinitionId`
+- **runSelectionOperationInteraction** — scoped lookup + guard
+- **Construct query** — parse-time typology validation per MD; MATCH seeds object rows by `typologyId`; CALL guarded
+
+## Renderer / Play
+
+- Pick targets: topology vs typology objects filtered by MD entity kinds + typology ownership
+- REPL: scoped interactions, actions, selection commands; selection command buttons in aside
+- Selection accept defaults to MD entity kinds; pick-kind toggle dimming uses mapped accept set
+- MD switch resets toggles, selection, interaction, `lastFinalizedInteractionId`
+- `SelectionAttributesPanel` + `SelectionPropertiesPanel` in play aside (scoped defs)
+- Play: `scopedInteractions`, guarded interaction load, construct panel seeds from active MD typologies
+## Kernel
+
+- STEP export derives properties via `listApplicablePropertyDefinitionsForModelDefinition(modelId, …)`
+
+- `interactions` prop removed from `InteractionRepl` / `PlaySession` (scoped list resolved inside REPL from `activeModelDefinitionId`)
+
+## Machine-stately
+
+- `buildSpatialStatelyMachineCatalogView` requires `{ modelDefinitionId }`
+- `script.ts generate` passes `--model-definition` (default `builtin`)
+
+## Tests (verified)
+
+- `@spatial/js-query`: **42/42**
+- `@spatial/js-renderer-r3f`: **10/10**
+- `@spatial/js-machine-stately`: **4/4**
+
+## Legacy removed
+
+- Unscoped: `listSpatialInteractions`, `resolveSpatialInteractionKey`, `buildTypologyToEntityKindMap`, `listApplicablePropertyDefinitions`, `listSelectionOperationInteractionDefs`, `runViewDerivedCall`, view-derived construct CALL
+- `InteractionRepl` no longer accepts host `interactions` list
 
 ## Files
 
 - `spatial/js/core/index.ts`
+- `spatial/js/query/index.ts`
 - `spatial/js/renderer-r3f/index.tsx`
 - `spatial/js/renderer-r3f/play/main.tsx`
-- `spatial/js/query/index.ts`
-- `spatial/js/machine-stately/index.ts`
 - `spatial/js/kernel-brepjs/index.ts`
+- `spatial/js/machine-stately/index.ts`
+- `spatial/js/machine-stately/script.ts`

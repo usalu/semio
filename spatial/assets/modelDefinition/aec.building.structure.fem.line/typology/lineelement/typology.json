@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Line Element",
   "description": "Derived structural element represented with line mesh.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "structure.linefem.createLineElementFrom2PointsAndHeight",
+    "structure.linefem.createLineElementFromCurveAndHeight",
+    "structure.linefem.createLineElementFromSurface",
+    "structure.linefem.constructLineElement"
+  ],
+  "interactions": [
+    "structure.linefem.constructLineElement"
+  ],
   "primitiveKinds": [
     "solid"
   ]

@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "structure.structure.constructReinforcedConcreteExternalWall",
+  "version": "1.0.0",
+  "label": "Construct Reinforced Concrete External Wall",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

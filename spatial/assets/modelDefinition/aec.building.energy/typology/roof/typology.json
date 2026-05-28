@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Roof",
   "description": "Highest external horizontal surface.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "energy.energy.createRoofFrom2PointsAndHeight",
+    "energy.energy.createRoofFromCurveAndHeight",
+    "energy.energy.createRoofFromSurface",
+    "energy.energy.constructRoof"
+  ],
+  "interactions": [
+    "energy.energy.constructRoof"
+  ],
   "primitiveKinds": [
     "solid"
   ]

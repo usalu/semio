@@ -4,8 +4,15 @@
   "version": "1.0.0",
   "label": "Hull",
   "description": "All external surfaces joined to a closed shell.",
-  "actions": [],
-  "interactions": [],
+  "actions": [
+    "energy.energy.createHullFrom2PointsAndHeight",
+    "energy.energy.createHullFromCurveAndHeight",
+    "energy.energy.createHullFromSurface",
+    "energy.energy.constructHull"
+  ],
+  "interactions": [
+    "energy.energy.constructHull"
+  ],
   "properties": [
     "builtin.volume",
     "energy.heatedvolume"

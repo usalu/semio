@@ -4,14 +4,19 @@ import { createRoot } from "react-dom/client";
 import {
 	DocumentHistory,
 	GEOMETRY_MODEL_DEFINITION_ID,
+	applyTransformation,
+	isGeometryModelDefinition,
 	isInteractionSessionActive,
 	listModelDefinitionManifests,
 	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
-	listSpatialInteractions,
+	listSpatialInteractionsForModelDefinition,
 	loadSpatialInteraction,
+	modelDefinitionSelectionEntityKinds,
+	modelDefinitionUsesGeometryPicking,
 	parseModelJson,
 	qualifiedTransformationId,
+	resolveModelDefinitionScope,
 	type InteractionSnapshot,
 	type InteractionRuntime,
 	type InteractionSpec,
@@ -34,6 +39,8 @@ import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
 	InteractionRepl,
+	SelectionAttributesPanel,
+	SelectionPropertiesPanel,
 	replDisplayedSelectionTargets,
 	r3fPreviewKernel,
 	useDocumentHistory,
@@ -41,11 +48,35 @@ import {
 } from "../index";
 
 //#region 🔖ConstructQueryPanel
-/** @emoji 🔍 Play-only `construct` runner bound to the live `InteractionRuntime`. */
-function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime }) {
-	const [text, setText] = useState("MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id LIMIT 8");
+function defaultConstructQueryForModelDefinition(modelDefinitionId: string): string {
+	if (isGeometryModelDefinition(modelDefinitionId)) {
+		return "MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id LIMIT 8";
+	}
+	const scope = resolveModelDefinitionScope(modelDefinitionId);
+	const typology = scope.typologies[0];
+	if (typology) return `MATCH (o:Object {typology: '${typology.id}'}) RETURN o.id LIMIT 8`;
+	return "MATCH (o:Object) RETURN o.id LIMIT 8";
+}
+
+/** @emoji 🔍 Play-only `construct` runner scoped to the active model definition. */
+function ConstructQueryPanel({
+	runtime,
+	activeModelDefinitionId,
+}: {
+	readonly runtime: InteractionRuntime;
+	readonly activeModelDefinitionId: string;
+}) {
+	const defaultQuery = useMemo(
+		() => defaultConstructQueryForModelDefinition(activeModelDefinitionId),
+		[activeModelDefinitionId],
+	);
+	const [text, setText] = useState(defaultQuery);
 	const [out, setOut] = useState("");
 	const [busy, setBusy] = useState(false);
+	useEffect(() => {
+		setText(defaultQuery);
+		setOut("");
+	}, [defaultQuery]);
 	const run = useCallback(async () => {
 		const q = text.trim();
 		if (!q) return;
@@ -393,11 +424,36 @@ function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
 	return out;
 }
 
+function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
+	if (models[definitionId] || isGeometryModelDefinition(definitionId)) return models as Record<string, Model>;
+	const fromBuiltin = listTransformationsIntoModelDefinition(definitionId).find((row) =>
+		isGeometryModelDefinition(row.source.modelDefinition),
+	);
+	const geometry = models[GEOMETRY_MODEL_DEFINITION_ID];
+	if (!fromBuiltin || !geometry) return models as Record<string, Model>;
+	return { ...models, [definitionId]: applyTransformation(fromBuiltin, geometry) };
+}
+
+function pickGeometryForModelDefinition(
+	models: Readonly<Record<string, Model>>,
+	activeModelDefinitionId: string,
+	liveModel: Model,
+): Model {
+	if (isGeometryModelDefinition(activeModelDefinitionId)) {
+		return models[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+	}
+	if (modelDefinitionUsesGeometryPicking(activeModelDefinitionId)) {
+		return models[activeModelDefinitionId] ?? models[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+	}
+	return liveModel;
+}
+
 const PLAY_SELECT_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" } as const;
 
 //#region 🔖PlayModelSpacePanel
 interface PlayModelSpacePanelProps {
 	readonly activeModelDefinitionId: string;
+	readonly modelSpaceCount: number;
 	readonly onActiveModelDefinitionId: (value: string) => void;
 	readonly onApplyTransformation: (spec: TransformationSpec) => void;
 }
@@ -405,10 +461,16 @@ interface PlayModelSpacePanelProps {
 /** @emoji 🌌 Play aside: active model definition + transform to/from dropdowns. */
 function PlayModelSpacePanel({
 	activeModelDefinitionId,
+	modelSpaceCount,
 	onActiveModelDefinitionId,
 	onApplyTransformation,
 }: PlayModelSpacePanelProps) {
 	const modelDefinitions = useMemo(() => listModelDefinitionManifests(), []);
+	const scope = useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId), [activeModelDefinitionId]);
+	const selectionKinds = useMemo(
+		() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId),
+		[activeModelDefinitionId],
+	);
 	const transformsTo = useMemo(
 		() => listTransformationsFromModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
@@ -417,10 +479,14 @@ function PlayModelSpacePanel({
 		() => listTransformationsIntoModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
 	);
+	const viewObjectCount = useMemo(
+		() => (isGeometryModelDefinition(activeModelDefinitionId) ? 0 : scope.typologies.length),
+		[activeModelDefinitionId, scope.typologies.length],
+	);
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
 			<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Model</span>
+				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Model definition</span>
 				<select
 					value={activeModelDefinitionId}
 					onChange={(e) => onActiveModelDefinitionId(e.target.value || GEOMETRY_MODEL_DEFINITION_ID)}
@@ -433,6 +499,21 @@ function PlayModelSpacePanel({
 					))}
 				</select>
 			</label>
+			<span style={{ opacity: 0.75, lineHeight: 1.4 }}>
+				{scope.typologies.length} typolog{scope.typologies.length === 1 ? "y" : "ies"}
+				{" · "}
+				{scope.interactions.length} interaction{scope.interactions.length === 1 ? "" : "s"}
+				{" · "}
+				{scope.attributeDefinitions.length} attribute{scope.attributeDefinitions.length === 1 ? "" : "s"}
+				{" · "}
+				{modelSpaceCount} linked model{modelSpaceCount === 1 ? "" : "s"}
+			</span>
+			<span style={{ opacity: 0.75 }}>Select: {selectionKinds.join(", ")}</span>
+			{!isGeometryModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
+				<span style={{ opacity: 0.75 }}>
+					{viewObjectCount} typolog{viewObjectCount === 1 ? "y" : "ies"} in view
+				</span>
+			) : null}
 			{transformsTo.length ? (
 				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Transform To</span>
@@ -486,7 +567,6 @@ function PlayModelSpacePanel({
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
-	readonly interactions: ReturnType<typeof listSpatialInteractions>;
 	readonly interactionId: string;
 	readonly spec: InteractionSpec;
 	readonly onInteractionId: (id: string) => void;
@@ -505,12 +585,13 @@ interface PlaySessionProps {
 	readonly modelDefinitionRevision: number;
 	readonly onModelDefinitionRevision: (revision: number) => void;
 	readonly onApplyTransformation: (spec: TransformationSpec) => void;
+	readonly pickGeometry: Model;
+	readonly onDocumentModelChange: (model: Model) => void;
 	readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
 function PlaySession({
-	interactions,
 	interactionId,
 	spec,
 	onInteractionId,
@@ -529,6 +610,8 @@ function PlaySession({
 	modelDefinitionRevision,
 	onModelDefinitionRevision,
 	onApplyTransformation,
+	pickGeometry,
+	onDocumentModelChange,
 	onSnapshot,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
@@ -549,14 +632,13 @@ function PlaySession({
 		() => (
 			<>
 				{asideExtra}
-				<ConstructQueryPanel runtime={rt} />
+				<ConstructQueryPanel runtime={rt} activeModelDefinitionId={activeModelDefinitionId} />
 			</>
 		),
-		[asideExtra, rt],
+		[asideExtra, rt, activeModelDefinitionId],
 	);
 	return (
 		<InteractionRepl
-			interactions={interactions}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={onInteractionId}
@@ -564,6 +646,8 @@ function PlaySession({
 			history={history}
 			document={documentModel}
 			geometry={documentModel.model}
+			pickGeometry={pickGeometry}
+			onDocumentModelChange={onDocumentModelChange}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
 			activeModelDefinitionId={activeModelDefinitionId}
@@ -584,7 +668,11 @@ function PlaySession({
 
 //#region 🔖PlayApp
 function PlayApp() {
-	const interactions = useMemo(() => listSpatialInteractions(), []);
+	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(GEOMETRY_MODEL_DEFINITION_ID);
+	const scopedInteractions = useMemo(
+		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId),
+		[activeModelDefinitionId],
+	);
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
@@ -594,7 +682,6 @@ function PlayApp() {
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
-	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(GEOMETRY_MODEL_DEFINITION_ID);
 	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
 	const [interactionSelection, setInteractionSelection] = useState<readonly SelectionTarget[]>([]);
 	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
@@ -608,6 +695,15 @@ function PlayApp() {
 		() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"],
 		[brepjsKernel],
 	);
+
+	useEffect(() => {
+		if (!interactionId) return;
+		if (!scopedInteractions.some((row) => row.id === interactionId)) setInteractionId("");
+	}, [activeModelDefinitionId, interactionId, scopedInteractions]);
+
+	useEffect(() => {
+		setModelsByDefinitionId((prev) => ensureDerivedModelInSpace(prev, activeModelDefinitionId));
+	}, [activeModelDefinitionId]);
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -630,10 +726,17 @@ function PlayApp() {
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
-	const activeModel = useMemo(
-		() => modelsByDefinitionId[activeModelDefinitionId] ?? modelsByDefinitionId[GEOMETRY_MODEL_DEFINITION_ID]!,
+	const modelsForActiveDefinition = useMemo(
+		() => ensureDerivedModelInSpace(modelsByDefinitionId, activeModelDefinitionId),
 		[activeModelDefinitionId, modelsByDefinitionId],
 	);
+
+	const activeModel = useMemo(() => {
+		const resolved =
+			modelsForActiveDefinition[activeModelDefinitionId] ?? modelsForActiveDefinition[GEOMETRY_MODEL_DEFINITION_ID];
+		if (!resolved) throw new Error("Play model space missing builtin geometry.");
+		return resolved;
+	}, [activeModelDefinitionId, modelsForActiveDefinition]);
 
 	const documentModel = useMemo((): ModelDocument => {
 		const model = Model.fromJSON(activeModel.toJSON());
@@ -641,10 +744,10 @@ function PlayApp() {
 	}, [activeModel, modelDefinitionRevision]);
 	const liveModel = documentModel.model;
 
-	const flushedModelsByDefinitionId = useMemo(
-		() => flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel),
-		[activeModelDefinitionId, liveModel, modelsByDefinitionId],
-	);
+	const flushedModelsByDefinitionId = useMemo(() => {
+		const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
+		return ensureDerivedModelInSpace(flushed, activeModelDefinitionId);
+	}, [activeModelDefinitionId, liveModel, modelsByDefinitionId]);
 
 	const playModelSpace = useMemo(
 		() => modelSpaceFromRecord(flushedModelsByDefinitionId),
@@ -656,13 +759,31 @@ function PlayApp() {
 		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
 	);
 
+	const pickGeometry = useMemo(
+		() => pickGeometryForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel),
+		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
+	);
+
 	const handleActiveModelDefinitionChange = useCallback(
 		(nextId: string) => {
-			setModelsByDefinitionId((prev) => flushModelsRecord(prev, activeModelDefinitionId, liveModel));
+			setModelsByDefinitionId((prev) => {
+				const flushed = flushModelsRecord(prev, activeModelDefinitionId, liveModel);
+				return ensureDerivedModelInSpace(flushed, nextId);
+			});
 			setActiveModelDefinitionId(nextId);
 			setModelDefinitionRevision((r) => r + 1);
+			setRendererSelection([]);
+			setInteractionSelection([]);
 		},
 		[activeModelDefinitionId, liveModel],
+	);
+
+	const handleModelAttributesChange = useCallback(
+		(model: Model) => {
+			setModelsByDefinitionId((prev) => ({ ...prev, [activeModelDefinitionId]: Model.fromJSON(model.toJSON()) }));
+			setModelDefinitionRevision((r) => r + 1);
+		},
+		[activeModelDefinitionId],
 	);
 
 	const interactionActive = useMemo(
@@ -679,9 +800,23 @@ function PlayApp() {
 		() => replDisplayedSelectionTargets(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection),
 		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
+	const selectionKinds = useMemo(
+		() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)),
+		[activeModelDefinitionId],
+	);
+
+	const selectionInScope = useMemo(
+		() =>
+			currentSelection.filter((target) => {
+				if (target.kind === "object" && target.editable === false) return selectionKinds.has("object");
+				return selectionKinds.has(target.kind);
+			}),
+		[currentSelection, selectionKinds],
+	);
+
 	const selectedGeometry = useMemo(
-		() => currentSelection.filter((target) => target.kind !== "object"),
-		[currentSelection],
+		() => selectionInScope.filter((target) => target.kind !== "object" || target.editable !== false),
+		[selectionInScope],
 	);
 	const exportBaseName = useMemo(() => {
 		if (loadedRawName) return fileStem(loadedRawName);
@@ -728,10 +863,10 @@ function PlayApp() {
 	const handleSaveSelected = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
-			{ model: selectRawModel(liveModel, selectedGeometry) },
-			`Saved ${selectedGeometry.length} selected item(s).`,
+			{ model: selectRawModel(liveModel, selectionInScope) },
+			`Saved ${selectionInScope.length} selected item(s) for ${activeModelDefinitionId}.`,
 		);
-	}, [exportBaseName, liveModel, saveBundle, selectedGeometry]);
+	}, [activeModelDefinitionId, exportBaseName, liveModel, saveBundle, selectionInScope]);
 
 	const handleSaveInPlay = useCallback(async () => {
 		try {
@@ -790,6 +925,7 @@ function PlayApp() {
 		<>
 			<PlayModelSpacePanel
 				activeModelDefinitionId={activeModelDefinitionId}
+				modelSpaceCount={Object.keys(playModelSpace.models).length}
 				onActiveModelDefinitionId={handleActiveModelDefinitionChange}
 				onApplyTransformation={handleApplyTransformation}
 			/>
@@ -826,28 +962,35 @@ function PlayApp() {
 					Precise
 				</button>
 			</div>
-			<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-				Geometry asset
-				<select
-					value={geometryAssetId}
-					onChange={(e) => handleGeometryAssetChange(e.target.value)}
-					style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-				>
-					<option value="">No asset</option>
-					{GEOMETRY_ASSETS.map((g) => (
-						<option key={g.id} value={g.id}>
-							[{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
-						</option>
-					))}
-				</select>
-			</label>
+			{isGeometryModelDefinition(activeModelDefinitionId) ? (
+				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Geometry asset</span>
+					<select
+						value={geometryAssetId}
+						onChange={(e) => handleGeometryAssetChange(e.target.value)}
+						style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+					>
+						<option value="">No asset</option>
+						{GEOMETRY_ASSETS.map((g) => (
+							<option key={g.id} value={g.id}>
+								[{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
+							</option>
+						))}
+					</select>
+				</label>
+			) : (
+				<span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
+					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>builtin</code>. Switch model definition to builtin to
+					change source geometry; derived models share it via transforms.
+				</span>
+			)}
 			<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
 				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Files</span>
 				<div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
 					<button
 						type="button"
 						onClick={() => void handleSaveSelected()}
-						disabled={selectedGeometry.length === 0}
+						disabled={selectionInScope.length === 0}
 						style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
 					>
 						Save (Selected)
@@ -868,9 +1011,6 @@ function PlayApp() {
 		</>
 	);
 
-	if (!interactions.length) {
-		return <div style={{ padding: 16, color: "#f88" }}>No spatial interactions registered.</div>;
-	}
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
@@ -884,7 +1024,6 @@ function PlayApp() {
 
 	return (
 		<PlaySession
-			interactions={interactions}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={handleInteractionPick}
@@ -903,6 +1042,8 @@ function PlayApp() {
 			modelDefinitionRevision={modelDefinitionRevision}
 			onModelDefinitionRevision={setModelDefinitionRevision}
 			onApplyTransformation={handleApplyTransformation}
+			pickGeometry={pickGeometry}
+			onDocumentModelChange={handleModelAttributesChange}
 			onSnapshot={handleSnapshotChange}
 		/>
 	);
