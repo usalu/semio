@@ -127,16 +127,20 @@ A typology has a set of allowed primitive kinds.
 Every typology has one or many actions to construct an object of that typology.
 Every typology has one or many interactions to construct an object of that typology.
 
-### Action
+## Action
 
 An action is a declarative headless operation document for a typology. It describes how the runtime reads, writes, derives, or transforms spatial data by invoking predefined capabilities and variables.
 Actions can call other actions.
+When an action only affects one typologie it is part of that typology.
+When an action affects more than one typologe then it is part of the model defintion.
 
-### Interaction
+## Interaction
 
 An interaction is a declarative static state machine for the renderer for a typology. It describes prompts, picks, transient state, previews, and transitions that usually resolve into one or more actions.
 Interactions can call other actions.
 A state can call another interaction, then the current interaction is paused until the called interaction finishes.
+When an interaction only affects one typologie it is part of that typology.
+When an interaction affects more than one typologe then it is part of the model defintion.
 
 ## AttributeDefinition
 

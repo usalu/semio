@@ -1201,15 +1201,14 @@ function rowVarsToEnv(
 	model: Model,
 	meta: import("@spatial/js-core").AttributeStore,
 	preview: SpatialKernel,
-	views?: null,
-	activeViewId?: string | null,
+	activeModelDefinitionId?: string | null,
 ): ExprEnv {
 	const vars: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(row)) {
 		if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
 		else vars[k] = v;
 	}
-	return { context: {}, vars, model, metadata: meta, views, activeViewId, preview };
+	return { context: {}, vars, model, metadata: meta, activeModelDefinitionId, preview };
 }
 
 /** @emoji 🪞 View-derived CALL targets are not shipped; use `transformation.*` qualified ids instead. */
@@ -1290,7 +1289,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				for (const row of expandPattern(ctx.model, ctx.kernel, index, st.pattern)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views, ctx.activeViewId));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1300,14 +1299,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "with") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
+				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId);
 				const out: Row = { ...r };
 				for (const p of st.projections) {
 					const v = evalExpr(p.expr, env);
 					if (p.alias) out[p.alias] = v;
 				}
 				if (st.where) {
-					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views));
+					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId));
 					if (!ok) continue;
 				}
 				next.push(out);
@@ -1336,8 +1335,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 								kernel: ctx.kernel,
 								preview: ctx.kernel,
 								model: ctx.model,
-								views: ctx.views,
-								activeViewId: ctx.activeViewId ?? null,
+								activeModelDefinitionId: ctx.activeModelDefinitionId ?? null,
 							});
 				const nr = { ...r };
 				for (const y of st.yieldItems) {
@@ -1350,13 +1348,13 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "unwind") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
+				const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId);
 				const src = evalExpr(st.source, env);
 				if (!Array.isArray(src)) continue;
 				for (const item of src) {
 					const merged: Row = { ...r, [st.alias]: item };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views, ctx.activeViewId));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1373,7 +1371,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 	let out = rows;
 	if (ret.limit !== undefined) out = out.slice(0, ret.limit);
 	for (const r of out) {
-		const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.views);
+		const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId);
 		const o: ConstructQueryRow = {};
 		for (let i = 0; i < ret.projections.length; i++) {
 			const p = ret.projections[i]!;

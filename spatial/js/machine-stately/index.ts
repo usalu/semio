@@ -271,8 +271,8 @@ export class StatelyStateEngine implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		views?: null,
 		preview?: import("@spatial/js-core").SpatialPreviewKernel,
+		activeModelDefinitionId?: string | null,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
 			this.rebuildMachine(this.interactionState);
@@ -285,8 +285,8 @@ export class StatelyStateEngine implements StateEngine {
 			kernel,
 			actions,
 			model,
-			views,
 			preview,
+			activeModelDefinitionId ?? null,
 		);
 		if (!r.ok) return { ok: false };
 		this.interactionState = r.nextState;

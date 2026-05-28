@@ -48,7 +48,7 @@ import {
 	vertex as brepVertex,
 	vertexPosition,
 	wireLoop,
-	exportSTEPConfigured,
+	exportSTEP,
 	importSTEP,
 } from "brepjs";
 import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepjs";
@@ -85,6 +85,8 @@ import {
 	stepSpatialFileHeader,
 	StepEntityWriter,
 	derivePropertyValue,
+	type ObjectRef,
+	type TypologyRef,
 } from "@spatial/js-core";
 export { kernelGeometry };
 // #endregion 📥Imports
@@ -1211,16 +1213,14 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 		ctx: {
 			readonly model: Model;
 			readonly preview: SpatialPreviewKernel;
-			readonly views?: null;
-			readonly activeViewId?: string | null;
+			readonly activeModelDefinitionId?: string | null;
 		},
 	): Promise<ActionResult> | ActionResult {
 		return executeBuiltinActionCapability(actionId, params, args, {
 			kernel: this as unknown as SpatialKernel,
 			preview: ctx.preview,
 			model: ctx.model,
-			views: ctx.views,
-			activeViewId: ctx.activeViewId,
+			activeModelDefinitionId: ctx.activeModelDefinitionId,
 		}) as Promise<ActionResult> | ActionResult;
 	}
 }
@@ -2074,7 +2074,7 @@ class BrepjsWasmEngine {
 			const modelPdId = writer.emitNew(`PRODUCT_DEFINITION(${stepEscape(modelId)}, 'Model', #${formationId}, #${contextId})`);
 			writer.emitNew(`NEXT_ASSEMBLY_USAGE_OCCURRENCE(${stepEscape(`MS_${modelId}`)}, 'Link', $, #${msPdId}, #${modelPdId}, $)`);
 			const modelJson = model.toJSON();
-			const { geometry, metadata, ...modelSansGeometry } = modelJson;
+			const { geometry, ...modelSansGeometry } = modelJson;
 			emitSpatialUdaProperty(writer, modelPdId, `spatial.model.${modelId}`, JSON.stringify(modelSansGeometry), "System_Generated");
 			emitSpatialUdaProperty(writer, modelPdId, `spatial.geometry.${modelId}`, JSON.stringify(geometry), "System_Generated");
 			for (const [entityId, fields] of model.metadata.entries()) {
@@ -2097,17 +2097,20 @@ class BrepjsWasmEngine {
 					const hash = hashSolidRecord(solid);
 					let brepAnchor = hashToBrepRoot.get(hash);
 					if (brepAnchor === undefined) {
-						const brep = this.solidForSolidRecord(model, solid);
+						const brep = this.solids.get(solid.id) ?? this.solidForSolidRecord(model, solid);
 						if (brep) {
-							const chunk = unwrap(exportSTEPConfigured([{ shape: brep, name: String(solid.id) }], { schema: 242 }));
-							const idMap = mergeStepDataChunk(chunk, writer);
-							const rootOld = [...idMap.keys()].find((oldId) => {
-								const body = chunk.match(new RegExp(`#${oldId}\\s*=\\s*([^;]+);`, "m"))?.[1]?.trim() ?? "";
-								return body.startsWith("SHAPE_REPRESENTATION(") || body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(");
-							});
-							brepAnchor = rootOld !== undefined ? idMap.get(rootOld)! : writer.alloc();
-							hashToBrepRoot.set(hash, brepAnchor);
-							emitSpatialUdaProperty(writer, brepAnchor, "Spatial_Hash", hash, "System_Generated");
+							const stepRes = exportSTEP([{ shape: brep, name: String(solid.id) }]);
+							if (isOk(stepRes)) {
+								const chunk = await stepRes.value.text();
+								const idMap = mergeStepDataChunk(chunk, writer);
+								const rootOld = [...idMap.keys()].find((oldId) => {
+									const body = chunk.match(new RegExp(`#${oldId}\\s*=\\s*([^;]+);`, "m"))?.[1]?.trim() ?? "";
+									return body.startsWith("SHAPE_REPRESENTATION(") || body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(");
+								});
+								brepAnchor = rootOld !== undefined ? idMap.get(rootOld)! : writer.alloc();
+								hashToBrepRoot.set(hash, brepAnchor);
+								emitSpatialUdaProperty(writer, brepAnchor, "Spatial_Hash", hash, "System_Generated");
+							}
 						}
 					}
 					if (brepAnchor !== undefined) {
@@ -2773,6 +2776,7 @@ if (import.meta.vitest) {
 			const restored = space.models.roundtrip!;
 			expect(restored.toJSON()).toEqual(before);
 			expect(restored.metadata.get(faceId)?.exposure).toBe("external");
+			await kernel.syncSolidsFromModel(restored);
 			expect(await kernel.volume(solid)).toBeGreaterThan(0);
 		});
 

@@ -364,6 +364,13 @@ export class AttributeStore {
     for (const row of rows ?? []) store.byId.set(row.id, { ...row.fields });
     return store;
   }
+
+  /** @emoji 🧭 Replaces all attribute rows; bumps parent revision when `bumpRevision` is true. */
+  loadSnapshot(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[], bumpRevision = true): void {
+    this.byId.clear();
+    for (const row of rows ?? []) this.byId.set(row.id, { ...row.fields });
+    if (bumpRevision && rows.length > 0) this.bumpRevision();
+  }
 }
 
 /** @emoji 🪪 `evalExpr` `field` target: a bound geometry row entity (`kind` + `id`). */
@@ -453,8 +460,7 @@ export interface ExprEnv {
   readonly vars?: Record<string, unknown>;
   readonly model?: Model;
   readonly metadata?: AttributeStore;
-  readonly views?: null;
-  readonly activeViewId?: string | null;
+  readonly activeModelDefinitionId?: string | null;
   readonly kernel?: SpatialKernel;
   readonly actionId?: string;
   readonly preview: SpatialPreviewKernel;
@@ -467,8 +473,7 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
     params: base.params,
     vars: { ...base.vars, ...vars },
     model: base.model,
-    views: base.views,
-    activeViewId: base.activeViewId,
+    activeModelDefinitionId: base.activeModelDefinitionId,
     kernel: base.kernel,
     actionId: base.actionId,
     metadata: base.metadata,
@@ -500,8 +505,7 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
       const model = env.model;
       if (model && isModelEntityRef(o)) {
         return readModelEntityProperty(model, env.metadata, o.kind, o.id, expr.name, {
-          views: env.views,
-          activeViewId: env.activeViewId,
+          activeModelDefinitionId: env.activeModelDefinitionId,
           preview: env.preview,
         });
       }
@@ -1056,12 +1060,7 @@ export class Model {
     g.faces = recordsById(geo.faces ?? []);
     g.shells = recordsById(geo.shells ?? []);
     g.solids = recordsById(geo.solids ?? []);
-    if (j.metadata?.length) {
-      const loaded = AttributeStore.fromJSON(j.metadata);
-      for (const [id, fields] of loaded.entries()) {
-        for (const [key, value] of Object.entries(fields)) g.metadata.setField(id, key, value);
-      }
-    }
+    if (j.metadata?.length) g.metadata.loadSnapshot(j.metadata, false);
     return g;
   }
 
@@ -1308,6 +1307,13 @@ export function stepParseFirstString(entityBody: string): string | null {
   return m[1]!.replace(/''/g, "'");
 }
 
+/** @emoji 🪜 Extracts the value string from `DESCRIPTIVE_REPRESENTATION_ITEM('Value', 'payload')`. */
+export function stepParseDescriptivePayload(entityBody: string): string | null {
+  const matches = [...entityBody.matchAll(/'((?:''|[^'])*)'/g)];
+  if (matches.length >= 2) return matches[1]![1]!.replace(/''/g, "'");
+  return stepParseFirstString(entityBody);
+}
+
 /** @emoji 🪜 Reads `spatial.*` UDA JSON payloads keyed by property name from STEP entities. */
 export function parseSpatialUdaPayloads(entities: StepEntityMap): Readonly<Record<string, string>> {
   const out: Record<string, string> = {};
@@ -1326,7 +1332,7 @@ export function parseSpatialUdaPayloads(entities: StepEntityMap): Readonly<Recor
     const reprBody = entities.get(refs[1]!);
     const itemRef = reprBody?.match(/#(\d+)/g)?.map((m) => Number(m.slice(1)))?.[0];
     const itemBody = itemRef !== undefined ? entities.get(itemRef) : undefined;
-    const payload = itemBody ? stepParseFirstString(itemBody) : reprBody ? stepParseFirstString(reprBody) : null;
+    const payload = itemBody ? stepParseDescriptivePayload(itemBody) : reprBody ? stepParseDescriptivePayload(reprBody) : null;
     if (payload) out[propName] = payload;
   }
   return out;
@@ -1411,7 +1417,6 @@ export function modelSpaceFromSpatialUda(uda: Readonly<Record<string, string>>, 
       geometry: geometryJson ? (JSON.parse(geometryJson) as KernelGeometryJson) : modelJson.geometry,
     };
     space.models[modelId] = Model.fromJSON(full);
-    applySpatialAttributesFromUda(space.models[modelId]!, uda);
   }
   return space;
 }
@@ -1425,8 +1430,7 @@ export function readModelEntityProperty(
   id: string,
   name: string,
   opts?: {
-    readonly views?: null;
-    readonly activeViewId?: string | null;
+    readonly activeModelDefinitionId?: string | null;
     readonly preview?: SpatialPreviewKernel;
   },
 ): unknown {
@@ -1489,9 +1493,9 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
-/** @emoji 🏷️ Parsed model-definition manifest (`spatial.extension/v1` envelope on disk). */
+/** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
-  readonly schema: "spatial.extension/v1";
+  readonly schema: "spatial.modelDefinition/v1";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -1499,15 +1503,23 @@ export interface ModelDefinitionManifest {
   readonly kinds: readonly string[];
 }
 
+/** @emoji 🧭 Builtin geometry model definition id (raw kernel topology editing). */
+export const GEOMETRY_MODEL_DEFINITION_ID = "builtin";
+
+/** @emoji 🧭 True when the active definition is geometry edit (`builtin`) rather than typology objects. */
+export function isGeometryModelDefinition(modelDefinitionId: string | null | undefined): boolean {
+  return modelDefinitionId == null || modelDefinitionId === GEOMETRY_MODEL_DEFINITION_ID;
+}
+
 /** @emoji 🧾 Parses a model-definition manifest JSON or returns `null`. */
 export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManifest | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.extension/v1") return null;
+  if (r.schema !== "spatial.modelDefinition/v1" && r.schema !== "spatial.extension/v1") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.kinds) || r.kinds.length === 0) return null;
   return {
-    schema: "spatial.extension/v1",
+    schema: "spatial.modelDefinition/v1",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -1936,6 +1948,16 @@ export function loadTransformation(qualifiedId: string): TransformationSpec | nu
   return shippedTransformationCatalog().find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qualifiedId) ?? null;
 }
 
+/** @emoji 🔄 Lists transformations whose target is `modelDefinitionId` (derive current definition from source). */
+export function listTransformationsIntoModelDefinition(modelDefinitionId: string): readonly TransformationSpec[] {
+  return listModelDefinitionTransformations().filter((row) => row.target.modelDefinition === modelDefinitionId);
+}
+
+/** @emoji 🔄 Lists transformations whose source is `modelDefinitionId` (derive another definition from current). */
+export function listTransformationsFromModelDefinition(modelDefinitionId: string): readonly TransformationSpec[] {
+  return listModelDefinitionTransformations().filter((row) => row.source.modelDefinition === modelDefinitionId);
+}
+
 /** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
 export function applyTransformation(spec: TransformationSpec, source: Model): Model {
   const target = new Model();
@@ -2157,8 +2179,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
     ctx: {
       readonly model: Model;
       readonly preview: SpatialPreviewKernel;
-      readonly views?: null;
-      readonly activeViewId?: string | null;
+      readonly activeModelDefinitionId?: string | null;
     },
   ): Promise<ActionResult> | ActionResult;
   executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }>;
@@ -2236,11 +2257,10 @@ export function appendCommittedMeshFaceToModel(model: Model, mesh: MeshTransfer,
   applyModelDiff(model, math.meshFaceModelDiff(mesh, idTag));
 }
 
-/** @emoji 🔌 Optional query context for derived-view resolution in kernel adapters. */
+/** @emoji 🔌 Optional query context for kernel adapters. */
 export interface KernelQueryContext {
   readonly model: Model;
-  readonly views?: null;
-  readonly activeViewId?: string | null;
+  readonly activeModelDefinitionId?: string | null;
 }
 // #endregion 🔌SpatialKernelInterface
 
@@ -2264,8 +2284,7 @@ export type ActionFn<TParams = Record<string, unknown>, TData = unknown> = (
     readonly kernel: SpatialKernel;
     readonly preview: SpatialPreviewKernel;
     readonly model: Model;
-    readonly views?: null;
-    readonly activeViewId?: string | null;
+    readonly activeModelDefinitionId?: string | null;
   },
 ) => Promise<ActionResult<TData>> | ActionResult<TData>;
 
@@ -2549,8 +2568,7 @@ export async function executeBuiltinActionCapability(
     readonly kernel: SpatialKernel;
     readonly preview: SpatialPreviewKernel;
     readonly model: Model;
-    readonly views?: null;
-    readonly activeViewId?: string | null;
+    readonly activeModelDefinitionId?: string | null;
   },
 ): Promise<unknown> {
   const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
@@ -2568,8 +2586,7 @@ async function executeKernelFunction(
     readonly kernel: SpatialKernel;
     readonly preview: SpatialPreviewKernel;
     readonly model: Model;
-    readonly views?: null;
-    readonly activeViewId?: string | null;
+    readonly activeModelDefinitionId?: string | null;
   },
 ): Promise<unknown> {
   const merged = { ...params, ...callArgs };
@@ -2592,8 +2609,7 @@ export class DeclarativeActionRuntime {
       readonly kernel: SpatialKernel;
       readonly preview: SpatialPreviewKernel;
       readonly model: Model;
-      readonly views?: null;
-      readonly activeViewId?: string | null;
+      readonly activeModelDefinitionId?: string | null;
     },
   ): Promise<ActionResult> {
     const vars: Record<string, unknown> = {};
@@ -2603,8 +2619,7 @@ export class DeclarativeActionRuntime {
       params,
       vars,
       model: ctx.model,
-      views: ctx.views,
-      activeViewId: ctx.activeViewId,
+      activeModelDefinitionId: ctx.activeModelDefinitionId,
       kernel: ctx.kernel,
       actionId: this.spec.id,
       metadata: ctx.model.metadata,
@@ -2659,8 +2674,7 @@ export class ActionRegistry {
       readonly kernel: SpatialKernel;
       readonly preview: SpatialPreviewKernel;
       readonly model: Model;
-      readonly views?: null;
-      readonly activeViewId?: string | null;
+      readonly activeModelDefinitionId?: string | null;
     },
   ): Promise<ActionResult> {
     const def = this.get(id);
@@ -2863,8 +2877,8 @@ function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTar
   });
 }
 
-/** @emoji 🪪 Collects stable `SelectionTarget` rows for kernel `kinds` from `model` (+ derived views when provided). */
-export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], views?: null, activeViewId?: string | null): SelectionTarget[] {
+/** @emoji 🪪 Collects stable `SelectionTarget` rows for kernel `kinds` from `model`. */
+export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   const out: SelectionTarget[] = [];
   const seen = new Set<string>();
   const push = (kind: ModelEntityKind, id: string, editable = true) => {
@@ -2907,20 +2921,20 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
 }
 
 /** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
-export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], views?: null, activeViewId?: string | null): SelectionTarget[] {
+export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
   const scopeKinds = kinds.length > 0 ? kinds : [...ALL_MODEL_SELECTION_KINDS];
-  const universe = collectGeometrySelectionTargets(model, scopeKinds, views, activeViewId);
+  const universe = collectGeometrySelectionTargets(model, scopeKinds, activeModelDefinitionId);
   if (operation === "selectAll" || operation === "selectKinds") return universe;
   const cur = new Set(current.map(selectionTargetKey));
   return universe.filter((target) => !cur.has(selectionTargetKey(target)));
 }
 
 /** @emoji 🪪 Shared selection command core used by `selection.apply` and headless callers. */
-export function executeSelectionApply(params: SelectionApplyParams, ctx: { readonly model: Model; readonly views?: null; readonly activeViewId?: string | null }): SelectionTarget[] {
+export function executeSelectionApply(params: SelectionApplyParams, ctx: { readonly model: Model; readonly activeModelDefinitionId?: string | null }): SelectionTarget[] {
   const seed = params.seedTargets ?? [];
   const kinds = params.operation === "selectKinds" ? [...(params.kinds ?? [])] : params.operation === "invert" || params.operation === "selectAll" ? [...ALL_MODEL_SELECTION_KINDS] : [];
-  return applySelectionOperation(params.operation, seed, ctx.model, kinds, ctx.views ?? null, ctx.activeViewId ?? null);
+  return applySelectionOperation(params.operation, seed, ctx.model, kinds, ctx.activeModelDefinitionId ?? null);
 }
 
 /** @emoji 🪪 Runs `selection.apply` headless via `ActionRegistry` (no interaction session). */
@@ -2930,8 +2944,7 @@ export async function runSelectionApply(
     readonly kernel: SpatialKernel;
     readonly preview: SpatialPreviewKernel;
     readonly model: Model;
-    readonly views?: null;
-    readonly activeViewId?: string | null;
+    readonly activeModelDefinitionId?: string | null;
     readonly actions?: ActionRegistry;
   },
 ): Promise<readonly SelectionTarget[]> {
@@ -2984,8 +2997,7 @@ export interface ConstructQueryContext {
   readonly model: Model;
   readonly kernel: SpatialKernel;
   readonly actions: ActionRegistry;
-  readonly views?: null;
-  readonly activeViewId?: string | null;
+  readonly activeModelDefinitionId?: string | null;
   /** @emoji 🪪 Default `seedTargets` for `CALL selection.*` when the call omits `seedTargets`. */
   readonly selectionTargets?: readonly SelectionTarget[];
 }
@@ -3013,7 +3025,7 @@ export interface StateEngine {
   getContext(): Record<string, unknown>;
   reset(): void;
   restore(state: string, context: Record<string, unknown>): void;
-  send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, views?: null, preview?: SpatialPreviewKernel): Promise<StateEngineSendResult>;
+  send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult>;
 }
 
 /** @emoji 🎭 Instantiates a `StateEngine` for a compiled `InteractionSpec`. */
@@ -3034,13 +3046,12 @@ export async function applyEffectAsync(
   kernel: SpatialKernel | undefined,
   model: Model,
   actions?: ActionRegistry,
-  views?: null,
   preview?: SpatialPreviewKernel,
-  activeViewId?: string | null,
+  activeModelDefinitionId?: string | null,
 ): Promise<void> {
   const math = preview ?? kernel;
   if (!math) return;
-  const env: ExprEnv = { context: ctx, event, model, views, activeViewId, preview: math };
+  const env: ExprEnv = { context: ctx, event, model, activeModelDefinitionId, preview: math };
   const reg = actions ?? ActionRegistry.withBuiltins();
   if (a.op === "assign") {
     const v = evalExpr(a.value, env);
@@ -3055,12 +3066,12 @@ export async function applyEffectAsync(
       writePathTarget(a.target, env, next);
     }
   } else if (a.op === "kernel.query") {
-    const queryCtx: KernelQueryContext = { model, views: env.views };
+    const queryCtx: KernelQueryContext = { model, activeModelDefinitionId };
     if (a.query === "face.resolveIds") {
       const target = (event as SelectionEvent).targets?.[0];
       const kind = target?.kind ?? "face";
       const id = target?.id ?? "";
-      const faceIds = views?.resolveFaceIds(model, kind, id) ?? (kind === "face" && id ? [id as FaceRef] : []);
+      const faceIds = kind === "face" && id ? [id as FaceRef] : [];
       writePathTarget(a.assignTo, env, faceIds);
     } else if (kernel?.query) {
       const params: Record<string, unknown> = {};
@@ -3089,8 +3100,8 @@ export async function applyTransition(
   kernel?: SpatialKernel,
   actions?: ActionRegistry,
   model?: Model,
-  views?: null,
   preview?: SpatialPreviewKernel,
+  activeModelDefinitionId?: string | null,
 ): Promise<ApplyTransitionResult> {
   const graph = model ?? new Model();
   const st = findState(spec, state);
@@ -3106,7 +3117,7 @@ export async function applyTransition(
       if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
     }
     for (const eff of tr.effects ?? []) {
-      await applyEffectAsync(eff, context, event, kernel, graph, actions, views, preview, views?.activeViewId ?? null);
+      await applyEffectAsync(eff, context, event, kernel, graph, actions, preview, activeModelDefinitionId ?? null);
     }
     let nextState = state;
     if (tr.target) {
@@ -3209,8 +3220,8 @@ export class StatechartRuntime implements StateEngine {
   }
 
   /** @emoji 🎬 Applies one external event; returns whether a transition fired. */
-  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, views?: null, preview?: SpatialPreviewKernel): Promise<StateEngineSendResult> {
-    const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, views, preview);
+  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
+    const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, preview, activeModelDefinitionId ?? null);
     if (r.ok) this.state = r.nextState;
     return { ok: r.ok, transient: r.transient };
   }
@@ -3465,8 +3476,7 @@ export interface InteractionRuntimeOptions {
   readonly stateEngine?: StateEngineProvider;
   readonly actions?: ActionRegistry;
   readonly query?: ConstructRunner;
-  readonly views?: null;
-  readonly activeViewId?: string | null;
+  readonly activeModelDefinitionId?: string | null;
 }
 
 export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
@@ -3566,13 +3576,13 @@ export class InteractionRuntime {
     const selectionEvent = this.selectionEventFromStart(event, sel);
     if (!selectionEvent || !selectionEventMatches(sel, selectionEvent)) return;
     const beforeCtx = this.cloneCtx(this.sm.getContext());
-    const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
+    const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     if (!r.ok) return;
     if (!r.transient) this.snapUndoStack.push({ state: stateBeforeSelection, context: JSON.stringify(beforeCtx) });
     const stateAfterSelection = this.sm.getState();
     if (stateAfterSelection === stateBeforeSelection && this.stateHasEvent(stateAfterSelection, "confirm")) {
       const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
-      const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
+      const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
       if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: stateAfterSelection, context: JSON.stringify(beforeConfirmCtx) });
     }
   }
@@ -3590,8 +3600,7 @@ export class InteractionRuntime {
       model: this.opts.document.model,
       kernel: this.opts.kernel,
       actions: this.actions,
-      views: this.opts.views,
-      activeViewId: this.opts.activeViewId ?? null,
+      activeModelDefinitionId: this.opts.activeModelDefinitionId ?? null,
     });
   }
 
@@ -3652,7 +3661,7 @@ export class InteractionRuntime {
       if (this.stateHasEvent(this.sm.getState(), "start")) {
         const beforeState = this.sm.getState();
         const beforeCtx = this.cloneCtx(this.sm.getContext());
-        const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
+        const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
         if (!r.ok) return;
         if (!r.transient) {
           this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
@@ -3686,7 +3695,7 @@ export class InteractionRuntime {
     }
     const beforeState = this.sm.getState();
     const beforeCtx = this.cloneCtx(this.sm.getContext());
-    const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.opts.views, this.previewKernel());
+    const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     if (!r.ok) return;
     if (!r.transient) {
       this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
@@ -3802,8 +3811,7 @@ export class InteractionRuntime {
         kernel: k,
         preview: this.previewKernel(),
         model: model,
-        views: this.opts.views,
-        activeViewId: this.opts.activeViewId ?? null,
+        activeModelDefinitionId: this.opts.activeModelDefinitionId ?? null,
       });
       if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
       diff = ar.diff ?? EMPTY_MODEL_DIFF;
@@ -3820,7 +3828,7 @@ export class InteractionRuntime {
     }
     const inverse = applyModelDiff(model, diff);
     const archiveContext = this.cloneCtx(this.sm.getContext());
-    if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.opts.views, this.previewKernel());
+    if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
     this.lastResponse = res;
     this.snapUndoStack.length = 0;
@@ -3950,7 +3958,7 @@ export function selectionApplyParamsForInteraction(defn: SelectionOperationInter
 }
 
 /** @emoji 🪪 True when a selection command targets authored `object` rows on the model. */
-export function selectionOperationUsesViewObjects(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
+export function selectionOperationUsesModelObjects(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
   return defn.kinds?.includes("object") ?? false;
 }
 
@@ -4168,6 +4176,13 @@ if (import.meta.vitest) {
   });
 
   describe("@spatial/js-core transformations", () => {
+    it("lists model definition manifests and transformation directions", () => {
+      const manifests = listModelDefinitionManifests();
+      expect(manifests.some((row) => row.id === "builtin")).toBe(true);
+      expect(manifests.some((row) => row.id === "aec.building.energy")).toBe(true);
+      expect(listTransformationsIntoModelDefinition("aec.building.energy").some((row) => row.id === "from_geometry")).toBe(true);
+      expect(listTransformationsFromModelDefinition("builtin").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
+    });
     it("loads and applies from_geometry transformation", () => {
       const spec = loadTransformation("aec.building.energy.from_geometry");
       expect(spec?.source.modelDefinition).toBe("builtin");
@@ -5403,7 +5418,7 @@ if (import.meta.vitest) {
 
     const archivedSelectionTargets = (snap: InteractionSnapshot): readonly SelectionTarget[] => selectionTargetsFromContext(snap.lastResponse?.archiveContext ?? {});
 
-    const assertSelectionCommandArchive = (defn: SelectionOperationInteractionDef, targets: readonly SelectionTarget[], model: Model, views?: null, activeViewId?: string | null): void => {
+    const assertSelectionCommandArchive = (defn: SelectionOperationInteractionDef, targets: readonly SelectionTarget[], model: Model, activeModelDefinitionId?: string | null): void => {
       switch (defn.operation) {
         case "deselectAll":
           expect(targets).toEqual([]);
@@ -5421,7 +5436,7 @@ if (import.meta.vitest) {
         case "selectKinds": {
           const kinds = defn.kinds ?? [];
           expect(targets.every((t) => kinds.includes(t.kind))).toBe(true);
-          const expected = collectGeometrySelectionTargets(model, kinds, views ?? null, activeViewId ?? null);
+          const expected = collectGeometrySelectionTargets(model, kinds, activeModelDefinitionId ?? null);
           expect(targets).toEqual(expected);
           if (defn.id === "selection.selectAnchors") {
             expect(targets).toEqual([]);
@@ -5438,15 +5453,14 @@ if (import.meta.vitest) {
       readonly fixture: InteractionE2EFixtureKind;
       readonly steps: readonly InteractionEvent[];
       readonly seedBox?: boolean;
-      readonly useView?: boolean;
+      readonly useModelObjects?: boolean;
       readonly spec?: InteractionSpec;
       readonly assert?: (ctx: {
         readonly snap: InteractionSnapshot;
         readonly model: Model;
         readonly before: ReturnType<typeof entityCounts>;
         readonly after: ReturnType<typeof entityCounts>;
-        readonly views?: null;
-        readonly activeViewId?: string | null;
+        readonly activeModelDefinitionId?: string | null;
       }) => void;
     }[] = [
       {

@@ -7,28 +7,28 @@ todos:
     status: completed
   - id: core-step
     content: "Add 🪜StepRoundtrip region to spatial/js/core/index.ts: writer helpers, AttributeStore.entries(), ModelJson metadata field"
-    status: in_progress
+    status: completed
   - id: kernel-export
     content: Implement exportModelSpaceToStep / exportModelToStep in spatial/js/kernel-brepjs/index.ts using brepjs exportSTEPConfigured with id-rewriting and six-pillar mapping
-    status: pending
+    status: completed
   - id: kernel-import
     content: Implement importStepToModelSpace in spatial/js/kernel-brepjs/index.ts using brepjs importSTEP and rebuild kernel geometry buckets
-    status: pending
+    status: completed
   - id: modelspace-share
     content: "Dedupe primitives across linked models via hashSolidRecord so shared geometry uses the same STEP #id"
-    status: pending
+    status: completed
   - id: tests-core
     content: Extend in-file vitest block in spatial/js/core/index.ts with helper + metadata roundtrip cases
-    status: pending
+    status: completed
   - id: tests-kernel
     content: Extend in-file vitest block in spatial/js/kernel-brepjs/index.ts with full STEP roundtrip + dedupe + property re-derive + behavioral-absence cases
-    status: pending
+    status: completed
   - id: run-tests
     content: Run bun nx test @spatial/js-core and @spatial/js-kernel-brepjs until green
-    status: pending
+    status: completed
   - id: ticket-close
     content: Close ticket with summary and list of touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -3,7 +3,11 @@ import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type Cha
 import { createRoot } from "react-dom/client";
 import {
 	DocumentHistory,
+	GEOMETRY_MODEL_DEFINITION_ID,
+	applyTransformation,
+	isGeometryModelDefinition,
 	isInteractionSessionActive,
+	listTransformationsIntoModelDefinition,
 	listSpatialInteractions,
 	loadSpatialInteraction,
 	parseModelJson,
@@ -14,7 +18,9 @@ import {
 	type SpatialComputeMode,
 	type ModelDocument,
 	type SelectionTarget,
+	type TransformationSpec,
 	Model,
+	ModelSpace,
 } from "@spatial/js-core";
 import { defaultConstructRunner } from "@spatial/js-query";
 import geometryNakagin from "../../../fixtures/geometry.json";
@@ -319,25 +325,97 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	};
 }
 
-async function writeJsonFile(name: string, payload: SpatialExchangeBundle): Promise<void> {
-	const text = `${JSON.stringify(payload, null, 2)}\n`;
+async function writeTextFile(
+	name: string,
+	text: string,
+	types: readonly SaveFilePickerTypeOption[],
+	fallbackMime = "application/octet-stream",
+): Promise<void> {
 	const pickerWindow = window as SavePickerWindow;
 	if (pickerWindow.showSaveFilePicker) {
-		const handle = await pickerWindow.showSaveFilePicker({
-			suggestedName: name,
-			types: [{ description: "Spatial JSON", accept: { "application/json": [".json", ".spatial.json"] } }],
-		});
+		const handle = await pickerWindow.showSaveFilePicker({ suggestedName: name, types });
 		const writable = await handle.createWritable();
 		await writable.write(text);
 		await writable.close();
 		return;
 	}
-	const href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+	const href = URL.createObjectURL(new Blob([text], { type: fallbackMime }));
 	const link = document.createElement("a");
 	link.href = href;
 	link.download = name;
 	link.click();
 	URL.revokeObjectURL(href);
+}
+
+async function writeJsonFile(name: string, payload: SpatialExchangeBundle): Promise<void> {
+	await writeTextFile(
+		name,
+		`${JSON.stringify(payload, null, 2)}\n`,
+		[{ description: "Spatial JSON", accept: { "application/json": [".json", ".spatial.json"] } }],
+		"application/json",
+	);
+}
+
+async function writeStepFile(name: string, stepText: string): Promise<void> {
+	await writeTextFile(
+		name,
+		stepText,
+		[{ description: "STEP AP242", accept: { "application/step": [".stp", ".step"], "model/step": [".stp", ".step"] } }],
+		"application/step",
+	);
+}
+
+function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
+	return modelDefinitionId.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "model";
+}
+
+function geometryModelForExport(derivedByDefinitionId: Readonly<Record<string, Model>>, liveModel: Model): Model {
+	return derivedByDefinitionId[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+}
+
+function resolveExportModel(
+	modelDefinitionId: string,
+	derivedByDefinitionId: Readonly<Record<string, Model>>,
+	geometryModel: Model,
+	liveModel: Model,
+	activeModelDefinitionId: string,
+): Model {
+	if (isGeometryModelDefinition(modelDefinitionId)) return geometryModel;
+	const cached = derivedByDefinitionId[modelDefinitionId];
+	if (cached) return cached;
+	if (modelDefinitionId === activeModelDefinitionId && !isGeometryModelDefinition(activeModelDefinitionId)) return liveModel;
+	const transforms = listTransformationsIntoModelDefinition(modelDefinitionId).filter((row) =>
+		isGeometryModelDefinition(row.source.modelDefinition),
+	);
+	if (transforms[0]) return applyTransformation(transforms[0], geometryModel);
+	return liveModel;
+}
+
+function buildPlayModelSpace(
+	derivedByDefinitionId: Readonly<Record<string, Model>>,
+	geometryModel: Model,
+	liveModel: Model,
+	activeModelDefinitionId: string,
+): ModelSpace {
+	const space = new ModelSpace();
+	const linked = new Set<string>();
+	const link = (id: string, model: Model) => {
+		if (linked.has(id)) return;
+		linked.add(id);
+		space.link(id, model);
+	};
+	link(GEOMETRY_MODEL_DEFINITION_ID, geometryModel);
+	for (const [id, model] of Object.entries(derivedByDefinitionId)) {
+		if (id === GEOMETRY_MODEL_DEFINITION_ID) continue;
+		link(id, model);
+	}
+	if (!isGeometryModelDefinition(activeModelDefinitionId) && !linked.has(activeModelDefinitionId)) {
+		link(
+			activeModelDefinitionId,
+			resolveExportModel(activeModelDefinitionId, derivedByDefinitionId, geometryModel, liveModel, activeModelDefinitionId),
+		);
+	}
+	return space;
 }
 //#endregion
 
@@ -350,17 +428,18 @@ interface PlaySessionProps {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: InteractionRuntimeOptions["kernel"];
-		readonly mode: SpatialComputeMode;
+	readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
 	readonly sessionRestartNonce: number;
-	readonly activeViewId: string | null;
-	readonly onActiveViewId: (value: string | null) => void;
+	readonly activeModelDefinitionId: string;
+	readonly onActiveModelDefinitionId: (value: string) => void;
 	readonly rendererSelection: readonly SelectionTarget[];
 	readonly onRendererSelection: (value: readonly SelectionTarget[]) => void;
 	readonly interactionSelection: readonly SelectionTarget[];
 	readonly onInteractionSelection: (value: readonly SelectionTarget[]) => void;
-	readonly viewsRevision: number;
-	readonly onViewsRevision: (revision: number) => void;
+	readonly modelDefinitionRevision: number;
+	readonly onModelDefinitionRevision: (revision: number) => void;
+	readonly onApplyTransformation: (spec: TransformationSpec) => void;
 	readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
 }
 
@@ -373,18 +452,18 @@ function PlaySession({
 	documentModel,
 	history,
 	kernel,
-	views,
 	mode,
 	asideExtra,
 	sessionRestartNonce,
-	activeViewId,
-	onActiveViewId,
+	activeModelDefinitionId,
+	onActiveModelDefinitionId,
 	rendererSelection,
 	onRendererSelection,
 	interactionSelection,
 	onInteractionSelection,
-	viewsRevision,
-	onViewsRevision,
+	modelDefinitionRevision,
+	onModelDefinitionRevision,
+	onApplyTransformation,
 	onSnapshot,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
@@ -396,10 +475,9 @@ function PlaySession({
 			history,
 			stateEngine: statelyStateEngineProvider,
 			query: defaultConstructRunner,
-			views,
-			activeViewId,
+			activeModelDefinitionId,
 		}),
-		[kernel, mode, documentModel, history, views, activeViewId],
+		[kernel, mode, documentModel, history, activeModelDefinitionId],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
 	const asideWithQuery = useMemo(
@@ -421,17 +499,17 @@ function PlaySession({
 			history={history}
 			document={documentModel}
 			geometry={documentModel.model}
-			views={views}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
-			activeViewId={activeViewId}
-			onActiveViewIdChange={onActiveViewId}
+			activeModelDefinitionId={activeModelDefinitionId}
+			onActiveModelDefinitionIdChange={onActiveModelDefinitionId}
 			rendererSelection={rendererSelection}
 			onRendererSelectionChange={onRendererSelection}
 			interactionSelection={interactionSelection}
 			onInteractionSelectionChange={onInteractionSelection}
-			viewsRevision={viewsRevision}
-			onViewsRevisionChange={onViewsRevision}
+			modelDefinitionRevision={modelDefinitionRevision}
+			onModelDefinitionRevisionChange={onModelDefinitionRevision}
+			onApplyTransformation={onApplyTransformation}
 			onSnapshotChange={onSnapshot}
 		/>
 	);
@@ -450,17 +528,21 @@ function PlayApp() {
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
-	const [activeViewId, setActiveViewId] = useState<string | null>(null);
+	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(GEOMETRY_MODEL_DEFINITION_ID);
 	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
 	const [interactionSelection, setInteractionSelection] = useState<readonly SelectionTarget[]>([]);
-	const [viewsRevision, setViewsRevision] = useState(0);
+	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
 	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
 	const [fileStatus, setFileStatus] = useState<string>("");
 	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
-	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(() => new BrepjsKernel() as unknown as InteractionRuntimeOptions["kernel"], []);
-	const views = null;
+	const brepjsKernel = useMemo(() => new BrepjsKernel(), []);
+	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(
+		() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"],
+		[brepjsKernel],
+	);
+	const [derivedModelsByDefinitionId, setDerivedModelsByDefinitionId] = useState<Record<string, Model>>({});
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -477,6 +559,7 @@ function PlayApp() {
 		setGeometryAssetId(id);
 		setLoadedRawName("");
 		setFileStatus("");
+		setDerivedModelsByDefinitionId({});
 		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
 		setModelJson(asset?.json ?? emptyModelJson());
 	}, []);
@@ -489,6 +572,28 @@ function PlayApp() {
 	}, [interactionModel]);
 	const liveModel = documentModel.model;
 
+	const geometryModel = useMemo(
+		() => geometryModelForExport(derivedModelsByDefinitionId, liveModel),
+		[derivedModelsByDefinitionId, liveModel],
+	);
+
+	const playModelSpace = useMemo(
+		() => buildPlayModelSpace(derivedModelsByDefinitionId, geometryModel, liveModel, activeModelDefinitionId),
+		[activeModelDefinitionId, derivedModelsByDefinitionId, geometryModel, liveModel],
+	);
+
+	const visibleExportModel = useMemo(
+		() =>
+			resolveExportModel(
+				activeModelDefinitionId,
+				derivedModelsByDefinitionId,
+				geometryModel,
+				liveModel,
+				activeModelDefinitionId,
+			),
+		[activeModelDefinitionId, derivedModelsByDefinitionId, geometryModel, liveModel],
+	);
+
 	const interactionActive = useMemo(
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
 		[spec, snapshot],
@@ -500,8 +605,8 @@ function PlayApp() {
 		});
 	}, []);
 	const currentSelection = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, activeViewId, rendererSelection, interactionSelection),
-		[interactionActive, activeViewId, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection),
+		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
 	const selectedGeometry = useMemo(
 		() => currentSelection.filter((target) => target.kind !== "object"),
@@ -513,12 +618,31 @@ function PlayApp() {
 		return fileStem(asset?.id ?? "spatial");
 	}, [geometryAssetId, loadedRawName]);
 
+	const handleApplyTransformation = useCallback(
+		(spec: TransformationSpec) => {
+			const source = parseModelJson(modelJson) ?? new Model();
+			const target = applyTransformation(spec, source);
+			setDerivedModelsByDefinitionId((prev) => {
+				const next = { ...prev, [spec.target.modelDefinition]: target };
+				if (isGeometryModelDefinition(spec.source.modelDefinition)) {
+					next[GEOMETRY_MODEL_DEFINITION_ID] = source;
+				}
+				return next;
+			});
+			setActiveModelDefinitionId(spec.target.modelDefinition);
+			setModelJson(target.toJSON());
+			setModelDefinitionRevision((r) => r + 1);
+			setFileStatus(`Applied ${spec.label} (${spec.source.modelDefinition} → ${spec.target.modelDefinition}).`);
+		},
+		[modelJson],
+	);
+
 	useEffect(() => {
 		history.clear();
 		setSnapshot(null);
 		setRendererSelection([]);
 		setInteractionSelection([]);
-		setViewsRevision(0);
+		setModelDefinitionRevision(0);
 	}, [history, modelJson]);
 
 	const saveBundle = useCallback(
@@ -541,9 +665,27 @@ function PlayApp() {
 		);
 	}, [exportBaseName, liveModel, saveBundle, selectedGeometry]);
 
-	const handleSaveView = useCallback(async () => {
-		await saveBundle(`${exportBaseName}.spatial.json`, { model: liveModel.toJSON() }, "Saved the model.");
-	}, [exportBaseName, liveModel, saveBundle]);
+	const handleSaveInPlay = useCallback(async () => {
+		try {
+			const stepText = await brepjsKernel.exportModelSpaceToStep(playModelSpace, exportBaseName);
+			await writeStepFile(`${exportBaseName}.modelspace.stp`, stepText);
+			setFileStatus(`Saved model space (${Object.keys(playModelSpace.models).length} model(s)) to STEP.`);
+		} catch (error) {
+			setFileStatus(`Save failed: ${String(error)}`);
+		}
+	}, [brepjsKernel, exportBaseName, playModelSpace]);
+
+	const handleSaveCurrent = useCallback(async () => {
+		try {
+			const modelId = activeModelDefinitionId;
+			const stepText = await brepjsKernel.exportModelToStep(visibleExportModel, modelId);
+			const stem = sanitizeModelDefinitionFileStem(modelId);
+			await writeStepFile(`${exportBaseName}.${stem}.stp`, stepText);
+			setFileStatus(`Saved ${modelId} to STEP.`);
+		} catch (error) {
+			setFileStatus(`Save failed: ${String(error)}`);
+		}
+	}, [activeModelDefinitionId, brepjsKernel, exportBaseName, visibleExportModel]);
 
 	const handleLoadRawRequest = useCallback(() => {
 		loadInputRef.current?.click();
@@ -566,6 +708,8 @@ function PlayApp() {
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
 			setModelJson(model.toJSON());
+			setDerivedModelsByDefinitionId({});
+			setActiveModelDefinitionId(GEOMETRY_MODEL_DEFINITION_ID);
 			setFileStatus(`Loaded model from ${file.name}.`);
 		} catch (error) {
 			setFileStatus(`Load failed: ${String(error)}`);
@@ -635,8 +779,11 @@ function PlayApp() {
 					>
 						Save (Selected)
 					</button>
-					<button type="button" onClick={() => void handleSaveView()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Save (View)
+					<button type="button" onClick={() => void handleSaveInPlay()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
+						Save in play
+					</button>
+					<button type="button" onClick={() => void handleSaveCurrent()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
+						Save (Current)
 					</button>
 					<button type="button" onClick={handleLoadRawRequest} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
 						Load
@@ -671,18 +818,18 @@ function PlayApp() {
 			documentModel={documentModel}
 			history={history}
 			kernel={kernel}
-			views={views}
 			mode={mode}
 			asideExtra={asideExtra}
 			sessionRestartNonce={interactionBootId}
-			activeViewId={activeViewId}
-			onActiveViewId={setActiveViewId}
+			activeModelDefinitionId={activeModelDefinitionId}
+			onActiveModelDefinitionId={setActiveModelDefinitionId}
 			rendererSelection={rendererSelection}
 			onRendererSelection={setRendererSelection}
 			interactionSelection={interactionSelection}
 			onInteractionSelection={setInteractionSelection}
-			viewsRevision={viewsRevision}
-			onViewsRevision={setViewsRevision}
+			modelDefinitionRevision={modelDefinitionRevision}
+			onModelDefinitionRevision={setModelDefinitionRevision}
+			onApplyTransformation={handleApplyTransformation}
 			onSnapshot={handleSnapshotChange}
 		/>
 	);
