@@ -1910,6 +1910,27 @@ class BrepjsWasmEngine {
 			const v0 = createVertex([0, 0, 0]);
 			return { diff: { vertices: { added: [v0] } } };
 		}
+		if (commandId.endsWith("From2PointsAndHeight")) {
+			const p0 = asVec3(params.pointA, asVec3(params.p0, [0, 0, 0]));
+			const p1 = asVec3(params.pointB, asVec3(params.p1, [1, 1, 0]));
+			const height = typeof params.height === "number" && Number.isFinite(params.height) ? params.height : 2.7;
+			const cornerA: Vec3 = [Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]), Math.min(p0[2], p1[2])];
+			const cornerB: Vec3 = [Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1]), Math.max(p0[2], p1[2])];
+			return this.createBoxFromCornersDiff({ cornerA, cornerB, height });
+		}
+		if (commandId.endsWith("FromCurveAndHeight")) {
+			const wireId = String(params.wireId ?? "");
+			const distance = typeof params.height === "number" && Number.isFinite(params.height) ? params.height : 2.7;
+			const model = params.model instanceof Model ? params.model : null;
+			if (wireId && model) return this.extrudeWireDiff({ wireId, distance, direction: [0, 0, 1], model });
+			return { diff: {} };
+		}
+		if (commandId.endsWith("FromSurface")) {
+			const faceId = String(params.faceId ?? "");
+			const model = params.model instanceof Model ? params.model : null;
+			if (faceId && model) return this.offsetFacesDiff({ faceIds: [faceId], distance: 0.01, model });
+			return { diff: {} };
+		}
 
 		return { diff: {} };
 	}
@@ -2756,6 +2777,15 @@ if (import.meta.vitest) {
 			const edges = res.diff.edges?.added ?? [];
 			expect(edges[0]!.curve?.kind).toBe("nurbs");
 			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
+		});
+
+		it("executeCommandDiff typology createFrom2PointsAndHeight builds a solid", async () => {
+			const res = await kernel.executeCommandDiff("energy.energy.createExternalWallFrom2PointsAndHeight", {
+				pointA: [0, 0, 0],
+				pointB: [4, 3, 0],
+				height: 2.5,
+			});
+			expect((res.diff.solids?.added ?? []).length).toBeGreaterThanOrEqual(1);
 		});
 
 		it("exports and reimports a box model with objects and attributes via AP242 STEP", async () => {

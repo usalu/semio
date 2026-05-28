@@ -46,6 +46,16 @@ When a non-builtin model definition is active, the spatial stack scopes selectio
 - `@spatial/js-query`: **42/42**
 - `@spatial/js-renderer-r3f`: **10/10**
 - `@spatial/js-machine-stately`: **4/4**
+- `@spatial/js-kernel-brepjs`: **22/22**
+- `@spatial/js-core`: **286/286**
+
+## Cleanup (final pass)
+
+- `listActionsForModelDefinition` includes action ids referenced by owned interaction specs (transition effects + commit)
+- Shipped `command.*` action assets (`addPoint`, `addSelection`, `selectionBboxCenter`, `constrainMoveCursor`, `undoPick`) under `spatial.shape`
+- `command.undoPick` capability implementation
+- `SpatialInteraction` interface hoisted into `ModelDefinitionScope` region
+- Catalog + transform interaction tests aligned with current assets and object-first move/copy workflow
 
 ## Legacy removed
 

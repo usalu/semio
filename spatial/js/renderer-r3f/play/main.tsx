@@ -12,6 +12,7 @@ import {
 	listTransformationsIntoModelDefinition,
 	listSpatialInteractionsForModelDefinition,
 	loadSpatialInteraction,
+	countViewObjectsForModelDefinition,
 	modelDefinitionSelectionEntityKinds,
 	modelDefinitionUsesGeometryPicking,
 	parseModelJson,
@@ -454,6 +455,7 @@ const PLAY_SELECT_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", 
 interface PlayModelSpacePanelProps {
 	readonly activeModelDefinitionId: string;
 	readonly modelSpaceCount: number;
+	readonly viewObjectCount: number;
 	readonly onActiveModelDefinitionId: (value: string) => void;
 	readonly onApplyTransformation: (spec: TransformationSpec) => void;
 }
@@ -462,6 +464,7 @@ interface PlayModelSpacePanelProps {
 function PlayModelSpacePanel({
 	activeModelDefinitionId,
 	modelSpaceCount,
+	viewObjectCount,
 	onActiveModelDefinitionId,
 	onApplyTransformation,
 }: PlayModelSpacePanelProps) {
@@ -478,10 +481,6 @@ function PlayModelSpacePanel({
 	const transformsFrom = useMemo(
 		() => listTransformationsIntoModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
-	);
-	const viewObjectCount = useMemo(
-		() => (isGeometryModelDefinition(activeModelDefinitionId) ? 0 : scope.typologies.length),
-		[activeModelDefinitionId, scope.typologies.length],
 	);
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
@@ -511,7 +510,7 @@ function PlayModelSpacePanel({
 			<span style={{ opacity: 0.75 }}>Select: {selectionKinds.join(", ")}</span>
 			{!isGeometryModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
 				<span style={{ opacity: 0.75 }}>
-					{viewObjectCount} typolog{viewObjectCount === 1 ? "y" : "ies"} in view
+					{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"} in view
 				</span>
 			) : null}
 			{transformsTo.length ? (
@@ -732,10 +731,14 @@ function PlayApp() {
 	);
 
 	const activeModel = useMemo(() => {
-		const resolved =
-			modelsForActiveDefinition[activeModelDefinitionId] ?? modelsForActiveDefinition[GEOMETRY_MODEL_DEFINITION_ID];
-		if (!resolved) throw new Error("Play model space missing builtin geometry.");
-		return resolved;
+		const resolved = modelsForActiveDefinition[activeModelDefinitionId];
+		if (resolved) return resolved;
+		if (isGeometryModelDefinition(activeModelDefinitionId)) {
+			const geometry = modelsForActiveDefinition[GEOMETRY_MODEL_DEFINITION_ID];
+			if (!geometry) throw new Error("Play model space missing builtin geometry.");
+			return geometry;
+		}
+		throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
 	}, [activeModelDefinitionId, modelsForActiveDefinition]);
 
 	const documentModel = useMemo((): ModelDocument => {
@@ -803,6 +806,10 @@ function PlayApp() {
 	const selectionKinds = useMemo(
 		() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)),
 		[activeModelDefinitionId],
+	);
+	const viewObjectCount = useMemo(
+		() => countViewObjectsForModelDefinition(liveModel, activeModelDefinitionId),
+		[liveModel, activeModelDefinitionId, modelDefinitionRevision],
 	);
 
 	const selectionInScope = useMemo(
@@ -926,8 +933,16 @@ function PlayApp() {
 			<PlayModelSpacePanel
 				activeModelDefinitionId={activeModelDefinitionId}
 				modelSpaceCount={Object.keys(playModelSpace.models).length}
+				viewObjectCount={viewObjectCount}
 				onActiveModelDefinitionId={handleActiveModelDefinitionChange}
 				onApplyTransformation={handleApplyTransformation}
+			/>
+			<SelectionPropertiesPanel
+				model={liveModel}
+				kernel={brepjsKernel}
+				activeModelDefinitionId={activeModelDefinitionId}
+				selection={selectionInScope}
+				selectionCount={selectionInScope.length}
 			/>
 			<div style={{ display: "flex", gap: 6, fontSize: 12 }}>
 				<span style={{ fontWeight: 600, color: "#c8c8e0", alignSelf: "center" }}>Compute</span>

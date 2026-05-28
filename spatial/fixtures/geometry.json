@@ -4,7 +4,10 @@
   "objects": [
     {
       "id": "object-capsule-0",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "capsule-0"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "capsule-0"
+      }
     }
   ],
   "geometry": {
@@ -89,4 +92,5 @@
     ]
   }
 }
+
 

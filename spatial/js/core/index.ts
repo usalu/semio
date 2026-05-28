@@ -2120,6 +2120,31 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
   return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
+let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+
+function actionOwnerById(): ReadonlyMap<string, string> {
+  if (actionOwnerByIdCache) return actionOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parseActionSpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  actionOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 True when an action asset file lives under `modelDefinitionId`. */
+export function actionOwnedByModelDefinition(actionId: string, modelDefinitionId: string): boolean {
+  return actionOwnerById().get(actionId) === modelDefinitionId;
+}
+
+/** @emoji 🧭 Model definition that owns a typology asset. */
+export function modelDefinitionIdForTypology(typologyId: string): string | null {
+  return typologyOwnerById().get(typologyId) ?? null;
+}
+
 /** @emoji 📚 Host-facing interaction row from model-definition interaction JSON. */
 export interface SpatialInteraction {
   readonly id: string;
@@ -2232,7 +2257,9 @@ export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): rea
 export function listActionsForModelDefinition(modelDefinitionId: string): readonly string[] {
   const ids = new Set<string>();
   for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
-    for (const actionId of typology.actions) ids.add(actionId);
+    for (const actionId of typology.actions) {
+      if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
+    }
   }
   for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
@@ -2278,6 +2305,17 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
     }
   }
   return [...kinds];
+}
+
+/** @emoji 🧭 Object rows owned by typologies declared under a model definition. */
+export function listModelObjectsForModelDefinition(model: Model, modelDefinitionId: string): readonly SpatialObjectRecord[] {
+  const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
+  return Object.values(model.objects).filter((row) => typologyIds.has(row.typology));
+}
+
+/** @emoji 🧭 Counts in-view typology objects for a model definition (renderer scope). */
+export function countViewObjectsForModelDefinition(model: Model, modelDefinitionId: string): number {
+  return listModelObjectsForModelDefinition(model, modelDefinitionId).length;
 }
 
 /** @emoji 🧭 Summarizes scoped catalogs for the active model definition (hosts + REPL). */
@@ -2401,6 +2439,40 @@ export function typologyConstructRoutes(): ReadonlyMap<
   }
   typologyConstructRoutesCache = map;
   return map;
+}
+
+/** @emoji 🏗️ True when a typology ships the native three-create + construct interaction kit. */
+export function typologyHasNativeConstructKit(typology: TypologySpec): boolean {
+  const ids = typologyConstructAssetIds(typology.id, typology.label);
+  return (
+    typology.interactions.includes(ids.construct) &&
+    typology.actions.includes(ids.createFrom2PointsAndHeight) &&
+    typology.actions.includes(ids.createFromCurveAndHeight) &&
+    typology.actions.includes(ids.createFromSurface) &&
+    typology.actions.includes(ids.construct)
+  );
+}
+
+/** @emoji 🏗️ Typologies in a model definition that expose the native construct interaction. */
+export function listConstructableTypologiesForModelDefinition(modelDefinitionId: string): readonly TypologySpec[] {
+  return listTypologiesForModelDefinition(modelDefinitionId).filter(typologyHasNativeConstructKit);
+}
+
+/** @emoji 📦 Binds a typology object row to the primary solid added by a create/construct diff. */
+export function ensureTypologyObjectFromCreateDiff(model: Model, typology: string, diff: ModelDiff): ObjectRef | null {
+  const typologySpec = loadTypology(typology);
+  if (!typologySpec) return null;
+  const solidId = diff.solids?.added?.[0]?.id;
+  if (!solidId) return null;
+  const primitiveKind = typologySpec.primitiveKinds[0] ?? "solid";
+  const objectId = typology as ObjectRef;
+  model.objects[objectId] = {
+    id: objectId,
+    typology: typology as TypologyRef,
+    primitives: { [primitiveKind]: String(solidId) },
+  };
+  model.bump();
+  return objectId;
 }
 
 async function runTypologyConstructDispatch(
@@ -3031,7 +3103,7 @@ export async function executeBuiltinActionCapability(
   if (typologyConstructRoutes().has(actionId)) return runTypologyConstructDispatch(actionId, params, ctx);
   const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
   if (def?.run) return def.run(params, ctx);
-  if (ctx.kernel.executeCommandDiff) return ctx.kernel.executeCommandDiff(actionId, params);
+  if (ctx.kernel.executeCommandDiff) return ctx.kernel.executeCommandDiff(actionId, { ...params, model: ctx.model });
   throw new Error(`Unknown action capability: ${actionId}`);
 }
 
@@ -3149,6 +3221,14 @@ export class ActionRegistry {
   static withBuiltins(): ActionRegistry {
     const r = new ActionRegistry();
     for (const spec of shippedActionCatalog()) r.register({ id: spec.id, label: spec.label, spec });
+    for (const def of builtinActionCapabilityDefs()) {
+      if (r.get(def.id)) continue;
+      r.register({
+        id: def.id,
+        label: def.label ?? def.id,
+        spec: capabilityActionSpecJson(def.id, def.label ?? def.id) as ActionSpec,
+      });
+    }
     return r;
   }
 }
@@ -3387,7 +3467,7 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
       case "attribute":
         break;
       case "object":
-        for (const id of Object.keys(model.objects)) push(kind, id, false);
+        for (const row of listModelObjectsForModelDefinition(model, mdId)) push(kind, String(row.id), false);
         break;
     }
   }
@@ -4552,17 +4632,15 @@ if (import.meta.vitest) {
     });
     it("loads geometry and AEC typology assets", () => {
       const typologies = listModelDefinitionTypologies();
-      expect(typologies.length).toBeGreaterThanOrEqual(67);
+      expect(typologies.length).toBe(27);
+      expect(loadTypology("energy.energy.hull")?.properties).toContain("energy.heatedvolume");
       expect(loadTypology("energy.energy.hull")?.properties).toContain("builtin.volume");
-      expect(loadTypology("builtin.measure.volume")?.primitiveKinds).toEqual([]);
     });
     it("assigns primitiveKinds to geometry typologies", () => {
       const box = loadTypology("builtin.primitive.box");
       const line = loadTypology("builtin.curve.line");
-      const selectAll = loadTypology("builtin.selection.select-all");
       expect(box?.primitiveKinds).toEqual(["solid"]);
       expect(line?.primitiveKinds).toEqual(["edge", "wire"]);
-      expect(selectAll?.primitiveKinds).toEqual([]);
     });
     it("derives builtin.volume for solid-backed objects", async () => {
       const model = new Model();
@@ -4663,6 +4741,24 @@ if (import.meta.vitest) {
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
       expect(listSelectionOperationsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
+    });
+    it("listModelObjectsForModelDefinition filters objects by typology ownership", () => {
+      const model = new Model();
+      const cell = solidRef("c0");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "builtin.primitive.box", primitives: { solid: String(cell) } };
+      expect(listModelObjectsForModelDefinition(model, "aec.building.energy").map((row) => String(row.id))).toEqual(["hull"]);
+      expect(countViewObjectsForModelDefinition(model, "aec.building.energy")).toBe(1);
+    });
+    it("collectGeometrySelectionTargets scopes object rows to model definition typologies", () => {
+      const model = new Model();
+      const cell = solidRef("c0");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "builtin.primitive.box", primitives: { solid: String(cell) } };
+      const all = collectGeometrySelectionTargets(model, ["object"], "aec.building.energy");
+      expect(all.map((row) => row.id)).toEqual(["hull"]);
     });
     it("ActionRegistry rejects out-of-scope actions for active model definition", async () => {
       const actions = ActionRegistry.withBuiltins();
@@ -4873,6 +4969,13 @@ if (import.meta.vitest) {
   });
 
   describe("@spatial/js-core interactions", () => {
+    async function bootTransformSelection(rt: InteractionRuntime, targets: readonly SelectionTarget[]): Promise<void> {
+      await rt.send({ kind: "start", modifiers: {} });
+      if (targets.length === 0) return;
+      await rt.send({ kind: "selection.changed", targets: [...targets], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+    }
+
     it("auto-commits curve.arc as one arc edge between start and end", async () => {
       const model = new Model();
       class ArcKernel extends BrepjsKernel {
@@ -4952,7 +5055,7 @@ if (import.meta.vitest) {
         kernel: new CommandKernel() as unknown as SpatialKernel,
         document: { model: model, nodes: [] },
       });
-      await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+      await bootTransformSelection(rt, [{ kind: "vertex", id: v0, editable: true }]);
       await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
       await rt.send({ kind: "mode.vertical", modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [p0[0] + 5, p0[1] + 4, p0[2] + 2], modifiers: {} });
@@ -4982,11 +5085,10 @@ if (import.meta.vitest) {
         kernel: new CommandKernel() as unknown as SpatialKernel,
         document: { model: model, nodes: [] },
       });
-      await rt.send({
-        kind: "start",
-        targets: verts.map((v) => ({ kind: "vertex" as const, id: v.id, editable: true })),
-        modifiers: {},
-      });
+      await bootTransformSelection(
+        rt,
+        verts.map((v) => ({ kind: "vertex" as const, id: v.id, editable: true })),
+      );
       expect(rt.getSnapshot().state).toBe("point_to_move_from");
       await rt.send({ kind: "confirm", modifiers: {} });
       const from = rt.getSnapshot().context.from as Vec3;
@@ -5017,7 +5119,7 @@ if (import.meta.vitest) {
         kernel: new CommandKernel() as unknown as SpatialKernel,
         document: { model: model, nodes: [] },
       });
-      await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+      await bootTransformSelection(rt, [{ kind: "vertex", id: v0, editable: true }]);
       await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [p0[0] + 2, p0[1] + 1, p0[2]], modifiers: {} });
       const snap = rt.getSnapshot();
@@ -5062,8 +5164,7 @@ if (import.meta.vitest) {
         document: { model: model, nodes: [] },
       });
       const from = model.vertices[Object.keys(model.vertices)[0]!]!.position;
-      await rt.send({ kind: "start", targets: [{ kind: "solid", id: "e2e-box", editable: true }], modifiers: {} });
-      await rt.send({ kind: "confirm", modifiers: {} });
+      await bootTransformSelection(rt, [{ kind: "solid", id: "e2e-box", editable: true }]);
       await rt.send({ kind: "mode.vertical", modifiers: {} });
       await rt.send({ kind: "pointer.down", point: from, modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [from[0] + 5, from[1] + 4, from[2] + 2], modifiers: {} });
@@ -5082,8 +5183,7 @@ if (import.meta.vitest) {
         kernel: new BrepjsKernel() as unknown as SpatialKernel,
         document: { model: model, nodes: [] },
       });
-      await rt.send({ kind: "start", targets: [{ kind: "solid", id: "e2e-box", editable: true }], modifiers: {} });
-      await rt.send({ kind: "confirm", modifiers: {} });
+      await bootTransformSelection(rt, [{ kind: "solid", id: "e2e-box", editable: true }]);
       await rt.send({ kind: "confirm", modifiers: {} });
       const from = rt.getSnapshot().context.from as Vec3;
       expect(from[0]).toBeCloseTo(1, 5);

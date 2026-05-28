@@ -45,6 +45,7 @@ import {
 	resolveSpatialInteractionKeyForModelDefinition,
 	modelDefinitionSelectionEntityKinds,
 	modelDefinitionUsesGeometryPicking,
+	countViewObjectsForModelDefinition,
 	primaryAttributeSelectionTarget,
 	listAttributeDefinitionsForModelDefinitionEntity,
 	attributeDefinitionEditorKind,
@@ -694,8 +695,8 @@ export function resolveSpatialSceneVisibility(
 	}
 	return {
 		showFactoryWireframe: false,
-		showCommittedFaces: visible("object"),
-		showCommittedEdges: visible("object"),
+		showCommittedFaces: false,
+		showCommittedEdges: false,
 	};
 }
 
@@ -2661,6 +2662,8 @@ export interface InteractionSpatialViewProps {
 	readonly committedMesh?: MeshTransfer | null;
 	readonly committedMeshes?: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
 	readonly geometry?: SpatialPickGeometry | null;
+	/** @emoji 🧲 Pick-target source; defaults to `geometry` (use builtin geometry when the active model is typology-only). */
+	readonly pickGeometry?: SpatialPickGeometry | null;
 	readonly activeModelDefinitionId?: string | null;
 	readonly modelDefinitionRevision?: number;
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
@@ -2727,6 +2730,7 @@ export function InteractionSpatialView({
 	committedMesh,
 	committedMeshes,
 	geometry,
+	pickGeometry: pickGeometryProp,
 	activeModelDefinitionId = GEOMETRY_MODEL_DEFINITION_ID,
 	modelDefinitionRevision = 0,
 	displayModel,
@@ -2823,11 +2827,16 @@ export function InteractionSpatialView({
 		() => resolveSpatialSceneVisibility(activeModelDefinitionId, filterKindToggles),
 		[activeModelDefinitionId, filterKindToggles],
 	);
+	const scenePickGeometry = pickGeometryProp ?? geometry;
+	const pickGeometryRevision =
+		scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry
+			? Number((scenePickGeometry as { revision?: unknown }).revision)
+			: 0;
 	return (
 		<>
 			{slots?.beforeScene}
 			<InvalidateOnRevision
-				revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${hoveredTargetKey ?? ""}`}
+				revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}`}
 			/>
 			<SpatialInvalidator />
 			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
@@ -2849,10 +2858,10 @@ export function InteractionSpatialView({
 				planeColor={resolvedTheme.groundPlaneColor}
 				planeOpacity={resolvedTheme.groundPlaneOpacity}
 			/>
-			<GeometryFactoryWireframeLayer geometry={geometry} visible={sceneVisibility.showFactoryWireframe} />
+			<GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
 			{showPickLayer ? (
 				<SpatialPickGeometryLayer
-					geometry={geometry}
+					geometry={scenePickGeometry}
 					activeModelDefinitionId={activeModelDefinitionId}
 					modelDefinitionRevision={modelDefinitionRevision}
 					geometryPreviewTransform={geometryPreviewTransform}
@@ -3510,6 +3519,11 @@ export function InteractionRepl({
 		onActiveModelDefinitionIdChange,
 		() => chromeDefaults.activeModelDefinitionId,
 	);
+	const mdIdForView = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const committedMeshesForView = useMemo(
+		() => (modelDefinitionUsesGeometryPicking(mdIdForView) ? committedMeshes : []),
+		[committedMeshes, mdIdForView],
+	);
 	const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
 	const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(
 		modelDefinitionRevisionProp,
@@ -3758,8 +3772,8 @@ export function InteractionRepl({
 	const activePickKinds = useMemo(() => [...spatialPickKindsForActiveView(activeModelDefinitionId)], [activeModelDefinitionId]);
 	const viewObjectCount = useMemo(() => {
 		if (isGeometryModelDefinition(activeModelDefinitionId)) return 0;
-		return Object.keys(documentModel.model.objects).length;
-	}, [activeModelDefinitionId, documentModel.model, modelDefinitionRevision]);
+		return countViewObjectsForModelDefinition(documentModel.model, mdIdForView);
+	}, [activeModelDefinitionId, documentModel.model, mdIdForView, modelDefinitionRevision]);
 
 	const commitSelection = useCallback(
 		(selection: readonly SelectionTarget[]) => {
@@ -4344,7 +4358,8 @@ export function InteractionRepl({
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
-						committedMeshes={committedMeshes}
+						pickGeometry={pickGeometry}
+						committedMeshes={committedMeshesForView}
 						activeModelDefinitionId={activeModelDefinitionId}
 						modelDefinitionRevision={modelDefinitionRevision}
 						displayModel={mergedDisplay}
@@ -5157,8 +5172,8 @@ if (import.meta.vitest) {
 			});
 			expect(resolveSpatialSceneVisibility("aec.building.energy", { object: true })).toEqual({
 				showFactoryWireframe: false,
-				showCommittedFaces: true,
-				showCommittedEdges: true,
+				showCommittedFaces: false,
+				showCommittedEdges: false,
 			});
 		});
 

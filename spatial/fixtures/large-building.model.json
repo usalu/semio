@@ -4,1471 +4,2572 @@
   "objects": [
     {
       "id": "object-large-building-cell-1004141672",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1004141672"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1004141672"
+      }
     },
     {
       "id": "object-large-building-cell-1013392090",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1013392090"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1013392090"
+      }
     },
     {
       "id": "object-large-building-cell-1020004718",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1020004718"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1020004718"
+      }
     },
     {
       "id": "object-large-building-cell-1020724866",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1020724866"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1020724866"
+      }
     },
     {
       "id": "object-large-building-cell-1023463569",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1023463569"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1023463569"
+      }
     },
     {
       "id": "object-large-building-cell-1040989298",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1040989298"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1040989298"
+      }
     },
     {
       "id": "object-large-building-cell-1049716639",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1049716639"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1049716639"
+      }
     },
     {
       "id": "object-large-building-cell-1054178389",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1054178389"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1054178389"
+      }
     },
     {
       "id": "object-large-building-cell-1055418843",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1055418843"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1055418843"
+      }
     },
     {
       "id": "object-large-building-cell-1064344432",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1064344432"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1064344432"
+      }
     },
     {
       "id": "object-large-building-cell-1069804212",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1069804212"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1069804212"
+      }
     },
     {
       "id": "object-large-building-cell-1083503782",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1083503782"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1083503782"
+      }
     },
     {
       "id": "object-large-building-cell-1089490873",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1089490873"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1089490873"
+      }
     },
     {
       "id": "object-large-building-cell-10903341",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-10903341"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-10903341"
+      }
     },
     {
       "id": "object-large-building-cell-1101800866",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1101800866"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1101800866"
+      }
     },
     {
       "id": "object-large-building-cell-1102180845",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1102180845"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1102180845"
+      }
     },
     {
       "id": "object-large-building-cell-1106215048",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1106215048"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1106215048"
+      }
     },
     {
       "id": "object-large-building-cell-1109879729",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1109879729"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1109879729"
+      }
     },
     {
       "id": "object-large-building-cell-1111405448",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1111405448"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1111405448"
+      }
     },
     {
       "id": "object-large-building-cell-111256821",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-111256821"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-111256821"
+      }
     },
     {
       "id": "object-large-building-cell-1121243182",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1121243182"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1121243182"
+      }
     },
     {
       "id": "object-large-building-cell-112429847",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-112429847"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-112429847"
+      }
     },
     {
       "id": "object-large-building-cell-1129109600",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1129109600"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1129109600"
+      }
     },
     {
       "id": "object-large-building-cell-1141219257",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1141219257"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1141219257"
+      }
     },
     {
       "id": "object-large-building-cell-114171471",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-114171471"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-114171471"
+      }
     },
     {
       "id": "object-large-building-cell-1142951240",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1142951240"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1142951240"
+      }
     },
     {
       "id": "object-large-building-cell-1148886072",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1148886072"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1148886072"
+      }
     },
     {
       "id": "object-large-building-cell-1150187425",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1150187425"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1150187425"
+      }
     },
     {
       "id": "object-large-building-cell-1175964261",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1175964261"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1175964261"
+      }
     },
     {
       "id": "object-large-building-cell-11796081",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-11796081"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-11796081"
+      }
     },
     {
       "id": "object-large-building-cell-118040107",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-118040107"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-118040107"
+      }
     },
     {
       "id": "object-large-building-cell-118728620",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-118728620"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-118728620"
+      }
     },
     {
       "id": "object-large-building-cell-1193941175",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1193941175"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1193941175"
+      }
     },
     {
       "id": "object-large-building-cell-1207626756",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1207626756"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1207626756"
+      }
     },
     {
       "id": "object-large-building-cell-121025160",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-121025160"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-121025160"
+      }
     },
     {
       "id": "object-large-building-cell-1229854154",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1229854154"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1229854154"
+      }
     },
     {
       "id": "object-large-building-cell-1233283355",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1233283355"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1233283355"
+      }
     },
     {
       "id": "object-large-building-cell-1234524246",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1234524246"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1234524246"
+      }
     },
     {
       "id": "object-large-building-cell-1243527809",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1243527809"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1243527809"
+      }
     },
     {
       "id": "object-large-building-cell-1246037173",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1246037173"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1246037173"
+      }
     },
     {
       "id": "object-large-building-cell-1246458461",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1246458461"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1246458461"
+      }
     },
     {
       "id": "object-large-building-cell-1248423310",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1248423310"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1248423310"
+      }
     },
     {
       "id": "object-large-building-cell-1253216694",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1253216694"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1253216694"
+      }
     },
     {
       "id": "object-large-building-cell-1265194968",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1265194968"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1265194968"
+      }
     },
     {
       "id": "object-large-building-cell-1268396954",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1268396954"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1268396954"
+      }
     },
     {
       "id": "object-large-building-cell-1283040864",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1283040864"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1283040864"
+      }
     },
     {
       "id": "object-large-building-cell-1285432454",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1285432454"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1285432454"
+      }
     },
     {
       "id": "object-large-building-cell-1287032391",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1287032391"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1287032391"
+      }
     },
     {
       "id": "object-large-building-cell-1288183004",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1288183004"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1288183004"
+      }
     },
     {
       "id": "object-large-building-cell-1289531079",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1289531079"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1289531079"
+      }
     },
     {
       "id": "object-large-building-cell-1293362575",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1293362575"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1293362575"
+      }
     },
     {
       "id": "object-large-building-cell-1298601843",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1298601843"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1298601843"
+      }
     },
     {
       "id": "object-large-building-cell-1311484371",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1311484371"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1311484371"
+      }
     },
     {
       "id": "object-large-building-cell-1316718169",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1316718169"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1316718169"
+      }
     },
     {
       "id": "object-large-building-cell-13288285",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-13288285"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-13288285"
+      }
     },
     {
       "id": "object-large-building-cell-1333388245",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1333388245"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1333388245"
+      }
     },
     {
       "id": "object-large-building-cell-1333654600",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1333654600"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1333654600"
+      }
     },
     {
       "id": "object-large-building-cell-1334371724",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1334371724"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1334371724"
+      }
     },
     {
       "id": "object-large-building-cell-1335234936",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1335234936"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1335234936"
+      }
     },
     {
       "id": "object-large-building-cell-1339960912",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1339960912"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1339960912"
+      }
     },
     {
       "id": "object-large-building-cell-1346493519",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1346493519"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1346493519"
+      }
     },
     {
       "id": "object-large-building-cell-1350270550",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1350270550"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1350270550"
+      }
     },
     {
       "id": "object-large-building-cell-1350502915",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1350502915"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1350502915"
+      }
     },
     {
       "id": "object-large-building-cell-1362192184",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1362192184"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1362192184"
+      }
     },
     {
       "id": "object-large-building-cell-137236045",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-137236045"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-137236045"
+      }
     },
     {
       "id": "object-large-building-cell-1372553139",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1372553139"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1372553139"
+      }
     },
     {
       "id": "object-large-building-cell-1374178500",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1374178500"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1374178500"
+      }
     },
     {
       "id": "object-large-building-cell-1384298173",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1384298173"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1384298173"
+      }
     },
     {
       "id": "object-large-building-cell-1385129118",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1385129118"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1385129118"
+      }
     },
     {
       "id": "object-large-building-cell-1399772037",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1399772037"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1399772037"
+      }
     },
     {
       "id": "object-large-building-cell-1413813062",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1413813062"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1413813062"
+      }
     },
     {
       "id": "object-large-building-cell-1414328491",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1414328491"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1414328491"
+      }
     },
     {
       "id": "object-large-building-cell-1419238363",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1419238363"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1419238363"
+      }
     },
     {
       "id": "object-large-building-cell-1423324296",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1423324296"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1423324296"
+      }
     },
     {
       "id": "object-large-building-cell-1426376275",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1426376275"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1426376275"
+      }
     },
     {
       "id": "object-large-building-cell-1433615883",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1433615883"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1433615883"
+      }
     },
     {
       "id": "object-large-building-cell-144120393",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-144120393"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-144120393"
+      }
     },
     {
       "id": "object-large-building-cell-1452194346",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1452194346"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1452194346"
+      }
     },
     {
       "id": "object-large-building-cell-1452628439",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1452628439"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1452628439"
+      }
     },
     {
       "id": "object-large-building-cell-1458773128",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1458773128"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1458773128"
+      }
     },
     {
       "id": "object-large-building-cell-1458955386",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1458955386"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1458955386"
+      }
     },
     {
       "id": "object-large-building-cell-1462648629",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1462648629"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1462648629"
+      }
     },
     {
       "id": "object-large-building-cell-1465297128",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1465297128"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1465297128"
+      }
     },
     {
       "id": "object-large-building-cell-1467648291",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1467648291"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1467648291"
+      }
     },
     {
       "id": "object-large-building-cell-148155363",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-148155363"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-148155363"
+      }
     },
     {
       "id": "object-large-building-cell-1483190541",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1483190541"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1483190541"
+      }
     },
     {
       "id": "object-large-building-cell-1491824653",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1491824653"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1491824653"
+      }
     },
     {
       "id": "object-large-building-cell-1491928290",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1491928290"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1491928290"
+      }
     },
     {
       "id": "object-large-building-cell-1492058886",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1492058886"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1492058886"
+      }
     },
     {
       "id": "object-large-building-cell-14992065",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-14992065"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-14992065"
+      }
     },
     {
       "id": "object-large-building-cell-1501995302",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1501995302"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1501995302"
+      }
     },
     {
       "id": "object-large-building-cell-1504802716",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1504802716"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1504802716"
+      }
     },
     {
       "id": "object-large-building-cell-1511601144",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1511601144"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1511601144"
+      }
     },
     {
       "id": "object-large-building-cell-1516461367",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1516461367"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1516461367"
+      }
     },
     {
       "id": "object-large-building-cell-152782310",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-152782310"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-152782310"
+      }
     },
     {
       "id": "object-large-building-cell-1533058852",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1533058852"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1533058852"
+      }
     },
     {
       "id": "object-large-building-cell-1537344562",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1537344562"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1537344562"
+      }
     },
     {
       "id": "object-large-building-cell-1542175244",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1542175244"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1542175244"
+      }
     },
     {
       "id": "object-large-building-cell-1550751013",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1550751013"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1550751013"
+      }
     },
     {
       "id": "object-large-building-cell-1551247004",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1551247004"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1551247004"
+      }
     },
     {
       "id": "object-large-building-cell-1553084179",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1553084179"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1553084179"
+      }
     },
     {
       "id": "object-large-building-cell-1554542682",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1554542682"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1554542682"
+      }
     },
     {
       "id": "object-large-building-cell-1554710488",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1554710488"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1554710488"
+      }
     },
     {
       "id": "object-large-building-cell-156005552",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-156005552"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-156005552"
+      }
     },
     {
       "id": "object-large-building-cell-1567021710",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1567021710"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1567021710"
+      }
     },
     {
       "id": "object-large-building-cell-1568543105",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1568543105"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1568543105"
+      }
     },
     {
       "id": "object-large-building-cell-1572559541",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1572559541"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1572559541"
+      }
     },
     {
       "id": "object-large-building-cell-1574283799",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1574283799"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1574283799"
+      }
     },
     {
       "id": "object-large-building-cell-157952911",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-157952911"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-157952911"
+      }
     },
     {
       "id": "object-large-building-cell-1594958692",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1594958692"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1594958692"
+      }
     },
     {
       "id": "object-large-building-cell-1606455892",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1606455892"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1606455892"
+      }
     },
     {
       "id": "object-large-building-cell-1621563908",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1621563908"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1621563908"
+      }
     },
     {
       "id": "object-large-building-cell-1629775114",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1629775114"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1629775114"
+      }
     },
     {
       "id": "object-large-building-cell-1630098802",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1630098802"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1630098802"
+      }
     },
     {
       "id": "object-large-building-cell-1636906910",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1636906910"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1636906910"
+      }
     },
     {
       "id": "object-large-building-cell-1637798769",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1637798769"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1637798769"
+      }
     },
     {
       "id": "object-large-building-cell-1639662255",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1639662255"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1639662255"
+      }
     },
     {
       "id": "object-large-building-cell-1642495518",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1642495518"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1642495518"
+      }
     },
     {
       "id": "object-large-building-cell-1655104928",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1655104928"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1655104928"
+      }
     },
     {
       "id": "object-large-building-cell-1661235616",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1661235616"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1661235616"
+      }
     },
     {
       "id": "object-large-building-cell-1664562652",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1664562652"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1664562652"
+      }
     },
     {
       "id": "object-large-building-cell-1669573461",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1669573461"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1669573461"
+      }
     },
     {
       "id": "object-large-building-cell-1669990171",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1669990171"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1669990171"
+      }
     },
     {
       "id": "object-large-building-cell-1673214315",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1673214315"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1673214315"
+      }
     },
     {
       "id": "object-large-building-cell-1676288496",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1676288496"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1676288496"
+      }
     },
     {
       "id": "object-large-building-cell-1677405757",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1677405757"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1677405757"
+      }
     },
     {
       "id": "object-large-building-cell-1682236199",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1682236199"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1682236199"
+      }
     },
     {
       "id": "object-large-building-cell-1683751716",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1683751716"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1683751716"
+      }
     },
     {
       "id": "object-large-building-cell-1691365017",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1691365017"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1691365017"
+      }
     },
     {
       "id": "object-large-building-cell-1691448967",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1691448967"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1691448967"
+      }
     },
     {
       "id": "object-large-building-cell-1693385501",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1693385501"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1693385501"
+      }
     },
     {
       "id": "object-large-building-cell-169478087",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-169478087"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-169478087"
+      }
     },
     {
       "id": "object-large-building-cell-1700440730",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1700440730"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1700440730"
+      }
     },
     {
       "id": "object-large-building-cell-1704223122",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1704223122"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1704223122"
+      }
     },
     {
       "id": "object-large-building-cell-1709868120",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1709868120"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1709868120"
+      }
     },
     {
       "id": "object-large-building-cell-1720011712",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1720011712"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1720011712"
+      }
     },
     {
       "id": "object-large-building-cell-1728692368",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1728692368"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1728692368"
+      }
     },
     {
       "id": "object-large-building-cell-1738937882",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1738937882"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1738937882"
+      }
     },
     {
       "id": "object-large-building-cell-1739069846",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1739069846"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1739069846"
+      }
     },
     {
       "id": "object-large-building-cell-1741776992",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1741776992"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1741776992"
+      }
     },
     {
       "id": "object-large-building-cell-174254260",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-174254260"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-174254260"
+      }
     },
     {
       "id": "object-large-building-cell-1743994860",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1743994860"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1743994860"
+      }
     },
     {
       "id": "object-large-building-cell-1744234194",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1744234194"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1744234194"
+      }
     },
     {
       "id": "object-large-building-cell-1749077340",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1749077340"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1749077340"
+      }
     },
     {
       "id": "object-large-building-cell-1752286192",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1752286192"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1752286192"
+      }
     },
     {
       "id": "object-large-building-cell-1753018533",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1753018533"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1753018533"
+      }
     },
     {
       "id": "object-large-building-cell-1753458239",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1753458239"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1753458239"
+      }
     },
     {
       "id": "object-large-building-cell-1754368647",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1754368647"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1754368647"
+      }
     },
     {
       "id": "object-large-building-cell-1755169371",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1755169371"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1755169371"
+      }
     },
     {
       "id": "object-large-building-cell-1755361797",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1755361797"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1755361797"
+      }
     },
     {
       "id": "object-large-building-cell-1756406764",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1756406764"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1756406764"
+      }
     },
     {
       "id": "object-large-building-cell-1759882796",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1759882796"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1759882796"
+      }
     },
     {
       "id": "object-large-building-cell-1761946630",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1761946630"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1761946630"
+      }
     },
     {
       "id": "object-large-building-cell-1769127177",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1769127177"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1769127177"
+      }
     },
     {
       "id": "object-large-building-cell-1774468370",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1774468370"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1774468370"
+      }
     },
     {
       "id": "object-large-building-cell-1777004258",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1777004258"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1777004258"
+      }
     },
     {
       "id": "object-large-building-cell-1788490980",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1788490980"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1788490980"
+      }
     },
     {
       "id": "object-large-building-cell-1793617842",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1793617842"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1793617842"
+      }
     },
     {
       "id": "object-large-building-cell-1804643835",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1804643835"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1804643835"
+      }
     },
     {
       "id": "object-large-building-cell-1809881889",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1809881889"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1809881889"
+      }
     },
     {
       "id": "object-large-building-cell-1810845419",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1810845419"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1810845419"
+      }
     },
     {
       "id": "object-large-building-cell-1811272852",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1811272852"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1811272852"
+      }
     },
     {
       "id": "object-large-building-cell-1819031792",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1819031792"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1819031792"
+      }
     },
     {
       "id": "object-large-building-cell-1824147512",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1824147512"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1824147512"
+      }
     },
     {
       "id": "object-large-building-cell-1825173390",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1825173390"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1825173390"
+      }
     },
     {
       "id": "object-large-building-cell-1836852030",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1836852030"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1836852030"
+      }
     },
     {
       "id": "object-large-building-cell-1838861853",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1838861853"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1838861853"
+      }
     },
     {
       "id": "object-large-building-cell-1838987275",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1838987275"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1838987275"
+      }
     },
     {
       "id": "object-large-building-cell-1844372216",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1844372216"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1844372216"
+      }
     },
     {
       "id": "object-large-building-cell-1846549355",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1846549355"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1846549355"
+      }
     },
     {
       "id": "object-large-building-cell-1847233259",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1847233259"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1847233259"
+      }
     },
     {
       "id": "object-large-building-cell-1850195412",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1850195412"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1850195412"
+      }
     },
     {
       "id": "object-large-building-cell-1851453968",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1851453968"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1851453968"
+      }
     },
     {
       "id": "object-large-building-cell-1872132833",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1872132833"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1872132833"
+      }
     },
     {
       "id": "object-large-building-cell-188530036",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-188530036"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-188530036"
+      }
     },
     {
       "id": "object-large-building-cell-1885991178",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1885991178"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1885991178"
+      }
     },
     {
       "id": "object-large-building-cell-19069908",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-19069908"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-19069908"
+      }
     },
     {
       "id": "object-large-building-cell-1917866767",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1917866767"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1917866767"
+      }
     },
     {
       "id": "object-large-building-cell-191793477",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-191793477"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-191793477"
+      }
     },
     {
       "id": "object-large-building-cell-1937516754",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1937516754"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1937516754"
+      }
     },
     {
       "id": "object-large-building-cell-1947661356",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1947661356"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1947661356"
+      }
     },
     {
       "id": "object-large-building-cell-1953339535",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1953339535"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1953339535"
+      }
     },
     {
       "id": "object-large-building-cell-1966038212",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1966038212"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1966038212"
+      }
     },
     {
       "id": "object-large-building-cell-1974791848",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1974791848"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1974791848"
+      }
     },
     {
       "id": "object-large-building-cell-1977865610",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1977865610"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1977865610"
+      }
     },
     {
       "id": "object-large-building-cell-1980983797",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1980983797"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1980983797"
+      }
     },
     {
       "id": "object-large-building-cell-1986954763",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1986954763"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1986954763"
+      }
     },
     {
       "id": "object-large-building-cell-1995703963",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-1995703963"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-1995703963"
+      }
     },
     {
       "id": "object-large-building-cell-2015302954",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2015302954"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2015302954"
+      }
     },
     {
       "id": "object-large-building-cell-2022669151",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2022669151"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2022669151"
+      }
     },
     {
       "id": "object-large-building-cell-2037183377",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2037183377"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2037183377"
+      }
     },
     {
       "id": "object-large-building-cell-2039397924",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2039397924"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2039397924"
+      }
     },
     {
       "id": "object-large-building-cell-205058725",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-205058725"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-205058725"
+      }
     },
     {
       "id": "object-large-building-cell-2051657542",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2051657542"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2051657542"
+      }
     },
     {
       "id": "object-large-building-cell-2054868562",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2054868562"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2054868562"
+      }
     },
     {
       "id": "object-large-building-cell-206037356",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-206037356"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-206037356"
+      }
     },
     {
       "id": "object-large-building-cell-2065983669",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2065983669"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2065983669"
+      }
     },
     {
       "id": "object-large-building-cell-2071512796",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2071512796"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2071512796"
+      }
     },
     {
       "id": "object-large-building-cell-2071762503",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2071762503"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2071762503"
+      }
     },
     {
       "id": "object-large-building-cell-2071817305",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2071817305"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2071817305"
+      }
     },
     {
       "id": "object-large-building-cell-2077037161",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2077037161"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2077037161"
+      }
     },
     {
       "id": "object-large-building-cell-2080814182",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2080814182"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2080814182"
+      }
     },
     {
       "id": "object-large-building-cell-2080819098",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2080819098"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2080819098"
+      }
     },
     {
       "id": "object-large-building-cell-2087886308",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2087886308"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2087886308"
+      }
     },
     {
       "id": "object-large-building-cell-2088793070",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2088793070"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2088793070"
+      }
     },
     {
       "id": "object-large-building-cell-2094921077",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2094921077"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2094921077"
+      }
     },
     {
       "id": "object-large-building-cell-2096574768",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2096574768"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2096574768"
+      }
     },
     {
       "id": "object-large-building-cell-2104624972",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2104624972"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2104624972"
+      }
     },
     {
       "id": "object-large-building-cell-2108735085",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2108735085"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2108735085"
+      }
     },
     {
       "id": "object-large-building-cell-2114348421",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2114348421"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2114348421"
+      }
     },
     {
       "id": "object-large-building-cell-2116490659",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2116490659"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2116490659"
+      }
     },
     {
       "id": "object-large-building-cell-2116540791",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2116540791"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2116540791"
+      }
     },
     {
       "id": "object-large-building-cell-212162919",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-212162919"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-212162919"
+      }
     },
     {
       "id": "object-large-building-cell-2122200768",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2122200768"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2122200768"
+      }
     },
     {
       "id": "object-large-building-cell-2123766556",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2123766556"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2123766556"
+      }
     },
     {
       "id": "object-large-building-cell-2129227684",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2129227684"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2129227684"
+      }
     },
     {
       "id": "object-large-building-cell-2129268090",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2129268090"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2129268090"
+      }
     },
     {
       "id": "object-large-building-cell-2130462791",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2130462791"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2130462791"
+      }
     },
     {
       "id": "object-large-building-cell-213288431",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-213288431"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-213288431"
+      }
     },
     {
       "id": "object-large-building-cell-2133933479",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2133933479"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2133933479"
+      }
     },
     {
       "id": "object-large-building-cell-213485354",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-213485354"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-213485354"
+      }
     },
     {
       "id": "object-large-building-cell-2138053116",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2138053116"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2138053116"
+      }
     },
     {
       "id": "object-large-building-cell-2140530466",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2140530466"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2140530466"
+      }
     },
     {
       "id": "object-large-building-cell-2145772830",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-2145772830"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-2145772830"
+      }
     },
     {
       "id": "object-large-building-cell-215497277",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-215497277"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-215497277"
+      }
     },
     {
       "id": "object-large-building-cell-21813760",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-21813760"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-21813760"
+      }
     },
     {
       "id": "object-large-building-cell-223582667",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-223582667"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-223582667"
+      }
     },
     {
       "id": "object-large-building-cell-225304973",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-225304973"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-225304973"
+      }
     },
     {
       "id": "object-large-building-cell-227817525",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-227817525"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-227817525"
+      }
     },
     {
       "id": "object-large-building-cell-233634660",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-233634660"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-233634660"
+      }
     },
     {
       "id": "object-large-building-cell-235570381",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-235570381"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-235570381"
+      }
     },
     {
       "id": "object-large-building-cell-260559960",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-260559960"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-260559960"
+      }
     },
     {
       "id": "object-large-building-cell-26915477",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-26915477"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-26915477"
+      }
     },
     {
       "id": "object-large-building-cell-280039332",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-280039332"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-280039332"
+      }
     },
     {
       "id": "object-large-building-cell-304645329",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-304645329"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-304645329"
+      }
     },
     {
       "id": "object-large-building-cell-305404617",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-305404617"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-305404617"
+      }
     },
     {
       "id": "object-large-building-cell-312722899",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-312722899"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-312722899"
+      }
     },
     {
       "id": "object-large-building-cell-318296333",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-318296333"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-318296333"
+      }
     },
     {
       "id": "object-large-building-cell-320056908",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-320056908"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-320056908"
+      }
     },
     {
       "id": "object-large-building-cell-337654450",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-337654450"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-337654450"
+      }
     },
     {
       "id": "object-large-building-cell-37179584",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-37179584"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-37179584"
+      }
     },
     {
       "id": "object-large-building-cell-381528827",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-381528827"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-381528827"
+      }
     },
     {
       "id": "object-large-building-cell-383781649",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-383781649"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-383781649"
+      }
     },
     {
       "id": "object-large-building-cell-392290533",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-392290533"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-392290533"
+      }
     },
     {
       "id": "object-large-building-cell-402090866",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-402090866"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-402090866"
+      }
     },
     {
       "id": "object-large-building-cell-404973293",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-404973293"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-404973293"
+      }
     },
     {
       "id": "object-large-building-cell-408133342",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-408133342"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-408133342"
+      }
     },
     {
       "id": "object-large-building-cell-408766514",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-408766514"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-408766514"
+      }
     },
     {
       "id": "object-large-building-cell-416458497",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-416458497"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-416458497"
+      }
     },
     {
       "id": "object-large-building-cell-417535326",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-417535326"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-417535326"
+      }
     },
     {
       "id": "object-large-building-cell-419000198",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-419000198"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-419000198"
+      }
     },
     {
       "id": "object-large-building-cell-428469789",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-428469789"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-428469789"
+      }
     },
     {
       "id": "object-large-building-cell-433779007",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-433779007"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-433779007"
+      }
     },
     {
       "id": "object-large-building-cell-439890637",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-439890637"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-439890637"
+      }
     },
     {
       "id": "object-large-building-cell-450505129",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-450505129"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-450505129"
+      }
     },
     {
       "id": "object-large-building-cell-459810409",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-459810409"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-459810409"
+      }
     },
     {
       "id": "object-large-building-cell-46409771",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-46409771"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-46409771"
+      }
     },
     {
       "id": "object-large-building-cell-4719948",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-4719948"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-4719948"
+      }
     },
     {
       "id": "object-large-building-cell-472731710",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-472731710"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-472731710"
+      }
     },
     {
       "id": "object-large-building-cell-476839878",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-476839878"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-476839878"
+      }
     },
     {
       "id": "object-large-building-cell-481315302",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-481315302"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-481315302"
+      }
     },
     {
       "id": "object-large-building-cell-486075734",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-486075734"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-486075734"
+      }
     },
     {
       "id": "object-large-building-cell-503902914",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-503902914"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-503902914"
+      }
     },
     {
       "id": "object-large-building-cell-528384819",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-528384819"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-528384819"
+      }
     },
     {
       "id": "object-large-building-cell-530309423",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-530309423"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-530309423"
+      }
     },
     {
       "id": "object-large-building-cell-534173069",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-534173069"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-534173069"
+      }
     },
     {
       "id": "object-large-building-cell-541839786",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-541839786"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-541839786"
+      }
     },
     {
       "id": "object-large-building-cell-547614243",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-547614243"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-547614243"
+      }
     },
     {
       "id": "object-large-building-cell-549410530",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-549410530"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-549410530"
+      }
     },
     {
       "id": "object-large-building-cell-552805697",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-552805697"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-552805697"
+      }
     },
     {
       "id": "object-large-building-cell-55346044",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-55346044"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-55346044"
+      }
     },
     {
       "id": "object-large-building-cell-553461608",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-553461608"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-553461608"
+      }
     },
     {
       "id": "object-large-building-cell-566091635",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-566091635"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-566091635"
+      }
     },
     {
       "id": "object-large-building-cell-568197314",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-568197314"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-568197314"
+      }
     },
     {
       "id": "object-large-building-cell-572719224",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-572719224"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-572719224"
+      }
     },
     {
       "id": "object-large-building-cell-598944803",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-598944803"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-598944803"
+      }
     },
     {
       "id": "object-large-building-cell-599054301",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-599054301"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-599054301"
+      }
     },
     {
       "id": "object-large-building-cell-602741849",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-602741849"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-602741849"
+      }
     },
     {
       "id": "object-large-building-cell-607542051",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-607542051"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-607542051"
+      }
     },
     {
       "id": "object-large-building-cell-607574733",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-607574733"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-607574733"
+      }
     },
     {
       "id": "object-large-building-cell-607978262",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-607978262"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-607978262"
+      }
     },
     {
       "id": "object-large-building-cell-609534795",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-609534795"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-609534795"
+      }
     },
     {
       "id": "object-large-building-cell-614643058",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-614643058"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-614643058"
+      }
     },
     {
       "id": "object-large-building-cell-617669493",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-617669493"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-617669493"
+      }
     },
     {
       "id": "object-large-building-cell-620471923",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-620471923"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-620471923"
+      }
     },
     {
       "id": "object-large-building-cell-632424245",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-632424245"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-632424245"
+      }
     },
     {
       "id": "object-large-building-cell-634843992",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-634843992"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-634843992"
+      }
     },
     {
       "id": "object-large-building-cell-637723258",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-637723258"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-637723258"
+      }
     },
     {
       "id": "object-large-building-cell-642463121",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-642463121"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-642463121"
+      }
     },
     {
       "id": "object-large-building-cell-642880768",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-642880768"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-642880768"
+      }
     },
     {
       "id": "object-large-building-cell-643167584",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-643167584"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-643167584"
+      }
     },
     {
       "id": "object-large-building-cell-645006906",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-645006906"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-645006906"
+      }
     },
     {
       "id": "object-large-building-cell-646086449",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-646086449"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-646086449"
+      }
     },
     {
       "id": "object-large-building-cell-651271670",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-651271670"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-651271670"
+      }
     },
     {
       "id": "object-large-building-cell-654577265",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-654577265"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-654577265"
+      }
     },
     {
       "id": "object-large-building-cell-656561317",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-656561317"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-656561317"
+      }
     },
     {
       "id": "object-large-building-cell-66343653",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-66343653"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-66343653"
+      }
     },
     {
       "id": "object-large-building-cell-664079830",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-664079830"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-664079830"
+      }
     },
     {
       "id": "object-large-building-cell-669155185",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-669155185"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-669155185"
+      }
     },
     {
       "id": "object-large-building-cell-673397914",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-673397914"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-673397914"
+      }
     },
     {
       "id": "object-large-building-cell-673410706",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-673410706"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-673410706"
+      }
     },
     {
       "id": "object-large-building-cell-676716695",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-676716695"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-676716695"
+      }
     },
     {
       "id": "object-large-building-cell-691907400",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-691907400"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-691907400"
+      }
     },
     {
       "id": "object-large-building-cell-698649403",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-698649403"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-698649403"
+      }
     },
     {
       "id": "object-large-building-cell-705718492",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-705718492"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-705718492"
+      }
     },
     {
       "id": "object-large-building-cell-710944330",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-710944330"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-710944330"
+      }
     },
     {
       "id": "object-large-building-cell-711086146",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-711086146"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-711086146"
+      }
     },
     {
       "id": "object-large-building-cell-722203143",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-722203143"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-722203143"
+      }
     },
     {
       "id": "object-large-building-cell-746750045",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-746750045"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-746750045"
+      }
     },
     {
       "id": "object-large-building-cell-748579329",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-748579329"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-748579329"
+      }
     },
     {
       "id": "object-large-building-cell-754806686",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-754806686"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-754806686"
+      }
     },
     {
       "id": "object-large-building-cell-762193120",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-762193120"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-762193120"
+      }
     },
     {
       "id": "object-large-building-cell-762348889",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-762348889"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-762348889"
+      }
     },
     {
       "id": "object-large-building-cell-77244172",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-77244172"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-77244172"
+      }
     },
     {
       "id": "object-large-building-cell-773107249",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-773107249"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-773107249"
+      }
     },
     {
       "id": "object-large-building-cell-781275054",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-781275054"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-781275054"
+      }
     },
     {
       "id": "object-large-building-cell-783534108",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-783534108"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-783534108"
+      }
     },
     {
       "id": "object-large-building-cell-792073146",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-792073146"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-792073146"
+      }
     },
     {
       "id": "object-large-building-cell-804884116",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-804884116"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-804884116"
+      }
     },
     {
       "id": "object-large-building-cell-806993931",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-806993931"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-806993931"
+      }
     },
     {
       "id": "object-large-building-cell-807347454",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-807347454"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-807347454"
+      }
     },
     {
       "id": "object-large-building-cell-810124589",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-810124589"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-810124589"
+      }
     },
     {
       "id": "object-large-building-cell-810673828",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-810673828"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-810673828"
+      }
     },
     {
       "id": "object-large-building-cell-813800220",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-813800220"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-813800220"
+      }
     },
     {
       "id": "object-large-building-cell-823549218",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-823549218"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-823549218"
+      }
     },
     {
       "id": "object-large-building-cell-828932231",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-828932231"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-828932231"
+      }
     },
     {
       "id": "object-large-building-cell-835729896",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-835729896"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-835729896"
+      }
     },
     {
       "id": "object-large-building-cell-83584399",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-83584399"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-83584399"
+      }
     },
     {
       "id": "object-large-building-cell-839454222",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-839454222"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-839454222"
+      }
     },
     {
       "id": "object-large-building-cell-839934663",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-839934663"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-839934663"
+      }
     },
     {
       "id": "object-large-building-cell-841685693",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-841685693"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-841685693"
+      }
     },
     {
       "id": "object-large-building-cell-848040804",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-848040804"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-848040804"
+      }
     },
     {
       "id": "object-large-building-cell-852583325",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-852583325"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-852583325"
+      }
     },
     {
       "id": "object-large-building-cell-854734575",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-854734575"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-854734575"
+      }
     },
     {
       "id": "object-large-building-cell-859734357",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-859734357"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-859734357"
+      }
     },
     {
       "id": "object-large-building-cell-862109542",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-862109542"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-862109542"
+      }
     },
     {
       "id": "object-large-building-cell-862989778",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-862989778"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-862989778"
+      }
     },
     {
       "id": "object-large-building-cell-869484013",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-869484013"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-869484013"
+      }
     },
     {
       "id": "object-large-building-cell-871480884",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-871480884"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-871480884"
+      }
     },
     {
       "id": "object-large-building-cell-871509497",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-871509497"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-871509497"
+      }
     },
     {
       "id": "object-large-building-cell-871775907",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-871775907"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-871775907"
+      }
     },
     {
       "id": "object-large-building-cell-874967452",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-874967452"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-874967452"
+      }
     },
     {
       "id": "object-large-building-cell-89584375",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-89584375"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-89584375"
+      }
     },
     {
       "id": "object-large-building-cell-909612915",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-909612915"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-909612915"
+      }
     },
     {
       "id": "object-large-building-cell-910033175",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-910033175"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-910033175"
+      }
     },
     {
       "id": "object-large-building-cell-922415589",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-922415589"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-922415589"
+      }
     },
     {
       "id": "object-large-building-cell-926490139",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-926490139"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-926490139"
+      }
     },
     {
       "id": "object-large-building-cell-928877125",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-928877125"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-928877125"
+      }
     },
     {
       "id": "object-large-building-cell-929713803",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-929713803"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-929713803"
+      }
     },
     {
       "id": "object-large-building-cell-931678682",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-931678682"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-931678682"
+      }
     },
     {
       "id": "object-large-building-cell-937967933",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-937967933"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-937967933"
+      }
     },
     {
       "id": "object-large-building-cell-939792477",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-939792477"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-939792477"
+      }
     },
     {
       "id": "object-large-building-cell-942275169",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-942275169"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-942275169"
+      }
     },
     {
       "id": "object-large-building-cell-942581040",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-942581040"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-942581040"
+      }
     },
     {
       "id": "object-large-building-cell-946465549",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-946465549"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-946465549"
+      }
     },
     {
       "id": "object-large-building-cell-952290097",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-952290097"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-952290097"
+      }
     },
     {
       "id": "object-large-building-cell-960375174",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-960375174"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-960375174"
+      }
     },
     {
       "id": "object-large-building-cell-967577797",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-967577797"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-967577797"
+      }
     },
     {
       "id": "object-large-building-cell-972596340",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-972596340"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-972596340"
+      }
     },
     {
       "id": "object-large-building-cell-976143122",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-976143122"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-976143122"
+      }
     },
     {
       "id": "object-large-building-cell-981187993",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-981187993"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-981187993"
+      }
     },
     {
       "id": "object-large-building-cell-982001082",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-982001082"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-982001082"
+      }
     },
     {
       "id": "object-large-building-cell-983580799",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-983580799"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-983580799"
+      }
     },
     {
       "id": "object-large-building-cell-989778350",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-989778350"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-989778350"
+      }
     },
     {
       "id": "object-large-building-cell-993300427",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-993300427"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-993300427"
+      }
     },
     {
       "id": "object-large-building-cell-993692891",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-993692891"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-993692891"
+      }
     },
     {
       "id": "object-large-building-cell-994255580",
-      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "large-building-cell-994255580"`r`n      }
+      "typology": "builtin.primitive.box",
+      "primitives": {
+        "solid": "large-building-cell-994255580"
+      }
     }
   ],
   "geometry": {
@@ -59407,4 +60508,5 @@
     ]
   }
 }
+
 

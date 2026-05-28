@@ -4,10 +4,6 @@
   "version": "1.0.0",
   "label": "Reinforced Concrete External Wall",
   "actions": [
-    "building.wall.constructVerticalConcreteWall",
-    "building.wall.constructWallFromBottomAndTop",
-    "building.wall.constructWallFromHorizontalPathAndProfile",
-    "building.wall.constructWallFromHorizontalPathAndProfiles",
     "structure.structure.createReinforcedConcreteExternalWallFrom2PointsAndHeight",
     "structure.structure.createReinforcedConcreteExternalWallFromCurveAndHeight",
     "structure.structure.createReinforcedConcreteExternalWallFromSurface",

@@ -28,11 +28,18 @@ Every AEC/FEM typology that lacked create flows now ships three declarative crea
 
 ## Tests
 
-- `@spatial/js-core`: `every typology ships construct kit or legacy create interactions` — pass
-- `@spatial/js-core`: `construct dispatch action delegates to the selected create action` — pass
-- `@spatial/js-core`: `typology actions reference shipped declarative action specs` — pass (added `command.finish` action asset for shape typologies)
-- `@spatial/js-renderer-r3f`: 10/10 pass
-- Full `@spatial/js-core` suite: 36 failures pre-existing (interaction e2e: arc, move, copy, …)
+- `@spatial/js-core`: **286/286 pass** (interaction e2e, transform move/copy, typology construct kit)
+- `@spatial/js-kernel-brepjs`: typology `createFrom2PointsAndHeight` handler — pass
+- `@spatial/js-renderer-r3f`: **10/10 pass**
+
+## Follow-up fixes (continue)
+
+- `actionAvailableInModelDefinition`: allow `command.*` infrastructure actions during interactions
+- `InteractionRuntime.send(start)`: run `start` transition before `consumeStartSelection` so pre-selected targets work
+- `ActionRegistry.withBuiltins`: register capability-only `command.*` actions with declarative specs
+- `executeBuiltinActionCapability`: pass `model` into `executeCommandDiff` for wire/face create modes
+- `BrepjsKernel.executeCommandDiff`: `*From2PointsAndHeight`, `*FromCurveAndHeight`, `*FromSurface` handlers
+- `spatial.shape/action/finish.json` for `command.finish` typology references
 
 ## Regenerate assets
 

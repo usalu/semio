@@ -28,29 +28,9 @@ function walkTypologyJsonFiles(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
-const WALL_EXTRA_ACTIONS = [
-	"building.wall.constructVerticalConcreteWall",
-	"building.wall.constructWallFromBottomAndTop",
-	"building.wall.constructWallFromHorizontalPathAndProfile",
-	"building.wall.constructWallFromHorizontalPathAndProfiles",
-] as const;
-
-const COLUMN_EXTRA_ACTIONS = [
-	"building.mushroomcolumn.constructMushroomColumn",
-	"building.mushroomcolumn.constructExtrudedMushroomColumn",
-	"building.mushroomcolumn.constructFullyQuadraticMushroomColumn",
-	"building.mushroomcolumn.constructRectangularMushroomColumnWithQuadraticSlab",
-] as const;
-
 function writeJson(path: string, value: unknown): void {
 	mkdirSync(dirname(path), { recursive: true });
 	writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-}
-
-function extraActionsForTypology(typology: string): readonly string[] {
-	if (typology.includes("wall")) return WALL_EXTRA_ACTIONS;
-	if (typology.includes("column")) return COLUMN_EXTRA_ACTIONS;
-	return [];
 }
 
 let updated = 0;
@@ -64,7 +44,6 @@ for (const typologyPath of walkTypologyJsonFiles(assetsRoot)) {
 	if (!ownerFolder) continue;
 	const modelDefinitionRoot = join(assetsRoot, ownerFolder);
 	const ids = typologyConstructAssetIds(spec.id, spec.label);
-	const extras = extraActionsForTypology(spec.id);
 	const actionDir = join(modelDefinitionRoot, "action");
 	const interactionDir = join(modelDefinitionRoot, "interaction");
 	writeJson(
@@ -89,7 +68,7 @@ for (const typologyPath of walkTypologyJsonFiles(assetsRoot)) {
 	);
 	const nextTypology = {
 		...(raw as Record<string, unknown>),
-		actions: [...extras, ids.createFrom2PointsAndHeight, ids.createFromCurveAndHeight, ids.createFromSurface, ids.construct],
+		actions: [ids.createFrom2PointsAndHeight, ids.createFromCurveAndHeight, ids.createFromSurface, ids.construct],
 		interactions: [ids.construct],
 	};
 	writeJson(typologyPath.replace(/\\/g, "/"), nextTypology);

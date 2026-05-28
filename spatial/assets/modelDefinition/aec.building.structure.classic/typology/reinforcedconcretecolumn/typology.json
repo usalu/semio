@@ -4,10 +4,6 @@
   "version": "1.0.0",
   "label": "Reinforced Concrete Column",
   "actions": [
-    "building.mushroomcolumn.constructMushroomColumn",
-    "building.mushroomcolumn.constructExtrudedMushroomColumn",
-    "building.mushroomcolumn.constructFullyQuadraticMushroomColumn",
-    "building.mushroomcolumn.constructRectangularMushroomColumnWithQuadraticSlab",
     "structure.structure.createReinforcedConcreteColumnFrom2PointsAndHeight",
     "structure.structure.createReinforcedConcreteColumnFromCurveAndHeight",
     "structure.structure.createReinforcedConcreteColumnFromSurface",

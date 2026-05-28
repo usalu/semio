@@ -41,7 +41,7 @@ if (command === "test") {
 		interactionIds: interactionIds.length > 0 ? interactionIds : undefined,
 	});
 	await Bun.write(outPath, `${JSON.stringify(doc, null, 2)}\n`);
-	console.error(`[DEBUG] wrote ${outPath} (${doc.machines.length} machine(s))`);
+	console.error(`wrote ${outPath} (${doc.machines.length} machine(s))`);
 	process.exit(0);
 } else {
 	console.error("usage: bun ./script.ts test [args…]");
