@@ -1,0 +1,10 @@
+{
+  "title": "Fix getrandom target config in setup script",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "The rustflags getrandom_backend flag in script.ts needs proper escaped quotes to avoid syntax errors in cargo builds.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪e95711e6d7be408c978aa6c2071c47b3"
+  ]
+}

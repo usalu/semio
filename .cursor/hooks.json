@@ -1,6 +1,106 @@
 {
-  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
-  "hooks": {},
+  "hooks": {
+    "afterAgentResponse": [
+      {
+        "command": "go run ./repo/client/mcp hook afterAgentResponse cursor-chat"
+      }
+    ],
+    "afterAgentThought": [
+      {
+        "command": "go run ./repo/client/mcp hook afterAgentThought cursor-chat"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "go run ./repo/client/mcp hook afterFileEdit cursor-chat"
+      }
+    ],
+    "afterMCPExecution": [
+      {
+        "command": "go run ./repo/client/mcp hook afterMCPExecution cursor-chat"
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "go run ./repo/client/mcp hook afterShellExecution cursor-chat"
+      }
+    ],
+    "afterTabFileEdit": [
+      {
+        "command": "go run ./repo/client/mcp hook afterTabFileEdit cursor-chat"
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "go run ./repo/client/mcp hook beforeMCPExecution cursor-chat"
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "go run ./repo/client/mcp hook beforeReadFile cursor-chat"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "go run ./repo/client/mcp hook beforeShellExecution cursor-chat"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "go run ./repo/client/mcp hook beforeSubmitPrompt cursor-chat"
+      }
+    ],
+    "beforeTabFileRead": [
+      {
+        "command": "go run ./repo/client/mcp hook beforeTabFileRead cursor-chat"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "go run ./repo/client/mcp hook postToolUse cursor-chat"
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": "go run ./repo/client/mcp hook postToolUseFailure cursor-chat"
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "go run ./repo/client/mcp hook preCompact cursor-chat"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "go run ./repo/client/mcp hook preToolUse cursor-chat"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "go run ./repo/client/mcp hook sessionEnd cursor-chat"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "go run ./repo/client/mcp hook sessionStart cursor-chat"
+      }
+    ],
+    "stop": [
+      {
+        "command": "go run ./repo/client/mcp hook stop cursor-chat"
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "go run ./repo/client/mcp hook subagentStart cursor-chat"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "go run ./repo/client/mcp hook subagentStop cursor-chat"
+      }
+    ]
+  },
   "version": 1
   // "hooks": {
   //   "afterAgentResponse": [

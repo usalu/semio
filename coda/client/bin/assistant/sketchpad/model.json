@@ -1,0 +1,140 @@
+{
+  "version": "BOT-2.0",
+  "ontology_hierarchy": {
+    "Level_1_User_Inputs": {
+      "source": "Frontend Drag & Drop / LLM Chat",
+      "building_zones": [
+        {
+          "id": "Room1",
+          "type": "Room",
+          "geometry": {
+            "x": 0,
+            "y": 0,
+            "width": 5,
+            "length": 4
+          }
+        },
+        {
+          "id": "Room2",
+          "type": "Room",
+          "geometry": {
+            "x": 5,
+            "y": 0,
+            "width": 3,
+            "length": 4
+          }
+        }
+      ],
+      "tabula_metadata": {
+        "building_type": "SFH",
+        "year_class": "2016+",
+        "scenario": "Existing State",
+        "story_height_m": 2.8,
+        "number_of_stories": 1
+      }
+    },
+    "Level_2_Computed_Geometry": {
+      "source": "Shapely Geometry Engine (Backend)",
+      "merged_footprint_area_m2": 32.0,
+      "true_exterior_perimeter_m": 24.0,
+      "exterior_coords": [
+        [
+          0.0,
+          -1.692413147294446e-19
+        ],
+        [
+          0.0,
+          3.9999999999999996
+        ],
+        [
+          8.0,
+          3.9999999999999996
+        ],
+        [
+          8.0,
+          -1.3708546493085012e-17
+        ],
+        [
+          0.0,
+          -1.692413147294446e-19
+        ]
+      ]
+    },
+    "Level_3_Database_Constants": {
+      "source": "TABULA / EPISCOPE Database Lookup",
+      "applied_u_values": {
+        "wall_W_m2K": 2,
+        "roof_W_m2K": 2.6,
+        "window_Uw_W_m2K": 2.8,
+        "window_g_value": 0.7,
+        "floor_W_m2K": 2.9,
+        "door_W_m2K": 2.0
+      }
+    },
+    "Level_4_Energy_Performance": {
+      "source": "Unified Calculator Tool",
+      "specific_q_h_kWh_m2a": 750.3
+    }
+  },
+  "zones": [
+    {
+      "id": "Room1",
+      "type": "Room",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 5,
+        "length": 4
+      }
+    },
+    {
+      "id": "Room2",
+      "type": "Room",
+      "geometry": {
+        "x": 5,
+        "y": 0,
+        "width": 3,
+        "length": 4
+      }
+    }
+  ],
+  "result": {
+    "name": "Two-Room SFH 2036",
+    "building_type": "SFH",
+    "year_class": "2016+",
+    "scenario": "Existing State",
+    "story_height_m": 2.8,
+    "number_of_stories": 1,
+    "footprint_area_m2": 32.0,
+    "exterior_perimeter_m": 24.0,
+    "exterior_coords": [
+      [
+        0.0,
+        -1.692413147294446e-19
+      ],
+      [
+        0.0,
+        3.9999999999999996
+      ],
+      [
+        8.0,
+        3.9999999999999996
+      ],
+      [
+        8.0,
+        -1.3708546493085012e-17
+      ],
+      [
+        0.0,
+        -1.692413147294446e-19
+      ]
+    ],
+    "walls_by_orientation": {
+      "N": 8.0,
+      "E": 4.0,
+      "S": 8.0,
+      "W": 4.0
+    },
+    "specific_q_h_kWh_m2a": 750.3
+  }
+}

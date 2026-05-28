@@ -4,7 +4,7 @@ members = [
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",
-    "semio/server/hub",
+    "semio/server/hub", "coda/client/bin/assistant/sketchpad-rs",
 ]
 
 resolver = "2"

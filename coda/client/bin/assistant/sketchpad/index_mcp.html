@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Energy Sketchpad — MCP App</title>
+    <meta name="description" content="Interactive 3D zone-based building energy analysis — MCP App edition">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #0a0f1e;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Layout: 2-column (controls + canvas) ── */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            grid-template-rows: 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* ── Left Panel ── */
+        .panel-left {
+            background: rgba(15, 23, 42, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        /* Section Card */
+        .section-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .section-card h3 {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        /* Zone List */
+        .zone-list {
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 4px;
+        }
+
+        .zone-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 6px;
+            transition: border-color 0.2s;
+        }
+
+        .zone-card:hover {
+            border-color: #38bdf8;
+        }
+
+        .zone-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .zone-card-header span {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .zone-card-type {
+            font-size: 0.7rem;
+            color: #818cf8;
+            background: rgba(129, 140, 248, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .zone-card .dims {
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .zone-card .dims span {
+            color: #38bdf8;
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover {
+            opacity: 1;
+        }
+
+        /* Form elements */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        label {
+            font-size: 0.68rem;
+            color: #64748b;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
+            padding: 7px 8px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #38bdf8;
+        }
+
+        input:disabled,
+        select:disabled {
+            background: rgba(255, 255, 255, 0.03);
+            color: #64748b;
+            border-color: rgba(255, 255, 255, 0.05);
+            cursor: not-allowed;
+        }
+
+        select option {
+            background: #1e293b;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 9px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 4px;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, #10b981, #059669);
+            margin-top: 10px;
+            padding: 12px;
+            font-size: 0.95rem;
+            position: sticky;
+            bottom: 0;
+        }
+
+        /* ── Center: 3D Canvas ── */
+        .panel-center {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            display: flex;
+            gap: 16px;
+        }
+
+        .status-bar .stat-value {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        /* Results overlay */
+        .results-overlay {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            max-width: 320px;
+            font-size: 0.8rem;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .results-overlay.visible {
+            display: block;
+        }
+
+        .results-overlay h4 {
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .results-overlay .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .results-overlay .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .results-overlay .result-label {
+            color: #94a3b8;
+        }
+
+        .results-overlay .result-value {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .results-overlay .result-value.highlight {
+            color: #10b981;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Inline notification */
+        .toast {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 185, 129, 0.9);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.2s ease;
+            z-index: 10;
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .toast.visible {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Wall Segment Cards */
+        .wall-seg {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+        }
+
+        .wall-seg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .wall-seg-dir {
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: #0f172a;
+        }
+
+        .wall-seg-dir.dir-N {
+            background: #ef4444;
+        }
+
+        .wall-seg-dir.dir-E {
+            background: #38bdf8;
+        }
+
+        .wall-seg-dir.dir-S {
+            background: #fbbf24;
+        }
+
+        .wall-seg-dir.dir-W {
+            background: #a78bfa;
+        }
+
+        .wall-seg-info {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        .wall-seg-windows {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 3px;
+        }
+
+        .win-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 0.7rem;
+            color: #38bdf8;
+        }
+
+        .win-tag .win-remove {
+            cursor: pointer;
+            color: #ef4444;
+            font-size: 0.65rem;
+            opacity: 0.7;
+        }
+
+        .win-tag .win-remove:hover {
+            opacity: 1;
+        }
+
+        .btn-add-win {
+            background: none;
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-add-win:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .toolbar button {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        .toolbar button.active {
+            background: rgba(56, 189, 248, 0.3);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+    </style>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+          }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- ── Left Panel: All Controls ── -->
+        <div class="panel-left">
+            <div class="logo">Building Energy Sketchpad</div>
+            <div class="subtitle">Draw zones · Configure settings · Calculate energy via MCP</div>
+
+            <!-- Zone List -->
+            <div class="zone-list" id="zone-list"></div>
+
+            <!-- Add Zone Form -->
+            <div class="section-card">
+                <h3>+ Add Zone</h3>
+                <div class="form-row single">
+                    <div>
+                        <label>Room Type</label>
+                        <select id="zone-type">
+                            <option>Living Room</option>
+                            <option>Kitchen</option>
+                            <option>Bedroom</option>
+                            <option>Bathroom</option>
+                            <option>Hallway</option>
+                            <option>Office</option>
+                            <option>Storage</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div><label>Width (m)</label><input type="number" id="zone-width" value="5" step="0.1" min="0.5">
+                    </div>
+                    <div><label>Length (m)</label><input type="number" id="zone-length" value="4" step="0.1" min="0.5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div><label>X Position (m)</label><input type="number" id="zone-x" value="0" step="0.1"></div>
+                    <div><label>Y Position (m)</label><input type="number" id="zone-y" value="0" step="0.1"></div>
+                </div>
+                <button class="btn-primary" id="btn-add-zone">Add Zone</button>
+            </div>
+
+            <!-- Building Parameters -->
+            <div class="section-card">
+                <h3>🏠 Building Parameters</h3>
+                <div class="form-row single">
+                    <div>
+                        <label>House Type</label>
+                        <select id="tabula-type">
+                            <option value="SFH">Single-Family House (SFH)</option>
+                            <option value="TH">Terraced House (TH)</option>
+                            <option value="MFH">Multi-Family House (MFH)</option>
+                            <option value="AB">Apartment Block (AB)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Year of Build</label>
+                        <select id="tabula-year">
+                            <option value="...1859">...1859</option>
+                            <option value="1860-1918">1860-1918</option>
+                            <option value="1919-1948">1919-1948</option>
+                            <option value="1949-1957">1949-1957</option>
+                            <option value="1958-1968">1958-1968</option>
+                            <option value="1969-1978">1969-1978</option>
+                            <option value="1979-1983">1979-1983</option>
+                            <option value="1984-1994">1984-1994</option>
+                            <option value="1995-2001">1995-2001</option>
+                            <option value="2002-2009">2002-2009</option>
+                            <option value="2010-2015">2010-2015</option>
+                            <option value="2016-...">2016-...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Refurbishment Status</label>
+                        <select id="tabula-scenario">
+                            <option value="Existing State">Existing State</option>
+                            <option value="Usual Refurbishment">Usual Refurbishment</option>
+                            <option value="Advanced Refurbishment">Advanced Refurbishment</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" id="num-stories" value="1">
+            <input type="hidden" id="story-height" value="2.8">
+
+            <!-- Hidden inputs to prevent JS errors when HVAC is commented out -->
+            <input type="hidden" id="ventilation-system" value="Natural">
+            <input type="hidden" id="heating-system" value="Gas Condensing Boiler">
+
+            <!-- Building Rotation (moved from wall-window-panel) -->
+            <div class="section-card">
+                <h3>🧭 Building Rotation</h3>
+                <div class="form-row single">
+                    <div>
+                        <label>North Angle (°)</label>
+                        <input type="range" id="building-rotation" value="0" min="0" max="360" step="5" style="width:100%">
+                        <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:#64748b;">
+                            <span>0°</span><span id="rotation-value">0°</span><span>360°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div style="margin-top: 12px; position: sticky; bottom: 0; display: flex; gap: 8px;">
+                <button id="btn-undo" style="
+                    flex: 1;
+                    padding: 11px 0;
+                    background: #18181b;
+                    color: #ffffff;
+                    border: 1px solid rgba(255,255,255,0.12);
+                    border-radius: 8px;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.18s;
+                ">Undo</button>
+                <button id="btn-redo" style="
+                    flex: 1;
+                    padding: 11px 0;
+                    background: #18181b;
+                    color: #ffffff;
+                    border: 1px solid rgba(255,255,255,0.12);
+                    border-radius: 8px;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.18s;
+                ">Redo</button>
+            </div>
+
+            <!-- System Logs -->
+            <div class="section-card" id="logs-panel"
+                style="margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <h3 style="margin-bottom:0; font-size:0.75rem; color:#94a3b8;">💻 System Logs</h3>
+                    <button id="btn-clear-logs"
+                        style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.7rem;">Clear</button>
+                </div>
+                <div id="log-console"
+                    style="max-height:80px; overflow-y:auto; font-family:monospace; font-size:0.65rem; color:#94a3b8; line-height:1.2; word-break:break-all;">
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Center: 3D View ── -->
+        <div class="panel-center">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button id="btn-mode-orbit" class="active">Orbit</button>
+                <button id="btn-mode-select">Select</button>
+                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;" id="toolbar-divider" style="display:none;"></div>
+                <button id="btn-transform-translate" style="display:none;" class="active">Moving</button>
+                <button id="btn-transform-scale" style="display:none;">Scaling</button>
+            </div>
+
+            <div id="canvas-container"></div>
+
+            <!-- Toast notification -->
+            <div class="toast" id="toast"></div>
+
+            <!-- Compass Rose -->
+            <div id="compass-container"
+                style="position:absolute; top:16px; left:16px; width:80px; height:80px; cursor:pointer; user-select:none;">
+                <svg id="compass-svg" viewBox="0 0 100 100" width="80" height="80"
+                    style="filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));">
+                    <circle cx="50" cy="50" r="48" fill="rgba(15,23,42,0.9)" stroke="rgba(255,255,255,0.15)"
+                        stroke-width="1.5" />
+                    <line x1="50" y1="5" x2="50" y2="12" stroke="#64748b" stroke-width="1" />
+                    <line x1="95" y1="50" x2="88" y2="50" stroke="#64748b" stroke-width="1" />
+                    <line x1="50" y1="95" x2="50" y2="88" stroke="#64748b" stroke-width="1" />
+                    <line x1="5" y1="50" x2="12" y2="50" stroke="#64748b" stroke-width="1" />
+                    <g id="compass-needle" transform="rotate(0, 50, 50)">
+                        <polygon points="50,10 44,48 56,48" fill="#ef4444" opacity="0.9" />
+                        <polygon points="50,90 44,52 56,52" fill="#94a3b8" opacity="0.5" />
+                        <circle cx="50" cy="50" r="4" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5" />
+                    </g>
+                    <text x="50" y="22" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="700"
+                        font-family="Inter,sans-serif">N</text>
+                    <text x="83" y="54" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="500"
+                        font-family="Inter,sans-serif">E</text>
+                    <text x="50" y="86" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="500"
+                        font-family="Inter,sans-serif">S</text>
+                    <text x="17" y="54" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="500"
+                        font-family="Inter,sans-serif">W</text>
+                </svg>
+                <div id="compass-angle" style="text-align:center; font-size:0.6rem; color:#64748b; margin-top:2px;">0°
+                </div>
+            </div>
+
+            <!-- Results Overlay -->
+            <div class="results-overlay" id="results-overlay">
+                <h4>✅ Energy Results</h4>
+                <div id="results-content"></div>
+            </div>
+
+            <div class="status-bar" id="status-bar">
+                <div>Zones: <span class="stat-value" id="stat-zones">0</span></div>
+                <div>Area: <span class="stat-value" id="stat-area">–</span></div>
+                <div>Perimeter: <span class="stat-value" id="stat-perimeter">–</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+          }
+        }
+    </script>
+    <script type="module" src="./main_mcp.js"></script>
+</body>
+
+</html>

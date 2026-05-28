@@ -760,10 +760,68 @@ _BUILDING_PLANNER_META: dict[str, typing.Any] = {
     }
 }
 
-@mcp.resource(_BUILDING_PLANNER_URI)
+@mcp.resource(
+    _BUILDING_PLANNER_URI,
+    name="building planner",
+    description="Interactive 3D Building Sketchpad UI for drawing building geometry.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_BUILDING_PLANNER_META,
+)
 def get_building_ui() -> str:
-    """Returns the Building Planner Sketchpad as a self-contained MCP App."""
+    """🏗️Returns the Building Planner Sketchpad as a self-contained MCP App."""
     dir_path = os.path.dirname(__file__)
+    
+    html_path = os.path.join(dir_path, "sketchpad", "index_mcp.html")
+    js_path = os.path.join(dir_path, "sketchpad", "main_mcp.js")
+    rs_js_path = os.path.join(dir_path, "sketchpad-rs", "pkg", "sketchpad_rs.js")
+    rs_wasm_path = os.path.join(dir_path, "sketchpad-rs", "pkg", "sketchpad_rs_bg.wasm")
+
+    if os.path.exists(html_path) and os.path.exists(js_path) and os.path.exists(rs_js_path):
+        import base64
+        with open(html_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(js_path, "r", encoding="utf-8") as f:
+            js = f.read()
+        with open(rs_js_path, "r", encoding="utf-8") as f:
+            rs_js = f.read()
+            rs_js = rs_js.replace(
+                "script_src = new URL(document.currentScript.src, location.href).toString();",
+                "try { script_src = new URL(document.currentScript.src, location.href).toString(); } catch(e) { script_src = ''; }"
+            )
+        with open(rs_wasm_path, "rb") as f:
+            rs_wasm_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+        inlined_rs = f'''<script>
+window.__wasmLogs = [];
+function initLog(msg, isErr=false) {{
+    window.__wasmLogs.push({{msg: msg, err: isErr}});
+    if (window.logToConsole) window.logToConsole(msg);
+}}
+{rs_js}
+try {{
+    initLog("[WASM-Init] Decoding wasmBase64...");
+    const wasmBase64 = "{rs_wasm_b64}";
+    const wasmBinary = Uint8Array.from(atob(wasmBase64), c => c.charCodeAt(0));
+    initLog("[WASM-Init] Decoded size: " + wasmBinary.length);
+    window.wasmInitPromise = wasm_bindgen(wasmBinary.buffer).then(() => {{
+        wasm_bindgen.init_engine();
+        window.sketchpadRs = wasm_bindgen;
+        initLog("[WASM-Init] WASM Engine initialized successfully!");
+    }}).catch(e => {{
+        initLog("[WASM-Init] Error in wasm_bindgen: " + e.message, true);
+    }});
+}} catch (err) {{
+    initLog("[WASM-Init] Error decoding or initializing WASM: " + err.message, true);
+}}
+</script>'''
+
+        inlined_script = f'<script type="module">\n{js}\n</script>'
+        html = html.replace(
+            '<script type="module" src="./main_mcp.js"></script>',
+            inlined_rs + '\n' + inlined_script,
+        )
+        return html
+
     bundled_path = os.path.join(dir_path, "ui", "sketchpad", "index_mcp.html")
     if not os.path.exists(bundled_path):
         bundled_path = os.path.join(dir_path, "ui", "index_mcp.html")
@@ -772,19 +830,8 @@ def get_building_ui() -> str:
         with open(bundled_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    html_path = os.path.join(dir_path, "sketchpad", "index_mcp.html")
-    js_path = os.path.join(dir_path, "sketchpad", "main_mcp.js")
-    with open(html_path, "r", encoding="utf-8") as f:
-        html = f.read()
-    with open(js_path, "r", encoding="utf-8") as f:
-        js = f.read()
+    raise FileNotFoundError("Could not find Building Planner UI assets (neither unbundled sketchpad/ nor bundled ui/sketchpad/).")
 
-    inlined_script = f'<script type="module">\n{js}\n</script>'
-    html = html.replace(
-        '<script type="module" src="./main_mcp.js"></script>',
-        inlined_script,
-    )
-    return html
 
 
 
@@ -3085,6 +3132,47 @@ def _write_stdout(obj: dict) -> None:
 
 
 # #endregion 🧱Sidecar
+
+# #region 🕸️HTTP
+
+async def _coda_http_payload_handler(request) -> JSONResponse:
+    """📡Serve large payload bundles to clients via token lookups."""
+    token = request.path_params.get("token")
+    payload = _mcp_app_payloads.get(token)
+    if payload is None:
+        return JSONResponse({"error": "Payload not found"}, status_code=404)
+    return JSONResponse(payload)
+
+
+@contextlib.asynccontextmanager
+async def _coda_http_app_lifespan(app):
+    """🔄Manage the FastMCP session lifecycle during the HTTP server execution."""
+    async with mcp.session_manager.run():
+        yield
+
+
+mcp.settings.streamable_http_path = "/"
+_coda_streamable_app = mcp.streamable_http_app()
+
+_coda_http_app = Starlette(
+    lifespan=_coda_http_app_lifespan,
+    routes=[
+        Route("/app/payload/{token}", _coda_http_payload_handler, methods=["GET", "OPTIONS"]),
+    ],
+)
+
+from starlette.middleware.cors import CORSMiddleware
+_coda_http_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_coda_http_app.mount("/mcp", _coda_streamable_app)
+
+# #endregion 🕸️HTTP
 
 # #region 🐼Main
 # Main MUST provide the CLI entry point supporting MCP (stdio/HTTP) and sidecar modes.
