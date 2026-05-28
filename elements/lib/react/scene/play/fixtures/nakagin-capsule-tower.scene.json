@@ -507,9 +507,14 @@
           "id": "01890804-66f2-4544-98f0-b6f0c0615492:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -536,9 +541,14 @@
           "id": "02526a37-d870-40de-8f83-ad74773deb73:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -565,9 +575,14 @@
           "id": "03b08a1d-bd01-4d7f-829e-e9008af5f8c1:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -594,9 +609,14 @@
           "id": "049888c1-42a1-4ee9-913d-2d16cbf90341:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -623,9 +643,14 @@
           "id": "072ae026-2a96-4599-b809-885ef08bf3f4:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -652,9 +677,14 @@
           "id": "085a9625-3c6d-4e2d-921a-70ac66cbc56a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -681,9 +711,14 @@
           "id": "087e2e86-96d9-4034-aa11-45e360a73761:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -710,9 +745,14 @@
           "id": "0a23d9c7-b75b-4166-8730-351367df9f8a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139565704817974,
-            -13.068800643880806,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -739,9 +779,14 @@
           "id": "0a5ebf89-46ea-4aee-ae72-5a9424ab88f1:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -768,9 +813,14 @@
           "id": "0ab890b8-783e-44fb-8e36-d7d92c54474d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -797,9 +847,14 @@
           "id": "0bb2a1dd-c9e3-4cb8-9590-faf1bc8d32ad:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -826,9 +881,14 @@
           "id": "0cc16d2b-ec2e-45c1-aa33-b835a6c9d83a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -855,9 +915,14 @@
           "id": "0fda6c60-3b37-46df-9212-2e1ce2d9baa8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068644299994109,
-            -15.139700662834503,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -884,9 +949,14 @@
           "id": "10bbba6a-100d-4b4e-b5fa-6aa851caaa52:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -913,9 +983,14 @@
           "id": "10f6459b-06db-4100-b2d4-0296077c465d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -942,9 +1017,14 @@
           "id": "11028f3e-9b83-427e-ad8a-36f13e94c9c9:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139417419870417,
-            13.0689724227624,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -971,9 +1051,14 @@
           "id": "1193fcf7-e96f-48cc-8cea-cdad0b75bbd0:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068816080406991,
-            15.139552379660888,
-            0.3999999999999991
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1000,9 +1085,14 @@
           "id": "14507529-de04-4eaa-bf7d-beddca7d46e9:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1029,9 +1119,14 @@
           "id": "1493671a-6c3b-42c7-98f9-67903212a99e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1058,9 +1153,14 @@
           "id": "156383bf-3817-4c04-818a-e64892ed57fa:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1087,9 +1187,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
           "position": [
-            -14.142213543963402,
-            -14.14205770306917,
-            0.4000000000000009
+            0,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -1097,9 +1202,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1107,9 +1217,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1117,9 +1232,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1127,9 +1247,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1137,9 +1262,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1147,9 +1277,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1157,9 +1292,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1167,9 +1307,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1177,9 +1322,14 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -1206,9 +1356,14 @@
           "id": "1972af01-10c0-4da2-8267-d6672c8778c7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1235,9 +1390,14 @@
           "id": "19d94471-b440-4be4-ad4a-f6755d24a0e8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1264,9 +1424,14 @@
           "id": "1ac5ad13-63e4-41cc-af35-cea46d5a047e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1293,9 +1458,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -1303,9 +1473,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1313,9 +1488,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1323,9 +1503,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139692377644455,
-            13.068653898175375,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1333,9 +1518,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1343,9 +1533,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068966881348441,
-            15.139422203446788,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1353,9 +1548,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1363,9 +1563,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13954409436192,
-            -13.068825678494264,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1373,9 +1578,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1383,9 +1593,14 @@
           "id": "1fd754e8-2973-40ac-91c2-2b1fcae0247b:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -1412,9 +1627,14 @@
           "id": "2473699e-f806-491e-8c80-a2bc03f60cc7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1441,9 +1661,14 @@
           "id": "24dc6dca-c4a8-4754-adaa-61011e2d9b7b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1470,9 +1695,14 @@
           "id": "25b0dba0-8f81-423a-94a1-b911a6031010:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139565704817974,
-            -13.068800643880806,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1499,9 +1729,14 @@
           "id": "27d9be65-dfdf-420e-a3f1-1b584af62b83:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1528,9 +1763,14 @@
           "id": "28638ae5-5591-427a-8859-2a1d80633edc:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976096913431217,
-            -0.9775234550658335,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1557,9 +1797,14 @@
           "id": "288f5a34-305a-4b76-87c2-3ed34b5675a9:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1586,9 +1831,14 @@
           "id": "2c171390-ce9b-4399-94aa-71a21c482093:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1615,9 +1865,14 @@
           "id": "2c4fd9c3-fecf-4fa1-b1cd-69ed957b94e6:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539716224743243,
-            16.997481634109334,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1644,9 +1899,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -1654,9 +1914,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1664,9 +1929,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997485491913274,
-            -10.539710003230532,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1674,9 +1944,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090328665104147,
-            -19.577262612822746,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1684,9 +1959,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539364496651809,
-            -16.99769972692527,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1694,9 +1974,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.577187646920525,
-            -4.090687452893756,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1704,9 +1989,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1714,9 +2004,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1724,9 +2019,14 @@
           "id": "2f0a569c-f942-4c10-8d75-f26817f693e0:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -1753,9 +2053,14 @@
           "id": "30f83909-7eb7-4452-8f67-9eef2175895e:e",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
           "position": [
-            -18.732966360250366,
-            -7.005424422954554,
-            0.40000000000000047
+            5.6,
+            -1.3,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1782,9 +2087,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -1792,9 +2102,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1802,9 +2117,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1812,9 +2132,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1822,9 +2147,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1832,9 +2162,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1842,9 +2177,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1852,9 +2192,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -1862,9 +2207,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -1872,9 +2222,14 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -1901,9 +2256,14 @@
           "id": "31c92922-b2f1-40e0-a186-bee2d209e466:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1930,9 +2290,14 @@
           "id": "323375ad-496b-4b23-8454-3e02a76fced3:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -1959,9 +2324,14 @@
           "id": "328b32f3-28b2-4809-a43f-9431ec4143a0:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -1988,9 +2358,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -1998,9 +2373,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2008,9 +2388,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2018,9 +2403,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2028,9 +2418,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2038,9 +2433,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2048,9 +2448,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2058,9 +2463,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2068,9 +2478,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2078,9 +2493,14 @@
           "id": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -2107,9 +2527,14 @@
           "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2136,9 +2561,14 @@
           "id": "3beea11e-35a1-414a-a21d-a188157591a8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2165,9 +2595,14 @@
           "id": "3f53491f-eba2-4e53-8b0e-c80f030a519f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068825975461113,
-            -15.13954383801285,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2194,9 +2629,14 @@
           "id": "4215ae1f-2636-443e-9499-f272b12f0d17:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577260019654812,
-            4.090341076588273,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2223,9 +2663,14 @@
           "id": "42cac031-0a1c-435c-aa8f-09c8598523ae:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2252,9 +2697,14 @@
           "id": "45d4a26d-fd7d-4445-b075-3e52b24de667:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2281,9 +2731,14 @@
           "id": "4a46b7f2-2046-4f75-8366-ea8b1ada5c93:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068649544540158,
-            15.139696135721824,
-            0.3999999999999991
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2310,9 +2765,14 @@
           "id": "4ab8da16-00a7-4c2d-b9ae-cd694119a4da:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2339,9 +2799,14 @@
           "id": "4b5c5bfe-7129-4bf8-bce6-3430ddb47d1f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139565704817974,
-            -13.068800643880806,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2368,9 +2833,14 @@
           "id": "4c1a395f-a2b9-4482-99bf-61fc8afc18da:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2397,9 +2867,14 @@
           "id": "4d2ede45-9474-4371-8b49-5b92fb7d904b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9772103654816823,
-            19.97611223190326,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2426,9 +2901,14 @@
           "id": "4e0b6527-5198-4138-a0f3-ce7cb8c0cd30:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068825975461113,
-            -15.13954383801285,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2455,9 +2935,14 @@
           "id": "530abb65-c3fb-4271-8adf-9a94faa3d0a7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139417419870417,
-            13.0689724227624,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2484,9 +2969,14 @@
           "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997699520192363,
-            10.53936483006696,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2513,9 +3003,14 @@
           "id": "537fa738-c6a1-4015-b9ea-d751d0580dd8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2542,9 +3037,14 @@
           "id": "53ca4530-f017-4079-bbae-16bf1a76c2df:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2571,9 +3071,14 @@
           "id": "549de7e4-6d98-4f86-b068-6461b88de67d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2600,9 +3105,14 @@
           "id": "54fd9af2-2038-4567-895c-e20c3b47e76c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2629,9 +3139,14 @@
           "id": "561f418a-311e-4a28-bc04-95f35bce9011:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2658,9 +3173,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -2668,9 +3188,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2678,9 +3203,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2688,9 +3218,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139692377644455,
-            13.068653898175375,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2698,9 +3233,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2708,9 +3248,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2718,9 +3263,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2728,9 +3278,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13954409436192,
-            -13.068825678494264,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2738,9 +3293,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2748,9 +3308,14 @@
           "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -2777,9 +3342,14 @@
           "id": "5bdc7584-ecc5-4a6b-85db-af82e511154e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2806,9 +3376,14 @@
           "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539710336641479,
-            -16.997485285173592,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2835,9 +3410,14 @@
           "id": "5de35caa-0f02-43d7-ae74-aa730efd3386:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -2864,9 +3444,14 @@
           "id": "5def8f68-d629-4c24-8e76-5e12ea88a861:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -2893,9 +3478,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
           "position": [
-            14.142137934519635,
-            -14.142133312941887,
-            0.4000000000000009
+            0,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -2903,9 +3493,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068790451844949,
-            -15.139574502797835,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2913,9 +3508,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2923,9 +3523,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139548621535617,
-            13.068820434000884,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2933,9 +3538,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2943,9 +3553,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2953,9 +3568,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2963,9 +3583,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13970091918001,
-            -13.068644003024183,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -2973,9 +3598,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -2983,9 +3613,14 @@
           "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -3012,9 +3647,14 @@
           "id": "5f911ea2-42a3-4354-b58d-786ec2539d4b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3041,9 +3681,14 @@
           "id": "5feebbf8-33d9-41ad-a13a-24c271a1860b:e",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
           "position": [
-            -18.73301539776237,
-            -7.005293292018399,
-            0.40000000000000047
+            5.6,
+            -1.3,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3070,9 +3715,14 @@
           "id": "60f7c606-1326-44c9-9fd7-4a3a17d15e0c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3099,9 +3749,14 @@
           "id": "64239b67-f7c9-4c25-9d22-4225f6668cd7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3128,9 +3783,14 @@
           "id": "64cd3320-6801-46ed-8683-20a81acc673c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3157,9 +3817,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -3167,9 +3832,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3177,9 +3847,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3187,9 +3862,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139548621535617,
-            13.068820434000884,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3197,9 +3877,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3207,9 +3892,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3217,9 +3907,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3227,9 +3922,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13970091918001,
-            -13.068644003024183,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3237,9 +3937,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3247,9 +3952,14 @@
           "id": "64f3e610-3dd8-4a9b-8f14-734e9af77777:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -3276,9 +3986,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -3286,9 +4001,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3296,9 +4016,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3306,9 +4031,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139548621535617,
-            13.068820434000884,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3316,9 +4046,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3326,9 +4061,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3336,9 +4076,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3346,9 +4091,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13970091918001,
-            -13.068644003024183,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3356,9 +4106,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3366,9 +4121,14 @@
           "id": "657162df-f57d-455b-b55c-d7b85126840b:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -3395,9 +4155,14 @@
           "id": "66b5cd84-bb09-4e47-8dc9-18d5a1113b4f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3424,9 +4189,14 @@
           "id": "68329fc1-37b6-4b3e-9b34-28fc47e96898:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090674273430197,
-            -19.577190400787757,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3453,9 +4223,14 @@
           "id": "6947a41b-8c6d-4291-bdd8-96cd535c78fc:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         }
@@ -3482,9 +4257,14 @@
           "id": "69e4f5f8-1d4b-4960-be4b-a9ca323fbef8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3511,9 +4291,14 @@
           "id": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9772172854107983,
-            -19.97611189338642,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3540,9 +4325,14 @@
           "id": "6c2cce5c-e3ea-42e4-aa65-498c0c47c453:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3569,9 +4359,14 @@
           "id": "6f257b95-74a0-441e-8c10-c7973b00b294:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3598,9 +4393,14 @@
           "id": "6f318d54-948f-40b7-be92-d18ccd482d17:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3627,9 +4427,14 @@
           "id": "710f1c95-8a66-4135-99ea-245dd4b81507:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068649544540158,
-            15.139696135721824,
-            0.3999999999999991
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3656,9 +4461,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -3666,9 +4476,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3676,9 +4491,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.57719032054791,
-            4.090674657442851,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3686,9 +4506,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3696,9 +4521,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3706,9 +4536,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3716,9 +4551,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3726,9 +4566,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997478603262763,
-            10.539721112611307,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3736,9 +4581,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3746,9 +4596,14 @@
           "id": "71e18c51-7752-46bb-917e-31874504b259:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            4.5833335
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -3775,9 +4630,14 @@
           "id": "72c81fc7-6b0e-421e-ae27-9d4e70f662c4:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3804,9 +4664,14 @@
           "id": "748b60c0-6730-4f46-be70-62b435c4bb45:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3833,9 +4698,14 @@
           "id": "775b73e2-effe-46f5-a538-1768534b86b2:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -3862,9 +4732,14 @@
           "id": "794499b1-500b-41b1-a271-29e67f4629c5:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -3891,9 +4766,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -3901,9 +4781,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3911,9 +4796,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3921,9 +4811,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3931,9 +4826,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3941,9 +4841,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3951,9 +4856,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -3961,9 +4871,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -3971,9 +4886,14 @@
           "id": "7bca27d8-db80-4552-b4a4-5fdea79f4e70:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -4000,9 +4920,14 @@
           "id": "7d7dd65e-40aa-4f27-b580-868315237a1d:e",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
           "position": [
-            -18.732966360250366,
-            -7.005424422954554,
-            0.40000000000000047
+            5.6,
+            -1.3,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4029,9 +4954,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -4039,9 +4969,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4049,9 +4984,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4059,9 +4999,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997485491913274,
-            -10.539710003230532,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4069,9 +5014,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4079,9 +5029,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4089,9 +5044,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4099,9 +5059,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4109,9 +5074,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4119,9 +5089,14 @@
           "id": "7db06be4-2de5-45c7-b17b-8feb2bd3c448:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -4148,9 +5123,14 @@
           "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
           "position": [
-            -14.142133035539462,
-            14.142138211921967,
-            0.39999999999999913
+            -7.5,
+            -7.7,
+            7.5
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         },
@@ -4158,9 +5138,14 @@
           "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
           "position": [
-            14.142218442915686,
-            14.142052804061207,
-            0.39999999999999913
+            -7.5,
+            -7.7,
+            7.5
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -4187,9 +5172,14 @@
           "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4216,9 +5206,14 @@
           "id": "7fdfbaa6-bb6f-410c-a79b-e8ff0136a236:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4245,9 +5240,14 @@
           "id": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4274,9 +5274,14 @@
           "id": "82d258be-3368-485f-ba34-c75847d4405f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4303,9 +5308,14 @@
           "id": "83630a6c-b717-4fd7-8636-376d863ef176:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4332,9 +5342,14 @@
           "id": "859638d9-270f-413a-bfb0-b9400a3e21b7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068649544540158,
-            15.139696135721824,
-            0.3999999999999991
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4361,9 +5376,14 @@
           "id": "87dd15bb-a74d-4f06-b3b5-a362767d7363:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4390,9 +5410,14 @@
           "id": "8821d699-009b-4001-984b-a5c20490848a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4419,9 +5444,14 @@
           "id": "88bc30e1-0cd9-4a34-bd4d-2463f2660c78:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4448,9 +5478,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -4458,9 +5493,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068790451844949,
-            -15.139574502797835,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4468,9 +5508,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.976112212734975,
-            -0.9772107573193258,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4478,9 +5523,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            18.732968786999763,
-            7.005417933663386,
-            0.3999999999999996
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4488,9 +5538,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9774908146318906,
-            19.976098510652932,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4498,9 +5553,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4508,9 +5568,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4518,9 +5583,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13970091918001,
-            -13.068644003024183,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4528,9 +5598,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.977523846903164,
-            -19.976096894256788,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4538,9 +5613,14 @@
           "id": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -4567,9 +5647,14 @@
           "id": "8b8ef6bd-e8d7-4bda-bf89-cbf3f373de09:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539716224743243,
-            16.997481634109334,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4596,9 +5681,14 @@
           "id": "8cadc9d3-8329-461a-b849-8e2f0df53c8d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -4625,9 +5715,14 @@
           "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577262693055808,
-            -4.090328281090065,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4654,9 +5749,14 @@
           "id": "8ea801da-b5ad-4fc2-94bb-d6f2142a1400:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068816080406991,
-            15.139552379660888,
-            0.3999999999999991
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4683,9 +5783,14 @@
           "id": "8ed7926a-3736-4812-941c-2471de6efb8b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4712,9 +5817,14 @@
           "id": "8efaff31-ae6e-4f14-9753-d9fde9a37b90:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4741,9 +5851,14 @@
           "id": "9071b6f8-7aa8-4c79-b9e1-c747518dce41:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -4770,9 +5885,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -4780,9 +5900,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4790,9 +5915,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4800,9 +5930,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            15.139692377644455,
-            13.068653898175375,
-            0.39999999999999925
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4810,9 +5945,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4820,9 +5960,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068966881348441,
-            15.139422203446788,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4830,9 +5975,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4840,9 +5990,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13954409436192,
-            -13.068825678494264,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4850,9 +6005,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4860,9 +6020,14 @@
           "id": "91fea4d1-82c6-4f12-82b2-069d72610e69:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -4889,9 +6054,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -4899,9 +6069,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4909,9 +6084,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4919,9 +6099,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4929,9 +6114,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4939,9 +6129,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4949,9 +6144,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4959,9 +6159,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -4969,9 +6174,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -4979,9 +6189,14 @@
           "id": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -5008,9 +6223,14 @@
           "id": "93d989bb-4066-4c09-87ee-1dab2e27c8d8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5037,9 +6257,14 @@
           "id": "976cd37f-4099-46c1-b9fe-f693ac20490c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5066,9 +6291,14 @@
           "id": "9901f61f-d0da-4a2a-a0f4-3028be4f54d8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5095,9 +6325,14 @@
           "id": "9a121d65-7b7b-417f-aa84-cff5b1370683:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5124,9 +6359,14 @@
           "id": "9a209b1a-86b5-4852-9a90-c238c35b1038:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090687068881142,
-            19.577187727160627,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5153,9 +6393,14 @@
           "id": "9b4f2cfe-7177-4b77-becc-fdf1f0c3bb04:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068649544540158,
-            15.139696135721824,
-            0.3999999999999991
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5182,9 +6427,14 @@
           "id": "9bfa1f48-46f3-4fd7-a416-8280e06b3461:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5211,9 +6461,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -5221,9 +6476,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068654195145141,
-            -15.139692121298744,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5231,9 +6491,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5241,9 +6506,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            18.733017824466344,
-            7.005286802710245,
-            0.3999999999999996
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5251,9 +6521,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775307668269624,
-            19.97609655563135,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5261,9 +6536,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068966881348441,
-            15.139422203446788,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5271,9 +6551,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976111874217995,
-            0.977217677248427,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5281,9 +6566,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13954409436192,
-            -13.068825678494264,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5291,9 +6581,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5301,9 +6596,14 @@
           "id": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -5330,9 +6630,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -5340,9 +6645,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539358608474505,
-            16.99770337786768,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5350,9 +6660,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5360,9 +6675,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5370,9 +6690,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5380,9 +6705,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5390,9 +6720,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997478603262763,
-            10.539721112611307,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5400,9 +6735,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090335446867484,
-            19.577261195889974,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5410,9 +6750,14 @@
           "id": "9d18882e-d90b-40de-a171-47cb4564ffa6:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -5439,9 +6784,14 @@
           "id": "9dda6a6c-8e71-4506-9226-77af581628d4:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5468,9 +6818,14 @@
           "id": "9e140565-2f54-4204-b5c6-23a8f982761a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068816080406991,
-            15.139552379660888,
-            0.3999999999999991
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5497,9 +6852,14 @@
           "id": "9fde3a12-8b39-42d9-850f-f0e8343caddd:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         }
@@ -5526,9 +6886,14 @@
           "id": "a16ba50b-f236-4d8d-91be-3459b28bc059:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5555,9 +6920,14 @@
           "id": "a251d19c-5826-4599-967c-fc976947267f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5584,9 +6954,14 @@
           "id": "a2ad1224-5915-4ba4-be15-6850d23720ce:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068644299994109,
-            -15.139700662834503,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5613,9 +6988,14 @@
           "id": "a3ea30e7-5602-4d0c-9541-13bc1a5c6ef6:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5642,9 +7022,14 @@
           "id": "a4450dcd-57ce-4dcc-a235-96b3b75cc82b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5671,9 +7056,14 @@
           "id": "a6155a06-37a9-48d2-86cb-93d0d2be53c4:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -5700,9 +7090,14 @@
           "id": "ac8569fc-2dc4-4e7e-bd07-83e841624802:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139417419870417,
-            13.0689724227624,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5729,9 +7124,14 @@
           "id": "ad940e2b-12e4-49ba-8cfa-98854e5b2f7a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5758,9 +7158,14 @@
           "id": "adeee513-f8d6-422b-bab5-05514510cd76:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068644299994109,
-            -15.139700662834503,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5787,9 +7192,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -5797,9 +7207,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5807,9 +7222,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5817,9 +7237,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5827,9 +7252,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5837,9 +7267,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5847,9 +7282,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5857,9 +7297,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -5867,9 +7312,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -5877,9 +7327,14 @@
           "id": "ae42dea4-47c9-44cb-bc0c-7875a127ff24:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -5906,9 +7361,14 @@
           "id": "aee66807-ac00-4b12-8251-abafefdae05b:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5935,9 +7395,14 @@
           "id": "b00a847f-6585-48a3-b9ee-4903c3e6a5b3:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5964,9 +7429,14 @@
           "id": "b3712e24-369c-4549-b55a-ede7f3d29fbb:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068649544540158,
-            15.139696135721824,
-            0.3999999999999991
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -5993,9 +7463,14 @@
           "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6022,9 +7497,14 @@
           "id": "ba35dd11-3022-4408-913f-0f6d25b40a83:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6051,9 +7531,14 @@
           "id": "bacfa200-04fe-4f3d-b281-e203893124d8:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539710336641479,
-            -16.997485285173592,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6080,9 +7565,14 @@
           "id": "bd2a1977-cedb-41bb-bf40-543c798fd2fd:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6109,9 +7599,14 @@
           "id": "bfc3de9f-d1f7-496d-8657-8a3334d086a2:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -13.068825975461113,
-            -15.13954383801285,
-            0.40000000000000097
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6138,9 +7633,14 @@
           "id": "c343b2f3-f528-42e3-9ba1-fe27e00a6c8c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6167,9 +7667,14 @@
           "id": "c69ffa1e-add7-430d-a478-5ce92d2d7654:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6196,9 +7701,14 @@
           "id": "c8749a39-f9d1-48b2-b331-6d00d2615302:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6225,9 +7735,14 @@
           "id": "cb832a2c-e9db-469c-a27a-03f2de76501d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6254,9 +7769,14 @@
           "id": "cc03c72c-5cc8-40ce-8c49-dc45daa89170:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6283,9 +7803,14 @@
           "id": "cd57b80c-d734-4a34-9d8d-437b12727dbd:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.577250421982868,
-            -4.090387012859738,
-            0.4000000000000003
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6312,9 +7837,14 @@
           "id": "cfe5a195-9439-48b2-8e15-58087f5f0e6f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6341,9 +7871,14 @@
           "id": "d03e6df1-6332-47d0-8e2f-ba364a1cc1b3:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6370,9 +7905,14 @@
           "id": "d04d9e84-6f8c-45d1-93c7-068498c7d962:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6399,9 +7939,14 @@
           "id": "d064105d-9a9d-442b-a53f-ed010b155b89:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6428,9 +7973,14 @@
           "id": "d45a533d-4975-4a93-a6c4-74ea4b2fdac9:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -4.090393410605054,
-            19.57724908526422,
-            0.3999999999999988
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6457,9 +8007,14 @@
           "id": "d6d8d74b-68c7-434f-83ab-1eebfe388f34:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6486,9 +8041,14 @@
           "id": "d7a393ed-e204-411c-a372-d38b0f0decff:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6515,9 +8075,14 @@
           "id": "d88f2d4c-4e31-454f-aee5-446636931c37:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6544,9 +8109,14 @@
           "id": "db29f29d-7f80-41e9-bab2-51100d97fd01:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6573,9 +8143,14 @@
           "id": "dc1c5b79-335b-49a7-aa1d-bcd0ed26cd9e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6602,9 +8177,14 @@
           "id": "dc6e7ac6-1515-46ca-9e94-248988badc0f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6631,9 +8211,14 @@
           "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            4.090400192363709,
-            -19.57724766830902,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6660,9 +8245,14 @@
           "id": "dfb776f3-e722-4c07-86ee-471dcb89d918:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6689,9 +8279,14 @@
           "id": "e1a31a11-ebee-4934-bdfa-cc43ca63c6ff:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6718,9 +8313,14 @@
           "id": "e59f5903-f9e5-45ad-b153-c9f5f6268799:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -10.539489368442172,
-            -16.997622299971678,
-            0.4000000000000011
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6747,9 +8347,14 @@
           "id": "e69ffcb1-0d2f-4a77-bd24-df67ed998192:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -15.139548108837674,
-            13.068821027934753,
-            0.39999999999999925
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6776,9 +8381,14 @@
           "id": "e80dc9d0-a547-42f8-943d-b3df6a4165c3:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6805,9 +8415,14 @@
           "id": "ec9ecf17-4f23-4bfb-a37d-f890951b105e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6834,9 +8449,14 @@
           "id": "ee2a19ee-04c2-4023-b048-4695dd8971f7:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.976097252054117,
-            0.9775165351419156,
-            0.39999999999999997
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -6863,9 +8483,14 @@
           "id": "f16efdbd-88ff-453b-a6b3-781952c6b6e6:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -19.976097890944683,
-            -0.9775034789684285,
-            0.4000000000000001
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6892,9 +8517,14 @@
           "id": "f1b5e882-0d34-40af-aa83-cca07919adab:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6921,9 +8551,14 @@
           "id": "f26701fa-20d2-4eac-a466-33478434470a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -6950,9 +8585,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -6960,9 +8600,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -10.539494589764256,
-            16.997619062454895,
-            0.39999999999999897
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -6970,9 +8615,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.577247588074545,
-            4.090400576377492,
-            0.39999999999999974
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -6980,9 +8630,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -16.997622506707025,
-            -10.539489035028538,
-            0.4000000000000007
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -6990,9 +8645,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -4.090387396873579,
-            -19.577250341748652,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7000,9 +8660,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            10.539500477912362,
-            -16.997615411465368,
-            0.4000000000000011
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7010,9 +8675,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.57724900502988,
-            -4.09039379461886,
-            0.4000000000000003
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7020,9 +8690,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            16.997615618200935,
-            10.539500144498863,
-            0.39999999999999936
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7030,9 +8705,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            4.090394178632674,
-            19.577248924795537,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7040,9 +8720,14 @@
           "id": "f28b4ee5-b037-4998-bb9c-a995233161de:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            3.6666667
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -7069,9 +8754,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:b",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
           "position": [
-            0.000006535897930762767,
-            -19.99999999999893,
-            0.40000000000000124
+            0,
+            0,
+            0.9166667
+          ],
+          "direction": [
+            0,
+            0,
+            -1
           ],
           "radius": 0.36
         },
@@ -7079,9 +8769,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl0_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            13.068790451844949,
-            -15.139574502797835,
-            0.40000000000000097
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7089,9 +8784,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl0_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            19.9760975523263,
-            -0.9775103988925695,
-            0.4000000000000001
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7099,9 +8799,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl0_d2",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            18.732968786999763,
-            7.005417933663386,
-            0.3999999999999996
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7109,9 +8814,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl0_d3",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            0.9775107907299152,
-            19.976097533152128,
-            0.3999999999999988
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7119,9 +8829,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl1_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -13.068815486472953,
-            15.139552892358637,
-            0.3999999999999991
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7129,9 +8844,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl1_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -19.976097213705522,
-            0.9775173188165985,
-            0.39999999999999997
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7139,9 +8859,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl2_d0",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "position": [
-            -15.13970091918001,
-            -13.068644003024183,
-            0.4000000000000008
+            2.75,
+            0.9,
+            0.2
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         },
@@ -7149,9 +8874,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:sl2_d1",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "position": [
-            -0.9775038708057827,
-            -19.976097871770648,
-            0.40000000000000124
+            0.9,
+            2.75,
+            0.2
+          ],
+          "direction": [
+            0,
+            1,
+            0
           ],
           "radius": 0.36
         },
@@ -7159,9 +8889,14 @@
           "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8:t",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
           "position": [
-            3.9230620162512406e-7,
-            19.999999999999996,
-            0.3999999999999988
+            0,
+            0,
+            4.5833335
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }
@@ -7188,9 +8923,14 @@
           "id": "f3621bd3-c6bb-40ee-8c34-cb18831c1f10:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.99761885571943,
-            -10.53949492317783,
-            0.4000000000000007
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7217,9 +8957,14 @@
           "id": "f44e6d7b-1386-439b-8705-1a7d9b23e83d:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            16.997703171134894,
-            -10.53935894188972,
-            0.4000000000000007
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -7246,9 +8991,14 @@
           "id": "f537171c-bacd-4422-abed-09e1ab19c572:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -16.997615204729797,
-            10.539500811325857,
-            0.39999999999999936
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7275,9 +9025,14 @@
           "id": "f540bf88-1f95-4a3a-99ff-b7c4154a7c05:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7304,9 +9059,14 @@
           "id": "f5828fcc-c966-431b-8d19-276123c68003:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            -0.9775100070552198,
-            19.976097571500468,
-            0.3999999999999988
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7333,9 +9093,14 @@
           "id": "f9e9746c-e5c1-4570-8d5f-4b050c5aff33:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -7362,9 +9127,14 @@
           "id": "fc693ca3-6a41-49b5-b5f6-258a7a06ed2e:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            0.9775169269792527,
-            -19.976097232879827,
-            0.40000000000000124
+            1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -7391,9 +9161,14 @@
           "id": "fd6dfe66-2051-441a-ab36-d551b99f575a:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            15.139696392067435,
-            -13.068649247570324,
-            0.4000000000000008
+            0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7420,9 +9195,14 @@
           "id": "fda1c2b5-1900-49ea-834b-8d2e00d50982:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            13.068816080406991,
-            15.139552379660888,
-            0.3999999999999991
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }
@@ -7449,9 +9229,14 @@
           "id": "fe8bb27a-9ac4-4731-8760-5ab24e35ed7f:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            19.577247748543485,
-            4.0903998083499165,
-            0.39999999999999974
+            -0.45,
+            -2.1,
+            2.7755576e-17
+          ],
+          "direction": [
+            0,
+            -1,
+            0
           ],
           "radius": 0.36
         }
@@ -7478,9 +9263,14 @@
           "id": "fea0125a-04d0-4b51-89b7-335c951e169c:link",
           "vortexKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "position": [
-            10.539495256591401,
-            16.997618648983963,
-            0.39999999999999897
+            -1.3,
+            -1.25,
+            0
+          ],
+          "direction": [
+            -1,
+            0,
+            0
           ],
           "radius": 0.36
         }

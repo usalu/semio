@@ -327,6 +327,15 @@ if (import.meta.vitest) {
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
 
+		it("stores nakagin vortex positions in type-local CAD space", () => {
+			const f = parseFixtureV1(nakaginSceneFixtureJson as unknown);
+			const o = f?.objects.find((obj) => obj.id === "01890804-66f2-4544-98f0-b6f0c0615492");
+			const v = o?.vortices.find((vx) => vx.id.endsWith(":link"));
+			expect(v?.position[0]).toBeCloseTo(-1.3, 5);
+			expect(v?.position[1]).toBeCloseTo(-1.25, 5);
+			expect(v?.position[2]).toBeCloseTo(0, 5);
+		});
+
 		it("declarative window body is a lone scene3d surface", () => {
 			const bus = new CommandBus();
 			const wb = new ProductRuntime();
