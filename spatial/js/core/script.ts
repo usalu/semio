@@ -15,23 +15,7 @@ if (command === "test") {
 		env: process.env,
 	});
 	process.exit(r.status ?? 1);
-} else if (command === "sync-typology-construct") {
-	const r = spawnSync("bun", ["./sync-typology-construct.ts"], {
-		cwd,
-		stdio: "inherit",
-		shell: true,
-		env: process.env,
-	});
-	process.exit(r.status ?? 1);
-} else if (command === "sync-shape-construct") {
-	const r = spawnSync("bun", ["./sync-shape-construct.ts"], {
-		cwd,
-		stdio: "inherit",
-		shell: true,
-		env: process.env,
-	});
-	process.exit(r.status ?? 1);
 } else {
-	console.error("usage: bun ./script.ts test|sync-typology-construct|sync-shape-construct [args…]");
+	console.error("usage: bun ./script.ts test [args…]");
 	process.exit(1);
 }

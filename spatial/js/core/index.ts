@@ -2515,26 +2515,83 @@ export function applyTransformation(spec: TransformationSpec, source: Model): Mo
 // #endregion 🧱Model
 
 // #region 🏗️TypologyConstruct
-import {
-  typologyObjectPascalFromLabel,
-  typologyConstructAssetIds,
-  typologyConstructCommitActionForMode,
-  typologyConstructModeActionIds,
-  capabilityActionSpecJson,
-  buildTypologyConstructInteractionSpec,
-  type TypologyConstructKit,
-  type TypologyConstructMode,
-} from "./typology-construct-codegen.ts";
-export {
-  typologyObjectPascalFromLabel,
-  typologyConstructAssetIds,
-  typologyConstructCommitActionForMode,
-  typologyConstructModeActionIds,
-  capabilityActionSpecJson,
-  buildTypologyConstructInteractionSpec,
-  type TypologyConstructKit,
-  type TypologyConstructMode,
+/** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
+export function typologyObjectPascalFromLabel(label: string): string {
+  return label
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
+}
+
+export type TypologyConstructMode = "2PointsAndHeight" | "curveAndHeight" | "surface";
+
+/** @emoji 🧭 Per-typology construct kit: three mode actions + one interaction id. */
+export type TypologyConstructKit = {
+  readonly typology: string;
+  readonly interaction: string;
+  readonly constructFrom2PointsAndHeight: string;
+  readonly constructFromCurveAndHeight: string;
+  readonly constructFromSurface: string;
 };
+
+/** @emoji 🧭 Stable ids: three `construct*From*` actions and one `construct*` interaction. */
+export function typologyConstructAssetIds(typology: string, label: string): TypologyConstructKit & { readonly construct: string } {
+  const parts = typology.split(".");
+  const prefix = parts.length > 1 ? `${parts.slice(0, -1).join(".")}.` : "";
+  const pascal = typologyObjectPascalFromLabel(label);
+  const interaction = `${prefix}construct${pascal}`;
+  return {
+    typology,
+    interaction,
+    construct: interaction,
+    constructFrom2PointsAndHeight: `${prefix}construct${pascal}From2PointsAndHeight`,
+    constructFromCurveAndHeight: `${prefix}construct${pascal}FromCurveAndHeight`,
+    constructFromSurface: `${prefix}construct${pascal}FromSurface`,
+  };
+}
+
+/** @emoji 🏷️ True when typology construct exposes surface-only workflow (e.g. base plate). */
+function typologyConstructIsSurfacePrimary(typologyId: string): boolean {
+  return typologyId.endsWith(".baseplate");
+}
+
+/** @emoji 🧭 `construct*` action ids declared on a typology (`surface`-primary typologies ship surface only). */
+export function typologyConstructModeActionIds(typologyId: string, label: string): readonly string[] {
+  const ids = typologyConstructAssetIds(typologyId, label);
+  if (typologyConstructIsSurfacePrimary(typologyId)) return [ids.constructFromSurface];
+  return [ids.constructFrom2PointsAndHeight, ids.constructFromCurveAndHeight, ids.constructFromSurface];
+}
+
+/** @emoji 🎯 Resolves the single mode action an interaction commit must run for `constructMode`. */
+export function typologyConstructCommitActionForMode(kit: TypologyConstructKit, mode: string): string {
+  switch (mode as TypologyConstructMode) {
+    case "2PointsAndHeight":
+      return kit.constructFrom2PointsAndHeight;
+    case "curveAndHeight":
+      return kit.constructFromCurveAndHeight;
+    case "surface":
+      return kit.constructFromSurface;
+    default:
+      throw new Error(`Unknown constructMode ${mode} for ${kit.interaction}`);
+  }
+}
+
+/** @emoji 📄 Declarative capability action JSON for typology construction steps. */
+export function capabilityActionSpecJson(id: string, label: string): ActionSpec {
+  return {
+    schema: "spatial.action/v1",
+    id,
+    version: "1.0.0",
+    label,
+    steps: [
+      { op: "kernel.call", function: "spatial.action.capability", assignTo: "result" },
+      { op: "return", result: { kind: "var", name: "result" } },
+    ],
+  } as ActionSpec;
+}
 
 let typologyConstructKitByInteractionCache: ReadonlyMap<string, TypologyConstructKit> | null = null;
 
