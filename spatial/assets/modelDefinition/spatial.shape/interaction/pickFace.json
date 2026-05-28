@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Pick Face",
   "key": "f",
-  "interaction": {
-    "callableOnly": true
-  },
+  "invocation": "callable",
   "guards": [
     {
       "name": "hasFace",

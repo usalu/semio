@@ -55,7 +55,7 @@ import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepj
 import initOpenCascade from "brepjs-opencascade";
 import {
 	applyModelDiff,
-	executeModelDefinitionActionCapability,
+	executeActionCapability,
 	isEmptyModelDiff,
 	emptyMeshTransfer,
 	type EdgeCurve,
@@ -1217,7 +1217,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 			readonly activeModelDefinitionId?: string | null;
 		},
 	): Promise<ActionResult> | ActionResult {
-		return executeModelDefinitionActionCapability(actionId, params, args, {
+		return executeActionCapability(actionId, params, args, {
 			kernel: this as unknown as SpatialKernel,
 			preview: ctx.preview,
 			model: ctx.model,

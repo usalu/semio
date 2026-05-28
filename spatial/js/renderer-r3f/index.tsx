@@ -5125,7 +5125,7 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("adds typology object picks for non-builtin model definitions", async () => {
+		it("adds typology object picks for non-shape model definitions", async () => {
 			const model = new Model();
 			const cell = solidRef("c0");
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));

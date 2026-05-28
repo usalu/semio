@@ -1121,7 +1121,7 @@ function normalizeSpatialObjectPrimitives(primitives: unknown): SpatialObjectPri
 function normalizeSpatialObjectRecord(row: SpatialObjectRecord | Record<string, unknown>): SpatialObjectRecord {
   return {
     id: String(row.id) as ObjectRef,
-    typology: String(row.typology ?? "builtin.object") as TypologyRef,
+    typology: String(row.typology ?? "spatial.shape.object") as TypologyRef,
     primitives: normalizeSpatialObjectPrimitives(row.primitives),
     ...(row.attributes && typeof row.attributes === "object" ? { attributes: row.attributes as Readonly<Record<string, unknown>> } : {}),
   };
@@ -1628,12 +1628,12 @@ export interface ModelDefinitionManifest {
   readonly kinds: readonly string[];
 }
 
-/** @emoji 🧭 Builtin geometry model definition id (raw kernel topology editing). */
-export const GEOMETRY_MODEL_DEFINITION_ID = "builtin";
+/** @emoji 🧭 ModelDefinition geometry model definition id (raw kernel topology editing). */
+export const SHAPE_MODEL_DEFINITION_ID = "spatial.shape";
 
-/** @emoji 🧭 True when the active definition is geometry edit (`builtin`) rather than typology objects. */
-export function isGeometryModelDefinition(modelDefinitionId: string | null | undefined): boolean {
-  return modelDefinitionId == null || modelDefinitionId === GEOMETRY_MODEL_DEFINITION_ID;
+/** @emoji 🧭 True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
+export function isShapeModelDefinition(modelDefinitionId: string | null | undefined): boolean {
+  return modelDefinitionId == null || modelDefinitionId === SHAPE_MODEL_DEFINITION_ID;
 }
 
 /** @emoji 🧾 Parses a model-definition manifest JSON or returns `null`. */
@@ -1747,7 +1747,7 @@ export function listModelDefinitionTypologies(): readonly TypologySpec[] {
   return shippedTypologyCatalog();
 }
 
-/** @emoji 📚 Loads a built-in typology by stable `id`. */
+/** @emoji 📚 Loads a model-definition typology by stable `id`. */
 export function loadTypology(typology: string): TypologySpec | null {
   return shippedTypologyCatalog().find((t) => t.id === typology) ?? null;
 }
@@ -1902,19 +1902,19 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
 
 /** @emoji 🪪 Kernel topology typology ids used by construct `MATCH` on geometry rows. */
 export const KERNEL_TOPOLOGY_TYPOLOGY_IDS: Readonly<Record<TypologyPrimitiveKind, string>> = {
-  anchor: "builtin.kernel.anchor",
-  vertex: "builtin.kernel.vertex",
-  edge: "builtin.kernel.edge",
-  wire: "builtin.kernel.wire",
-  face: "builtin.kernel.face",
-  shell: "builtin.kernel.shell",
-  solid: "builtin.kernel.solid",
+  anchor: "spatial.shape.kernel.anchor",
+  vertex: "spatial.shape.kernel.vertex",
+  edge: "spatial.shape.kernel.edge",
+  wire: "spatial.shape.kernel.wire",
+  face: "spatial.shape.kernel.face",
+  shell: "spatial.shape.kernel.shell",
+  solid: "spatial.shape.kernel.solid",
 };
 
-/** @emoji 🧭 Typology → entity kind map for one model definition (`builtin` includes kernel topology ids; AEC typologies map to `object`). */
+/** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel topology ids; AEC typologies map to `object`). */
 export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId: string): Readonly<Record<string, ModelEntityKind>> {
   const out: Record<string, ModelEntityKind> = {};
-  if (isGeometryModelDefinition(modelDefinitionId)) {
+  if (isShapeModelDefinition(modelDefinitionId)) {
     for (const [kind, id] of Object.entries(KERNEL_TOPOLOGY_TYPOLOGY_IDS)) out[id] = kind as ModelEntityKind;
     for (const spec of listTypologiesForModelDefinition(modelDefinitionId)) {
       if (spec.primitiveKinds.length !== 1) continue;
@@ -1942,7 +1942,7 @@ export async function derivePropertyValue(
 ): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
   const primaryPrimitiveRef = objectPrimaryPrimitiveRef(ctx.object);
-  if (defn.id === "builtin.volume") {
+  if (defn.id === "spatial.shape.volume") {
     const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
     if (kind !== "solid") return { volume: 0 };
     const volume = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
@@ -1970,7 +1970,7 @@ export function listApplicablePropertyDefinitionsForModelDefinition(
 
 /** @emoji 🧭 Throws when `actionId` is outside the active model definition catalog. */
 export function assertActionAvailableInModelDefinition(actionId: string, activeModelDefinitionId?: string | null): void {
-  const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
   if (!actionAvailableInModelDefinition(actionId, mdId)) {
     throw new Error(`action ${actionId} is not available in model definition ${mdId}`);
   }
@@ -1997,7 +1997,7 @@ export function listAttributeDefinitionsForModelDefinitionEntity(
 
 /** @emoji 🧲 True when the model definition needs factory-geometry pick targets (not only typology objects). */
 export function modelDefinitionUsesGeometryPicking(modelDefinitionId: string): boolean {
-  if (isGeometryModelDefinition(modelDefinitionId)) return true;
+  if (isShapeModelDefinition(modelDefinitionId)) return true;
   for (const kind of modelDefinitionSelectionEntityKinds(modelDefinitionId)) {
     if ((TOPOLOGY_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) return true;
   }
@@ -2418,7 +2418,7 @@ export function listSelectionOperationsForModelDefinition(modelDefinitionId: str
 
 /** @emoji 🧭 Selection entity kinds available while a model definition is active. */
 export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
-  if (isGeometryModelDefinition(modelDefinitionId)) return [...TOPOLOGY_MODEL_ENTITY_KINDS];
+  if (isShapeModelDefinition(modelDefinitionId)) return [...TOPOLOGY_MODEL_ENTITY_KINDS];
   const entityKindIds = new Set<string>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
   const kinds = new Set<ModelEntityKind>(["object"]);
   for (const defn of listAttributeDefinitionsForModelDefinition(modelDefinitionId)) {
@@ -2514,6 +2514,11 @@ import {
   buildTypologyConstructInteractionSpec,
   type TypologyConstructMode,
 } from "./typology-construct-codegen.ts";
+import {
+  buildConstructSurfaceInteractionSpec,
+  buildConstructCurveInteractionSpec,
+  typologyConstructIsSurfacePrimary,
+} from "./shape-construct-codegen.ts";
 
 export {
   typologyObjectPascalFromLabel,
@@ -2521,6 +2526,9 @@ export {
   capabilityActionSpecJson,
   buildTypologyConstructInteractionSpec,
   type TypologyConstructMode,
+  buildConstructSurfaceInteractionSpec,
+  buildConstructCurveInteractionSpec,
+  typologyConstructIsSurfacePrimary,
 };
 
 let typologyConstructRoutesCache: ReadonlyMap<
@@ -2622,7 +2630,7 @@ async function runTypologyConstructDispatch(
           ? routes.createFromSurface
           : null;
   if (!target) throw new Error(`Unknown constructMode ${mode} for ${constructActionId}`);
-  const spec = listBuiltinActionSpecs().find((row) => row.id === target);
+  const spec = listModelDefinitionActionSpecs().find((row) => row.id === target);
   if (!spec) throw new Error(`Missing create action spec: ${target}`);
   const result = await new DeclarativeActionRuntime(spec).run({ ...params, typology: routes.typology }, ctx);
   if (result.diff && !isEmptyModelDiff(result.diff)) ensureTypologyObjectFromCreateDiff(ctx.model, routes.typology, result.diff);
@@ -3003,16 +3011,11 @@ export function parseActionSpec(raw: unknown): ActionSpec | null {
   return r as unknown as ActionSpec;
 }
 
-/** @emoji 📚 Lists data-only built-in action assets. */
+/** @emoji 📚 Lists data-only model-definition action assets. */
 export function listModelDefinitionActionSpecs(): readonly ActionSpec[] {
   return modelDefinitionActionCatalog()
     .map((raw) => parseActionSpec(raw))
     .filter((spec): spec is ActionSpec => spec !== null);
-}
-
-/** @emoji 📚 Lists declarative actions from model-definition assets (alias). */
-export function listBuiltinActionSpecs(): readonly ActionSpec[] {
-  return listModelDefinitionActionSpecs();
 }
 
 function shippedActionCatalog(): readonly ActionSpec[] {
@@ -3081,7 +3084,7 @@ function anchorAction(params: Record<string, unknown>, ctx: { readonly model: Mo
   return { diff: { anchors: { added: [anchor] } }, data: anchor };
 }
 
-function builtinActionCapabilityDefs(): readonly ActionDef[] {
+function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
   return [
     { id: "primitive.createBoxFromCorners", run: runCreateBox },
     { id: "primitive.createBoxFrom3Points", run: runCreateBox },
@@ -3216,7 +3219,7 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
   ];
 }
 
-export async function executeBuiltinActionCapability(
+export async function executeActionCapability(
   actionId: string,
   params: Record<string, unknown>,
   args: Record<string, unknown>,
@@ -3228,7 +3231,7 @@ export async function executeBuiltinActionCapability(
   },
 ): Promise<unknown> {
   if (typologyConstructRoutes().has(actionId)) return runTypologyConstructDispatch(actionId, params, ctx);
-  const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
+  const def = modelDefinitionActionCapabilityDefs().find((d) => d.id === actionId);
   if (def?.run) return def.run(params, ctx);
   if (ctx.kernel.executeCommandDiff) {
     const result = await ctx.kernel.executeCommandDiff(actionId, { ...params, model: ctx.model });
@@ -3257,7 +3260,7 @@ async function executeKernelFunction(
   }
   if (functionName === "spatial.action.capability") {
     if (ctx.kernel.executeAction) return ctx.kernel.executeAction(actionId, merged, callArgs, ctx);
-    return executeBuiltinActionCapability(actionId, merged, callArgs, ctx);
+    return executeActionCapability(actionId, merged, callArgs, ctx);
   }
   throw new Error(`Unknown kernel function: ${functionName}`);
 }
@@ -3312,7 +3315,7 @@ export class DeclarativeActionRuntime {
   }
 }
 
-/** @emoji 🧭 Runtime registry for data-only `ActionSpec` entries (built-ins + host overrides). */
+/** @emoji 🧭 Runtime registry for data-only `ActionSpec` entries (model-definitions + host overrides). */
 export class ActionRegistry {
   private readonly defs = new Map<string, ActionDef>();
 
@@ -3343,17 +3346,17 @@ export class ActionRegistry {
     const def = this.get(id);
     if (def?.spec) return new DeclarativeActionRuntime(def.spec).run(params, ctx);
     if (def?.run) return Promise.resolve(def.run(params, ctx));
-    const kernelResult = await executeBuiltinActionCapability(id, params, {}, ctx);
+    const kernelResult = await executeActionCapability(id, params, {}, ctx);
     if (kernelResult && typeof kernelResult === "object" && "diff" in (kernelResult as object)) return kernelResult as ActionResult;
     if (kernelResult && typeof kernelResult === "object" && "patch" in (kernelResult as object)) return kernelResult as ActionResult;
     if (kernelResult !== undefined) return { data: kernelResult };
     throw new Error(`Unknown action: ${id}`);
   }
 
-  static withBuiltins(): ActionRegistry {
+  static withModelDefinitionActions(): ActionRegistry {
     const r = new ActionRegistry();
     for (const spec of shippedActionCatalog()) r.register({ id: spec.id, label: spec.label, spec });
-    for (const def of builtinActionCapabilityDefs()) {
+    for (const def of modelDefinitionActionCapabilityDefs()) {
       if (r.get(def.id)) continue;
       r.register({
         id: def.id,
@@ -3477,7 +3480,7 @@ export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", 
 
 const MODEL_SELECTION_KIND_ORDER = new Map<ModelEntityKind, number>(ALL_MODEL_SELECTION_KINDS.map((kind, index) => [kind, index]));
 
-/** @emoji 🪪 Built-in selection command operation id (`selection.apply` param). */
+/** @emoji 🪪 model-definition selection command operation id (`selection.apply` param). */
 export type SelectionApplyOperation = "selectAll" | "deselectAll" | "invert" | "selectKinds";
 
 /** @emoji 🪪 Headless `selection.apply` / interaction commit input. */
@@ -3487,7 +3490,7 @@ export interface SelectionApplyParams {
   readonly kinds?: readonly ModelEntityKind[];
 }
 
-/** @emoji 🪪 Built-in selection command interaction row (`selection.*` registry). */
+/** @emoji 🪪 model-definition selection command interaction row (`selection.*` registry). */
 export type SelectionOperationInteractionDef = {
   readonly id: string;
   readonly label: string;
@@ -3559,7 +3562,7 @@ export function primaryAttributeSelectionTarget(selection: readonly SelectionTar
 
 /** @emoji 🪪 Collects stable `SelectionTarget` rows for kernel `kinds` scoped to the active model definition. */
 export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
-  const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const allowed = new Set(scopeKinds);
   const out: SelectionTarget[] = [];
@@ -3609,7 +3612,7 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
 /** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
 export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
-  const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const universe = collectGeometrySelectionTargets(model, scopeKinds, mdId);
   if (operation === "selectAll" || operation === "selectKinds") return universe;
@@ -3635,7 +3638,7 @@ export async function runSelectionApply(
     readonly actions?: ActionRegistry;
   },
 ): Promise<readonly SelectionTarget[]> {
-  const actions = ctx.actions ?? ActionRegistry.withBuiltins();
+  const actions = ctx.actions ?? ActionRegistry.withModelDefinitionActions();
   const result = await actions.run(
     "selection.apply",
     {
@@ -3749,7 +3752,7 @@ export async function applyEffectAsync(
   const math = preview ?? kernel;
   if (!math) return;
   const env: ExprEnv = { context: ctx, event, model, activeModelDefinitionId, preview: math };
-  const reg = actions ?? ActionRegistry.withBuiltins();
+  const reg = actions ?? ActionRegistry.withModelDefinitionActions();
   if (a.op === "assign") {
     const v = evalExpr(a.value, env);
     writePathTarget(a.target, env, v);
@@ -4229,7 +4232,7 @@ export class InteractionRuntime {
     private readonly opts: InteractionRuntimeOptions,
   ) {
     this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec);
-    this.actions = opts.actions ?? ActionRegistry.withBuiltins();
+    this.actions = opts.actions ?? ActionRegistry.withModelDefinitionActions();
   }
 
   /** @emoji 🔌 Precise BREP kernel wired into this runtime (tessellation, commit, derived views). */
@@ -4295,16 +4298,6 @@ export class InteractionRuntime {
     await this.maybeCompleteChild();
   }
 
-  private mergeChildOutputs(call: InteractionChildCallSpec, childCtx: Record<string, unknown>): void {
-    const hostCtx = this.sm.getContext();
-    const outputs = call.outputs ?? {};
-    const keys = Object.keys(outputs).length > 0 ? Object.keys(outputs) : ["faceId"];
-    for (const hostKey of keys) {
-      const childKey = outputs[hostKey] ?? hostKey;
-      if (childCtx[childKey] !== undefined) hostCtx[hostKey] = childCtx[childKey];
-    }
-  }
-
   private resumeHostAfterChild(success: boolean): void {
     const call = this.pausedHost;
     const child = this.child;
@@ -4312,36 +4305,77 @@ export class InteractionRuntime {
     this.pausedHost = null;
     if (!call || !child) return;
     if (success) {
-      this.mergeChildOutputs(call, child.sm.getContext());
-      const hostCtx = this.cloneCtx(this.sm.getContext());
-      this.sm.restore(call.resumeTarget, hostCtx);
+      mergeInteractionCallOutputs(this.sm.getContext(), child.sm.getContext(), call.outputs);
+      this.sm.restore(call.resumeTarget, this.cloneCtx(this.sm.getContext()));
+      return;
     }
+    this.sm.restore(call.rollback.state, this.cloneCtx(call.rollback.context));
   }
 
   private abortChildCall(): void {
-    if (!this.child) return;
+    if (!this.child || !this.pausedHost) return;
     this.child.cancel();
+    const rb = this.pausedHost.rollback;
     this.child = null;
     this.pausedHost = null;
+    this.sm.restore(rb.state, this.cloneCtx(rb.context));
+  }
+
+  private async settleChildSession(): Promise<boolean> {
+    const child = this.child;
+    if (!child) return false;
+    const snap = child.getSnapshot();
+    if (!isFinalInteractionState(child.spec, snap.state)) return false;
+    if (snap.capabilities.canCommit && snap.lastResponse?.ok !== true) {
+      await child.commit();
+    }
+    return true;
+  }
+
+  private async continueHostSessionAfterEngineSend(): Promise<void> {
+    if (isFinalInteractionState(this.spec, this.sm.getState())) {
+      await this.runCommit(false);
+      return;
+    }
+    if (this.canCommit()) {
+      await this.runCommit(true);
+      return;
+    }
+    this.emit();
   }
 
   private async maybeCompleteChild(): Promise<void> {
     if (!this.child || !this.pausedHost) return;
-    const child = this.child;
-    const snap = child.getSnapshot();
-    if (!isFinalInteractionState(child.spec, snap.state)) return;
-    if (snap.capabilities.canCommit && !snap.lastResponse?.ok) {
-      await child.commit();
-    }
-    const ok = Boolean(child.getSnapshot().lastResponse?.ok ?? true);
+    if (!(await this.settleChildSession())) return;
+    const ok = this.child.getSnapshot().lastResponse?.ok !== false;
     this.resumeHostAfterChild(ok);
-    if (ok && isFinalInteractionState(this.spec, this.sm.getState())) {
-      await this.runCommit(false);
+    if (!ok) {
+      this.emit();
       return;
     }
-    if (ok && this.canCommit()) {
-      await this.runCommit(true);
+    await this.continueHostSessionAfterEngineSend();
+  }
+
+  private async handleEngineSendResult(
+    r: StateEngineSendResult,
+    beforeState: string,
+    beforeCtx: Record<string, unknown>,
+  ): Promise<void> {
+    if (!r.ok) return;
+    if (r.childCall) {
+      if (!r.transient) {
+        this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+        this.snapRedoStack.length = 0;
+      }
+      await this.startChildCall(r.childCall);
+      this.emit();
+      return;
     }
+    if (!r.transient) {
+      this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+      this.snapRedoStack.length = 0;
+    }
+    await this.continueHostSessionAfterEngineSend();
   }
 
   private canCommit(): boolean {
@@ -4399,6 +4433,7 @@ export class InteractionRuntime {
 
   /** @emoji 🔍 Executes a `construct` script via `opts.query` (host registers `@spatial/js-query`). */
   async query(text: string): Promise<ConstructQueryResult> {
+    if (this.child) return this.child.query(text);
     const runner = this.opts.query;
     if (!runner) throw new Error("InteractionRuntime.query requires InteractionRuntimeOptions.query");
     return runner(text, {
@@ -4484,6 +4519,10 @@ export class InteractionRuntime {
         const beforeCtx = this.cloneCtx(this.sm.getContext());
         const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
         if (!r.ok) return;
+        if (r.childCall) {
+          await this.handleEngineSendResult(r, beforeState, beforeCtx);
+          return;
+        }
         if (!r.transient) {
           this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
           this.snapRedoStack.length = 0;
@@ -4518,29 +4557,7 @@ export class InteractionRuntime {
     const beforeState = this.sm.getState();
     const beforeCtx = this.cloneCtx(this.sm.getContext());
     const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
-    if (!r.ok) return;
-    if (r.childCall) {
-      if (!r.transient) {
-        this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
-        this.snapRedoStack.length = 0;
-      }
-      await this.startChildCall(r.childCall);
-      this.emit();
-      return;
-    }
-    if (!r.transient) {
-      this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
-      this.snapRedoStack.length = 0;
-    }
-    if (isFinalInteractionState(this.spec, this.sm.getState())) {
-      await this.runCommit(false);
-      return;
-    }
-    if (this.canCommit()) {
-      await this.runCommit(true);
-      return;
-    }
-    this.emit();
+    await this.handleEngineSendResult(r, beforeState, beforeCtx);
   }
 
   undo(): void {
@@ -4695,6 +4712,7 @@ export class InteractionRuntime {
 
   /** @emoji 📜 Executes `commit.operation` against `kernel`, applies `diff` to `document.model`, records history. */
   async commit(): Promise<InteractionResponse> {
+    if (this.child) return this.child.commit();
     return this.runCommit(true);
   }
 }
@@ -4709,12 +4727,12 @@ export async function runSelectionOperationInteraction(
   interactionId: string,
   opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] },
 ): Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }> {
-  const mdId = opts.activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+  const mdId = opts.activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
   const defn = selectionOperationsForModelDefinitionFromActions(mdId).find((row) => row.id === interactionId);
   if (!defn) throw new Error(`Not a selection operation: ${interactionId}`);
   assertActionAvailableInModelDefinition(interactionId, mdId);
   const seedTargets = opts.seedTargets ?? [];
-  const result = await (opts.actions ?? ActionRegistry.withBuiltins()).run(
+  const result = await (opts.actions ?? ActionRegistry.withModelDefinitionActions()).run(
     interactionId,
     { seedTargets, __context: {}, __event: { kind: "commit" } },
     { kernel: opts.kernel, preview: opts.previewKernel ?? (opts.kernel as unknown as SpatialPreviewKernel), model: opts.document.model, activeModelDefinitionId: mdId },
@@ -4732,7 +4750,7 @@ export async function runSelectionOperationInteraction(
 // #endregion 📜Interaction
 
 // #region 📦Interactions
-type BuiltinInteractionFixture = InteractionSpec & { readonly key?: string };
+type ModelDefinitionInteractionFixture = InteractionSpec & { readonly key?: string };
 
 const SELECTION_INTERACTION_KEYS: Readonly<Record<string, string>> = {
   "selection.selectAll": "sa",
@@ -4806,9 +4824,9 @@ export function selectionSeedTargetsForOperation(operation: SelectionApplyOperat
   return operation === "invert" || operation === "deselectAll" ? [seedCell] : [];
 }
 
-const shippedInteractionJsons = modelDefinitionInteractionCatalog() as readonly BuiltinInteractionFixture[];
+const shippedInteractionJsons = modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
 
-function interactionFixtureRow(spec: BuiltinInteractionFixture): SpatialInteraction {
+function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): SpatialInteraction {
   return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
 }
 
@@ -4829,7 +4847,7 @@ export function resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId
   return null;
 }
 
-/** @emoji 🧭 Built-in `InteractionSpec` registry (fixtures + host `register`). */
+/** @emoji 🧭 model-definition `InteractionSpec` registry (fixtures + host `register`). */
 export class InteractionRegistry {
   private readonly specs = new Map<string, InteractionSpec>();
 
@@ -4845,7 +4863,7 @@ export class InteractionRegistry {
     return [...this.specs.values()];
   }
 
-  static withBuiltins(): InteractionRegistry {
+  static withModelDefinitionActions(): InteractionRegistry {
     const r = new InteractionRegistry();
     const xs = shippedInteractionJsons.map((raw) => {
       const spec = parseInteractionSpec(raw);
@@ -4858,7 +4876,7 @@ export class InteractionRegistry {
   }
 }
 
-/** @emoji 📚 Loads a built-in interaction by stable `id`. */
+/** @emoji 📚 Loads a model-definition interaction by stable `id`. */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
   const raw = shippedInteractionJsons.find((spec) => spec.id === interactionId);
   const spec = raw ? parseInteractionSpec(raw) : null;
@@ -4921,38 +4939,38 @@ if (import.meta.vitest) {
       const attributes = listModelDefinitionAttributeDefinitions();
       const properties = listModelDefinitionPropertyDefinitions();
       expect(attributes.length).toBeGreaterThanOrEqual(6);
-      expect(properties.some((row) => row.id === "builtin.volume")).toBe(true);
-      expect(loadAttributeDefinition("builtin.material")?.field).toBe("material");
-      expect(loadPropertyDefinition("builtin.volume")?.unit).toBe("volume");
+      expect(properties.some((row) => row.id === "spatial.shape.volume")).toBe(true);
+      expect(loadAttributeDefinition("spatial.shape.material")?.field).toBe("material");
+      expect(loadPropertyDefinition("spatial.shape.volume")?.unit).toBe("volume");
     });
     it("loads geometry and AEC typology assets", () => {
       const typologies = listModelDefinitionTypologies();
       expect(typologies.length).toBe(27);
       expect(loadTypology("energy.energy.hull")?.properties).toContain("energy.heatedvolume");
-      expect(loadTypology("energy.energy.hull")?.properties).toContain("builtin.volume");
+      expect(loadTypology("energy.energy.hull")?.properties).toContain("spatial.shape.volume");
     });
     it("assigns primitiveKinds to geometry typologies", () => {
-      const box = loadTypology("builtin.primitive.box");
-      const line = loadTypology("builtin.curve.line");
+      const box = loadTypology("spatial.shape.primitive.box");
+      const line = loadTypology("spatial.shape.curve.line");
       expect(box?.primitiveKinds).toEqual(["solid"]);
       expect(line?.primitiveKinds).toEqual(["edge", "wire"]);
     });
-    it("derives builtin.volume for solid-backed objects", async () => {
+    it("derives spatial.shape.volume for solid-backed objects", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
       const solidId = Object.keys(model.solids)[0]!;
       const object = {
         id: "obj-a" as ObjectRef,
-        typology: "builtin.primitive.box" as TypologyRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: solidId },
       };
-      const defn = loadPropertyDefinition("builtin.volume")!;
+      const defn = loadPropertyDefinition("spatial.shape.volume")!;
       const kernel = {
         solidVolume: async () => 42,
       } as unknown as SpatialKernel;
       const out = await derivePropertyValue(defn, { model, kernel, object });
       expect(out.volume).toBe(42);
-      expect(listApplicablePropertyDefinitionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID, model, object).map((row) => row.id)).toContain("builtin.volume");
+      expect(listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, model, object).map((row) => row.id)).toContain("spatial.shape.volume");
     });
     it("validates object geometry against typology primitiveKinds", () => {
       const model = new Model();
@@ -4960,13 +4978,13 @@ if (import.meta.vitest) {
       const solidId = Object.keys(model.solids)[0]!;
       model.objects["obj-a"] = {
         id: "obj-a" as ObjectRef,
-        typology: "builtin.primitive.box" as TypologyRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: solidId },
       };
       expect(objectMatchesTypologyPrimitives(model, model.objects["obj-a"]!)).toBe(true);
       model.objects["obj-b"] = {
         id: "obj-b" as ObjectRef,
-        typology: "builtin.selection.select-all" as TypologyRef,
+        typology: "spatial.shape.selection.select-all" as TypologyRef,
         primitives: { solid: solidId },
       };
       expect(objectMatchesTypologyPrimitives(model, model.objects["obj-b"]!)).toBe(false);
@@ -5009,22 +5027,22 @@ if (import.meta.vitest) {
   describe("@spatial/js-core transformations", () => {
     it("lists model definition manifests and transformation directions", () => {
       const manifests = listModelDefinitionManifests();
-      expect(manifests.some((row) => row.id === "builtin")).toBe(true);
+      expect(manifests.some((row) => row.id === "spatial.shape")).toBe(true);
       expect(manifests.some((row) => row.id === "aec.building.energy")).toBe(true);
       expect(listTransformationsIntoModelDefinition("aec.building.energy").some((row) => row.id === "from_geometry")).toBe(true);
-      expect(listTransformationsFromModelDefinition("builtin").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
+      expect(listTransformationsFromModelDefinition("spatial.shape").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
     });
     it("scopes catalogs to active model definition", () => {
-      const builtin = resolveModelDefinitionScope(GEOMETRY_MODEL_DEFINITION_ID);
+      const shape = resolveModelDefinitionScope(SHAPE_MODEL_DEFINITION_ID);
       const energy = resolveModelDefinitionScope("aec.building.energy");
-      expect(builtin.interactions.some((row) => row.id === "primitive.box")).toBe(true);
+      expect(shape.interactions.some((row) => row.id === "primitive.box")).toBe(true);
       expect(energy.interactions.length).toBe(5);
       expect(energy.interactions.every((row) => row.id.startsWith("energy.energy.construct"))).toBe(true);
       expect(energy.interactions.some((row) => row.id === "primitive.box")).toBe(false);
       expect(energy.typologies.some((row) => row.id === "energy.energy.hull")).toBe(true);
       expect(energy.selectionEntityKinds).toEqual(["object"]);
-      expect(builtin.selectionEntityKinds).toContain("vertex");
-      expect(builtin.selectionEntityKinds).toContain("face");
+      expect(shape.selectionEntityKinds).toContain("vertex");
+      expect(shape.selectionEntityKinds).toContain("face");
       const structure = resolveModelDefinitionScope("aec.building.structure");
       expect(structure.selectionEntityKinds).toContain("face");
       expect(structure.selectionEntityKinds).toContain("object");
@@ -5032,9 +5050,9 @@ if (import.meta.vitest) {
         true,
       );
       expect(listPropertyDefinitionsForModelDefinition("aec.building.energy").some((row) => row.id === "energy.heatedvolume")).toBe(true);
-      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", GEOMETRY_MODEL_DEFINITION_ID)).toBe(true);
+      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", SHAPE_MODEL_DEFINITION_ID)).toBe(true);
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
-      expect(listSelectionOperationsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
+      expect(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
     it("listModelObjectsForModelDefinition filters objects by typology ownership", () => {
@@ -5042,7 +5060,7 @@ if (import.meta.vitest) {
       const cell = solidRef("c0");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
-      model.objects["other"] = { id: "other" as ObjectRef, typology: "builtin.primitive.box", primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: String(cell) } };
       expect(listModelObjectsForModelDefinition(model, "aec.building.energy").map((row) => String(row.id))).toEqual(["hull"]);
       expect(countViewObjectsForModelDefinition(model, "aec.building.energy")).toBe(1);
     });
@@ -5051,12 +5069,12 @@ if (import.meta.vitest) {
       const cell = solidRef("c0");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
-      model.objects["other"] = { id: "other" as ObjectRef, typology: "builtin.primitive.box", primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: String(cell) } };
       const all = collectGeometrySelectionTargets(model, ["object"], "aec.building.energy");
       expect(all.map((row) => row.id)).toEqual(["hull"]);
     });
     it("ActionRegistry rejects out-of-scope actions for active model definition", async () => {
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const model = new Model();
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       await expect(
@@ -5069,13 +5087,13 @@ if (import.meta.vitest) {
     });
     it("loads and applies from_geometry transformation", () => {
       const spec = loadTransformation("aec.building.energy.from_geometry");
-      expect(spec?.source.modelDefinition).toBe("builtin");
+      expect(spec?.source.modelDefinition).toBe("spatial.shape");
       expect(spec?.target.modelDefinition).toBe("aec.building.energy");
       const source = new Model();
       applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       source.objects["geom"] = {
         id: "geom" as ObjectRef,
-        typology: "builtin.primitive.box" as TypologyRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "box" },
       };
       const target = applyTransformation(spec!, source);
@@ -5091,7 +5109,7 @@ if (import.meta.vitest) {
 
   describe("@spatial/js-core attribute validation", () => {
     it("validates opening attribute options", () => {
-      const defn = loadAttributeDefinition("builtin.opening")!;
+      const defn = loadAttributeDefinition("spatial.shape.opening")!;
       expect(validateAttributeValue(defn, "window")).toBe(true);
       expect(validateAttributeValue(defn, "invalid")).toBe(false);
     });
@@ -5428,7 +5446,7 @@ if (import.meta.vitest) {
     it("transform.copy action constrains vertical delta to Z only", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const from: Vec3 = [0, 0, 0];
       const r = await actions.run(
         "transform.copy",
@@ -5502,9 +5520,9 @@ if (import.meta.vitest) {
       expect(parseActionSpec({ ...base, function: "x" })).toBeNull();
       expect(parseActionSpec({ ...base, steps: [{ op: "eval", code: "x" }] })).toBeNull();
     });
-    it("loads built-in actions from data-only JSON specs", () => {
-      const specs = listBuiltinActionSpecs();
-      const registry = ActionRegistry.withBuiltins();
+    it("loads model-definition actions from data-only JSON specs", () => {
+      const specs = listModelDefinitionActionSpecs();
+      const registry = ActionRegistry.withModelDefinitionActions();
       expect(specs.length).toBeGreaterThan(0);
       expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action/v1")).toBe(true);
       expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
@@ -5517,7 +5535,7 @@ if (import.meta.vitest) {
       ).toBe(true);
     });
     it("typology actions reference shipped declarative action specs", () => {
-      const actionIds = new Set(listBuiltinActionSpecs().map((row) => row.id));
+      const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
       for (const typology of listModelDefinitionTypologies()) {
         for (const actionId of typology.actions) {
           expect(actionIds.has(actionId), `${typology.id} → ${actionId}`).toBe(true);
@@ -5525,8 +5543,8 @@ if (import.meta.vitest) {
       }
     });
     it("every typology ships construct kit or legacy create interactions", () => {
-      const actionIds = new Set(listBuiltinActionSpecs().map((row) => row.id));
-      const interactionIds = new Set(InteractionRegistry.withBuiltins().list().map((row) => row.id));
+      const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
+      const interactionIds = new Set(InteractionRegistry.withModelDefinitionActions().list().map((row) => row.id));
       for (const typology of listModelDefinitionTypologies()) {
         const ids = typologyConstructAssetIds(typology.id, typology.label);
         if (!typology.interactions.includes(ids.construct)) {
@@ -5548,7 +5566,7 @@ if (import.meta.vitest) {
     it("every model-definition typology is constructable with native assets in its folder", () => {
       for (const manifest of listModelDefinitionManifests()) {
         const mdId = manifest.id;
-        if (isGeometryModelDefinition(mdId)) continue;
+        if (isShapeModelDefinition(mdId)) continue;
         for (const typology of listTypologiesForModelDefinition(mdId)) {
           expect(typologyHasNativeConstructKit(typology), `${mdId} → ${typology.id}`).toBe(true);
           const ids = typologyConstructAssetIds(typology.id, typology.label);
@@ -5566,7 +5584,7 @@ if (import.meta.vitest) {
       const model = new Model();
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const typology = "energy.energy.hull";
-      await ActionRegistry.withBuiltins().run(
+      await ActionRegistry.withModelDefinitionActions().run(
         "energy.energy.createHullFrom2PointsAndHeight",
         { typology, pointA: [0, 0, 0], pointB: [3, 2, 0], height: 2.5 },
         { kernel, preview: kernel as unknown as SpatialPreviewKernel, model, activeModelDefinitionId: "aec.building.energy" },
@@ -5583,7 +5601,7 @@ if (import.meta.vitest) {
           return { diff: EMPTY_MODEL_DIFF };
         },
       } as unknown as SpatialKernel;
-      await executeBuiltinActionCapability(
+      await executeActionCapability(
         ids.construct,
         { constructMode: "surface", faceId: "f0" },
         {},
@@ -5617,7 +5635,7 @@ if (import.meta.vitest) {
       expect(snap.context.faceId).toBe(fid);
       expect(snap.lastResponse?.ok).toBe(true);
     });
-    it("aborting nested interaction leaves host paused state unchanged", async () => {
+    it("aborting nested interaction rolls back the calling transition", async () => {
       const spec = loadSpatialInteraction("energy.energy.constructBasePlate")!;
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(spec!, {
@@ -5631,11 +5649,143 @@ if (import.meta.vitest) {
       const snap = rt.getSnapshot();
       expect(snap.interactionId).toBe("energy.energy.constructBasePlate");
       expect(snap.state).toBe("choose_mode");
-      expect(snap.context.constructMode).toBe("surface");
+      expect(snap.context.constructMode).toBeUndefined();
       expect(snap.context.faceId).toBeUndefined();
     });
-    it("ActionRegistry.withBuiltins registers declarative model-definition actions only", () => {
-      const r = ActionRegistry.withBuiltins();
+    it("mergeInteractionCallOutputs maps child context through PathTarget bindings", () => {
+      const host: Record<string, unknown> = {};
+      mergeInteractionCallOutputs(host, { faceId: "f-42", extra: 1 }, [
+        {
+          target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
+          value: { kind: "path", root: "context", segments: [{ kind: "field", name: "faceId" }] },
+        },
+      ]);
+      expect(host.faceId).toBe("f-42");
+    });
+    it("interaction.call supports arbitrarily nested interaction sessions", async () => {
+      const grandchild = parseInteractionSpec({
+        schema: "spatial.interaction/v1",
+        id: "test.pick.grandchild",
+        version: "1",
+        invocation: "callable",
+        machine: {
+          initial: "go",
+          states: [
+            { name: "go", on: [{ event: "confirm", transitions: [{ target: "done" }] }] },
+            { name: "done", final: true },
+          ],
+        },
+        commit: {
+          fromStates: ["done"],
+          operation: { kind: "action", action: "command.finish", params: {} },
+        },
+      })!;
+      const child = parseInteractionSpec({
+        schema: "spatial.interaction/v1",
+        id: "test.pick.child",
+        version: "1",
+        invocation: "callable",
+        machine: {
+          initial: "call",
+          states: [
+            {
+              name: "call",
+              on: [
+                {
+                  event: "confirm",
+                  transitions: [
+                    {
+                      target: "done",
+                      effects: [
+                        {
+                          op: "interaction.call",
+                          interaction: "test.pick.grandchild",
+                          outputs: [
+                            {
+                              target: { root: "context", segments: [{ kind: "field", name: "token" }] },
+                              value: { kind: "const", value: "ok" },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            { name: "done", final: true },
+          ],
+        },
+        commit: {
+          fromStates: ["done"],
+          operation: { kind: "action", action: "command.finish", params: {} },
+        },
+      })!;
+      const host = parseInteractionSpec({
+        schema: "spatial.interaction/v1",
+        id: "test.pick.host",
+        version: "1",
+        machine: {
+          initial: "call",
+          states: [
+            {
+              name: "call",
+              on: [
+                {
+                  event: "go",
+                  transitions: [
+                    {
+                      target: "done",
+                      effects: [
+                        {
+                          op: "interaction.call",
+                          interaction: "test.pick.child",
+                          outputs: [
+                            {
+                              target: { root: "context", segments: [{ kind: "field", name: "token" }] },
+                              value: { kind: "path", root: "context", segments: [{ kind: "field", name: "token" }] },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            { name: "done", final: true },
+          ],
+        },
+        commit: {
+          fromStates: ["done"],
+          operation: { kind: "action", action: "command.finish", params: {} },
+        },
+      })!;
+      const reg = InteractionRegistry.withBuiltins();
+      reg.register(compileInteraction(grandchild));
+      reg.register(compileInteraction(child));
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(compileInteraction(host), {
+        kernel,
+        document: { model: new Model(), nodes: [] },
+        actions: reg,
+      });
+      await rt.send({ kind: "go" });
+      let snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("test.pick.child");
+      expect(snap.nested?.hostInteractionId).toBe("test.pick.host");
+      await rt.send({ kind: "confirm" });
+      snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("test.pick.grandchild");
+      expect(snap.nested?.hostInteractionId).toBe("test.pick.child");
+      await rt.send({ kind: "confirm" });
+      snap = rt.getSnapshot();
+      expect(snap.interactionId).toBe("test.pick.host");
+      expect(snap.state).toBe("done");
+      expect(snap.context.token).toBe("ok");
+    });
+    it("ActionRegistry.withModelDefinitionActions registers declarative model-definition actions only", () => {
+      const r = ActionRegistry.withModelDefinitionActions();
       const ids = new Set(r.list().map((d) => d.id));
       expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
       expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
@@ -5646,8 +5796,8 @@ if (import.meta.vitest) {
       expect(ids.has("selection.selectVertices")).toBe(true);
       expect(r.list().every((def) => def.spec !== undefined && def.run === undefined)).toBe(true);
     });
-    it("register replaces a built-in action id", () => {
-      const r = ActionRegistry.withBuiltins();
+    it("register replaces a model-definition action id", () => {
+      const r = ActionRegistry.withModelDefinitionActions();
       const before = r.get("measure.faceArea")?.label;
       r.register({
         id: "measure.faceArea",
@@ -5657,8 +5807,8 @@ if (import.meta.vitest) {
       expect(r.get("measure.faceArea")?.label).toBe("override");
       expect(before).not.toBe("override");
     });
-    it("InteractionRegistry.withBuiltins get matches buildBoxInteractionSpec", () => {
-      const reg = InteractionRegistry.withBuiltins();
+    it("InteractionRegistry.withModelDefinitionActions get matches buildBoxInteractionSpec", () => {
+      const reg = InteractionRegistry.withModelDefinitionActions();
       expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
     });
     it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
@@ -5683,11 +5833,11 @@ if (import.meta.vitest) {
       const p0: Vec3 = [0, 0, 0];
       const p1: Vec3 = [2, 3, 0];
       const p2: Vec3 = [1, 1, 0];
-      await ActionRegistry.withBuiltins().run("primitive.createBoxFrom3Points", { p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k as unknown as SpatialKernel, preview: M, model });
+      await ActionRegistry.withModelDefinitionActions().run("primitive.createBoxFrom3Points", { p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k as unknown as SpatialKernel, preview: M, model });
       expect(k.lastInput).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 3 });
     });
     it("command.addSelection applies selection modifiers", async () => {
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const base = [{ kind: "wire", id: "w0", editable: true }] as const;
       const next = [{ kind: "wire", id: "w1", editable: true }] as const;
       const additive = await actions.run(
@@ -5724,7 +5874,7 @@ if (import.meta.vitest) {
       ]);
     });
     it("selection.apply runs selectAll, deselectAll, invert, and selectKinds", async () => {
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const seed = [{ kind: "vertex", id: Object.keys(model.vertices)[0]!, editable: true }] as const;
@@ -5747,7 +5897,7 @@ if (import.meta.vitest) {
     it("selection.selectAll returns targets without model diff", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const result = await ActionRegistry.withBuiltins().run(
+      const result = await ActionRegistry.withModelDefinitionActions().run(
         "selection.selectAll",
         { seedTargets: [], __context: {}, __event: { kind: "commit" } },
         { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
@@ -5766,21 +5916,21 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const hist = new DocumentHistory();
-      await ActionRegistry.withBuiltins().run(
+      await ActionRegistry.withModelDefinitionActions().run(
         "selection.selectAll",
         { seedTargets: [], __context: {}, __event: { kind: "commit" } },
         { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
       );
       expect(hist.entries()).toEqual([]);
     });
-    it.each(listSelectionOperationsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID))("registers selection command action $id", (defn) => {
-      expect(ActionRegistry.withBuiltins().get(defn.id)?.spec?.schema).toBe("spatial.action/v1");
+    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("registers selection command action $id", (defn) => {
+      expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action/v1");
     });
     it("selection.invert honors seed targets", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const seed = [{ kind: "solid", id: "e2e-box", editable: true }] as const;
-      const result = await ActionRegistry.withBuiltins().run(
+      const result = await ActionRegistry.withModelDefinitionActions().run(
         "selection.invert",
         { seedTargets: seed, __context: {}, __event: { kind: "commit" } },
         { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
@@ -5792,7 +5942,7 @@ if (import.meta.vitest) {
     it("ActionRegistry.run executes selection.apply headless", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const result = await actions.run(
         "selection.apply",
         {
@@ -5817,7 +5967,7 @@ if (import.meta.vitest) {
       const headless = await runSelectionApply(params, ctx);
       expect(headless).toEqual(direct);
     });
-    it.each(listSelectionOperationsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -5835,7 +5985,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-      const actions = ActionRegistry.withBuiltins();
+      const actions = ActionRegistry.withModelDefinitionActions();
       const run = async (id: string, targets: readonly SelectionTarget[]) => {
         const result = await actions.run(id, { seedTargets: targets, __context: {}, __event: { kind: "commit" } }, { kernel, preview: M, model });
         return selectionTargetsFromActionResult(result);
@@ -6052,7 +6202,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("m-area")));
       const fid = Object.keys(model.faces)[0]! as FaceRef;
-      const r = await ActionRegistry.withBuiltins().run("measure.faceArea", { faceId: fid }, { model: model, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M });
+      const r = await ActionRegistry.withModelDefinitionActions().run("measure.faceArea", { faceId: fid }, { model: model, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M });
       expect(r.data).toBeGreaterThan(0);
       expect(r.diff?.anchors?.added?.length).toBe(1);
       expect(r.diff!.anchors!.added![0]!.attachment.kind).toBe("face");
@@ -6836,7 +6986,7 @@ if (import.meta.vitest) {
     ];
 
     it("covers every shipped interaction", () => {
-      const ids = listSpatialInteractionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID)
+      const ids = listSpatialInteractionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID)
         .map((row) => row.id)
         .filter((id) => {
           const spec = loadSpatialInteraction(id);
@@ -6846,14 +6996,14 @@ if (import.meta.vitest) {
       expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
     });
 
-    it.each(listSelectionOperationsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID))("$id selection action completes on seeded box", async (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("$id selection action completes on seeded box", async (defn) => {
       const model = topoFromFixture("empty");
       seedBoxCell(model);
       if (defn.kinds?.includes("object")) {
         const solidId = Object.keys(model.solids)[0]!;
         model.objects["e2e-object"] = {
           id: "e2e-object" as ObjectRef,
-          typology: "builtin.primitive.box",
+          typology: "spatial.shape.primitive.box",
           primitives: { solid: solidId },
         };
       }
@@ -6894,5 +7044,4 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Tests
-
 

@@ -143,6 +143,13 @@ function ConstructQueryPanel({
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
+	const space = parseModelSpaceJson(json);
+	if (space) {
+		const preferred = space.get(SHAPE_MODEL_DEFINITION_ID);
+		if (preferred) return Object.keys(preferred.vertices).length;
+		const firstId = Object.keys(space.models).sort()[0];
+		return firstId ? Object.keys(space.models[firstId]?.vertices ?? {}).length : 0;
+	}
 	const geo = json.geometry;
 	if (geo && typeof geo === "object") {
 		const nested = (geo as Record<string, unknown>).vertices;
@@ -410,8 +417,17 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 	return modelDefinitionId.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "model";
 }
 
-function modelsFromGeometryJson(json: unknown): Record<string, Model> {
+function modelsFromSpatialJson(json: unknown): Record<string, Model> {
+	const space = parseModelSpaceJson(json);
+	if (space) return recordFromModelSpace(space);
 	return { [SHAPE_MODEL_DEFINITION_ID]: parseModelJson(json) ?? new Model() };
+}
+
+function activeModelDefinitionIdFromSpatialJson(json: unknown): string {
+	const space = parseModelSpaceJson(json);
+	if (!space) return SHAPE_MODEL_DEFINITION_ID;
+	if (space.get(SHAPE_MODEL_DEFINITION_ID)) return SHAPE_MODEL_DEFINITION_ID;
+	return Object.keys(space.models).sort()[0] ?? SHAPE_MODEL_DEFINITION_ID;
 }
 
 function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
@@ -435,12 +451,12 @@ function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
 
 function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
 	if (models[definitionId] || isShapeModelDefinition(definitionId)) return models as Record<string, Model>;
-	const fromModelDefinition = listTransformationsIntoModelDefinition(definitionId).find((row) =>
+	const fromShape = listTransformationsIntoModelDefinition(definitionId).find((row) =>
 		isShapeModelDefinition(row.source.modelDefinition),
 	);
 	const geometry = models[SHAPE_MODEL_DEFINITION_ID];
-	if (!fromModelDefinition || !geometry) return models as Record<string, Model>;
-	return { ...models, [definitionId]: applyTransformation(fromModelDefinition, geometry) };
+	if (!fromShape || !geometry) return models as Record<string, Model>;
+	return { ...models, [definitionId]: applyTransformation(fromShape, geometry) };
 }
 
 function pickGeometryForModelDefinition(
@@ -685,7 +701,7 @@ function PlayApp() {
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return modelsFromSpatialJson(asset?.json ?? emptyModelSpaceJson());
+		return modelsFromGeometryJson(asset?.json ?? emptyModelJson());
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -743,7 +759,7 @@ function PlayApp() {
 		if (resolved) return resolved;
 		if (isShapeModelDefinition(activeModelDefinitionId)) {
 			const geometry = modelsForActiveDefinition[SHAPE_MODEL_DEFINITION_ID];
-			if (!geometry) throw new Error("Play model space missing spatial.shape geometry.");
+			if (!geometry) throw new Error("Play model space missing spatial.shape model.");
 			return geometry;
 		}
 		throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
@@ -878,7 +894,7 @@ function PlayApp() {
 	const handleSaveSelected = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
-			{ model: selectedModel.toJSON(), modelSpace: selectedModelSpace.toJSON(), activeModelDefinitionId },
+			{ model: selectRawModel(liveModel, selectionInScope) },
 			`Saved ${selectionInScope.length} selected item(s) for ${activeModelDefinitionId}.`,
 		);
 	}, [activeModelDefinitionId, exportBaseName, liveModel, saveBundle, selectionInScope]);
@@ -921,11 +937,11 @@ function PlayApp() {
 					: envelope && typeof envelope === "object" && "raw" in envelope
 						? envelope.raw
 						: parsed;
-			const modelSpace = parseModelSpaceJson(snapshot);`r`n`t`t`tif (modelSpace) {`r`n`t`t`t`tconst nextActiveModelDefinitionId =`r`n`t`t`t`t`ttypeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId)`r`n`t`t`t`t`t`t? envelope.activeModelDefinitionId`r`n`t`t`t`t`t`t: activeModelDefinitionIdFromSpatialJson(snapshot);`r`n`t`t`t`tsetGeometryAssetId("");`r`n`t`t`t`tsetLoadedRawName(file.name);`r`n`t`t`t`tsetModelsByDefinitionId(recordFromModelSpace(modelSpace));`r`n`t`t`t`tsetActiveModelDefinitionId(nextActiveModelDefinitionId);`r`n`t`t`t`tsetModelDefinitionRevision((r) => r + 1);`r`n`t`t`t`tsetFileStatus(`Loaded model space from ${file.name}.`);`r`n`t`t`t`treturn;`r`n`t`t`t}`r`n`t`t`tconst model = parseModelJson(snapshot);
+			const model = parseModelJson(snapshot);
 			if (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
-			setModelsByDefinitionId(modelsFromSpatialJson(model.toJSON()));
+			setModelsByDefinitionId(modelsFromGeometryJson(model.toJSON()));
 			setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
 			setModelDefinitionRevision((r) => r + 1);
 			setFileStatus(`Loaded model from ${file.name}.`);
@@ -1003,7 +1019,7 @@ function PlayApp() {
 				</label>
 			) : (
 				<span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>builtin</code>. Switch model definition to spatial.shape to
+					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>spatial.shape</code>. Switch model definition to spatial.shape to
 					change source geometry; derived models share it via transforms.
 				</span>
 			)}
@@ -1081,4 +1097,3 @@ if (el) {
 		</StrictMode>,
 	);
 }
-

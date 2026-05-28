@@ -1,5 +1,17 @@
 /** @emoji 🏗️ Pure helpers to generate typology construct actions and interactions (no asset glob). */
 
+import { nestedCall, typologyConstructIsSurfacePrimary } from "./shape-construct-codegen.ts";
+
+const SURFACE_CONSTRUCT_OUTPUTS = {
+	faceId: "faceId",
+	wireId: "wireId",
+	wireIds: "wireIds",
+	curves: "curves",
+	points: "points",
+	targets: "targets",
+	surfaceConstructMode: "surfaceConstructMode",
+} as const;
+
 /** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
 export function typologyObjectPascalFromLabel(label: string): string {
 	return label
@@ -56,6 +68,15 @@ const ctxField = (name: string) => ({
 	segments: [{ kind: "field" as const, name }],
 });
 
+/** @emoji 📞 Shared `interaction.call` to `pick.face` with declarative output bindings. */
+export function pickFaceInteractionCallEffect(): Record<string, unknown> {
+	return {
+		op: "interaction.call",
+		interaction: "pick.face",
+		outputs: [{ target: { root: "context", segments: [{ kind: "field", name: "faceId" }] }, value: ctxField("faceId") }],
+	};
+}
+
 const promptLabel = (id: string, text: string, y = 0.25) => ({
 	kind: "label" as const,
 	id,
@@ -90,14 +111,18 @@ const footprintBoxPreview = (id: string) => ({
 });
 
 /** @emoji 🖼️ Display templates for typology construct workflow states. */
-function buildTypologyConstructDisplay(label: string): { readonly states: readonly Record<string, unknown>[] } {
+function buildTypologyConstructDisplay(
+	label: string,
+	surfacePrimary: boolean,
+): { readonly states: readonly Record<string, unknown>[] } {
+	const chooseText = surfacePrimary
+		? `Construct ${label}: 1=surface (rectangle, pick, line+extrude, loft, …)`
+		: `Construct ${label}: 1=2pts+height 2=curve+height 3=surface`;
 	return {
 		states: [
 			{
 				state: "choose_mode",
-				items: [
-					promptLabel("choose-mode", `Construct ${label}: 1=2pts+height 2=curve+height 3=surface`),
-				],
+				items: [promptLabel("choose-mode", chooseText)],
 			},
 			{
 				state: "two_points_first",
@@ -235,6 +260,45 @@ export function buildTypologyConstructInteractionSpec(
 		event: "pointer.move",
 		transitions: [{ transient: true, effects: [assignHeightFromPointerZ("pointA")] }],
 	};
+	const callSurfaceConstruct = nestedCall("surface.construct", { ...SURFACE_CONSTRUCT_OUTPUTS });
+	const surfacePrimary = typologyConstructIsSurfacePrimary(typology);
+	const chooseModeOn = surfacePrimary
+		? [
+				{
+					event: "mode.surface",
+					transitions: [
+						{
+							target: "committed",
+							key: "1",
+							label: "Surface",
+							effects: [assignMode("surface"), callSurfaceConstruct],
+						},
+					],
+				},
+			]
+		: [
+				{
+					event: "mode.2points",
+					transitions: [
+						{ target: "two_points_first", key: "1", label: "2 points + height", effects: [assignMode("2PointsAndHeight")] },
+					],
+				},
+				{
+					event: "mode.curve",
+					transitions: [{ target: "curve_wire", key: "2", label: "Curve + height", effects: [assignMode("curveAndHeight")] }],
+				},
+				{
+					event: "mode.surface",
+					transitions: [
+						{
+							target: "committed",
+							key: "3",
+							label: "Surface",
+							effects: [assignMode("surface"), callSurfaceConstruct],
+						},
+					],
+				},
+			];
 	return {
 		schema: "spatial.interaction/v1",
 		id: constructActionId,
@@ -260,36 +324,7 @@ export function buildTypologyConstructInteractionSpec(
 			states: [
 				{
 					name: "choose_mode",
-					on: [
-						{
-							event: "mode.2points",
-							transitions: [
-								{ target: "two_points_first", key: "1", label: "2 points + height", effects: [assignMode("2PointsAndHeight")] },
-							],
-						},
-						{
-							event: "mode.curve",
-							transitions: [{ target: "curve_wire", key: "2", label: "Curve + height", effects: [assignMode("curveAndHeight")] }],
-						},
-						{
-							event: "mode.surface",
-							transitions: [
-								{
-									target: "committed",
-									key: "3",
-									label: "Surface",
-									effects: [
-										assignMode("surface"),
-										{
-											op: "interaction.call",
-											interaction: "pick.face",
-											outputs: { faceId: "faceId" },
-										},
-									],
-								},
-							],
-						},
-					],
+					on: chooseModeOn,
 				},
 				{
 					name: "two_points_first",

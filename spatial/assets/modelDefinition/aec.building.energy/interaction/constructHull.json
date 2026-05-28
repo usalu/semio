@@ -126,10 +126,156 @@
                   },
                   {
                     "op": "interaction.call",
-                    "interaction": "pick.face",
-                    "outputs": {
-                      "faceId": "faceId"
-                    }
+                    "interaction": "surface.construct",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "faceId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "faceId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "surfaceConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "surfaceConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
                   }
                 ]
               }
