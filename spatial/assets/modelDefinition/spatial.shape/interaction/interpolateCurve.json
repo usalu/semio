@@ -488,6 +488,6 @@
   },
   "key": "i",
   "produces": {
-    "typology": "builtin.curve.interpolate-curve"
+    "typology": "spatial.shape.curve.interpolate-curve"
   }
 }

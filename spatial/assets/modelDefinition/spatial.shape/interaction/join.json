@@ -250,6 +250,6 @@
   },
   "key": "6",
   "produces": {
-    "typology": "builtin.edit.join"
+    "typology": "spatial.shape.edit.join"
   }
 }

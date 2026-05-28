@@ -581,6 +581,6 @@
   },
   "key": "q",
   "produces": {
-    "typology": "builtin.surface.sweep2"
+    "typology": "spatial.shape.surface.sweep2"
   }
 }

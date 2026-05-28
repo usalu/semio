@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.surface.network-srf",
+  "id": "spatial.shape.surface.network-srf",
   "version": "1.0.0",
   "label": "Network Surface",
   "description": "Typology produced by surface.network-srf.",

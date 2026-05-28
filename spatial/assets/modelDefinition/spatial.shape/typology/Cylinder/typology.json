@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.solid.cylinder",
+  "id": "spatial.shape.solid.cylinder",
   "version": "1.0.0",
   "label": "Cylinder",
   "description": "Typology produced by solid.cylinder.",

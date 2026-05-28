@@ -1,6 +1,6 @@
 {
   "schema": "spatial.attribute/v1",
-  "id": "builtin.uvalue",
+  "id": "spatial.shape.uvalue",
   "version": "1.0.0",
   "label": "U-Value",
   "description": "Authored thermal transmittance for surfaces.",

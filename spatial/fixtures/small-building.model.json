@@ -4,70 +4,70 @@
   "objects": [
     {
       "id": "object-small-building-cell-123052045",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-123052045"
       }
     },
     {
       "id": "object-small-building-cell-1278694563",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-1278694563"
       }
     },
     {
       "id": "object-small-building-cell-1726958126",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-1726958126"
       }
     },
     {
       "id": "object-small-building-cell-177644683",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-177644683"
       }
     },
     {
       "id": "object-small-building-cell-346474455",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-346474455"
       }
     },
     {
       "id": "object-small-building-cell-509251538",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-509251538"
       }
     },
     {
       "id": "object-small-building-cell-531581172",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-531581172"
       }
     },
     {
       "id": "object-small-building-cell-548248443",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-548248443"
       }
     },
     {
       "id": "object-small-building-cell-916435296",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-916435296"
       }
     },
     {
       "id": "object-small-building-cell-920901709",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "small-building-cell-920901709"
       }

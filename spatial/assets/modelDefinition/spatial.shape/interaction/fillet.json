@@ -349,6 +349,6 @@
   },
   "key": "8",
   "produces": {
-    "typology": "builtin.edit.fillet"
+    "typology": "spatial.shape.edit.fillet"
   }
 }

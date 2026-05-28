@@ -989,6 +989,6 @@
   },
   "key": "x",
   "produces": {
-    "typology": "builtin.transform.copy"
+    "typology": "spatial.shape.transform.copy"
   }
 }

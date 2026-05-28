@@ -303,6 +303,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.feature.offset-surface"
+    "typology": "spatial.shape.feature.offset-surface"
   }
 }

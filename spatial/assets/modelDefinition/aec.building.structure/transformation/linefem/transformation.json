@@ -3,9 +3,9 @@
   "id": "linefem",
   "version": "1.0.0",
   "label": "Line Fem",
-  "description": "Derives line FEM typology objects from builtin geometry.",
+  "description": "Derives line FEM typology objects from spatial.shape geometry.",
   "source": {
-    "modelDefinition": "builtin"
+    "modelDefinition": "spatial.shape"
   },
   "target": {
     "modelDefinition": "aec.building.structure"

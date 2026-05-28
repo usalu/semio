@@ -476,6 +476,6 @@
   },
   "key": "2",
   "produces": {
-    "typology": "builtin.surface.plane"
+    "typology": "spatial.shape.surface.plane"
   }
 }

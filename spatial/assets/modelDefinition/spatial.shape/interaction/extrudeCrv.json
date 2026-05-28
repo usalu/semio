@@ -463,6 +463,6 @@
   },
   "key": "0",
   "produces": {
-    "typology": "builtin.surface.extrude-crv"
+    "typology": "spatial.shape.surface.extrude-crv"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.curve.polyline",
+  "id": "spatial.shape.curve.polyline",
   "version": "1.0.0",
   "label": "Polyline",
   "description": "Typology produced by curve.polyline.",

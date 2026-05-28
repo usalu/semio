@@ -518,6 +518,6 @@
   },
   "key": "p",
   "produces": {
-    "typology": "builtin.curve.polyline"
+    "typology": "spatial.shape.curve.polyline"
   }
 }

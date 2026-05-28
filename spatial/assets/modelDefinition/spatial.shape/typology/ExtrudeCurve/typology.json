@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.surface.extrude-crv",
+  "id": "spatial.shape.surface.extrude-crv",
   "version": "1.0.0",
   "label": "Extrude Curve",
   "description": "Typology produced by surface.extrude-crv.",

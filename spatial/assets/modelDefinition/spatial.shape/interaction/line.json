@@ -533,6 +533,6 @@
   },
   "key": "l",
   "produces": {
-    "typology": "builtin.curve.line"
+    "typology": "spatial.shape.curve.line"
   }
 }

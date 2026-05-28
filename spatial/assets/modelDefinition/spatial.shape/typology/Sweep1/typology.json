@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.surface.sweep1",
+  "id": "spatial.shape.surface.sweep1",
   "version": "1.0.0",
   "label": "Sweep1",
   "description": "Typology produced by surface.sweep1.",

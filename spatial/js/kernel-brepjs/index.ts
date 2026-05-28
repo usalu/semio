@@ -55,7 +55,7 @@ import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepj
 import initOpenCascade from "brepjs-opencascade";
 import {
 	applyModelDiff,
-	executeBuiltinActionCapability,
+	executeModelDefinitionActionCapability,
 	isEmptyModelDiff,
 	emptyMeshTransfer,
 	type EdgeCurve,
@@ -85,7 +85,7 @@ import {
 	stepSpatialFileHeader,
 	StepEntityWriter,
 	derivePropertyValue,
-	GEOMETRY_MODEL_DEFINITION_ID,
+	SHAPE_MODEL_DEFINITION_ID,
 	type ObjectRef,
 	type TypologyRef,
 } from "@spatial/js-core";
@@ -1217,7 +1217,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 			readonly activeModelDefinitionId?: string | null;
 		},
 	): Promise<ActionResult> | ActionResult {
-		return executeBuiltinActionCapability(actionId, params, args, {
+		return executeModelDefinitionActionCapability(actionId, params, args, {
 			kernel: this as unknown as SpatialKernel,
 			preview: ctx.preview,
 			model: ctx.model,
@@ -2794,7 +2794,7 @@ if (import.meta.vitest) {
 			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, solid));
 			model.objects["obj-step"] = {
 				id: "obj-step" as ObjectRef,
-				typology: "builtin.primitive.box" as TypologyRef,
+				typology: "spatial.shape.primitive.box" as TypologyRef,
 				primitives: { solid: String(solid) },
 			};
 			const faceId = Object.keys(geom(model).faces)[0]!;
@@ -2832,7 +2832,7 @@ if (import.meta.vitest) {
 			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 2 }, solid));
 			model.objects["obj-vol"] = {
 				id: "obj-vol" as ObjectRef,
-				typology: "builtin.primitive.box" as TypologyRef,
+				typology: "spatial.shape.primitive.box" as TypologyRef,
 				primitives: { solid: String(solid) },
 			};
 			const stepText = await kernel.exportModelToStep(model, "props");
@@ -2840,8 +2840,8 @@ if (import.meta.vitest) {
 			const space = await kernel.importStepToModelSpace(stepText);
 			const restored = space.models.props!;
 			const obj = restored.objects["obj-vol"]!;
-			const defns = listApplicablePropertyDefinitionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID, restored, obj);
-			const volumeDefn = defns.find((d) => d.id === "builtin.volume");
+			const defns = listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, restored, obj);
+			const volumeDefn = defns.find((d) => d.id === "spatial.shape.volume");
 			expect(volumeDefn).toBeDefined();
 			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });
 			expect((derived.volume as number) ?? 0).toBeGreaterThan(0);

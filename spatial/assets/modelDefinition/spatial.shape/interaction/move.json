@@ -991,6 +991,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.transform.move"
+    "typology": "spatial.shape.transform.move"
   }
 }

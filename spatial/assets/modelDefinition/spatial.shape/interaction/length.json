@@ -223,6 +223,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.measure.length"
+    "typology": "spatial.shape.measure.length"
   }
 }

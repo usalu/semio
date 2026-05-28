@@ -1,6 +1,6 @@
 {
   "schema": "spatial.attribute/v1",
-  "id": "builtin.bondable",
+  "id": "spatial.shape.bondable",
   "version": "1.0.0",
   "label": "Bondable",
   "description": "Marks geometry that may be unified with matching contacts.",

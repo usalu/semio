@@ -1,19 +1,19 @@
 {
 	"schema": "spatial.property/v1",
-	"id": "builtin.volume",
+	"id": "spatial.shape.volume",
 	"version": "1.0.0",
 	"label": "Volume",
 	"description": "Derived volume for solid objects.",
 	"unit": "volume",
 	"sources": {
 		"typologies": [
-			"builtin.solid.sphere",
-			"builtin.solid.cylinder",
-			"builtin.primitive.box",
-			"builtin.solid.boolean-union",
-			"builtin.solid.boolean-difference",
-			"builtin.solid.boolean-intersection",
-			"builtin.feature.extrude-wire"
+			"spatial.shape.solid.sphere",
+			"spatial.shape.solid.cylinder",
+			"spatial.shape.primitive.box",
+			"spatial.shape.solid.boolean-union",
+			"spatial.shape.solid.boolean-difference",
+			"spatial.shape.solid.boolean-intersection",
+			"spatial.shape.feature.extrude-wire"
 		]
 	},
 	"output": {

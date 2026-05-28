@@ -1,8 +1,8 @@
 {
 	"schema": "spatial.modelDefinition/v1",
-	"id": "builtin",
+	"id": "spatial.shape",
 	"version": "1.0.0",
-	"label": "Builtin",
+	"label": "ModelDefinition",
 	"description": "Core model definition assets shipped with the spatial runtime.",
 	"kinds": [
 		"action",

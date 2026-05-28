@@ -857,6 +857,6 @@
   },
   "key": "3",
   "produces": {
-    "typology": "builtin.transform.scale3d"
+    "typology": "spatial.shape.transform.scale3d"
   }
 }

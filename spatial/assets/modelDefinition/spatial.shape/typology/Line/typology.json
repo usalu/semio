@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.curve.line",
+  "id": "spatial.shape.curve.line",
   "version": "1.0.0",
   "label": "Line",
   "description": "Typology produced by curve.line.",

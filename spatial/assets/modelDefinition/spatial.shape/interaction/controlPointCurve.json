@@ -488,6 +488,6 @@
   },
   "key": "u",
   "produces": {
-    "typology": "builtin.curve.control-point-curve"
+    "typology": "spatial.shape.curve.control-point-curve"
   }
 }

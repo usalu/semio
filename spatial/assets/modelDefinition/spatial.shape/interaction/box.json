@@ -2393,6 +2393,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.primitive.box"
+    "typology": "spatial.shape.primitive.box"
   }
 }

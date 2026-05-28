@@ -3,9 +3,9 @@
   "id": "surfacefem",
   "version": "1.0.0",
   "label": "Surface Fem",
-  "description": "Derives surface FEM typology objects from builtin geometry.",
+  "description": "Derives surface FEM typology objects from spatial.shape geometry.",
   "source": {
-    "modelDefinition": "builtin"
+    "modelDefinition": "spatial.shape"
   },
   "target": {
     "modelDefinition": "aec.building.structure"

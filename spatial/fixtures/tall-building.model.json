@@ -4,175 +4,175 @@
   "objects": [
     {
       "id": "object-tall-building-cell-1081834846",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1081834846"
       }
     },
     {
       "id": "object-tall-building-cell-1096094486",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1096094486"
       }
     },
     {
       "id": "object-tall-building-cell-1279952659",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1279952659"
       }
     },
     {
       "id": "object-tall-building-cell-128407723",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-128407723"
       }
     },
     {
       "id": "object-tall-building-cell-1328253869",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1328253869"
       }
     },
     {
       "id": "object-tall-building-cell-1352884655",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1352884655"
       }
     },
     {
       "id": "object-tall-building-cell-1483470234",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1483470234"
       }
     },
     {
       "id": "object-tall-building-cell-1566933627",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1566933627"
       }
     },
     {
       "id": "object-tall-building-cell-1625171106",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1625171106"
       }
     },
     {
       "id": "object-tall-building-cell-1742409446",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1742409446"
       }
     },
     {
       "id": "object-tall-building-cell-1787309167",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1787309167"
       }
     },
     {
       "id": "object-tall-building-cell-1791018247",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1791018247"
       }
     },
     {
       "id": "object-tall-building-cell-179470786",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-179470786"
       }
     },
     {
       "id": "object-tall-building-cell-1881454733",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1881454733"
       }
     },
     {
       "id": "object-tall-building-cell-1983976325",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-1983976325"
       }
     },
     {
       "id": "object-tall-building-cell-2067663447",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-2067663447"
       }
     },
     {
       "id": "object-tall-building-cell-273806170",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-273806170"
       }
     },
     {
       "id": "object-tall-building-cell-391420525",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-391420525"
       }
     },
     {
       "id": "object-tall-building-cell-418180204",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-418180204"
       }
     },
     {
       "id": "object-tall-building-cell-52113531",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-52113531"
       }
     },
     {
       "id": "object-tall-building-cell-554343839",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-554343839"
       }
     },
     {
       "id": "object-tall-building-cell-751631438",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-751631438"
       }
     },
     {
       "id": "object-tall-building-cell-869813452",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-869813452"
       }
     },
     {
       "id": "object-tall-building-cell-980890500",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-980890500"
       }
     },
     {
       "id": "object-tall-building-cell-981303600",
-      "typology": "builtin.primitive.box",
+      "typology": "spatial.shape.primitive.box",
       "primitives": {
         "solid": "tall-building-cell-981303600"
       }

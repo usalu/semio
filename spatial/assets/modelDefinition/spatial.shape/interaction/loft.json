@@ -469,6 +469,6 @@
   },
   "key": "f",
   "produces": {
-    "typology": "builtin.surface.loft"
+    "typology": "spatial.shape.surface.loft"
   }
 }

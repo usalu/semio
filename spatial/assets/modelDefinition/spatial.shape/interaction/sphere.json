@@ -510,6 +510,6 @@
   },
   "key": "h",
   "produces": {
-    "typology": "builtin.solid.sphere"
+    "typology": "spatial.shape.solid.sphere"
   }
 }

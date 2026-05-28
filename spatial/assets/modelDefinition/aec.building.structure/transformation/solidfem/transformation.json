@@ -3,9 +3,9 @@
   "id": "solidfem",
   "version": "1.0.0",
   "label": "Solid Fem",
-  "description": "Derives solid FEM typology objects from builtin geometry.",
+  "description": "Derives solid FEM typology objects from spatial.shape geometry.",
   "source": {
-    "modelDefinition": "builtin"
+    "modelDefinition": "spatial.shape"
   },
   "target": {
     "modelDefinition": "aec.building.structure"

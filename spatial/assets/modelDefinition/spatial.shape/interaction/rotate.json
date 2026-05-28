@@ -867,6 +867,6 @@
   },
   "key": "z",
   "produces": {
-    "typology": "builtin.transform.rotate"
+    "typology": "spatial.shape.transform.rotate"
   }
 }

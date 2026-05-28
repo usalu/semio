@@ -3,9 +3,9 @@
   "id": "from_geometry",
   "version": "1.0.0",
   "label": "From Geometry",
-  "description": "Derives an energy object model from a builtin geometry source model.",
+  "description": "Derives an energy object model from a spatial.shape geometry source model.",
   "source": {
-    "modelDefinition": "builtin"
+    "modelDefinition": "spatial.shape"
   },
   "target": {
     "modelDefinition": "aec.building.energy"

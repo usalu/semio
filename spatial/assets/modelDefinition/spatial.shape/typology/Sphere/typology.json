@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.solid.sphere",
+  "id": "spatial.shape.solid.sphere",
   "version": "1.0.0",
   "label": "Sphere",
   "description": "Typology produced by solid.sphere.",

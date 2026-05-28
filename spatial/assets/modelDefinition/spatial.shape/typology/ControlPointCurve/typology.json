@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.curve.control-point-curve",
+  "id": "spatial.shape.curve.control-point-curve",
   "version": "1.0.0",
   "label": "Control Point Curve",
   "description": "Typology produced by curve.control-point-curve.",

@@ -17,10 +17,10 @@ if (command === "test") {
 	});
 	process.exit(r.status ?? 1);
 } else if (command === "generate") {
-	const { GEOMETRY_MODEL_DEFINITION_ID } = await import("@spatial/js-core");
+	const { SHAPE_MODEL_DEFINITION_ID } = await import("@spatial/js-core");
 	const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
 	let outPath = join(cwd, "machine.json");
-	let modelDefinitionId = GEOMETRY_MODEL_DEFINITION_ID;
+	let modelDefinitionId = SHAPE_MODEL_DEFINITION_ID;
 	const interactionIds: string[] = [];
 	for (let i = 0; i < extra.length; i++) {
 		const a = extra[i]!;

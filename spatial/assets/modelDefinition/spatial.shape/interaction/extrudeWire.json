@@ -273,6 +273,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.feature.extrude-wire"
+    "typology": "spatial.shape.feature.extrude-wire"
   }
 }

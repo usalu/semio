@@ -14,7 +14,7 @@
     "energy.energy.constructHull"
   ],
   "properties": [
-    "builtin.volume",
+    "spatial.shape.volume",
     "energy.heatedvolume"
   ],
   "primitiveKinds": [

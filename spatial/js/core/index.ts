@@ -748,6 +748,66 @@ function listFinalInteractionStates(spec: InteractionSpec): string[] {
   return spec.machine.states.filter((s) => s.final).map((s) => s.name);
 }
 
+function normalizeInteractionCallEffectRaw(fx: Record<string, unknown>): boolean {
+  if (fx.op !== "interaction.call" || typeof fx.interaction !== "string") return false;
+  const outputs = fx.outputs;
+  if (outputs === undefined) return true;
+  if (Array.isArray(outputs)) return outputs.every((row) => row && typeof row === "object" && "target" in (row as object) && "value" in (row as object));
+  if (outputs && typeof outputs === "object") {
+    fx.outputs = Object.entries(outputs as Record<string, unknown>).map(([hostKey, childKey]) => ({
+      target: { root: "context", segments: [{ kind: "field", name: hostKey }] },
+      value: { kind: "path", root: "context", segments: [{ kind: "field", name: String(childKey) }] },
+    }));
+    return true;
+  }
+  return false;
+}
+
+function normalizeInteractionDocumentRaw(r: Record<string, unknown>): void {
+  const spatial = r.interaction;
+  if (spatial && typeof spatial === "object" && (spatial as Record<string, unknown>).callableOnly === true) {
+    r.invocation = "callable";
+    delete (spatial as Record<string, unknown>).callableOnly;
+  }
+  const machine = r.machine;
+  if (!machine || typeof machine !== "object") return;
+  const states = (machine as Record<string, unknown>).states;
+  if (!Array.isArray(states)) return;
+  for (const st of states) {
+    if (!st || typeof st !== "object") continue;
+    const on = (st as Record<string, unknown>).on;
+    if (!Array.isArray(on)) continue;
+    for (const h of on) {
+      if (!h || typeof h !== "object") continue;
+      const transitions = (h as Record<string, unknown>).transitions;
+      if (!Array.isArray(transitions)) continue;
+      for (const tr of transitions) {
+        if (!tr || typeof tr !== "object") continue;
+        const effects = (tr as Record<string, unknown>).effects;
+        if (!Array.isArray(effects)) continue;
+        for (const eff of effects) {
+          if (!eff || typeof eff !== "object") continue;
+          if (!normalizeInteractionCallEffectRaw(eff as Record<string, unknown>)) return;
+        }
+      }
+    }
+  }
+}
+
+/** @emoji 📞 Writes child session values onto host context using declarative output bindings. */
+export function mergeInteractionCallOutputs(
+  hostContext: Record<string, unknown>,
+  childContext: Record<string, unknown>,
+  outputs: readonly InteractionOutputBinding[] | undefined,
+): void {
+  if (!outputs?.length) return;
+  const childEnv: ExprEnv = { context: childContext, event: { kind: "interaction.return" } };
+  const hostEnv: ExprEnv = { ...childEnv, context: hostContext };
+  for (const row of outputs) {
+    writePathTarget(row.target, hostEnv, evalExpr(row.value, childEnv));
+  }
+}
+
 /** @emoji 🧾 Validates and returns an `InteractionSpec` or `null` when malformed. */
 export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   if (!raw || typeof raw !== "object") return null;
@@ -799,6 +859,8 @@ export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   if (!op || typeof op !== "object") return null;
   const o = op as Record<string, unknown>;
   if (o.kind !== "action" || typeof o.action !== "string") return null;
+  if (r.invocation !== undefined && r.invocation !== "standalone" && r.invocation !== "callable") return null;
+  normalizeInteractionDocumentRaw(r);
   const spec = r as unknown as InteractionSpec;
   const gn = guardNames(spec);
   if (c.when !== undefined && typeof c.when === "string" && !gn.has(c.when)) return null;
@@ -2203,7 +2265,10 @@ export function modelDefinitionIdForInteraction(interactionId: string): string |
 }
 
 /** @emoji 🧭 Interactions shipped for a model definition (folder assets + typology references). */
-export function listSpatialInteractionsForModelDefinition(modelDefinitionId: string): readonly SpatialInteraction[] {
+export function listSpatialInteractionsForModelDefinition(
+  modelDefinitionId: string,
+  options?: { readonly includeCallable?: boolean },
+): readonly SpatialInteraction[] {
   const ids = new Set<string>();
   for (const [id, owner] of interactionOwnerById()) {
     if (owner === modelDefinitionId) ids.add(id);
@@ -2215,6 +2280,11 @@ export function listSpatialInteractionsForModelDefinition(modelDefinitionId: str
   return [...ids]
     .map((id) => catalog.get(id))
     .filter((row): row is SpatialInteraction => row !== undefined)
+    .filter((row) => {
+      if (options?.includeCallable) return true;
+      const spec = loadSpatialInteraction(row.id);
+      return spec ? !isCallableOnlyInteraction(spec) : true;
+    })
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
@@ -3705,6 +3775,8 @@ export async function applyEffectAsync(
       const res = await kernel.query(a.query, params, queryCtx);
       writePathTarget(a.assignTo, env, res);
     }
+  } else if (a.op === "interaction.call") {
+    return;
   } else if (a.op === "action") {
     const def = reg.get(a.action);
     if (!def) return;

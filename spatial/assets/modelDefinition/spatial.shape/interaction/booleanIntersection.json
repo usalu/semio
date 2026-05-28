@@ -381,6 +381,6 @@
   },
   "key": "j",
   "produces": {
-    "typology": "builtin.solid.boolean-intersection"
+    "typology": "spatial.shape.solid.boolean-intersection"
   }
 }

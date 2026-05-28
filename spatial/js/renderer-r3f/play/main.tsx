@@ -3,9 +3,9 @@ import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type Cha
 import { createRoot } from "react-dom/client";
 import {
 	DocumentHistory,
-	GEOMETRY_MODEL_DEFINITION_ID,
+	SHAPE_MODEL_DEFINITION_ID,
 	applyTransformation,
-	isGeometryModelDefinition,
+	isShapeModelDefinition,
 	isInteractionSessionActive,
 	listModelDefinitionManifests,
 	listTransformationsFromModelDefinition,
@@ -51,8 +51,8 @@ import {
 
 //#region 🔖ConstructQueryPanel
 function defaultConstructQueryForModelDefinition(modelDefinitionId: string): string {
-	if (isGeometryModelDefinition(modelDefinitionId)) {
-		return "MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id LIMIT 8";
+	if (isShapeModelDefinition(modelDefinitionId)) {
+		return "MATCH (o:Object {typology: 'spatial.shape.primitive.box'}) RETURN o.id LIMIT 8";
 	}
 	const scope = resolveModelDefinitionScope(modelDefinitionId);
 	const typology = scope.typologies[0];
@@ -411,7 +411,7 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 }
 
 function modelsFromGeometryJson(json: unknown): Record<string, Model> {
-	return { [GEOMETRY_MODEL_DEFINITION_ID]: parseModelJson(json) ?? new Model() };
+	return { [SHAPE_MODEL_DEFINITION_ID]: parseModelJson(json) ?? new Model() };
 }
 
 function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
@@ -434,13 +434,13 @@ function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
 }
 
 function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
-	if (models[definitionId] || isGeometryModelDefinition(definitionId)) return models as Record<string, Model>;
-	const fromBuiltin = listTransformationsIntoModelDefinition(definitionId).find((row) =>
-		isGeometryModelDefinition(row.source.modelDefinition),
+	if (models[definitionId] || isShapeModelDefinition(definitionId)) return models as Record<string, Model>;
+	const fromModelDefinition = listTransformationsIntoModelDefinition(definitionId).find((row) =>
+		isShapeModelDefinition(row.source.modelDefinition),
 	);
-	const geometry = models[GEOMETRY_MODEL_DEFINITION_ID];
-	if (!fromBuiltin || !geometry) return models as Record<string, Model>;
-	return { ...models, [definitionId]: applyTransformation(fromBuiltin, geometry) };
+	const geometry = models[SHAPE_MODEL_DEFINITION_ID];
+	if (!fromModelDefinition || !geometry) return models as Record<string, Model>;
+	return { ...models, [definitionId]: applyTransformation(fromModelDefinition, geometry) };
 }
 
 function pickGeometryForModelDefinition(
@@ -448,11 +448,11 @@ function pickGeometryForModelDefinition(
 	activeModelDefinitionId: string,
 	liveModel: Model,
 ): Model {
-	if (isGeometryModelDefinition(activeModelDefinitionId)) {
-		return models[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+	if (isShapeModelDefinition(activeModelDefinitionId)) {
+		return models[SHAPE_MODEL_DEFINITION_ID] ?? liveModel;
 	}
 	if (modelDefinitionUsesGeometryPicking(activeModelDefinitionId)) {
-		return models[activeModelDefinitionId] ?? models[GEOMETRY_MODEL_DEFINITION_ID] ?? liveModel;
+		return models[activeModelDefinitionId] ?? models[SHAPE_MODEL_DEFINITION_ID] ?? liveModel;
 	}
 	return liveModel;
 }
@@ -496,7 +496,7 @@ function PlayModelSpacePanel({
 				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Model definition</span>
 				<select
 					value={activeModelDefinitionId}
-					onChange={(e) => onActiveModelDefinitionId(e.target.value || GEOMETRY_MODEL_DEFINITION_ID)}
+					onChange={(e) => onActiveModelDefinitionId(e.target.value || SHAPE_MODEL_DEFINITION_ID)}
 					style={PLAY_SELECT_STYLE}
 				>
 					{modelDefinitions.map((row) => (
@@ -516,7 +516,7 @@ function PlayModelSpacePanel({
 				{modelSpaceCount} linked model{modelSpaceCount === 1 ? "" : "s"}
 			</span>
 			<span style={{ opacity: 0.75 }}>Select: {selectionKinds.join(", ")}</span>
-			{!isGeometryModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
+			{!isShapeModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
 				<span style={{ opacity: 0.75 }}>
 					{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"} in view
 				</span>
@@ -675,7 +675,7 @@ function PlaySession({
 
 //#region 🔖PlayApp
 function PlayApp() {
-	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(GEOMETRY_MODEL_DEFINITION_ID);
+	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(SHAPE_MODEL_DEFINITION_ID);
 	const scopedInteractions = useMemo(
 		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
@@ -685,7 +685,7 @@ function PlayApp() {
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return modelsFromGeometryJson(asset?.json ?? emptyModelJson());
+		return modelsFromSpatialJson(asset?.json ?? emptyModelSpaceJson());
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -729,7 +729,7 @@ function PlayApp() {
 		setFileStatus("");
 		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
 		setModelsByDefinitionId(modelsFromGeometryJson(asset?.json ?? emptyModelJson()));
-		setActiveModelDefinitionId(GEOMETRY_MODEL_DEFINITION_ID);
+		setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
@@ -741,9 +741,9 @@ function PlayApp() {
 	const activeModel = useMemo(() => {
 		const resolved = modelsForActiveDefinition[activeModelDefinitionId];
 		if (resolved) return resolved;
-		if (isGeometryModelDefinition(activeModelDefinitionId)) {
-			const geometry = modelsForActiveDefinition[GEOMETRY_MODEL_DEFINITION_ID];
-			if (!geometry) throw new Error("Play model space missing builtin geometry.");
+		if (isShapeModelDefinition(activeModelDefinitionId)) {
+			const geometry = modelsForActiveDefinition[SHAPE_MODEL_DEFINITION_ID];
+			if (!geometry) throw new Error("Play model space missing spatial.shape geometry.");
 			return geometry;
 		}
 		throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
@@ -878,7 +878,7 @@ function PlayApp() {
 	const handleSaveSelected = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
-			{ model: selectRawModel(liveModel, selectionInScope) },
+			{ model: selectedModel.toJSON(), modelSpace: selectedModelSpace.toJSON(), activeModelDefinitionId },
 			`Saved ${selectionInScope.length} selected item(s) for ${activeModelDefinitionId}.`,
 		);
 	}, [activeModelDefinitionId, exportBaseName, liveModel, saveBundle, selectionInScope]);
@@ -921,12 +921,12 @@ function PlayApp() {
 					: envelope && typeof envelope === "object" && "raw" in envelope
 						? envelope.raw
 						: parsed;
-			const model = parseModelJson(snapshot);
+			const modelSpace = parseModelSpaceJson(snapshot);`r`n`t`t`tif (modelSpace) {`r`n`t`t`t`tconst nextActiveModelDefinitionId =`r`n`t`t`t`t`ttypeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId)`r`n`t`t`t`t`t`t? envelope.activeModelDefinitionId`r`n`t`t`t`t`t`t: activeModelDefinitionIdFromSpatialJson(snapshot);`r`n`t`t`t`tsetGeometryAssetId("");`r`n`t`t`t`tsetLoadedRawName(file.name);`r`n`t`t`t`tsetModelsByDefinitionId(recordFromModelSpace(modelSpace));`r`n`t`t`t`tsetActiveModelDefinitionId(nextActiveModelDefinitionId);`r`n`t`t`t`tsetModelDefinitionRevision((r) => r + 1);`r`n`t`t`t`tsetFileStatus(`Loaded model space from ${file.name}.`);`r`n`t`t`t`treturn;`r`n`t`t`t}`r`n`t`t`tconst model = parseModelJson(snapshot);
 			if (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
-			setModelsByDefinitionId(modelsFromGeometryJson(model.toJSON()));
-			setActiveModelDefinitionId(GEOMETRY_MODEL_DEFINITION_ID);
+			setModelsByDefinitionId(modelsFromSpatialJson(model.toJSON()));
+			setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
 			setModelDefinitionRevision((r) => r + 1);
 			setFileStatus(`Loaded model from ${file.name}.`);
 		} catch (error) {
@@ -985,7 +985,7 @@ function PlayApp() {
 					Precise
 				</button>
 			</div>
-			{isGeometryModelDefinition(activeModelDefinitionId) ? (
+			{isShapeModelDefinition(activeModelDefinitionId) ? (
 				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
 					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Geometry asset</span>
 					<select
@@ -1003,7 +1003,7 @@ function PlayApp() {
 				</label>
 			) : (
 				<span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>builtin</code>. Switch model definition to builtin to
+					Geometry assets apply to <code style={{ color: "#e8e8f0" }}>builtin</code>. Switch model definition to spatial.shape to
 					change source geometry; derived models share it via transforms.
 				</span>
 			)}
@@ -1081,3 +1081,4 @@ if (el) {
 		</StrictMode>,
 	);
 }
+

@@ -7,7 +7,7 @@ import { createActor, setup } from "xstate";
 import {
 	applyTransition,
 	createInteractionRuntime,
-	GEOMETRY_MODEL_DEFINITION_ID,
+	SHAPE_MODEL_DEFINITION_ID,
 	initialContextForSpec,
 	isEmptyModelDiff,
 	listSpatialInteractionsForModelDefinition,
@@ -108,7 +108,7 @@ export interface SpatialStatelyMachineView {
 	readonly statelyRoutingNote: string;
 }
 
-/** @emoji 📊 Catalog of built-in interactions for Stately/Mermaid viewers (`machine.json`). */
+/** @emoji 📊 Catalog of model-definition interactions for Stately/Mermaid viewers (`machine.json`). */
 export interface SpatialStatelyMachineCatalogView {
 	readonly kind: "spatial.stately-machine-view/v1";
 	readonly schemaVersion: "1.0";
@@ -391,9 +391,9 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-machine-stately", () => {
 		it("buildSpatialStatelyMachineCatalogView lists scoped interactions with edges and mermaid", () => {
-			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: GEOMETRY_MODEL_DEFINITION_ID });
+			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: SHAPE_MODEL_DEFINITION_ID });
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
-			expect(doc.machines.length).toBe(listSpatialInteractionsForModelDefinition(GEOMETRY_MODEL_DEFINITION_ID).length);
+			expect(doc.machines.length).toBe(listSpatialInteractionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).length);
 			const box = doc.machines.find((m) => m.interactionId === "primitive.box");
 			expect(box?.edges.length).toBeGreaterThan(0);
 			expect(box?.mermaid).toContain("primitive_box");

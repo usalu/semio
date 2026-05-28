@@ -1,6 +1,6 @@
 {
   "schema": "spatial.attribute/v1",
-  "id": "builtin.material",
+  "id": "spatial.shape.material",
   "version": "1.0.0",
   "label": "Material",
   "description": "Authored material metadata attachable to curve, surface, or solid geometry.",

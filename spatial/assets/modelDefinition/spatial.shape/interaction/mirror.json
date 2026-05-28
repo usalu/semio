@@ -612,6 +612,6 @@
   },
   "key": "4",
   "produces": {
-    "typology": "builtin.transform.mirror"
+    "typology": "spatial.shape.transform.mirror"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.primitive.box",
+  "id": "spatial.shape.primitive.box",
   "version": "1.0.0",
   "label": "Box",
   "description": "Typology produced by primitive.box.",

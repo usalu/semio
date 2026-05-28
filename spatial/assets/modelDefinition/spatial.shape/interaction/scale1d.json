@@ -857,6 +857,6 @@
   },
   "key": "1",
   "produces": {
-    "typology": "builtin.transform.scale1d"
+    "typology": "spatial.shape.transform.scale1d"
   }
 }

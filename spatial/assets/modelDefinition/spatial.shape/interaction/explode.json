@@ -250,6 +250,6 @@
   },
   "key": "7",
   "produces": {
-    "typology": "builtin.edit.explode"
+    "typology": "spatial.shape.edit.explode"
   }
 }

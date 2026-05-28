@@ -166,6 +166,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.measure.area"
+    "typology": "spatial.shape.measure.area"
   }
 }

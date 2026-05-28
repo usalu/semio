@@ -16,7 +16,7 @@ import {
 	solidRef,
 	isSelectionConstructActionId,
 	actionAvailableInModelDefinition,
-	GEOMETRY_MODEL_DEFINITION_ID,
+	SHAPE_MODEL_DEFINITION_ID,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
@@ -533,7 +533,7 @@ export interface ReturnClauseAst {
 export type ConstructClauseAst = MatchClauseAst | WithClauseAst | CallClauseAst | UnwindClauseAst;
 
 function assertConstructAst(ast: ConstructAst, activeModelDefinitionId?: string | null): void {
-	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 	const typologyKinds = buildTypologyToEntityKindMapForModelDefinition(mdId);
 	for (const cl of ast.clauses) {
 		if (cl.kind !== "match") continue;
@@ -905,7 +905,7 @@ export function parseConstruct(text: string, activeModelDefinitionId?: string | 
 
 // #region Index
 function typologyToEntityKindForConstruct(activeModelDefinitionId?: string | null): Readonly<Record<string, ModelEntityKind>> {
-	const mdId = activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 	return buildTypologyToEntityKindMapForModelDefinition(mdId);
 }
 
@@ -1329,7 +1329,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			rows = next;
 		} else if (st.kind === "call") {
 			const transformation = loadTransformation(st.actionId);
-			const modelDefinitionId = ctx.activeModelDefinitionId ?? GEOMETRY_MODEL_DEFINITION_ID;
+			const modelDefinitionId = ctx.activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 			if (!transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
 			if (!transformation && !actionAvailableInModelDefinition(st.actionId, modelDefinitionId)) {
 				throw new Error(`action ${st.actionId} is not available in model definition ${modelDefinitionId}`);
@@ -1484,13 +1484,13 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-query parse", () => {
 		it("parses MATCH RETURN with property access", () => {
-			const a = parseConstruct("MATCH (f:Object {typology: 'builtin.kernel.face', id: 'f0'}) RETURN f.id");
+			const a = parseConstruct("MATCH (f:Object {typology: 'spatial.shape.kernel.face', id: 'f0'}) RETURN f.id");
 			expect(a.clauses[0]?.kind).toBe("match");
 			expect(a.returnClause?.projections.length).toBe(1);
 		});
 		it("parses RETURN LIMIT without ORDER BY", () => {
 			const a = parseConstruct(
-				"MATCH (v:Object {typology: 'builtin.kernel.vertex'}) RETURN v.id LIMIT 3",
+				"MATCH (v:Object {typology: 'spatial.shape.kernel.vertex'}) RETURN v.id LIMIT 3",
 			);
 			expect(a.returnClause?.limit).toBe(3);
 		});
@@ -1538,11 +1538,11 @@ if (import.meta.vitest) {
 		it("MATCH solid shell face chain returns face ids", async () => {
 			const model = new Model();
 			seedSolidShellFaces(model);
-			const q = `MATCH (c:Object {typology: 'builtin.kernel.solid'})-[:BOUNDED_BY]->(:Object {typology: 'builtin.kernel.shell'})-[:CONTAINS]->(f:Object {typology: 'builtin.kernel.face'}) RETURN f.id`;
+			const q = `MATCH (c:Object {typology: 'spatial.shape.kernel.solid'})-[:BOUNDED_BY]->(:Object {typology: 'spatial.shape.kernel.shell'})-[:CONTAINS]->(f:Object {typology: 'spatial.shape.kernel.face'}) RETURN f.id`;
 			const res = await runConstruct(q, {
 				model: model,
 				kernel: mkKernelStub(),
-				actions: ActionRegistry.withBuiltins(),
+				actions: ActionRegistry.withModelDefinitions(),
 			});
 			const ids = res.rows.map((r) => r.c0).sort();
 			expect(ids).toEqual(["f0", "f1"]);
@@ -1559,11 +1559,11 @@ if (import.meta.vitest) {
 			model.solids["c0" as SolidRef] = { id: "c0" as SolidRef, shellIds: [sh0] };
 			model.solids["c1" as SolidRef] = { id: "c1" as SolidRef, shellIds: [sh1] };
 			const res = await runConstruct(
-				"MATCH (a:Object {typology: 'builtin.kernel.solid'})-[:ADJACENT_TO]-(b:Object {typology: 'builtin.kernel.solid'}) RETURN a.id, b.id",
+				"MATCH (a:Object {typology: 'spatial.shape.kernel.solid'})-[:ADJACENT_TO]-(b:Object {typology: 'spatial.shape.kernel.solid'}) RETURN a.id, b.id",
 				{
 					model: model,
 					kernel: mkKernelStub(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 				},
 			);
 			expect(res.rows.length).toBeGreaterThan(0);
@@ -1577,7 +1577,7 @@ if (import.meta.vitest) {
 				runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 				}),
 			).rejects.toThrow(/unknown action/i);
 		});
@@ -1588,7 +1588,7 @@ if (import.meta.vitest) {
 				runConstruct("CALL no.such.action({}) YIELD data", {
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 				}),
 			).rejects.toThrow(/unknown action/i);
 		});
@@ -1600,7 +1600,7 @@ if (import.meta.vitest) {
 				{
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 				},
 			);
 			expect(res.diff).toBeDefined();
@@ -1611,7 +1611,7 @@ if (import.meta.vitest) {
 		it("CALL selection.selectAll YIELD targets returns every box model kind", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-			const actions = ActionRegistry.withBuiltins();
+			const actions = ActionRegistry.withModelDefinitions();
 			expect(actions.get("selection.selectAll")).not.toBeNull();
 			const res = await runConstruct("CALL selection.selectAll({}) YIELD targets", {
 				model: model,
@@ -1633,7 +1633,7 @@ if (import.meta.vitest) {
 				{
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 					selectionTargets: seed,
 				},
 			);
@@ -1648,7 +1648,7 @@ if (import.meta.vitest) {
 			const res = await runConstruct("CALL selection.selectVertices({}) YIELD targets", {
 				model: model,
 				kernel: new QueryTestKernel(),
-				actions: ActionRegistry.withBuiltins(),
+				actions: ActionRegistry.withModelDefinitions(),
 			});
 			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
 			expect(targets?.length).toBe(8);
@@ -1661,7 +1661,7 @@ if (import.meta.vitest) {
 				runConstruct("CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [1,1,0], height: 1 })", {
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 					activeModelDefinitionId: "aec.building.energy",
 				}),
 			).rejects.toThrow(/not available in model definition aec\.building\.energy/);
@@ -1674,7 +1674,7 @@ if (import.meta.vitest) {
 				runConstruct("CALL selection.selectVertices({}) YIELD targets", {
 					model: model,
 					kernel: new QueryTestKernel(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 					activeModelDefinitionId: "aec.building.energy",
 				}),
 			).rejects.toThrow(/not available in model definition aec\.building\.energy/);
@@ -1683,10 +1683,10 @@ if (import.meta.vitest) {
 		it("rejects geometry typology MATCH under energy model definition", async () => {
 			const model = new Model();
 			await expect(
-				runConstruct("MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id", {
+				runConstruct("MATCH (o:Object {typology: 'spatial.shape.primitive.box'}) RETURN o.id", {
 					model: model,
 					kernel: mkKernelStub(),
-					actions: ActionRegistry.withBuiltins(),
+					actions: ActionRegistry.withModelDefinitions(),
 					activeModelDefinitionId: "aec.building.energy",
 				}),
 			).rejects.toThrow(/unknown typology builtin\.primitive\.box for model definition aec\.building\.energy/);
@@ -1704,19 +1704,19 @@ if (import.meta.vitest) {
 			const res = await runConstruct("MATCH (o:Object {typology: 'energy.energy.hull'}) RETURN o.id AS id", {
 				model: model,
 				kernel: mkKernelStub(),
-				actions: ActionRegistry.withBuiltins(),
+				actions: ActionRegistry.withModelDefinitions(),
 				activeModelDefinitionId: "aec.building.energy",
 			});
 			expect(res.rows.some((row) => row.id === "energy-hull")).toBe(true);
 		});
 
-		it("MATCH builtin.primitive.box typology resolves to solids", async () => {
+		it("MATCH spatial.shape.primitive.box typology resolves to solids", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-			const res = await runConstruct("MATCH (s:Object {typology: 'builtin.primitive.box'}) RETURN s.id", {
+			const res = await runConstruct("MATCH (s:Object {typology: 'spatial.shape.primitive.box'}) RETURN s.id", {
 				model: model,
 				kernel: mkKernelStub(),
-				actions: ActionRegistry.withBuiltins(),
+				actions: ActionRegistry.withModelDefinitions(),
 			});
 			expect(res.rows.length).toBeGreaterThanOrEqual(1);
 			expect(res.rows.some((r) => typeof r.c0 === "string")).toBe(true);
@@ -1728,14 +1728,14 @@ if (import.meta.vitest) {
 			applyModelDiff(model, r);
 			model.objects["object-box"] = {
 				id: "object-box" as import("@spatial/js-core").ObjectRef,
-				typology: "builtin.primitive.box",
+				typology: "spatial.shape.primitive.box",
 				primitives: { solid: String(r.solid ?? "box") },
 			};
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {
 				model: model,
 				kernel,
-				actions: ActionRegistry.withBuiltins(),
+				actions: ActionRegistry.withModelDefinitions(),
 			});
 			const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
 			expect(targets!.length).toBeGreaterThan(0);

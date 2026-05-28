@@ -1,6 +1,6 @@
 {
   "schema": "spatial.typology/v1",
-  "id": "builtin.curve.arc",
+  "id": "spatial.shape.curve.arc",
   "version": "1.0.0",
   "label": "Arc",
   "description": "Typology produced by curve.arc.",

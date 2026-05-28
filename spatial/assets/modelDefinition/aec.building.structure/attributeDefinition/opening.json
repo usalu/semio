@@ -1,6 +1,6 @@
 {
   "schema": "spatial.attribute/v1",
-  "id": "builtin.opening",
+  "id": "spatial.shape.opening",
   "version": "1.0.0",
   "label": "Opening",
   "description": "Marks a surface opening kind used by downstream derived models.",

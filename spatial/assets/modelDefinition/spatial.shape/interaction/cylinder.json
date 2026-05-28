@@ -723,6 +723,6 @@
   },
   "key": "y",
   "produces": {
-    "typology": "builtin.solid.cylinder"
+    "typology": "spatial.shape.solid.cylinder"
   }
 }
