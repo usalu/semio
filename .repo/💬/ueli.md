@@ -2573,7 +2573,19 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
-The core mechanism
+In order to deal with the problem that brepjs cant attach metdata directly, the kernel needs to be extended with a layer to track attributes and metadata. Further brepjs cant import/export json.
+We import and export with AP242 UDA STEP.
+Make sure that our framework cleanly roundtrips with step.
+See .repo/✍️/spatial-step-export-import.md plan
+
+---
+
+A big refactor is ongoing.
+Get rid of all the extra legacy topologic entities such as View, Extension, etc
+The new entities are just: ModelSpace, Primitive, Model, Object, Attribute
+The extension mechanism uses views to derive new models.
+All actions, interactions, attributeDefinition, modelDefinition, propertyDefinition, typologies needed for this are stored inside extensions as data.
+For geometry use the entities that brepjs is using for the kernel. Dont add any new terms, wrapper structures etc
 
 ---
 

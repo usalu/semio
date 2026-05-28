@@ -347,6 +347,23 @@ export class AttributeStore {
   deleteEntity(id: string): void {
     if (this.byId.delete(id)) this.bumpRevision();
   }
+
+  /** @emoji 🧭 Iterates `(entityId, fields)` pairs in stable id order. */
+  entries(): Iterable<[string, Readonly<Record<string, unknown>>]> {
+    return [...this.byId.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }
+
+  /** @emoji 🧭 Serializes sidecar attribute rows for STEP / JSON. */
+  toJSON(): readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[] {
+    return [...this.entries()].map(([id, fields]) => ({ id, fields }));
+  }
+
+  /** @emoji 🧭 Hydrates sidecar attributes from JSON rows. */
+  static fromJSON(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[]): AttributeStore {
+    const store = new AttributeStore(() => {});
+    for (const row of rows ?? []) store.byId.set(row.id, { ...row.fields });
+    return store;
+  }
 }
 
 /** @emoji 🪪 `evalExpr` `field` target: a bound geometry row entity (`kind` + `id`). */
@@ -978,6 +995,7 @@ export interface ModelJson {
   readonly revision: number;
   readonly objects: readonly SpatialObjectRecord[];
   readonly geometry: KernelGeometryJson;
+  readonly metadata?: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[];
 }
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
@@ -1007,6 +1025,7 @@ export class Model {
 
   /** @emoji 🧭 Serializes to `ModelJson` (stable id-sorted arrays). */
   toJSON(): ModelJson {
+    const meta = this.metadata.toJSON();
     return {
       schema: "spatial.model/v1",
       revision: this.revision,
@@ -1020,6 +1039,7 @@ export class Model {
         shells: sortedRecordValues(this.shells),
         solids: sortedRecordValues(this.solids),
       },
+      ...(meta.length > 0 ? { metadata: meta } : {}),
     };
   }
 
@@ -1036,6 +1056,12 @@ export class Model {
     g.faces = recordsById(geo.faces ?? []);
     g.shells = recordsById(geo.shells ?? []);
     g.solids = recordsById(geo.solids ?? []);
+    if (j.metadata?.length) {
+      const loaded = AttributeStore.fromJSON(j.metadata);
+      for (const [id, fields] of loaded.entries()) {
+        for (const [key, value] of Object.entries(fields)) g.metadata.setField(id, key, value);
+      }
+    }
     return g;
   }
 
@@ -1209,6 +1235,187 @@ export class ModelSpace {
     this.revision += 1;
   }
 }
+
+// #region 🪜StepRoundtrip
+const STEP_AP242_SCHEMA = "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF";
+
+/** @emoji 🪜 Escapes a string for STEP string literals. */
+export function stepEscape(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+/** @emoji 🪜 Formats a number for STEP (rejects non-finite). */
+export function stepNumber(value: number): string {
+  if (!Number.isFinite(value)) throw new Error(`stepNumber: non-finite ${value}`);
+  const s = Object.is(value, -0) ? "0." : String(value);
+  return s.includes(".") || s.includes("e") || s.includes("E") ? s : `${s}.`;
+}
+
+/** @emoji 🪜 Parsed STEP entity map (`#id` → assignment body after `=`). */
+export type StepEntityMap = ReadonlyMap<number, string>;
+
+/** @emoji 🪜 Incremental AP242 entity writer with stable `#` numbering. */
+export class StepEntityWriter {
+  private nextId = 10;
+  private readonly lines: string[] = [];
+
+  /** @emoji 🪜 Allocates the next entity id. */
+  alloc(): number {
+    const id = this.nextId;
+    this.nextId += 1;
+    return id;
+  }
+
+  /** @emoji 🪜 Emits `#id = body;` (body must not include leading `#`). */
+  emit(id: number, body: string): number {
+    const trimmed = body.trim().replace(/;\s*$/, "");
+    this.lines.push(`#${id} = ${trimmed};`);
+    return id;
+  }
+
+  /** @emoji 🪜 Emits with a freshly allocated id. */
+  emitNew(body: string): number {
+    return this.emit(this.alloc(), body);
+  }
+
+  /** @emoji 🪜 DATA section entity lines in emission order. */
+  entityLines(): readonly string[] {
+    return this.lines;
+  }
+
+  /** @emoji 🪜 Resets the writer for another file. */
+  reset(): void {
+    this.nextId = 10;
+    this.lines.length = 0;
+  }
+}
+
+/** @emoji 🪜 Parses STEP `DATA` entities into an id → body map. */
+export function parseStepEntityMap(stepText: string): StepEntityMap {
+  const out = new Map<number, string>();
+  const data = stepText.match(/DATA;\s*([\s\S]*?)ENDSEC;/i)?.[1] ?? stepText;
+  const re = /^#(\d+)\s*=\s*(.+?);\s*$/gm;
+  for (const match of data.matchAll(re)) {
+    out.set(Number(match[1]), match[2]!.trim());
+  }
+  return out;
+}
+
+/** @emoji 🪜 Extracts quoted STEP string literal contents (first argument). */
+export function stepParseFirstString(entityBody: string): string | null {
+  const m = entityBody.match(/'((?:''|[^'])*)'/);
+  if (!m) return null;
+  return m[1]!.replace(/''/g, "'");
+}
+
+/** @emoji 🪜 Reads `spatial.*` UDA JSON payloads keyed by property name from STEP entities. */
+export function parseSpatialUdaPayloads(entities: StepEntityMap): Readonly<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const propNames = new Map<number, string>();
+  for (const [id, body] of entities) {
+    if (!body.startsWith("PROPERTY_DEFINITION(")) continue;
+    const name = stepParseFirstString(body);
+    if (name?.startsWith("spatial.")) propNames.set(id, name);
+  }
+  for (const body of entities.values()) {
+    if (!body.startsWith("PROPERTY_DEFINITION_REPRESENTATION(")) continue;
+    const refs = [...body.matchAll(/#(\d+)/g)].map((m) => Number(m[1]));
+    if (refs.length < 2) continue;
+    const propName = propNames.get(refs[0]!);
+    if (!propName) continue;
+    const reprBody = entities.get(refs[1]!);
+    const itemRef = reprBody?.match(/#(\d+)/g)?.map((m) => Number(m.slice(1)))?.[0];
+    const itemBody = itemRef !== undefined ? entities.get(itemRef) : undefined;
+    const payload = itemBody ? stepParseFirstString(itemBody) : reprBody ? stepParseFirstString(reprBody) : null;
+    if (payload) out[propName] = payload;
+  }
+  return out;
+}
+
+/** @emoji 🪜 Renumber brepjs STEP `DATA` lines into a shared writer (returns old→new id map). */
+export function mergeStepDataChunk(chunk: string, writer: StepEntityWriter): ReadonlyMap<number, number> {
+  const idMap = new Map<number, number>();
+  const data = chunk.match(/DATA;\s*([\s\S]*?)ENDSEC;/i)?.[1] ?? "";
+  const bodies: { readonly oldId: number; readonly body: string }[] = [];
+  const re = /^#(\d+)\s*=\s*(.+?);\s*$/gm;
+  for (const match of data.matchAll(re)) {
+    const oldId = Number(match[1]);
+    bodies.push({ oldId, body: match[2]!.trim() });
+    idMap.set(oldId, writer.alloc());
+  }
+  const rewriteRefs = (body: string): string =>
+    body.replace(/#(\d+)\b/g, (_, digits: string) => {
+      const mapped = idMap.get(Number(digits));
+      return mapped !== undefined ? `#${mapped}` : `#${digits}`;
+    });
+  for (const row of bodies) {
+    const newId = idMap.get(row.oldId)!;
+    writer.emit(newId, rewriteRefs(row.body));
+  }
+  return idMap;
+}
+
+/** @emoji 🪜 Builds AP242 STEP header for spatial six-pillar exports. */
+export function stepSpatialFileHeader(fileName: string, timestampIso: string): string {
+  const ts = stepEscape(timestampIso);
+  const name = stepEscape(fileName);
+  return [
+    "ISO-10303-21;",
+    "HEADER;",
+    "FILE_DESCRIPTION(('Pure Spatial State Export'), '2;1');",
+    `FILE_NAME(${name}, ${ts}, ('Spatial'), ('Spatial'), 'spatial-kernel', 'spatial', '');`,
+    `FILE_SCHEMA(('${STEP_AP242_SCHEMA}'));`,
+    "ENDSEC;",
+  ].join("\n");
+}
+
+/** @emoji 🪜 Assembles header + DATA + ENDSEC footer. */
+export function assembleStepFile(header: string, writer: StepEntityWriter): string {
+  return `${header}\nDATA;\n${writer.entityLines().join("\n")}\nENDSEC;\nEND-ISO-10303-21;\n`;
+}
+
+/** @emoji 🪜 Property-definition + descriptive value UDA pair on a STEP definition context. */
+export function emitSpatialUdaProperty(
+  writer: StepEntityWriter,
+  contextId: number,
+  propertyName: string,
+  payloadJson: string,
+  role: "Authored Attribute" | "Derived Property" | "System_Generated",
+): void {
+  const propId = writer.emitNew(`PROPERTY_DEFINITION(${stepEscape(propertyName)}, ${stepEscape(role)}, #${contextId})`);
+  const itemId = writer.emitNew(`DESCRIPTIVE_REPRESENTATION_ITEM('Value', ${stepEscape(payloadJson)})`);
+  const reprId = writer.emitNew(`REPRESENTATION('Spatial_Uda', (#${itemId}), #10)`);
+  writer.emitNew(`PROPERTY_DEFINITION_REPRESENTATION(#${propId}, #${reprId})`);
+}
+
+/** @emoji 🪜 Restores `AttributeStore` fields from parsed `spatial.attribute.*` UDA keys. */
+export function applySpatialAttributesFromUda(model: Model, uda: Readonly<Record<string, string>>): void {
+  for (const [key, json] of Object.entries(uda)) {
+    if (!key.startsWith("spatial.attribute.")) continue;
+    const entityId = key.slice("spatial.attribute.".length);
+    const fields = JSON.parse(json) as Record<string, unknown>;
+    for (const [field, value] of Object.entries(fields)) model.metadata.setField(entityId, field, value);
+  }
+}
+
+/** @emoji 🪜 Restores models from `spatial.model` / `spatial.geometry` UDA payloads. */
+export function modelSpaceFromSpatialUda(uda: Readonly<Record<string, string>>, modelIds: readonly string[]): ModelSpace {
+  const space = new ModelSpace();
+  const ms = JSON.parse(uda["spatial.modelspace"] ?? "{}") as { revision?: number };
+  space.revision = ms.revision ?? 0;
+  for (const modelId of modelIds) {
+    const modelJson = JSON.parse(uda[`spatial.model.${modelId}`] ?? "{}") as ModelJson;
+    const geometryJson = uda[`spatial.geometry.${modelId}`];
+    const full: ModelJson = {
+      ...modelJson,
+      geometry: geometryJson ? (JSON.parse(geometryJson) as KernelGeometryJson) : modelJson.geometry,
+    };
+    space.models[modelId] = Model.fromJSON(full);
+    applySpatialAttributesFromUda(space.models[modelId]!, uda);
+  }
+  return space;
+}
+// #endregion 🪜StepRoundtrip
 
 /** @emoji 🧭 Reads `name` from metadata, geometry records, or model objects. */
 export function readModelEntityProperty(
@@ -4109,6 +4316,50 @@ if (import.meta.vitest) {
       g.metadata.setField("e1", "exposure", "external");
       expect(g.revision).toBeGreaterThan(r0);
       expect(g.metadata.get("e1")?.exposure).toBe("external");
+    });
+
+    it("AttributeStore entries and JSON roundtrip", () => {
+      const store = new AttributeStore(() => {});
+      store.setField("face-1", "exposure", "external");
+      store.setField("face-2", "uValue", 0.25);
+      const json = store.toJSON();
+      expect(json).toHaveLength(2);
+      const restored = AttributeStore.fromJSON(json);
+      expect(restored.get("face-1")?.exposure).toBe("external");
+      expect(restored.get("face-2")?.uValue).toBe(0.25);
+    });
+
+    it("ModelJson metadata roundtrip", () => {
+      const g = new Model();
+      g.metadata.setField("solid-a", "tag", "roof");
+      const back = Model.fromJSON(g.toJSON());
+      expect(back.metadata.get("solid-a")?.tag).toBe("roof");
+    });
+  });
+
+  describe("@spatial/js-core step roundtrip helpers", () => {
+    it("stepEscape quotes apostrophes", () => {
+      expect(stepEscape("a'b")).toBe("'a''b'");
+    });
+
+    it("stepNumber formats integers with trailing dot", () => {
+      expect(stepNumber(3)).toBe("3.");
+      expect(stepNumber(0.25)).toBe("0.25");
+    });
+
+    it("parseStepEntityMap reads DATA entities", () => {
+      const text = "DATA;\n#10 = CARTESIAN_POINT('O', (0.,0.,0.));\nENDSEC;";
+      const map = parseStepEntityMap(text);
+      expect(map.get(10)).toContain("CARTESIAN_POINT");
+    });
+
+    it("emitSpatialUdaProperty roundtrips through parseSpatialUdaPayloads", () => {
+      const writer = new StepEntityWriter();
+      writer.emit(10, "GEOMETRIC_REPRESENTATION_CONTEXT(3)");
+      emitSpatialUdaProperty(writer, 12, "spatial.modelspace", '{"revision":1}', "System_Generated");
+      const file = assembleStepFile(stepSpatialFileHeader("t.stp", "2026-05-28T00:00:00Z"), writer);
+      const uda = parseSpatialUdaPayloads(parseStepEntityMap(file));
+      expect(JSON.parse(uda["spatial.modelspace"]!).revision).toBe(1);
     });
   });
 

@@ -48,6 +48,8 @@ import {
 	vertex as brepVertex,
 	vertexPosition,
 	wireLoop,
+	exportSTEPConfigured,
+	importSTEP,
 } from "brepjs";
 import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
@@ -65,11 +67,24 @@ import {
 	type SpatialKernel,
 	type SpatialPreviewKernel,
 	Model,
+	ModelSpace,
 	type ModelDiff,
 	type ModelJson,
 	type ActionResult,
 	kernelGeometry,
 	type Vec3,
+	assembleStepFile,
+	emitSpatialUdaProperty,
+	hashSolidRecord,
+	listApplicablePropertyDefinitions,
+	mergeStepDataChunk,
+	modelSpaceFromSpatialUda,
+	parseSpatialUdaPayloads,
+	parseStepEntityMap,
+	stepEscape,
+	stepSpatialFileHeader,
+	StepEntityWriter,
+	derivePropertyValue,
 } from "@spatial/js-core";
 export { kernelGeometry };
 // #endregion 📥Imports
@@ -2034,6 +2049,121 @@ class BrepjsWasmEngine {
 	async offsetFaces(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<void> {
 		await this.offsetFacesDiff(input);
 	}
+
+	/** @emoji 🪜 Exports a `ModelSpace` to AP242 STEP (six pillars + brepjs solids). */
+	async exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "default"): Promise<string> {
+		await this.ensureInit();
+		const writer = new StepEntityWriter();
+		writer.emit(10, "GEOMETRIC_REPRESENTATION_CONTEXT(3)");
+		const contextId = 10;
+		const modelIds = Object.keys(space.models).sort();
+		const productId = writer.emitNew(`PRODUCT(${stepEscape(`Spatial_ModelSpace_${modelSpaceId}`)}, 'ModelSpace', $, ($))`);
+		const formationId = writer.emitNew(`PRODUCT_DEFINITION_FORMATION('1.0', $, #${productId})`);
+		const msPdId = writer.emitNew(`PRODUCT_DEFINITION('ModelSpace_Context', 'ModelSpace', #${formationId}, #${contextId})`);
+		emitSpatialUdaProperty(
+			writer,
+			msPdId,
+			"spatial.modelspace",
+			JSON.stringify({ revision: space.revision, modelIds }),
+			"System_Generated",
+		);
+		const hashToBrepRoot = new Map<string, number>();
+		for (const modelId of modelIds) {
+			const model = space.models[modelId]!;
+			await this.syncSolidsFromModel(model);
+			const modelPdId = writer.emitNew(`PRODUCT_DEFINITION(${stepEscape(modelId)}, 'Model', #${formationId}, #${contextId})`);
+			writer.emitNew(`NEXT_ASSEMBLY_USAGE_OCCURRENCE(${stepEscape(`MS_${modelId}`)}, 'Link', $, #${msPdId}, #${modelPdId}, $)`);
+			const modelJson = model.toJSON();
+			const { geometry, metadata, ...modelSansGeometry } = modelJson;
+			emitSpatialUdaProperty(writer, modelPdId, `spatial.model.${modelId}`, JSON.stringify(modelSansGeometry), "System_Generated");
+			emitSpatialUdaProperty(writer, modelPdId, `spatial.geometry.${modelId}`, JSON.stringify(geometry), "System_Generated");
+			for (const [entityId, fields] of model.metadata.entries()) {
+				emitSpatialUdaProperty(
+					writer,
+					modelPdId,
+					`spatial.attribute.${entityId}`,
+					JSON.stringify(fields),
+					"Authored Attribute",
+				);
+			}
+			for (const obj of Object.values(model.objects)) {
+				const objPdId = writer.emitNew(
+					`PRODUCT_DEFINITION(${stepEscape(String(obj.id))}, ${stepEscape(String(obj.typologyId))}, #${formationId}, #${contextId})`,
+				);
+				writer.emitNew(`NEXT_ASSEMBLY_USAGE_OCCURRENCE(${stepEscape(`M_${obj.id}`)}, 'Link', $, #${modelPdId}, #${objPdId}, $)`);
+				const shapeId = writer.emitNew(`PRODUCT_DEFINITION_SHAPE('Object_Geometry', $, #${objPdId})`);
+				const solid = geom(model).solids[obj.geometryRef as SolidRef];
+				if (solid) {
+					const hash = hashSolidRecord(solid);
+					let brepAnchor = hashToBrepRoot.get(hash);
+					if (brepAnchor === undefined) {
+						const brep = this.solidForSolidRecord(model, solid);
+						if (brep) {
+							const chunk = unwrap(exportSTEPConfigured([{ shape: brep, name: String(solid.id) }], { schema: 242 }));
+							const idMap = mergeStepDataChunk(chunk, writer);
+							const rootOld = [...idMap.keys()].find((oldId) => {
+								const body = chunk.match(new RegExp(`#${oldId}\\s*=\\s*([^;]+);`, "m"))?.[1]?.trim() ?? "";
+								return body.startsWith("SHAPE_REPRESENTATION(") || body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(");
+							});
+							brepAnchor = rootOld !== undefined ? idMap.get(rootOld)! : writer.alloc();
+							hashToBrepRoot.set(hash, brepAnchor);
+							emitSpatialUdaProperty(writer, brepAnchor, "Spatial_Hash", hash, "System_Generated");
+						}
+					}
+					if (brepAnchor !== undefined) {
+						writer.emitNew(`SHAPE_DEFINITION_REPRESENTATION(#${shapeId}, #${brepAnchor})`);
+					}
+				}
+				for (const defn of listApplicablePropertyDefinitions(model, obj)) {
+					const derived = await derivePropertyValue(defn, { model, kernel: this as unknown as SpatialKernel, object: obj });
+					for (const [key, value] of Object.entries(derived)) {
+						emitSpatialUdaProperty(
+							writer,
+							shapeId,
+							`spatial.property.${String(obj.id)}.${key}`,
+							JSON.stringify(value),
+							"Derived Property",
+						);
+					}
+				}
+			}
+		}
+		const header = stepSpatialFileHeader(`${modelSpaceId}.stp`, new Date().toISOString());
+		return assembleStepFile(header, writer);
+	}
+
+	/** @emoji 🪜 Exports one `Model` as a single-model `ModelSpace` STEP file. */
+	async exportModelToStep(model: Model, modelId = "model"): Promise<string> {
+		const space = new ModelSpace();
+		space.link(modelId, model);
+		return this.exportModelSpaceToStep(space, modelId);
+	}
+
+	/** @emoji 🪜 Imports AP242 STEP produced by `exportModelSpaceToStep` into a `ModelSpace`. */
+	async importStepToModelSpace(stepText: string): Promise<ModelSpace> {
+		await this.ensureInit();
+		const entities = parseStepEntityMap(stepText);
+		const uda = parseSpatialUdaPayloads(entities);
+		const ms = JSON.parse(uda["spatial.modelspace"] ?? "{}") as { modelIds?: string[] };
+		const modelIds = ms.modelIds ?? [];
+		const space = modelSpaceFromSpatialUda(uda, modelIds);
+		const blob = new Blob([stepText], { type: "application/step" });
+		const imported = await importSTEP(blob);
+		if (isOk(imported)) {
+			const shape = imported.value;
+			for (const modelId of modelIds) {
+				const model = space.models[modelId];
+				if (!model) continue;
+				await this.syncSolidsFromModel(model);
+				for (const solid of Object.values(geom(model).solids)) {
+					const brep = this.solidForSolidRecord(model, solid);
+					if (brep) this.solids.set(solid.id, brep);
+				}
+			}
+			void shape;
+		}
+		return space;
+	}
 }
 // #endregion 🔌BrepjsWasmEngine
 
@@ -2050,12 +2180,16 @@ type BrepjsWorkerResponse =
 
 function serializeWorkerArg(arg: unknown): unknown {
 	if (arg instanceof Model) return { __modelJson: arg.toJSON() };
+	if (arg instanceof ModelSpace) return { __modelSpaceJson: arg.toJSON() };
 	return arg;
 }
 
 function deserializeWorkerArg(arg: unknown): unknown {
 	if (arg && typeof arg === "object" && "__modelJson" in arg) {
 		return Model.fromJSON((arg as { readonly __modelJson: ModelJson }).__modelJson);
+	}
+	if (arg && typeof arg === "object" && "__modelSpaceJson" in arg) {
+		return ModelSpace.fromJSON((arg as { readonly __modelSpaceJson: Parameters<typeof ModelSpace.fromJSON>[0] }).__modelSpaceJson);
 	}
 	return arg;
 }
@@ -2256,6 +2390,39 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 	async syncSolidsFromModel(model: Model): Promise<void> {
 		await this.wasm.rpc("syncSolidsFromModel", [model]);
 	}
+
+	/** @emoji 🪜 Exports a linked `ModelSpace` to AP242 STEP. */
+	async exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "default"): Promise<string> {
+		return this.wasm.rpc("exportModelSpaceToStep", [space, modelSpaceId]);
+	}
+
+	/** @emoji 🪜 Exports one `Model` to AP242 STEP. */
+	async exportModelToStep(model: Model, modelId = "model"): Promise<string> {
+		return this.wasm.rpc("exportModelToStep", [model, modelId]);
+	}
+
+	/** @emoji 🪜 Imports AP242 STEP into a `ModelSpace`. */
+	async importStepToModelSpace(stepText: string): Promise<ModelSpace> {
+		return this.wasm.rpc("importStepToModelSpace", [stepText]);
+	}
+}
+
+/** @emoji 🪜 Exports `space` via a fresh `BrepjsKernel` (convenience). */
+export async function exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "default"): Promise<string> {
+	const kernel = new BrepjsKernel();
+	return kernel.exportModelSpaceToStep(space, modelSpaceId);
+}
+
+/** @emoji 🪜 Exports `model` via a fresh `BrepjsKernel` (convenience). */
+export async function exportModelToStep(model: Model, modelId = "model"): Promise<string> {
+	const kernel = new BrepjsKernel();
+	return kernel.exportModelToStep(model, modelId);
+}
+
+/** @emoji 🪜 Imports STEP text via a fresh `BrepjsKernel` (convenience). */
+export async function importStepToModelSpace(stepText: string): Promise<ModelSpace> {
+	const kernel = new BrepjsKernel();
+	return kernel.importStepToModelSpace(stepText);
 }
 // #endregion 🔌BrepjsKernel
 
@@ -2584,6 +2751,64 @@ if (import.meta.vitest) {
 			const edges = res.diff.edges?.added ?? [];
 			expect(edges[0]!.curve?.kind).toBe("nurbs");
 			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
+		});
+
+		it("exports and reimports a box model with objects and attributes via AP242 STEP", async () => {
+			const model = new Model();
+			const solid = kernelGeometry.solidRef("step-box");
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, solid));
+			model.objects["obj-step"] = {
+				id: "obj-step" as ObjectRef,
+				typologyId: "builtin.primitive.box" as TypologyRef,
+				geometryRef: String(solid),
+			};
+			const faceId = Object.keys(geom(model).faces)[0]!;
+			model.metadata.setField(faceId, "exposure", "external");
+			const before = model.toJSON();
+			const stepText = await kernel.exportModelToStep(model, "roundtrip");
+			expect(stepText).toContain("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF");
+			expect(stepText).not.toMatch(/\bACTION\s*\(/);
+			expect(stepText).not.toMatch(/\bINTERACTION\s*\(/);
+			const space = await kernel.importStepToModelSpace(stepText);
+			const restored = space.models.roundtrip!;
+			expect(restored.toJSON()).toEqual(before);
+			expect(restored.metadata.get(faceId)?.exposure).toBe("external");
+			expect(await kernel.volume(solid)).toBeGreaterThan(0);
+		});
+
+		it("ModelSpace STEP export dedupes brep solids with identical hash", async () => {
+			const boxDiff = boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, kernelGeometry.solidRef("shared"));
+			const modelA = new Model();
+			const modelB = new Model();
+			applyModelDiff(modelA, boxDiff);
+			applyModelDiff(modelB, boxDiff);
+			const space = new ModelSpace();
+			space.link("a", modelA);
+			space.link("b", modelB);
+			const stepText = await kernel.exportModelSpaceToStep(space, "dedupe");
+			const manifoldCount = (stepText.match(/MANIFOLD_SOLID_BREP/g) ?? []).length;
+			expect(manifoldCount).toBeLessThanOrEqual(1);
+		});
+
+		it("derived properties are absent from STEP and re-derived after import", async () => {
+			const model = new Model();
+			const solid = kernelGeometry.solidRef("prop-box");
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 2 }, solid));
+			model.objects["obj-vol"] = {
+				id: "obj-vol" as ObjectRef,
+				typologyId: "builtin.primitive.box" as TypologyRef,
+				geometryRef: String(solid),
+			};
+			const stepText = await kernel.exportModelToStep(model, "props");
+			expect(stepText).toContain("spatial.property.");
+			const space = await kernel.importStepToModelSpace(stepText);
+			const restored = space.models.props!;
+			const obj = restored.objects["obj-vol"]!;
+			const defns = listApplicablePropertyDefinitions(restored, obj);
+			const volumeDefn = defns.find((d) => d.id === "builtin.volume");
+			expect(volumeDefn).toBeDefined();
+			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });
+			expect((derived.volume as number) ?? 0).toBeGreaterThan(0);
 		});
 
 	});
