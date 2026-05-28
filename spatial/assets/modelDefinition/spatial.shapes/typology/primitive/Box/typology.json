@@ -1,0 +1,29 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.primitive.box",
+  "version": "1.0.0",
+  "label": "Box",
+  "description": "Typology produced by primitive.box.",
+  "actions": [
+    "box.aabbFromDiagonalCorners",
+    "box.cornerFromLengthWidth",
+    "box.initPeakAboveOrigin",
+    "box.peakFromOriginZ",
+    "box.rubberCornerFromCenter",
+    "box.rubberSquareFromCenter",
+    "box.setCubeHeightFromFootprint",
+    "box.snapSquareFootprint",
+    "box.tripletCommit",
+    "box.tripletRubber",
+    "box.verticalFinalizeFootprint",
+    "box.verticalRubberCorner",
+    "primitive.createBoxFrom3Points",
+    "primitive.createBoxFromCorners"
+  ],
+  "interactions": [
+    "primitive.box"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.feature.extrude-wire",
+  "version": "1.0.0",
+  "label": "Extrude Wire",
+  "description": "Typology produced by feature.extrude-wire.",
+  "actions": [
+    "feature.extrudeWireToSolid"
+  ],
+  "interactions": [
+    "feature.extrude-wire"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

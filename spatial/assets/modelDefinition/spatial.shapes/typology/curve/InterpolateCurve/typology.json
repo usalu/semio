@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.curve.interpolate-curve",
+  "version": "1.0.0",
+  "label": "Interpolate Curve",
+  "description": "Typology produced by curve.interpolate-curve.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "curve.interpolate-curve"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
+  ]
+}

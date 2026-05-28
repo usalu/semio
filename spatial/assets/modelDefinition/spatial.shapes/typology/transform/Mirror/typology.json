@@ -1,0 +1,21 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.transform.mirror",
+  "version": "1.0.0",
+  "label": "Mirror",
+  "description": "Typology produced by transform.mirror.",
+  "actions": [
+    "command.finish",
+    "transform.mirror"
+  ],
+  "interactions": [
+    "transform.mirror"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
+  ]
+}

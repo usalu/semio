@@ -450,7 +450,7 @@ if (import.meta.vitest) {
 		});
 
 		it("matches pure-ts distance + area measure commits (response parity)", async () => {
-			const distSpec = loadSpatialInteraction("measure.length")!;
+			const distSpec = loadSpatialInteraction("measure.distance")!;
 			const areaSpec = loadSpatialInteraction("measure.area")!;
 			const mkModel = () => {
 				const t = new Model();

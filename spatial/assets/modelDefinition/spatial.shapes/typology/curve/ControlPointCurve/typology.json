@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.curve.control-point-curve",
+  "version": "1.0.0",
+  "label": "Control Point Curve",
+  "description": "Typology produced by curve.control-point-curve.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "curve.control-point-curve"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
+  ]
+}

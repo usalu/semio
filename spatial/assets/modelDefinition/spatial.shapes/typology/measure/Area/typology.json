@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.measure.area",
+  "version": "1.0.0",
+  "label": "Area",
+  "description": "Typology produced by measure.area.",
+  "actions": [
+    "measure.faceArea"
+  ],
+  "interactions": [
+    "measure.area"
+  ],
+  "primitiveKinds": [
+    "anchor"
+  ]
+}

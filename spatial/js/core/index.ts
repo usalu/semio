@@ -40,10 +40,16 @@ const modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefi
   import: "default",
 }) as Record<string, unknown>;
 
-const modelDefinitionPropertyDefinitionModules = import.meta.glob("../../assets/modelDefinition/**/propertyDefinition/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+const modelDefinitionPropertyDefinitionModules = import.meta.glob(
+  [
+    "../../assets/modelDefinition/**/propertyDefinition/*.json",
+    "../../assets/modelDefinition/**/propertyKind/*.json",
+  ],
+  {
+    eager: true,
+    import: "default",
+  },
+) as Record<string, unknown>;
 
 const modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
   eager: true,
@@ -85,7 +91,10 @@ function modelDefinitionAttributeCatalog(): readonly unknown[] {
 }
 
 function modelDefinitionPropertyCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionPropertyDefinitionModules), ...Object.values(modelDefinitionPropertyModules)];
+  return [
+    ...Object.values(modelDefinitionPropertyDefinitionModules),
+    ...Object.values(modelDefinitionPropertyModules),
+  ];
 }
 // #endregion 📥ModelDefinitionAssets
 
@@ -2360,7 +2369,7 @@ async function executeKernelFunction(
   if (functionName === "spatial.selection.apply") {
     return selectionCommandActionResult(executeSelectionApply(selectionApplyParamsFromRecord(merged), ctx));
   }
-  if (functionName === "spatial.action.capability" || functionName === "spatial.action.execute") {
+  if (functionName === "spatial.action.capability") {
     if (ctx.kernel.executeAction) return ctx.kernel.executeAction(actionId, merged, callArgs, ctx);
     return executeBuiltinActionCapability(actionId, merged, callArgs, ctx);
   }
@@ -3799,11 +3808,9 @@ export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("feature.offsetSurface");
 }
 
-/** @emoji 📦 Compiled `measure.length` interaction from model-definition assets. */
+/** @emoji 📦 Compiled `measure.distance` interaction from model-definition assets. */
 export function buildDistanceInteractionSpec(): InteractionSpec {
-  const spec = loadSpatialInteraction("measure.length") ?? loadSpatialInteraction("measure.distance");
-  if (!spec) throw new Error("measure.length interaction missing from modelDefinition assets");
-  return spec;
+  return requireSpatialInteraction("measure.distance");
 }
 
 /** @emoji 📦 Compiled `measure.area` interaction from model-definition assets. */
@@ -4349,6 +4356,18 @@ if (import.meta.vitest) {
       expect(registry.get("command.finish")?.spec?.schema).toBe("spatial.action/v1");
       expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
       expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
+      const allowedKernelFunctions = new Set(["spatial.selection.apply", "spatial.action.capability"]);
+      expect(
+        specs.every((spec) => spec.steps.every((step) => step.op !== "kernel.call" || allowedKernelFunctions.has(step.function))),
+      ).toBe(true);
+    });
+    it("typology actions reference shipped declarative action specs", () => {
+      const actionIds = new Set(listBuiltinActionSpecs().map((row) => row.id));
+      for (const typology of listModelDefinitionTypologies()) {
+        for (const actionId of typology.actions) {
+          expect(actionIds.has(actionId)).toBe(true);
+        }
+      }
     });
     it("ActionRegistry.withBuiltins registers declarative model-definition actions only", () => {
       const r = ActionRegistry.withBuiltins();
