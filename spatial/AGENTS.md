@@ -1,3 +1,7 @@
+---
+technology: spatial
+---
+
 # Core
 
 Extendable spatial framework around persistent models, runtime execution, and rendering.
@@ -72,16 +76,39 @@ An attribute is attachable authored metadata to primitives.
 
 ## ModelSpace
 
-A model space is a container for linked models.
+A model space is a container for logically the same model but different model definitions.
+In a model space, editing models is as much linked as possible.
 When a primitive is edited inside a model space, then all primitives withe same hash, are also edited.
+
+e.g. Assume there is a shape model definition where a Box object with a box primitive geometry is created with createBox interactions that yields a constructBoxFrom3Points action. Then the user creates a new building energy model from the shape model with the general `spatial.shape_to_aec.building.energy`. That transformation creates 4 Wall objects with attribute exposure external attached to the primitive, one Roof and BasePlate (both same principle as Wall). When a vertical edge of the box is moved, the vertical edge of the walls of the energy model should also move. If the user tries to change something that is affecting primitives that cant be linked back, give the users a warning that the models are no longer linked.
+
+e.g.
+
+```json
+{ "models": "spatial.shape", "objects":[{…}] }
+```
 
 ## Model
 
+A model is an instance of a model definition.
 A model contains objects.
+
+e.g.
+
+```json
+{ "modelDefinition": "spatial.shape", "objects":[{…}] }
+```
 
 ### Object
 
-An object is an instance of a typology along with primitives.
+An object is an instance of a typology.
+An object contains primitives and properties
+
+e.g.
+
+```json
+{ "typology": "aec.building.energy.Roof", "primitives":{"surface":{…}}, "properties":[{"uValue":0.25}] }
+```
 
 #### Property
 
