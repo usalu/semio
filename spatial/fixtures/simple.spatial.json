@@ -1,575 +1,696 @@
 {
-  "schema": "spatial.model/v1",
-  "revision": 2,
-  "objects": [
+  "schema": "spatial.modelspace/v1",
+  "revision": 1,
+  "models": [
     {
-      "id": "object-brepjs-solid-2",
-      "typology": "spatial.shape.primitive.box",
-      "primitives": {
-        "solid": "brepjs-solid-2"
-      }
-    },
-    {
-      "id": "object-brepjs-solid-3",
-      "typology": "spatial.shape.primitive.box",
-      "primitives": {
-        "solid": "brepjs-solid-3"
+      "id": "spatial.shape",
+      "model": {
+        "schema": "spatial.model/v1",
+        "revision": 2,
+        "objects": [
+          {
+            "id": "object-brepjs-solid-2",
+            "typology": "spatial.shape.primitive.box",
+            "primitives": {
+              "solid": "brepjs-solid-2"
+            }
+          },
+          {
+            "id": "object-brepjs-solid-3",
+            "typology": "spatial.shape.primitive.box",
+            "primitives": {
+              "solid": "brepjs-solid-3"
+            }
+          }
+        ],
+        "geometry": {
+          "anchors": [],
+          "vertices": [
+            {
+              "id": "box-brepjs-solid-2-v000",
+              "position": [
+                -5.0924836054805525,
+                -3.8487012044072877,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v001",
+              "position": [
+                -5.0924836054805525,
+                -3.8487012044072877,
+                4.869068695617633
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v010",
+              "position": [
+                -5.0924836054805525,
+                1.479195903729277,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v011",
+              "position": [
+                -5.0924836054805525,
+                1.479195903729277,
+                4.869068695617633
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v100",
+              "position": [
+                4.034053782295219,
+                -3.8487012044072877,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v101",
+              "position": [
+                4.034053782295219,
+                -3.8487012044072877,
+                4.869068695617633
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v110",
+              "position": [
+                4.034053782295219,
+                1.479195903729277,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-v111",
+              "position": [
+                4.034053782295219,
+                1.479195903729277,
+                4.869068695617633
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v000",
+              "position": [
+                -0.13159033797429132,
+                -1.3106006485486343,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v001",
+              "position": [
+                -0.13159033797429132,
+                -1.3106006485486343,
+                2.5371243144957782
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v010",
+              "position": [
+                -0.13159033797429132,
+                3.515931427831294,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v011",
+              "position": [
+                -0.13159033797429132,
+                3.515931427831294,
+                2.5371243144957782
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v100",
+              "position": [
+                6.557133103076254,
+                -1.3106006485486343,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v101",
+              "position": [
+                6.557133103076254,
+                -1.3106006485486343,
+                2.5371243144957782
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v110",
+              "position": [
+                6.557133103076254,
+                3.515931427831294,
+                0
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-v111",
+              "position": [
+                6.557133103076254,
+                3.515931427831294,
+                2.5371243144957782
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "box-brepjs-solid-2-eb0",
+              "vertexIds": [
+                "box-brepjs-solid-2-v000",
+                "box-brepjs-solid-2-v100"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-eb1",
+              "vertexIds": [
+                "box-brepjs-solid-2-v100",
+                "box-brepjs-solid-2-v110"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-eb2",
+              "vertexIds": [
+                "box-brepjs-solid-2-v110",
+                "box-brepjs-solid-2-v010"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-eb3",
+              "vertexIds": [
+                "box-brepjs-solid-2-v010",
+                "box-brepjs-solid-2-v000"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-et0",
+              "vertexIds": [
+                "box-brepjs-solid-2-v001",
+                "box-brepjs-solid-2-v101"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-et1",
+              "vertexIds": [
+                "box-brepjs-solid-2-v101",
+                "box-brepjs-solid-2-v111"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-et2",
+              "vertexIds": [
+                "box-brepjs-solid-2-v111",
+                "box-brepjs-solid-2-v011"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-et3",
+              "vertexIds": [
+                "box-brepjs-solid-2-v011",
+                "box-brepjs-solid-2-v001"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-ev0",
+              "vertexIds": [
+                "box-brepjs-solid-2-v000",
+                "box-brepjs-solid-2-v001"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-ev1",
+              "vertexIds": [
+                "box-brepjs-solid-2-v100",
+                "box-brepjs-solid-2-v101"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-ev2",
+              "vertexIds": [
+                "box-brepjs-solid-2-v110",
+                "box-brepjs-solid-2-v111"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-ev3",
+              "vertexIds": [
+                "box-brepjs-solid-2-v010",
+                "box-brepjs-solid-2-v011"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-eb0",
+              "vertexIds": [
+                "box-brepjs-solid-3-v000",
+                "box-brepjs-solid-3-v100"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-eb1",
+              "vertexIds": [
+                "box-brepjs-solid-3-v100",
+                "box-brepjs-solid-3-v110"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-eb2",
+              "vertexIds": [
+                "box-brepjs-solid-3-v110",
+                "box-brepjs-solid-3-v010"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-eb3",
+              "vertexIds": [
+                "box-brepjs-solid-3-v010",
+                "box-brepjs-solid-3-v000"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-et0",
+              "vertexIds": [
+                "box-brepjs-solid-3-v001",
+                "box-brepjs-solid-3-v101"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-et1",
+              "vertexIds": [
+                "box-brepjs-solid-3-v101",
+                "box-brepjs-solid-3-v111"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-et2",
+              "vertexIds": [
+                "box-brepjs-solid-3-v111",
+                "box-brepjs-solid-3-v011"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-et3",
+              "vertexIds": [
+                "box-brepjs-solid-3-v011",
+                "box-brepjs-solid-3-v001"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-ev0",
+              "vertexIds": [
+                "box-brepjs-solid-3-v000",
+                "box-brepjs-solid-3-v001"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-ev1",
+              "vertexIds": [
+                "box-brepjs-solid-3-v100",
+                "box-brepjs-solid-3-v101"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-ev2",
+              "vertexIds": [
+                "box-brepjs-solid-3-v110",
+                "box-brepjs-solid-3-v111"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-ev3",
+              "vertexIds": [
+                "box-brepjs-solid-3-v010",
+                "box-brepjs-solid-3-v011"
+              ]
+            }
+          ],
+          "wires": [
+            {
+              "id": "box-brepjs-solid-2-wire-bottom",
+              "edgeIds": [
+                "box-brepjs-solid-2-eb0",
+                "box-brepjs-solid-2-eb1",
+                "box-brepjs-solid-2-eb2",
+                "box-brepjs-solid-2-eb3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-wire-top",
+              "edgeIds": [
+                "box-brepjs-solid-2-et0",
+                "box-brepjs-solid-2-et1",
+                "box-brepjs-solid-2-et2",
+                "box-brepjs-solid-2-et3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-wire-x0",
+              "edgeIds": [
+                "box-brepjs-solid-2-eb3",
+                "box-brepjs-solid-2-ev0",
+                "box-brepjs-solid-2-et3",
+                "box-brepjs-solid-2-ev3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-wire-x1",
+              "edgeIds": [
+                "box-brepjs-solid-2-eb1",
+                "box-brepjs-solid-2-ev2",
+                "box-brepjs-solid-2-et1",
+                "box-brepjs-solid-2-ev1"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-wire-y0",
+              "edgeIds": [
+                "box-brepjs-solid-2-eb0",
+                "box-brepjs-solid-2-ev1",
+                "box-brepjs-solid-2-et0",
+                "box-brepjs-solid-2-ev0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-wire-y1",
+              "edgeIds": [
+                "box-brepjs-solid-2-eb2",
+                "box-brepjs-solid-2-ev3",
+                "box-brepjs-solid-2-et2",
+                "box-brepjs-solid-2-ev2"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-bottom",
+              "edgeIds": [
+                "box-brepjs-solid-3-eb0",
+                "box-brepjs-solid-3-eb1",
+                "box-brepjs-solid-3-eb2",
+                "box-brepjs-solid-3-eb3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-top",
+              "edgeIds": [
+                "box-brepjs-solid-3-et0",
+                "box-brepjs-solid-3-et1",
+                "box-brepjs-solid-3-et2",
+                "box-brepjs-solid-3-et3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-x0",
+              "edgeIds": [
+                "box-brepjs-solid-3-eb3",
+                "box-brepjs-solid-3-ev0",
+                "box-brepjs-solid-3-et3",
+                "box-brepjs-solid-3-ev3"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-x1",
+              "edgeIds": [
+                "box-brepjs-solid-3-eb1",
+                "box-brepjs-solid-3-ev2",
+                "box-brepjs-solid-3-et1",
+                "box-brepjs-solid-3-ev1"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-y0",
+              "edgeIds": [
+                "box-brepjs-solid-3-eb0",
+                "box-brepjs-solid-3-ev1",
+                "box-brepjs-solid-3-et0",
+                "box-brepjs-solid-3-ev0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-wire-y1",
+              "edgeIds": [
+                "box-brepjs-solid-3-eb2",
+                "box-brepjs-solid-3-ev3",
+                "box-brepjs-solid-3-et2",
+                "box-brepjs-solid-3-ev2"
+              ]
+            }
+          ],
+          "faces": [
+            {
+              "id": "box-brepjs-solid-2-face-bottom",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-bottom"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-face-top",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-top"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-face-x0",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-x0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-face-x1",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-x1"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-face-y0",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-y0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-2-face-y1",
+              "wireIds": [
+                "box-brepjs-solid-2-wire-y1"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-bottom",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-bottom"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-top",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-top"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-x0",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-x0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-x1",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-x1"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-y0",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-y0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-face-y1",
+              "wireIds": [
+                "box-brepjs-solid-3-wire-y1"
+              ]
+            }
+          ],
+          "shells": [
+            {
+              "id": "box-brepjs-solid-2-shell",
+              "faceIds": [
+                "box-brepjs-solid-2-face-bottom",
+                "box-brepjs-solid-2-face-top",
+                "box-brepjs-solid-2-face-y0",
+                "box-brepjs-solid-2-face-x1",
+                "box-brepjs-solid-2-face-y1",
+                "box-brepjs-solid-2-face-x0"
+              ]
+            },
+            {
+              "id": "box-brepjs-solid-3-shell",
+              "faceIds": [
+                "box-brepjs-solid-3-face-bottom",
+                "box-brepjs-solid-3-face-top",
+                "box-brepjs-solid-3-face-y0",
+                "box-brepjs-solid-3-face-x1",
+                "box-brepjs-solid-3-face-y1",
+                "box-brepjs-solid-3-face-x0"
+              ]
+            }
+          ],
+          "solids": [
+            {
+              "id": "brepjs-solid-2",
+              "shellIds": [
+                "box-brepjs-solid-2-shell"
+              ],
+              "solid": {
+                "kind": "box",
+                "cornerA": [
+                  -5.0924836054805525,
+                  -3.8487012044072877,
+                  0
+                ],
+                "cornerB": [
+                  4.034053782295219,
+                  1.479195903729277,
+                  0
+                ],
+                "height": 4.869068695617633
+              }
+            },
+            {
+              "id": "brepjs-solid-3",
+              "shellIds": [
+                "box-brepjs-solid-3-shell"
+              ],
+              "solid": {
+                "kind": "box",
+                "cornerA": [
+                  -0.13159033797429132,
+                  -1.3106006485486343,
+                  0
+                ],
+                "cornerB": [
+                  6.557133103076254,
+                  3.515931427831294,
+                  0
+                ],
+                "height": 2.5371243144957782
+              }
+            }
+          ]
+        }
       }
     }
   ],
-  "geometry": {
-    "anchors": [],
-    "vertices": [
-      {
-        "id": "box-brepjs-solid-2-v000",
-        "position": [
-          -5.0924836054805525,
-          -3.8487012044072877,
-          0
-        ]
+  "vertexHashesByModel": {
+    "spatial.shape": {
+      "box-brepjs-solid-2-v000": "v:839832f2",
+      "box-brepjs-solid-2-v001": "v:d5e90e22",
+      "box-brepjs-solid-2-v010": "v:a9a51f05",
+      "box-brepjs-solid-2-v011": "v:d8718271",
+      "box-brepjs-solid-2-v100": "v:ae3ec219",
+      "box-brepjs-solid-2-v101": "v:ad6d0435",
+      "box-brepjs-solid-2-v110": "v:3a417384",
+      "box-brepjs-solid-2-v111": "v:cadb2490",
+      "box-brepjs-solid-3-v000": "v:c11b1e48",
+      "box-brepjs-solid-3-v001": "v:6d246f32",
+      "box-brepjs-solid-3-v010": "v:f2427cd4",
+      "box-brepjs-solid-3-v011": "v:d86dafd6",
+      "box-brepjs-solid-3-v100": "v:a0f95b54",
+      "box-brepjs-solid-3-v101": "v:66edc256",
+      "box-brepjs-solid-3-v110": "v:d71de550",
+      "box-brepjs-solid-3-v111": "v:a16633aa"
+    }
+  },
+  "geometryHashesByModel": {
+    "spatial.shape": {
+      "vertex": {
+        "box-brepjs-solid-2-v000": "v:839832f2",
+        "box-brepjs-solid-2-v001": "v:d5e90e22",
+        "box-brepjs-solid-2-v010": "v:a9a51f05",
+        "box-brepjs-solid-2-v011": "v:d8718271",
+        "box-brepjs-solid-2-v100": "v:ae3ec219",
+        "box-brepjs-solid-2-v101": "v:ad6d0435",
+        "box-brepjs-solid-2-v110": "v:3a417384",
+        "box-brepjs-solid-2-v111": "v:cadb2490",
+        "box-brepjs-solid-3-v000": "v:c11b1e48",
+        "box-brepjs-solid-3-v001": "v:6d246f32",
+        "box-brepjs-solid-3-v010": "v:f2427cd4",
+        "box-brepjs-solid-3-v011": "v:d86dafd6",
+        "box-brepjs-solid-3-v100": "v:a0f95b54",
+        "box-brepjs-solid-3-v101": "v:66edc256",
+        "box-brepjs-solid-3-v110": "v:d71de550",
+        "box-brepjs-solid-3-v111": "v:a16633aa"
       },
-      {
-        "id": "box-brepjs-solid-2-v001",
-        "position": [
-          -5.0924836054805525,
-          -3.8487012044072877,
-          4.869068695617633
-        ]
+      "edge": {
+        "box-brepjs-solid-2-eb0": "e:e1de7370",
+        "box-brepjs-solid-2-eb1": "e:3c910b88",
+        "box-brepjs-solid-2-eb2": "e:9cd04896",
+        "box-brepjs-solid-2-eb3": "e:1ac4a662",
+        "box-brepjs-solid-2-et0": "e:9dd0914c",
+        "box-brepjs-solid-2-et1": "e:b9a1164c",
+        "box-brepjs-solid-2-et2": "e:86590706",
+        "box-brepjs-solid-2-et3": "e:138e9c2e",
+        "box-brepjs-solid-2-ev0": "e:b2ab67fd",
+        "box-brepjs-solid-2-ev1": "e:6ac9153f",
+        "box-brepjs-solid-2-ev2": "e:d22148d1",
+        "box-brepjs-solid-2-ev3": "e:d724f557",
+        "box-brepjs-solid-3-eb0": "e:ebd7cbe3",
+        "box-brepjs-solid-3-eb1": "e:07b93e21",
+        "box-brepjs-solid-3-eb2": "e:6d4fb55f",
+        "box-brepjs-solid-3-eb3": "e:b3c2272d",
+        "box-brepjs-solid-3-et0": "e:eee6010b",
+        "box-brepjs-solid-3-et1": "e:0a490099",
+        "box-brepjs-solid-3-et2": "e:7c66e023",
+        "box-brepjs-solid-3-et3": "e:415dbb31",
+        "box-brepjs-solid-3-ev0": "e:c629aaaf",
+        "box-brepjs-solid-3-ev1": "e:dcad6d8f",
+        "box-brepjs-solid-3-ev2": "e:978c647f",
+        "box-brepjs-solid-3-ev3": "e:66ce3ccb"
       },
-      {
-        "id": "box-brepjs-solid-2-v010",
-        "position": [
-          -5.0924836054805525,
-          1.479195903729277,
-          0
-        ]
+      "wire": {
+        "box-brepjs-solid-2-wire-bottom": "w:239dad9b",
+        "box-brepjs-solid-2-wire-top": "w:34f76487",
+        "box-brepjs-solid-2-wire-x0": "w:5f8b46fa",
+        "box-brepjs-solid-2-wire-x1": "w:4b91e3c8",
+        "box-brepjs-solid-2-wire-y0": "w:3365ab5a",
+        "box-brepjs-solid-2-wire-y1": "w:85bb0a92",
+        "box-brepjs-solid-3-wire-bottom": "w:6251eaff",
+        "box-brepjs-solid-3-wire-top": "w:064cbc7b",
+        "box-brepjs-solid-3-wire-x0": "w:662b84aa",
+        "box-brepjs-solid-3-wire-x1": "w:d3b7faa8",
+        "box-brepjs-solid-3-wire-y0": "w:8e43bb32",
+        "box-brepjs-solid-3-wire-y1": "w:aa7c9e82"
       },
-      {
-        "id": "box-brepjs-solid-2-v011",
-        "position": [
-          -5.0924836054805525,
-          1.479195903729277,
-          4.869068695617633
-        ]
+      "face": {
+        "box-brepjs-solid-2-face-bottom": "f:4b3702e6",
+        "box-brepjs-solid-2-face-top": "f:fafa078c",
+        "box-brepjs-solid-2-face-x0": "f:af64564f",
+        "box-brepjs-solid-2-face-x1": "f:6e4b85f2",
+        "box-brepjs-solid-2-face-y0": "f:f9da9cc4",
+        "box-brepjs-solid-2-face-y1": "f:71f171a1",
+        "box-brepjs-solid-3-face-bottom": "f:992818fb",
+        "box-brepjs-solid-3-face-top": "f:b44b88f3",
+        "box-brepjs-solid-3-face-x0": "f:6d5ce926",
+        "box-brepjs-solid-3-face-x1": "f:09a85f83",
+        "box-brepjs-solid-3-face-y0": "f:40885731",
+        "box-brepjs-solid-3-face-y1": "f:f4878f14"
       },
-      {
-        "id": "box-brepjs-solid-2-v100",
-        "position": [
-          4.034053782295219,
-          -3.8487012044072877,
-          0
-        ]
+      "shell": {
+        "box-brepjs-solid-2-shell": "s:cf2bbb5b",
+        "box-brepjs-solid-3-shell": "s:72725761"
       },
-      {
-        "id": "box-brepjs-solid-2-v101",
-        "position": [
-          4.034053782295219,
-          -3.8487012044072877,
-          4.869068695617633
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-v110",
-        "position": [
-          4.034053782295219,
-          1.479195903729277,
-          0
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-v111",
-        "position": [
-          4.034053782295219,
-          1.479195903729277,
-          4.869068695617633
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v000",
-        "position": [
-          -0.13159033797429132,
-          -1.3106006485486343,
-          0
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v001",
-        "position": [
-          -0.13159033797429132,
-          -1.3106006485486343,
-          2.5371243144957782
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v010",
-        "position": [
-          -0.13159033797429132,
-          3.515931427831294,
-          0
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v011",
-        "position": [
-          -0.13159033797429132,
-          3.515931427831294,
-          2.5371243144957782
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v100",
-        "position": [
-          6.557133103076254,
-          -1.3106006485486343,
-          0
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v101",
-        "position": [
-          6.557133103076254,
-          -1.3106006485486343,
-          2.5371243144957782
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v110",
-        "position": [
-          6.557133103076254,
-          3.515931427831294,
-          0
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-v111",
-        "position": [
-          6.557133103076254,
-          3.515931427831294,
-          2.5371243144957782
-        ]
+      "solid": {
+        "brepjs-solid-2": "s:be0b7204",
+        "brepjs-solid-3": "s:8718e87b"
       }
-    ],
-    "edges": [
-      {
-        "id": "box-brepjs-solid-2-eb0",
-        "vertexIds": [
-          "box-brepjs-solid-2-v000",
-          "box-brepjs-solid-2-v100"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-eb1",
-        "vertexIds": [
-          "box-brepjs-solid-2-v100",
-          "box-brepjs-solid-2-v110"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-eb2",
-        "vertexIds": [
-          "box-brepjs-solid-2-v110",
-          "box-brepjs-solid-2-v010"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-eb3",
-        "vertexIds": [
-          "box-brepjs-solid-2-v010",
-          "box-brepjs-solid-2-v000"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-et0",
-        "vertexIds": [
-          "box-brepjs-solid-2-v001",
-          "box-brepjs-solid-2-v101"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-et1",
-        "vertexIds": [
-          "box-brepjs-solid-2-v101",
-          "box-brepjs-solid-2-v111"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-et2",
-        "vertexIds": [
-          "box-brepjs-solid-2-v111",
-          "box-brepjs-solid-2-v011"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-et3",
-        "vertexIds": [
-          "box-brepjs-solid-2-v011",
-          "box-brepjs-solid-2-v001"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-ev0",
-        "vertexIds": [
-          "box-brepjs-solid-2-v000",
-          "box-brepjs-solid-2-v001"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-ev1",
-        "vertexIds": [
-          "box-brepjs-solid-2-v100",
-          "box-brepjs-solid-2-v101"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-ev2",
-        "vertexIds": [
-          "box-brepjs-solid-2-v110",
-          "box-brepjs-solid-2-v111"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-ev3",
-        "vertexIds": [
-          "box-brepjs-solid-2-v010",
-          "box-brepjs-solid-2-v011"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-eb0",
-        "vertexIds": [
-          "box-brepjs-solid-3-v000",
-          "box-brepjs-solid-3-v100"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-eb1",
-        "vertexIds": [
-          "box-brepjs-solid-3-v100",
-          "box-brepjs-solid-3-v110"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-eb2",
-        "vertexIds": [
-          "box-brepjs-solid-3-v110",
-          "box-brepjs-solid-3-v010"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-eb3",
-        "vertexIds": [
-          "box-brepjs-solid-3-v010",
-          "box-brepjs-solid-3-v000"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-et0",
-        "vertexIds": [
-          "box-brepjs-solid-3-v001",
-          "box-brepjs-solid-3-v101"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-et1",
-        "vertexIds": [
-          "box-brepjs-solid-3-v101",
-          "box-brepjs-solid-3-v111"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-et2",
-        "vertexIds": [
-          "box-brepjs-solid-3-v111",
-          "box-brepjs-solid-3-v011"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-et3",
-        "vertexIds": [
-          "box-brepjs-solid-3-v011",
-          "box-brepjs-solid-3-v001"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-ev0",
-        "vertexIds": [
-          "box-brepjs-solid-3-v000",
-          "box-brepjs-solid-3-v001"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-ev1",
-        "vertexIds": [
-          "box-brepjs-solid-3-v100",
-          "box-brepjs-solid-3-v101"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-ev2",
-        "vertexIds": [
-          "box-brepjs-solid-3-v110",
-          "box-brepjs-solid-3-v111"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-ev3",
-        "vertexIds": [
-          "box-brepjs-solid-3-v010",
-          "box-brepjs-solid-3-v011"
-        ]
-      }
-    ],
-    "wires": [
-      {
-        "id": "box-brepjs-solid-2-wire-bottom",
-        "edgeIds": [
-          "box-brepjs-solid-2-eb0",
-          "box-brepjs-solid-2-eb1",
-          "box-brepjs-solid-2-eb2",
-          "box-brepjs-solid-2-eb3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-wire-top",
-        "edgeIds": [
-          "box-brepjs-solid-2-et0",
-          "box-brepjs-solid-2-et1",
-          "box-brepjs-solid-2-et2",
-          "box-brepjs-solid-2-et3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-wire-x0",
-        "edgeIds": [
-          "box-brepjs-solid-2-eb3",
-          "box-brepjs-solid-2-ev0",
-          "box-brepjs-solid-2-et3",
-          "box-brepjs-solid-2-ev3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-wire-x1",
-        "edgeIds": [
-          "box-brepjs-solid-2-eb1",
-          "box-brepjs-solid-2-ev2",
-          "box-brepjs-solid-2-et1",
-          "box-brepjs-solid-2-ev1"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-wire-y0",
-        "edgeIds": [
-          "box-brepjs-solid-2-eb0",
-          "box-brepjs-solid-2-ev1",
-          "box-brepjs-solid-2-et0",
-          "box-brepjs-solid-2-ev0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-wire-y1",
-        "edgeIds": [
-          "box-brepjs-solid-2-eb2",
-          "box-brepjs-solid-2-ev3",
-          "box-brepjs-solid-2-et2",
-          "box-brepjs-solid-2-ev2"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-bottom",
-        "edgeIds": [
-          "box-brepjs-solid-3-eb0",
-          "box-brepjs-solid-3-eb1",
-          "box-brepjs-solid-3-eb2",
-          "box-brepjs-solid-3-eb3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-top",
-        "edgeIds": [
-          "box-brepjs-solid-3-et0",
-          "box-brepjs-solid-3-et1",
-          "box-brepjs-solid-3-et2",
-          "box-brepjs-solid-3-et3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-x0",
-        "edgeIds": [
-          "box-brepjs-solid-3-eb3",
-          "box-brepjs-solid-3-ev0",
-          "box-brepjs-solid-3-et3",
-          "box-brepjs-solid-3-ev3"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-x1",
-        "edgeIds": [
-          "box-brepjs-solid-3-eb1",
-          "box-brepjs-solid-3-ev2",
-          "box-brepjs-solid-3-et1",
-          "box-brepjs-solid-3-ev1"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-y0",
-        "edgeIds": [
-          "box-brepjs-solid-3-eb0",
-          "box-brepjs-solid-3-ev1",
-          "box-brepjs-solid-3-et0",
-          "box-brepjs-solid-3-ev0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-wire-y1",
-        "edgeIds": [
-          "box-brepjs-solid-3-eb2",
-          "box-brepjs-solid-3-ev3",
-          "box-brepjs-solid-3-et2",
-          "box-brepjs-solid-3-ev2"
-        ]
-      }
-    ],
-    "faces": [
-      {
-        "id": "box-brepjs-solid-2-face-bottom",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-bottom"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-face-top",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-top"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-face-x0",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-x0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-face-x1",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-x1"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-face-y0",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-y0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-2-face-y1",
-        "wireIds": [
-          "box-brepjs-solid-2-wire-y1"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-bottom",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-bottom"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-top",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-top"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-x0",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-x0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-x1",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-x1"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-y0",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-y0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-face-y1",
-        "wireIds": [
-          "box-brepjs-solid-3-wire-y1"
-        ]
-      }
-    ],
-    "shells": [
-      {
-        "id": "box-brepjs-solid-2-shell",
-        "faceIds": [
-          "box-brepjs-solid-2-face-bottom",
-          "box-brepjs-solid-2-face-top",
-          "box-brepjs-solid-2-face-y0",
-          "box-brepjs-solid-2-face-x1",
-          "box-brepjs-solid-2-face-y1",
-          "box-brepjs-solid-2-face-x0"
-        ]
-      },
-      {
-        "id": "box-brepjs-solid-3-shell",
-        "faceIds": [
-          "box-brepjs-solid-3-face-bottom",
-          "box-brepjs-solid-3-face-top",
-          "box-brepjs-solid-3-face-y0",
-          "box-brepjs-solid-3-face-x1",
-          "box-brepjs-solid-3-face-y1",
-          "box-brepjs-solid-3-face-x0"
-        ]
-      }
-    ],
-    "solids": [
-      {
-        "id": "brepjs-solid-2",
-        "shellIds": [
-          "box-brepjs-solid-2-shell"
-        ],
-        "solid": {
-          "kind": "box",
-          "cornerA": [
-            -5.0924836054805525,
-            -3.8487012044072877,
-            0
-          ],
-          "cornerB": [
-            4.034053782295219,
-            1.479195903729277,
-            0
-          ],
-          "height": 4.869068695617633
-        }
-      },
-      {
-        "id": "brepjs-solid-3",
-        "shellIds": [
-          "box-brepjs-solid-3-shell"
-        ],
-        "solid": {
-          "kind": "box",
-          "cornerA": [
-            -0.13159033797429132,
-            -1.3106006485486343,
-            0
-          ],
-          "cornerB": [
-            6.557133103076254,
-            3.515931427831294,
-            0
-          ],
-          "height": 2.5371243144957782
-        }
-      }
-    ]
+    }
+  },
+  "objectPropertyIdsByModel": {
+    "spatial.shape": {
+      "object-brepjs-solid-2": [
+        "spatial.shape.volume"
+      ],
+      "object-brepjs-solid-3": [
+        "spatial.shape.volume"
+      ]
+    }
   }
 }
-
-

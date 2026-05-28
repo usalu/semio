@@ -1,408 +1,505 @@
 {
-  "schema": "spatial.model/v1",
+  "schema": "spatial.modelspace/v1",
   "revision": 1,
-  "objects": [],
-  "geometry": {
-    "anchors": [],
-    "vertices": [
-      {
-        "id": "r0",
-        "position": [
-          0,
-          0,
-          0
-        ]
-      },
-      {
-        "id": "r1",
-        "position": [
-          1.2,
-          0.4,
-          0
-        ]
-      },
-      {
-        "id": "r10",
-        "position": [
-          6,
-          0,
-          0.8
-        ]
-      },
-      {
-        "id": "r11",
-        "position": [
-          7.4,
-          0.6,
-          0.8
-        ]
-      },
-      {
-        "id": "r12",
-        "position": [
-          8.8,
-          0.2,
-          0.8
-        ]
-      },
-      {
-        "id": "r13",
-        "position": [
-          9.9,
-          1.1,
-          0.8
-        ]
-      },
-      {
-        "id": "r14",
-        "position": [
-          10.2,
-          2.6,
-          0.8
-        ]
-      },
-      {
-        "id": "r15",
-        "position": [
-          9.4,
-          3.9,
-          0.8
-        ]
-      },
-      {
-        "id": "r16",
-        "position": [
-          7.8,
-          4.4,
-          0.8
-        ]
-      },
-      {
-        "id": "r17",
-        "position": [
-          6.2,
-          4.1,
-          0.8
-        ]
-      },
-      {
-        "id": "r18",
-        "position": [
-          2,
-          6,
-          1.6
-        ]
-      },
-      {
-        "id": "r19",
-        "position": [
-          3.5,
-          6.8,
-          1.6
-        ]
-      },
-      {
-        "id": "r2",
-        "position": [
-          2.6,
-          0.1,
-          0
-        ]
-      },
-      {
-        "id": "r20",
-        "position": [
-          5.2,
-          6.5,
-          1.6
-        ]
-      },
-      {
-        "id": "r21",
-        "position": [
-          6.8,
-          7.2,
-          1.6
-        ]
-      },
-      {
-        "id": "r22",
-        "position": [
-          7.5,
-          8.4,
-          1.6
-        ]
-      },
-      {
-        "id": "r23",
-        "position": [
-          6.1,
-          9.1,
-          1.6
-        ]
-      },
-      {
-        "id": "r3",
-        "position": [
-          3.8,
-          0.9,
-          0
-        ]
-      },
-      {
-        "id": "r4",
-        "position": [
-          4.5,
-          2.1,
-          0
-        ]
-      },
-      {
-        "id": "r5",
-        "position": [
-          4.2,
-          3.5,
-          0
-        ]
-      },
-      {
-        "id": "r6",
-        "position": [
-          3.1,
-          4.2,
-          0
-        ]
-      },
-      {
-        "id": "r7",
-        "position": [
-          1.5,
-          4.5,
-          0
-        ]
-      },
-      {
-        "id": "r8",
-        "position": [
-          0.2,
-          3.8,
-          0
-        ]
-      },
-      {
-        "id": "r9",
-        "position": [
-          -0.4,
-          2.2,
-          0
-        ]
+  "models": [
+    {
+      "id": "spatial.shape",
+      "model": {
+        "schema": "spatial.model/v1",
+        "revision": 1,
+        "objects": [],
+        "geometry": {
+          "anchors": [],
+          "vertices": [
+            {
+              "id": "r0",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "id": "r1",
+              "position": [
+                1.2,
+                0.4,
+                0
+              ]
+            },
+            {
+              "id": "r10",
+              "position": [
+                6,
+                0,
+                0.8
+              ]
+            },
+            {
+              "id": "r11",
+              "position": [
+                7.4,
+                0.6,
+                0.8
+              ]
+            },
+            {
+              "id": "r12",
+              "position": [
+                8.8,
+                0.2,
+                0.8
+              ]
+            },
+            {
+              "id": "r13",
+              "position": [
+                9.9,
+                1.1,
+                0.8
+              ]
+            },
+            {
+              "id": "r14",
+              "position": [
+                10.2,
+                2.6,
+                0.8
+              ]
+            },
+            {
+              "id": "r15",
+              "position": [
+                9.4,
+                3.9,
+                0.8
+              ]
+            },
+            {
+              "id": "r16",
+              "position": [
+                7.8,
+                4.4,
+                0.8
+              ]
+            },
+            {
+              "id": "r17",
+              "position": [
+                6.2,
+                4.1,
+                0.8
+              ]
+            },
+            {
+              "id": "r18",
+              "position": [
+                2,
+                6,
+                1.6
+              ]
+            },
+            {
+              "id": "r19",
+              "position": [
+                3.5,
+                6.8,
+                1.6
+              ]
+            },
+            {
+              "id": "r2",
+              "position": [
+                2.6,
+                0.1,
+                0
+              ]
+            },
+            {
+              "id": "r20",
+              "position": [
+                5.2,
+                6.5,
+                1.6
+              ]
+            },
+            {
+              "id": "r21",
+              "position": [
+                6.8,
+                7.2,
+                1.6
+              ]
+            },
+            {
+              "id": "r22",
+              "position": [
+                7.5,
+                8.4,
+                1.6
+              ]
+            },
+            {
+              "id": "r23",
+              "position": [
+                6.1,
+                9.1,
+                1.6
+              ]
+            },
+            {
+              "id": "r3",
+              "position": [
+                3.8,
+                0.9,
+                0
+              ]
+            },
+            {
+              "id": "r4",
+              "position": [
+                4.5,
+                2.1,
+                0
+              ]
+            },
+            {
+              "id": "r5",
+              "position": [
+                4.2,
+                3.5,
+                0
+              ]
+            },
+            {
+              "id": "r6",
+              "position": [
+                3.1,
+                4.2,
+                0
+              ]
+            },
+            {
+              "id": "r7",
+              "position": [
+                1.5,
+                4.5,
+                0
+              ]
+            },
+            {
+              "id": "r8",
+              "position": [
+                0.2,
+                3.8,
+                0
+              ]
+            },
+            {
+              "id": "r9",
+              "position": [
+                -0.4,
+                2.2,
+                0
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "re0",
+              "vertexIds": [
+                "r0",
+                "r1"
+              ]
+            },
+            {
+              "id": "re1",
+              "vertexIds": [
+                "r1",
+                "r2"
+              ]
+            },
+            {
+              "id": "re10",
+              "vertexIds": [
+                "r10",
+                "r11"
+              ]
+            },
+            {
+              "id": "re11",
+              "vertexIds": [
+                "r11",
+                "r12"
+              ]
+            },
+            {
+              "id": "re12",
+              "vertexIds": [
+                "r12",
+                "r13"
+              ]
+            },
+            {
+              "id": "re13",
+              "vertexIds": [
+                "r13",
+                "r14"
+              ]
+            },
+            {
+              "id": "re14",
+              "vertexIds": [
+                "r14",
+                "r15"
+              ]
+            },
+            {
+              "id": "re15",
+              "vertexIds": [
+                "r15",
+                "r16"
+              ]
+            },
+            {
+              "id": "re16",
+              "vertexIds": [
+                "r16",
+                "r17"
+              ]
+            },
+            {
+              "id": "re17",
+              "vertexIds": [
+                "r17",
+                "r10"
+              ]
+            },
+            {
+              "id": "re18",
+              "vertexIds": [
+                "r18",
+                "r19"
+              ]
+            },
+            {
+              "id": "re19",
+              "vertexIds": [
+                "r19",
+                "r20"
+              ]
+            },
+            {
+              "id": "re2",
+              "vertexIds": [
+                "r2",
+                "r3"
+              ]
+            },
+            {
+              "id": "re20",
+              "vertexIds": [
+                "r20",
+                "r21"
+              ]
+            },
+            {
+              "id": "re21",
+              "vertexIds": [
+                "r21",
+                "r22"
+              ]
+            },
+            {
+              "id": "re22",
+              "vertexIds": [
+                "r22",
+                "r23"
+              ]
+            },
+            {
+              "id": "re3",
+              "vertexIds": [
+                "r3",
+                "r4"
+              ]
+            },
+            {
+              "id": "re4",
+              "vertexIds": [
+                "r4",
+                "r5"
+              ]
+            },
+            {
+              "id": "re5",
+              "vertexIds": [
+                "r5",
+                "r6"
+              ]
+            },
+            {
+              "id": "re6",
+              "vertexIds": [
+                "r6",
+                "r7"
+              ]
+            },
+            {
+              "id": "re7",
+              "vertexIds": [
+                "r7",
+                "r8"
+              ]
+            },
+            {
+              "id": "re8",
+              "vertexIds": [
+                "r8",
+                "r9"
+              ]
+            },
+            {
+              "id": "re9",
+              "vertexIds": [
+                "r9",
+                "r0"
+              ]
+            }
+          ],
+          "wires": [
+            {
+              "id": "orbit-a",
+              "edgeIds": [
+                "re10",
+                "re11",
+                "re12",
+                "re13",
+                "re14",
+                "re15",
+                "re16",
+                "re17"
+              ]
+            },
+            {
+              "id": "spine-b",
+              "edgeIds": [
+                "re18",
+                "re19",
+                "re20",
+                "re21",
+                "re22"
+              ]
+            },
+            {
+              "id": "stub-wire",
+              "edgeIds": [
+                "re0",
+                "re1",
+                "re2",
+                "re3",
+                "re4",
+                "re5",
+                "re6",
+                "re7",
+                "re8",
+                "re9"
+              ]
+            }
+          ],
+          "faces": [],
+          "shells": [],
+          "solids": []
+        }
       }
-    ],
-    "edges": [
-      {
-        "id": "re0",
-        "vertexIds": [
-          "r0",
-          "r1"
-        ]
+    }
+  ],
+  "vertexHashesByModel": {
+    "spatial.shape": {
+      "r0": "v:9638e46f",
+      "r1": "v:c4b81246",
+      "r10": "v:8840aac7",
+      "r11": "v:68cb2866",
+      "r12": "v:6089d66b",
+      "r13": "v:3e6783c9",
+      "r14": "v:da827998",
+      "r15": "v:beb0f564",
+      "r16": "v:3754d5f0",
+      "r17": "v:11659002",
+      "r18": "v:f6d4bf44",
+      "r19": "v:ddb0335c",
+      "r2": "v:dc406f28",
+      "r20": "v:23bd60cc",
+      "r21": "v:28899e01",
+      "r22": "v:bdc7e1d6",
+      "r23": "v:da574ff9",
+      "r3": "v:0fd65d15",
+      "r4": "v:76a14029",
+      "r5": "v:767cd60b",
+      "r6": "v:1e4f980f",
+      "r7": "v:afbacea4",
+      "r8": "v:ae4a4dd0",
+      "r9": "v:e495a83c"
+    }
+  },
+  "geometryHashesByModel": {
+    "spatial.shape": {
+      "vertex": {
+        "r0": "v:9638e46f",
+        "r1": "v:c4b81246",
+        "r10": "v:8840aac7",
+        "r11": "v:68cb2866",
+        "r12": "v:6089d66b",
+        "r13": "v:3e6783c9",
+        "r14": "v:da827998",
+        "r15": "v:beb0f564",
+        "r16": "v:3754d5f0",
+        "r17": "v:11659002",
+        "r18": "v:f6d4bf44",
+        "r19": "v:ddb0335c",
+        "r2": "v:dc406f28",
+        "r20": "v:23bd60cc",
+        "r21": "v:28899e01",
+        "r22": "v:bdc7e1d6",
+        "r23": "v:da574ff9",
+        "r3": "v:0fd65d15",
+        "r4": "v:76a14029",
+        "r5": "v:767cd60b",
+        "r6": "v:1e4f980f",
+        "r7": "v:afbacea4",
+        "r8": "v:ae4a4dd0",
+        "r9": "v:e495a83c"
       },
-      {
-        "id": "re1",
-        "vertexIds": [
-          "r1",
-          "r2"
-        ]
+      "edge": {
+        "re0": "e:af35328c",
+        "re1": "e:7b3de5bb",
+        "re10": "e:9b308eac",
+        "re11": "e:1d4c744a",
+        "re12": "e:e530560f",
+        "re13": "e:2ad9453a",
+        "re14": "e:e394fc1f",
+        "re15": "e:6867757f",
+        "re16": "e:e58a0d1f",
+        "re17": "e:3a18a45a",
+        "re18": "e:ac060e4d",
+        "re19": "e:b7cd09a8",
+        "re2": "e:229c6d5c",
+        "re20": "e:73e883d4",
+        "re21": "e:e6541dc4",
+        "re22": "e:c6cf37e2",
+        "re3": "e:082a01dd",
+        "re4": "e:b07eb7df",
+        "re5": "e:98c56c89",
+        "re6": "e:ef360606",
+        "re7": "e:2e1122f9",
+        "re8": "e:5c4bb6ff",
+        "re9": "e:00bc3a86"
       },
-      {
-        "id": "re10",
-        "vertexIds": [
-          "r10",
-          "r11"
-        ]
-      },
-      {
-        "id": "re11",
-        "vertexIds": [
-          "r11",
-          "r12"
-        ]
-      },
-      {
-        "id": "re12",
-        "vertexIds": [
-          "r12",
-          "r13"
-        ]
-      },
-      {
-        "id": "re13",
-        "vertexIds": [
-          "r13",
-          "r14"
-        ]
-      },
-      {
-        "id": "re14",
-        "vertexIds": [
-          "r14",
-          "r15"
-        ]
-      },
-      {
-        "id": "re15",
-        "vertexIds": [
-          "r15",
-          "r16"
-        ]
-      },
-      {
-        "id": "re16",
-        "vertexIds": [
-          "r16",
-          "r17"
-        ]
-      },
-      {
-        "id": "re17",
-        "vertexIds": [
-          "r17",
-          "r10"
-        ]
-      },
-      {
-        "id": "re18",
-        "vertexIds": [
-          "r18",
-          "r19"
-        ]
-      },
-      {
-        "id": "re19",
-        "vertexIds": [
-          "r19",
-          "r20"
-        ]
-      },
-      {
-        "id": "re2",
-        "vertexIds": [
-          "r2",
-          "r3"
-        ]
-      },
-      {
-        "id": "re20",
-        "vertexIds": [
-          "r20",
-          "r21"
-        ]
-      },
-      {
-        "id": "re21",
-        "vertexIds": [
-          "r21",
-          "r22"
-        ]
-      },
-      {
-        "id": "re22",
-        "vertexIds": [
-          "r22",
-          "r23"
-        ]
-      },
-      {
-        "id": "re3",
-        "vertexIds": [
-          "r3",
-          "r4"
-        ]
-      },
-      {
-        "id": "re4",
-        "vertexIds": [
-          "r4",
-          "r5"
-        ]
-      },
-      {
-        "id": "re5",
-        "vertexIds": [
-          "r5",
-          "r6"
-        ]
-      },
-      {
-        "id": "re6",
-        "vertexIds": [
-          "r6",
-          "r7"
-        ]
-      },
-      {
-        "id": "re7",
-        "vertexIds": [
-          "r7",
-          "r8"
-        ]
-      },
-      {
-        "id": "re8",
-        "vertexIds": [
-          "r8",
-          "r9"
-        ]
-      },
-      {
-        "id": "re9",
-        "vertexIds": [
-          "r9",
-          "r0"
-        ]
+      "wire": {
+        "orbit-a": "w:9aea4ac3",
+        "spine-b": "w:a734a1e6",
+        "stub-wire": "w:55bcf2f4"
       }
-    ],
-    "wires": [
-      {
-        "id": "orbit-a",
-        "edgeIds": [
-          "re10",
-          "re11",
-          "re12",
-          "re13",
-          "re14",
-          "re15",
-          "re16",
-          "re17"
-        ]
-      },
-      {
-        "id": "spine-b",
-        "edgeIds": [
-          "re18",
-          "re19",
-          "re20",
-          "re21",
-          "re22"
-        ]
-      },
-      {
-        "id": "stub-wire",
-        "edgeIds": [
-          "re0",
-          "re1",
-          "re2",
-          "re3",
-          "re4",
-          "re5",
-          "re6",
-          "re7",
-          "re8",
-          "re9"
-        ]
-      }
-    ],
-    "faces": [],
-    "shells": [],
-    "solids": []
+    }
   }
 }

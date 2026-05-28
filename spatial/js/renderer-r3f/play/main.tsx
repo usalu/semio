@@ -16,7 +16,6 @@ import {
 	modelDefinitionSelectionEntityKinds,
 	modelDefinitionUsesGeometryPicking,
 	parseModelJson,
-	parseModelSpaceJson,
 	qualifiedTransformationId,
 	resolveModelDefinitionScope,
 	type InteractionSnapshot,
@@ -41,7 +40,6 @@ import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
 	InteractionRepl,
-	SelectionAttributesPanel,
 	SelectionPropertiesPanel,
 	replDisplayedSelectionTargets,
 	r3fPreviewKernel,
@@ -216,8 +214,20 @@ function emptyModelJson(): ModelJsonSnapshot {
 	return new Model().toJSON();
 }
 
-function emptyModelSpaceJson(): ModelSpaceJsonSnapshot {
-	return new ModelSpace().toJSON();
+function emptyPlayModels(): Record<string, Model> {
+	return { [SHAPE_MODEL_DEFINITION_ID]: new Model() };
+}
+
+function ensurePlayShapeModel(models: Readonly<Record<string, Model>>): Record<string, Model> {
+	if (models[SHAPE_MODEL_DEFINITION_ID]) return { ...models };
+	return { ...models, [SHAPE_MODEL_DEFINITION_ID]: new Model() };
+}
+
+function parseModelSpaceJson(raw: unknown): ModelSpace | null {
+	if (!raw || typeof raw !== "object") return null;
+	const row = raw as Record<string, unknown>;
+	if (row.schema !== "spatial.modelspace/v1" || !Array.isArray(row.models)) return null;
+	return ModelSpace.fromJSON(row as ModelSpaceJsonSnapshot);
 }
 
 function fileStem(name: string): string {
@@ -356,13 +366,16 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	return {
 		schema: "spatial.model/v1",
 		revision: model.revision,
-		anchors: sortIds(anchors).map((id) => model.anchors[id]!),
-		vertices: sortIds(vertices).map((id) => model.vertices[id]!),
-		edges: sortIds(edges).map((id) => model.edges[id]!),
-		wires: sortIds(wires).map((id) => model.wires[id]!),
-		faces: sortIds(faces).map((id) => model.faces[id]!),
-		shells: sortIds(shells).map((id) => model.shells[id]!),
-		solids: sortIds(solids).map((id) => model.solids[id]!),
+		objects: [],
+		geometry: {
+			anchors: sortIds(anchors).map((id) => model.anchors[id]!),
+			vertices: sortIds(vertices).map((id) => model.vertices[id]!),
+			edges: sortIds(edges).map((id) => model.edges[id]!),
+			wires: sortIds(wires).map((id) => model.wires[id]!),
+			faces: sortIds(faces).map((id) => model.faces[id]!),
+			shells: sortIds(shells).map((id) => model.shells[id]!),
+			solids: sortIds(solids).map((id) => model.solids[id]!),
+		},
 	};
 }
 
@@ -413,15 +426,17 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 function modelsFromSpatialJson(json: unknown): Record<string, Model> {
 	const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
 	const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-	if (modelSpace) return recordFromModelSpace(ModelSpace.fromJSON(modelSpace));
-	return { [SHAPE_MODEL_DEFINITION_ID]: parseModelJson(bundle?.model ?? json) ?? new Model() };
+	if (modelSpace) return ensurePlayShapeModel(recordFromModelSpace(modelSpace));
+	return ensurePlayShapeModel({
+		[SHAPE_MODEL_DEFINITION_ID]: parseModelJson(bundle?.model ?? json) ?? new Model(),
+	});
 }
 
 function activeModelDefinitionIdFromSpatialJson(json: unknown): string {
 	const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
 	if (typeof bundle?.activeModelDefinitionId === "string") return bundle.activeModelDefinitionId;
 	const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-	return modelSpace?.models[0]?.id ?? SHAPE_MODEL_DEFINITION_ID;
+	return Object.keys(modelSpace?.models ?? {})[0] ?? SHAPE_MODEL_DEFINITION_ID;
 }
 
 function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
@@ -444,13 +459,15 @@ function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
 }
 
 function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
-	if (models[definitionId] || isShapeModelDefinition(definitionId)) return models as Record<string, Model>;
+	const withShape = ensurePlayShapeModel(models);
+	if (withShape[definitionId]) return withShape;
+	if (isShapeModelDefinition(definitionId)) return withShape;
 	const fromShape = listTransformationsIntoModelDefinition(definitionId).find((row) =>
 		isShapeModelDefinition(row.source.modelDefinition),
 	);
-	const shape = models[SHAPE_MODEL_DEFINITION_ID];
-	if (!fromShape || !shape) return models as Record<string, Model>;
-	return { ...models, [definitionId]: applyTransformation(fromShape, shape) };
+	const shape = withShape[SHAPE_MODEL_DEFINITION_ID];
+	if (!fromShape || !shape) return withShape;
+	return { ...withShape, [definitionId]: applyTransformation(fromShape, shape) };
 }
 
 function pickShapeForModelDefinition(
@@ -737,10 +754,15 @@ function PlayApp() {
 		setShapeAssetId(id);
 		setLoadedRawName("");
 		setFileStatus("");
-		const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
-		const raw = asset?.json ?? emptyModelSpaceJson();
-		setModelsByDefinitionId(modelsFromSpatialJson(raw));
-		setActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(raw));
+		if (!id) {
+			setModelsByDefinitionId(emptyPlayModels());
+			setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
+		} else {
+			const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
+			if (!asset) return;
+			setModelsByDefinitionId(modelsFromSpatialJson(asset.json));
+			setActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(asset.json));
+		}
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
@@ -840,10 +862,6 @@ function PlayApp() {
 		[currentSelection, selectionKinds],
 	);
 
-	const selectedShapeTargets = useMemo(
-		() => selectionInScope.filter((target) => target.kind !== "object" || target.editable !== false),
-		[selectionInScope],
-	);
 	const exportBaseName = useMemo(() => {
 		if (loadedRawName) return fileStem(loadedRawName);
 		const asset = SHAPE_ASSETS.find((g) => g.id === shapeAssetId);

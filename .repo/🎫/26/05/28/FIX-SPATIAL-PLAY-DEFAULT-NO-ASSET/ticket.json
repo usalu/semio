@@ -1,0 +1,9 @@
+{
+  "title": "Fix Spatial Play Default No Asset",
+  "emoji": "🎮",
+  "status": "open",
+  "description": "Spatial play must start with no shape asset loaded and must not throw when clearing or selecting shape assets.",
+  "goal": "🎯r2602",
+  "client": "cursor-chat",
+  "llm": "gpt-5-4"
+}

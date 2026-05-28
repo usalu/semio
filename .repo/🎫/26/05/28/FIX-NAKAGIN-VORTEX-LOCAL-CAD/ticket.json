@@ -1,8 +1,9 @@
 {
   "title": "Fix Nakagin Scene Vortex Local Cad",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Nakagin scene fixture vortex positions must be type-local CAD connector points from metabolism kit, not world coordinates. GLB origin/orientation unchanged. One-time ticket migration only.",
+  "summary": "One-off migrate-vortex-local-cad.mts rewrote 358 vortices from metabolism kit connector.point per board handle port (per-type lookup). Regenerated nakagin-capsule-tower.scene.json; origins/orientations untouched. Vitest 70/70; scene e2e LOD UI test timed out (unrelated flake).",
   "goal": "🎯r2602",
   "client": "cursor-chat",
   "llm": "gpt-5-4"
