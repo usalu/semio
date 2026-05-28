@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.solidfem.constructSolidElement",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.solidfem.solidelement"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.solidfem.solidelement"
   }
 }
+

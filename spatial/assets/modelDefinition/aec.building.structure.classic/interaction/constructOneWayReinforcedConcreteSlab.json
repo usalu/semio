@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.structure.constructOneWayReinforcedConcreteSlab",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.structure.onewayreinforcedconcreteslab"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.structure.onewayreinforcedconcreteslab"
   }
 }
+

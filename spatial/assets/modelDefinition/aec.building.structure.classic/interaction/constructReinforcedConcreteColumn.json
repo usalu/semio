@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.structure.constructReinforcedConcreteColumn",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.structure.reinforcedconcretecolumn"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.structure.reinforcedconcretecolumn"
   }
 }
+

@@ -15,11 +15,14 @@
     "object": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "typologyId", "geometryRef"],
+      "required": ["id", "typology", "primitives"],
       "properties": {
         "id": { "type": "string" },
-        "typologyId": { "type": "string" },
-        "geometryRef": { "type": "string" },
+        "typology": { "type": "string" },
+        "primitives": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
         "attributes": {
           "type": "object",
           "additionalProperties": true

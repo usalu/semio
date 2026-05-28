@@ -1613,7 +1613,7 @@ function parseTypologyPrimitiveKinds(raw: unknown, typology: string): readonly T
     const k = entry as TypologyPrimitiveKind;
     if (allowed.has(k)) kinds.push(k);
   }
-  return kinds.length ? kinds : inferTypologyPrimitiveKinds(typologyId);
+  return kinds.length ? kinds : inferTypologyPrimitiveKinds(typology);
 }
 
 /** @emoji 🧾 Parses `spatial.typology/v1` JSON or returns `null`. */
@@ -2120,6 +2120,14 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
   return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
+/** @emoji 📚 Host-facing interaction row from model-definition interaction JSON. */
+export interface SpatialInteraction {
+  readonly id: string;
+  readonly label: string;
+  /** @emoji ⌨️ Host interaction key; must stay unique and appear in `label`. */
+  readonly key: string;
+}
+
 let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 
 function interactionOwnerById(): ReadonlyMap<string, string> {
@@ -2204,7 +2212,23 @@ export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: str
     .filter((row): row is PropertyDefinitionSpec => row !== null);
 }
 
-/** @emoji 🧭 Action ids declared on typologies or model-definition action assets. */
+/** @emoji 🧭 Action ids referenced by one interaction spec (transition effects + commit). */
+export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
+  const ids = new Set<string>();
+  if (spec.commit.operation.kind === "action") ids.add(spec.commit.operation.action);
+  for (const st of spec.machine.states) {
+    for (const h of st.on ?? []) {
+      for (const tr of h.transitions) {
+        for (const fx of tr.effects ?? []) {
+          if (fx.op === "action") ids.add(fx.action);
+        }
+      }
+    }
+  }
+  return [...ids];
+}
+
+/** @emoji 🧭 Action ids declared on typologies, action assets, or owned interactions. */
 export function listActionsForModelDefinition(modelDefinitionId: string): readonly string[] {
   const ids = new Set<string>();
   for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
@@ -2215,12 +2239,19 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
   }
+  for (const row of listSpatialInteractionsForModelDefinition(modelDefinitionId)) {
+    const interaction = loadSpatialInteraction(row.id);
+    if (interaction) {
+      for (const actionId of actionIdsReferencedByInteractionSpec(interaction)) ids.add(actionId);
+    }
+  }
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
 /** @emoji 🧭 True when `actionId` is declared in the active model definition (or is `selection.apply`). */
 export function actionAvailableInModelDefinition(actionId: string, modelDefinitionId: string): boolean {
   if (actionId === "selection.apply") return true;
+  if (actionId.startsWith("command.")) return true;
   const transformation = loadTransformation(actionId);
   if (transformation) {
     return transformation.source.modelDefinition === modelDefinitionId || transformation.target.modelDefinition === modelDefinitionId;
@@ -2888,6 +2919,25 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
         const modifiers = (event?.modifiers ?? params.modifiers ?? {}) as InteractionEvent["modifiers"];
         const merged = selectionTargetsWithMode(current, incoming, modifiers);
         return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: merged } }, data: { targets: merged } };
+      },
+    },
+    {
+      id: "command.undoPick",
+      run: (params) => {
+        const ctx = (params.__context as Record<string, unknown>) ?? {};
+        const field = String(params.field ?? "points");
+        const cur = ctx[field];
+        const clearKeys = Array.isArray(params.clearKeys) ? (params.clearKeys as string[]) : [];
+        const patch: Record<string, unknown> = {};
+        if (cur && typeof cur === "object" && !Array.isArray(cur)) {
+          const base = { ...(cur as Record<string, unknown>) };
+          for (const key of clearKeys) delete base[key];
+          patch[field] = base;
+          for (const key of clearKeys) patch[key] = undefined;
+        } else if (Array.isArray(cur)) {
+          patch[field] = cur.slice(0, -1);
+        }
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: patch } };
       },
     },
     {
@@ -4083,7 +4133,6 @@ export class InteractionRuntime {
   /** @emoji 📜 Dispatches a typed interaction event through the statechart + optional kernel queries. */
   async send(event: InteractionEvent): Promise<void> {
     if (event.kind === "start") {
-      await this.consumeStartSelection(event);
       if (this.stateHasEvent(this.sm.getState(), "start")) {
         const beforeState = this.sm.getState();
         const beforeCtx = this.cloneCtx(this.sm.getContext());
@@ -4094,6 +4143,7 @@ export class InteractionRuntime {
           this.snapRedoStack.length = 0;
         }
       }
+      await this.consumeStartSelection(event);
       if (isFinalInteractionState(this.spec, this.sm.getState())) {
         this.applyInstantStartPayload(event);
         await this.runCommit(false);
@@ -4394,14 +4444,6 @@ function interactionFixtureRow(spec: BuiltinInteractionFixture): SpatialInteract
 
 function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
   return shippedInteractionJsons.map(interactionFixtureRow);
-}
-
-/** @emoji 📚 Host-facing interaction row from spatial/assets/modelDefinition interaction JSON. */
-export interface SpatialInteraction {
-  readonly id: string;
-  readonly label: string;
-  /** @emoji ⌨️ Host interaction key; must stay unique and appear in `label`. */
-  readonly key: string;
 }
 
 /** @emoji 🧭 Resolves a typed token to an interaction in one model definition (`key`, `id`, or compact `label`). */
@@ -6380,4 +6422,5 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Tests
+
 

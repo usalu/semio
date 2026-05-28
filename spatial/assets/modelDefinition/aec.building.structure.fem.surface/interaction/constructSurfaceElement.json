@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.surfacefem.constructSurfaceElement",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.surfacefem.surfaceelement"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.surfacefem.surfaceelement"
   }
 }
+

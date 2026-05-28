@@ -4,8 +4,7 @@
   "objects": [
     {
       "id": "object-void-cap",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "void-cap"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "void-cap"`r`n      }
     }
   ],
   "geometry": {
@@ -248,3 +247,4 @@
     ]
   }
 }
+

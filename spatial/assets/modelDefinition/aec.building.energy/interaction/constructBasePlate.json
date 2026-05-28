@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "energy.energy.constructBasePlate",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "energy.energy.baseplate"
         },
@@ -495,3 +495,4 @@
     "typology": "energy.energy.baseplate"
   }
 }
+

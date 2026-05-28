@@ -4,13 +4,11 @@
   "objects": [
     {
       "id": "object-brepjs-solid-2",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "brepjs-solid-2"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "brepjs-solid-2"`r`n      }
     },
     {
       "id": "object-brepjs-solid-3",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "brepjs-solid-3"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "brepjs-solid-3"`r`n      }
     }
   ],
   "geometry": {
@@ -567,3 +565,4 @@
     ]
   }
 }
+

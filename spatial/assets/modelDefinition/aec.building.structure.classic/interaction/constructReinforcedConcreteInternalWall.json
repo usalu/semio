@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.structure.constructReinforcedConcreteInternalWall",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.structure.reinforcedconcreteinternalwall"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.structure.reinforcedconcreteinternalwall"
   }
 }
+

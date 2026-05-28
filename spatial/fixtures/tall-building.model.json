@@ -4,128 +4,103 @@
   "objects": [
     {
       "id": "object-tall-building-cell-1081834846",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1081834846"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1081834846"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1096094486",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1096094486"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1096094486"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1279952659",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1279952659"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1279952659"`r`n      }
     },
     {
       "id": "object-tall-building-cell-128407723",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-128407723"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-128407723"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1328253869",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1328253869"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1328253869"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1352884655",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1352884655"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1352884655"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1483470234",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1483470234"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1483470234"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1566933627",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1566933627"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1566933627"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1625171106",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1625171106"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1625171106"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1742409446",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1742409446"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1742409446"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1787309167",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1787309167"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1787309167"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1791018247",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1791018247"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1791018247"`r`n      }
     },
     {
       "id": "object-tall-building-cell-179470786",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-179470786"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-179470786"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1881454733",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1881454733"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1881454733"`r`n      }
     },
     {
       "id": "object-tall-building-cell-1983976325",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-1983976325"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-1983976325"`r`n      }
     },
     {
       "id": "object-tall-building-cell-2067663447",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-2067663447"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-2067663447"`r`n      }
     },
     {
       "id": "object-tall-building-cell-273806170",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-273806170"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-273806170"`r`n      }
     },
     {
       "id": "object-tall-building-cell-391420525",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-391420525"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-391420525"`r`n      }
     },
     {
       "id": "object-tall-building-cell-418180204",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-418180204"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-418180204"`r`n      }
     },
     {
       "id": "object-tall-building-cell-52113531",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-52113531"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-52113531"`r`n      }
     },
     {
       "id": "object-tall-building-cell-554343839",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-554343839"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-554343839"`r`n      }
     },
     {
       "id": "object-tall-building-cell-751631438",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-751631438"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-751631438"`r`n      }
     },
     {
       "id": "object-tall-building-cell-869813452",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-869813452"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-869813452"`r`n      }
     },
     {
       "id": "object-tall-building-cell-980890500",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-980890500"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-980890500"`r`n      }
     },
     {
       "id": "object-tall-building-cell-981303600",
-      "typologyId": "builtin.primitive.box",
-      "geometryRef": "tall-building-cell-981303600"
+      "typology": "builtin.primitive.box",`r`n      "primitives": {`r`n        "solid": "tall-building-cell-981303600"`r`n      }
     }
   ],
   "geometry": {
@@ -3491,3 +3466,4 @@
     ]
   }
 }
+

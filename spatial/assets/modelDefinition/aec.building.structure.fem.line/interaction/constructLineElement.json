@@ -424,7 +424,7 @@
       "kind": "action",
       "action": "structure.linefem.constructLineElement",
       "params": {
-        "typologyId": {
+        "typology": {
           "kind": "const",
           "value": "structure.linefem.lineelement"
         },
@@ -495,3 +495,4 @@
     "typology": "structure.linefem.lineelement"
   }
 }
+
