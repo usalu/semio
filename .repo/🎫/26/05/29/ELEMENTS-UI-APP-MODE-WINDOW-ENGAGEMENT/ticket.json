@@ -1,8 +1,9 @@
 {
   "title": "Elements Ui App Mode Window Engagement",
   "emoji": "⚛️",
-  "status": "open",
+  "status": "closed",
   "description": "Implement Ui, App, Mode, Window, Engagement as canonical pure-React components in @elements/lib/react/core, add stories, rewire framework/playground renderers to compose them, replace Golden Layout with pure-React resizable layout.",
+  "summary": "Implemented canonical pure-React shell components Ui, App, Mode, Window (extended), and Engagement in @elements/ui with resizable multi-pane Mode layout (react-resizable-panels), active-window focus, and floating three-line Engagement overlay. Replaced Golden Layout UICanvas with ShellModeCanvas in @elements/framework-react and @elements/playground/react; ProductView and PlaygroundView now compose Ui/App/ShellModeCanvas. Added Storybook stories (Ui, App, Mode, Engagement) and extended Window.stories. Removed golden-layout dependency and CSS. All vitest suites pass for @elements/ui (82), @elements/framework-react (7), and @elements/playground (8).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1496"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "5813ffd3",
-    "source": "C:\\git\\semio\\.cursor\\plans\\elements_ui_components_5813ffd3.plan.md"
+    "local": "elements_ui_components_5813ffd3.plan.md"
   },
   "sessions": [
     "⚪8dd9c9bd1e5a4120b3b4438efac95b94"

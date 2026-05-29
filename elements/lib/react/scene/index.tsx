@@ -92,6 +92,7 @@ import {
 	SCENE_PLAY_SCENE_SURFACE_ID,
 	SCENE_PLAY_SETTINGS_TAB_ID,
 	buildScenePlayHierarchySections,
+	scenePlayFixtureRowLabel,
 	ScenePlayShellController,
 	buildScenePlayAppRuntime,
 	buildScenePlayRuntime,
@@ -241,6 +242,8 @@ export const DEFAULT_LOD_GRID_FACTOR = 10;
 export interface VortexProps {
 	id: string;
 	vortexKind?: string;
+	/** @emoji 🏷️ Human-readable handle label for play UI and hierarchy. */
+	label?: string;
 	position: Vec3;
 	direction?: Vec3;
 	radius?: number;
@@ -894,6 +897,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 				vortices.push({
 					id: vx.id,
 					...(typeof vx.vortexKind === "string" ? { vortexKind: vx.vortexKind } : {}),
+					...(typeof vx.label === "string" ? { label: vx.label } : {}),
 					position: vx.position,
 					...(isVec3(vx.direction) ? { direction: vx.direction } : {}),
 					...(typeof vx.radius === "number" ? { radius: vx.radius } : {}),
@@ -5093,6 +5097,7 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 			relocateMode: "translate",
 			selection: SCENE_PLAY_EMPTY_SELECTION,
 			selectedId: null,
+			selectedLabel: null,
 			selectionMode: "single",
 			proximityRadius: 24,
 			chunkSize: 256,
@@ -5303,7 +5308,9 @@ function ScenePlayInspectorVortices(props: {
 		<div className="space-y-3 border-l border-element/60 pl-2">
 			{rows.map((row) => (
 				<div key={row.fullId} className="space-y-2 rounded border border-element/40 p-2">
-					<div className="font-mono text-[11px] text-muted-foreground">{row.fullId}</div>
+					<div className="text-[11px] text-muted-foreground">
+						{scenePlayFixtureRowLabel(row.vortex.label, row.fullId)}
+					</div>
 					<Label id={`scene-play.inspector.vortex.kind.${row.fullId}`} label="Vortex kind">
 						<Select
 							onValueChange={(value) => {
@@ -5556,8 +5563,7 @@ function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus:
 			defaultOpen: true,
 			items: fixture.objects.map((object) => ({
 				id: `scene-play-inspector.scene-object.${object.id}`,
-				label: object.label ? `${object.id} · ${object.label}` : object.id,
-				description: object.objectKind ?? undefined,
+				label: scenePlayFixtureRowLabel(object.label, object.id),
 				onClick: () => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] }),
 			})),
 		});
@@ -5759,6 +5765,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					relocateMode={snap.relocateMode}
 					selection={snap.selection}
 					selectedId={snap.selectedId}
+					selectedLabel={snap.selectedLabel}
 					selectionMode={snap.selectionMode}
 					selectedVortexFullIds={selectedVortexFullIds}
 					proximityRadius={snap.proximityRadius}
@@ -5906,6 +5913,7 @@ function PlaySceneCanvas(props: {
 	readonly showLodGrid: boolean;
 	readonly gridSnapEnabled: boolean;
 	readonly selectedId: string | null;
+	readonly selectedLabel: string | null;
 	readonly setSelectedId: (id: string | null) => void;
 	readonly onSelect: (snap: SelectionSnapshot) => void;
 	readonly onIndirectConnect: () => void;
@@ -5923,7 +5931,7 @@ function PlaySceneCanvas(props: {
 		<>
 			<div className="pointer-events-none absolute left-0 top-0 z-[-1] px-px py-px opacity-0">
 				<div data-e2e-scene-lod>{formatSceneLod(props.lodTag)}</div>
-				<div data-e2e-selected>{props.selectedId ?? "none"}</div>
+				<div data-e2e-selected>{props.selectedLabel ?? "none"}</div>
 			</div>
 			<Canvas3D
 				className="absolute inset-0"

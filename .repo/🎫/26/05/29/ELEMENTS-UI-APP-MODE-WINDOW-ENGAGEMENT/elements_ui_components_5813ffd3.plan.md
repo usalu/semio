@@ -25,16 +25,16 @@ todos:
     status: completed
   - id: stories
     content: Add Ui/App/Mode/Engagement stories and extend Window.stories.tsx under .storybook/stories/elements/ui/ following existing conventions; build Storybook.
-    status: in_progress
+    status: completed
   - id: rewire-renderers
     content: Refactor PlaygroundView and ProductView to map runtime -> descriptors and render <Ui>; delete Golden Layout UICanvas and golden-layout deps.
-    status: pending
+    status: completed
   - id: consumers
     content: Validate/fix play hosts (spatial, board, scene, topology) and sketchpad; update UI.stories.tsx; remove dead Golden Layout CSS.
-    status: pending
+    status: completed
   - id: validate
     content: Run lint + vitest across affected packages and runtime-verify each play host (active focus + engagement) before closing the ticket.
-    status: pending
+    status: completed
 isProject: false
 ---
 

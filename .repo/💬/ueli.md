@@ -724,6 +724,10 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+All the objects and vortex dont have the proper labels from the original asset (nakagin capsule tower). Make sure that in the ui only the labels show. Just one time migration, no permanent links. Clean assets with clean non-id poluted play
+
+---
+
 Complete it. Add all props, onX callbacks, options, etc.
 Make sure that play displays and allows to modify all information.
 e.g. all objects can be deleted (and that it deletes all child vortices with it and stale attractions)

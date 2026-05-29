@@ -141,6 +141,31 @@ export function sceneVortexFullId(objectId: string, vortexId: string): string {
 	return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
 }
 
+/** @emoji 🏷️ Tree/inspector label: trimmed fixture label, else fallback id. */
+export function scenePlayFixtureRowLabel(label: string | undefined, fallbackId: string): string {
+	const trimmed = label?.trim();
+	return trimmed && trimmed.length > 0 ? trimmed : fallbackId;
+}
+
+/** @emoji 🎯 Resolved selection label for play chrome (objects, vortices, attractions). */
+export function scenePlaySelectionLabel(fixture: FixtureV1 | null, selection: ScenePlaySelection): string | null {
+	if (!fixture) return null;
+	if (selection.attractionIds[0]) {
+		return selection.attractionIds[0];
+	}
+	if (selection.vortexIds[0]) {
+		const { objectId, vortexId } = parseVortexFullId(selection.vortexIds[0]);
+		const object = fixture.objects.find((row) => row.id === objectId);
+		const vortex = object?.vortices.find((row) => row.id === vortexId || sceneVortexFullId(objectId, row.id) === selection.vortexIds[0]);
+		return scenePlayFixtureRowLabel(vortex?.label, selection.vortexIds[0]);
+	}
+	if (selection.objectIds[0]) {
+		const object = fixture.objects.find((row) => row.id === selection.objectIds[0]);
+		return scenePlayFixtureRowLabel(object?.label, selection.objectIds[0]);
+	}
+	return null;
+}
+
 /** @emoji 🗑️ Removes an object and any attractions touching it or its vortices. */
 export function deleteSceneObjectFromFixture(fixture: FixtureV1, objectId: string): FixtureV1 {
 	const removedVortexFullIds = new Set<string>();
@@ -337,8 +362,7 @@ export function buildScenePlayHierarchySections(
 			const fullId = sceneVortexFullId(object.id, vortex.id);
 			return {
 				id: `scene-play-hierarchy.vortex.${fullId}`,
-				label: vortex.label?.trim() ? `${vortex.id} · ${vortex.label}` : vortex.id,
-				description: vortex.vortexKind ?? undefined,
+				label: scenePlayFixtureRowLabel(vortex.label, fullId),
 				isSelected: selectedVortices.has(fullId),
 				onClick: () => handlers.onSelectVortex(fullId),
 			};
@@ -353,8 +377,7 @@ export function buildScenePlayHierarchySections(
 		};
 		return {
 			id: `scene-play-hierarchy.object.${object.id}`,
-			label: object.label?.trim() ? `${object.id} · ${object.label}` : object.id,
-			description: object.objectKind ?? undefined,
+			label: scenePlayFixtureRowLabel(object.label, object.id),
 			isSelected: objectSelected,
 			defaultOpen: true,
 			onClick: () => handlers.onSelectObject(object.id),
@@ -797,6 +820,7 @@ export class ScenePlayShellController extends Controller {
 			relocateMode: this.relocateMode,
 			selection: this.selection,
 			selectedId: primaryScenePlayObjectId(this.selection),
+			selectedLabel: scenePlaySelectionLabel(this.fixture, this.selection),
 			selectionMode: this.selectionMode,
 			proximityRadius: this.proximityRadius,
 			chunkSize: this.chunkSize,
@@ -824,6 +848,7 @@ export interface ScenePlaySnapshot {
 	readonly relocateMode: RelocateMode;
 	readonly selection: ScenePlaySelection;
 	readonly selectedId: string | null;
+	readonly selectedLabel: string | null;
 	readonly selectionMode: SelectionMode;
 	readonly proximityRadius: number;
 	readonly chunkSize: number;
@@ -981,14 +1006,39 @@ if (import.meta.vitest) {
 			expect(next.attractions).toEqual([]);
 		});
 
+		it("scenePlaySelectionLabel resolves object and vortex fixture labels", () => {
+			const fixture = parseFixtureV1({
+				schema: "elements.scene.fixture/v1",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				attractions: [],
+				objects: [
+					{
+						id: "a",
+						label: "Alpha",
+						meshUrl: "/m.glb",
+						origin: [0, 0, 0],
+						vortices: [{ id: "v1", label: "Handle A", position: [0, 0, 0] }],
+					},
+				],
+			});
+			expect(scenePlaySelectionLabel(fixture, { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe("Alpha");
+			expect(scenePlaySelectionLabel(fixture, { objectIds: [], vortexIds: ["a:v1"], attractionIds: [] })).toBe("Handle A");
+		});
+
 		it("buildScenePlayHierarchySections nests objects, vortices, and attractions", () => {
 			const fixture = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
 				attractions: [{ id: "t1", attracting: "a:v1", attracted: "b:v2" }],
 				objects: [
-					{ id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
-					{ id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", position: [0, 0, 0] }] },
+					{
+						id: "a",
+						label: "Alpha",
+						meshUrl: "/m.glb",
+						origin: [0, 0, 0],
+						vortices: [{ id: "v1", label: "Handle A", position: [0, 0, 0] }],
+					},
+					{ id: "b", label: "Beta", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", label: "Handle B", position: [0, 0, 0] }] },
 				],
 			});
 			expect(fixture).not.toBeNull();
@@ -1001,7 +1051,9 @@ if (import.meta.vitest) {
 			const objectsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Objects");
 			expect(objectsGroup?.items?.length).toBe(2);
 			const firstObject = objectsGroup?.items?.[0];
+			expect(firstObject?.label).toBe("Alpha");
 			expect(firstObject?.items?.[0]?.label).toBe("Vortices");
+			expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
 			expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("scene-play-hierarchy.vortex.a:v1");
 			const attractionsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Attractions");
 			expect(attractionsGroup?.items?.[0]?.id).toBe("scene-play-hierarchy.attraction.t1");

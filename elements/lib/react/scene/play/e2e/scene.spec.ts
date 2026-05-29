@@ -89,15 +89,16 @@ test("scene selection hook updates label", async ({ page }) => {
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
+	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
-		(id) => {
+		({ id, label }) => {
 			const w = window as unknown as { __scenePlaySelect?: (objectId: string) => void };
 			if (typeof w.__scenePlaySelect !== "function") return false;
 			w.__scenePlaySelect(id);
-			const label = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
-			return label.includes(id.slice(0, 8));
+			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
+			return selected.includes(label);
 		},
-		objectId,
+		{ id: objectId, label: objectLabel },
 		{ timeout: 30_000 },
 	);
 	expectCleanSceneConsole(messages);
@@ -109,15 +110,16 @@ test("scene pointer miss clears selection", async ({ page }) => {
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
+	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
-		(id) => {
+		({ id, label }) => {
 			const w = window as unknown as { __scenePlaySelect?: (objectId: string) => void };
 			if (typeof w.__scenePlaySelect !== "function") return false;
 			w.__scenePlaySelect(id);
-			const label = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
-			return label.includes(id.slice(0, 8));
+			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
+			return selected.includes(label);
 		},
-		objectId,
+		{ id: objectId, label: objectLabel },
 		{ timeout: 30_000 },
 	);
 	await page.evaluate(() => {
@@ -137,15 +139,16 @@ test("scene activate hook shows relocate controls without recursion", async ({ p
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
+	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
-		(id) => {
+		({ id, label }) => {
 			const w = window as unknown as { __scenePlayActivate?: (objectId: string) => void };
 			if (typeof w.__scenePlayActivate !== "function") return false;
 			w.__scenePlayActivate(id);
-			const label = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
-			return label.includes(id.slice(0, 8));
+			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
+			return selected.includes(label);
 		},
-		objectId,
+		{ id: objectId, label: objectLabel },
 		{ timeout: 30_000 },
 	);
 	await expect(page.locator("canvas")).toBeVisible();

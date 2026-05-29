@@ -42,7 +42,6 @@ import {
 	spatialPlayModelsDigest,
 	spatialPlayPaneFromSurfaceId,
 	spatialPlaySceneSurfaceIdForPane,
-	type SpatialPlayPaneId,
 } from "./index.ts";
 import {
 	DocumentHistory,
