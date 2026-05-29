@@ -338,6 +338,14 @@ export class AttributeStore {
     this.bumpRevision();
   }
 
+  deleteField(id: string, key: string): void {
+    const r = this.byId.get(id);
+    if (!r || !Object.hasOwn(r, key)) return;
+    delete r[key];
+    if (Object.keys(r).length === 0) this.byId.delete(id);
+    this.bumpRevision();
+  }
+
   deleteEntity(id: string): void {
     if (this.byId.delete(id)) this.bumpRevision();
   }
@@ -2448,8 +2456,14 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
       if (entityKindIds.has(kind)) kinds.add(kind as ModelEntityKind);
     }
   }
-  return TOPOLOGY_MODEL_ENTITY_KINDS.filter((kind) => kinds.has(kind))
-    .concat([...kinds].filter((kind) => !TOPOLOGY_MODEL_ENTITY_KINDS.includes(kind as (typeof TOPOLOGY_MODEL_ENTITY_KINDS)[number])));
+  const ordered: ModelEntityKind[] = [];
+  for (const kind of TOPOLOGY_MODEL_ENTITY_KINDS) {
+    if (kinds.has(kind)) ordered.push(kind);
+  }
+  for (const kind of kinds) {
+    if (!(TOPOLOGY_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) ordered.push(kind);
+  }
+  return ordered;
 }
 
 /** @emoji 🧭 Object rows owned by typologies declared under a model definition. */

@@ -41,6 +41,7 @@ import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
 	InteractionRepl,
+	SelectionAttributesPanel,
 	SelectionPropertiesPanel,
 	replDisplayedSelectionTargets,
 	r3fPreviewKernel,
@@ -987,6 +988,13 @@ function PlayApp() {
 				viewObjectCount={viewObjectCount}
 				onActiveModelDefinitionId={handleActiveModelDefinitionChange}
 				onApplyTransformation={handleApplyTransformation}
+			/>
+			<SelectionAttributesPanel
+				model={liveModel}
+				activeModelDefinitionId={activeModelDefinitionId}
+				selection={selectionInScope}
+				selectionCount={selectionInScope.length}
+				onModelChange={handleModelAttributesChange}
 			/>
 			<SelectionPropertiesPanel
 				model={liveModel}

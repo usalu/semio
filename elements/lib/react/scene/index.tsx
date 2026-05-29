@@ -1,5 +1,5 @@
 import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import React, {
 	Children,
 	Suspense,
@@ -2554,7 +2554,14 @@ function nearestAttractionSnapFullId(args: {
 //#endregion ­ƒº▓AttractionGesture
 
 //#region ­ƒºèMesh
-export interface MeshProps {
+/** @emoji 🖱️ R3F pointer handlers for scene mesh pick targets. */
+export interface SceneMeshPointerHandlers {
+	readonly onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+	readonly onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
+	readonly onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
+}
+
+export interface MeshProps extends SceneMeshPointerHandlers {
 	readonly meshUrl: string;
 	readonly style?: MeshStyleKind;
 	readonly userData?: Record<string, unknown>;
@@ -2574,6 +2581,9 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 		return null;
 	}
 	const scale = props.scale;
+	const { onPointerDown, onPointerOut, onPointerOver, meshUrl, style: _style, userData, scale: _scale, ...rest } = props;
+	void meshUrl;
+	void rest;
 	return (
 		<GlbMeshFrame>
 			<Clone
@@ -2586,19 +2596,28 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 									: (scale as [number, number, number]),
 						}
 					: {})}
-				userData={props.userData}
+				onPointerDown={onPointerDown}
+				onPointerOut={onPointerOut}
+				onPointerOver={onPointerOver}
+				userData={userData}
 			/>
 		</GlbMeshFrame>
 	);
 });
 
-const PlaceholderMesh = memo(function PlaceholderMesh(props: { readonly style: MeshStyleKind }) {
+const PlaceholderMesh = memo(function PlaceholderMesh(
+	props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind },
+) {
 	const colors = meshStyleColors(props.style);
 	const meshColor = colors?.meshColor ?? "#cbd5e1";
 	const opacity = colors?.opacity ?? 1;
 	return (
 		<GlbMeshFrame>
-			<mesh>
+			<mesh
+				onPointerDown={props.onPointerDown}
+				onPointerOut={props.onPointerOut}
+				onPointerOver={props.onPointerOver}
+			>
 				<boxGeometry args={[1, 1, 1]} />
 				<meshStandardMaterial
 					color={meshColor}
@@ -2681,6 +2700,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const [pointerHovered, setPointerHovered] = useState(false);
+	const invalidate = useThree((state) => state.invalidate);
 
 	useEffect(() => {
 		registerObject(props.id, props.objectKind, group.current);
@@ -2713,17 +2733,65 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				disabled: props.disabled,
 				selected: props.selected,
 				highlighted: linkHighlighted,
-				hovered: props.hovered === true,
+				hovered: props.hovered === true || pointerHovered,
 			}),
-		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted],
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
 	);
-	const showHoverOutline =
-		pointerHovered &&
-		!props.disabled &&
-		!props.selected &&
-		!linkHighlighted &&
-		props.hovered !== true &&
-		meshStyle === DEFAULT_MESH_STYLE;
+
+	useEffect(() => {
+		if (pointerHovered) {
+			invalidate();
+		}
+	}, [pointerHovered, invalidate]);
+
+	const meshPointerHandlers = useMemo(
+		() => ({
+			onPointerDown: (e: ThreeEvent<PointerEvent>) => {
+				const pe = e.nativeEvent;
+				if (pe.button !== 0) {
+					return;
+				}
+				e.stopPropagation();
+				if (attractionDragActive || attractionIndirectPickAwait) {
+					return;
+				}
+				if (props.disabled) {
+					return;
+				}
+				const snap: SelectionSnapshot = { objectIds: [props.id], vortexIds: [] };
+				if (selectionMode === "single") {
+					setSelectedObjectIds([props.id]);
+					onSelect?.(snap);
+				} else if (selectionMode === "additive") {
+					setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
+					onSelect?.(snap);
+				} else {
+					onSelect?.(snap);
+				}
+				setActiveRelocateObjectId(props.id);
+			},
+			onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+				e.stopPropagation();
+				if (!props.disabled) {
+					setPointerHovered(true);
+				}
+			},
+			onPointerOut: (e: ThreeEvent<PointerEvent>) => {
+				e.stopPropagation();
+				setPointerHovered(false);
+			},
+		}),
+		[
+			attractionDragActive,
+			attractionIndirectPickAwait,
+			onSelect,
+			props.disabled,
+			props.id,
+			selectionMode,
+			setActiveRelocateObjectId,
+			setSelectedObjectIds,
+		],
+	);
 
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
@@ -2757,21 +2825,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			setSelectedObjectIds,
 		],
 	);
-
-	const handlePointerEnter = useCallback(
-		(e: { stopPropagation: () => void }) => {
-			e.stopPropagation();
-			if (!props.disabled) {
-				setPointerHovered(true);
-			}
-		},
-		[props.disabled],
-	);
-
-	const handlePointerLeave = useCallback((e: { stopPropagation: () => void }) => {
-		e.stopPropagation();
-		setPointerHovered(false);
-	}, []);
 
 	const poseKey = useMemo(
 		() => objectPoseKey(props.id, props.origin, props.orientation, props.scale),
