@@ -1375,7 +1375,7 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 					scale: object.scale,
 				});
 			}
-			return buildSnapshot(records, state.attractions, state.version + 1);
+			return { records, attractions: state.attractions, tree: state.tree, version: state.version + 1 };
 		}
 		case "addAttraction": {
 			const edges = attractionEdgesFromAttractions(state.attractions);
@@ -1460,11 +1460,22 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 					);
 				}
 			}
-			return buildSnapshot(records, state.attractions, state.version + 1);
+			return { records, attractions: state.attractions, tree: state.tree, version: state.version + 1 };
 		}
 		default:
 			return state;
 	}
+}
+
+function recordScaleVec(scale: number | Vec3 | undefined): Vec3 {
+	if (typeof scale === "number") {
+		return [scale, scale, scale];
+	}
+	return scale ? ([scale[0], scale[1], scale[2]] as Vec3) : ([1, 1, 1] as Vec3);
+}
+
+function normalizeRecordScale(scale: Vec3): number | Vec3 {
+	return scale[0] === scale[1] && scale[1] === scale[2] ? scale[0] : scale;
 }
 
 /** @emoji ✋ Object ids whose fixture pose rows change for a relocate commit. */
@@ -1479,34 +1490,71 @@ export function relocateAffectedObjectIds(
 	return ids;
 }
 
-function fixtureObjectFromRecord(object: FixtureObjectV1, record: ObjectRecord): FixtureObjectV1 {
-	return {
-		...object,
-		origin: record.origin,
-		...(record.orientation ? { orientation: record.orientation } : {}),
-		...(record.scale !== undefined ? { scale: record.scale } : {}),
-	};
-}
-
 /** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
-export function applyRelocateToSceneFixture(fixture: FixtureV1, payload: RelocatePayload): FixtureV1 {
-	const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
-	const next = objectStateReducer(snap, { type: "relocate", payload });
-	const ids = relocateAffectedObjectIds(payload, next.tree.attractingByObjectId);
+export function applyRelocateToSceneFixture(
+	fixture: FixtureV1,
+	payload: RelocatePayload,
+	attractingByObjectId?: ReadonlyMap<string, readonly string[]>,
+): FixtureV1 {
+	const tree =
+		attractingByObjectId ??
+		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0).tree.attractingByObjectId;
+	const ids = relocateAffectedObjectIds(payload, tree);
 	if (!ids.length) {
 		return fixture;
 	}
 	const indexById = new Map(fixture.objects.map((object, index) => [object.id, index]));
 	const objects = fixture.objects.slice();
 	let changed = false;
-	for (const id of ids) {
+	const writePose = (id: string, origin: Vec3, orientation: Quat, scale: Vec3) => {
 		const index = indexById.get(id);
-		const record = next.records.get(id);
-		if (index === undefined || !record) {
-			continue;
+		if (index === undefined) {
+			return;
 		}
-		objects[index] = fixtureObjectFromRecord(objects[index]!, record);
+		const cur = objects[index]!;
+		const nextScale = normalizeRecordScale(scale);
+		const nextOrient = orientation;
+		if (
+			cur.origin[0] === origin[0] &&
+			cur.origin[1] === origin[1] &&
+			cur.origin[2] === origin[2] &&
+			cur.orientation?.[0] === nextOrient[0] &&
+			cur.orientation?.[1] === nextOrient[1] &&
+			cur.orientation?.[2] === nextOrient[2] &&
+			cur.orientation?.[3] === nextOrient[3] &&
+			cur.scale === nextScale
+		) {
+			return;
+		}
+		objects[index] = {
+			...cur,
+			origin,
+			orientation: nextOrient,
+			scale: nextScale,
+		};
 		changed = true;
+	};
+	writePose(
+		payload.objectId,
+		payload.after.origin,
+		payload.after.orientation,
+		payload.after.scale,
+	);
+	if (payload.mode === "translate") {
+		const delta = vec3Sub(payload.after.origin, payload.before.origin);
+		for (const id of collectAttractedDescendantIds(payload.objectId, tree)) {
+			const index = indexById.get(id);
+			if (index === undefined) {
+				continue;
+			}
+			const cur = objects[index]!;
+			writePose(
+				id,
+				vec3Add(cur.origin, delta),
+				cur.orientation ?? ([0, 0, 0, 1] as Quat),
+				recordScaleVec(cur.scale),
+			);
+		}
 	}
 	return changed ? { ...fixture, objects } : fixture;
 }
@@ -1543,7 +1591,10 @@ export function SceneObjectStateProvider(props: {
 	readonly fixture: FixtureV1;
 	readonly fixtureRevision?: number;
 	readonly children: ReactNode;
-	readonly onRelocate?: (payload: RelocatePayload) => void;
+	readonly onRelocate?: (
+		payload: RelocatePayload,
+		attractingByObjectId: ReadonlyMap<string, readonly string[]>,
+	) => void;
 	readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
 	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
@@ -1598,11 +1649,12 @@ export function SceneObjectStateProvider(props: {
 	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint, snapshot.records]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
+			const attractingByObjectId = snapshot.tree.attractingByObjectId;
 			skipExternalPoseSyncRef.current = true;
 			dispatch({ type: "relocate", payload });
-			props.onRelocate?.(payload);
+			props.onRelocate?.(payload, attractingByObjectId);
 		},
-		[props.onRelocate],
+		[props.onRelocate, snapshot.tree.attractingByObjectId],
 	);
 	const handleConnect = useCallback(
 		(payload: AttractionPayload) => {
@@ -4980,6 +5032,33 @@ if (import.meta.vitest) {
 			expect(edges[0]?.attractedObjectId).toBe("objB");
 		});
 	});
+	describe("applyRelocateToSceneFixture", () => {
+		it("translates attracted descendants when adjacency is passed", () => {
+			const fixture: FixtureV1 = {
+				objects: [
+					{ id: "a", meshUrl: "m", origin: [0, 0, 0], vortices: [] },
+					{ id: "b", meshUrl: "m", origin: [1, 0, 0], vortices: [] },
+				],
+				attractions: [{ id: "t1", attracting: "a:h1", attracted: "b:h2" }],
+			};
+			const tree = resolveSceneAttractionTree({
+				objectIds: ["a", "b"],
+				edges: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
+			});
+			const next = applyRelocateToSceneFixture(
+				fixture,
+				{
+					objectId: "a",
+					mode: "translate",
+					before: { origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: [1, 1, 1] },
+					after: { origin: [2, 0, 0], orientation: [0, 0, 0, 1], scale: [1, 1, 1] },
+				},
+				tree.attractingByObjectId,
+			);
+			expect(next.objects[0]?.origin).toEqual([2, 0, 0]);
+			expect(next.objects[1]?.origin).toEqual([3, 0, 0]);
+		});
+	});
 }
 
 
@@ -5666,8 +5745,8 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
 					bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect");
 				}}
-				onRelocate={(payload) => {
-					ctrl?.patchRelocate(payload);
+				onRelocate={(payload, attractingByObjectId) => {
+					ctrl?.patchRelocate(payload, attractingByObjectId);
 				}}
 			>
 				<PlaySceneCanvas

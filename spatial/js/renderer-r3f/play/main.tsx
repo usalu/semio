@@ -49,7 +49,6 @@ import {
 	isShapeModelDefinition,
 	isInteractionSessionActive,
 	isEmptyModelDiff,
-	listModelDefinitionManifests,
 	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
 	listSpatialInteractionsForModelDefinition,

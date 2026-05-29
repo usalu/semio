@@ -73,7 +73,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -115,6 +114,12 @@ import {
 	ToolbarItem,
 	ToolbarZone,
 	Window,
+	App,
+	Mode,
+	Ui,
+	type EngagementSpec,
+	type ModeWindowDescriptor,
+	type WindowLayoutNode as ShellWindowLayoutNode,
 	cn,
 	resolveTranslationLabel,
 	useCommandHotkey,
@@ -220,6 +225,7 @@ export interface UIWindowKindDefinition {
   component: React.ComponentType<any>;
   controls?: UIWindowControl[];
   measures?: UIWindowMeasure[];
+  engagement?: EngagementSpec;
   contextMenu?: ContextMenuItem[];
   variants?: {
     id: string;
@@ -642,225 +648,80 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
 
 // #endregion 🪟WindowMeasuresOverlay
 
-/**
- * Portal target for a golden-layout window kind.
- * Holds the DOM element, window kind definition, and a unique key.
- **/
-interface UICanvasPortal {
-  key: string;
-  element: HTMLElement;
-  windowKind: UIWindowKindDefinition;
-}
-
-interface UICanvasAsyncLifecycle {
-  isDisposed: () => boolean;
-  registerCleanup: (cleanup: () => void) => void;
-  dispose: () => void;
-}
-
-function createUICanvasAsyncLifecycle(): UICanvasAsyncLifecycle {
-  let disposed = false;
-  let cleanup: (() => void) | undefined;
-
+function convertFrameworkLayoutNodeToShellLayout(node: WindowLayoutNode): ShellWindowLayoutNode {
+  if (node.kind === "stack") {
+    return {
+      kind: "stack",
+      size: node.size,
+      children: node.children.map((child) => ({ kind: "window", id: child.windowKindId, title: child.title })),
+    };
+  }
   return {
-    isDisposed: () => disposed,
-    registerCleanup: (nextCleanup) => {
-      cleanup = nextCleanup;
-      if (disposed) {
-        cleanup();
-      }
-    },
-    dispose: () => {
-      disposed = true;
-      if (cleanup) {
-        const fn = cleanup;
-        cleanup = undefined;
-        fn();
-      }
-    },
+    kind: node.kind,
+    size: node.size,
+    children: node.children.map((child) => convertFrameworkLayoutNodeToShellLayout(child)),
   };
 }
 
-/**
- * Golden-layout canvas that renders window kinds using React portals.
- * Dynamically imports golden-layout and registers each window kind as a component.
- * Uses portals instead of createRoot so that parent React context flows into golden-layout windows.
- **/
-const UICanvas: React.FC<{
+function convertFrameworkLayoutToShellLayout(layout: WindowLayout): ShellWindowLayoutNode {
+  return convertFrameworkLayoutNodeToShellLayout(layout.root);
+}
+
+function windowControlsToEngagement(controls: UIWindowControl[] | undefined): EngagementSpec | undefined {
+  if (!controls?.length) return undefined;
+  return {
+    options: controls.map((control) => ({
+      id: control.id,
+      label: control.value ?? control.id,
+      icon: control.icon,
+      pressed: control.value === "on",
+      onPress: () => control.onChange?.(control.value === "on" ? "off" : "on"),
+    })),
+  };
+}
+
+/** @emoji 🪟 Pure-React resizable mode canvas backed by {@link Mode}. */
+const ShellModeCanvas: React.FC<{
   windowKinds: UIWindowKindDefinition[];
   defaultLayout: WindowLayout;
-  layoutState?: unknown;
-  onLayoutChange?: (layout: WindowLayout) => void;
+  activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
-}> = ({ windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const layoutRef = React.useRef<any>(null);
-  const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
-  const onLayoutChangeRef = React.useRef(onLayoutChange);
-  const onActiveWindowChangeRef = React.useRef(onActiveWindowChange);
-  onLayoutChangeRef.current = onLayoutChange;
-  onActiveWindowChangeRef.current = onActiveWindowChange;
-  /** @emoji 🪟 Stable registry key so measure/control-only `windowKinds` updates do not destroy Golden Layout. */
-  const windowKindRegistryKey = React.useMemo(() => windowKinds.map((wk) => wk.id).join("\0"), [windowKinds]);
-
-  /** @emoji 📐 Keeps floating measures/controls in sync when `windowKinds` change without tearing down Golden Layout. */
-  React.useEffect(() => {
-    if (!layoutRef.current) {
-      return;
-    }
-    setPortals((prev) =>
-      prev.map((portal) => {
-        const next = windowKinds.find((wk) => wk.id === portal.windowKind.id);
-        return next ? { ...portal, windowKind: next } : portal;
-      }),
-    );
-  }, [windowKinds]);
-
-  React.useEffect(() => {
-    if (!containerRef.current || layoutRef.current) return;
-
-    const lifecycle = createUICanvasAsyncLifecycle();
-
-    const loadGoldenLayout = async () => {
-      try {
-        const goldenLayoutModule = await import("golden-layout");
-        if (lifecycle.isDisposed()) return;
-        const GoldenLayout = (goldenLayoutModule as any).GoldenLayout;
-        if (!GoldenLayout || typeof GoldenLayout !== "function") {
-          console.error("[UICanvas] GoldenLayout is not a constructor");
-          return;
-        }
-
-        const rawLayout = parseWindowLayout(layoutState) ?? defaultLayout;
-        const config = convertWindowLayoutToGoldenConfig(rawLayout);
-        if (!config) {
-          console.error("[UICanvas] No layout config");
-          return;
-        }
-
-        const layout = new GoldenLayout(config, containerRef.current!);
-        let isInitialized = false;
-        let portalCounter = 0;
-
-        windowKinds.forEach((windowKind) => {
-          layout.registerComponent(windowKind.id, (container: any) => {
-            if (lifecycle.isDisposed()) return;
-            const element = container.getElement();
-            let domElement: HTMLElement;
-            if (element instanceof HTMLElement) {
-              domElement = element;
-            } else if (Array.isArray(element) && element[0] instanceof HTMLElement) {
-              domElement = element[0];
-            } else if (element?.[0] instanceof HTMLElement) {
-              domElement = element[0];
-            } else if (element?.nodeType === 1) {
-              domElement = element as HTMLElement;
-            } else {
-              console.error("[UICanvas] Could not extract DOM element from container");
-              return;
-            }
-
-            const portalKey = `${windowKind.id}-${portalCounter++}`;
-            const portal: UICanvasPortal = { key: portalKey, element: domElement, windowKind };
-            setPortals((prev) => [...prev, portal]);
-
-            container.on("destroy", () => {
-              setPortals((prev) => prev.filter((p) => p.key !== portalKey));
-            });
-          });
-        });
-
-        layout.on("stateChanged", () => {
-          const onLayout = onLayoutChangeRef.current;
-          if (!onLayout || !isInitialized) return;
-          try {
-            const nextLayout = parseWindowLayout(layout.toConfig());
-            if (nextLayout) onLayout(nextLayout);
-          } catch (error: any) {
-            if (!error?.message?.includes("not yet initialised")) {
-              console.warn("[UICanvas] Failed to get layout config:", error);
-            }
-          }
-        });
-
-        layout.on("tab", (tab: any) => {
-          if (tab._header) {
-            tab._header.on("click", () => {
-              const componentName = tab._contentItem?.config?.componentName;
-              const onActive = onActiveWindowChangeRef.current;
-              if (componentName && onActive) onActive(componentName);
-            });
-          }
-        });
-
-        layout.init();
-        isInitialized = true;
-        layoutRef.current = layout;
-
-        const handleResize = () => layout.updateSize();
-        const bindings = createDOMEventBinding();
-        bindings.listen(window, "resize", handleResize);
-
-        lifecycle.registerCleanup(() => {
-          if (layoutRef.current === layout) {
-            layoutRef.current = null;
-          }
-          bindings.dispose();
-          setPortals([]);
-          try {
-            layout.destroy();
-          } catch {}
-          layoutRef.current = null;
-        });
-      } catch (error) {
-        console.error("[UICanvas] Failed to load GoldenLayout:", error);
-      }
-    };
-
-    void loadGoldenLayout();
-
-    return () => {
-      lifecycle.dispose();
-    };
-  }, [windowKindRegistryKey, defaultLayout, layoutState]);
-
-  return (
-    <>
-      <div ref={containerRef} className="w-full h-full" />
-      {portals.map((portal) => {
-        const WindowComponent = portal.windowKind.component;
-
-        const clickGoldenLayoutControl = (selector: string) => {
-          const stackElement = portal.element.closest(".lm_item.lm_stack") as HTMLElement | null;
-          const controlElement = queryElement<HTMLElement>(selector, stackElement);
-          controlElement?.click();
-        };
-
-		return createPortal(
-          <Window
-            key={portal.key}
-            id={portal.windowKind.id}
-            isVisible={true}
-            showControls={true}
-            onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
-            onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
-            onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
-            onClose={() => clickGoldenLayoutControl(".lm_close")}
-            controls={portal.windowKind.controls ? <UIWindowControlsGroup controls={portal.windowKind.controls} /> : undefined}
-            measures={portal.windowKind.measures?.length ? <UIWindowMeasures measures={portal.windowKind.measures} /> : undefined}
-          >
-            <ContextMenu items={portal.windowKind.contextMenu}>
+}> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
+  const windows = React.useMemo<ModeWindowDescriptor[]>(
+    () =>
+      windowKinds.map((windowKind) => {
+        const WindowComponent = windowKind.component;
+        return {
+          id: windowKind.id,
+          showControls: true,
+          controls: windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
+          measures: windowKind.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,
+          engagement: windowKind.engagement ?? windowControlsToEngagement(windowKind.controls),
+          children: (
+            <ContextMenu items={windowKind.contextMenu}>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <WindowComponent />
               </div>
             </ContextMenu>
-          </Window>,
-			portal.element,
-        );
-      })}
-    </>
+          ),
+        };
+      }),
+    [windowKinds],
+  );
+
+  return (
+    <Mode
+      windows={windows}
+      layout={convertFrameworkLayoutToShellLayout(defaultLayout)}
+      activeWindowId={activeWindowId}
+      onActiveWindowChange={onActiveWindowChange}
+      className="h-full w-full"
+    />
   );
 };
+
+/** @deprecated Golden Layout canvas removed; use {@link ShellModeCanvas}. */
+const UICanvas = ShellModeCanvas;
 
 // #region 🎼UISearch
 
@@ -1296,7 +1157,8 @@ const UIToolbar: React.FC<{
   );
 };
 
-export { UICanvas, UISearch, UIFind, UIToolbar };
+export { ShellModeCanvas, UISearch, UIFind, UIToolbar };
+export { App, Mode, Ui } from "@elements/ui";
 
 // #endregion 📔UIToolbar
 
@@ -2589,17 +2451,36 @@ export const ProductView: React.FC<ProductViewProps> = ({
 							: undefined
 					}
 					canvas={
-						<UICanvas
-							windowKinds={goldenWindowKinds}
-							defaultLayout={
-								resolvedMobile
-									? createTabStackLayout(
-											goldenWindowKinds.map((windowKind) => windowKind.id),
-											goldenWindowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
-									  )
-									: (activeApp.defaultLayout as WindowLayout)
-							}
-							onActiveWindowChange={handleActiveWindowChange}
+						<Ui
+							apps={resolvedApps.map((app) => ({
+								id: app.id,
+								label: app.label,
+								icon: app.iconId ? resolveElementIcon(app.iconId) : undefined,
+								children: (
+									<App
+										modes={
+											app.modes.length > 0
+												? app.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null }))
+												: [{ id: app.id, label: app.label, children: null }]
+										}
+										activeModeId={app.id === activeAppId ? (activeModeId ?? app.modes[0]?.id ?? app.id) : (app.modes[0]?.id ?? app.id)}
+										onActiveModeChange={app.id === activeAppId ? setActiveModeId : undefined}
+										chrome={false}
+									>
+										{app.id === activeAppId ? (
+											<ShellModeCanvas
+												windowKinds={goldenWindowKinds}
+												defaultLayout={activeApp.defaultLayout as WindowLayout}
+												activeWindowId={activeWindowKindId}
+												onActiveWindowChange={handleActiveWindowChange}
+											/>
+										) : null}
+									</App>
+								),
+							}))}
+							activeAppId={activeAppId}
+							onActiveAppChange={setActiveAppId}
+							chrome={false}
 						/>
 					}
 				/>

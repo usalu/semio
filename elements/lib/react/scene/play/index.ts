@@ -502,17 +502,19 @@ export class ScenePlayShellController extends Controller {
 		}
 	}
 
-	/** @emoji ✋ Persists a gumball relocate on the fixture (pose-only; no structure revision). */
-	patchRelocate(payload: RelocatePayload): void {
+	/** @emoji ✋ Persists a gumball relocate on the fixture (pose-only; no React emit). */
+	patchRelocate(
+		payload: RelocatePayload,
+		attractingByObjectId?: ReadonlyMap<string, readonly string[]>,
+	): void {
 		if (!this.fixture) {
 			return;
 		}
-		const next = applyRelocateToSceneFixture(this.fixture, payload);
+		const next = applyRelocateToSceneFixture(this.fixture, payload, attractingByObjectId);
 		if (next === this.fixture) {
 			return;
 		}
 		this.fixture = next;
-		this.emit();
 	}
 
 	/** @emoji 📷 Persists orbit camera on the fixture without bumping structure revision or re-emitting React state. */
