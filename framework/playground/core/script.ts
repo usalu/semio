@@ -1,18 +1,13 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@elements/playground` task router — `bun ./script.ts test`. */
-import { spawnSync } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+/** 🧭 `@elements/playground` task router: `bun ./script.ts test`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/bundle-script.ts";
 
-const command = process.argv[2];
-const here = dirname(fileURLToPath(import.meta.url));
-
-if (command === "test") {
-	const result = spawnSync("bun", ["x", "vitest", "run", "--config", join(here, "vitest.config.ts")], {
-		stdio: "inherit",
-		cwd: here,
-	});
-	process.exit(result.status ?? 1);
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runVitest(this.root, segments, "vitest.config.ts");
+  }
 }
-console.error("usage: bun ./script.ts test");
-process.exit(1);
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

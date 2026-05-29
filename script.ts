@@ -3,7 +3,7 @@
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
 import { spawn, spawnSync } from "node:child_process";
-import { Script, devToolingEnv, runCmd, tryRun } from "./repo/lib/js/src/bundle-script.ts";
+import { Script, ScriptRouter, devToolingEnv, runCmd, tryRun } from "./repo/lib/js/src/bundle-script.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -833,37 +833,21 @@ export class MigrateScript extends Script {
 //#endregion 🔖MigrateScript
 
 //#region 🔖Dispatch
-const registry = new Map<string, Script>([
-  ["nx", new NxScript(WORKSPACE_ROOT)],
-  ["setup", new SetupScript(WORKSPACE_ROOT)],
-  ["start", new StartScript(WORKSPACE_ROOT)],
-  ["dev", new DevScript(WORKSPACE_ROOT)],
-  ["generate", new GenerateScript(WORKSPACE_ROOT)],
-  ["migrate", new MigrateScript(WORKSPACE_ROOT)],
-  ["lint", new LintScript(WORKSPACE_ROOT)],
-  ["format", new FormatScript(WORKSPACE_ROOT)],
-  ["test", new TestScript(WORKSPACE_ROOT)],
-  ["build", new BuildScript(WORKSPACE_ROOT)],
-  ["cpp", new CppScript(WORKSPACE_ROOT)],
-  ["publish", new PublishScript(WORKSPACE_ROOT)],
-  ["purge", new PurgeScript(WORKSPACE_ROOT)],
-  ["query", new QueryScript(WORKSPACE_ROOT)],
-]);
+const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
+  .register("nx", NxScript)
+  .register("setup", SetupScript)
+  .register("start", StartScript)
+  .register("dev", DevScript)
+  .register("generate", GenerateScript)
+  .register("migrate", MigrateScript)
+  .register("lint", LintScript)
+  .register("format", FormatScript)
+  .register("test", TestScript)
+  .register("build", BuildScript)
+  .register("cpp", CppScript)
+  .register("publish", PublishScript)
+  .register("purge", PurgeScript)
+  .register("query", QueryScript);
 
-async function main(): Promise<void> {
-  const segments = process.argv.slice(2);
-  if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|migrate|lint|format|test|build|cpp|publish|purge|query> [segments…]");
-    process.exit(1);
-  }
-  const verb = segments[0];
-  const script = registry.get(verb);
-  if (!script) {
-    console.error(`unknown verb ${JSON.stringify(verb)}`);
-    process.exit(1);
-  }
-  await Promise.resolve(script.run(segments.slice(1)));
-}
-
-await main();
+await router.run(process.argv.slice(2));
 //#endregion 🔖Dispatch

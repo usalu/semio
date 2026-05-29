@@ -1,7 +1,7 @@
 {
   "title": "Wrap External Dependencies Behind Interfaces",
   "emoji": "🔌",
-  "status": "closed",
+  "status": "open",
   "description": "Wrap External Dependencies Behind Interfaces",
   "summary": "Extended dependency-boundary rollout: wrapped all coordinator Next.js API routes (next/server, zod) in 🔌Adapters; added adapter regions to @puzzle/2d-react, @framework/playground-renderer-react (+ board/topology play hosts), semio/coda Electron renderers, and sketchpad docs entry; added per-bundle lint.script.ts for framework and puzzle 2d; extended dependency-boundary unit test for adapter-whitelisted imports (9/9 pass).",
   "github": {
@@ -10,6 +10,7 @@
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪91c40c4432c447bbb8ef79c180fa9399",
-    "⚪66c9d32b63514829b4de3209e19b3d10"
+    "⚪66c9d32b63514829b4de3209e19b3d10",
+    "⚪aa2fea50bae242a9ba8758aeca3b9153"
   ]
 }

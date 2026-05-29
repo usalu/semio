@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   NEO4J_GRAPH_DATABASE_NAMES,
   getAllNeo4jGraphExportSpecs,
@@ -53,8 +55,6 @@ describe("bundle-script", () => {
 
   test("findRepoRoot reaches monorepo from repo/lib/js/src", () => {
     const root = findRepoRoot(import.meta.dir);
-    const { existsSync } = require("node:fs");
-    const { join } = require("node:path");
     expect(existsSync(join(root, "nx.json"))).toBe(true);
   });
 });

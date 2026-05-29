@@ -1,5 +1,5 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getWorkspaceRoot } from "./cli.ts";
@@ -200,6 +200,47 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
 /** ▶️Vitest run in bundle directory. */
 export function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): void {
   runBunx(["vitest", "run", "--config", config, "--passWithNoTests", ...segments], bundleRoot, devToolingEnv());
+}
+
+/** 🧰Play/vite dev env with optional file-watcher polling defaults. */
+export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return devToolingEnv({
+    ...(process.env.WATCHPACK_POLLING !== undefined
+      ? {}
+      : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
+    ...extra,
+  });
+}
+
+/** ▶️Playwright test run in bundle directory. */
+export function runPlaywright(bundleRoot: string, config: string, segments: string[] = []): void {
+  runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, playPollingEnv());
+}
+
+/** ▶️Vite dev via `bunx` with root-level `vite.config.ts`. */
+export function runViteBunxDev(
+  bundleRoot: string,
+  segments: string[],
+  opts: { portEnv?: string; defaultPort?: string; clearViteCache?: boolean } = {},
+): void {
+  if (opts.clearViteCache) {
+    const viteCache = join(bundleRoot, "node_modules", ".vite");
+    if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
+  }
+  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+  const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
+  spawnBunx(["vite", "--config", "vite.config.ts", "--host", host, "--port", port, ...segments], bundleRoot, playPollingEnv());
+}
+
+/** ▶️Vite dev via `bunx` without a fixed config path (extra args only). */
+export function runViteBunxDevPlain(bundleRoot: string, segments: string[]): void {
+  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+  spawnBunx(["vite", "--host", host, ...segments], bundleRoot, playPollingEnv());
+}
+
+/** 🦀Runs `cargo` with inherited stdio. */
+export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
+  runCmd("cargo", args, { cwd, env });
 }
 
 /** 🔗Resolves `import.meta.url` of the bundle `script.ts`. */

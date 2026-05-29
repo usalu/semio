@@ -22,7 +22,8 @@ await runBundleScriptMain(router, import.meta.url);
 - **`BundleScript`**: `this.root` is the bundle directory; `this.repoRoot` is the monorepo root (`findRepoRoot`).
 - **`runBundleScriptMain(router, import.meta.url)`**: runs `policy` when `export const policy` is present, then dispatches argv.
 - **`runPolicyOnlyMain(import.meta.url)`**: policy-only bundles (no subcommands).
-- **Workspace root** (`/script.ts`): same `Script` base class; uses a `Map` of pre-built command instances (see root `script.ts`).
+- **Workspace root** (`/script.ts`): same `Script` base class with `ScriptRouter` over workspace verbs (see root `script.ts`).
+- **Ticket folders**: one `script.ts` router per ticket; task modules stay plain `.ts` beside it.
 - Helpers: `runCmd`, `runBun`, `runBunx`, `runViteDev`, `runViteBuild`, `runVitest`, `devToolingEnv`, `spawnBunx`.
 
 ## Policy scripts (`script.ts` only)

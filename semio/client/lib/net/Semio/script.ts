@@ -1,34 +1,19 @@
 #!/usr/bin/env bun
-// #region 🧲Header
-
-// 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Build script for the Semio .NET library assembly.
-
-// #endregion 🧲Header
-
-// #region 🐹Build
+/** 🧭 Semio.NET build router: `bun ./script.ts build`. */
 import { spawnSync } from "node:child_process";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/src/bundle-script.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-
-if (segs[0] !== "build") {
-  console.error("usage: bun ./script.ts build");
-  process.exit(1);
+class BuildScript extends BundleScript {
+  run(): void {
+    const buildResult = spawnSync("dotnet", ["build", "Semio.csproj", "-c", "Debug"], {
+      cwd: this.root,
+      stdio: "inherit",
+    });
+    if (buildResult.status !== 0) process.exit(buildResult.status ?? 1);
+    console.log("✅ Semio.NET build complete");
+  }
 }
 
-const buildResult = spawnSync("dotnet", ["build", "Semio.csproj", "-c", "Debug"], {
-  cwd,
-  stdio: "inherit",
-});
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript);
 
-if (buildResult.status !== 0) {
-  process.exit(buildResult.status ?? 1);
-}
-
-console.log("✅ Semio.NET build complete");
-
-// #endregion 🐹Build
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });

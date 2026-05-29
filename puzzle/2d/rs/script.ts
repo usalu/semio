@@ -1,14 +1,11 @@
 #!/usr/bin/env bun
 /** 🦀 `@puzzle/2d-wasm` router: `bun ./script.ts wasm`. */
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
 
-const rsDir = import.meta.dir;
-const pkgDir = join(rsDir, "pkg");
-const pkgJsonPath = join(pkgDir, "package.json");
-
-function runWasmBuild(): void {
+function runWasmBuild(rsDir: string): void {
   if (process.env.ELEMENTS_BOARD_SKIP_WASM_BUILD === "1") {
     console.log("[puzzle/2d/rs] ELEMENTS_BOARD_SKIP_WASM_BUILD=1 → skipping wasm-pack build");
     return;
@@ -26,6 +23,7 @@ function runWasmBuild(): void {
   }
   console.log(`[puzzle/2d/rs] wasm-pack build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
+  const pkgDir = join(rsDir, "pkg");
   if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
   const pkgJson = {
     name: "@puzzle/2d-wasm",
@@ -37,7 +35,7 @@ function runWasmBuild(): void {
     types: "puzzle_board.d.ts",
     sideEffects: ["./snippets/*"],
   };
-  writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
+  writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
   const wasmPath = join(pkgDir, "puzzle_board_bg.wasm");
   if (existsSync(wasmPath)) {
@@ -49,10 +47,12 @@ function runWasmBuild(): void {
   }
 }
 
-const segs = process.argv.slice(2);
-if (segs[0] === "wasm" || segs.length === 0) {
-  runWasmBuild();
-} else {
-  console.error("usage: bun ./script.ts wasm");
-  process.exit(1);
+class WasmScript extends BundleScript {
+  run(): void {
+    runWasmBuild(this.root);
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

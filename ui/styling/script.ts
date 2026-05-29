@@ -215,15 +215,22 @@ export function generateStylingArtifacts(): void {
 	writeFileSync(join(semioNetPaletteDir, "Palette.g.cs"), emitCSharpPalette(tokens), "utf8");
 }
 
-if (import.meta.main) {
-	const command = process.argv[2];
-	if (command === "generate") {
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/bundle-script.ts";
+
+class GenerateScript extends BundleScript {
+	run(): void {
 		generateStylingArtifacts();
 		console.log("elements/lib/styling: wrote generated/*.css, js/palette.css, Palette.g.cs");
-	} else if (command === "fonts") {
-		await fetchElementsFonts();
-	} else {
-		console.error("usage: bun ./script.ts <generate|fonts>");
-		process.exit(1);
 	}
+}
+
+class FontsScript extends BundleScript {
+	async run(): Promise<void> {
+		await fetchElementsFonts();
+	}
+}
+
+if (import.meta.main) {
+	const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript);
+	await runBundleScriptMain(router, import.meta.url);
 }

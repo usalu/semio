@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🧩 Puzzle playground relayer ticket router. */
-const cmd = process.argv[2];
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
+
 const tasks: Record<string, string> = {
   "rename-scopes": "./rename-scopes.ts",
   "clean-react-imports": "./clean-react-imports.ts",
@@ -14,9 +15,16 @@ const tasks: Record<string, string> = {
   "split-play-host": "./split-play-host.ts",
 };
 
-if (!cmd || !tasks[cmd]) {
-  console.error(`usage: bun ./script.ts <${Object.keys(tasks).join("|")}>`);
-  process.exit(1);
+const router = new ScriptRouter(import.meta.dir);
+for (const [name, modulePath] of Object.entries(tasks)) {
+  router.register(
+    name,
+    class extends BundleScript {
+      async run(): Promise<void> {
+        await import(modulePath);
+      }
+    },
+  );
 }
 
-await import(tasks[cmd]!);
+await runBundleScriptMain(router, import.meta.url);

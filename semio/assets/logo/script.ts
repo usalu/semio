@@ -362,12 +362,17 @@ function runLogoGenerate(): void {
 
 export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
 
-const segs = process.argv.slice(2);
-if (segs[0] !== "generate") {
-  console.error("usage: bun ./script.ts generate");
-  process.exit(1);
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
+
+class GenerateScript extends BundleScript {
+  run(): void {
+    runLogoGenerate();
+  }
 }
-runLogoGenerate();
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
 
 //#endregion 🚀Entrypoint
 

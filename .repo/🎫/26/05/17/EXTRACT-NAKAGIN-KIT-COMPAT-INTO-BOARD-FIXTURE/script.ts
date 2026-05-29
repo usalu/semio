@@ -1,9 +1,13 @@
 #!/usr/bin/env bun
 /** 🧩 Nakagin kit-compat extraction: `bun ./script.ts extract [--write-board]`. */
-const cmd = process.argv[2] ?? "extract";
-if (cmd === "extract") {
-  await import("./extract-nakagin-kit-compat.ts");
-} else {
-  console.error("usage: bun ./script.ts extract [--write-board]");
-  process.exit(1);
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
+
+class ExtractScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("./extract-nakagin-kit-compat.ts");
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("extract", ExtractScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "extract" });

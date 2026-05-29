@@ -1,44 +1,52 @@
 #!/usr/bin/env bun
 /** 🧩 Neo4j ticket router: `bun ./script.ts <migrate|kit-field|rename-ops|gen-domain|stitch>`. */
-const cmd = process.argv[2] ?? "migrate";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
 
-switch (cmd) {
-  case "migrate":
+class MigrateScript extends BundleScript {
+  async run(): Promise<void> {
     await import("./migrate.neo4j.ts");
-    break;
-  case "kit-field": {
-    const { existsSync } = await import("node:fs");
-    const { dirname, join } = await import("node:path");
+  }
+}
+
+class KitFieldScript extends BundleScript {
+  async run(): Promise<void> {
     const { runKitFieldDeclaredIsRepair } = await import("./kit-field-declared-is.ts");
-    let dir = import.meta.dir;
-    for (let i = 0; i < 24; i++) {
-      if (existsSync(join(dir, "script.ts"))) break;
-      const parent = dirname(dir);
-      if (parent === dir) throw new Error("[kit-field] repo root not found");
-      dir = parent;
-    }
-    const repoRoot = dir;
-    const cacheDir = join(repoRoot, ".repo", "cache", "neo4j-migrate");
-    const { mkdirSync } = await import("node:fs");
+    const cacheDir = join(this.repoRoot, ".repo", "cache", "neo4j-migrate");
     mkdirSync(cacheDir, { recursive: true });
     runKitFieldDeclaredIsRepair({
-      repoRoot,
+      repoRoot: this.repoRoot,
       database: process.env.NEO4J_DATABASE || "semio",
       cacheDir,
     });
     console.log("[kit-field] repair ok.");
-    break;
   }
-  case "rename-ops":
-    await import("./rename-operations-imperative.ts");
-    break;
-  case "gen-domain":
-    await import("./gen-domain-operation-classes.ts");
-    break;
-  case "stitch":
-    await import("./stitch-operation-command-migrations.ts");
-    break;
-  default:
-    console.error("usage: bun ./script.ts <migrate|kit-field|rename-ops|gen-domain|stitch>");
-    process.exit(1);
 }
+
+class RenameOpsScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("./rename-operations-imperative.ts");
+  }
+}
+
+class GenDomainScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("./gen-domain-operation-classes.ts");
+  }
+}
+
+class StitchScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("./stitch-operation-command-migrations.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("migrate", MigrateScript)
+  .register("kit-field", KitFieldScript)
+  .register("rename-ops", RenameOpsScript)
+  .register("gen-domain", GenDomainScript)
+  .register("stitch", StitchScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "migrate" });

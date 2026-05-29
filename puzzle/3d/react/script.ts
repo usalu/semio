@@ -1,25 +1,13 @@
 #!/usr/bin/env bun
 /** 🧭 `@puzzle/3d-react` task router: `bun ./script.ts test [args…]`. */
-import { spawnSync } from "node:child_process";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/bundle-script.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-const command = segs[0] ?? "test";
-const extra = segs.slice(1);
-
-const env = { ...process.env };
-delete env.NODE_OPTIONS;
-delete env.VSCODE_INSPECTOR_OPTIONS;
-
-if (command === "test") {
-	const result = spawnSync("bunx", ["vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra], {
-		cwd,
-		env,
-		shell: true,
-		stdio: "inherit",
-	});
-	process.exit(result.status ?? 1);
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runVitest(this.root, segments);
+  }
 }
 
-console.error("usage: bun ./script.ts test [args…]");
-process.exit(1);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

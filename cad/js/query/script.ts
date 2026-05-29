@@ -1,21 +1,13 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@cad/js-query` task router. */
-import { spawnSync } from "node:child_process";
+/** 🧭 `@cad/js-query` task router: `bun ./script.ts test [args…]`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/bundle-script.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-const command = segs[0];
-const extra = segs.slice(1);
-
-if (command === "test") {
-	const r = spawnSync("bunx", ["vitest", "run", "--config", "vitest.config.ts", ...extra], {
-		cwd,
-		stdio: "inherit",
-		shell: true,
-		env: process.env,
-	});
-	process.exit(r.status ?? 1);
-} else {
-	console.error("usage: bun ./script.ts test [args…]");
-	process.exit(1);
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runVitest(this.root, segments);
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -1,15 +1,20 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@ui/styling` task router — `bun ./script.ts generate`. */
+/** 🧭 `@ui/styling` task router: `bun ./script.ts <generate|fonts>`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
 import { fetchElementsFonts, generateStylingArtifacts } from "../script.ts";
 
-const cmd = process.argv[2];
-if (cmd === "generate") {
-	generateStylingArtifacts();
-	process.exit(0);
+class GenerateScript extends BundleScript {
+  run(): void {
+    generateStylingArtifacts();
+  }
 }
-if (cmd === "fonts") {
-	await fetchElementsFonts();
-	process.exit(0);
+
+class FontsScript extends BundleScript {
+  async run(): Promise<void> {
+    await fetchElementsFonts();
+  }
 }
-console.error("usage: bun ./script.ts <generate|fonts>");
-process.exit(1);
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript);
+
+await runBundleScriptMain(router, import.meta.url);
