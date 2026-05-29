@@ -769,7 +769,8 @@ function findState(spec: InteractionSpec, name: string): StateDefSpec | undefine
   return spec.machine.states.find((s) => s.name === name);
 }
 
-function isFinalInteractionState(spec: InteractionSpec, state: string): boolean {
+/** @emoji 🏁 True when `state` is marked `final` on the interaction machine. */
+export function isFinalInteractionState(spec: InteractionSpec, state: string): boolean {
   return Boolean(findState(spec, state)?.final);
 }
 

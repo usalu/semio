@@ -1,5 +1,5 @@
-import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Clone, Line, OrbitControls, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
+import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
 import React, {
 	Children,
 	Suspense,
@@ -333,6 +333,35 @@ export interface KindCompatEntry {
 export interface SelectionSnapshot {
 	readonly objectIds: readonly string[];
 	readonly vortexIds: readonly string[];
+}
+
+/** @emoji 🖱️ Exclusive scene hover target (at most one active). */
+export type SceneHoverTarget =
+	| { readonly kind: "object"; readonly id: string }
+	| { readonly kind: "vortex"; readonly fullId: string }
+	| { readonly kind: "attraction"; readonly id: string };
+
+/** @emoji 🖱️ Compares two hover targets for equality. */
+export function sceneHoverTargetsEqual(a: SceneHoverTarget | null, b: SceneHoverTarget | null): boolean {
+	if (a === b) {
+		return true;
+	}
+	if (!a || !b) {
+		return false;
+	}
+	if (a.kind !== b.kind) {
+		return false;
+	}
+	switch (a.kind) {
+		case "object":
+			return b.kind === "object" && a.id === b.id;
+		case "vortex":
+			return b.kind === "vortex" && a.fullId === b.fullId;
+		case "attraction":
+			return b.kind === "attraction" && a.id === b.id;
+		default:
+			return false;
+	}
 }
 
 export interface RelocatePayload {
@@ -2184,6 +2213,12 @@ export interface RegistryValue {
 	onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
 	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
 	onRelocate?: (p: RelocatePayload) => void;
+	readonly hoverTarget: SceneHoverTarget | null;
+	setSceneHover: (target: SceneHoverTarget) => void;
+	clearSceneHover: (target: SceneHoverTarget) => void;
+	clearSceneHoverAll: () => void;
+	isSceneHovered: (target: SceneHoverTarget) => boolean;
+	clearSceneSelection: () => void;
 }
 
 /** @emoji ­ƒÄ» Attraction-drag UI state isolated so orbit idle frames do not re-render every object. */
@@ -2212,6 +2247,58 @@ function useRegistryDrag(): RegistryDragState {
 
 function useRegistry(): RegistryValue {
 	return { ...useRegistryCore(), ...useRegistryDrag() };
+}
+
+/** @emoji 🖱️ Clears exclusive hover when the pointer leaves the canvas. */
+function SceneHoverMissBridge(): null {
+	const { clearSceneHoverAll } = useRegistryCore();
+	const invalidate = useThree((state) => state.invalidate);
+	const gl = useThree((state) => state.gl);
+	useEffect(() => {
+		const onLeave = () => {
+			clearSceneHoverAll();
+			invalidate();
+		};
+		gl.domElement.addEventListener("pointerleave", onLeave);
+		return () => gl.domElement.removeEventListener("pointerleave", onLeave);
+	}, [clearSceneHoverAll, gl, invalidate]);
+	return null;
+}
+
+/** @emoji 🖱️ Redraws the canvas when exclusive hover changes. */
+function SceneHoverInvalidateBridge(): null {
+	const { hoverTarget } = useRegistryCore();
+	const invalidate = useThree((state) => state.invalidate);
+	useEffect(() => {
+		invalidate();
+	}, [hoverTarget, invalidate]);
+	return null;
+}
+
+/** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
+function SceneSelectionMissBridge(): null {
+	const { clearSceneSelection } = useRegistryCore();
+	const store = useStore();
+	const attractionBusy =
+		useRegistryDrag().attractionDragActive || useRegistryDrag().attractionIndirectPickAwait !== null;
+	const clearSceneSelectionRef = useRef(clearSceneSelection);
+	clearSceneSelectionRef.current = clearSceneSelection;
+	const attractionBusyRef = useRef(attractionBusy);
+	attractionBusyRef.current = attractionBusy;
+	useEffect(() => {
+		const previous = store.getState().onPointerMissed;
+		const onMiss = (event: MouseEvent) => {
+			if (event.button !== 0 || attractionBusyRef.current) {
+				previous?.(event);
+				return;
+			}
+			clearSceneSelectionRef.current();
+			previous?.(event);
+		};
+		store.setState({ onPointerMissed: onMiss });
+		return () => store.setState({ onPointerMissed: previous });
+	}, [store]);
+	return null;
 }
 //#endregion ­ƒÄ»Registry
 
@@ -2581,9 +2668,6 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 		return null;
 	}
 	const scale = props.scale;
-	const { onPointerDown, onPointerOut, onPointerOver, meshUrl, style: _style, userData, scale: _scale, ...rest } = props;
-	void meshUrl;
-	void rest;
 	return (
 		<GlbMeshFrame>
 			<Clone
@@ -2596,10 +2680,10 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 									: (scale as [number, number, number]),
 						}
 					: {})}
-				onPointerDown={onPointerDown}
-				onPointerOut={onPointerOut}
-				onPointerOver={onPointerOver}
-				userData={userData}
+				onPointerDown={props.onPointerDown}
+				onPointerOut={props.onPointerOut}
+				onPointerOver={props.onPointerOver}
+				userData={props.userData}
 			/>
 		</GlbMeshFrame>
 	);
@@ -2696,11 +2780,13 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		attractionDragActive,
 		attractionIndirectPickAwait,
 		attractionCompatibleAttractedFullIds,
+		setSceneHover,
+		clearSceneHover,
+		isSceneHovered,
 	} = useRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
-	const [pointerHovered, setPointerHovered] = useState(false);
-	const invalidate = useThree((state) => state.invalidate);
+	const objectPointerHovered = isSceneHovered({ kind: "object", id: props.id });
 
 	useEffect(() => {
 		registerObject(props.id, props.objectKind, group.current);
@@ -2733,16 +2819,10 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				disabled: props.disabled,
 				selected: props.selected,
 				highlighted: linkHighlighted,
-				hovered: props.hovered === true || pointerHovered,
+				hovered: props.hovered === true || objectPointerHovered,
 			}),
-		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, objectPointerHovered],
 	);
-
-	useEffect(() => {
-		if (pointerHovered) {
-			invalidate();
-		}
-	}, [pointerHovered, invalidate]);
 
 	const meshPointerHandlers = useMemo(
 		() => ({
@@ -2772,56 +2852,25 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			},
 			onPointerOver: (e: ThreeEvent<PointerEvent>) => {
 				e.stopPropagation();
-				if (!props.disabled) {
-					setPointerHovered(true);
+				if (!props.disabled && !attractionDragActive && !attractionIndirectPickAwait) {
+					setSceneHover({ kind: "object", id: props.id });
 				}
 			},
 			onPointerOut: (e: ThreeEvent<PointerEvent>) => {
 				e.stopPropagation();
-				setPointerHovered(false);
+				clearSceneHover({ kind: "object", id: props.id });
 			},
 		}),
 		[
 			attractionDragActive,
 			attractionIndirectPickAwait,
+			clearSceneHover,
 			onSelect,
 			props.disabled,
 			props.id,
 			selectionMode,
 			setActiveRelocateObjectId,
-			setSelectedObjectIds,
-		],
-	);
-
-	const handlePointerDown = useCallback(
-		(e: { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
-			const pe = e.nativeEvent;
-			if (pe && pe.button !== 0) return;
-			e.stopPropagation();
-			if (attractionDragActive || attractionIndirectPickAwait) return;
-			if (props.disabled) {
-				return;
-			}
-			const snap: SelectionSnapshot = { objectIds: [props.id], vortexIds: [] };
-			if (selectionMode === "single") {
-				setSelectedObjectIds([props.id]);
-				onSelect?.(snap);
-			} else if (selectionMode === "additive") {
-				setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
-				onSelect?.(snap);
-			} else {
-				onSelect?.(snap);
-			}
-			setActiveRelocateObjectId(props.id);
-		},
-		[
-			attractionDragActive,
-			attractionIndirectPickAwait,
-			onSelect,
-			props.disabled,
-			props.id,
-			selectionMode,
-			setActiveRelocateObjectId,
+			setSceneHover,
 			setSelectedObjectIds,
 		],
 	);
@@ -2859,9 +2908,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			<group
 				ref={group}
 				visible={props.visible !== false}
-				onPointerDown={handlePointerDown}
-				onPointerEnter={handlePointerEnter}
-				onPointerLeave={handlePointerLeave}
 				userData={{
 					sceneObjectId: props.id,
 					sceneMeshStyle: meshStyle,
@@ -2871,11 +2917,10 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				}}
 			>
 				{resolvedMeshUrl === PLACEHOLDER_MESH_URL ? (
-					<PlaceholderMesh style={meshStyle} />
+					<PlaceholderMesh style={meshStyle} {...meshPointerHandlers} />
 				) : (
-					<MeshBody meshUrl={resolvedMeshUrl} style={meshStyle} />
+					<MeshBody meshUrl={resolvedMeshUrl} style={meshStyle} {...meshPointerHandlers} />
 				)}
-				{showHoverOutline ? <Outlines thickness={3} color="#ff344f" /> : null}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
 			{showTc && tcTarget && (
@@ -2900,14 +2945,19 @@ function VortexHandleGltf(props: {
 	fullId: string;
 	radius: number;
 	style: MeshStyleKind;
+	onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
+	onPointerOut?: (e: ThreeEvent<PointerEvent>) => void;
 }) {
 	const scale = (props.radius / 0.35) * 0.9;
+	const { onPointerOver, onPointerOut, ...meshProps } = props;
 	return (
 		<MeshBody
-			meshUrl={props.meshUrl}
-			style={props.style}
+			meshUrl={meshProps.meshUrl}
+			style={meshProps.style}
 			scale={scale}
-			userData={{ sceneVortexFullId: props.fullId }}
+			userData={{ sceneVortexFullId: meshProps.fullId }}
+			onPointerOver={onPointerOver}
+			onPointerOut={onPointerOut}
 		/>
 	);
 }
@@ -2932,12 +2982,19 @@ function VortexFallbackMesh(props: {
 	fullId: string;
 	radius: number;
 	highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing";
+	onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
+	onPointerOut?: (e: ThreeEvent<PointerEvent>) => void;
 }) {
 	const style = vortexHighlightMeshStyle(props.highlight);
 	const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
+	const { onPointerOver, onPointerOut, ...meshProps } = props;
 	return (
-		<mesh userData={{ sceneVortexFullId: props.fullId }}>
-			<sphereGeometry args={[props.radius, 12, 12]} />
+		<mesh
+			userData={{ sceneVortexFullId: meshProps.fullId }}
+			onPointerOver={onPointerOver}
+			onPointerOut={onPointerOut}
+		>
+			<sphereGeometry args={[meshProps.radius, 12, 12]} />
 			<meshStandardMaterial
 				color={colors.meshColor}
 				emissive={colors.emissiveColor}
@@ -3082,7 +3139,26 @@ export const Vortex = memo(function Vortex(
 		[props.position, props.objectOrigin, props.objectOrientation],
 	);
 
-	const handleMeshStyle = vortexHighlightMeshStyle(highlight);
+	const vortexPointerHovered = reg.isSceneHovered({ kind: "vortex", fullId });
+	const handleMeshStyle =
+		highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
+
+	const vortexPointerHoverHandlers = useMemo(
+		() => ({
+			onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+				e.stopPropagation();
+				if (!reg.attractionDragActive && !reg.attractionIndirectPickAwait) {
+					reg.setSceneHover({ kind: "vortex", fullId });
+				}
+			},
+			onPointerOut: (e: ThreeEvent<PointerEvent>) => {
+				e.stopPropagation();
+				reg.clearSceneHover({ kind: "vortex", fullId });
+			},
+		}),
+		[fullId, reg],
+	);
+
 	const vis = props.visible !== false;
 	return (
 		<group
@@ -3094,14 +3170,27 @@ export const Vortex = memo(function Vortex(
 			onPointerDown={onPointerDown}
 		>
 			{drawHandleBody && meshUrl ? (
-				<VortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} />
+				<VortexHandleGltf
+					meshUrl={meshUrl}
+					fullId={fullId}
+					radius={r}
+					style={handleMeshStyle}
+					{...vortexPointerHoverHandlers}
+				/>
 			) : drawHandleBody && props.children ? (
-				<group userData={{ sceneVortexFullId: fullId }}>{props.children}</group>
+				<group userData={{ sceneVortexFullId: fullId }} {...vortexPointerHoverHandlers}>
+					{props.children}
+				</group>
 			) : drawHandleBody ? (
-				<VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} />
+				<VortexFallbackMesh
+					fullId={fullId}
+					radius={r}
+					highlight={highlight}
+					{...vortexPointerHoverHandlers}
+				/>
 			) : null}
 			{pickProxy ? (
-				<mesh userData={{ sceneVortexFullId: fullId }} renderOrder={-1}>
+				<mesh userData={{ sceneVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>
 					<sphereGeometry args={[r, 12, 12]} />
 					<meshBasicMaterial transparent opacity={0} depthWrite={false} />
 				</mesh>
@@ -3129,25 +3218,41 @@ export const Magnet = memo(function Magnet(
 //#endregion ­ƒº▓Magnet
 
 //#region ­ƒº▓SceneAttraction
+function sceneAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): number {
+	if (e.index != null) {
+		return Math.floor(e.index / 2);
+	}
+	if (e.faceIndex != null) {
+		return e.faceIndex;
+	}
+	return 0;
+}
+
 const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 	readonly attractions: readonly AttractionProps[];
 }) {
 	const reg = useRegistry();
 	const mat = useMemo(() => {
 		const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
-		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true });
+		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, vertexColors: true });
 	}, []);
 	const geo = useMemo(() => new BufferGeometry(), []);
+	const normalColor = useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
+	const hoveredColor = useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#38bdf8")), []);
 	useLayoutEffect(() => {
 		const vertexCount = Math.max(props.attractions.length * 2, 2);
 		geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
+		geo.setAttribute("color", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
 	}, [geo, props.attractions.length]);
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
+		const colors = geo.attributes.color as Float32BufferAttribute;
+		const hoveredId = reg.hoverTarget?.kind === "attraction" ? reg.hoverTarget.id : null;
 		let write = 0;
 		for (const attraction of props.attractions) {
 			const a = reg.getVortexWorld(attraction.attracting);
 			const b = reg.getVortexWorld(attraction.attracted);
+			const c = attraction.id === hoveredId ? hoveredColor : normalColor;
 			if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 				pos.setXYZ(write, a.x, a.y, a.z);
 				pos.setXYZ(write + 1, b.x, b.y, b.z);
@@ -3155,10 +3260,38 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 				pos.setXYZ(write, 0, 0, 0);
 				pos.setXYZ(write + 1, 0, 0, 0);
 			}
+			colors.setXYZ(write, c.r, c.g, c.b);
+			colors.setXYZ(write + 1, c.r, c.g, c.b);
 			write += 2;
 		}
 		pos.needsUpdate = true;
+		colors.needsUpdate = true;
 	});
+	const onPointerOver = useCallback(
+		(e: ThreeEvent<PointerEvent>) => {
+			e.stopPropagation();
+			if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
+				return;
+			}
+			const idx = sceneAttractionIndexFromPointerEvent(e);
+			const attraction = props.attractions[idx];
+			if (attraction) {
+				reg.setSceneHover({ kind: "attraction", id: attraction.id });
+			}
+		},
+		[props.attractions, reg],
+	);
+	const onPointerOut = useCallback(
+		(e: ThreeEvent<PointerEvent>) => {
+			e.stopPropagation();
+			const idx = sceneAttractionIndexFromPointerEvent(e);
+			const attraction = props.attractions[idx];
+			if (attraction) {
+				reg.clearSceneHover({ kind: "attraction", id: attraction.id });
+			}
+		},
+		[props.attractions, reg],
+	);
 	useEffect(
 		() => () => {
 			geo.dispose();
@@ -3169,7 +3302,9 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 	if (!props.attractions.length) {
 		return null;
 	}
-	return <lineSegments geometry={geo} material={mat} raycast={() => null} />;
+	return (
+		<lineSegments geometry={geo} material={mat} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />
+	);
 });
 
 export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
@@ -3476,6 +3611,35 @@ function RegistryProvider({
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
 	const [attractionHoverRingFullId, setAttractionHoverRingFullId] = useState<string | null>(null);
 	const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = useState<AttractionIndirectPickAwait | null>(null);
+	const [hoverTarget, setHoverTarget] = useState<SceneHoverTarget | null>(null);
+
+	const setSceneHover = useCallback((target: SceneHoverTarget) => {
+		setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? prev : target));
+	}, []);
+
+	const clearSceneHover = useCallback((target: SceneHoverTarget) => {
+		setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? null : prev));
+	}, []);
+
+	const clearSceneHoverAll = useCallback(() => {
+		setHoverTarget((prev) => (prev === null ? prev : null));
+	}, []);
+
+	const isSceneHovered = useCallback(
+		(target: SceneHoverTarget) => sceneHoverTargetsEqual(hoverTarget, target),
+		[hoverTarget],
+	);
+
+	const clearSceneSelection = useCallback(() => {
+		clearSceneHoverAll();
+		setActiveRelocateObjectId(null);
+		if (controlledSelection !== undefined) {
+			onSelect?.({ objectIds: [], vortexIds: [] });
+			return;
+		}
+		setInternalSelectedObjectIds([]);
+		onSelect?.({ objectIds: [], vortexIds: [] });
+	}, [clearSceneHoverAll, controlledSelection, onSelect]);
 
 	const vortexGettersRef = useRef(new Map<string, VortexGetter>());
 	const vortexMetaRef = useRef(new Map<string, VortexBindingMeta>());
@@ -3551,6 +3715,7 @@ function RegistryProvider({
 		setAttractionCompatibleAttractedFullIds(new Set());
 		setAttractionHoverRingFullId(null);
 		setAttractionIndirectPickAwait(null);
+		setHoverTarget(null);
 		onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
 	}, [onAttractionTargetRing]);
 
@@ -3588,6 +3753,7 @@ function RegistryProvider({
 			setAttractionCompatibleAttractedFullIds(compat);
 			setAttractionHoverRingFullId(null);
 			setActiveRelocateObjectId(null);
+			setHoverTarget(null);
 			onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
 		},
 		[blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
@@ -3874,6 +4040,12 @@ function RegistryProvider({
 			updateIndirectPickPointer,
 			commitIndirectPickPointerDown,
 			attractionEndWorldRef,
+			hoverTarget,
+			setSceneHover,
+			clearSceneHover,
+			clearSceneHoverAll,
+			isSceneHovered,
+			clearSceneSelection,
 		}),
 		[
 			registerVortex,
@@ -3913,6 +4085,12 @@ function RegistryProvider({
 			commitAttractionPointer,
 			updateIndirectPickPointer,
 			commitIndirectPickPointerDown,
+			hoverTarget,
+			setSceneHover,
+			clearSceneHover,
+			clearSceneHoverAll,
+			isSceneHovered,
+			clearSceneSelection,
 		],
 	);
 	const coreValue = useMemo(() => {
@@ -3945,7 +4123,12 @@ function RegistryProvider({
 
 	return (
 		<RegistryCoreContext.Provider value={coreValue}>
-			<RegistryDragContext.Provider value={dragValue}>{children}</RegistryDragContext.Provider>
+			<RegistryDragContext.Provider value={dragValue}>
+				{children}
+				<SceneHoverMissBridge />
+				<SceneHoverInvalidateBridge />
+				<SceneSelectionMissBridge />
+			</RegistryDragContext.Provider>
 		</RegistryCoreContext.Provider>
 	);
 }
@@ -4414,6 +4597,14 @@ if (import.meta.vitest) {
 				}),
 			).toBe("original");
 		});
+		it("compares scene hover targets by kind and id", () => {
+			expect(sceneHoverTargetsEqual(null, null)).toBe(true);
+			expect(sceneHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "a" })).toBe(true);
+			expect(sceneHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "b" })).toBe(false);
+			expect(sceneHoverTargetsEqual({ kind: "vortex", fullId: "o:v" }, { kind: "object", id: "o" })).toBe(false);
+			expect(sceneHoverTargetsEqual({ kind: "attraction", id: "e1" }, { kind: "attraction", id: "e1" })).toBe(true);
+		});
+
 		it("orders disabled, selected, highlighted, hovered, then default", () => {
 			expect(resolveMeshStyle({ disabled: true, selected: true })).toBe("disabled");
 			expect(resolveMeshStyle({ selected: true, highlighted: true })).toBe("selected");

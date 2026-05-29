@@ -5599,7 +5599,10 @@ if (import.meta.vitest) {
 			];
 			expect(
 				replMergeSelectionPickInView(false, SHAPE_MODEL_DEFINITION_ID, renderer, [], [{ kind: "wire", id: "w1", editable: true }], {}),
-			).toEqual([{ kind: "wire", id: "w1", editable: true }]);
+			).toEqual([
+				{ kind: "object", id: "o0", editable: false },
+				{ kind: "wire", id: "w1", editable: true },
+			]);
 		});
 	});
 }

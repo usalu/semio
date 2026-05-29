@@ -47,7 +47,11 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await expect(page.locator('[data-measure-id="scene-main-auto"]')).toBeVisible({ timeout: 120_000 });
-	await page.locator('[data-measure-id="scene-main-auto"]').getByRole("button", { name: "Auto zoom" }).click();
+	const detailsPanelToggle = page.locator("#ui\\.panelToggle\\.details");
+	if ((await detailsPanelToggle.getAttribute("data-state")) === "on") {
+		await detailsPanelToggle.click();
+	}
+	await page.locator("#scene-main-auto").click({ timeout: 30_000 });
 	const slider = page.locator('[data-measure-id="scene-main-lod"] [role="slider"]');
 	await slider.waitFor({ state: "visible", timeout: 30_000 });
 	await slider.focus();
@@ -66,6 +70,11 @@ test("scene play inspector panel is visible", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
+	const detailsPanelToggle = page.locator("#ui\\.panelToggle\\.details");
+	if ((await detailsPanelToggle.getAttribute("data-state")) !== "on") {
+		await detailsPanelToggle.click();
+	}
+	await page.locator("#scene-play-inspector").click({ timeout: 30_000 });
 	await expect(page.getByText("Inspector", { exact: true })).toBeVisible({ timeout: 30_000 });
 	expectCleanSceneConsole(messages);
 });
@@ -87,6 +96,33 @@ test("scene selection hook updates label", async ({ page }) => {
 		objectId,
 		{ timeout: 30_000 },
 	);
+	expectCleanSceneConsole(messages);
+});
+
+test("scene background click clears selection", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	const canvas = page.locator("canvas").first();
+	await canvas.waitFor({ state: "visible", timeout: 120_000 });
+	await page.waitForLoadState("networkidle");
+	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
+	await page.waitForFunction(
+		(id) => {
+			const w = window as unknown as { __scenePlaySelect?: (objectId: string) => void };
+			if (typeof w.__scenePlaySelect !== "function") return false;
+			w.__scenePlaySelect(id);
+			const label = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
+			return label.includes(id.slice(0, 8));
+		},
+		objectId,
+		{ timeout: 30_000 },
+	);
+	const box = await canvas.boundingBox();
+	if (!box) {
+		throw new Error("scene canvas missing bounding box");
+	}
+	await canvas.click({ position: { x: 8, y: 8 } });
+	await expect(page.locator("[data-e2e-selected]")).toHaveText("none", { timeout: 15_000 });
 	expectCleanSceneConsole(messages);
 });
 
