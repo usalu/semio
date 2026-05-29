@@ -4,14 +4,14 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/scene` (react + play sources with `import.meta.vitest`). */
+/** @emoji 🧪 Vitest for `@puzzle/scene` (react + play sources with `import.meta.vitest`). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/playground/react": resolve(root, "../../playground/react/index.tsx"),
-			"@elements/playground": resolve(root, "../../playground/index.ts"),
-			"@elements/ui": resolve(root, "../core/index.tsx"),
+			"@framework/playground-react": resolve(root, "../../framework/playground/renderer/react/index.tsx"),
+			"@framework/playground": resolve(root, "../../framework/playground/core/index.ts"),
+			"@ui/react": resolve(root, "../../ui/react/index.tsx"),
 		},
 	},
 	test: {

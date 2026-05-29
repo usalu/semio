@@ -9,12 +9,12 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/ui": resolve(root, "../react/core/index.tsx"),
+			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
 		},
 	},
 	test: {
 		environment: "node",
-		include: ["index.ts", "react/index.tsx"],
+		include: ["index.ts", "core.ts"],
 		passWithNoTests: false,
 	},
 });

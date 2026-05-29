@@ -24,10 +24,11 @@ const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
 
-const elementsUiDir = resolve(repoRootPath, "elements/lib/react/core");
-const elementsStylingDir = resolve(repoRootPath, "elements/lib/styling/js");
-const elementsPlaygroundDir = resolve(repoRootPath, "elements/lib/playground");
-const elementsBoardDir = resolve(repoRootPath, "elements/lib/board");
+const uiReactDir = resolve(repoRootPath, "ui/react");
+const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
+const frameworkPlaygroundDir = resolve(repoRootPath, "framework/playground/core");
+const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/playground/renderer/react");
+const puzzleBoardDir = resolve(repoRootPath, "puzzle/2d");
 const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
@@ -51,42 +52,43 @@ function storybookScopeMatches(prefix: string): boolean {
 	return storybookScope === prefix || storybookScope.startsWith(`${prefix}/`);
 }
 
-const loadElementsStack = storybookScopeMatches("elements");
+const loadUiStack = storybookScopeMatches("ui");
+const loadPuzzleStack = storybookScopeMatches("puzzle");
 const loadSemioStack = storybookScopeMatches("semio");
 
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
-	if (loadElementsStack) {
-		alias["@elements/ui"] = toVitePath(elementsUiDir);
-		alias["@elements/ui/elements"] = toVitePath(resolve(elementsUiDir, "index.tsx"));
-		alias["@elements/styling"] = toVitePath(elementsStylingDir);
-		alias["@elements/playground"] = toVitePath(elementsPlaygroundDir);
-		alias["@elements/playground/react"] = toVitePath(resolve(elementsPlaygroundDir, "react/index.tsx"));
-		alias["@elements/board"] = toVitePath(elementsBoardDir);
+	if (loadUiStack || loadPuzzleStack) {
+		alias["@ui/react"] = toVitePath(uiReactDir);
+		alias["@ui/react/elements"] = toVitePath(resolve(uiReactDir, "index.tsx"));
+		alias["@ui/styling"] = toVitePath(uiStylingDir);
+		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
+		alias["@framework/playground-react"] = toVitePath(frameworkPlaygroundReactDir);
+		alias["@puzzle/board"] = toVitePath(puzzleBoardDir);
 		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
 	if (loadSemioStack) {
-		alias["@semio/ui"] = toVitePath(elementsUiDir);
-		alias["@semio/ui/globals.css"] = toVitePath(resolve(elementsUiDir, "globals.css"));
+		alias["@semio/ui"] = toVitePath(uiReactDir);
+		alias["@semio/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
 		alias["@semio/react"] = toVitePath(semioJsDir);
 		alias["@semio/js"] = toVitePath(semioJsDir);
 		alias["@semio/rs-wasm"] = toVitePath(semioRsWasmEntryPath);
 		alias["@semio/assets"] = toVitePath(semioAssetsDir);
 		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
-		alias["@elements/ui"] = toVitePath(elementsUiDir);
-		alias["@elements/ui/elements"] = toVitePath(resolve(elementsUiDir, "index.tsx"));
-		alias["@elements/styling"] = toVitePath(elementsStylingDir);
+		alias["@ui/react"] = toVitePath(uiReactDir);
+		alias["@ui/react/elements"] = toVitePath(resolve(uiReactDir, "index.tsx"));
+		alias["@ui/styling"] = toVitePath(uiStylingDir);
 	}
 	return alias;
 }
 
 function buildScopeWatchIgnores(): string[] {
 	if (!storybookScope) return [];
-	if (loadElementsStack && !loadSemioStack) {
-		return ["**/semio/**", "**/coda/**", "**/spatial/**", "**/reuse/**", "**/mit-bestand/**"];
+	if ((loadUiStack || loadPuzzleStack) && !loadSemioStack) {
+		return ["**/semio/**", "**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
 	}
-	if (loadSemioStack && !loadElementsStack) {
-		return ["**/coda/**", "**/spatial/**", "**/reuse/**", "**/mit-bestand/**"];
+	if (loadSemioStack && !loadUiStack && !loadPuzzleStack) {
+		return ["**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
 	}
 	return [];
 }
@@ -181,10 +183,11 @@ const config: StorybookConfig = {
 		config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
-			"@elements/ui",
-			"@elements/ui/elements",
-			"@elements/playground",
-			"@elements/board",
+			"@ui/react",
+			"@ui/react/elements",
+			"@framework/playground",
+			"@framework/playground-react",
+			"@puzzle/board",
 		]);
 		if (loadSemioStack) {
 			optimizeExclude.add("@semio/ui");
@@ -205,7 +208,8 @@ const config: StorybookConfig = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("development"),
 				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
-				__STORYBOOK_LOAD_ELEMENTS__: JSON.stringify(loadElementsStack),
+				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
+				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
 				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(loadSemioStack),
 			};
 		} else {
@@ -214,7 +218,8 @@ const config: StorybookConfig = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("production"),
 				__STORYBOOK_SCOPE__: JSON.stringify(""),
-				__STORYBOOK_LOAD_ELEMENTS__: JSON.stringify(true),
+				__STORYBOOK_LOAD_UI__: JSON.stringify(true),
+				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(true),
 				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(true),
 			};
 		}

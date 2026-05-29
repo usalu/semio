@@ -1,20 +1,20 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@elements/topology",
+  "name": "@puzzle/topology",
   "version": "0.1.0",
   "description": "elements Ôö¼├Ç topology (board + scene)",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun nx run @elements/topology:dev",
-    "build": "bun nx run @elements/topology:build",
-    "test": "bun nx run @elements/topology:test"
+    "dev": "bun nx run @puzzle/topology:dev",
+    "build": "bun nx run @puzzle/topology:build",
+    "test": "bun nx run @puzzle/topology:test"
   },
   "dependencies": {
-    "@elements/playground": "workspace:*",
-    "@elements/board": "workspace:*",
-    "@elements/scene": "workspace:*",
-    "@elements/ui": "workspace:*",
+    "@framework/playground": "workspace:*",
+    "@puzzle/board": "workspace:*",
+    "@puzzle/scene": "workspace:*",
+    "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "lucide-react": "^0.536.0",
@@ -42,7 +42,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "elements/lib/react/topology"
+    "directory": "puzzle/combined"
   },
   "bundleKind": "library"
 }

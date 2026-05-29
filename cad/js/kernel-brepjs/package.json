@@ -1,15 +1,15 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@spatial/js-kernel-brepjs",
+  "name": "@cad/js-kernel-brepjs",
   "version": "0.1.0",
-  "description": "🧭 brepjs implementation of `@spatial/js-core` `KernelAdapter`.",
+  "description": "🧭 brepjs implementation of `@cad/js-core` `KernelAdapter`.",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @spatial/js-kernel-brepjs:test"
+    "test": "bun nx run @cad/js-kernel-brepjs:test"
   },
   "dependencies": {
-    "@spatial/js-core": "workspace:*",
+    "@cad/js-core": "workspace:*",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6"
   },
@@ -21,7 +21,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "spatial/js/kernel-brepjs"
+    "directory": "cad/js/kernel-brepjs"
   },
   "bundleKind": "library"
 }

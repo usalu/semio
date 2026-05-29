@@ -9,7 +9,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@spatial/js-core": coreEntry,
+			"@cad/js-core": coreEntry,
 		},
 	},
 	test: {

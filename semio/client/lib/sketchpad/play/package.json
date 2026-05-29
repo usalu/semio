@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "description": "semio ⋅ playground",
   "dependencies": {
-    "@elements/ui": "*",
+    "@ui/react": "workspace:*",
     "@semio/js": "*",
     "@semio/sketchpad": "*"
   },

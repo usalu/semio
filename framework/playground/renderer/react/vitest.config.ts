@@ -4,16 +4,19 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@ui/react` (inline tests in index.tsx). */
+/** @emoji 🧪 Vitest for `@framework/playground-react`. */
 export default defineConfig({
 	root,
 	resolve: {
-		alias: [{ find: "@ui/react", replacement: resolve(root, "index.tsx") }],
+		alias: {
+			"@framework/playground": resolve(root, "../../core/index.ts"),
+			"@framework/playground-react": resolve(root, "index.tsx"),
+			"@ui/react": resolve(root, "../../../../ui/react/index.tsx"),
+		},
 	},
 	test: {
 		environment: "jsdom",
-		includeSource: ["index.tsx"],
+		include: ["index.tsx"],
 		passWithNoTests: true,
-		setupFiles: [resolve(root, "vitest.setup.ts")],
 	},
 });

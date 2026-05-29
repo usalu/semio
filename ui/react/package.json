@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@elements/ui",
+  "name": "@ui/react",
   "version": "0.1.0",
   "description": "elements · ui",
   "type": "module",
@@ -17,12 +17,12 @@
   },
   "targets": {
     "lint": {
-      "command": "bun nx run @elements/ui:lint",
+      "command": "bun nx run @ui/react:lint",
       "cwd": "."
     }
   },
   "dependencies": {
-    "@elements/styling": "workspace:*",
+    "@ui/styling": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -108,7 +108,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "elements/renderer/react"
+    "directory": "ui/react"
   },
   "bundleKind": "ui"
 }

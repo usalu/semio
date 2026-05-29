@@ -1,12 +1,12 @@
 {
-  "name": "@spatial/js-kernel-brepjs",
+  "name": "@cad/js-kernel-brepjs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "spatial/js/kernel-brepjs",
+        "cwd": "cad/js/kernel-brepjs",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

@@ -6,7 +6,7 @@
   "description": "semio · 3dm ui",
   "type": "module",
   "dependencies": {
-    "@elements/ui": "*",
+    "@ui/react": "workspace:*",
     "@semio/js": "*",
     "@semio/react": "*",
     "@semio/assets": "*",

@@ -1,11 +1,11 @@
 // #region 🧲Header
-/** @emoji 🔗 `@elements/topology` — paired board + scene surfaces + play harness (monolith). */
+/** @emoji 🔗 `@puzzle/topology` — paired board + scene surfaces + play harness (monolith). */
 // #endregion 🧲Header
 
-import type { ContextMenuItem } from "@elements/ui";
+import type { ContextMenuItem } from "@ui/react";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
-/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@elements/board` and `@elements/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
+/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/board` and `@puzzle/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
 
 import {
 	boardFixtureMetaKindCatalogBundle,
@@ -18,8 +18,8 @@ import {
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
 	type CameraState as BoardCameraState,
-} from "@elements/board";
-import { BoardCanvas, Edge, Handle, Node, Wire } from "@elements/board";
+} from "@puzzle/board";
+import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/board";
 import {
 	Canvas3D as Scene,
 	SceneAttractions,
@@ -712,8 +712,8 @@ if (import.meta.vitest) {
 import React from "react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree } from "lucide-react";
-import { LevelProvider, getLevelBgClass } from "@elements/ui";
-import { ProductRuntime } from "@elements/playground";
+import { LevelProvider, getLevelBgClass } from "@ui/react";
+import { ProductRuntime } from "@framework/playground";
 import {
 	PlaygroundView,
 	PureSidePanelTabDefinition,
@@ -727,7 +727,7 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@elements/playground/react";
+} from "@framework/playground-react";
 import {
 	TOPOLOGY_PLAY_APP_ID,
 	TOPOLOGY_PLAY_BOARD_BODY_KEY,

@@ -91,10 +91,10 @@
       }
     },
     {
-      "name": "dev:storybook:elements",
+      "name": "dev:storybook:ui",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:elements",
+      "command": "bun run dev:storybook:ui",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -110,10 +110,10 @@
       }
     },
     {
-      "name": "dev:storybook:elements:board",
+      "name": "dev:storybook:puzzle:board",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:elements:board",
+      "command": "bun run dev:storybook:puzzle:board",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -129,10 +129,10 @@
       }
     },
     {
-      "name": "dev:storybook:elements:ui",
+      "name": "dev:storybook:puzzle",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:elements:ui",
+      "command": "bun run dev:storybook:puzzle",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -601,10 +601,10 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧭spatial",
+      "name": "🛠️dev🧭cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @spatial/js-renderer-r3f:dev",
+      "command": "bun nx run @cad/js-renderer-r3f:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "SPATIAL_R3F_PLAY_PORT": "6020"
@@ -620,10 +620,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩elements🏁board",
+      "name": "🛠️dev🧩puzzle🏁board",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/board:dev",
+      "command": "bun nx run @puzzle/board:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "BOARD_PLAY_PORT": "6012"
@@ -639,10 +639,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩elements🏙️scene",
+      "name": "🛠️dev🧩puzzle🏙️scene",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/scene:dev",
+      "command": "bun nx run @puzzle/scene:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "SCENE_PLAY_PORT": "6013"

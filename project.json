@@ -37,33 +37,33 @@
         }
       }
     },
-    "dev-storybook-elements": {
+    "dev-storybook-ui": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook elements",
+        "command": "bun ./script.ts dev storybook ui",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
         }
       }
     },
-    "dev-storybook-elements-board": {
+    "dev-storybook-puzzle": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook elements board",
+        "command": "bun ./script.ts dev storybook puzzle",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
         }
       }
     },
-    "dev-storybook-elements-ui": {
+    "dev-storybook-puzzle-board": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook elements ui",
+        "command": "bun ./script.ts dev storybook puzzle board",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"

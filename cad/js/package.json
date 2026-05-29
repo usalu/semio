@@ -1,5 +1,5 @@
 {
-  "name": "@spatial/js-workspace",
+  "name": "@cad/js-workspace",
   "private": true,
   "workspaces": ["core", "kernel-brepjs", "machine-stately", "query", "renderer-r3f"],
   "dependencies": {

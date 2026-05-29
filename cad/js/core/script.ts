@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-core` task router: `bun ./script.ts test`. */
+/** @emoji 🧭 `@cad/js-core` task router: `bun ./script.ts test`. */
 import { spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;

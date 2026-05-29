@@ -1,11 +1,11 @@
 {
-  "name": "@elements/styling",
+  "name": "@ui/styling",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/styling/js",
+        "cwd": "ui/styling/js",
         "command": "bun ./script.ts generate",
         "forwardAllArgs": true
       }

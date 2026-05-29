@@ -1,11 +1,11 @@
 {
-	"name": "@elements/framework-react",
+	"name": "@framework/platform-react",
 	"$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/lib/framework/renderer",
+				"cwd": "framework/platform/renderer/react",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

@@ -1,10 +1,10 @@
 // #region 🧲Header
-/** @emoji ⚛️ `@elements/framework-react` — React renderer for {@link @elements/framework}: declarative {@link UiNode} host (monolith). */
+/** @emoji ⚛️ `@framework/platform-react` — React renderer for {@link @framework/platform}: declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
-export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@elements/framework";
+export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@framework/platform";
 
-export type { Level } from "@elements/ui";
+export type { Level } from "@ui/react";
 export {
 	LevelProvider,
 	useLevel,
@@ -14,7 +14,7 @@ export {
 	getLevelZClass,
 	getLevelBorderElementClass,
 	getLevelDivideElementClass,
-} from "@elements/ui";
+} from "@ui/react";
 
 import {
 	APP_TOOL_CATEGORY_ORDER,
@@ -47,7 +47,7 @@ import {
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
 	type UiTextNode,
-} from "@elements/framework";
+} from "@framework/platform";
 import {
 	ArrowLeft,
 	ArrowRight,
@@ -126,7 +126,7 @@ import {
 	useMediaQuery,
 	type ContextMenuItem,
 	type NavbarItem,
-} from "@elements/ui";
+} from "@ui/react";
 
 //#region 📦shell-chrome-types.tsx
 
@@ -1157,7 +1157,7 @@ const UIToolbar: React.FC<{
 };
 
 export { ShellModeCanvas, UISearch, UIFind, UIToolbar };
-export { App, Mode, Ui } from "@elements/ui";
+export { App, Mode, Ui } from "@ui/react";
 
 // #endregion 📔UIToolbar
 

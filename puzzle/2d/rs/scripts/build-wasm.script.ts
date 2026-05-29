@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀➡️🌐 Builds `elements_board` WASM via wasm-pack into `rs/pkg/` for the thin JS bridge. */
+/** 🦀➡️🌐 Builds `puzzle_board` WASM via wasm-pack into `rs/pkg/` for the thin JS bridge. */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -33,18 +33,18 @@ if (process.env.ELEMENTS_BOARD_SKIP_WASM_BUILD === "1") {
 
 if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
 const pkgJson = {
-	name: "@elements/board-wasm",
+	name: "@puzzle/board-wasm",
 	type: "module",
 	version: "0.1.0",
-	files: ["elements_board_bg.wasm", "elements_board.js", "elements_board.d.ts", "elements_board_bg.wasm.d.ts"],
-	main: "elements_board.js",
-	module: "elements_board.js",
-	types: "elements_board.d.ts",
+	files: ["puzzle_board_bg.wasm", "puzzle_board.js", "puzzle_board.d.ts", "puzzle_board_bg.wasm.d.ts"],
+	main: "puzzle_board.js",
+	module: "puzzle_board.js",
+	types: "puzzle_board.d.ts",
 	sideEffects: ["./snippets/*"],
 };
 writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
-const wasmPath = join(pkgDir, "elements_board_bg.wasm");
+const wasmPath = join(pkgDir, "puzzle_board_bg.wasm");
 if (existsSync(wasmPath)) {
 	const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
 	console.log(`[elements/board/rs] pkg/elements_board_bg.wasm ready (${sz} MiB) + pkg/package.json restored`);

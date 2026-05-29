@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@spatial/js-query` (inline `import.meta.vitest`). */
+/** @emoji 🧪 Vitest for `@cad/js-query` (inline `import.meta.vitest`). */
 export default defineConfig({
 	root,
 	test: {

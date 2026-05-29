@@ -10,7 +10,7 @@ export default defineConfig({
 	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
-			"@spatial/js-core": coreEntry,
+			"@cad/js-core": coreEntry,
 		},
 	},
 	test: {

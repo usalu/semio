@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-machine-stately` task router; `generate` catalogs model-definition interactions via core. */
+/** @emoji 🧭 `@cad/js-machine-stately` task router; `generate` catalogs model-definition interactions via core. */
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -17,7 +17,7 @@ if (command === "test") {
 	});
 	process.exit(r.status ?? 1);
 } else if (command === "generate") {
-	const { SHAPE_MODEL_DEFINITION_ID } = await import("@spatial/js-core");
+	const { SHAPE_MODEL_DEFINITION_ID } = await import("@cad/js-core");
 	const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
 	let outPath = join(cwd, "machine.json");
 	let modelDefinitionId = SHAPE_MODEL_DEFINITION_ID;

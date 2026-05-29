@@ -3,16 +3,16 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { elementsAssetsVitePlugin } from "../../../../elements/lib/styling/vite-elements-assets.ts";
+import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../");
-const elementsAssetsRoot = resolve(repoRoot, "elements/assets");
+const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
 const jsRoot = resolve(dir, "../..");
 const reactRoot = resolve(jsRoot, "node_modules/react");
 const reactDomRoot = resolve(jsRoot, "node_modules/react-dom");
-const threeModule = resolve(repoRoot, "elements/lib/react/core/node_modules/three/build/three.module.js");
-const threePackageRoot = resolve(repoRoot, "elements/lib/react/core/node_modules/three");
+const threeModule = resolve(repoRoot, "ui/react/node_modules/three/build/three.module.js");
+const threePackageRoot = resolve(repoRoot, "ui/react/node_modules/three");
 const coreEntry = resolve(dir, "../../core/index.ts");
 const kernelEntry = resolve(dir, "../../kernel-brepjs/index.ts");
 const machineStatelyEntry = resolve(dir, "../../machine-stately/index.ts");
@@ -34,13 +34,13 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@elements/playground/react", replacement: resolve(dir, "../../../../elements/lib/playground/react/index.tsx") },
-			{ find: "@elements/playground", replacement: resolve(dir, "../../../../elements/lib/playground/index.ts") },
-			{ find: "@elements/ui", replacement: resolve(dir, "../../../../elements/lib/react/core/index.tsx") },
-			{ find: "@spatial/js-core", replacement: coreEntry },
-			{ find: "@spatial/js-kernel-brepjs", replacement: kernelEntry },
-			{ find: "@spatial/js-machine-stately", replacement: machineStatelyEntry },
-			{ find: "@spatial/js-query", replacement: queryEntry },
+			{ find: "@framework/playground-react", replacement: resolve(dir, "../../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground", replacement: resolve(dir, "../../../../framework/playground/core/index.ts") },
+			{ find: "@ui/react", replacement: resolve(dir, "../../../../ui/react/index.tsx") },
+			{ find: "@cad/js-core", replacement: coreEntry },
+			{ find: "@cad/js-kernel-brepjs", replacement: kernelEntry },
+			{ find: "@cad/js-machine-stately", replacement: machineStatelyEntry },
+			{ find: "@cad/js-query", replacement: queryEntry },
 			{ find: /^react$/, replacement: resolve(reactRoot, "index.js") },
 			{ find: /^react\/jsx-runtime$/, replacement: resolve(reactRoot, "jsx-runtime.js") },
 			{ find: /^react\/jsx-dev-runtime$/, replacement: resolve(reactRoot, "jsx-dev-runtime.js") },

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/react/scene/play/index.ts — Scene play on `@elements/playground`: Nakagin fixture, LOD measures, selection/filter tools (no React).
+// 💻 elements/lib/react/scene/play/index.ts — Scene play on `@framework/playground`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -26,7 +26,7 @@ import {
   type UiTreeSectionNode,
   type WindowBodyViewContext,
   type WindowMeasure,
-} from "@elements/playground";
+} from "@framework/playground";
 
 import {
   DEFAULT_MANUAL_LOD,

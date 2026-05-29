@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎭 `@spatial/js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
+/** @emoji 🎭 `@cad/js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -28,7 +28,7 @@ import {
 	type Vec3,
 	type VertexRef,
 	type WireRef,
-} from "@spatial/js-core";
+} from "@cad/js-core";
 // #endregion 📥Imports
 
 // #region 🎭AdvanceEvent
@@ -270,7 +270,7 @@ export class StatelyStateEngine implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		preview?: import("@spatial/js-core").SpatialPreviewKernel,
+		preview?: import("@cad/js-core").SpatialPreviewKernel,
 		activeModelDefinitionId?: string | null,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
@@ -307,7 +307,7 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 // #endregion 🎭Provider
 
 // #region 🧪Tests
-const __spatialStatelyTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("@cad/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
 	const { BrepjsKernel } = __spatialStatelyTestKernel!;
@@ -389,7 +389,7 @@ if (import.meta.vitest) {
 		}
 	}
 
-	describe("@spatial/js-machine-stately", () => {
+	describe("@cad/js-machine-stately", () => {
 		it("buildSpatialStatelyMachineCatalogView lists scoped interactions with edges and mermaid", () => {
 			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: SHAPE_MODEL_DEFINITION_ID });
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");

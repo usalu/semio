@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧭 `@spatial/js-core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `spatial/AGENTS.md` and `spatial/assets/modelDefinition`. */
+/** @emoji 🧭 `@cad/js-core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `spatial/AGENTS.md` and `spatial/assets/modelDefinition`. */
 // #endregion 🧲Header
 
 // #region 📥ModelDefinitionAssets
@@ -3806,7 +3806,7 @@ export interface ConstructQueryResult {
   readonly diff?: ModelDiff;
 }
 
-/** @emoji 🔍 Host wiring for `InteractionRuntime.query` (`@spatial/js-query` supplies the default runner). */
+/** @emoji 🔍 Host wiring for `InteractionRuntime.query` (`@cad/js-query` supplies the default runner). */
 export interface ConstructQueryContext {
   readonly model: Model;
   readonly kernel: SpatialKernel;
@@ -3816,7 +3816,7 @@ export interface ConstructQueryContext {
   readonly selectionTargets?: readonly SelectionTarget[];
 }
 
-/** @emoji 🔍 Async bridge so core never imports `@spatial/js-query`. */
+/** @emoji 🔍 Async bridge so core never imports `@cad/js-query`. */
 export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Promise<ConstructQueryResult>;
 // #endregion 🔍ConstructQuery
 
@@ -4335,7 +4335,7 @@ export interface DisplayItem {
   readonly params?: Record<string, unknown>;
 }
 
-/** @emoji 🖼️ Renderer-neutral snapshot slice consumed by `@spatial/js-renderer-r3f`. */
+/** @emoji 🖼️ Renderer-neutral snapshot slice consumed by `@cad/js-renderer-r3f`. */
 export interface DisplayModel {
   readonly prompt?: string;
   readonly items: readonly DisplayItem[];
@@ -4965,7 +4965,7 @@ export class InteractionRuntime {
     return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
   }
 
-  /** @emoji 🔍 Executes a `construct` script via `opts.query` (host registers `@spatial/js-query`). */
+  /** @emoji 🔍 Executes a `construct` script via `opts.query` (host registers `@cad/js-query`). */
   async query(text: string): Promise<ConstructQueryResult> {
     if (this.child) return this.child.query(text);
     const runner = this.opts.query;
@@ -5470,20 +5470,20 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦Interactions
 
 // #region 🧪Tests
-const __spatialCoreTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
+const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath } = __spatialCoreTestKernel!;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("@spatial/js-core vec", () => {
+  describe("@cad/js-core vec", () => {
     it("adds and distances", () => {
       expect(M.vec3Distance([0, 0, 0], [3, 4, 0])).toBe(5);
     });
   });
 
-  describe("@spatial/js-core model definition catalogs", () => {
+  describe("@cad/js-core model definition catalogs", () => {
     it("loads attribute and property definition assets", () => {
       const attributes = listModelDefinitionAttributeDefinitions();
       const properties = listModelDefinitionPropertyDefinitions();
@@ -5540,7 +5540,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core model space and hashing", () => {
+  describe("@cad/js-core model space and hashing", () => {
     it("hashes vertex positions stably", () => {
       const a = hashVertexPosition([1, 2, 3]);
       const b = hashVertexPosition([1.0000000004, 2, 3]);
@@ -5573,7 +5573,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core transformations", () => {
+  describe("@cad/js-core transformations", () => {
     it("lists model definition manifests and transformation directions", () => {
       const manifests = listModelDefinitionManifests();
       expect(manifests.some((row) => row.id === "spatial.shape")).toBe(true);
@@ -5677,7 +5677,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core attribute validation", () => {
+  describe("@cad/js-core attribute validation", () => {
     it("validates opening attribute options", () => {
       const defn = loadAttributeDefinition("spatial.shape.opening")!;
       expect(validateAttributeValue(defn, "window")).toBe(true);
@@ -5685,7 +5685,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core edge and solid geometry", () => {
+  describe("@cad/js-core edge and solid geometry", () => {
     it("arcEndOnCircle projects off-circle pick onto arc", () => {
       const end = M.arcEndOnCircle([0, 0, 0], [2, 0, 0], [0, 3, 0]);
       expect(end[0]).toBeCloseTo(0, 5);
@@ -5731,7 +5731,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core expr", () => {
+  describe("@cad/js-core expr", () => {
     it("evaluates numeric fold min expr", () => {
       const e: Expr = {
         kind: "fold",
@@ -5760,7 +5760,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core model json", () => {
+  describe("@cad/js-core model json", () => {
     it("parseModelJson fills missing entity arrays with empty lists", () => {
       const model = parseModelJson({
         schema: "spatial.model/v1",
@@ -5778,7 +5778,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core model commit mesh", () => {
+  describe("@cad/js-core model commit mesh", () => {
     it("appendCommittedMeshFaceToModel adds one mesh face from a triangle mesh", () => {
       const g = new Model();
       const mesh: MeshTransfer = {
@@ -5797,7 +5797,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core metadata", () => {
+  describe("@cad/js-core metadata", () => {
     it("AttributeStore setField bumps model revision", () => {
       const g = new Model();
       const r0 = g.revision;
@@ -5825,7 +5825,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core step roundtrip helpers", () => {
+  describe("@cad/js-core step roundtrip helpers", () => {
     it("stepEscape quotes apostrophes", () => {
       expect(stepEscape("a'b")).toBe("'a''b'");
     });
@@ -5851,7 +5851,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core interactions", () => {
+  describe("@cad/js-core interactions", () => {
     async function bootTransformSelection(rt: InteractionRuntime, targets: readonly SelectionTarget[]): Promise<void> {
       await rt.send({ kind: "start", modifiers: {} });
       if (targets.length === 0) return;
@@ -6077,7 +6077,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core action and interaction registries", () => {
+  describe("@cad/js-core action and interaction registries", () => {
     it("rejects executable action document fields", () => {
       const base = {
         schema: "spatial.action/v1",
@@ -6665,7 +6665,7 @@ if (import.meta.vitest) {
       expect(inverted.find((t) => t.id === verts[0]!.id)).toBeUndefined();
     });
   });
-  describe("@spatial/js-core model diff", () => {
+  describe("@cad/js-core model diff", () => {
     it("applyModelDiff then inverse restores counts", () => {
       const g = new Model();
       const mesh: MeshTransfer = {
@@ -6696,7 +6696,7 @@ if (import.meta.vitest) {
       expect(Object.keys(g.solids)).toEqual(["box-solid"]);
     });
   });
-  describe("@spatial/js-core selection filter", () => {
+  describe("@cad/js-core selection filter", () => {
     it("selectionEventMatches rejects kinds outside accept", () => {
       const spec: SelectionSpec = { accept: ["face"], multiple: false };
       const ok: SelectionEvent = {
@@ -6711,7 +6711,7 @@ if (import.meta.vitest) {
       expect(selectionEventMatches(spec, bad)).toBe(false);
     });
   });
-  describe("@spatial/js-core interaction box", () => {
+  describe("@cad/js-core interaction box", () => {
     it("tracks first-corner cursor on the grid after start", async () => {
       class StubKernel extends BrepjsKernel {
         async createBoxFromCorners() {
@@ -6959,7 +6959,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core interaction length entry", () => {
+  describe("@cad/js-core interaction length entry", () => {
     it("interactionLengthEntryForState resolves shipped line rubber-band", () => {
       const spec = requireSpatialInteraction("curve.line");
       expect(interactionLengthEntryForState(spec, "end_of_line")).toEqual({
@@ -7087,7 +7087,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core stateEngine option", () => {
+  describe("@cad/js-core stateEngine option", () => {
     it("explicit pure-ts provider matches default interaction snapshots", async () => {
       class StubKernel extends BrepjsKernel {
         async createBoxFromCorners() {
@@ -7116,7 +7116,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core measure distance", () => {
+  describe("@cad/js-core measure distance", () => {
     it("measure.faceArea action adds face anchor geometry", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("m-area")));
@@ -7209,7 +7209,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core measure area", () => {
+  describe("@cad/js-core measure area", () => {
     it("resolves face picks through surface.resolveFaces before commit", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("area-box")));
@@ -7266,7 +7266,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core document history", () => {
+  describe("@cad/js-core document history", () => {
     it("records modifications and undo/redo applies forward and backwards diffs", () => {
       const g = new Model();
       const h = new DocumentHistory();
@@ -7306,7 +7306,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core measure distance history", () => {
+  describe("@cad/js-core measure distance history", () => {
     it("interactionRecordsDocumentHistory skips measure interactions", () => {
       expect(interactionRecordsDocumentHistory("measure.distance")).toBe(false);
       expect(interactionRecordsDocumentHistory("primitive.box")).toBe(true);
@@ -7352,7 +7352,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core interaction session undo redo", () => {
+  describe("@cad/js-core interaction session undo redo", () => {
     it("supports redo after undo during an active interaction and clears redo on new branch", async () => {
       class StubKernel extends BrepjsKernel {
         async createBoxFromCorners() {
@@ -7381,7 +7381,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core undo routing", () => {
+  describe("@cad/js-core undo routing", () => {
     it("uses snapshot undo while active and document history when idle", async () => {
       class StubKernel extends BrepjsKernel {
         async createBoxFromCorners() {
@@ -7431,7 +7431,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core box display committed", () => {
+  describe("@cad/js-core box display committed", () => {
     it("keeps box-preview visible for committed state", () => {
       const spec = buildBoxInteractionSpec();
       const ctx: Record<string, unknown> = {
@@ -7447,7 +7447,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core interaction e2e fixtures", () => {
+  describe("@cad/js-core interaction e2e fixtures", () => {
     type InteractionE2EFixtureKind = "loom" | "routes" | "building" | "empty";
 
     const MOD: InteractionEvent["modifiers"] = {};

@@ -17,10 +17,10 @@
     "types": ["react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@elements/playground": ["../../playground/index.ts"],
-      "@elements/playground/react": ["../../playground/renderer/react/index.tsx"],
-      "@elements/ui": ["../core/index.tsx"],
-      "@elements/ui/*": ["../core/*"]
+      "@framework/playground": ["../../framework/playground/core/index.ts"],
+      "@framework/playground-react": ["../../framework/playground/renderer/react/index.tsx"],
+      "@ui/react": ["./index.tsx"],
+      "@ui/react/*": ["./*"]
     }
   },
   "include": ["react/**/*.tsx", "play/**/*.tsx", "play/**/*.ts", "vitest.config.ts"],

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/react/topology/play/index.ts — Topology play on `@elements/playground`: paired board+scene fixtures, LOD measures, relocate tools (no React).
+// 💻 elements/lib/react/topology/play/index.ts — Topology play on `@framework/playground`: paired board+scene fixtures, LOD measures, relocate tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -16,9 +16,9 @@ import {
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type UiNode,
-} from "@elements/playground";
-import { playgroundTreePanelRootItems } from "@elements/playground/react";
-import type { TreeDataItem, TreeDataSection } from "@elements/ui";
+} from "@framework/playground";
+import { playgroundTreePanelRootItems } from "@framework/playground-react";
+import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
 import { buildBoardPlayHierarchySections } from "../../../board/play/index.ts";
 import nakaginBoardJson from "../../../board/play/fixtures/nakagin-capsule-tower.board.json";

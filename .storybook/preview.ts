@@ -7,7 +7,7 @@
 
 import type { Preview } from "@storybook/react-vite";
 
-import { Expertise } from "@elements/ui";
+import { Expertise } from "@ui/react";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
@@ -15,7 +15,7 @@ declare const __STORYBOOK_LOAD_ELEMENTS__: boolean;
 
 //#region 🔖ScopeStyles
 if (__STORYBOOK_LOAD_ELEMENTS__) {
-	await import("../elements/lib/react/core/globals.css");
+	await import("../ui/react/globals.css");
 }
 //#endregion 🔖ScopeStyles
 

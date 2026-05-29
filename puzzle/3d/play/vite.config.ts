@@ -3,14 +3,14 @@ import react from "@vitejs/plugin-react";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { defineConfig } from "vite";
-import { elementsAssetsVitePlugin } from "../../../styling/vite-elements-assets.ts";
+import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 
 const repoRoot = path.resolve(__dirname, "../../../../../");
-const elementsAssetsRoot = path.resolve(__dirname, "../../../../assets");
+const elementsAssetsRoot = path.resolve(__dirname, "../../../../ui/assets");
 const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
-const threeModule = path.resolve(__dirname, "../../core/node_modules/three/build/three.module.js");
-const threePackageRoot = path.resolve(__dirname, "../../core/node_modules/three");
+const threeModule = path.resolve(__dirname, "../node_modules/three/build/three.module.js");
+const threePackageRoot = path.resolve(__dirname, "../node_modules/three");
 
 export default defineConfig({
 	root: __dirname,
@@ -57,9 +57,9 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../core/index.tsx") },
-			{ find: "@elements/playground/react", replacement: path.resolve(__dirname, "../../../playground/react/index.tsx") },
-			{ find: "@elements/playground", replacement: path.resolve(__dirname, "../../../playground/index.ts") },
+			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
+			{ find: "@framework/playground-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
 			{ find: /^three$/, replacement: threeModule },
 			{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 		],

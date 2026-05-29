@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 .storybook/withTheme.tsx — Storybook decorator: theme (system/light/dark), device (desktop/tablet/mobile), expertise via {@link useElementsSurfaceChrome} from `@elements/ui`.
+// 💻 .storybook/withTheme.tsx — Storybook decorator: theme (system/light/dark), device (desktop/tablet/mobile), expertise via {@link useElementsSurfaceChrome} from `@ui/react`.
 // #endregion 🧲Header
 
 import {
@@ -7,7 +7,7 @@ import {
 	useElementsSurfaceChrome,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
-} from "@elements/ui";
+} from "@ui/react";
 import type { Decorator } from "@storybook/react-vite";
 import * as React from "react";
 

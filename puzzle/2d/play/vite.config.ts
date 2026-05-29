@@ -7,11 +7,11 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { elementsAssetsVitePlugin } from "../../styling/vite-elements-assets.ts";
+import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../../../../../");
-const elementsAssetsRoot = path.resolve(__dirname, "../../../assets");
+const elementsAssetsRoot = path.resolve(__dirname, "../../../../ui/assets");
 
 export default defineConfig({
 	root: __dirname,
@@ -21,9 +21,9 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@elements/playground/react", replacement: path.resolve(__dirname, "../../playground/react/index.tsx") },
-			{ find: "@elements/playground", replacement: path.resolve(__dirname, "../../playground/index.ts") },
-			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../react/core/index.tsx") },
+			{ find: "@framework/playground-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
+			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
 		],
 	},
 	server: {

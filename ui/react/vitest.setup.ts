@@ -1,4 +1,4 @@
-/** @emoji 🧪 jsdom polyfills for `@elements/ui` vitest. */
+/** @emoji 🧪 jsdom polyfills for `@ui/react` vitest. */
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 

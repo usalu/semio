@@ -1,11 +1,11 @@
 {
-	"name": "@elements/styling-core",
+	"name": "@ui/styling-tokens",
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"generate": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/lib/styling",
+				"cwd": "ui/styling",
 				"command": "bun ./script.ts generate",
 				"forwardAllArgs": true
 			}
@@ -13,7 +13,7 @@
 		"fonts": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/lib/styling",
+				"cwd": "ui/styling",
 				"command": "bun ./script.ts fonts",
 				"forwardAllArgs": true
 			}

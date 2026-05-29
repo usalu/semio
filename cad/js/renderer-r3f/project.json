@@ -1,11 +1,11 @@
 {
-  "name": "@spatial/js-renderer-r3f",
+  "name": "@cad/js-renderer-r3f",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "spatial/js/renderer-r3f",
+        "cwd": "cad/js/renderer-r3f",
         "command": "bun ./script.ts dev",
         "env": {
           "SPATIAL_R3F_PLAY_PORT": "6020",
@@ -21,7 +21,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "spatial/js/renderer-r3f",
+        "cwd": "cad/js/renderer-r3f",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
@@ -30,7 +30,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "spatial/js/renderer-r3f",
+        "cwd": "cad/js/renderer-r3f",
         "command": "bun ./script.ts test",
         "env": {
           "SPATIAL_R3F_PLAY_PORT": "6041"

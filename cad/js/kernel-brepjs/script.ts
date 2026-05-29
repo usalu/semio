@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-kernel-brepjs` task router. */
+/** @emoji 🧭 `@cad/js-kernel-brepjs` task router. */
 import { spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;

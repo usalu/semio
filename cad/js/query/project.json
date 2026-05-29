@@ -1,12 +1,12 @@
 {
-  "name": "@spatial/js-query",
+  "name": "@cad/js-query",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "spatial/js/query",
+        "cwd": "cad/js/query",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-renderer-r3f` task router: `dev` | `build` | `test`. */
+/** @emoji 🧭 `@cad/js-renderer-r3f` task router: `dev` | `build` | `test`. */
 import { spawn, spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;

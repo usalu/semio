@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/board/play/index.ts — Board play shell on `@elements/playground`: declarative bodies, LOD measures, toolbar tools (no React).
+// 💻 elements/lib/board/play/index.ts — Board play shell on `@framework/playground`: declarative bodies, LOD measures, toolbar tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -19,10 +19,10 @@ import {
 	type WindowMeasure,
 	type UiNode,
 	type WindowLayout,
-} from "@elements/playground";
+} from "@framework/playground";
 
-import { playgroundTreePanelRootItems } from "@elements/playground/react";
-import type { TreeDataItem, TreeDataSection } from "@elements/ui";
+import { playgroundTreePanelRootItems } from "@framework/playground-react";
+import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {

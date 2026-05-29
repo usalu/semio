@@ -1,11 +1,11 @@
 {
-  "name": "@elements/ui",
+  "name": "@ui/react",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/core",
+        "cwd": "ui/react",
         "command": "bun ./script.ts dev",
         "env": {
           "STORYBOOK_PORT": "6006"
@@ -16,7 +16,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/core",
+        "cwd": "ui/react",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
@@ -24,7 +24,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/core",
+        "cwd": "ui/react",
         "command": "bun ./script.ts lint",
         "forwardAllArgs": true
       }
@@ -32,7 +32,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/core",
+        "cwd": "ui/react",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

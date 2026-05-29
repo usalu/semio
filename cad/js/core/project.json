@@ -1,12 +1,12 @@
 {
-  "name": "@spatial/js-core",
+  "name": "@cad/js-core",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "spatial/js/core",
+        "cwd": "cad/js/core",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📋 `@elements/board` — WASM board renderer + React canvas + play harness (monolith). */
+/** @emoji 📋 `@puzzle/board` — WASM board renderer + React canvas + play harness (monolith). */
 // #endregion 🧲Header
 
 import {
@@ -22,8 +22,8 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 	type TreeDataSection,
-} from "@elements/ui";
-import { Expertise, ProductRuntime, type FooterItem } from "@elements/playground";
+} from "@ui/react";
+import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
 import {
 	PlaygroundView,
 	PureSidePanelTabDefinition,
@@ -34,7 +34,7 @@ import {
 	registerWindowBody,
 	type SidePanelTabConfig,
 	type UiBoardHostSurfaceNode,
-} from "@elements/playground/react";
+} from "@framework/playground-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	BOARD_PLAY_APP_ID,
@@ -91,13 +91,13 @@ import initBoardWasm, {
 	boardRedrawLayoutFixtureJson,
 	BoardSession,
 	initSync,
-} from "./rs/pkg/elements_board.js";
+} from "./rs/pkg/puzzle_board.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
-	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "./rs/pkg/elements_board_bg.wasm");
+	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "./rs/pkg/puzzle_board_bg.wasm");
 	initSync({ module: readFileSync(wasmPath) });
 } else {
 	await initBoardWasm();
@@ -5521,7 +5521,7 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	registerSuspenseInstanceRetry: () => { },
 	releaseResource: () => null,
 	releaseSingletonInstance: () => null,
-	rendererPackageName: "@elements/board",
+	rendererPackageName: "@puzzle/board",
 	rendererVersion: "0.1.0",
 	replaceContainerChildren: () => { },
 	resetFormInstance: () => { },

@@ -59,7 +59,7 @@ if (command === "dev") {
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
   runSync(["bun", "run", "vite", "build", "--config", "play/vite.config.ts", ...extra]);
 } else if (command === "test") {
-  runSync(["cargo", "test", "-p", "elements_board"], { cwd: repoRoot });
+  runSync(["cargo", "test", "-p", "puzzle_board"], { cwd: repoRoot });
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
   runSync(["bunx", "vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra]);
   runSync(["bunx", "playwright", "test", "--config", "play/playwright.config.ts", ...extra], { cwd });

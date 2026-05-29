@@ -13,8 +13,8 @@ import {
 	type ChangeEvent,
 	type ReactNode,
 } from "react";
-import { ProductRuntime } from "@elements/playground";
-import { getLevelBgClass, LevelProvider } from "@elements/ui";
+import { ProductRuntime } from "@framework/playground";
+import { getLevelBgClass, LevelProvider } from "@ui/react";
 import {
 	PlaygroundView,
 	CallbackTreePanelDefinition,
@@ -25,7 +25,7 @@ import {
 	type SidePanelTabConfig,
 	type TreeDataSection,
 	type UiScene3DHostSurfaceNode,
-} from "@elements/playground/react";
+} from "@framework/playground-react";
 import { ListTree, Shapes } from "lucide-react";
 import {
 	SPATIAL_PLAY_APP_ID,
@@ -71,16 +71,16 @@ import {
 	type TransformationSpec,
 	Model,
 	ModelSpace,
-} from "@spatial/js-core";
-import { defaultConstructRunner } from "@spatial/js-query";
+} from "@cad/js-core";
+import { defaultConstructRunner } from "@cad/js-query";
 import geometryNakagin from "../../../fixtures/geometry.json";
 import geometryLoom from "../../../fixtures/geometry-loom.json";
 import geometryRoutes from "../../../fixtures/geometry-routes.json";
 import geometrySmallBuilding from "../../../fixtures/small-building.model.json";
 import geometryTallBuilding from "../../../fixtures/tall-building.model.json";
 import geometryLargeBuilding from "../../../fixtures/large-building.model.json";
-import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
-import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
+import { BrepjsKernel } from "@cad/js-kernel-brepjs";
+import { statelyStateEngineProvider } from "@cad/js-machine-stately";
 import {
 	InteractionRepl,
 	InteractionReplViewport,

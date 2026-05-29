@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-query` task router. */
+/** @emoji 🧭 `@cad/js-query` task router. */
 import { spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;

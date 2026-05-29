@@ -9,9 +9,9 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@elements/framework", replacement: resolve(root, "../../core/index.ts") },
-			{ find: "@elements/framework-react", replacement: resolve(root, "index.tsx") },
-			{ find: "@elements/ui", replacement: resolve(root, "../../../react/core/index.tsx") },
+			{ find: "@framework/platform", replacement: resolve(root, "../../core/index.ts") },
+			{ find: "@framework/platform-react", replacement: resolve(root, "index.tsx") },
+			{ find: "@ui/react", replacement: resolve(root, "../../../../ui/react/index.tsx") },
 		],
 	},
 	test: {

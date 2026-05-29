@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@elements/styling` task router — `bun ./script.ts generate`. */
+/** @emoji 🧭 `@ui/styling` task router — `bun ./script.ts generate`. */
 import { fetchElementsFonts, generateStylingArtifacts } from "../script.ts";
 
 const cmd = process.argv[2];

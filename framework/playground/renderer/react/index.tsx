@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 `@elements/playground/react` — Playground shell renderer: {@link PlaygroundView}, declarative tree panels, and surface hosts (depends only on `@elements/ui`). */
+/** @emoji 🛝 `@framework/playground-react` — Playground shell renderer: {@link PlaygroundView}, declarative tree panels, and surface hosts (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
 import {
@@ -34,7 +34,7 @@ import {
   type TreePanelConfig,
   type TreePanelDefinition,
   type TreePanelSource,
-} from "@elements/ui";
+} from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRightLeft, Filter, Folder, FolderOpen, Hand, History, Info, Lasso, LayoutGrid, MoreHorizontal, MousePointer2, Plus, Save, Search, Settings2 } from "lucide-react";
@@ -50,6 +50,7 @@ import {
   getWindowBodyFactory,
   type AppToolCategory,
   type AppTools,
+  type Playground,
   type ResolvedAppState,
   type SidePanelBodyViewContext,
   type SideTabSpec,
@@ -60,7 +61,7 @@ import {
   type WindowBodyViewContext,
   type WindowLayout,
   type WindowMeasure,
-} from "../../core.js";
+} from "@framework/playground";
 
 export type {
   AppRuntime,
@@ -974,6 +975,16 @@ export function mountPlaygroundApp(element: React.ReactElement, rootId = "root")
 
 /** @emoji 🚀 Alias for {@link mountPlaygroundApp}. */
 export const mountReactApp = mountPlaygroundApp;
+
+/** @emoji 🛝 Boots a {@link Playground} definition and mounts {@link PlaygroundView}. */
+export function renderPlayground(playground: Playground, rootId = "root"): void {
+  playground.registerBodies();
+  playground.registerSurfaceHosts();
+  mountPlaygroundApp(
+    <PlaygroundView runtime={playground.runtime} initialPanelVisibility={playground.initialPanelVisibility} />,
+    rootId,
+  );
+}
 //#endregion 🔖Mount
 
 //#region 🧪Tests

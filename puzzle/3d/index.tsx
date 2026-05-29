@@ -1,5 +1,5 @@
-import { CommandBus, ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@elements/playground";
-import { Button, Expertise, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@elements/ui";
+import { CommandBus, ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@framework/playground";
+import { Button, Expertise, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
 import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
 import { ClipboardList, ListTree, Settings, Tags, Trash2 } from "lucide-react";
@@ -51,7 +51,7 @@ import {
   type Scene as ThreeScene,
   type WebGLRenderer,
 } from "three";
-import { registerTabIcon, registerUiScene3DSurfaceHost, registerWindowBody, useApp } from "@elements/playground/react";
+import { registerTabIcon, registerUiScene3DSurfaceHost, registerWindowBody, useApp } from "@framework/playground-react";
 import nakaginSceneFixtureJson from "./play/fixtures/nakagin-capsule-tower.scene.json";
 import "./play/globals.css";
 import {

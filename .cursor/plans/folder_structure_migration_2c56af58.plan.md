@@ -4,22 +4,22 @@ overview: "Complete the in-progress monorepo restructure for the ui, framework, 
 todos:
   - id: ticket-ui
     content: "Open ticket; rename ui technology: @elements/ui->@ui/react, @elements/styling->@ui/styling (+ Nx @ui/styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
-    status: in_progress
+    status: completed
   - id: ticket-framework
     content: "Open ticket; rename framework technology: @elements/framework->@framework/platform, @elements/framework-react->@framework/platform-react, @elements/playground->@framework/playground; split playground renderer into @framework/playground-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
-    status: pending
+    status: completed
   - id: ticket-puzzle
     content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @ui/react/@framework/playground(-react)."
-    status: pending
+    status: completed
   - id: ticket-cad
     content: Open ticket; rename cad packages @spatial/js-*->@cad/js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @framework/playground + @ui/react.
-    status: pending
+    status: completed
   - id: ticket-root-rewire
     content: Open consolidating ticket; rewire root package.json workspaces + scripts (dev:spatial->dev:cad, storybook ids), script.ts dev mapping, .vscode/launch.json, .storybook/main.ts + stories, nx.json/eslint/Monorepo.sln. Run bun install to regenerate bun.lock.
-    status: pending
+    status: completed
   - id: verify
     content: "Verify: grep shows no remaining @elements/*/@spatial/* workspace refs in scope; run bun nx build/test per renamed package and dev:cad/board/scene/storybook:ui to confirm runtime resolution. Close tickets with file summaries."
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

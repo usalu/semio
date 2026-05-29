@@ -1,7 +1,7 @@
 // #region 🧲Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭 `@spatial/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
+/** @emoji 🧭 `@cad/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -88,7 +88,7 @@ import {
 	SHAPE_MODEL_DEFINITION_ID,
 	type ObjectRef,
 	type TypologyRef,
-} from "@spatial/js-core";
+} from "@cad/js-core";
 export { kernelGeometry };
 // #endregion 📥Imports
 
@@ -2511,7 +2511,7 @@ if (isBrepjsDedicatedWorker()) {
 if (import.meta.vitest) {
 	const { beforeEach, describe, expect, it } = import.meta.vitest;
 
-	describe("@spatial/js-kernel-brepjs", () => {
+	describe("@cad/js-kernel-brepjs", () => {
 		const kernel = new BrepjsKernel();
 
 		beforeEach(async () => {

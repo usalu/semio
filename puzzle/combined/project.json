@@ -1,11 +1,11 @@
 {
-  "name": "@elements/topology",
+  "name": "@puzzle/topology",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/topology",
+        "cwd": "puzzle/combined",
         "command": "bun ./script.ts dev",
         "env": {
           "TOPOLOGY_PLAY_PORT": "6014",
@@ -22,7 +22,7 @@
       "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/topology",
+        "cwd": "puzzle/combined",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
@@ -31,7 +31,7 @@
       "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/lib/react/topology",
+        "cwd": "puzzle/combined",
         "command": "bun ./script.ts test",
         "env": {
           "TOPOLOGY_PLAY_PORT": "6035"

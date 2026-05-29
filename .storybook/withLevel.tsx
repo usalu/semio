@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { type Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { type Level, LevelProvider, getLevelBgClass } from "@ui/react";
 import type { Decorator } from "@storybook/react-vite";
 import React from "react";
 
