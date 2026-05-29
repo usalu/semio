@@ -22,12 +22,12 @@ import {
   type DesignPlain,
   type MoveVector,
   type VecValue,
-} from "../../client/lib/react/rendering";
+} from "@semio/ui";
 import * as React from "react";
 
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/assets";
 
-import { openSessionInMemory, type Store as JsStore } from "../../client/lib/js";
+import { openSessionInMemory, type Store as JsStore } from "@semio/js";
 // #endregion 📥Imports
 
 // #region 🧾GqlWire

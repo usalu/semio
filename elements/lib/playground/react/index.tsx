@@ -521,6 +521,8 @@ const UICanvas: React.FC<{
 	const onActiveWindowChangeRef = React.useRef(onActiveWindowChange);
 	onActiveWindowChangeRef.current = onActiveWindowChange;
 	const windowKindRegistryKey = React.useMemo(() => windowKinds.map((wk) => wk.id).join("\0"), [windowKinds]);
+	const windowKindsRef = React.useRef(windowKinds);
+	windowKindsRef.current = windowKinds;
 
 	React.useEffect(() => {
 		if (!layoutRef.current) return;
@@ -540,7 +542,10 @@ const UICanvas: React.FC<{
 				const goldenLayoutModule = await import("golden-layout");
 				if (disposed) return;
 				const GoldenLayout = (goldenLayoutModule as { GoldenLayout?: new (config: unknown, el: HTMLElement) => { init: () => void; destroy: () => void; updateSize: () => void; registerComponent: (name: string, fn: (c: GoldenContainer) => void) => void; on: (ev: string, fn: (...args: unknown[]) => void) => void } }).GoldenLayout;
-				if (!GoldenLayout) return;
+				if (!GoldenLayout || typeof GoldenLayout !== "function") {
+					console.error("[PlaygroundUICanvas] GoldenLayout is not a constructor");
+					return;
+				}
 				const config = convertWindowLayoutToGoldenConfig(defaultLayout);
 				const layout = new GoldenLayout(config, containerRef.current!);
 				let portalCounter = 0;
@@ -548,20 +553,21 @@ const UICanvas: React.FC<{
 					getElement: () => HTMLElement | HTMLElement[];
 					on: (ev: string, fn: () => void) => void;
 				};
-				windowKinds.forEach((windowKind) => {
+				for (const windowKind of windowKindsRef.current) {
 					layout.registerComponent(windowKind.id, (container: GoldenContainer) => {
 						if (disposed) return;
 						const element = container.getElement();
 						const domElement = Array.isArray(element) ? element[0] : element;
 						if (!(domElement instanceof HTMLElement)) return;
-						const portalKey = `${windowKind.id}-${portalCounter++}`;
-						const portal: UICanvasPortal = { key: portalKey, element: domElement, windowKind };
+						const latest = windowKindsRef.current.find((wk) => wk.id === windowKind.id) ?? windowKind;
+						const portalKey = `${latest.id}-${portalCounter++}`;
+						const portal: UICanvasPortal = { key: portalKey, element: domElement, windowKind: latest };
 						setPortals((prev) => [...prev, portal]);
 						container.on("destroy", () => {
 							setPortals((prev) => prev.filter((p) => p.key !== portalKey));
 						});
 					});
-				});
+				}
 				layout.on("tab", (tab: { _header?: { on: (ev: string, fn: () => void) => void }; _contentItem?: { config?: { componentName?: string } } }) => {
 					tab._header?.on("click", () => {
 						const componentName = tab._contentItem?.config?.componentName;
@@ -570,6 +576,7 @@ const UICanvas: React.FC<{
 				});
 				layout.init();
 				layoutRef.current = layout;
+				requestAnimationFrame(() => layout.updateSize());
 				const handleResize = () => layout.updateSize();
 				window.addEventListener("resize", handleResize);
 				return () => {
@@ -589,7 +596,7 @@ const UICanvas: React.FC<{
 			} catch {}
 			layoutRef.current = null;
 		};
-	}, [windowKindRegistryKey, defaultLayout, windowKinds]);
+	}, [windowKindRegistryKey, defaultLayout]);
 
 	return (
 		<>
@@ -818,7 +825,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 		});
 	}, [activeApp.defaultLayout, activeApp.windowKinds]);
 
-	const goldenWindowKinds = React.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus, runtime.generation]);
+	const goldenWindowKinds = React.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
 
 	const footerItems: FooterItem[] = [
 		...(activeApp.footerItems.map((item) => ({

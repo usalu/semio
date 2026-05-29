@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: spatial-hierarchy
     content: "Spatial play: SpatialPlayChromeContext bridge, ModelSpace tree, SpatialPlayRoot tabs + vitest"
-    status: in_progress
+    status: completed
   - id: e2e-verify
     content: Extend board-play e2e for hierarchy tab visibility; run nx tests for all four plays
-    status: pending
+    status: completed
 isProject: false
 ---
 

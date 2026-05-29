@@ -608,7 +608,7 @@ if (import.meta.vitest) {
 		it("buildBoardPlayHierarchySections nests root nodes, handles, and child nodes", () => {
 			const fixture = parseBoardFixtureV1({
 				schema: "elements.board.fixture/v1",
-				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
 					{
 						id: "root",

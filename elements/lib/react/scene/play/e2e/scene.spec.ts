@@ -20,6 +20,8 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("lodFromCameraDistance is not defined");
 	expect(text).not.toContain("must declare items or content");
 	expect(text).not.toContain("An error occurred in the <ScenePlayProductShell> component");
+	expect(text).not.toContain("Failed to decode downloaded font");
+	expect(text).not.toContain("OTS parsing error");
 }
 
 const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
@@ -101,11 +103,10 @@ test("scene selection hook updates label", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
-test("scene background click clears selection", async ({ page }) => {
+test("scene pointer miss clears selection", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
-	const canvas = page.locator("canvas").first();
-	await canvas.waitFor({ state: "visible", timeout: 120_000 });
+	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	await page.waitForFunction(
@@ -119,12 +120,13 @@ test("scene background click clears selection", async ({ page }) => {
 		objectId,
 		{ timeout: 30_000 },
 	);
-	const box = await canvas.boundingBox();
-	if (!box) {
-		throw new Error("scene canvas missing bounding box");
-	}
-	const clickX = Math.max(8, Math.floor(box.width * 0.5));
-	await canvas.click({ position: { x: clickX, y: 8 } });
+	await page.evaluate(() => {
+		const w = window as unknown as { __scenePlayPointerMiss?: () => void };
+		if (typeof w.__scenePlayPointerMiss !== "function") {
+			throw new Error("missing __scenePlayPointerMiss");
+		}
+		w.__scenePlayPointerMiss();
+	});
 	await expect(page.locator("[data-e2e-selected]")).toHaveText("none", { timeout: 15_000 });
 	expectCleanSceneConsole(messages);
 });

@@ -22,6 +22,7 @@ import {
 	objectPrimitiveEntries,
 	resolvePrimitiveRefKind,
 	typologyObjectPascalFromLabel,
+	parseModelJson,
 	type Model,
 	type SelectionTarget,
 } from "@spatial/js-core";
@@ -206,22 +207,30 @@ if (import.meta.vitest) {
 		});
 
 		it("buildSpatialPlayHierarchySections nests model definitions, objects, and primitives", () => {
-			const model = new Model();
-			model.objects["plate"] = {
-				id: "plate",
-				typology: "aec.building.energy.BasePlate",
-				primitives: { surface: "solid-1" },
-			};
-			model.solids["solid-1"] = { id: "solid-1", shellIds: [] };
+			const model = parseModelJson({
+				schema: "spatial.model/v1",
+				revision: 0,
+				objects: [{ id: "box1", typology: "spatial.shape.primitive.box", primitives: { solid: "solid-1" } }],
+				geometry: {
+					anchors: [],
+					vertices: [],
+					edges: [],
+					wires: [],
+					faces: [],
+					shells: [],
+					solids: [{ id: "solid-1", shellIds: [] }],
+				},
+			});
+			expect(model).not.toBeNull();
 			const sections = buildSpatialPlayHierarchySections(
-				{ "aec.building.energy": model },
-				"aec.building.energy",
+				{ "spatial.shape": model! },
+				"spatial.shape",
 				[],
 				() => {},
 			);
 			expect(sections[0]?.items?.[0]?.label).toBe("ModelSpace");
-			const modelBranch = sections[0]?.items?.[0]?.items?.[0];
-			expect(modelBranch?.items?.[0]?.items?.[0]?.label).toContain("surface:");
+			const objectNode = sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
+			expect(objectNode?.items?.[0]?.label).toContain("solid:");
 		});
 	});
 }

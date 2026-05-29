@@ -16,7 +16,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "../../../../elements/client/lib/react";
+import { elementUiI18n as i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@elements/ui";
 
 import "./globals.css";
 

@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/preview.ts
 // Specs: Reuse the shared UI theme and level decorators for the root monorepo Storybook.
-// Summary: Defines global Storybook preview parameters for the aggregated workspace stories.
+// Summary: Defines global Storybook preview parameters; loads CSS stacks only for the active `STORYBOOK_SCOPE` slice in dev.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -11,8 +11,13 @@ import { Expertise } from "@elements/ui";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
-import "../elements/client/lib/react/globals.css";
-import "../semio/client/lib/react/rendering/globals.css";
+declare const __STORYBOOK_LOAD_ELEMENTS__: boolean;
+
+//#region 🔖ScopeStyles
+if (__STORYBOOK_LOAD_ELEMENTS__) {
+	await import("../elements/lib/react/core/globals.css");
+}
+//#endregion 🔖ScopeStyles
 
 enum Theme {
 	SYSTEM = "system",

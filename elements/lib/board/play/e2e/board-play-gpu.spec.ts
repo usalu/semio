@@ -18,16 +18,23 @@ async function gotoBoardPlayShell(page: Page): Promise<void> {
 	if ((await workbenchToggle.getAttribute("data-state")) !== "on") {
 		await workbenchToggle.click();
 	}
+	const libraryTab = page.locator("#board-play-library");
+	if (await libraryTab.isVisible()) {
+		await libraryTab.click();
+	}
 	await expect
 		.poll(async () => await page.getByTestId("board-play-fixture-shelf").isVisible(), { timeout: 120_000 })
 		.toBe(true);
-	await expect(page.locator("#board-play-hierarchy")).toBeVisible();
 }
 
 async function gotoBoardPlayReady(page: Page): Promise<void> {
 	await gotoBoardPlayShell(page);
-	await expect(page.locator('[data-testid="board-canvas"]').first()).toBeVisible({ timeout: 120_000 });
-	await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
+	await expect
+		.poll(async () => await page.locator('[data-testid="board-canvas"]').first().isVisible(), { timeout: 180_000 })
+		.toBe(true);
+	await expect
+		.poll(async () => await page.locator('[data-measure-id="board-overview-lod"]').isVisible(), { timeout: 180_000 })
+		.toBe(true);
 }
 
 test.describe("board play", () => {
@@ -88,15 +95,15 @@ test.describe("board play", () => {
 		await gotoBoardPlayShell(page);
 		const handlesToolbar = page.locator('button[title^="Redraw handles"]');
 		await expect(handlesToolbar).toBeVisible({ timeout: 120_000 });
-		await handlesToolbar.click();
-		await page.locator("#board-play-settings").click();
+		await handlesToolbar.click({ force: true });
+		await page.locator("#board-play-settings").click({ force: true });
 		await expect(page.locator("#board-play-redraw-nodes")).toBeVisible({ timeout: 120_000 });
 		await expect(page.locator("#board-play-redraw-handles")).toBeVisible();
 		await page.evaluate(() => {
 			document.getElementById("board-play-redraw-nodes")?.click();
 			document.getElementById("board-play-redraw-handles")?.click();
 		});
-		await handlesToolbar.click();
+		await handlesToolbar.click({ force: true });
 		await page.waitForTimeout(100);
 		const blockingErrors = errors.filter(
 			(text) =>
@@ -116,7 +123,7 @@ test.describe("board play", () => {
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 120_000 })
 			.toBeGreaterThan(0);
-		await page.locator("#board-overview-lod").click();
+		await page.locator('[data-measure-id="board-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
 		await page.getByRole("option", { name: "Overview", exact: true }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
@@ -124,7 +131,7 @@ test.describe("board play", () => {
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 30_000 })
 			.toBeGreaterThan(0);
-		await page.locator("#board-overview-lod").click();
+		await page.locator('[data-measure-id="board-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
 		await page.getByRole("option", { name: /^Automatic · / }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })

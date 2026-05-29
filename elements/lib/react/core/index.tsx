@@ -10739,6 +10739,7 @@ function initializeElementUiI18n() {
     supportedLngs: ["en", "de"],
     nonExplicitSupportedLngs: true,
     lng: requestedLocale,
+    showSupportNotice: false,
     returnObjects: true,
     interpolation: {
       escapeValue: false,

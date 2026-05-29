@@ -4517,13 +4517,14 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 
 /** @emoji ­ƒº¬ Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
 export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
-	const { setActiveRelocateObjectId } = useRegistryInteraction();
+	const { setActiveRelocateObjectId, clearSceneSelection } = useRegistryInteraction();
 	const setSelectedId = props.setSelectedId;
 	useEffect(() => {
 		const w = window as unknown as {
 			__scenePlaySelect?: (id: string) => void;
 			__scenePlayActivate?: (id: string) => void;
 			__scenePlayClearSelection?: () => void;
+			__scenePlayPointerMiss?: () => void;
 		};
 		w.__scenePlaySelect = (id: string) => {
 			setSelectedId(id);
@@ -4536,12 +4537,16 @@ export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string
 			setSelectedId(null);
 			setActiveRelocateObjectId(null);
 		};
+		w.__scenePlayPointerMiss = () => {
+			clearSceneSelection();
+		};
 		return () => {
 			delete w.__scenePlaySelect;
 			delete w.__scenePlayActivate;
 			delete w.__scenePlayClearSelection;
+			delete w.__scenePlayPointerMiss;
 		};
-	}, [setSelectedId, setActiveRelocateObjectId]);
+	}, [setSelectedId, setActiveRelocateObjectId, clearSceneSelection]);
 	return null;
 }
 

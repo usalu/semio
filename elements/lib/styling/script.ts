@@ -114,16 +114,21 @@ function googleFontsCssUrl(family: string): string {
 /** @emoji 🔤 Parses Google Fonts CSS into subset/index → woff2 URL. */
 function parseGoogleFontWoff2Map(css: string): Map<string, string> {
 	const map = new Map<string, string>();
-	const parts = css.split("@font-face");
-	for (const part of parts) {
-		const urlMatch = part.match(/url\((https:[^)]+\.woff2)\)/);
+	let subset: string | undefined;
+	for (const line of css.split("\n")) {
+		const comment = line.match(/^\s*\/\*\s*([^*]+?)\s*\*\/\s*$/);
+		if (comment) {
+			subset = comment[1]!.trim().toLowerCase();
+			continue;
+		}
+		const urlMatch = line.match(/url\((https:[^)]+\.woff2)\)/);
 		if (!urlMatch) {
 			continue;
 		}
 		const url = urlMatch[1]!;
-		const commentMatch = part.match(/\/\*\s*([^*]+?)\s*\*\//);
-		if (commentMatch) {
-			map.set(commentMatch[1]!.trim().toLowerCase(), url);
+		if (subset) {
+			map.set(subset, url);
+			subset = undefined;
 			continue;
 		}
 		const indexMatch = url.match(/\.(\d+)\.woff2/);

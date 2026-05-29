@@ -14,15 +14,15 @@ import {
 	Handle,
 	Node,
 	useBoardEvent,
-} from "../../../../elements/client/lib/board/index.tsx";
+} from "../../../../elements/lib/board/index.tsx";
 import {
 	BOARD_BUILTIN_PORT_HANDLE_KIND,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 	boardFixtureMetaKindCatalogBundle,
 	boardFixtureMetaKindCompatibility,
 	mergeBoardKindCatalogBundleByRowId,
-} from "../../../../elements/client/lib/board/index";
-import nakaginCapsuleTowerBoardFixture from "../../../../elements/client/lib/board/play/fixtures/nakagin-capsule-tower.board.json";
+} from "../../../../elements/lib/board/index";
+import nakaginCapsuleTowerBoardFixture from "../../../../elements/lib/board/play/fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {
 	title: "elements/board",
