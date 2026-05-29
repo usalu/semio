@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, Steps } from "@elements/ui";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, Steps } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";

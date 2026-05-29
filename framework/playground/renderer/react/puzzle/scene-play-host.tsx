@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Scene play React chrome in `@framework/playground-renderer-react/puzzle/scene` (not in `@puzzle/3d-play`). */
+/** @emoji 🛝 Scene play React chrome in `@framework/playground/renderer/react/puzzle/scene` (not in `@puzzle/3d/play`). */
 // #endregion 🧲Header
 
 import { LevelProvider, getLevelBgClass } from "@ui/react";
@@ -14,8 +14,8 @@ import {
 	registerUiScene3DSurfaceHost,
 	useApp,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react/shell";
-import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground-renderer-react/boot";
+} from "@framework/playground/renderer/react/shell";
+import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground/renderer/react/boot";
 import nakaginSceneFixtureJson from "../../../../../puzzle/3d/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	PlaySceneCanvas,
@@ -28,7 +28,7 @@ import {
 	DEFAULT_MANUAL_LOD,
 	type FixtureV1,
 	type RelocatePayload,
-} from "@puzzle/3d-react";
+} from "@puzzle/3d/react";
 import {
 	SCENE_PLAY_BODY_KEY,
 	SCENE_PLAY_CONTROLLER_ID,
@@ -42,7 +42,7 @@ import {
 	parseKindCatalogs,
 	parseKindCompatibility,
 	type ScenePlaySnapshot,
-} from "@puzzle/3d-play";
+} from "@puzzle/3d/play";
 
 function useScenePlayController(): ScenePlayShellController | undefined {
 	const { runtime } = useApp();

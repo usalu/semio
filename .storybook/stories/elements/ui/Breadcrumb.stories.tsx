@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@elements/ui";
+import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlertCircle, Home } from "lucide-react";
 import { MemoryRouter } from "react-router";

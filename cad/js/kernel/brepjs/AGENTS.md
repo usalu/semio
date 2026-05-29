@@ -1,6 +1,6 @@
 # Kernel (brepjs)
 
-Private brepjs persistence graph used inside `@spatial/js-kernel-brepjs`. Not part of the public spatial framework vocabulary.
+Private brepjs persistence graph used inside `@cad/js/kernel/brepjs`. Not part of the public spatial framework vocabulary.
 
 ## Raw (editable, kernel-private)
 

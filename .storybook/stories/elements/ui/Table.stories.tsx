@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Table, TableAvatar, TableColumn, TableSkeleton } from "@elements/ui";
+import { Table, TableAvatar, TableColumn, TableSkeleton } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { FileCode, FileImage, FolderIcon } from "lucide-react";
 

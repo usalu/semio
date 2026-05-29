@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup, Panel as ResizableSidePanel } from "@elements/ui";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup, Panel as ResizableSidePanel } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

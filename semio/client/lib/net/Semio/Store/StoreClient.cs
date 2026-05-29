@@ -89,7 +89,7 @@ public sealed class StoreClient : IDisposable
             if (line.Length == 0) continue;
             try
             {
-                var o = JObject.Parse(line);
+                var o = SemioJson.Codec.ParseJsonRoot(line) as JObject;
                 if (o["semioStoreReady"]?.Value<bool>() == true)
                 {
                     var port = o["port"]?.Value<int?>() ?? fallbackPort;

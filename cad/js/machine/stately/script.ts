@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@cad/js-machine-stately` task router: `generate` | `test` | `policy`. */
+/** 🧭 `@cad/js/machine/stately` task router: `generate` | `test` | `policy`. */
 import { join, resolve } from "node:path";
 import type { FileLinter } from "../../../../repo/lib/js/src/linter.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/dependency-boundary.ts";
@@ -9,7 +9,7 @@ import { defineLint } from "../../../../repo/lib/js/src/script.ts";
 
 export const policyFile = "index.ts";
 
-export const policy = defineLint("@cad/js-machine-stately-index", (l: FileLinter) => {
+export const policy = defineLint("@cad/js/machine/stately-index", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
@@ -23,7 +23,7 @@ class TestScript extends BundleScript {
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { SHAPE_MODEL_DEFINITION_ID } = await import("@cad/js-core");
+    const { SHAPE_MODEL_DEFINITION_ID } = await import("@cad/js/core");
     const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
     let outPath = join(this.root, "machine.json");
     let modelDefinitionId = SHAPE_MODEL_DEFINITION_ID;

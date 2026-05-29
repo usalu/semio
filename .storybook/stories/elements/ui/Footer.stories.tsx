@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Footer } from "@elements/ui";
+import { Footer } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { CheckCircle2 } from "lucide-react";
 

@@ -7,7 +7,7 @@
 	"private": true,
 	"exports": {
 		".": "./index.tsx",
-		"./shell": "./shell.tsx",
+		"./shell": "./index.tsx",
 		"./boot": "./index.tsx",
 		"./puzzle/board": "./puzzle/board-play-host.tsx",
 		"./puzzle/scene": "./puzzle/scene-play-host.tsx",

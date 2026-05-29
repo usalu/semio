@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
+/** @emoji 🛝 Puzzle play React chrome in `@framework/playground/renderer/react` (not in play packages). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -35,8 +35,8 @@ import {
 	type SidePanelTabConfig,
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react/shell";
-import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground-renderer-react/boot";
+} from "@framework/playground/renderer/react/shell";
+import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground/renderer/react/boot";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement } from "react";
 import {
@@ -66,7 +66,7 @@ import {
 	buildBoardPlaySelectionDeclarativeBody,
 	buildBoardPlayRuntime,
 	type BoardPlayPaneId,
-} from "@puzzle/2d-play";
+} from "@puzzle/2d/play";
 import {
 	mergeBoardKindCatalogBundleByRowId,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
@@ -97,7 +97,7 @@ import {
 	type BoardSelectionMode,
 	type BoardSelectionTargets,
 	type CameraState,
-} from "@puzzle/2d-react";
+} from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground";
 // #endregion 🔌Adapters
 
@@ -107,7 +107,7 @@ const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 );
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "@puzzle/2d-play";
+export type { BoardPlayPaneId } from "@puzzle/2d/play";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -824,7 +824,7 @@ function BoardPlayBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurface
 
 let boardPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers board play surface host, window bodies, and tab icons (called from `@framework/playground-renderer-react`). */
+/** @emoji 🧊 Registers board play surface host, window bodies, and tab icons (called from `@framework/playground/renderer/react`). */
 export function registerBoardPlaySurfaceHosts(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;

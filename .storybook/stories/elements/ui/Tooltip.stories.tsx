@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@elements/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Plus, Settings, Trash2 } from "lucide-react";
 

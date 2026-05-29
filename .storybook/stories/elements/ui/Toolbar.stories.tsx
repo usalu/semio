@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@elements/ui";
+import { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 

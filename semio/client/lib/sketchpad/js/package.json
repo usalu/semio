@@ -9,9 +9,9 @@
     ".": "./index.tsx"
   },
   "dependencies": {
-    "@puzzle/2d-react": "workspace:*",
-    "@puzzle/3d-react": "workspace:*",
-    "@puzzle/5d-react": "workspace:*",
+    "@puzzle/2d/react": "workspace:*",
+    "@puzzle/3d/react": "workspace:*",
+    "@puzzle/5d/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@framework/platform": "workspace:*",
     "fflate": "^0.8.2",

@@ -7,8 +7,6 @@
 #endregion 📱Header
 
 using Semio;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xunit;
 using System;
 using System.IO;
@@ -167,7 +165,7 @@ public class Tests
         [InlineData(KitKind.Transport, "\"transport\"")]
         public void KitKind_Serializes_To_Lowercase(KitKind kind, string expectedJson)
         {
-            var json = JsonConvert.SerializeObject(kind);
+            var json = SemioJson.Codec.Serialize(kind);
             Assert.Equal(expectedJson, json);
         }
 
@@ -179,7 +177,7 @@ public class Tests
         [InlineData("\"transport\"", KitKind.Transport)]
         public void KitKind_Deserializes_From_Lowercase(string json, KitKind expectedKind)
         {
-            var kind = JsonConvert.DeserializeObject<KitKind>(json);
+            var kind = SemioJson.Codec.Deserialize<KitKind>(json);
             Assert.Equal(expectedKind, kind);
         }
 
@@ -188,8 +186,8 @@ public class Tests
         {
             foreach (var kind in Enum.GetValues(typeof(KitKind)).Cast<KitKind>())
             {
-                var json = JsonConvert.SerializeObject(kind);
-                var deserialized = JsonConvert.DeserializeObject<KitKind>(json);
+                var json = SemioJson.Codec.Serialize(kind);
+                var deserialized = SemioJson.Codec.Deserialize<KitKind>(json);
                 Assert.Equal(kind, deserialized);
             }
         }
@@ -1365,7 +1363,7 @@ public class Tests
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
-            var parsed = JsonConvert.DeserializeObject(json);
+            var parsed = SemioJson.Codec.Deserialize<object>(json);
             Assert.NotNull(parsed);
         }
 
@@ -1386,7 +1384,7 @@ public class Tests
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
-            var parsed = JsonConvert.DeserializeObject(json);
+            var parsed = SemioJson.Codec.Deserialize<object>(json);
             Assert.NotNull(parsed);
             var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-representation"));
             Directory.CreateDirectory(reportsDir);

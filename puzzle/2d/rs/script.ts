@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@puzzle/2d-wasm` router: `bun ./script.ts wasm`. */
+/** 🦀 `@puzzle/2d/rs` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/bundle-script.ts";
 
 class WasmScript extends BundleScript {
@@ -10,7 +10,7 @@ class WasmScript extends BundleScript {
       logPrefix: "puzzle/2d/rs",
       wasmBaseName: "puzzle_board",
       pkg: {
-        name: "@puzzle/2d-wasm",
+        name: "@puzzle/2d/rs",
         files: ["puzzle_board_bg.wasm", "puzzle_board.js", "puzzle_board.d.ts", "puzzle_board_bg.wasm.d.ts"],
         main: "puzzle_board.js",
         module: "puzzle_board.js",

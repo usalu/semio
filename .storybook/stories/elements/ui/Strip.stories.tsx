@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Band, Strip } from "@elements/ui";
+import { Band, Strip } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 📢Strip

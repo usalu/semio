@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem } from "@elements/ui";
+import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
 import React from "react";

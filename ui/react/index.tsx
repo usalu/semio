@@ -15640,7 +15640,7 @@ function looksLikeAsciiCatalogishVectorStemForIconSelectorUi(s: string): boolean
 	return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyElementsBoardIconSelectorMode` in `@elements/board`. */
+/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyElementsBoardIconSelectorMode` in `@puzzle/2d/react`. */
 function defaultClassifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
 	const t = raw.trim();
 	if (t === "") {
@@ -21376,7 +21376,7 @@ export const Scene: React.FC<SceneProps> = ({
       <div className="absolute top-1 right-1 z-panel">
         <ActionDropdown id="scene-projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
       </div>
-      <ThreeCanvas
+      <HostThreeCanvas
         onPointerMissed={onPointerMissed}
         orthographic={resolvedProjection === "orthographic"}
         shadows={shadows}
@@ -21398,7 +21398,7 @@ export const Scene: React.FC<SceneProps> = ({
         >
           {children}
         </SceneInner>
-      </ThreeCanvas>
+      </HostThreeCanvas>
     </div>
   );
 };
@@ -23050,7 +23050,7 @@ if (import.meta.vitest) {
 // #region 🗿Framework Re-exports
 
 // Re-exports of common libraries used alongside UI primitives.
-// Workbench shell types and chrome live in `@elements/framework` / `@elements/framework-react`.
+// Workbench shell types and chrome live in `@framework/platform` / `@framework/platform/renderer/react`.
 
 // #region 🌩️DnD Kit
 export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";

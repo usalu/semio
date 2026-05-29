@@ -1,15 +1,15 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@cad/js-core",
+  "name": "@cad/js/core",
   "version": "0.1.0",
   "description": "🧭 Spatial factory runtime, model graph, and kernel contracts (headless).",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @cad/js-core:test"
+    "test": "bun nx run @cad/js/core:test"
   },
   "devDependencies": {
-    "@cad/js-kernel-brepjs": "workspace:*",
+    "@cad/js/kernel/brepjs": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

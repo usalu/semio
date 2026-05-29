@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js-workspace",
+  "name": "@cad/js",
   "private": true,
   "workspaces": ["core", "kernel/brepjs", "machine/stately", "query", "renderer"],
   "dependencies": {

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📋 `@puzzle/2d-react` — WASM board renderer + React canvas (depends only on `@ui/react`). */
+/** @emoji 📋 `@puzzle/2d/react` — WASM board renderer + React canvas (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -5472,7 +5472,7 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	registerSuspenseInstanceRetry: () => { },
 	releaseResource: () => null,
 	releaseSingletonInstance: () => null,
-	rendererPackageName: "@puzzle/2d-react",
+	rendererPackageName: "@puzzle/2d/react",
 	rendererVersion: "0.1.0",
 	replaceContainerChildren: () => { },
 	resetFormInstance: () => { },

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Cursor, LoadingRow, Spinner } from "@elements/ui";
+import { Cursor, LoadingRow, Spinner } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box } from "lucide-react";
 

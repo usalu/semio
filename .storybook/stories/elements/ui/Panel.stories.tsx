@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { BottomPanel, Panel, PanelSection, SidePanel } from "@elements/ui";
+import { BottomPanel, Panel, PanelSection, SidePanel } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Info, Layers, Settings } from "lucide-react";
 import { useState } from "react";

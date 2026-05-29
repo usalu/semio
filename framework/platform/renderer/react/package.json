@@ -1,6 +1,6 @@
 {
 	"$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/platform-react",
+	"name": "@framework/platform/renderer/react",
 	"version": "0.1.0",
 	"description": "framework · React renderer for @framework/platform",
 	"type": "module",

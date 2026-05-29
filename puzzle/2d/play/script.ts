@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/2d-play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
+/** 🧭 `@puzzle/2d/play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
 import { join } from "node:path";
 import {
   BundleScript,

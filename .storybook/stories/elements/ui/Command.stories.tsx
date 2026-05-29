@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@elements/ui";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, Circle, Cylinder, Settings, User } from "lucide-react";
 import { useState } from "react";

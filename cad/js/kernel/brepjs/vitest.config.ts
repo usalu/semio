@@ -12,7 +12,7 @@ export default defineConfig({
 	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
-			"@cad/js-core": coreEntry,
+			"@cad/js/core": coreEntry,
 		},
 	},
 	test: {

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { ButtonGroup, ButtonGroupItem } from "@elements/ui";
+import { ButtonGroup, ButtonGroupItem } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network } from "lucide-react";
 

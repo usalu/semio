@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🏛️ `@semio/architect` — `bun script.ts <build|test|wasm>`. */
+/** 🏛️ `@semio/query` — `bun script.ts <build|test|wasm>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/src/bundle-script.ts";
 
@@ -11,7 +11,7 @@ class WasmScript extends BundleScript {
       logPrefix: "architect",
       wasmBaseName: "architect",
       pkg: {
-        name: "@semio/architect-wasm",
+        name: "@semio/query/pkg",
         files: ["architect_bg.wasm", "architect.js", "architect.d.ts", "architect_bg.wasm.d.ts"],
         main: "architect.js",
         module: "architect.js",

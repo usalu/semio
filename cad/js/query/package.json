@@ -1,19 +1,19 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@cad/js-query",
+  "name": "@cad/js/query",
   "version": "0.1.0",
   "description": "🔍 Cypher-inspired construct query language for spatial models (Chevrotain AST + kernel index).",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @cad/js-query:test"
+    "test": "bun nx run @cad/js/query:test"
   },
   "dependencies": {
-    "@cad/js-core": "workspace:*",
+    "@cad/js/core": "workspace:*",
     "chevrotain": "^11.0.3"
   },
   "devDependencies": {
-    "@cad/js-kernel-brepjs": "workspace:*",
+    "@cad/js/kernel/brepjs": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

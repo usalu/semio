@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@puzzle/5d-play`. */
+/** @emoji 🛝 Vite dev/build for `@puzzle/5d/play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -15,8 +15,8 @@ export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
 	extraAliases: [
-		{ find: "@puzzle/2d-react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
-		{ find: "@puzzle/3d-react", replacement: path.resolve(repoRoot, "puzzle/3d/react/index.tsx") },
-		{ find: "@puzzle/5d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@puzzle/2d/react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+		{ find: "@puzzle/3d/react", replacement: path.resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+		{ find: "@puzzle/5d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
 	],
 });

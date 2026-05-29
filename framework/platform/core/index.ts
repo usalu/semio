@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@elements/framework` — Renderer-agnostic product shell: {@link ProductRuntime} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link ProductDefinition} + {@link SurfaceDefinition} for contribution routing. */
+/** 🧱 `@framework/platform` — Renderer-agnostic product shell: {@link ProductRuntime} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link ProductDefinition} + {@link SurfaceDefinition} for contribution routing. */
 // #endregion 🧱Header
 
 //#region 🔖JsonValue

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@elements/ui";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Settings } from "lucide-react";
 

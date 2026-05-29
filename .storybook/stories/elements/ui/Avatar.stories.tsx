@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar } from "@elements/ui";
+import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 📔Avatar

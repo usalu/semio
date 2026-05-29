@@ -65,10 +65,10 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@ui/react/elements"] = toVitePath(resolve(uiReactDir, "index.tsx"));
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
-		alias["@framework/playground-renderer-react"] = toVitePath(frameworkPlaygroundReactDir);
-		alias["@puzzle/2d-react"] = toVitePath(puzzle2dReactDir);
-		alias["@puzzle/3d-react"] = toVitePath(puzzle3dReactDir);
-		alias["@puzzle/5d-react"] = toVitePath(puzzle5dReactDir);
+		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
+		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
+		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
+		alias["@puzzle/5d/react"] = toVitePath(puzzle5dReactDir);
 		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
 	if (loadSemioStack) {
@@ -190,8 +190,8 @@ const config: StorybookConfig = {
 			"@ui/react",
 			"@ui/react/elements",
 			"@framework/playground",
-			"@framework/playground-renderer-react",
-			"@puzzle/2d-react",
+			"@framework/playground/renderer/react",
+			"@puzzle/2d/react",
 		]);
 		if (loadSemioStack) {
 			optimizeExclude.add("@semio/ui");

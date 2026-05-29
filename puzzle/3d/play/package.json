@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@puzzle/3d-play",
+  "name": "@puzzle/3d/play",
   "version": "0.1.0",
   "description": "puzzle · 3d play harness (renderer-neutral runtime + Vite entry)",
   "type": "module",
@@ -9,15 +9,15 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "dev": "bun nx run @puzzle/3d-play:dev",
-    "build": "bun nx run @puzzle/3d-play:build",
-    "test": "bun nx run @puzzle/3d-play:test"
+    "dev": "bun nx run @puzzle/3d/play:dev",
+    "build": "bun nx run @puzzle/3d/play:build",
+    "test": "bun nx run @puzzle/3d/play:test"
   },
   "dependencies": {
     "@framework/playground": "workspace:*"
   },
   "devDependencies": {
-    "@framework/playground-renderer-react": "workspace:*",
+    "@framework/playground/renderer/react": "workspace:*",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "^5.1.2",

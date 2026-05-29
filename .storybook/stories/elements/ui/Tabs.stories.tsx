@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@elements/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🏷️Tabs

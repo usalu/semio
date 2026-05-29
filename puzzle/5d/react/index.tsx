@@ -1,12 +1,12 @@
 // #region 🧲Header
-/** @emoji 🔗 `@puzzle/5d-react` — paired board + scene surfaces + play harness (monolith). */
+/** @emoji 🔗 `@puzzle/5d/react` — paired board + scene surfaces + play harness (monolith). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
 import type { ContextMenuItem } from "@ui/react";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
-/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/2d-react` and `@puzzle/3d-react` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
+/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/2d/react` and `@puzzle/3d/react` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
 
 import {
 	boardFixtureMetaKindCatalogBundle,
@@ -19,8 +19,8 @@ import {
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
 	type CameraState as BoardCameraState,
-} from "@puzzle/2d-react";
-import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/2d-react";
+} from "@puzzle/2d/react";
+import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/2d/react";
 import {
 	Canvas3D as Scene,
 	SceneAttractions,

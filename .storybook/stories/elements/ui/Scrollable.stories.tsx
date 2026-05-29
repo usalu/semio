@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Scrollable } from "@elements/ui";
+import { Scrollable } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎮Scrollable

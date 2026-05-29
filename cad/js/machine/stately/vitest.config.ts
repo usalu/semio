@@ -11,7 +11,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@cad/js-core": coreEntry,
+			"@cad/js/core": coreEntry,
 		},
 	},
 	test: {

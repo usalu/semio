@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import type { RingOrbData } from "@elements/ui";
-import { Ring } from "@elements/ui";
+import type { RingOrbData } from "@ui/react";
+import { Ring } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger } from "@elements/ui";
+import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { CalendarDays } from "lucide-react";
 

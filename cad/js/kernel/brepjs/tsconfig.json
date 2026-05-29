@@ -5,7 +5,7 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@cad/js-core": ["../../core/index.ts"]
+      "@cad/js/core": ["../../core/index.ts"]
     }
   },
   "include": ["index.ts"]

@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { DiagramNode, DiagramSkeleton } from "@elements/ui";
+import { DiagramNode, DiagramSkeleton } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔓DiagramNode

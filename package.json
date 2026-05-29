@@ -73,8 +73,8 @@
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun ./script.ts publish",
     "purge": "bun ./script.ts purge",
-    "query:build": "bun nx run @semio/architect:build",
-    "query:test": "bun nx run @semio/architect:test",
+    "query:build": "bun nx run @semio/query:build",
+    "query:test": "bun nx run @semio/query:test",
     "query:wasm": "bun ./script.ts query wasm"
   },
   "devDependencies": {

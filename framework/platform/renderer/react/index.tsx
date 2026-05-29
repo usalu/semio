@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji ⚛️ `@framework/platform-react` — React renderer for {@link @framework/platform}: declarative {@link UiNode} host (monolith). */
+/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform}: declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
 export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@framework/platform";

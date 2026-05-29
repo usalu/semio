@@ -50,10 +50,10 @@
       "@semio/rs-wasm/*": [
         "../rs/pkg/*"
       ],
-      "@elements/ui": [
+      "@ui/react": [
         "../../elements/ui/index.tsx"
       ],
-      "@elements/ui/elements": [
+      "@ui/react/elements": [
         "../../elements/ui/index.tsx"
       ]
     }

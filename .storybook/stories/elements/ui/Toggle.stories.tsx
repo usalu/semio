@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Toggle } from "@elements/ui";
+import { Toggle } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 

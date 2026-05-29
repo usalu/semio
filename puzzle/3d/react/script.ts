@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/3d-react` task router: `bun ./script.ts test [args…]`. */
+/** 🧭 `@puzzle/3d/react` task router: `bun ./script.ts test [args…]`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/bundle-script.ts";
 
 class TestScript extends BundleScript {

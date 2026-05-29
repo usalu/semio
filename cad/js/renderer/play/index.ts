@@ -19,7 +19,7 @@ import {
 	type UiNode,
 	type WindowLayout,
 } from "@framework/playground";
-import { playgroundTreePanelRootItems } from "@framework/playground-renderer-react";
+import { playgroundTreePanelRootItems } from "@framework/playground/renderer/react";
 import type { TreeDataItem, TreeDataSection } from "@ui/react";
 import {
 	SHAPE_MODEL_DEFINITION_ID,
@@ -40,7 +40,7 @@ import {
 	type SelectionTarget,
 	type SpatialComputeMode,
 	type TransformationSpec,
-} from "@cad/js-core";
+} from "@cad/js/core";
 
 /** @emoji ⚡ Per-window compute mode options for spatial play window measures. */
 export const SPATIAL_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
@@ -654,7 +654,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildSpatialPlayHierarchySections lists objects after box commit object binding", async () => {
-			const { BrepjsKernel } = await import("@cad/js-kernel-brepjs");
+			const { BrepjsKernel } = await import("@cad/js/kernel/brepjs");
 			const spec = loadSpatialInteraction("primitive.box")!;
 			const model = new Model();
 			const kernel = new BrepjsKernel() as never;
@@ -673,8 +673,8 @@ if (import.meta.vitest) {
 		});
 
 		it("buildSpatialPlayHierarchySections nests topology under primitive slots", async () => {
-			const { preciseSpatialKernelMath: M } = await import("@cad/js-kernel-brepjs");
-			const { applyModelDiff, solidRef } = await import("@cad/js-core");
+			const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
+			const { applyModelDiff, solidRef } = await import("@cad/js/core");
 			const model = new Model();
 			const solid = solidRef("solid-1");
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));

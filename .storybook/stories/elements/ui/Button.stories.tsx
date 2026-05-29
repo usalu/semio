@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, ButtonCycle } from "@elements/ui";
+import { Button, ButtonCycle } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network, Plus } from "lucide-react";
 import { useState } from "react";

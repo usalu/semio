@@ -1,16 +1,16 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@puzzle/5d-react",
+  "name": "@puzzle/5d/react",
   "version": "0.1.0",
   "description": "elements Ôö¼├Ç topology (board + scene)",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @puzzle/5d-react:test"
+    "test": "bun nx run @puzzle/5d/react:test"
   },
   "dependencies": {
-    "@puzzle/2d-react": "workspace:*",
-    "@puzzle/3d-react": "workspace:*",
+    "@puzzle/2d/react": "workspace:*",
+    "@puzzle/3d/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",

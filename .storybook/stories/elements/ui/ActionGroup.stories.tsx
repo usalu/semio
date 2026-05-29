@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { ActionGroup, ActionGroupItem } from "@elements/ui";
+import { ActionGroup, ActionGroupItem } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Copy, Download, ExternalLink } from "lucide-react";
 

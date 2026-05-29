@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/2d-react",
+  "name": "@puzzle/2d/react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

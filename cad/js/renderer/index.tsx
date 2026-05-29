@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@cad/js-renderer-r3f` — R3F renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/spatial.shape/interaction/box.json`. */
+/** @emoji 🎬 `@cad/js/renderer` — R3F renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -102,7 +102,7 @@ import {
 	type ObjectRef,
 	type Vec3,
 	type SpatialComputeMode,
-} from "@cad/js-core";
+} from "@cad/js/core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
 type AnchorRef = kernelGeometry.AnchorRef;
@@ -117,7 +117,7 @@ type VertexRecord = kernelGeometry.VertexRecord;
 type WireRecord = kernelGeometry.WireRecord;
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js-kernel-brepjs";
+import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 // #endregion 🔌Adapters
 
 // #region ⚡R3FPreviewKernel
@@ -5885,13 +5885,13 @@ export function SelectionPropertiesPanel({
 // #endregion ­ƒ¬®Repl
 
 // #region ­ƒº¬Tests
-const __spatialR3fTestKernel = import.meta.vitest ? await import("@cad/js-kernel-brepjs") : null;
+const __spatialR3fTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 
 if (import.meta.vitest) {
 	const { BrepjsKernel, preciseSpatialKernelMath: M } = __spatialR3fTestKernel!;
 	const { describe, it, expect } = import.meta.vitest;
 
-	describe("@cad/js-renderer-r3f interaction adapter", () => {
+	describe("@cad/js/renderer interaction adapter", () => {
 		it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
 			const spec = loadSpatialInteraction("primitive.box");
 			expect(replHostGeometryPickingEnabled("primitive.box", spec, "first_corner")).toBe(false);

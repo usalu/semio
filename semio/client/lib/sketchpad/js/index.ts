@@ -139,7 +139,7 @@ import {
   type BoardHoverPayload,
   type BoardSelectionSnapshot,
   type CameraState as ElementsBoardCameraState,
-} from "@elements/board";
+} from "@puzzle/2d/react";
 import {
   DEFAULT_DOMAIN,
   PLACEHOLDER_MESH_URL,
@@ -148,7 +148,7 @@ import {
   type SceneRelocateMode as ElementsSceneRelocateMode,
   type SceneRelocatePayload,
   type SceneAttractionPayload,
-} from "@elements/scene";
+} from "@puzzle/3d/react";
 import {
   buildTopologyDualSurfaceBindings,
   TopologyBoardPane,
@@ -162,7 +162,7 @@ import {
   topologyDiagramForceGraphOptions,
   topologyParseBoardCompoundId,
   topologySceneChromeDefaults,
-} from "@elements/topology";
+} from "@puzzle/5d/react";
 import { gunzipSync } from "fflate";
 
 /** @emoji ðŸ‘Ÿ Registry kit-store factory until sketchpad runs purely on {@link SessionContextProvider}. */
@@ -449,7 +449,7 @@ import {
 	type UiNode,
 	type UiPanelHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@elements/framework";
+} from "@framework/platform";
 import {
 	ProductView,
 	getLevelBgClass,
@@ -457,7 +457,7 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	type SidePanelTabConfig,
-} from "@elements/framework-react";
+} from "@framework/platform/renderer/react";
 
 // #region ðŸ”–SketchpadKitUiHelpers
 /**
@@ -13852,7 +13852,7 @@ const KitTableApp: FC = () => {
 // #endregion ðŸ›Žï¸Table
 
 // #region ðŸ§«Diagram
-// Diagram MUST render the kit topology on @elements/board (WASM force layout) with type and design nodes.
+// Diagram MUST render the kit topology on @puzzle/2d/react (WASM force layout) with type and design nodes.
 
 /**
  * KitDiagramNode holds the data fields for a KitDiagramNode record.
@@ -34205,7 +34205,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #endregion Â­Æ’ÂºÂ½Diagram
 
 // #region Â­Æ’ÂºÂ®TopologyAdapter
-/** Â­Æ’Ã„Â¼ Design board+scene via {@link TopologyBoardPane} / {@link TopologyScenePane} on @elements/topology and @elements/scene. */
+/** Â­Æ’Ã„Â¼ Design board+scene via {@link TopologyBoardPane} / {@link TopologyScenePane} on @puzzle/5d/react and @puzzle/3d/react. */
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH = 96;
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT = 48;
 const SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS = 10;
@@ -48560,7 +48560,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const centerX = sceneBox.x + sceneBox.width / 2;
             const centerY = sceneBox.y + sceneBox.height / 2;
 
-            console.log("[Design Test] Starting scene pan operations on @elements/scene canvas");
+            console.log("[Design Test] Starting scene pan operations on @puzzle/3d/react canvas");
 
             // Warmup pan
             await page.mouse.move(centerX, centerY);

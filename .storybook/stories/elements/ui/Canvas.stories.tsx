@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Window } from "@elements/ui";
+import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Window } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region ⚙️Canvas

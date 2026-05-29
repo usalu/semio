@@ -2,7 +2,7 @@
 // .storybook/stories/elements/ui/App.stories.tsx
 // #endregion 🧲Header
 
-import { App, Mode } from "@elements/ui";
+import { App, Mode } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 

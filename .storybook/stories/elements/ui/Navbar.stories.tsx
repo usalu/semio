@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@elements/ui";
+import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, ZoomIn, ZoomOut } from "lucide-react";
 

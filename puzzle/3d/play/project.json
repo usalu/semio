@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/3d-play",
+  "name": "@puzzle/3d/play",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
@@ -27,7 +27,7 @@
       }
     },
     "test": {
-      "dependsOn": ["@puzzle/3d-react:test"],
+      "dependsOn": ["@puzzle/3d/react:test"],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "puzzle/3d/play",

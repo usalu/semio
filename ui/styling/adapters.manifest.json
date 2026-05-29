@@ -3,7 +3,7 @@
   "adapters": [
     {
       "id": "js-tailwind",
-      "description": "Tailwind v4 @theme fragments + @font-face for @elements/styling",
+      "description": "Tailwind v4 @theme fragments + @font-face for @ui/styling",
       "generator": "js/tailwind/generate.ts",
       "outputs": [
         "../../client/lib/styling/generated/palette-fonts.css",

@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js-renderer-r3f",
+  "name": "@cad/js/renderer",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

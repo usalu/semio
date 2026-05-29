@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@elements/ui";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@elements/playground` task router: `bun ./script.ts test`. */
+/** 🧭 `@framework/playground` task router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/bundle-script.ts";
 
 class TestScript extends BundleScript {

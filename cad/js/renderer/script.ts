@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@cad/js-renderer-r3f` task router: `bun ./script.ts <dev|build|test|policy> [args…]`. */
+/** 🧭 `@cad/js/renderer` task router: `bun ./script.ts <dev|build|test|policy> [args…]`. */
 import type { FileLinter } from "../../../repo/lib/js/src/linter.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/dependency-boundary.ts";
 import { getWorkspaceRoot } from "../../../repo/lib/js/src/cli.ts";
@@ -15,7 +15,7 @@ import { defineLint } from "../../../repo/lib/js/src/script.ts";
 
 export const policyFile = "index.tsx";
 
-export const policy = defineLint("@cad/js-renderer-r3f-index", (l: FileLinter) => {
+export const policy = defineLint("@cad/js/renderer-index", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);

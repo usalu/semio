@@ -2,7 +2,7 @@
 // .storybook/stories/elements/ui/Mode.stories.tsx
 // #endregion 🧲Header
 
-import { Mode, createEvenWindowLayout } from "@elements/ui";
+import { Mode, createEvenWindowLayout } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import { expect, userEvent, within } from "storybook/test";

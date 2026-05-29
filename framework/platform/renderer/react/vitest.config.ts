@@ -6,13 +6,13 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/framework-react` monolith. */
+/** @emoji 🧪 Vitest for `@framework/platform/renderer/react` monolith. */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: [
 			{ find: "@framework/platform", replacement: resolve(root, "../../core/index.ts") },
-			{ find: "@framework/platform-react", replacement: resolve(root, "index.tsx") },
+			{ find: "@framework/platform/renderer/react", replacement: resolve(root, "index.tsx") },
 			{ find: "@ui/react", replacement: resolve(root, "../../../../ui/react/index.tsx") },
 		],
 	},

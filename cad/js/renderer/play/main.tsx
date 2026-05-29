@@ -25,7 +25,7 @@ import {
 	type SidePanelTabConfig,
 	type TreeDataSection,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/renderer/react";
 import { ListTree, Shapes } from "lucide-react";
 import {
 	SPATIAL_PLAY_APP_ID,
@@ -71,16 +71,16 @@ import {
 	type TransformationSpec,
 	Model,
 	ModelSpace,
-} from "@cad/js-core";
-import { defaultConstructRunner } from "@cad/js-query";
+} from "@cad/js/core";
+import { defaultConstructRunner } from "@cad/js/query";
 import geometryNakagin from "../../../fixtures/geometry.json";
 import geometryLoom from "../../../fixtures/geometry-loom.json";
 import geometryRoutes from "../../../fixtures/geometry-routes.json";
 import geometrySmallBuilding from "../../../fixtures/small-building.model.json";
 import geometryTallBuilding from "../../../fixtures/tall-building.model.json";
 import geometryLargeBuilding from "../../../fixtures/large-building.model.json";
-import { BrepjsKernel } from "@cad/js-kernel-brepjs";
-import { statelyStateEngineProvider } from "@cad/js-machine-stately";
+import { BrepjsKernel } from "@cad/js/kernel/brepjs";
+import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
 	InteractionRepl,
 	InteractionReplViewport,

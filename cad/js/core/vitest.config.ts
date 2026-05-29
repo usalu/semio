@@ -7,15 +7,15 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 const jsRoot = resolve(root, "..");
 
-/** @emoji 🧪 Vitest for `@cad/js-core` (inline `import.meta.vitest`). */
+/** @emoji 🧪 Vitest for `@cad/js/core` (inline `import.meta.vitest`). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@cad/js-core": resolve(root, "index.ts"),
-			"@cad/js-kernel-brepjs": resolve(jsRoot, "kernel-brepjs/index.ts"),
-			"@cad/js-machine-stately": resolve(jsRoot, "machine-stately/index.ts"),
-			"@cad/js-query": resolve(jsRoot, "query/index.ts"),
+			"@cad/js/core": resolve(root, "index.ts"),
+			"@cad/js/kernel/brepjs": resolve(jsRoot, "kernel-brepjs/index.ts"),
+			"@cad/js/machine/stately": resolve(jsRoot, "machine-stately/index.ts"),
+			"@cad/js/query": resolve(jsRoot, "query/index.ts"),
 		},
 	},
 	test: {

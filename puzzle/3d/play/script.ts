@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/3d-play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
+/** 🧭 `@puzzle/3d/play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
 import {
   BundleScript,
   ScriptRouter,

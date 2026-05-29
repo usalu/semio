@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Slider } from "@elements/ui";
+import { Slider } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

@@ -324,7 +324,7 @@
       "name": "🛠️dev👤semio🏛️architect🧪test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/architect:test",
+      "command": "bun nx run @semio/query:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -335,7 +335,7 @@
       "name": "🛠️dev👤semio🏛️architect🦀build",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/architect:build",
+      "command": "bun nx run @semio/query:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -604,7 +604,7 @@
       "name": "🛠️dev🧭cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js-renderer-r3f:dev",
+      "command": "bun nx run @cad/js/renderer:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "SPATIAL_R3F_PLAY_PORT": "6020"
@@ -623,7 +623,7 @@
       "name": "🛠️dev🧩puzzle🏁board",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/2d-play:dev",
+      "command": "bun nx run @puzzle/2d/play:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "BOARD_PLAY_PORT": "6012"
@@ -642,7 +642,7 @@
       "name": "🛠️dev🧩puzzle🏙️scene",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/3d-play:dev",
+      "command": "bun nx run @puzzle/3d/play:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "SCENE_PLAY_PORT": "6013"
@@ -661,7 +661,7 @@
       "name": "🛠️dev🧩puzzle🌐topology",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/5d-play:dev",
+      "command": "bun nx run @puzzle/5d/play:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "TOPOLOGY_PLAY_PORT": "6014"

@@ -1,20 +1,20 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@cad/js-machine-stately",
+  "name": "@cad/js/machine/stately",
   "version": "0.1.0",
-  "description": "🎭 XState-backed `StateEngineProvider` for `@cad/js-core` factory specs.",
+  "description": "🎭 XState-backed `StateEngineProvider` for `@cad/js/core` factory specs.",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @cad/js-machine-stately:test",
-    "generate": "bun nx run @cad/js-machine-stately:generate"
+    "test": "bun nx run @cad/js/machine/stately:test",
+    "generate": "bun nx run @cad/js/machine/stately:generate"
   },
   "dependencies": {
-    "@cad/js-core": "workspace:*",
+    "@cad/js/core": "workspace:*",
     "xstate": "^5.31.1"
   },
   "devDependencies": {
-    "@cad/js-kernel-brepjs": "workspace:*",
+    "@cad/js/kernel/brepjs": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

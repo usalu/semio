@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@puzzle/3d-play` (mesh middleware + three aliases). */
+/** @emoji 🛝 Vite dev/build for `@puzzle/3d/play` (mesh middleware + three aliases). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -49,7 +49,7 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	extraPlugins: [scenePlayMeshes],
 	extraAliases: [
-		{ find: "@puzzle/3d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@puzzle/3d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],

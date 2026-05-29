@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
+/** @emoji 🛝 Puzzle play React chrome in `@framework/playground/renderer/react` (not in play packages). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -21,8 +21,8 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react/shell";
-import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground-renderer-react/boot";
+} from "@framework/playground/renderer/react/shell";
+import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground/renderer/react/boot";
 import {
 	buildTopologyDualSurfaceBindings,
 	topologyMirrorConnectHandlers,
@@ -30,7 +30,7 @@ import {
 	TopologyBoardPane,
 	TopologyScenePane,
 	topologySceneChromeDefaults,
-} from "@puzzle/5d-react";
+} from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground";
 import {
 	TOPOLOGY_PLAY_APP_ID,
@@ -47,7 +47,7 @@ import {
 	buildTopologyPlayRuntime,
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
-} from "@puzzle/5d-play";
+} from "@puzzle/5d/play";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
@@ -203,7 +203,7 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 //#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers topology play board+scene surface hosts (called from `@framework/playground-renderer-react`). */
+/** @emoji 🧊 Registers topology play board+scene surface hosts (called from `@framework/playground/renderer/react`). */
 export function registerTopologyPlaySurfaceHosts(): void {
 	if (topologyPlayChromeRegistered) return;
 	topologyPlayChromeRegistered = true;

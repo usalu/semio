@@ -10,7 +10,7 @@
 
 // #region 🗄️Configuration
 // Tailwind CSS configuration extending the shared semio preset for the desktop application.
-// Configuration MUST use the shared tailwindConfig preset from `@elements/styling`.
+// Configuration MUST use the shared tailwindConfig preset from `@ui/styling`.
 
 import { tailwindConfig } from "../../../../elements/client/lib/styling/tailwind.config";
 import type { Config } from "tailwindcss";

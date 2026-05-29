@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@elements/ui";
+import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";

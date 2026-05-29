@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js-query",
+  "name": "@cad/js/query",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
