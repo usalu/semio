@@ -3490,7 +3490,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		lodCtx.gridStepWorld > 0
 			? lodCtx.gridStepWorld
 			: undefined;
-	const showTc = props.selected && props.relocateActive === true && props.relocate !== false && tcTarget;
+	const showTc = selected && relocateActive && props.relocate !== false && tcTarget;
 
 	return (
 		<>
@@ -4665,6 +4665,9 @@ function RegistryProvider({
 			proximityRadius,
 			proximityRelocateEnabled,
 			relocateMode,
+			selectedObjectIds,
+			selectionMode,
+			activeRelocateObjectId,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -4698,6 +4701,9 @@ function RegistryProvider({
 			proximityRadius,
 			proximityRelocateEnabled,
 			relocateMode,
+			selectedObjectIds,
+			selectionMode,
+			activeRelocateObjectId,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -5131,6 +5137,21 @@ if (import.meta.vitest) {
 			).toBe(false);
 		});
 	});
+	describe("createSelectionSnapshotStore", () => {
+		it("notifies subscribers synchronously on setSnapshot", () => {
+			const store = createSelectionSnapshotStore();
+			let count = 0;
+			const unsubscribe = store.subscribe(() => {
+				count += 1;
+			});
+			store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+			expect(count).toBe(1);
+			expect(store.getSnapshot().objectIds).toEqual(["a"]);
+			store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+			expect(count).toBe(1);
+			unsubscribe();
+		});
+	});
 	describe("parseFixtureV1", () => {
 		it("accepts minimal fixture", () => {
 			const f = parseFixtureV1({
@@ -5436,8 +5457,34 @@ function useScenePlayController(): ScenePlayShellController | undefined {
 
 function useScenePlaySnapshot(): ScenePlaySnapshot {
 	const ctrl = useScenePlayController();
-	return (
-		ctrl?.getSnapshot() ?? {
+	return useSyncExternalStore(
+		(onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
+		() =>
+			ctrl?.getSnapshot() ?? {
+				fixture: null,
+				fixtureRevision: 0,
+				lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
+				lodTag: DEFAULT_MANUAL_LOD,
+				lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
+				automaticLod: true,
+				depthVariableLod: false,
+				relocateMode: "translate",
+				selection: SCENE_PLAY_EMPTY_SELECTION,
+				selectedId: null,
+				selectedLabel: null,
+				selectionMode: "single",
+				proximityRadius: 24,
+				chunkSize: 256,
+				gridFactor: 10,
+				showLodGrid: false,
+				gridSnapEnabled: true,
+				proximityCount: 0,
+				connectCount: 0,
+				indirectCount: 0,
+				compatibleObjectsCount: 0,
+				targetRingCount: 0,
+			},
+		() => ({
 			fixture: null,
 			fixtureRevision: 0,
 			lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
@@ -5460,7 +5507,7 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 			indirectCount: 0,
 			compatibleObjectsCount: 0,
 			targetRingCount: 0,
-		}
+		}),
 	);
 }
 
@@ -5902,6 +5949,21 @@ class ScenePlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 			id: SCENE_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
+}
+
+class ScenePlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: SCENE_PLAY_KINDS_TAB_ID,
+			icon: Tags,
+			order: 1,
 			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
 		};
 	}
@@ -6384,6 +6446,9 @@ function ScenePlayProductShell(props: {
 	const selectionKey = shellValue
 		? `${shellValue.snap.selection.objectIds.join("\0")}\u0001${shellValue.snap.selection.vortexIds.join("\0")}\u0001${shellValue.snap.selection.attractionIds.join("\0")}\u0001${shellValue.snap.fixtureRevision}`
 		: "";
+	const kindCatalogKey = shellValue?.kindCatalogs
+		? `${shellValue.kindCatalogs.nodes?.length ?? 0}\u0001${shellValue.kindCatalogs.handles?.length ?? 0}\u0001${shellValue.kindCatalogs.wires?.length ?? 0}\u0001${shellValue.kindCatalogs.edges?.length ?? 0}`
+		: "";
 	const workbenchTabs = useMemo(
 		() =>
 			shellValue
@@ -6398,9 +6463,10 @@ function ScenePlayProductShell(props: {
 									shellValue.setSelection({ objectIds: [], vortexIds: [], attractionIds: [attractionId] }),
 							}),
 						).resolveTab(),
+						new ScenePlayKindsPanelDefinition(() => buildScenePlayKindsSections(shellValue.kindCatalogs)).resolveTab(),
 					]
 				: [],
-		[shellValue, selectionKey],
+		[shellValue, selectionKey, kindCatalogKey],
 	);
 	const detailTabs = useMemo(
 		() =>

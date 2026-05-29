@@ -112,14 +112,7 @@ export function buildTopologyPlayHierarchySections(
 		defaultOpen: true,
 		items: branches.length ? branches : [{ id: "topology-play-hierarchy.topology.empty", label: "(no fixtures)" }],
 	};
-	return [
-		{
-			id: "topology-play-hierarchy.section",
-			label: "Hierarchy",
-			defaultOpen: true,
-			items: [topologyRoot],
-		},
-	];
+	return playgroundTreePanelRootItems("topology-play-hierarchy.root", [topologyRoot]);
 }
 //#endregion 🔖TopologyPlayHierarchy
 

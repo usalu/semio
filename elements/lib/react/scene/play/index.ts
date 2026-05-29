@@ -518,6 +518,7 @@ export class ScenePlayShellController extends Controller {
 	private indirectCount: number;
 	private compatibleObjectsCount: number;
 	private targetRingCount: number;
+	private snapshotListeners = new Set<() => void>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SCENE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -542,6 +543,18 @@ export class ScenePlayShellController extends Controller {
 		this.compatibleObjectsCount = 0;
 		this.targetRingCount = 0;
 		this.rebuildShellMode();
+	}
+
+	/** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */
+	subscribeSnapshot(listener: () => void): () => void {
+		this.snapshotListeners.add(listener);
+		return () => this.snapshotListeners.delete(listener);
+	}
+
+	private notifySnapshot(): void {
+		for (const listener of this.snapshotListeners) {
+			listener();
+		}
 	}
 
 	getFixture(): FixtureV1 | null {
@@ -720,6 +733,7 @@ export class ScenePlayShellController extends Controller {
 						return;
 					}
 					this.selection = resolved;
+					this.notifySnapshot();
 					this.emit();
 				}
 				return;
@@ -733,6 +747,7 @@ export class ScenePlayShellController extends Controller {
 					return;
 				}
 				this.selection = resolved;
+				this.notifySnapshot();
 				this.emit();
 				return;
 			}
@@ -752,6 +767,7 @@ export class ScenePlayShellController extends Controller {
 					return;
 				}
 				this.selection = resolved;
+				this.notifySnapshot();
 				this.emit();
 				return;
 			}
@@ -1015,6 +1031,22 @@ if (import.meta.vitest) {
 			void ctrl;
 		});
 
+		it("subscribeSnapshot notifies listeners on noteSelection", () => {
+			const trackingBus = new CommandBus();
+			const trackingCtrl = new ScenePlayShellController(trackingBus, () => undefined);
+			let snapshotCount = 0;
+			const unsubscribe = trackingCtrl.subscribeSnapshot(() => {
+				snapshotCount += 1;
+			});
+			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
+			expect(snapshotCount).toBe(1);
+			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
+			expect(snapshotCount).toBe(1);
+			trackingCtrl.run("noteSelection", { objectIds: ["b"], vortexIds: [] });
+			expect(snapshotCount).toBe(2);
+			unsubscribe();
+		});
+
 		it("deleteSelection removes selected fixture rows and clears selection", () => {
 			const bus = new CommandBus();
 			const wb = new ProductRuntime();
@@ -1105,6 +1137,19 @@ if (import.meta.vitest) {
 			expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("scene-play-hierarchy.vortex.a:v1");
 			const attractionsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Attractions");
 			expect(attractionsGroup?.items?.[0]?.id).toBe("scene-play-hierarchy.attraction.t1");
+		});
+
+		it("buildScenePlayKindsSections lists object, vortex, and attraction kind categories", () => {
+			const catalogs = parseKindCatalogs({
+				kindCatalogs: {
+					nodes: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
+					handles: [{ id: "core circular top", label: "Core circular top", name: "Core circular top" }],
+					wires: [{ id: "board.wire.link", label: "Link", name: "Link" }],
+				},
+			});
+			const sections = buildScenePlayKindsSections(catalogs);
+			expect(sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
+			expect(sections[0]?.items?.[0]?.label).toBe("Capsule");
 		});
 
 		it("declarative window body is a lone scene3d surface", () => {
