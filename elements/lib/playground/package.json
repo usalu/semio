@@ -13,7 +13,6 @@
 	"dependencies": {
 		"@elements/ui": "workspace:*",
 		"clsx": "^2.1.1",
-		"golden-layout": "^2.6.0",
 		"lucide-react": "^0.536.0",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",

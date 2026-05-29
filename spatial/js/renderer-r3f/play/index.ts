@@ -15,6 +15,7 @@ import {
 	type AppTools,
 	type ToolItem,
 	type WindowBodyViewContext,
+	type WindowMeasure,
 	type UiNode,
 	type WindowLayout,
 } from "@elements/playground";
@@ -36,8 +37,12 @@ import {
 	typologyObjectPascalFromLabel,
 	type ModelTopologyHierarchyNode,
 	type SelectionTarget,
+	type SpatialComputeMode,
 	type TransformationSpec,
 } from "@spatial/js-core";
+
+/** @emoji ⚡ Per-window compute mode options for spatial play window measures. */
+export const SPATIAL_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
 
 //#region 🔖Ids
 export const SPATIAL_PLAY_APP_ID = "spatial-play";
@@ -154,6 +159,15 @@ export function spatialPlayModelDefinitionIdForPane(pane: SpatialPlayPaneId): st
 /** @emoji 🧭 Scene surface id for a spatial play pane. */
 export function spatialPlaySceneSurfaceIdForPane(pane: SpatialPlayPaneId): string {
 	return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.surfaceId;
+}
+
+/** @emoji 🧭 Maps a spatial play window kind id to its pane id. */
+export function spatialPlayPaneFromWindowKindId(windowKindId: string): SpatialPlayPaneId | null {
+	return SPATIAL_PLAY_PANE_SPECS.find((row) => row.windowKindId === windowKindId)?.pane ?? null;
+}
+
+function isSpatialComputeMode(value: string): value is SpatialComputeMode {
+	return value === "fast" || value === "precise";
 }
 //#endregion 🔖Ids
 
@@ -409,12 +423,49 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
 export class SpatialPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Spatial", undefined);
 	private hostBridge: SpatialPlayHostBridge | null = null;
+	private computeModeByPane: Record<SpatialPlayPaneId, SpatialComputeMode>;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.computeModeByPane = {
+			shape: "fast",
+			building: "fast",
+			energy: "fast",
+			"structure-classic": "fast",
+		};
+		this.rebuildShellMode();
+	}
+
+	private computeMeasureForPane(pane: SpatialPlayPaneId): WindowMeasure {
+		return {
+			kind: "select",
+			id: `${pane}-compute`,
+			label: "Compute",
+			value: this.computeModeByPane[pane],
+			items: SPATIAL_PLAY_COMPUTE_MODES.map((mode) => ({
+				id: mode,
+				value: mode,
+				label: mode === "fast" ? "Fast" : "Precise",
+			})),
+			onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "setComputeModeForPane", args: { pane } },
+		};
+	}
+
+	/** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures. */
+	rebuildShellMode(): void {
 		this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map(
-			(row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey),
+			(row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)]),
 		);
+	}
+
+	/** @emoji ⚡ Returns compute mode for one quad pane. */
+	getComputeModeForPane(pane: SpatialPlayPaneId): SpatialComputeMode {
+		return this.computeModeByPane[pane];
+	}
+
+	/** @emoji ⚡ Snapshot of compute modes for all quad panes. */
+	getComputeModeByPane(): Readonly<Record<SpatialPlayPaneId, SpatialComputeMode>> {
+		return this.computeModeByPane;
 	}
 
 	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
@@ -434,6 +485,15 @@ export class SpatialPlayShellController extends Controller {
 
 	override run(command: string, args?: unknown): void {
 		switch (command) {
+			case "setComputeModeForPane": {
+				const { pane, value } = args as { pane?: SpatialPlayPaneId; value?: string };
+				if (!pane || !SPATIAL_PLAY_PANE_SPECS.some((row) => row.pane === pane)) break;
+				if (!value || !isSpatialComputeMode(value)) break;
+				if (this.computeModeByPane[pane] === value) break;
+				this.computeModeByPane = { ...this.computeModeByPane, [pane]: value };
+				this.rebuildShellMode();
+				break;
+			}
 			case "focusModelDefinition":
 			case "applyTransformation":
 			case "saveSelected":
@@ -507,6 +567,19 @@ export function buildSpatialPlayRuntime(): ProductRuntime {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("SpatialPlayShellController compute mode", () => {
+		it("stores independent compute modes per quad pane", () => {
+			const runtime = new ProductRuntime();
+			const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
+			expect(controller.getComputeModeForPane("shape")).toBe("fast");
+			controller.run("setComputeModeForPane", { pane: "energy", value: "precise" });
+			expect(controller.getComputeModeForPane("energy")).toBe("precise");
+			expect(controller.getComputeModeForPane("shape")).toBe("fast");
+			const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
+			expect(energyWindow?.measures[0]).toMatchObject({ kind: "select", value: "precise" });
+		});
+	});
 
 	describe("buildSpatialPlayToolbarTools", () => {
 		it("registers view, save, and transform categories", () => {

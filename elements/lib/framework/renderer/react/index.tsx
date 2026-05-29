@@ -720,9 +720,6 @@ const ShellModeCanvas: React.FC<{
   );
 };
 
-/** @deprecated Golden Layout canvas removed; use {@link ShellModeCanvas}. */
-const UICanvas = ShellModeCanvas;
-
 // #region 🎼UISearch
 
 /**

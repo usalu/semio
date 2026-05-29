@@ -95,6 +95,23 @@ export const WithError: Story = {
   ),
 };
 
+export const WithEngagement: Story = {
+  args: {
+    id: "engagement-window",
+    children: <WindowContent title="Window with Engagement" />,
+    engagement: {
+      options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
+      input: { placeholder: "Command…" },
+      status: [{ id: "status", content: "Ready" }],
+    },
+  },
+  render: (args) => (
+    <div className="h-[400px] w-[600px]">
+      <Window {...args} />
+    </div>
+  ),
+};
+
 export const HorizontalLayout: Story = {
   args: { id: "h-layout", children: null },
   render: () => (

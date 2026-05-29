@@ -9,6 +9,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useSyncExternalStore,
 	type ChangeEvent,
 	type ReactNode,
 } from "react";
@@ -35,6 +36,7 @@ import {
 	SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
 	buildSpatialPlayHierarchySections,
 	buildSpatialPlayRuntime,
+	type SpatialPlayPaneId,
 	type SpatialPlayShellController,
 	spatialPlayModelDefinitionIdForPane,
 	spatialPlayModelsDigest,
@@ -726,8 +728,7 @@ interface SpatialPlayModelSpaceValue {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: InteractionRuntimeOptions["kernel"];
-	readonly mode: SpatialComputeMode;
-	readonly setMode: (mode: SpatialComputeMode) => void;
+	readonly computeModeForPane: (pane: SpatialPlayPaneId) => SpatialComputeMode;
 	readonly sessionRestartNonce: number;
 	readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
 	readonly setRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
@@ -771,11 +772,23 @@ function useSpatialPlayModelSpace(): SpatialPlayModelSpaceValue {
 
 function SpatialPlayModelSpaceProvider({
 	children,
+	runtime,
 	shellController,
 }: {
 	readonly children: ReactNode;
+	readonly runtime: ProductRuntime;
 	readonly shellController: SpatialPlayShellController;
 }) {
+	const shellGeneration = useSyncExternalStore(
+		(onStoreChange) => runtime.subscribe(onStoreChange),
+		() => runtime.generation,
+		() => 0,
+	);
+	void shellGeneration;
+	const computeModeForPane = useCallback(
+		(pane: SpatialPlayPaneId) => shellController.getComputeModeForPane(pane),
+		[shellController, shellGeneration],
+	);
 	const publishSpatialPlayChrome = useSpatialPlayChromePublish();
 	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(SHAPE_MODEL_DEFINITION_ID);
 	const scopedInteractions = useMemo(
@@ -787,7 +800,6 @@ function SpatialPlayModelSpaceProvider({
 	const [shapeAssetId, setShapeAssetId] = useState("");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(emptyPlayModels);
 	const [loadedRawName, setLoadedRawName] = useState("");
-	const [mode, setMode] = useState<SpatialComputeMode>("fast");
 	const [rendererSelectionByModel, setRendererSelectionByModel] = useState<SpatialRendererSelectionByModel>({});
 	const [interactionSelectionByState, setInteractionSelectionByState] = useState<SpatialInteractionSelectionByState>({});
 	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
@@ -1179,8 +1191,7 @@ function SpatialPlayModelSpaceProvider({
 			documentModel,
 			history,
 			kernel,
-			mode,
-			setMode,
+			computeModeForPane,
 			sessionRestartNonce: interactionBootId,
 			rendererSelectionByModel,
 			setRendererSelectionByModel,
@@ -1234,7 +1245,7 @@ function SpatialPlayModelSpaceProvider({
 			interactionSelectionByState,
 			kernel,
 			liveModel,
-			mode,
+			computeModeForPane,
 			modelDefinitionRevision,
 			pickGeometry,
 			playModelSpace,
@@ -1286,7 +1297,6 @@ function SpatialPlayDetailsAside(): ReactNode {
 				selection={selectionInScope}
 				selectionCount={selectionInScope.length}
 			/>
-			<SpatialPlayComputeModeToggle />
 			{shapeInteractionRuntime ? (
 				<ConstructQueryPanel runtime={shapeInteractionRuntime} activeModelDefinitionId={activeModelDefinitionId} />
 			) : null}
@@ -1321,45 +1331,6 @@ function SpatialPlayDetailsAside(): ReactNode {
 	);
 }
 
-function SpatialPlayComputeModeToggle(): ReactNode {
-	const { mode, setMode } = useSpatialPlayModelSpace();
-	return (
-		<div style={{ display: "flex", gap: 6, fontSize: 12 }}>
-			<span style={{ fontWeight: 600, color: "#c8c8e0", alignSelf: "center" }}>Compute</span>
-			<button
-				type="button"
-				onClick={() => setMode("fast")}
-				style={{
-					flex: 1,
-					padding: "6px 10px",
-					borderRadius: 6,
-					border: "1px solid #2a2a3c",
-					background: mode === "fast" ? "#3a4a6a" : "#1a1a28",
-					color: "#e8e8f0",
-					cursor: "pointer",
-				}}
-			>
-				Fast
-			</button>
-			<button
-				type="button"
-				onClick={() => setMode("precise")}
-				style={{
-					flex: 1,
-					padding: "6px 10px",
-					borderRadius: 6,
-					border: "1px solid #2a2a3c",
-					background: mode === "precise" ? "#3a4a6a" : "#1a1a28",
-					color: "#e8e8f0",
-					cursor: "pointer",
-				}}
-			>
-				Precise
-			</button>
-		</div>
-	);
-}
-
 /** @emoji 🎮 Shape pane: interaction editing on spatial.shape. */
 function SpatialPlayShapePane(): ReactNode {
 	const {
@@ -1369,7 +1340,7 @@ function SpatialPlayShapePane(): ReactNode {
 		documentModel,
 		history,
 		kernel,
-		mode,
+		computeModeForPane,
 		sessionRestartNonce,
 		activeModelDefinitionId,
 		focusModelDefinition,
@@ -1396,6 +1367,8 @@ function SpatialPlayShapePane(): ReactNode {
 			</div>
 		);
 	}
+
+	const mode = computeModeForPane("shape");
 
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(SHAPE_MODEL_DEFINITION_ID)}>
@@ -1439,9 +1412,10 @@ function SpatialPlayViewPane({ pane }: { readonly pane: SpatialPlayPaneId }): Re
 		interactionSelectionByState,
 		setInteractionSelectionByState,
 		kernel,
-		mode,
+		computeModeForPane,
 		handleSnapshotChange,
 	} = useSpatialPlayModelSpace();
+	const mode = computeModeForPane(pane);
 	const paneModel = flushedModelsByDefinitionId[modelDefinitionId] ?? new Model();
 	const documentModel = useMemo(
 		(): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }),
@@ -1638,7 +1612,7 @@ function SpatialPlayRoot(): ReactNode {
 	);
 	return (
 		<SpatialPlayChromeContext.Provider value={chromeContextValue}>
-			<SpatialPlayModelSpaceProvider shellController={shellController}>
+			<SpatialPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
 				<LevelProvider level="window">
 					<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
 						<SpatialPlayLoadInput />

@@ -411,7 +411,16 @@ function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: Command
 							{windowMeasureShell(
 								measure.id,
 								measure.label,
-								<Select id={measure.id} value={measure.value} onValueChange={(value) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value })}>
+								<Select
+									id={measure.id}
+									value={measure.value}
+									onValueChange={(value) =>
+										bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
+											...(measure.onChange.args as object | undefined),
+											value,
+										})
+									}
+								>
 									<SelectTrigger id={measure.id} className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
 										<SelectValue placeholder={measure.label} />
 									</SelectTrigger>
@@ -439,7 +448,12 @@ function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: Command
 									min={measure.min}
 									max={measure.max}
 									step={measure.step}
-									onValueChange={(vals) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value: vals[0] ?? measure.min })}
+									onValueChange={(vals) =>
+										bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
+											...(measure.onChange.args as object | undefined),
+											value: vals[0] ?? measure.min,
+										})
+									}
 								/>,
 							)}
 						</React.Fragment>
@@ -455,7 +469,12 @@ function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: Command
 									id={measure.id}
 									pressed={measure.pressed}
 									text={measure.text}
-									onPressedChange={(pressed) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { pressed })}
+									onPressedChange={(pressed) =>
+										bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
+											...(measure.onChange.args as object | undefined),
+											pressed,
+										})
+									}
 								/>,
 							)}
 						</React.Fragment>
