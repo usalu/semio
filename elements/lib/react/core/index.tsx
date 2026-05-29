@@ -21991,17 +21991,78 @@ interface ModePendingDrag {
   startY: number;
 }
 
-function computeModeDropZone(pointerX: number, pointerY: number, stackRects: ReadonlyMap<ModeLayoutPath, DOMRect>, modeRect: DOMRect | null): ModeDropZone | null {
-  for (const [stackPath, rect] of stackRects) {
-    if (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom) continue;
-    const relX = (pointerX - rect.left) / rect.width;
-    const relY = (pointerY - rect.top) / rect.height;
-    const edge = 0.25;
-    if (relX < edge) return { kind: "split", stackPath, side: "left" };
-    if (relX > 1 - edge) return { kind: "split", stackPath, side: "right" };
-    if (relY < edge) return { kind: "split", stackPath, side: "top" };
-    if (relY > 1 - edge) return { kind: "split", stackPath, side: "bottom" };
-    return { kind: "tab", stackPath, index: -1 };
+interface ModeStackDropTargets {
+  tabBar: DOMRect | null;
+  body: DOMRect | null;
+  tabBarElement: HTMLElement | null;
+}
+
+function computeTabInsertIndex(pointerX: number, tabBarElement: HTMLElement | null): number {
+  if (!tabBarElement) return -1;
+  const tabs = tabBarElement.querySelectorAll('[data-slot="mode-dock-tab"]');
+  for (let index = 0; index < tabs.length; index++) {
+    const tabRect = tabs[index]!.getBoundingClientRect();
+    if (pointerX < tabRect.left + tabRect.width / 2) return index;
+  }
+  return tabs.length;
+}
+
+/** @emoji 📍 Resolves tab-bar insertion line and slot preview geometry for drag feedback. */
+function computeTabInsertPreview(tabBarElement: HTMLElement | null, insertIndex: number): { insertX: number; top: number; height: number; slotLeft: number; slotWidth: number } | null {
+  if (!tabBarElement) return null;
+  const tabBarRect = tabBarElement.getBoundingClientRect();
+  const tabRects = [...tabBarElement.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getBoundingClientRect());
+  const top = tabBarRect.top;
+  const height = tabBarRect.height;
+  const defaultWidth = tabRects[0]?.width ?? 96;
+  const resolvedIndex = insertIndex < 0 ? tabRects.length : insertIndex;
+
+  if (tabRects.length === 0) {
+    return { insertX: tabBarRect.left + 6, top, height, slotLeft: tabBarRect.left + 4, slotWidth: defaultWidth };
+  }
+  if (resolvedIndex <= 0) {
+    return { insertX: tabRects[0]!.left, top, height, slotLeft: tabRects[0]!.left, slotWidth: defaultWidth };
+  }
+  if (resolvedIndex >= tabRects.length) {
+    const last = tabRects[tabRects.length - 1]!;
+    return { insertX: last.right, top, height, slotLeft: last.right, slotWidth: defaultWidth };
+  }
+  const prev = tabRects[resolvedIndex - 1]!;
+  const next = tabRects[resolvedIndex]!;
+  const insertX = (prev.right + next.left) / 2;
+  return { insertX, top, height, slotLeft: insertX - defaultWidth / 2, slotWidth: defaultWidth };
+}
+
+function pointerInRect(x: number, y: number, rect: DOMRect): boolean {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+function modeDropEdgeDepth(size: number, ratio = 0.2, minPx = 28): number {
+  return Math.min(size / 2, Math.max(minPx, size * ratio));
+}
+
+function computeModeDropZone(
+  pointerX: number,
+  pointerY: number,
+  stackTargets: ReadonlyMap<ModeLayoutPath, ModeStackDropTargets>,
+  modeRect: DOMRect | null,
+): ModeDropZone | null {
+  for (const [stackPath, targets] of stackTargets) {
+    if (targets.tabBar && pointerInRect(pointerX, pointerY, targets.tabBar)) {
+      return { kind: "tab", stackPath, index: computeTabInsertIndex(pointerX, targets.tabBarElement) };
+    }
+  }
+  for (const [stackPath, targets] of stackTargets) {
+    const rect = targets.body;
+    if (!rect || !pointerInRect(pointerX, pointerY, rect)) continue;
+    const edgeX = modeDropEdgeDepth(rect.width);
+    const edgeY = modeDropEdgeDepth(rect.height);
+    const x = pointerX - rect.left;
+    const y = pointerY - rect.top;
+    if (x < edgeX) return { kind: "split", stackPath, side: "left" };
+    if (x > rect.width - edgeX) return { kind: "split", stackPath, side: "right" };
+    if (y < edgeY) return { kind: "split", stackPath, side: "top" };
+    if (y > rect.height - edgeY) return { kind: "split", stackPath, side: "bottom" };
   }
   if (!modeRect) return null;
   const relX = (pointerX - modeRect.left) / modeRect.width;
@@ -22036,7 +22097,7 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
 //#region 🧭ModeDockTabBar
 
 interface ModeDockContextValue {
-  registerStackRect: (path: ModeLayoutPath, element: HTMLElement | null) => void;
+  registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
@@ -22054,12 +22115,12 @@ interface ModeDockTabBarProps {
   onSelectTab: (windowId: string) => void;
 }
 
-const ModeDockTabBar: React.FC<ModeDockTabBarProps> = ({ stackPath, tabs, activeId, onSelectTab }) => {
+const ModeDockTabBar = React.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
   const dock = React.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
 
   return (
-    <div data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-base">
+    <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-base">
       <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
         {tabs.map((tab, index) => (
           <div
@@ -22108,9 +22169,9 @@ const ModeDockTabBar: React.FC<ModeDockTabBarProps> = ({ stackPath, tabs, active
       </div>
     </div>
   );
-};
+});
 
-//#endregion 🧭ModeDockTabBar
+ModeDockTabBar.displayName = "ModeDockTabBar";
 
 //#region 🧭ModeDockStack
 
@@ -22123,7 +22184,8 @@ interface ModeDockStackProps {
 
 const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId }) => {
   const dock = React.useContext(ModeDockContext);
-  const stackRef = React.useRef<HTMLDivElement>(null);
+  const tabBarRef = React.useRef<HTMLDivElement>(null);
+  const bodyRef = React.useRef<HTMLDivElement>(null);
   const activeId = node.activeId ?? node.children[0]?.id;
   const tabs = node.children.map((child) => ({
     id: child.id,
@@ -22131,16 +22193,16 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   }));
 
   React.useLayoutEffect(() => {
-    dock?.registerStackRect(stackPath, stackRef.current);
-    return () => dock?.registerStackRect(stackPath, null);
+    dock?.registerStackDropTargets(stackPath, tabBarRef.current, bodyRef.current);
+    return () => dock?.registerStackDropTargets(stackPath, null, null);
   }, [dock, stackPath, node.children.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
 
   return (
-    <div ref={stackRef} data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
-      <ModeDockTabBar stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
-      <div data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <div data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+      <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
+      <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeDescriptor ? (
           (() => {
             const { children, engagement, ...windowProps } = activeDescriptor;
@@ -22209,7 +22271,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const [dropZone, setDropZone] = React.useState<ModeDropZone | null>(null);
   const dropZoneRef = React.useRef<ModeDropZone | null>(null);
   const modeBodyRef = React.useRef<HTMLDivElement>(null);
-  const stackElementsRef = React.useRef(new Map<ModeLayoutPath, HTMLElement>());
+  const stackDropElementsRef = React.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
   const layoutKeyRef = React.useRef(layoutKey);
   const windowsKeyRef = React.useRef(windowsKey);
 
@@ -22227,9 +22289,16 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
   }, [activeWindowId]);
 
-  const registerStackRect = React.useCallback((path: ModeLayoutPath, element: HTMLElement | null) => {
-    if (element) stackElementsRef.current.set(path, element);
-    else stackElementsRef.current.delete(path);
+  const registerStackDropTargets = React.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
+    if (!tabBarElement && !bodyElement) {
+      stackDropElementsRef.current.delete(path);
+      return;
+    }
+    const prev = stackDropElementsRef.current.get(path) ?? { tabBar: null, body: null };
+    stackDropElementsRef.current.set(path, {
+      tabBar: tabBarElement ?? prev.tabBar,
+      body: bodyElement ?? prev.body,
+    });
   }, []);
 
   const activateWindow = React.useCallback(
@@ -22260,10 +22329,16 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   }, []);
 
   const refreshDropZone = React.useCallback((clientX: number, clientY: number) => {
-    const rects = new Map<ModeLayoutPath, DOMRect>();
-    stackElementsRef.current.forEach((element, path) => rects.set(path, element.getBoundingClientRect()));
+    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
+    stackDropElementsRef.current.forEach((elements, path) => {
+      targets.set(path, {
+        tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
+        body: elements.body?.getBoundingClientRect() ?? null,
+        tabBarElement: elements.tabBar,
+      });
+    });
     const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
-    const zone = computeModeDropZone(clientX, clientY, rects, modeRect);
+    const zone = computeModeDropZone(clientX, clientY, targets, modeRect);
     dropZoneRef.current = zone;
     setDropZone(zone);
   }, []);
@@ -22345,7 +22420,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const dockContext = React.useMemo<ModeDockContextValue>(
     () => ({
-      registerStackRect,
+      registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
       closeWindow,
@@ -22353,7 +22428,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [registerStackRect, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = React.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
@@ -22406,19 +22481,46 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
                     if (side === "top") return { left: 0, top: 0, width: "100%", height: "30%" };
                     return { left: 0, bottom: 0, width: "100%", height: "30%" };
                   }
-                  const rect = stackElementsRef.current.get(dropZone.stackPath)?.getBoundingClientRect();
+                  const elements = stackDropElementsRef.current.get(dropZone.stackPath);
+                  const rect = elements?.body?.getBoundingClientRect();
                   const modeRect = modeBodyRef.current?.getBoundingClientRect();
                   if (!rect || !modeRect) return { display: "none" };
                   const left = rect.left - modeRect.left;
                   const top = rect.top - modeRect.top;
-                  if (dropZone.side === "left") return { left, top, width: rect.width * 0.5, height: rect.height };
-                  if (dropZone.side === "right") return { left: left + rect.width * 0.5, top, width: rect.width * 0.5, height: rect.height };
-                  if (dropZone.side === "top") return { left, top, width: rect.width, height: rect.height * 0.5 };
-                  return { left, top: top + rect.height * 0.5, width: rect.width, height: rect.height * 0.5 };
+                  const edgeX = modeDropEdgeDepth(rect.width);
+                  const edgeY = modeDropEdgeDepth(rect.height);
+                  if (dropZone.side === "left") return { left, top, width: edgeX, height: rect.height };
+                  if (dropZone.side === "right") return { left: left + rect.width - edgeX, top, width: edgeX, height: rect.height };
+                  if (dropZone.side === "top") return { left, top, width: rect.width, height: edgeY };
+                  return { left, top: top + rect.height - edgeY, width: rect.width, height: edgeY };
                 })()}
               />
             ) : (
-              <div className="absolute inset-x-[20%] top-0 h-medium border-b-2 border-accent bg-accent/20" />
+              (() => {
+                const elements = stackDropElementsRef.current.get(dropZone.stackPath);
+                const preview = computeTabInsertPreview(elements?.tabBar ?? null, dropZone.index);
+                const modeRect = modeBodyRef.current?.getBoundingClientRect();
+                if (!preview || !modeRect) return null;
+                const lineLeft = preview.insertX - modeRect.left - 1;
+                const slotLeft = preview.slotLeft - modeRect.left;
+                const slotTop = preview.top - modeRect.top;
+                return (
+                  <>
+                    <div
+                      data-slot="mode-dock-tab-insert-line"
+                      className="absolute w-[2px] rounded-full bg-accent shadow-[0_0_0_1px_var(--accent)]"
+                      style={{ left: lineLeft, top: slotTop + 2, height: preview.height - 4 }}
+                    />
+                    <div
+                      data-slot="mode-dock-tab-insert-slot"
+                      className="absolute flex items-center overflow-hidden rounded-sm border border-dashed border-accent bg-accent/15 px-single text-xs text-foreground shadow-sm"
+                      style={{ left: slotLeft, top: slotTop + 1, width: preview.slotWidth, height: preview.height - 2 }}
+                    >
+                      <span className="truncate">{dragState.ghostLabel}</span>
+                    </div>
+                  </>
+                );
+              })()
             )}
           </div>
         ) : null}
@@ -22427,7 +22529,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   );
 };
 
-export { Mode, removeWindowFromLayout, splitWithWindow, reconcileWindows, normalizeLayoutToStacks, collapseLayout };
+export { Mode, removeWindowFromLayout, splitWithWindow, reconcileWindows, normalizeLayoutToStacks, collapseLayout, computeModeDropZone, computeTabInsertPreview };
 
 // #endregion 🧭Mode
 
@@ -22655,6 +22757,34 @@ if (import.meta.vitest) {
       fireEvent.click(soloTab!);
       expect(screen.queryByText("Solo Body")).toBeNull();
       expect(screen.getByText("Peer Body")).toBeTruthy();
+    });
+
+    it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
+      const tabBar = document.createElement("div");
+      tabBar.setAttribute("data-slot", "mode-dock-tabbar");
+      const tabA = document.createElement("div");
+      tabA.setAttribute("data-slot", "mode-dock-tab");
+      tabA.getBoundingClientRect = () => ({ left: 0, right: 80, top: 0, bottom: 24, width: 80, height: 24 }) as DOMRect;
+      const tabB = document.createElement("div");
+      tabB.setAttribute("data-slot", "mode-dock-tab");
+      tabB.getBoundingClientRect = () => ({ left: 80, right: 160, top: 0, bottom: 24, width: 80, height: 24 }) as DOMRect;
+      tabBar.appendChild(tabA);
+      tabBar.appendChild(tabB);
+      tabBar.getBoundingClientRect = () => ({ left: 0, right: 160, top: 0, bottom: 24, width: 160, height: 24 }) as DOMRect;
+      const between = computeTabInsertPreview(tabBar, 1);
+      expect(between?.insertX).toBe(80);
+      const end = computeTabInsertPreview(tabBar, 2);
+      expect(end?.insertX).toBe(160);
+    });
+
+    it("computeModeDropZone treats tab bar hits as tab drops not vertical splits", () => {
+      const tabBar = { left: 0, top: 0, right: 200, bottom: 24, width: 200, height: 24 } as DOMRect;
+      const body = { left: 0, top: 24, right: 200, bottom: 224, width: 200, height: 200 } as DOMRect;
+      const targets = new Map([["1", { tabBar, body, tabBarElement: null }]]);
+      expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", index: -1 });
+      expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
+      expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
+      expect(computeModeDropZone(100, 120, targets, null)).toBeNull();
     });
 
     it("removeWindowFromLayout and splitWithWindow mutate the layout tree", () => {

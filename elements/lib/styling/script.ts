@@ -9,7 +9,10 @@ const generatedDir = join(stylingRoot, "generated");
 const jsGeneratedDir = join(stylingRoot, "js");
 const netPaletteDir = join(stylingRoot, "net", "Elements.Styling", "Generated");
 const repoRoot = join(stylingRoot, "..", "..", "..");
-const elementsAssetsRoot = join(repoRoot, "elements", "assets");
+
+/** @emoji 📁 Canonical `elements/assets` directory (fonts, cursors, …). */
+export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "..", "assets");
+const elementsAssetsRoot = ELEMENTS_ASSETS_ROOT;
 const semioNetPaletteDir = join(repoRoot, "semio", "client", "lib", "net", "Elements.Styling", "Generated");
 
 const GOOGLE_FONTS_UA =

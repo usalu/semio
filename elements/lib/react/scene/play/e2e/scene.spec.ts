@@ -22,6 +22,7 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("An error occurred in the <ScenePlayProductShell> component");
 	expect(text).not.toContain("Failed to decode downloaded font");
 	expect(text).not.toContain("OTS parsing error");
+	expect(text).not.toContain("invalid sfntVersion");
 }
 
 const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
