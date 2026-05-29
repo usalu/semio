@@ -5,8 +5,8 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 
-const repoRoot = path.resolve(__dirname, "../../../../../");
-const elementsAssetsRoot = path.resolve(__dirname, "../../../../ui/assets");
+const repoRoot = path.resolve(__dirname, "../../..");
+const elementsAssetsRoot = path.resolve(repoRoot, "ui/assets");
 const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
 const threeModule = path.resolve(__dirname, "../node_modules/three/build/three.module.js");

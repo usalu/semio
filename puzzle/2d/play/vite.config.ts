@@ -10,8 +10,8 @@ import { defineConfig } from "vite";
 import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "../../../../../");
-const elementsAssetsRoot = path.resolve(__dirname, "../../../../ui/assets");
+const repoRoot = path.resolve(__dirname, "../../..");
+const elementsAssetsRoot = path.resolve(repoRoot, "ui/assets");
 
 export default defineConfig({
 	root: __dirname,

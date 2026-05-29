@@ -62,6 +62,9 @@ export function elementsAssetsVitePlugin(assetsRoot: string): Plugin {
 			server.middlewares.use(serveAssets);
 		},
 		closeBundle() {
+			if (!existsSync(assetsRoot)) {
+				return;
+			}
 			const dest = resolve(viteRoot, outDir, "assets");
 			mkdirSync(resolve(viteRoot, outDir), { recursive: true });
 			cpSync(assetsRoot, dest, { recursive: true });
