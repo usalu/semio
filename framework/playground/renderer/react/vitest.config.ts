@@ -13,7 +13,7 @@ export default defineConfig({
 		alias: [
 			{ find: "@framework/playground", replacement: resolve(root, "../../core/index.ts") },
 			{ find: "@framework/playground-renderer-react/shell", replacement: resolve(root, "shell.tsx") },
-			{ find: "@framework/playground-renderer-react/boot", replacement: resolve(root, "boot-playground.ts") },
+			{ find: "@framework/playground-renderer-react/boot", replacement: resolve(root, "index.tsx") },
 			{ find: "@framework/playground-renderer-react/puzzle/board", replacement: resolve(root, "puzzle/board-play-host.tsx") },
 			{ find: "@framework/playground-renderer-react/puzzle/scene", replacement: resolve(root, "puzzle/scene-play-host.tsx") },
 			{ find: "@framework/playground-renderer-react/puzzle/topology", replacement: resolve(root, "puzzle/topology-play-host.tsx") },

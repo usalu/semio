@@ -3,7 +3,7 @@
   "emoji": "🔌",
   "status": "open",
   "description": "Wrap External Dependencies Behind Interfaces",
-  "summary": "Tooling and transport boundary pass: treat *-transport.ts and kit-store.worker as adapter files in Go/TS policy; marked rs-wasm-transport and kit-store.worker with 🔌Adapters; wrapped playwright.config.ts (5), eslint.config.ts (3), ui/styling/vite-elements-assets.ts; reorganized eslint configs with adapter import blocks; nested engine pytest imports in 🔌Adapters and hoisted collections import; tests 12/12 pass.",
+  "summary": "Port injection pass: expanded ISemioJsonCodec + SemioJson.Codec wiring in Semio.cs (representation serialize/deserialize, validation JSON, API error payloads); moved SemioContractResolver into NewtonsoftSemioJsonCodec; routed StoreGraphql wire helpers and SemioDiff.Wire kit-diff JSON through the codec; added 🔌PortWiring defaults for reactHostPort/flowHostPort/threeHostPort in @ui/react; added json_codec JsonCodecPort binding in semio py. JsonConvert remains only inside NewtonsoftSemioJsonCodec adapter. Tests 12/12 pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1505"
   },
@@ -13,6 +13,7 @@
     "⚪66c9d32b63514829b4de3209e19b3d10",
     "⚪aa2fea50bae242a9ba8758aeca3b9153",
     "⚪d1ef225f09624edea7d0304e84a43fbe",
-    "⚪cf1e4ebc191048d9827d352d6a4fb2a4"
+    "⚪cf1e4ebc191048d9827d352d6a4fb2a4",
+    "⚪cb7d31b0b4f14573b9efbee93477a830"
   ]
 }

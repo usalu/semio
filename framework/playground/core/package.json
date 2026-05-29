@@ -6,8 +6,7 @@
 	"type": "module",
 	"private": true,
 	"exports": {
-		".": "./index.ts",
-		"./core": "./core.ts"
+		".": "./core.ts"
 	},
 	"dependencies": {
 		"@ui/react": "workspace:*",

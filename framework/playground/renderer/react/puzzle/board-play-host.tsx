@@ -77,11 +77,9 @@ import {
 	Handle,
 	Edge,
 	Wire,
-	newBoardAuthoringId,
 	encodeBoardFixtureForDragV1,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
-	BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
 	BOARD_LOD_MODE_AUTOMATIC,
 	BoardPaneChrome,
 	BoardStructuralDeleteReporter,
@@ -428,10 +426,10 @@ function useBoardPlayShell(): BoardPlayShellValue {
 
 // #region 🔖PlayRedrawHelpers
 function newBoardAuthoringId(prefix: string): string {
-  if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
-    return `${prefix}-${globalThis.crypto.randomUUID()}`;
-  }
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+	if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
+		return `${prefix}-${globalThis.crypto.randomUUID()}`;
+	}
+	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */

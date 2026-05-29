@@ -8,7 +8,7 @@
 	"exports": {
 		".": "./index.tsx",
 		"./shell": "./shell.tsx",
-		"./boot": "./boot-playground.ts",
+		"./boot": "./index.tsx",
 		"./puzzle/board": "./puzzle/board-play-host.tsx",
 		"./puzzle/scene": "./puzzle/scene-play-host.tsx",
 		"./puzzle/topology": "./puzzle/topology-play-host.tsx"

@@ -126,6 +126,19 @@ export interface ReactHostPort {
   readonly createElement: typeof React.createElement;
   readonly useState: typeof React.useState;
   readonly useEffect: typeof React.useEffect;
+  readonly useMemo: typeof React.useMemo;
+  readonly useCallback: typeof React.useCallback;
+  readonly useRef: typeof React.useRef;
+  readonly useContext: typeof React.useContext;
+  readonly useLayoutEffect: typeof React.useLayoutEffect;
+  readonly useSyncExternalStore: typeof React.useSyncExternalStore;
+  readonly useId: typeof React.useId;
+  readonly useImperativeHandle: typeof React.useImperativeHandle;
+  readonly memo: typeof React.memo;
+  readonly forwardRef: typeof React.forwardRef;
+  readonly lazy: typeof React.lazy;
+  readonly Suspense: typeof React.Suspense;
+  readonly createContext: typeof React.createContext;
 }
 
 /** @emoji 🕸️ Host surface for diagram runtime (implemented by 🔌Adapters). */
@@ -147,6 +160,19 @@ export let reactHostPort: ReactHostPort = {
   createElement: React.createElement,
   useState: React.useState,
   useEffect: React.useEffect,
+  useMemo: React.useMemo,
+  useCallback: React.useCallback,
+  useRef: React.useRef,
+  useContext: React.useContext,
+  useLayoutEffect: React.useLayoutEffect,
+  useSyncExternalStore: React.useSyncExternalStore,
+  useId: React.useId,
+  useImperativeHandle: React.useImperativeHandle,
+  memo: React.memo,
+  forwardRef: React.forwardRef,
+  lazy: React.lazy,
+  Suspense: React.Suspense,
+  createContext: React.createContext,
 };
 
 /** @emoji 🔌 Default diagram host port wired to @xyflow/react adapters. */
@@ -160,6 +186,11 @@ export let threeHostPort: ThreeHostPort = {
   canvas: ThreeCanvas,
   drei: { OrbitControls, Grid },
 };
+
+/** @emoji 🔌 JSX aliases for diagram / R3F hosts (use instead of adapter imports in domain JSX). */
+export const HostReactFlow = flowHostPort.flow;
+export const HostReactFlowProvider = flowHostPort.provider;
+export const HostThreeCanvas = threeHostPort.canvas;
 // #endregion 🔌PortWiring
 
 // #region 🎼Utilities
@@ -339,9 +370,9 @@ export interface ContextMenuProps {
  * 🧩 Right-click menu via Radix dropdown primitives; passes children through when `items` is empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
-  const [open, setOpen] = React.useState(false);
-  const [point, setPoint] = React.useState<{ x: number; y: number } | null>(null);
-  const close = React.useCallback(() => setOpen(false), []);
+  const [open, setOpen] = reactHostPort.useState(false);
+  const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
+  const close = reactHostPort.useCallback(() => setOpen(false), []);
   if (!items?.length) {
     return <>{children}</>;
   }
@@ -420,9 +451,9 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
  * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the board `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
-  const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
-  const menuRef = React.useRef<HTMLDivElement | null>(null);
-  React.useEffect(() => {
+  const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
+  const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  reactHostPort.useEffect(() => {
     if (!open || !items.length || !position) {
       return undefined;
     }
@@ -550,7 +581,7 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
  * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
 export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  React.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise }), [device, expertise, theme]);
+  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise }), [device, expertise, theme]);
 
   return { mobile: device === "mobile" };
 }
@@ -10932,7 +10963,7 @@ export function useCommandHotkey(
 ) {
   const inferredTranslatedHotkey = useTranslatedHotkey(hotkeyOrId);
   const translatedHotkey = configuration?.translatedHotkey ?? inferredTranslatedHotkey;
-  const finalHotkey = React.useMemo(() => configuration?.overrides?.[hotkeyOrId] ?? translatedHotkey ?? hotkeyOrId, [configuration?.overrides, hotkeyOrId, translatedHotkey]);
+  const finalHotkey = reactHostPort.useMemo(() => configuration?.overrides?.[hotkeyOrId] ?? translatedHotkey ?? hotkeyOrId, [configuration?.overrides, hotkeyOrId, translatedHotkey]);
 
   useHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
@@ -10941,7 +10972,7 @@ export function useCommandHotkey(
  * Hook returning whether a CSS media query currently matches.
  **/
 export function useMediaQuery(query: string, defaultValue = false): boolean {
-  const getMatches = React.useCallback(() => {
+  const getMatches = reactHostPort.useCallback(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return defaultValue;
     }
@@ -10949,9 +10980,9 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
     return window.matchMedia(query).matches;
   }, [defaultValue, query]);
 
-  const [matches, setMatches] = React.useState<boolean>(getMatches);
+  const [matches, setMatches] = reactHostPort.useState<boolean>(getMatches);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return undefined;
     }
@@ -11041,11 +11072,11 @@ interface InteractionCommands {
 /**
  * InteractionContext holds the data fields for a InteractionContext record.
  **/
-const InteractionContext = React.createContext<InteractionCommands | undefined>(undefined);
+const InteractionContext = reactHostPort.createContext<InteractionCommands | undefined>(undefined);
 /**
  * ActiveInteractionContext holds the data fields for a ActiveInteractionContext record.
  **/
-const ActiveInteractionContext = React.createContext<string | undefined>(undefined);
+const ActiveInteractionContext = reactHostPort.createContext<string | undefined>(undefined);
 
 /**
  * Context provider for UI interaction commands and active state.
@@ -11065,12 +11096,12 @@ export const InteractionProvider: React.FC<{
 /**
  * useInteractionCommands holds the data fields for a useInteractionCommands record.
  **/
-const useInteractionCommands = () => React.useContext(InteractionContext);
+const useInteractionCommands = () => reactHostPort.useContext(InteractionContext);
 /** useActiveInteraction holds the data fields for a useActiveInteraction record.
  **/
 /**
  **/
-const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
+const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionContext);
 
 // #endregion 🔤Interaction Context
 
@@ -11078,7 +11109,7 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 /** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
 export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
-const LevelContext = React.createContext<Level>("base");
+const LevelContext = reactHostPort.createContext<Level>("base");
 
 /** @emoji 🎈 Sets the current UI depth level for descendant chrome. */
 export const LevelProvider: React.FC<{
@@ -11088,7 +11119,7 @@ export const LevelProvider: React.FC<{
 
 /** @emoji 🪝 Returns the nearest {@link LevelProvider} level. */
 export function useLevel(): Level {
-	return React.useContext(LevelContext);
+	return reactHostPort.useContext(LevelContext);
 }
 
 /** @emoji 🎨 Tailwind background class for a {@link Level}. */
@@ -11204,7 +11235,7 @@ export interface Transaction {
 /**
  * TransactionContext holds the data fields for a TransactionContext record.
  **/
-const TransactionContext = React.createContext<Transaction | undefined>(undefined);
+const TransactionContext = reactHostPort.createContext<Transaction | undefined>(undefined);
 
 /**
  * Context provider that supplies a Transaction to descendants.
@@ -11219,7 +11250,7 @@ export const TransactionProvider: React.FC<{
 /**
  * Hook returning the current Transaction context.
  **/
-export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
+export const useTransaction = (): Transaction | undefined => reactHostPort.useContext(TransactionContext);
 
 /**
  * Base props interface requiring an id string.
@@ -11777,7 +11808,7 @@ interface LabelProps {
 export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
-  const fallbackLabel = React.useMemo(() => {
+  const fallbackLabel = reactHostPort.useMemo(() => {
     const trailingToken = id.split(".").pop() ?? id;
     const normalizedToken = trailingToken.replace(/[-_]+/g, " ").trim();
     if (!normalizedToken) return id;
@@ -11787,15 +11818,15 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       .join(" ");
   }, [id]);
   const displayLabel = resolvedLabel ?? fallbackLabel;
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
-  const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const isInsideTreeRow = reactHostPort.useContext(TreeRowAlignmentContext);
   const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
-  const propertyRowRef = React.useRef<HTMLDivElement>(null);
-  const propertyLabelRef = React.useRef<HTMLDivElement>(null);
-  const propertyControlRef = React.useRef<HTMLDivElement>(null);
-  const [propertyRowStacked, setPropertyRowStacked] = React.useState(false);
+  const propertyRowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const propertyLabelRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const propertyControlRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [propertyRowStacked, setPropertyRowStacked] = reactHostPort.useState(false);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const rowElement = propertyRowRef.current;
     const labelElement = propertyLabelRef.current;
     const controlElement = propertyControlRef.current;
@@ -12060,7 +12091,7 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 /**
  * Avatar holds the data fields for a Avatar record.
  **/
-const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
+const Avatar = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
   const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
   const isFullSize = className && className.includes("size-full");
   const hasExplicitSize = style && (style.width || style.height);
@@ -12079,7 +12110,7 @@ Avatar.displayName = "Avatar";
 /**
  * AvatarImage holds the data fields for a AvatarImage record.
  **/
-const AvatarImage = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(({ className, ...props }, ref) => (
+const AvatarImage = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(({ className, ...props }, ref) => (
   <AvatarPrimitive.Image ref={ref} data-slot="avatar-image" className={cn("aspect-square size-full", className)} {...props} />
 ));
 AvatarImage.displayName = "AvatarImage";
@@ -12087,7 +12118,7 @@ AvatarImage.displayName = "AvatarImage";
 /**
  * AvatarFallback holds the data fields for a AvatarFallback record.
  **/
-const AvatarFallback = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(({ className, ...props }, ref) => (
+const AvatarFallback = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback ref={ref} data-slot="avatar-fallback" className={cn("bg-muted flex size-full items-center justify-center rounded-full", className)} {...props} />
 ));
 AvatarFallback.displayName = "AvatarFallback";
@@ -12119,7 +12150,7 @@ export interface DraggableAvatarProps {
 /**
  * Avatar component with drag-and-drop support and selection styling.
  **/
-export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
+export const DraggableAvatar = reactHostPort.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onPointerDown, onMouseDown, onDoubleClick, onPointerEnter, onPointerLeave, className, avatarClassName, dataDragKind, dataDragGuid }, ref) => {
     const dragPointerDown = dragListeners?.onPointerDown as ((event: React.PointerEvent<HTMLDivElement>) => void) | undefined;
     const dragMouseDown = dragListeners?.onMouseDown as ((event: React.MouseEvent<HTMLDivElement>) => void) | undefined;
@@ -12590,7 +12621,7 @@ const actionGroupItemVariants = cva(
 /**
  * ActionGroupContext holds the data fields for a ActionGroupContext record.
  **/
-const ActionGroupContext = React.createContext<{ level: Level }>({
+const ActionGroupContext = reactHostPort.createContext<{ level: Level }>({
   level: "base",
 });
 
@@ -12630,7 +12661,7 @@ function ActionGroupItem({
   text?: string;
   as?: "button" | "div";
 }) {
-  const context = React.useContext(ActionGroupContext);
+  const context = reactHostPort.useContext(ActionGroupContext);
   const level = context.level ?? "base";
   const hasText = Boolean(text);
 
@@ -12698,7 +12729,7 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
  **/
 function ActionDropdown({ className, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
   const transaction = useTransaction();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = reactHostPort.useState(false);
   const level = useLevel();
 
   const selectedOption = options.find((option) => option.value === value);
@@ -12840,7 +12871,7 @@ const buttonGroupItemVariants = cva(
 /**
  * ButtonGroupContext holds the data fields for a ButtonGroupContext record.
  **/
-const ButtonGroupContext = React.createContext<{ level: Level }>({
+const ButtonGroupContext = reactHostPort.createContext<{ level: Level }>({
   level: "base",
 });
 
@@ -12902,7 +12933,7 @@ function ButtonGroupItem({
   text?: string;
   asChild?: boolean;
 }) {
-  const context = React.useContext(ButtonGroupContext);
+  const context = reactHostPort.useContext(ButtonGroupContext);
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
 
@@ -13043,8 +13074,8 @@ interface ComboboxProps extends ElementProps {
  **/
 export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
-  const [open, setOpen] = React.useState(false);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const [open, setOpen] = reactHostPort.useState(false);
   const { t } = useTranslation();
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
 
@@ -13278,19 +13309,19 @@ interface CollapsedFieldDisplayProps {
 }
 
 function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabled, id, mixed, onActivate, placeholder, slot, value }: CollapsedFieldDisplayProps) {
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
-  const displayRef = React.useRef<HTMLDivElement>(null);
-  const lineRef = React.useRef<HTMLSpanElement>(null);
-  const normalizedValue = React.useMemo(() => normalizeCollapsedFieldText(value), [value]);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const displayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const lineRef = reactHostPort.useRef<HTMLSpanElement>(null);
+  const normalizedValue = reactHostPort.useMemo(() => normalizeCollapsedFieldText(value), [value]);
   const stackedOverflowEnabled = isInPropertyValueColumn && allowStackedOverflow;
-  const [displayState, setDisplayState] = React.useState<CollapsedFieldDisplayState>({
+  const [displayState, setDisplayState] = reactHostPort.useState<CollapsedFieldDisplayState>({
     value: normalizedValue,
     normalizedValue,
     isOverflowing: false,
     layoutKind: "single-line",
   });
 
-  const updateCollapsedValue = React.useCallback(() => {
+  const updateCollapsedValue = reactHostPort.useCallback(() => {
     const element = displayRef.current;
     const lineElement = lineRef.current;
     if (!element || !lineElement) {
@@ -13342,11 +13373,11 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
     );
   }, [normalizedValue, stackedOverflowEnabled]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     updateCollapsedValue();
   }, [updateCollapsedValue]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const fontSet = document.fonts;
     if (!fontSet?.ready) {
       return;
@@ -13364,7 +13395,7 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
     };
   }, [updateCollapsedValue]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const element = displayRef.current;
     if (!element || typeof ResizeObserver === "undefined") {
       return;
@@ -13450,24 +13481,24 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
  **/
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const transaction = useTransaction();
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
-  const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [isFocused, setIsFocused] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const [localValue, setLocalValue] = reactHostPort.useState(externalValue?.toString() || "");
+  const [isEditing, setIsEditing] = reactHostPort.useState(false);
+  const [isFocused, setIsFocused] = reactHostPort.useState(false);
+  const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
   /** @emoji 🧾 Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
-  const skipLazyBlurCommitRef = React.useRef(false);
+  const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const placeholderLabel = useLabel(placeholderId || "");
   const mixedLabel = useLabel("semio.sketchpad.common.mixedValues");
   const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
   }, [externalValue, isEditing]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (isFocused && inputRef.current) {
       inputRef.current.focus();
     }
@@ -13604,7 +13635,7 @@ export { Input };
  **/
 function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const transaction = useTransaction();
-  const fallbackValue = React.useMemo(() => {
+  const fallbackValue = reactHostPort.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
         if (!React.isValidElement(node)) {
@@ -13835,22 +13866,22 @@ function Slider({
     snapValues?: number[];
   }) {
   const transaction = useTransaction();
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [isSliding, setIsSliding] = React.useState(false);
-  const [editValue, setEditValue] = React.useState("");
-  const [hasBeenEdited, setHasBeenEdited] = React.useState(false);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const [isEditing, setIsEditing] = reactHostPort.useState(false);
+  const [isSliding, setIsSliding] = reactHostPort.useState(false);
+  const [editValue, setEditValue] = reactHostPort.useState("");
+  const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const activeInteraction = useActiveInteraction();
   const isInteracting = interactionId && activeInteraction === interactionId;
   const shouldFade = activeInteraction && !isInteracting;
 
-  const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
+  const _values = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
   const displayValue = _values[0] ?? min;
 
-  const findNearestSnapValue = React.useCallback(
+  const findNearestSnapValue = reactHostPort.useCallback(
     (val: number): number => {
       if (!snapValues || snapValues.length === 0) return val;
       let nearest = snapValues[0];
@@ -13867,7 +13898,7 @@ function Slider({
     [snapValues],
   );
 
-  const handleValueChange = React.useCallback(
+  const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
       if (snapValues && snapValues.length > 0) {
         const snappedValues = values.map(findNearestSnapValue);
@@ -14069,25 +14100,25 @@ interface StepperProps extends ElementProps {
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
   const transaction = useTransaction();
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
-  const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [hasBeenEdited, setHasBeenEdited] = React.useState(false);
-  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [internalValue, setInternalValue] = reactHostPort.useState(value ?? defaultValue);
+  const [isEditing, setIsEditing] = reactHostPort.useState(false);
+  const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
+  const intervalRef = reactHostPort.useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = reactHostPort.useRef<NodeJS.Timeout | null>(null);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const activeInteraction = useActiveInteraction();
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (value !== undefined) {
       setInternalValue(value);
     }
   }, [value]);
 
-  const clampValue = React.useCallback(
+  const clampValue = reactHostPort.useCallback(
     (val: number): number => {
       let clampedValue = val;
       if (min !== undefined) clampedValue = Math.max(clampedValue, min);
@@ -14097,7 +14128,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [min, max],
   );
 
-  const updateValue = React.useCallback(
+  const updateValue = reactHostPort.useCallback(
     (newValue: number) => {
       const clampedValue = clampValue(newValue);
       setInternalValue(clampedValue);
@@ -14106,7 +14137,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [clampValue, onChange],
   );
 
-  const startContinuousChange = React.useCallback(
+  const startContinuousChange = reactHostPort.useCallback(
     (increment: number) => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -14123,7 +14154,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [clampValue, onChange],
   );
 
-  const stopContinuousChange = React.useCallback(() => {
+  const stopContinuousChange = reactHostPort.useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -14134,7 +14165,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     }
   }, []);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     return () => {
       stopContinuousChange();
     };
@@ -14328,20 +14359,20 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
  **/
 function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, mixed, rows, ...props }: TextareaProps) {
   const transaction = useTransaction();
-  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
-  const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [isFocused, setIsFocused] = React.useState(false);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const [localValue, setLocalValue] = reactHostPort.useState(externalValue?.toString() || "");
+  const [isEditing, setIsEditing] = reactHostPort.useState(false);
+  const [isFocused, setIsFocused] = reactHostPort.useState(false);
+  const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
   const mixedLabel = useLabel("semio.sketchpad.common.mixedValues");
   const effectivePlaceholder = mixed ? mixedLabel || "—" : computedPlaceholder;
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
   }, [externalValue, isEditing]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (isFocused && textareaRef.current) {
       textareaRef.current.focus();
     }
@@ -14542,7 +14573,7 @@ export type { ToggleProps };
 /**
  * ToggleGroupContext holds the data fields for a ToggleGroupContext record.
  **/
-const ToggleGroupContext = React.createContext<{ level: Level }>({
+const ToggleGroupContext = reactHostPort.createContext<{ level: Level }>({
   level: "base",
 });
 
@@ -14611,7 +14642,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
  * ToggleGroupItem holds the data fields for a ToggleGroupItem record.
  **/
 function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
-  const context = React.useContext(ToggleGroupContext);
+  const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
 
   const toggleGroupItemElement = (
@@ -14726,8 +14757,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       onOpenChange,
       onValueChange,
     } = dropdownProps;
-    const [internalValue, setInternalValue] = React.useState<T | undefined>(defaultValue);
-    const [internalOpen, setInternalOpen] = React.useState(false);
+    const [internalValue, setInternalValue] = reactHostPort.useState<T | undefined>(defaultValue);
+    const [internalOpen, setInternalOpen] = reactHostPort.useState(false);
 
     const isControlled = controlledValue !== undefined;
     const value = isControlled ? controlledValue : internalValue;
@@ -14932,14 +14963,14 @@ interface RingProps extends ElementProps {
 
 function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onOrbHoverChange, showLabel, className }: RingProps) {
   const transaction = useTransaction();
-  const svgRef = React.useRef<SVGSVGElement>(null);
-  const [draggingOrbId, setDraggingOrbId] = React.useState<string | null>(null);
-  const [localT, setLocalT] = React.useState<number | null>(null);
-  const dragStartT = React.useRef<number>(0);
-  const rafId = React.useRef<number>(0);
-  const pendingT = React.useRef<number | null>(null);
+  const svgRef = reactHostPort.useRef<SVGSVGElement>(null);
+  const [draggingOrbId, setDraggingOrbId] = reactHostPort.useState<string | null>(null);
+  const [localT, setLocalT] = reactHostPort.useState<number | null>(null);
+  const dragStartT = reactHostPort.useRef<number>(0);
+  const rafId = reactHostPort.useRef<number>(0);
+  const pendingT = reactHostPort.useRef<number | null>(null);
   const center = size / 2;
-  const angleFromEvent = React.useCallback(
+  const angleFromEvent = reactHostPort.useCallback(
     (e: React.PointerEvent | PointerEvent): number => {
       if (!svgRef.current) return 0;
       const rect = svgRef.current.getBoundingClientRect();
@@ -14951,7 +14982,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     },
     [center],
   );
-  const handleOrbPointerDown = React.useCallback(
+  const handleOrbPointerDown = reactHostPort.useCallback(
     (orbId: string, t: number) => (e: React.PointerEvent<SVGCircleElement>) => {
       e.preventDefault();
       setDraggingOrbId(orbId);
@@ -14963,7 +14994,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     },
     [transaction, onOrbSelect],
   );
-  const flushPendingChange = React.useCallback(
+  const flushPendingChange = reactHostPort.useCallback(
     (orbId: string) => {
       if (pendingT.current !== null) {
         onOrbChange?.(orbId, dragStartT.current, pendingT.current);
@@ -14972,7 +15003,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     },
     [onOrbChange],
   );
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!draggingOrbId) return;
     const onMove = (e: PointerEvent) => {
       const newT = angleFromEvent(e);
@@ -15012,7 +15043,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     bindings.listen(window, "pointercancel", onCancel);
     return () => bindings.dispose();
   }, [draggingOrbId, angleFromEvent, flushPendingChange, onOrbChange, transaction]);
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
     };
@@ -15274,8 +15305,8 @@ function ResizableHandle({
   onMouseLeave: externalOnMouseLeave,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.Separator> & { onMouseDown?: React.MouseEventHandler<HTMLDivElement>; onMouseEnter?: React.MouseEventHandler<HTMLDivElement>; onMouseLeave?: React.MouseEventHandler<HTMLDivElement> }) {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [isDragging, setIsDragging] = React.useState(false);
+  const [isHovered, setIsHovered] = reactHostPort.useState(false);
+  const [isDragging, setIsDragging] = reactHostPort.useState(false);
 
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     setIsDragging(true);
@@ -15329,7 +15360,7 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // #region 🎮Scrollable
 // Custom scrollable area built on Radix ScrollArea.
 // 🔷Consumers MUST wrap content in Scrollable.
-const Scrollable = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Viewport>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(
+const Scrollable = reactHostPort.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Viewport>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
     return (
       <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
@@ -15715,7 +15746,7 @@ export function IconSelector({
 }: IconSelectorProps): React.ReactElement {
 	const classifyMode = classifyModeProp ?? defaultClassifyElementsBoardIconSelectorMode;
 	const activeMode = classifyMode(value);
-	const fileInputRef = React.useRef<HTMLInputElement>(null);
+	const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
 	const locked = disabled || !uniform;
 	const mathFieldValue = uniform && activeMode === "math" ? mathInnerFromIconKindStored(value) : "";
 	const dataFieldValue = uniform && activeMode === "data" ? value : "";
@@ -15809,7 +15840,7 @@ export function IconSelector({
 		reader.readAsDataURL(f);
 	};
 
-	const vectorPreviewSrc = React.useMemo(() => {
+	const vectorPreviewSrc = reactHostPort.useMemo(() => {
 		const t = value.trim();
 		const lower = t.toLowerCase();
 		if (!lower.includes("<svg")) {
@@ -15822,7 +15853,7 @@ export function IconSelector({
 		}
 	}, [value]);
 
-	const rasterPreviewSrc = React.useMemo(() => {
+	const rasterPreviewSrc = reactHostPort.useMemo(() => {
 		const t = value.trim();
 		if (!/^data:image\/(png|jpeg|jpg);/i.test(t)) {
 			return null;
@@ -15946,13 +15977,13 @@ interface TreeStateContextValue {
 /**
  * TreeStateContext holds the data fields for a TreeStateContext record.
  **/
-const TreeStateContext = React.createContext<TreeStateContextValue | null>(null);
+const TreeStateContext = reactHostPort.createContext<TreeStateContextValue | null>(null);
 
 /**
  * Context provider managing tree expansion state.
  **/
 export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [openStates, setOpenStates] = React.useState<Record<string, boolean>>({});
+  const [openStates, setOpenStates] = reactHostPort.useState<Record<string, boolean>>({});
 
   const setOpenState = (id: string, open: boolean) => {
     setOpenStates((prev) => ({ ...prev, [id]: open }));
@@ -15969,16 +16000,16 @@ export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
  * Hook returning tree expansion state and toggle functions.
  **/
 export const useTreeState = () => {
-  const context = React.useContext(TreeStateContext);
+  const context = reactHostPort.useContext(TreeStateContext);
   if (!context) throw new Error("useTreeState must be used within TreeStateProvider");
   return context;
 };
 
 const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
-  const treeState = React.useContext(TreeStateContext);
-  const [fallbackOpen, setFallbackOpen] = React.useState(defaultOpen);
+  const treeState = reactHostPort.useContext(TreeStateContext);
+  const [fallbackOpen, setFallbackOpen] = reactHostPort.useState(defaultOpen);
   const open = treeState ? treeState.getOpenState(itemId, defaultOpen) : fallbackOpen;
-  const setOpen = React.useCallback(
+  const setOpen = reactHostPort.useCallback(
     (value: boolean) => {
       if (treeState) {
         treeState.setOpenState(itemId, value);
@@ -16045,10 +16076,10 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
   visitNestedChildren(children);
 };
 
-const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
-const TreeRowAlignmentContext = React.createContext(false);
+const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
+const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
-const PropertyValueColumnContext = React.createContext(false);
+const PropertyValueColumnContext = reactHostPort.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
 const treeRowHeightPx = 24;
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
@@ -16097,7 +16128,7 @@ const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties
 /**
  **/
 const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ level, showLines }) => {
-  const { indentMultiplier, isLastAtLevel } = React.useContext(TreeContext);
+  const { indentMultiplier, isLastAtLevel } = reactHostPort.useContext(TreeContext);
   if (!showLines || level === 0) return null;
 
   const guideIndices = Array.from({ length: level }, (_, index) => index).filter((index) => !isLastAtLevel[index]);
@@ -16123,7 +16154,7 @@ interface TreeHierarchyGutterProps {
 }
 
 const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0, anchorOffsetPx }) => {
-  const { indentMultiplier } = React.useContext(TreeContext);
+  const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
   const hasSlot = slot !== null && slot !== undefined && slot !== false;
@@ -16195,7 +16226,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   slotOffsetPx = 0,
   anchorOffsetPx,
 }) => {
-  const { indentMultiplier } = React.useContext(TreeContext);
+  const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   return (
     <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
       <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
@@ -16210,7 +16241,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
  * Wrapper rendering tree children with connecting lines.
  **/
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   return (
     <div data-slot="tree-content" data-tree-row-kind="content" className="relative" style={{ paddingTop: `${treeRowVerticalPaddingPx}px`, paddingBottom: `${treeRowVerticalPaddingPx}px` }}>
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
@@ -16230,9 +16261,9 @@ interface TreeBranchContentProps {
 }
 
 const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, className, topPaddingPx = 0, ownerRowKind, ownerExpanded = false }) => {
-  const { level, showLines, isTree } = React.useContext(TreeContext);
-  const branchRef = React.useRef<HTMLDivElement>(null);
-  React.useLayoutEffect(() => {
+  const { level, showLines, isTree } = reactHostPort.useContext(TreeContext);
+  const branchRef = reactHostPort.useRef<HTMLDivElement>(null);
+  reactHostPort.useLayoutEffect(() => {
     const branchElement = branchRef.current;
     if (!branchElement || !isTree) {
       return;
@@ -16628,7 +16659,7 @@ interface TreeDataRenderingContextValue {
   handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
 }
 
-const TreeDataRenderingContext = React.createContext<TreeDataRenderingContextValue | null>(null);
+const TreeDataRenderingContext = reactHostPort.createContext<TreeDataRenderingContextValue | null>(null);
 
 const treeDefaultDragMimeKind = "application/vnd.code.tree.item";
 
@@ -16688,21 +16719,21 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDragLeave,
   onDrop,
 }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const localizedLabel = id ? useLabel(id) : undefined;
   const displayLabel = label !== undefined ? label : localizedLabel;
   assertNoNestedTreeSections(children, "TreeSection");
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
   const open = controlledOpen ?? treeOpenState.open;
-  const setOpen = React.useCallback(
+  const setOpen = reactHostPort.useCallback(
     (value: boolean) => {
       treeOpenState.setOpen(value);
       onOpenChange?.(value);
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
@@ -16863,13 +16894,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   onDoubleClick,
   layoutKind = "default",
 }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const localizedLabel = id ? useLabel(id) : undefined;
   const displayLabel = label ?? localizedLabel;
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
@@ -17193,19 +17224,19 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     );
   }
 
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = getTreeItemStateId(String(itemKey));
   const treeOpenState = useTreeOpenState(itemId, defaultOpen);
   const open = controlledOpen ?? treeOpenState.open;
-  const setOpen = React.useCallback(
+  const setOpen = reactHostPort.useCallback(
     (value: boolean) => {
       treeOpenState.setOpen(value);
       onOpenChange?.(value);
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"}`;
@@ -17535,7 +17566,7 @@ export const TreeRow: React.FC<{
 }> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const rowKind = treeRowUsesPropertyHeaderAnchor(children) ? "property" : "content";
 
   if (resolvedLabel) {
@@ -17573,7 +17604,7 @@ export const TreeRow: React.FC<{
  * value-column of the shared property-row grid (same layout as Label).
  **/
 export const HelperRow: React.FC<{ children: React.ReactNode; className?: string; propertyAligned?: boolean }> = ({ children, className, propertyAligned = false }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const helperContent = (
     <div data-slot="helper-row" data-detail-panel-control="fill" className={cn("text-xs text-muted-foreground leading-tight py-[2px]", className)}>
       {children}
@@ -17760,7 +17791,7 @@ export const Tree = (({
   if (hasNonEmptyChildren(children)) {
     throw new Error("Tree only accepts section data through the sections prop.");
   }
-  const [sectionItemsById, setSectionItemsById] = React.useState<Record<string, TreeDataItem[]>>(() =>
+  const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>(() =>
     (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
       if (section.items) {
         result[section.id] = section.items;
@@ -17768,15 +17799,15 @@ export const Tree = (({
       return result;
     }, {}),
   );
-  const [itemItemsById, setItemItemsById] = React.useState<Record<string, TreeDataItem[]>>({});
-  const [loadingById, setLoadingById] = React.useState<Record<string, boolean>>({});
-  const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = React.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
-  const [draggedIds, setDraggedIds] = React.useState<string[]>([]);
+  const [itemItemsById, setItemItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>({});
+  const [loadingById, setLoadingById] = reactHostPort.useState<Record<string, boolean>>({});
+  const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
+  const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
   const resolvedSections = sections ?? [];
-  const anchorIdRef = React.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
-  const resolvedSelectedIds = React.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
+  const anchorIdRef = reactHostPort.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
+  const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     setSectionItemsById((previousItems) => {
       let hasChanges = false;
       const nextItems = { ...previousItems };
@@ -17790,7 +17821,7 @@ export const Tree = (({
     });
   }, [resolvedSections]);
 
-  const itemMap = React.useMemo(() => {
+  const itemMap = reactHostPort.useMemo(() => {
     const map: Record<string, TreeDataItem> = {};
     resolvedSections.forEach((section) => {
       collectTreeItemMap(getTreeSectionItems(section, sectionItemsById), map);
@@ -17801,7 +17832,7 @@ export const Tree = (({
     return map;
   }, [itemItemsById, resolvedSections, sectionItemsById]);
 
-  const updateSelection = React.useCallback(
+  const updateSelection = reactHostPort.useCallback(
     (nextSelectedIds: string[]) => {
       const normalizedIds = normalizeTreeSelectedIds(nextSelectedIds, selectionMode);
       if (controlledSelectedIds === undefined) {
@@ -17812,7 +17843,7 @@ export const Tree = (({
     [controlledSelectedIds, itemMap, onSelectionChange, selectionMode],
   );
 
-  const loadSectionItems = React.useCallback(
+  const loadSectionItems = reactHostPort.useCallback(
     async (section: TreeDataSection) => {
       if (!section.getItems || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
         return;
@@ -17828,7 +17859,7 @@ export const Tree = (({
     [loadingById, sectionItemsById],
   );
 
-  const loadItemItems = React.useCallback(
+  const loadItemItems = reactHostPort.useCallback(
     async (item: TreeDataItem) => {
       if (!item.getItems || itemItemsById[item.id] !== undefined || loadingById[getTreeItemLoadingId(item.id)]) {
         return;
@@ -17844,12 +17875,12 @@ export const Tree = (({
     [itemItemsById, loadingById],
   );
 
-  const handleDragOver = React.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleSelectItem = React.useCallback(
+  const handleSelectItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
       const nextSelection = getTreeNextSelectionState({
@@ -17868,14 +17899,14 @@ export const Tree = (({
     [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection],
   );
 
-  const handleDoubleClickItem = React.useCallback(
+  const handleDoubleClickItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
       item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
     },
     [resolvedSelectedIds],
   );
 
-  const handleDragStart = React.useCallback(
+  const handleDragStart = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
       const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
@@ -17891,7 +17922,7 @@ export const Tree = (({
     [dragAndDropController, itemMap, resolvedSelectedIds],
   );
 
-  const handleDrop = React.useCallback(
+  const handleDrop = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
       event.preventDefault();
       const sourceIds = draggedIds.length > 0 ? draggedIds : JSON.parse(event.dataTransfer.getData(treeDefaultDragMimeKind) || "[]");
@@ -17911,7 +17942,7 @@ export const Tree = (({
     const baseChildItems = getTreeItemItems(item, itemItemsById);
     const alternatives = item.alternatives ?? [];
     const branchCount = alternatives.length;
-    const [activeBranchIndex, setActiveBranchIndex] = React.useState(0);
+    const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
     const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
     const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
     const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
@@ -17920,7 +17951,7 @@ export const Tree = (({
     const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
     const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
 
-    React.useEffect(() => {
+    reactHostPort.useEffect(() => {
       if (treeOpenState.open && hasDynamicChildren) {
         void loadItemItems(item);
       }
@@ -17971,7 +18002,7 @@ export const Tree = (({
     const hasDynamicChildren = Boolean(section.getItems);
     const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
 
-    React.useEffect(() => {
+    reactHostPort.useEffect(() => {
       if (treeOpenState.open && hasDynamicChildren) {
         void loadSectionItems(section);
       }
@@ -18004,9 +18035,9 @@ export const Tree = (({
     );
   };
 
-  const treeRootRef = React.useRef<HTMLDivElement>(null);
+  const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
 
-  const handleTreePointerOver = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handleTreePointerOver = reactHostPort.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const root = treeRootRef.current;
     if (!root) return;
     const row = resolveHoverRow(e.target as HTMLElement, root);
@@ -18014,7 +18045,7 @@ export const Tree = (({
     else clearTreeHoverPath(root);
   }, []);
 
-  const handleTreePointerLeave = React.useCallback(() => {
+  const handleTreePointerLeave = reactHostPort.useCallback(() => {
     const root = treeRootRef.current;
     if (root) clearTreeHoverPath(root);
   }, []);
@@ -18067,9 +18098,9 @@ const createBasicChatMessages = (id: string, title: string): BasicChatMessage[] 
 export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
-  const [messages, setMessages] = React.useState<BasicChatMessage[]>(() => createBasicChatMessages(id, title));
-  const [draft, setDraft] = React.useState("");
-  const nextMessageIndexRef = React.useRef(2);
+  const [messages, setMessages] = reactHostPort.useState<BasicChatMessage[]>(() => createBasicChatMessages(id, title));
+  const [draft, setDraft] = reactHostPort.useState("");
+  const nextMessageIndexRef = reactHostPort.useRef(2);
   const appendMessage = (role: BasicChatMessageRole, body: string) => {
     const nextMessageId = `${id}.${role}.${nextMessageIndexRef.current}`;
     nextMessageIndexRef.current += 1;
@@ -18098,7 +18129,7 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
     appendMessage("assistant", `Saved locally: "${responsePreview}"`);
   };
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     nextMessageIndexRef.current = 2;
     setMessages(createBasicChatMessages(id, title));
     setDraft("");
@@ -18164,8 +18195,8 @@ interface FileTreeItemProps {
  * FileTreeItem holds the data fields for a FileTreeItem record.
  **/
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
-  const { level, isTree, indentMultiplier } = React.useContext(TreeContext);
-  const [isHovered, setIsHovered] = React.useState(false);
+  const { level, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const itemId = `file-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, true);
 
@@ -18432,7 +18463,7 @@ interface ControlTreeFolderRowProps {
   onToggleFolder?: (path: string, collapsed: boolean) => void;
 }
 const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, classNames, children, defaultOpen, onToggleFolder }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const itemId = `control-tree-folder-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
@@ -18488,7 +18519,7 @@ interface ControlTreeLeafRowProps {
   classNames?: ControlTreeClassNames;
 }
 const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderControl, classNames }) => {
-  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   return (
     <ControlTreeRow
       className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
@@ -18542,8 +18573,8 @@ export interface ControlTreeProps {
  * Leva-like nested folder+controls tree panel using existing design system components.
  **/
 export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText = "", folderSettings, onToggleFolder, renderControl = defaultControlRenderer, classNames, className }) => {
-  const tree = React.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);
-  const sorted = React.useMemo(() => sortControlTreeNodes(tree), [tree]);
+  const tree = reactHostPort.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);
+  const sorted = reactHostPort.useMemo(() => sortControlTreeNodes(tree), [tree]);
   return (
     <div data-slot="control-tree" className={cn("w-full min-w-0", classNames?.panel, className)}>
       <Tree
@@ -18599,7 +18630,7 @@ interface BreadcrumbProps extends Omit<React.ComponentProps<"nav">, "children"> 
 /**
  **/
 function Breadcrumb({ className, items, ...props }: BreadcrumbProps) {
-  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const [openIndex, setOpenIndex] = reactHostPort.useState<number | null>(null);
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
 
@@ -18637,7 +18668,7 @@ interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"
  **/
 function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
   const itemContent = content ?? children;
-  const interactiveContent = React.useMemo(() => {
+  const interactiveContent = reactHostPort.useMemo(() => {
     if (itemContent == null || typeof itemContent === "boolean") return null;
     if (React.isValidElement(itemContent)) {
       if (itemContent.type === React.Fragment) {
@@ -18897,8 +18928,8 @@ const Panel: React.FC<PanelProps> = ({
   panelKey,
 }) => {
   const mode = useTooltipMode();
-  const [isResizeHovered, setIsResizeHovered] = React.useState(false);
-  const [isResizing, setIsResizing] = React.useState(false);
+  const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
+  const [isResizing, setIsResizing] = reactHostPort.useState(false);
   if (!visible) return null;
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -18954,7 +18985,7 @@ const Panel: React.FC<PanelProps> = ({
       ? { top: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex }
       : { bottom: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
-  const treeSections = React.useMemo<TreeDataSection[]>(() => {
+  const treeSections = reactHostPort.useMemo<TreeDataSection[]>(() => {
     const nextSections: TreeDataSection[] = [];
     if (additionalContent) {
       nextSections.push({ id: `${panelKey}-additional`, label: null, content: additionalContent });
@@ -19171,8 +19202,8 @@ export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(ha
   onEnd?: (event: React.PointerEvent<TElement>) => void;
   onCancel?: (event: React.PointerEvent<TElement>) => void;
 }): Pick<React.HTMLAttributes<TElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"> {
-  const activePointerIdRef = React.useRef<number | null>(null);
-  return React.useMemo(
+  const activePointerIdRef = reactHostPort.useRef<number | null>(null);
+  return reactHostPort.useMemo(
     () => ({
       onPointerDown: (event: React.PointerEvent<TElement>) => {
         activePointerIdRef.current = event.pointerId;
@@ -19214,7 +19245,7 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
   },
   draggable = true,
 ): Pick<React.HTMLAttributes<TElement>, "draggable" | "onDragEnd" | "onDragOver" | "onDragStart" | "onDrop"> {
-  return React.useMemo(
+  return reactHostPort.useMemo(
     () => ({
       draggable,
       onDragStart: handlers.onDragStart,
@@ -19244,13 +19275,13 @@ export interface SidePanelProps {
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
-  const [isResizeHovered, setIsResizeHovered] = React.useState(false);
-  const [isResizing, setIsResizing] = React.useState(false);
-  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
-  const sizeRef = React.useRef(size);
-  const resizeStartRef = React.useRef<{ pointerX: number; size: number } | null>(null);
+  const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
+  const [isResizing, setIsResizing] = reactHostPort.useState(false);
+  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
+  const sizeRef = reactHostPort.useRef(size);
+  const resizeStartRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     sizeRef.current = size;
   }, [size]);
 
@@ -19379,7 +19410,7 @@ export interface MobilePanelProps {
  * It merges all tabs into a single non-resizable panel.
  **/
 const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabId, onActiveTabChange, className = "", height = 260 }) => {
-  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
+  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
 
   if (!visible || tabs.length === 0) return null;
 
@@ -19574,8 +19605,8 @@ export interface EngagementProps extends EngagementSpec {
 
 /** @emoji 💬 Floating three-line engagement panel with options, input, and status rows. */
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, className = "" }) => {
-  const [draft, setDraft] = React.useState(input?.value ?? "");
-  React.useEffect(() => {
+  const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
+  reactHostPort.useEffect(() => {
     setDraft(input?.value ?? "");
   }, [input?.value]);
 
@@ -19794,9 +19825,9 @@ export interface PageProps {
  * Full-page wrapper with frontmatter header and footer.
  **/
 export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusComplete, footer, children }) => {
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
       const element = getElementById(focusedItemId);
       if (element) {
@@ -20075,12 +20106,12 @@ const DiagramInner: React.FC<DiagramProps> = ({
   autoPanOnNodeDrag,
   selectNodesOnDrag,
 }) => {
-  const forceConfig = React.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
-  const simulationRef = React.useRef<Simulation<any, any> | null>(null);
-  const draggingNodeRef = React.useRef<string | null>(null);
+  const forceConfig = reactHostPort.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
+  const simulationRef = reactHostPort.useRef<Simulation<any, any> | null>(null);
+  const draggingNodeRef = reactHostPort.useRef<string | null>(null);
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
   const rfStoreApi = useStoreApi();
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const original = rfStoreApi.setState;
     const api = rfStoreApi as any;
     api.__suppressTransform = false;
@@ -20106,34 +20137,34 @@ const DiagramInner: React.FC<DiagramProps> = ({
     };
   }, [rfStoreApi]);
 
-  const [internalNodes, setInternalNodes] = React.useState<Node[]>(initialNodes);
-  const [internalEdges, setInternalEdges] = React.useState<Edge[]>(initialEdges);
+  const [internalNodes, setInternalNodes] = reactHostPort.useState<Node[]>(initialNodes);
+  const [internalEdges, setInternalEdges] = reactHostPort.useState<Edge[]>(initialEdges);
 
   const finalNodes = isControlled ? controlledNodes : internalNodes;
   const finalEdges = isControlled ? controlledEdges : internalEdges;
 
-  const onNodesChangeReactFlowRef = React.useRef(onNodesChangeReactFlow);
+  const onNodesChangeReactFlowRef = reactHostPort.useRef(onNodesChangeReactFlow);
   onNodesChangeReactFlowRef.current = onNodesChangeReactFlow;
-  const onNodeDragStartPropRef = React.useRef(onNodeDragStartProp);
+  const onNodeDragStartPropRef = reactHostPort.useRef(onNodeDragStartProp);
   onNodeDragStartPropRef.current = onNodeDragStartProp;
-  const onNodeDragPropRef = React.useRef(onNodeDragProp);
+  const onNodeDragPropRef = reactHostPort.useRef(onNodeDragProp);
   onNodeDragPropRef.current = onNodeDragProp;
-  const onNodeDragStopPropRef = React.useRef(onNodeDragStopProp);
+  const onNodeDragStopPropRef = reactHostPort.useRef(onNodeDragStopProp);
   onNodeDragStopPropRef.current = onNodeDragStopProp;
-  const onInitPropRef = React.useRef(onInitProp);
+  const onInitPropRef = reactHostPort.useRef(onInitProp);
   onInitPropRef.current = onInitProp;
-  const onConnectRef = React.useRef(onConnect);
+  const onConnectRef = reactHostPort.useRef(onConnect);
   onConnectRef.current = onConnect;
-  const onMoveStartRef = React.useRef(onMoveStart);
+  const onMoveStartRef = reactHostPort.useRef(onMoveStart);
   onMoveStartRef.current = onMoveStart;
-  const onMoveEndRef = React.useRef(onMoveEnd);
+  const onMoveEndRef = reactHostPort.useRef(onMoveEnd);
   onMoveEndRef.current = onMoveEnd;
-  const onSelectionChangeRef = React.useRef(onSelectionChange);
+  const onSelectionChangeRef = reactHostPort.useRef(onSelectionChange);
   onSelectionChangeRef.current = onSelectionChange;
-  const finalNodesRef = React.useRef(finalNodes);
+  const finalNodesRef = reactHostPort.useRef(finalNodes);
   finalNodesRef.current = finalNodes;
 
-  const handleNodesChange = React.useCallback(
+  const handleNodesChange = reactHostPort.useCallback(
     (changes: any[]) => {
       onNodesChangeReactFlowRef.current?.(changes);
       if (!isControlled) {
@@ -20143,7 +20174,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [isControlled],
   );
 
-  const handleEdgesChange = React.useCallback(
+  const handleEdgesChange = reactHostPort.useCallback(
     (changes: any[]) => {
       if (!isControlled) {
         setInternalEdges((eds) => {
@@ -20161,7 +20192,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [isControlled],
   );
 
-  const handleInit = React.useCallback(
+  const handleInit = reactHostPort.useCallback(
     (instance: ReactFlowInstance) => {
       if (reactFlowInstanceRef) {
         (reactFlowInstanceRef as any).current = instance;
@@ -20171,7 +20202,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [reactFlowInstanceRef],
   );
 
-  const handleNodeDragStart = React.useCallback(
+  const handleNodeDragStart = reactHostPort.useCallback(
     (event: React.MouseEvent, node: Node) => {
       draggingNodeRef.current = node.id;
       if (forceConfig.enabled && simulationRef.current) {
@@ -20194,7 +20225,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [forceConfig.enabled],
   );
 
-  const handleNodeDrag = React.useCallback(
+  const handleNodeDrag = reactHostPort.useCallback(
     (event: React.MouseEvent, node: Node) => {
       if (draggingNodeRef.current !== node.id) return;
       if (forceConfig.enabled && simulationRef.current) {
@@ -20221,7 +20252,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [forceConfig.enabled],
   );
 
-  const handleNodeDragStop = React.useCallback(
+  const handleNodeDragStop = reactHostPort.useCallback(
     (event: React.MouseEvent, node: Node) => {
       if (forceConfig.enabled && simulationRef.current) {
         simulationRef.current.alphaTarget(0);
@@ -20236,20 +20267,20 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [forceConfig.enabled],
   );
 
-  const stableOnConnect = React.useCallback((connection: any) => {
+  const stableOnConnect = reactHostPort.useCallback((connection: any) => {
     onConnectRef.current?.(connection);
   }, []);
-  const stableOnMoveStart = React.useCallback(() => {
+  const stableOnMoveStart = reactHostPort.useCallback(() => {
     onMoveStartRef.current?.();
   }, []);
-  const stableOnMoveEnd = React.useCallback(() => {
+  const stableOnMoveEnd = reactHostPort.useCallback(() => {
     onMoveEndRef.current?.();
   }, []);
-  const stableOnSelectionChange = React.useCallback((selection: OnSelectionChangeParams) => {
+  const stableOnSelectionChange = reactHostPort.useCallback((selection: OnSelectionChangeParams) => {
     onSelectionChangeRef.current?.(selection);
   }, []);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!forceConfig.enabled || finalNodes.length === 0) {
       simulationRef.current = null;
       return;
@@ -20337,7 +20368,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
     };
   }, [forceConfig.enabled, forceConfig.chargeStrength, forceConfig.linkDistance, forceConfig.collideRadius, forceConfig.centerStrength, finalNodes.length, finalEdges.length, isControlled, onNodesChangeProp]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (focusedItemId && reactFlowInstanceRef?.current) {
       const node = finalNodes.find((n) => n.id === focusedItemId);
       const edge = finalEdges.find((e) => e.id === focusedItemId);
@@ -20367,20 +20398,20 @@ const DiagramInner: React.FC<DiagramProps> = ({
     }
   }, [focusedItemId, finalNodes, finalEdges, reactFlowInstanceRef, onFocusComplete]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isControlled) {
       setInternalNodes(initialNodes);
       setInternalEdges(initialEdges);
     }
   }, [initialNodes, initialEdges, isControlled]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isControlled && onNodesChangeProp) {
       onNodesChangeProp(internalNodes);
     }
   }, [internalNodes, onNodesChangeProp, isControlled]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isControlled && onEdgesChangeProp) {
       onEdgesChangeProp(internalEdges);
     }
@@ -20388,7 +20419,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
 
   return (
     <div ref={wrapperRef as any} className={`relative w-full h-full ${className}`}>
-      <ReactFlow
+      <HostReactFlow
         nodes={finalNodes}
         edges={finalEdges}
         onNodesChange={handleNodesChange}
@@ -20440,7 +20471,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
       >
         {showMinimap && <MiniMap className="border border-element" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
         {panels}
-      </ReactFlow>
+      </HostReactFlow>
     </div>
   );
 };
@@ -20450,9 +20481,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
  **/
 const Diagram: React.FC<DiagramProps> = (props) => {
   return (
-    <ReactFlowProvider>
+    <HostReactFlowProvider>
       <DiagramInner {...props} />
-    </ReactFlowProvider>
+    </HostReactFlowProvider>
   );
 };
 
@@ -20463,7 +20494,7 @@ export type { OnSelectionChangeParams };
  * Hook computing and memoizing diagram layout from nodes and edges.
  **/
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {
-  return React.useMemo(() => {
+  return reactHostPort.useMemo(() => {
     if (initialNodes.length === 0) {
       return { nodes: [], edges: [] };
     }
@@ -20484,7 +20515,7 @@ interface DiagramSkeletonProps {
  * Skeleton loading placeholder for a diagram.
  **/
 export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
-  const skeletonNodes: Node[] = React.useMemo(
+  const skeletonNodes: Node[] = reactHostPort.useMemo(
     () =>
       Array.from({ length: nodeCount }).map((_, i) => ({
         id: `skeleton-node-${i}`,
@@ -20495,7 +20526,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
       })),
     [nodeCount],
   );
-  const skeletonEdges: Edge[] = React.useMemo(
+  const skeletonEdges: Edge[] = reactHostPort.useMemo(
     () =>
       Array.from({ length: edgeCount }).map((_, i) => ({
         id: `skeleton-edge-${i}`,
@@ -20507,7 +20538,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
   );
   return (
     <div className={`relative w-full h-full ${className}`}>
-      <ReactFlow
+      <HostReactFlow
         nodes={skeletonNodes}
         edges={skeletonEdges}
         nodeTypes={{}}
@@ -20519,7 +20550,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         zoomOnPinch={false}
         proOptions={{ hideAttribution: true }}
         className="bg-background animate-pulse opacity-50"
-      ></ReactFlow>
+      ></HostReactFlow>
     </div>
   );
 };
@@ -20535,7 +20566,7 @@ const SceneFrameControl: React.FC = () => {
   const gl = useThree((s) => s.gl);
   const setFrameloop = useThree((s) => s.setFrameloop);
   const invalidate = useThree((s) => s.invalidate);
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     sceneFrameControlRef.current = {
       pause: () => setFrameloop("never"),
       resume: () => {
@@ -20666,32 +20697,32 @@ interface GeometryProps {
  * 3D geometry mesh component with selection, hover, and edge rendering.
  **/
 export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
-  const foregroundColor = React.useMemo(() => getComputedColor("--foreground"), []);
-  const activeBaseColor = React.useMemo(() => getComputedColor("--active-base"), []);
-  const hoverBaseColor = React.useMemo(() => getComputedColor("--hover-base"), []);
-  const [isPointerOver, setIsPointerOver] = React.useState(false);
+  const foregroundColor = reactHostPort.useMemo(() => getComputedColor("--foreground"), []);
+  const activeBaseColor = reactHostPort.useMemo(() => getComputedColor("--active-base"), []);
+  const hoverBaseColor = reactHostPort.useMemo(() => getComputedColor("--hover-base"), []);
+  const [isPointerOver, setIsPointerOver] = reactHostPort.useState(false);
   const isInteractive = Boolean(onClick || onDoubleClick);
 
-  const resolvedColor = React.useMemo(() => {
+  const resolvedColor = reactHostPort.useMemo(() => {
     if (selected) return activeBaseColor;
     if (hovered) return hoverBaseColor;
     if (color) return color;
     return foregroundColor;
   }, [color, selected, hovered, activeBaseColor, hoverBaseColor, foregroundColor]);
 
-  const resolvedEmissiveColor = React.useMemo(() => {
+  const resolvedEmissiveColor = reactHostPort.useMemo(() => {
     if (selected) return activeBaseColor;
     if (hovered) return hoverBaseColor;
     if (emissiveColor) return emissiveColor;
     return resolvedColor;
   }, [selected, hovered, activeBaseColor, hoverBaseColor, emissiveColor, resolvedColor]);
-  const resolvedEdgeColor = React.useMemo(() => {
+  const resolvedEdgeColor = reactHostPort.useMemo(() => {
     if (edgeColor) return edgeColor;
     if (selected) return activeBaseColor;
     if (hovered) return hoverBaseColor;
     return foregroundColor;
   }, [edgeColor, selected, hovered, activeBaseColor, hoverBaseColor, foregroundColor]);
-  const handlePointerEnter = React.useCallback(
+  const handlePointerEnter = reactHostPort.useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       if (isInteractive) {
         setIsPointerOver(true);
@@ -20701,7 +20732,7 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
     [isInteractive, onPointerEnter],
   );
 
-  const handlePointerLeave = React.useCallback(
+  const handlePointerLeave = reactHostPort.useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       if (isInteractive) {
         setIsPointerOver(false);
@@ -20711,7 +20742,7 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
     [isInteractive, onPointerLeave],
   );
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!isInteractive || !isPointerOver) return;
     selectableCursorUsageCount += 1;
     document.body.classList.add("cursor-selectable");
@@ -20763,10 +20794,10 @@ const getComputedColorForGltf = (variable: string): string => {
  **/
 const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
   const { scene } = useGLTF(src);
-  const plasterColor = React.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster")), []);
-  const plasterEdgeColor = React.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster-edge")), []);
+  const plasterColor = reactHostPort.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster")), []);
+  const plasterEdgeColor = reactHostPort.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster-edge")), []);
 
-  const clonedScene = React.useMemo(() => {
+  const clonedScene = reactHostPort.useMemo(() => {
     const cloned = scene.clone();
     const plasterMaterial = new THREE.MeshStandardMaterial({
       color: plasterColor,
@@ -20811,9 +20842,9 @@ const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness
   return (
     <div className="w-full h-full">
       <Geometry>
-        <React.Suspense fallback={null}>
+        <reactHostPort.Suspense fallback={null}>
           <Gltf src={src} roughness={roughness} metalness={metalness} />
-        </React.Suspense>
+        </reactHostPort.Suspense>
       </Geometry>
     </div>
   );
@@ -20915,14 +20946,14 @@ const updateSceneCameraProjection = (camera: THREE.Camera): void => {
  **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const { size } = useThree();
-  const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
-  const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
-  const placement = React.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
+  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
+  const labels = reactHostPort.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
+  const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
-  const axisScale = React.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
-  const labelColor = React.useMemo(() => getComputedColor("--foreground"), []);
+  const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
+  const labelColor = reactHostPort.useMemo(() => getComputedColor("--foreground"), []);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const updateColors = () => setColors([getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
     updateColors();
     const observer = new MutationObserver(updateColors);
@@ -20978,12 +21009,12 @@ interface SceneInnerProps {
  * SceneInner holds the data fields for a SceneInner record.
  **/
 const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, projection, camera: initialCamera, onCameraChange, onProjectionChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onOrbitEnd }) => {
-  const [gridColors, setGridColors] = React.useState({
+  const [gridColors, setGridColors] = reactHostPort.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
   });
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const updateColors = () =>
       setGridColors({
         sectionColor: getComputedColor("--foreground"),
@@ -20999,16 +21030,16 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
   }, []);
 
   const { camera: threeCamera, gl, size, scene: threeScene } = useThree();
-  const controlsRef = React.useRef<any>(null);
-  const isUpdatingCameraRef = React.useRef(false);
-  const prevCameraStringRef = React.useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
-  const cameraRestoredRef = React.useRef(false);
-  const restoredCameraStringRef = React.useRef<string | undefined>(undefined);
-  const previousProjectionRef = React.useRef<SceneProjectionKind>(projection);
-  const cameraRef = React.useRef<THREE.Camera>(threeCamera as THREE.Camera);
-  const [pendingSnapTarget, setPendingSnapTarget] = React.useState<SceneGizmoSnapTarget | null>(null);
+  const controlsRef = reactHostPort.useRef<any>(null);
+  const isUpdatingCameraRef = reactHostPort.useRef(false);
+  const prevCameraStringRef = reactHostPort.useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
+  const cameraRestoredRef = reactHostPort.useRef(false);
+  const restoredCameraStringRef = reactHostPort.useRef<string | undefined>(undefined);
+  const previousProjectionRef = reactHostPort.useRef<SceneProjectionKind>(projection);
+  const cameraRef = reactHostPort.useRef<THREE.Camera>(threeCamera as THREE.Camera);
+  const [pendingSnapTarget, setPendingSnapTarget] = reactHostPort.useState<SceneGizmoSnapTarget | null>(null);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     cameraRef.current = threeCamera as THREE.Camera;
     const currentCamera = cameraRef.current;
     if (projection === "orthographic" && currentCamera instanceof THREE.OrthographicCamera) {
@@ -21017,7 +21048,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
     updateSceneCameraProjection(currentCamera);
   }, [projection, threeCamera]);
 
-  const emitCameraChange = React.useCallback(() => {
+  const emitCameraChange = reactHostPort.useCallback(() => {
     if (!cameraRef.current || !controlsRef.current || !onCameraChange) return;
     const position = cameraRef.current.position;
     const target = controlsRef.current.target;
@@ -21032,7 +21063,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
     });
   }, [onCameraChange]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!cameraRef.current || !controlsRef.current) return;
 
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
@@ -21107,7 +21138,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
     }
   }, [initialCamera, projection]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!pendingSnapTarget || !cameraRef.current || !controlsRef.current) return;
 
     const currentCamera = cameraRef.current;
@@ -21160,23 +21191,23 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
     requestAnimationFrame(animateSnap);
   }, [emitCameraChange, onProjectionChange, pendingSnapTarget, projection]);
 
-  const handleGizmoAxisClick = React.useCallback((direction: THREE.Vector3) => {
+  const handleGizmoAxisClick = reactHostPort.useCallback((direction: THREE.Vector3) => {
     setPendingSnapTarget(resolveSceneGizmoSnapTarget(direction));
   }, []);
 
-  const handleStart = React.useCallback(() => {
+  const handleStart = reactHostPort.useCallback(() => {
     if (isUpdatingCameraRef.current || projection !== "orthographic") return;
     emitCameraChange();
     onProjectionChange?.("camera");
   }, [emitCameraChange, onProjectionChange, projection]);
 
-  const handleEnd = React.useCallback(() => {
+  const handleEnd = reactHostPort.useCallback(() => {
     if (isUpdatingCameraRef.current) return;
     onOrbitEnd?.();
     emitCameraChange();
   }, [emitCameraChange, onOrbitEnd]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
 
     let retryCount = 0;
@@ -21313,13 +21344,13 @@ export const Scene: React.FC<SceneProps> = ({
   onProjectionChange,
   selectionOnDrag = false,
 }) => {
-  const [resolvedProjection, setResolvedProjection] = React.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
+  const [resolvedProjection, setResolvedProjection] = reactHostPort.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     setResolvedProjection(projection ?? (orthographic ? "orthographic" : "camera"));
   }, [orthographic, projection]);
 
-  const handleProjectionChange = React.useCallback(
+  const handleProjectionChange = reactHostPort.useCallback(
     (nextProjection: SceneProjectionKind) => {
       setResolvedProjection(nextProjection);
       onProjectionChange?.(nextProjection);
@@ -21500,8 +21531,8 @@ const Table = <T,>({
   wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-  const [activeId, setActiveId] = React.useState<string | null>(null);
+  const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
   const level = useLevel();
   const headerBgClass = {
     base: "bg-base",
@@ -21519,7 +21550,7 @@ const Table = <T,>({
     }),
   );
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
       const rowElements = scrollAreaRef.current.querySelectorAll(isMobile ? "[data-row]" : "tbody tr");
       let focusedIndex = -1;
@@ -22194,7 +22225,7 @@ interface ModeDockContextValue {
   toggleMaximize: (stackPath: ModeLayoutPath) => void;
 }
 
-const ModeDockContext = React.createContext<ModeDockContextValue | null>(null);
+const ModeDockContext = reactHostPort.createContext<ModeDockContextValue | null>(null);
 
 interface ModeDockTabBarProps {
   stackPath: ModeLayoutPath;
@@ -22203,8 +22234,8 @@ interface ModeDockTabBarProps {
   onSelectTab: (windowId: string) => void;
 }
 
-const ModeDockTabBar = React.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
-  const dock = React.useContext(ModeDockContext);
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
+  const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
   const dragState = dock?.dragState;
 
@@ -22278,9 +22309,9 @@ interface ModeDockStackProps {
 }
 
 const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId }) => {
-  const dock = React.useContext(ModeDockContext);
-  const tabBarRef = React.useRef<HTMLDivElement>(null);
-  const bodyRef = React.useRef<HTMLDivElement>(null);
+  const dock = reactHostPort.useContext(ModeDockContext);
+  const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dragState = dock?.dragState;
   const activeId = node.activeId ?? node.children[0]?.id;
   const tabs = node.children.map((child) => ({
@@ -22288,7 +22319,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
     title: child.title ?? windowsById.get(child.id)?.title ?? child.id,
   }));
 
-  React.useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     dock?.registerStackDropTargets(stackPath, tabBarRef.current, bodyRef.current);
     return () => dock?.registerStackDropTargets(stackPath, null, null);
   }, [dock, stackPath, node.children.length]);
@@ -22359,22 +22390,22 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "" }) => {
-  const windowsById = React.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
-  const windowsKey = React.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
-  const layoutKey = React.useMemo(() => JSON.stringify(layout ?? null), [layout]);
-  const initialLayout = React.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
-  const [layoutState, setLayoutState] = React.useState<WindowLayoutNode>(() => initialLayout);
-  const [maximizedStackPath, setMaximizedStackPath] = React.useState<ModeLayoutPath | null>(null);
-  const [dragState, setDragState] = React.useState<ModeDragState | null>(null);
-  const [pendingDrag, setPendingDrag] = React.useState<ModePendingDrag | null>(null);
-  const [dropZone, setDropZone] = React.useState<ModeDropZone | null>(null);
-  const dropZoneRef = React.useRef<ModeDropZone | null>(null);
-  const modeBodyRef = React.useRef<HTMLDivElement>(null);
-  const stackDropElementsRef = React.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
-  const layoutKeyRef = React.useRef(layoutKey);
-  const windowsKeyRef = React.useRef(windowsKey);
+  const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
+  const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
+  const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
+  const initialLayout = reactHostPort.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
+  const [layoutState, setLayoutState] = reactHostPort.useState<WindowLayoutNode>(() => initialLayout);
+  const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<ModeLayoutPath | null>(null);
+  const [dragState, setDragState] = reactHostPort.useState<ModeDragState | null>(null);
+  const [pendingDrag, setPendingDrag] = reactHostPort.useState<ModePendingDrag | null>(null);
+  const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
+  const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
+  const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
+  const layoutKeyRef = reactHostPort.useRef(layoutKey);
+  const windowsKeyRef = reactHostPort.useRef(windowsKey);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
     if (!layoutChanged && windowsKeyRef.current === windowsKey) return;
     layoutKeyRef.current = layoutKey;
@@ -22383,12 +22414,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setMaximizedStackPath(null);
   }, [layout, layoutKey, windows, windowsKey]);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!activeWindowId) return;
     setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
   }, [activeWindowId]);
 
-  const registerStackDropTargets = React.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
+  const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
       stackDropElementsRef.current.delete(path);
       return;
@@ -22400,7 +22431,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     });
   }, []);
 
-  const activateWindow = React.useCallback(
+  const activateWindow = reactHostPort.useCallback(
     (windowId: string) => {
       if (activeWindowId === windowId) return;
       setLayoutState((prev) => setActiveWindowInLayout(prev, windowId));
@@ -22409,7 +22440,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [activeWindowId, onActiveWindowChange],
   );
 
-  const closeWindow = React.useCallback(
+  const closeWindow = reactHostPort.useCallback(
     (windowId: string) => {
       setLayoutState((prev) => {
         const next = collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] };
@@ -22424,11 +22455,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [activeWindowId, onActiveWindowChange],
   );
 
-  const toggleMaximize = React.useCallback((stackPath: ModeLayoutPath) => {
+  const toggleMaximize = reactHostPort.useCallback((stackPath: ModeLayoutPath) => {
     setMaximizedStackPath((prev) => (prev === stackPath ? null : stackPath));
   }, []);
 
-  const refreshDropZone = React.useCallback((clientX: number, clientY: number) => {
+  const refreshDropZone = reactHostPort.useCallback((clientX: number, clientY: number) => {
     const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
     stackDropElementsRef.current.forEach((elements, path) => {
       targets.set(path, {
@@ -22443,7 +22474,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setDropZone(zone);
   }, []);
 
-  const finishDrag = React.useCallback(
+  const finishDrag = reactHostPort.useCallback(
     (drag: ModeDragState, zone: ModeDropZone | null) => {
       if (!zone) return;
       setLayoutState((prev) => applyModeDrop(prev, drag, zone));
@@ -22452,11 +22483,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [activateWindow],
   );
 
-  const clearPendingDrag = React.useCallback((pointerId: number) => {
+  const clearPendingDrag = reactHostPort.useCallback((pointerId: number) => {
     setPendingDrag((prev) => (prev?.pointerId === pointerId ? null : prev));
   }, []);
 
-  const startTabDrag = React.useCallback(
+  const startTabDrag = reactHostPort.useCallback(
     (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       setPendingDrag({
@@ -22472,7 +22503,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [],
   );
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!pendingDrag && !dragState) return;
     const handleMove = (event: PointerEvent) => {
       const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
@@ -22514,11 +22545,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     };
   }, [pendingDrag, dragState, finishDrag, refreshDropZone]);
 
-  const onAxisLayoutChanged = React.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
+  const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
-  const dockContext = React.useMemo<ModeDockContextValue>(
+  const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
       registerStackDropTargets,
@@ -22532,7 +22563,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [dragState, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
-  const renderContext = React.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
+  const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
 
   const maximizedStack =
     maximizedStackPath !== null

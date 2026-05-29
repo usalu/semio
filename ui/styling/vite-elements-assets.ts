@@ -105,7 +105,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 	const uiReact = resolve(repoRoot, "ui/react/index.tsx");
 	const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
 		{ find: "@framework/playground-renderer-react/shell", replacement: resolve(rendererRoot, "shell.tsx") },
-		{ find: "@framework/playground-renderer-react/boot", replacement: resolve(rendererRoot, "boot-playground.ts") },
+		{ find: "@framework/playground-renderer-react/boot", replacement: resolve(rendererRoot, "index.tsx") },
 		{ find: "@framework/playground-renderer-react/puzzle/board", replacement: resolve(rendererRoot, "puzzle/board-play-host.tsx") },
 		{ find: "@framework/playground-renderer-react/puzzle/scene", replacement: resolve(rendererRoot, "puzzle/scene-play-host.tsx") },
 		{ find: "@framework/playground-renderer-react/puzzle/topology", replacement: resolve(rendererRoot, "puzzle/topology-play-host.tsx") },
