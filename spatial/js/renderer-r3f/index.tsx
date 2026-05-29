@@ -4105,8 +4105,6 @@ export function InteractionRepl({
 		const allowed = listSpatialInteractionsForModelDefinition(mdId);
 		if (interactionId && !allowed.some((row) => row.id === interactionId)) onInteractionId("");
 		setLastFinalizedInteractionId("");
-		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
-		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 	}, [
 		activeModelDefinitionId,
 		modelDefinitionRevision,
@@ -4116,15 +4114,8 @@ export function InteractionRepl({
 		setSelectionTypologyToggles,
 		setFilterPrimitiveToggles,
 		setSelectionPrimitiveToggles,
-		setRendererSelection,
-		setInteractionSelection,
 		setLastFinalizedInteractionId,
 	]);
-
-	useEffect(() => {
-		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
-		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [geometry, modelDefinitionRevision, setRendererSelection, setInteractionSelection]);
 
 	useEffect(() => {
 		setCmdLine("");

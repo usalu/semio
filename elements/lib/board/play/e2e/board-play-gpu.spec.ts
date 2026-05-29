@@ -2,7 +2,25 @@
 // 💻 elements/client/lib/board/play/e2e/board-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
 // #endregion 🧲Header
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function gotoBoardPlayReady(page: Page): Promise<void> {
+	const errors: string[] = [];
+	page.on("pageerror", (error) => errors.push(error.message));
+	await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+	const workbenchToggle = page.locator("#playground\\.panel\\.workbench");
+	try {
+		await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
+	} catch (cause) {
+		const snippet = (await page.locator("body").innerText().catch(() => "")).slice(0, 400);
+		throw new Error(`Board play shell did not mount. Console/page errors: ${errors.join(" | ") || "(none)"} Body: ${snippet}`, { cause });
+	}
+	if ((await workbenchToggle.getAttribute("data-state")) !== "on") {
+		await workbenchToggle.click();
+	}
+	await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 60_000 });
+	await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
+}
 
 test.describe("board play", () => {
 	test.beforeEach(async ({ page }) => {
@@ -19,9 +37,7 @@ test.describe("board play", () => {
 	});
 
 	test("opens board background context menu on overview canvas", async ({ page }) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect
@@ -61,8 +77,7 @@ test.describe("board play", () => {
 		page.on("pageerror", (err) => {
 			errors.push(err.message);
 		});
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const handlesToolbar = page.locator('button[title^="Redraw handles"]');
 		await expect(handlesToolbar).toBeVisible({ timeout: 120_000 });
 		await handlesToolbar.click();
@@ -79,9 +94,7 @@ test.describe("board play", () => {
 	});
 
 	test("LOD select is visible on each pane and pins a tier without clearing the graph", async ({ page }) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		await expect(page.locator('[data-measure-id="board-detail-lod"]')).toBeVisible();
 		await expect(page.locator('[data-measure-id="board-selection-lod"]')).toBeVisible();
 		const overviewCanvas = page.locator('[data-testid="board-canvas"]').first();
@@ -104,8 +117,7 @@ test.describe("board play", () => {
 	});
 
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const overlays = page.locator('[data-slot="window-measures-overlay"]');
 		await expect(overlays).toHaveCount(3, { timeout: 120_000 });
 		const n = await overlays.count();
@@ -116,8 +128,7 @@ test.describe("board play", () => {
 	});
 
 	test("hover state follows the pointer and syncs across every board pane", async ({ page }) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 120_000 });
 		const canvas = canvases.first();
@@ -144,8 +155,7 @@ test.describe("board play", () => {
 	});
 
 	test("hit target at canvas center is the board canvas under Golden Layout", async ({ page }) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect
@@ -185,8 +195,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
@@ -218,7 +227,6 @@ test.describe("board play", () => {
 	});
 
 	test("each board canvas reaches GPU ready state", async ({ page }, testInfo) => {
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		const adapterOk = await page.evaluate(async () => {
 			const gpu = globalThis.navigator?.gpu;
 			if (!gpu) return false;
@@ -228,7 +236,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter reported by the browser");
 		}
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
@@ -267,8 +275,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
-		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await gotoBoardPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect

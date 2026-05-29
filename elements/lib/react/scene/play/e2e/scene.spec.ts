@@ -18,6 +18,8 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("Maximum call stack size exceeded");
 	expect(text).not.toContain("updateMatrixWorld");
 	expect(text).not.toContain("lodFromCameraDistance is not defined");
+	expect(text).not.toContain("must declare items or content");
+	expect(text).not.toContain("An error occurred in the <ScenePlayProductShell> component");
 }
 
 const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
@@ -47,7 +49,7 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await expect(page.locator('[data-measure-id="scene-main-auto"]')).toBeVisible({ timeout: 120_000 });
-	const detailsPanelToggle = page.locator("#ui\\.panelToggle\\.details");
+	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
 	if ((await detailsPanelToggle.getAttribute("data-state")) === "on") {
 		await detailsPanelToggle.click();
 	}
@@ -70,7 +72,7 @@ test("scene play inspector panel is visible", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	const detailsPanelToggle = page.locator("#ui\\.panelToggle\\.details");
+	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
 	if ((await detailsPanelToggle.getAttribute("data-state")) !== "on") {
 		await detailsPanelToggle.click();
 	}

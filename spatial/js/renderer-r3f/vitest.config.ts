@@ -9,9 +9,13 @@ export default defineConfig({
 	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: [
+			{ find: "@elements/playground/react", replacement: resolve(root, "../../../elements/lib/playground/react/index.tsx") },
+			{ find: "@elements/playground", replacement: resolve(root, "../../../elements/lib/playground/index.ts") },
+			{ find: "@elements/ui", replacement: resolve(root, "../../../elements/lib/react/core/index.tsx") },
 			{ find: "@spatial/js-core", replacement: resolve(root, "../core/index.ts") },
 			{ find: "@spatial/js-kernel-brepjs", replacement: resolve(root, "../kernel-brepjs/index.ts") },
 			{ find: "@spatial/js-machine-stately", replacement: resolve(root, "../machine-stately/index.ts") },
+			{ find: "@spatial/js-query", replacement: resolve(root, "../query/index.ts") },
 		],
 	},
 		test: {

@@ -112,14 +112,16 @@ function cnPlay(...inputs: ClassValue[]): string {
 }
 
 //#region 🔖TreePanels
-/** @emoji 🌲 Enforces playground panels: every section must declare `items` (no content-only or JSON fallbacks). */
+/** @emoji 🌲 Enforces playground panels: each section needs `items` and/or `content` (no JSON-only fallbacks). */
 export function enforcePlaygroundTreePanel(config: TreePanelConfig): void {
 	if (!config.sections?.length) {
 		throw new Error("Playground tree panel must declare at least one section.");
 	}
 	for (const section of config.sections) {
-		if (!section.items?.length) {
-			throw new Error(`Playground tree section "${section.id}" must declare items.`);
+		const hasItems = Boolean(section.items?.length);
+		const hasContent = section.content != null;
+		if (!hasItems && !hasContent) {
+			throw new Error(`Playground tree section "${section.id}" must declare items or content.`);
 		}
 	}
 }
@@ -360,47 +362,74 @@ export interface UIWindowKindDefinition {
 	measures?: React.ReactNode;
 }
 
+function windowMeasureShell(measureId: string, label: string | undefined, children: React.ReactNode): React.ReactNode {
+	return (
+		<div data-slot="window-measure-float" data-measure-id={measureId} className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm">
+			{label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
+			<div className="min-w-0 w-full">{children}</div>
+		</div>
+	);
+}
+
 function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): React.ReactNode {
 	if (!measures.length) return undefined;
 	return (
-		<div className="pointer-events-auto flex flex-col gap-single p-single">
+		<div data-slot="window-measures-stack-inner" className="pointer-events-auto flex flex-col items-end gap-half p-single">
 			{measures.map((measure) => {
 				if (measure.kind === "select") {
 					return (
-						<Select key={measure.id} value={measure.value} onValueChange={(value) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value })}>
-							<SelectTrigger className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
-								<SelectValue placeholder={measure.label} />
-							</SelectTrigger>
-							<SelectContent>
-								{measure.items.map((item) => (
-									<SelectItem key={item.id} value={item.value}>
-										{item.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<React.Fragment key={measure.id}>
+							{windowMeasureShell(
+								measure.id,
+								measure.label,
+								<Select id={measure.id} value={measure.value} onValueChange={(value) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value })}>
+									<SelectTrigger id={measure.id} className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
+										<SelectValue placeholder={measure.label} />
+									</SelectTrigger>
+									<SelectContent>
+										{measure.items.map((item) => (
+											<SelectItem key={item.id} value={item.value}>
+												{item.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>,
+							)}
+						</React.Fragment>
 					);
 				}
 				if (measure.kind === "slider") {
 					return (
-						<Slider
-							key={measure.id}
-							value={[measure.value]}
-							min={measure.min}
-							max={measure.max}
-							step={measure.step}
-							onValueChange={(vals) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value: vals[0] ?? measure.min })}
-						/>
+						<React.Fragment key={measure.id}>
+							{windowMeasureShell(
+								measure.id,
+								measure.label,
+								<Slider
+									id={measure.id}
+									value={[measure.value]}
+									min={measure.min}
+									max={measure.max}
+									step={measure.step}
+									onValueChange={(vals) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { value: vals[0] ?? measure.min })}
+								/>,
+							)}
+						</React.Fragment>
 					);
 				}
 				if (measure.kind === "toggle") {
 					return (
-						<Toggle
-							key={measure.id}
-							pressed={measure.pressed}
-							text={measure.text}
-							onPressedChange={(pressed) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { pressed })}
-						/>
+						<React.Fragment key={measure.id}>
+							{windowMeasureShell(
+								measure.id,
+								measure.label,
+								<Toggle
+									id={measure.id}
+									pressed={measure.pressed}
+									text={measure.text}
+									onPressedChange={(pressed) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { pressed })}
+								/>,
+							)}
+						</React.Fragment>
 					);
 				}
 				return null;
@@ -899,12 +928,20 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("enforcePlaygroundTreePanel", () => {
-		it("rejects content-only sections", () => {
+		it("rejects sections without items or content", () => {
 			expect(() =>
 				enforcePlaygroundTreePanel({
-					sections: [{ id: "a", content: "x" }],
+					sections: [{ id: "a" }],
 				}),
-			).toThrow(/items/);
+			).toThrow(/items or content/);
+		});
+
+		it("accepts content-only sections", () => {
+			expect(() =>
+				enforcePlaygroundTreePanel({
+					sections: [{ id: "a", content: "panel body" }],
+				}),
+			).not.toThrow();
 		});
 
 		it("accepts sections with items", () => {

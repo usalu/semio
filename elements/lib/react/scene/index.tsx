@@ -5396,28 +5396,46 @@ function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus:
 			],
 		});
 	}
-	sections.push({
-		id: "scene-play-inspector.scene-attractions",
-		label: "Attractions in scene",
-		defaultOpen: !hasSelection,
-		items: fixture.attractions.map((attraction) => ({
-			id: `scene-play-inspector.scene-attraction.${attraction.id}`,
-			label: attraction.id,
-			description: `${attraction.attracting} → ${attraction.attracted}`,
-			onClick: () => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] }),
-		})),
-	});
-	sections.push({
-		id: "scene-play-inspector.scene-objects",
-		label: "Objects in scene",
-		defaultOpen: true,
-		items: fixture.objects.map((object) => ({
-			id: `scene-play-inspector.scene-object.${object.id}`,
-			label: object.label ? `${object.id} · ${object.label}` : object.id,
-			description: object.objectKind ?? undefined,
-			onClick: () => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] }),
-		})),
-	});
+	if (fixture.attractions.length > 0) {
+		sections.push({
+			id: "scene-play-inspector.scene-attractions",
+			label: "Attractions in scene",
+			defaultOpen: !hasSelection,
+			items: fixture.attractions.map((attraction) => ({
+				id: `scene-play-inspector.scene-attraction.${attraction.id}`,
+				label: attraction.id,
+				description: `${attraction.attracting} → ${attraction.attracted}`,
+				onClick: () => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] }),
+			})),
+		});
+	} else {
+		sections.push({
+			id: "scene-play-inspector.scene-attractions",
+			label: "Attractions in scene",
+			defaultOpen: !hasSelection,
+			content: <p className="text-muted-foreground px-2 py-1 text-xs">No attractions in this scene.</p>,
+		});
+	}
+	if (fixture.objects.length > 0) {
+		sections.push({
+			id: "scene-play-inspector.scene-objects",
+			label: "Objects in scene",
+			defaultOpen: true,
+			items: fixture.objects.map((object) => ({
+				id: `scene-play-inspector.scene-object.${object.id}`,
+				label: object.label ? `${object.id} · ${object.label}` : object.id,
+				description: object.objectKind ?? undefined,
+				onClick: () => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] }),
+			})),
+		});
+	} else {
+		sections.push({
+			id: "scene-play-inspector.scene-objects",
+			label: "Objects in scene",
+			defaultOpen: true,
+			content: <p className="text-muted-foreground px-2 py-1 text-xs">No objects in this scene.</p>,
+		});
+	}
 	return sections;
 }
 

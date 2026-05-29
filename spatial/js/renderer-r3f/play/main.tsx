@@ -1,4 +1,5 @@
 /** @emoji 🎮 Vite entry: spatial.shape catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
+import "./globals.css";
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { ProductRuntime } from "@elements/playground";
 import {

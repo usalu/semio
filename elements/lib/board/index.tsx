@@ -14,6 +14,7 @@ import {
 	LevelProvider,
 	getLevelBgClass,
 	useElementsSurfaceChrome,
+	useNativeDragAndDrop,
 	type ContextMenuItem,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
@@ -6254,6 +6255,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -8907,20 +8909,21 @@ function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureN
 /** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
 function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
   const { fixture: dragFixture, label, preview } = props;
-  const dragController = useMemo(
-    () =>
-      new NativeDragAndDropController<HTMLDivElement>({
-        onDragStart: (event) => {
+  const dragProps = useNativeDragAndDrop(
+    useMemo(
+      () => ({
+        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
           event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
           event.dataTransfer.effectAllowed = "copy";
           const { clientHeight, clientWidth } = event.currentTarget;
           event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
         },
       }),
-    [dragFixture],
+      [dragFixture],
+    ),
   );
   return (
-    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragController.getProps()}>
+    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragProps}>
       {preview}
     </div>
   );
@@ -8931,15 +8934,16 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 function BoardFixtureLibraryPanel(): ReactElement {
   const { fixture } = useBoardPlayShell();
 
-  const shelfDragController = useMemo(
-    () =>
-      new NativeDragAndDropController<HTMLDivElement>({
-        onDragStart: (event) => {
+  const shelfDragProps = useNativeDragAndDrop(
+    useMemo(
+      () => ({
+        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
           event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
           event.dataTransfer.effectAllowed = "copy";
         },
       }),
-    [fixture],
+      [fixture],
+    ),
   );
 
   return (
@@ -8954,7 +8958,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
           <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
-      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragController.getProps()}>
+      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
         <p className="font-medium">Active graph</p>
         <p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
       </div>
