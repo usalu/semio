@@ -422,6 +422,23 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+The Ui, App, Mode, Window, Engagement react components are still adhoc and miss features.
+One ui has multiple apps (one active).
+One app has multiple modes (one active).
+One mode has multiple windows (one active).
+One window optionally has optionally engagement.
+The Engagement is a floating component with three lines: first buttons for the options, second input line, third status components.
+
+<Ui apps={apps} activeAppId={activeAppId}/>
+<App modes={modes} activeModeId={activeModeId}/>
+<Mode window={windows} activeWindowId={activeWindowId}/>
+<Window engagement={engagement?} />
+<Engagement input={input} options={options} status={status} />
+
+Make sure to implement missing behaviour, components, stories, etc
+
+---
+
 Add a commands to ui.
 Commands are registerable at UI-level, App-Level, Mode-Level, WindowKind-Level.
 Depending on what is active they will shown as suggestion or not.
