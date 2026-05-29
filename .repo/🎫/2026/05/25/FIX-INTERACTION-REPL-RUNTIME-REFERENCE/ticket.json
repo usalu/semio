@@ -2,9 +2,10 @@
   "title": "Fix Arc Preview and Output",
   "status": "open",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Investigated the Vite runtime error. Found that spatial/js/kernel-brepjs/index.ts imports getCachedShapeKind from brepjs, but brepjs 18.20.3 does not publicly export that symbol from its package root. Vite's optimized dependency contains an internal function with that name, but the final export list omits it, so the browser ESM loader rejects the import. Public replacement appears to be getShapeKind from brepjs/core/root exports, or a refactor away from the private cached topology helper.",
+  "summary": "Monorepo scripts consolidated to `script.ts` only. Policy lints use `export const policy` (+ optional `policyFile`) and `bun ./script.ts policy`; nx plugin matches `**/script.ts` with policy exports. WASM builds live in `puzzle/2d/rs`, `semio/client/lib/query`, and `semio/client/lib/rs` `script.ts`. Removed yak helper `*.script.ts`, all `lint.script.ts` / `*.lint.script.ts`, `build-wasm` scripts, and root `script.ps1`/`script.sh` (native bootstrap via `bun ./script.ts setup native` / `start` using ticket-embedded shells). Updated project.json, README, and @repo/lib docs.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪8d10652d4d464f29ad354d87cca945e4"
+    "⚪8d10652d4d464f29ad354d87cca945e4",
+    "⚪74f93cd4f69f4ba28470bfde5e99035f"
   ]
 }

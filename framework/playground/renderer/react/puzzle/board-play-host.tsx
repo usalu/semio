@@ -25,6 +25,8 @@ import {
 import { Expertise, ProductRuntime, type FooterItem, type UiTreeNode } from "@framework/playground";
 import {
 	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
 	mountPlaygroundApp,
 	registerTabIcon,
 	registerUiBoardSurfaceHost,
@@ -33,7 +35,6 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 } from "@framework/playground-renderer-react";
-import { PureSidePanelTabDefinition, StaticTreePanelDefinition } from "../tree-panels.tsx";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement } from "react";
 import {

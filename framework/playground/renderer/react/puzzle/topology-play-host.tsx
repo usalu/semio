@@ -11,6 +11,8 @@ import { LevelProvider, getLevelBgClass } from "@ui/react";
 import { ProductRuntime } from "@framework/playground";
 import {
 	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
 	mountPlaygroundApp,
 	registerUiBoardSurfaceHost,
 	registerUiScene3DSurfaceHost,
@@ -20,8 +22,7 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "../index.tsx";
-import { PureSidePanelTabDefinition, StaticTreePanelDefinition } from "../tree-panels.tsx";
+} from "@framework/playground-renderer-react";
 import {
 	buildTopologyDualSurfaceBindings,
 	topologyMirrorConnectHandlers,

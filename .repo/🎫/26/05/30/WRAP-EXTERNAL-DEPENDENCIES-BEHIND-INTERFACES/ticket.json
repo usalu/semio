@@ -3,11 +3,13 @@
   "emoji": "🔌",
   "status": "open",
   "description": "Wrap External Dependencies Behind Interfaces",
+  "summary": "Continued dependency-boundary rollout: renamed legacy Import regions to 🔌Adapters across cad renderer/stately, puzzle 5d, semio/js, sketchpad, repo server/coordinator/vscode, and semio UI hosts; added per-bundle lint.script.ts hooks; fixed Rust macro paths ($crate::external_adapters) so semio compiles; dependency-boundary unit tests pass (8/8).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1505"
   },
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪91c40c4432c447bbb8ef79c180fa9399"
+    "⚪91c40c4432c447bbb8ef79c180fa9399",
+    "⚪66c9d32b63514829b4de3209e19b3d10"
   ]
 }
