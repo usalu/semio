@@ -10,10 +10,11 @@ import {
 	ModeRuntime,
 	WindowKindRuntime,
 	buildScene3dWindowBody,
-	createStackLayout,
+	createWindowLayout,
 	registerWindowBody,
 	type WindowBodyViewContext,
 	type UiNode,
+	type WindowLayout,
 } from "@elements/playground";
 import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 import {
@@ -35,11 +36,119 @@ import {
 //#region 🔖Ids
 export const SPATIAL_PLAY_APP_ID = "spatial-play";
 export const SPATIAL_PLAY_CONTROLLER_ID = "spatial-play";
-export const SPATIAL_PLAY_WINDOW_ID = "spatial-viewport";
-export const SPATIAL_PLAY_WINDOW_LABEL = "Spatial";
-export const SPATIAL_PLAY_BODY_KEY = "spatial.play.viewport";
-export const SPATIAL_PLAY_SCENE_SURFACE_ID = "spatial.play.scene3d/v1";
 export const SPATIAL_PLAY_HIERARCHY_TAB_ID = "spatial-play-hierarchy";
+
+export const SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID = "aec.building";
+export const SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
+export const SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
+
+export type SpatialPlayPaneId = "shape" | "building" | "energy" | "structure-classic";
+
+export const SPATIAL_PLAY_SHAPE_WINDOW_ID = "spatial-play-shape";
+export const SPATIAL_PLAY_BUILDING_WINDOW_ID = "spatial-play-building";
+export const SPATIAL_PLAY_ENERGY_WINDOW_ID = "spatial-play-energy";
+export const SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID = "spatial-play-structure-classic";
+
+export const SPATIAL_PLAY_SHAPE_WINDOW_LABEL = "Shape";
+export const SPATIAL_PLAY_BUILDING_WINDOW_LABEL = "Building";
+export const SPATIAL_PLAY_ENERGY_WINDOW_LABEL = "Energy";
+export const SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL = "Structure Classic";
+
+export const SPATIAL_PLAY_SHAPE_BODY_KEY = "spatial.play.shape";
+export const SPATIAL_PLAY_BUILDING_BODY_KEY = "spatial.play.building";
+export const SPATIAL_PLAY_ENERGY_BODY_KEY = "spatial.play.energy";
+export const SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY = "spatial.play.structure-classic";
+
+export const SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID = "spatial.play.scene3d/shape";
+export const SPATIAL_PLAY_BUILDING_SCENE_SURFACE_ID = "spatial.play.scene3d/building";
+export const SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID = "spatial.play.scene3d/energy";
+export const SPATIAL_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "spatial.play.scene3d/structure-classic";
+
+/** @emoji 🪟 Quad play layout: shape/building left, energy/structure classic right. */
+export const SPATIAL_PLAY_LAYOUT: WindowLayout = {
+	root: {
+		kind: "row",
+		children: [
+			{
+				kind: "column",
+				size: 50,
+				children: [
+					{ kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_SHAPE_WINDOW_ID, SPATIAL_PLAY_SHAPE_WINDOW_LABEL)] },
+					{ kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_BUILDING_WINDOW_ID, SPATIAL_PLAY_BUILDING_WINDOW_LABEL)] },
+				],
+			},
+			{
+				kind: "column",
+				size: 50,
+				children: [
+					{ kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_ENERGY_WINDOW_ID, SPATIAL_PLAY_ENERGY_WINDOW_LABEL)] },
+					{
+						kind: "stack",
+						size: 50,
+						children: [createWindowLayout(SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID, SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL)],
+					},
+				],
+			},
+		],
+	},
+};
+
+const SPATIAL_PLAY_PANE_SPECS: readonly {
+	readonly pane: SpatialPlayPaneId;
+	readonly windowKindId: string;
+	readonly label: string;
+	readonly bodyKey: string;
+	readonly surfaceId: string;
+	readonly modelDefinitionId: string;
+}[] = [
+	{
+		pane: "shape",
+		windowKindId: SPATIAL_PLAY_SHAPE_WINDOW_ID,
+		label: SPATIAL_PLAY_SHAPE_WINDOW_LABEL,
+		bodyKey: SPATIAL_PLAY_SHAPE_BODY_KEY,
+		surfaceId: SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID,
+		modelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+	},
+	{
+		pane: "building",
+		windowKindId: SPATIAL_PLAY_BUILDING_WINDOW_ID,
+		label: SPATIAL_PLAY_BUILDING_WINDOW_LABEL,
+		bodyKey: SPATIAL_PLAY_BUILDING_BODY_KEY,
+		surfaceId: SPATIAL_PLAY_BUILDING_SCENE_SURFACE_ID,
+		modelDefinitionId: SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID,
+	},
+	{
+		pane: "energy",
+		windowKindId: SPATIAL_PLAY_ENERGY_WINDOW_ID,
+		label: SPATIAL_PLAY_ENERGY_WINDOW_LABEL,
+		bodyKey: SPATIAL_PLAY_ENERGY_BODY_KEY,
+		surfaceId: SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID,
+		modelDefinitionId: SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID,
+	},
+	{
+		pane: "structure-classic",
+		windowKindId: SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
+		label: SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL,
+		bodyKey: SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY,
+		surfaceId: SPATIAL_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID,
+		modelDefinitionId: SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+	},
+];
+
+/** @emoji 🧭 Maps a spatial play scene surface id to its pane id. */
+export function spatialPlayPaneFromSurfaceId(surfaceId: string): SpatialPlayPaneId | null {
+	return SPATIAL_PLAY_PANE_SPECS.find((row) => row.surfaceId === surfaceId)?.pane ?? null;
+}
+
+/** @emoji 🧭 Active model definition for a spatial play pane. */
+export function spatialPlayModelDefinitionIdForPane(pane: SpatialPlayPaneId): string {
+	return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.modelDefinitionId;
+}
+
+/** @emoji 🧭 Scene surface id for a spatial play pane. */
+export function spatialPlaySceneSurfaceIdForPane(pane: SpatialPlayPaneId): string {
+	return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.surfaceId;
+}
 //#endregion 🔖Ids
 
 //#region 🔖SpatialPlayHierarchy
@@ -200,9 +309,9 @@ export class SpatialPlayShellController extends Controller {
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-		this.mainMode.windowKinds = [
-			new WindowKindRuntime(SPATIAL_PLAY_WINDOW_ID, SPATIAL_PLAY_WINDOW_LABEL, SPATIAL_PLAY_BODY_KEY),
-		];
+		this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map(
+			(row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey),
+		);
 	}
 
 	override run(_command: string, _args?: unknown): void {
@@ -216,13 +325,19 @@ function spatialControllerFromContext(ctx: WindowBodyViewContext): SpatialPlaySh
 	return ctx.runtime.getActiveApp()?.controller as SpatialPlayShellController | undefined;
 }
 
-/** @emoji 🧊 Declarative spatial viewport: lone scene3d surface bound to the play host. */
-export function buildSpatialPlayDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
-	if (!spatialControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing spatial play controller" };
-	}
-	return buildScene3dWindowBody(SPATIAL_PLAY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID);
+function buildSpatialPlayDeclarativeBodyForPane(pane: SpatialPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
+	return (ctx) => {
+		if (!spatialControllerFromContext(ctx)) {
+			return { type: "text", value: "Missing spatial play controller" };
+		}
+		return buildScene3dWindowBody(spatialPlaySceneSurfaceIdForPane(pane), SPATIAL_PLAY_CONTROLLER_ID);
+	};
 }
+
+export const buildSpatialPlayShapeDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("shape");
+export const buildSpatialPlayBuildingDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("building");
+export const buildSpatialPlayEnergyDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("energy");
+export const buildSpatialPlayStructureClassicDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("structure-classic");
 
 export function buildSpatialPlayAppRuntime(controller: SpatialPlayShellController): AppRuntime {
 	const app = new AppRuntime(
@@ -230,7 +345,7 @@ export function buildSpatialPlayAppRuntime(controller: SpatialPlayShellControlle
 		"Spatial play",
 		undefined,
 		controller,
-		createStackLayout([SPATIAL_PLAY_WINDOW_ID], [SPATIAL_PLAY_WINDOW_LABEL]) as never,
+		SPATIAL_PLAY_LAYOUT as never,
 		controller.mainMode.windowKinds,
 	);
 	app.defaultModeId = controller.mainMode.id;
@@ -240,9 +355,12 @@ export function buildSpatialPlayAppRuntime(controller: SpatialPlayShellControlle
 	return app;
 }
 
-/** @emoji 📝 Registers spatial play window body on the playground host. */
+/** @emoji 📝 Registers spatial play window bodies on the playground host. */
 export function registerSpatialPlayDeclarativeBodies(): void {
-	registerWindowBody(SPATIAL_PLAY_BODY_KEY, buildSpatialPlayDeclarativeBody);
+	registerWindowBody(SPATIAL_PLAY_SHAPE_BODY_KEY, buildSpatialPlayShapeDeclarativeBody);
+	registerWindowBody(SPATIAL_PLAY_BUILDING_BODY_KEY, buildSpatialPlayBuildingDeclarativeBody);
+	registerWindowBody(SPATIAL_PLAY_ENERGY_BODY_KEY, buildSpatialPlayEnergyDeclarativeBody);
+	registerWindowBody(SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY, buildSpatialPlayStructureClassicDeclarativeBody);
 }
 
 /** @emoji 🚀 Creates spatial play {@link ProductRuntime} with declarative viewport body registered. */
@@ -260,16 +378,34 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("spatial play runtime", () => {
-		it("builds canvas-only viewport body", () => {
+		it("builds quad viewport bodies for each pane", () => {
 			const runtime = buildSpatialPlayRuntime();
-			const body = buildSpatialPlayDeclarativeBody({
-				runtime,
-				windowKindId: SPATIAL_PLAY_WINDOW_ID,
-				bodyKey: SPATIAL_PLAY_BODY_KEY,
-				activeModeId: "main",
-				generation: 0,
-			});
-			expect(body).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+			const ctx = { runtime, activeModeId: "main", generation: 0 } as const;
+			expect(
+				buildSpatialPlayShapeDeclarativeBody({
+					...ctx,
+					windowKindId: SPATIAL_PLAY_SHAPE_WINDOW_ID,
+					bodyKey: SPATIAL_PLAY_SHAPE_BODY_KEY,
+				}),
+			).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+			expect(
+				buildSpatialPlayEnergyDeclarativeBody({
+					...ctx,
+					windowKindId: SPATIAL_PLAY_ENERGY_WINDOW_ID,
+					bodyKey: SPATIAL_PLAY_ENERGY_BODY_KEY,
+				}),
+			).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+		});
+
+		it("registers four window kinds in quad layout", () => {
+			const app = buildSpatialPlayRuntime().getActiveApp();
+			expect(app?.defaultLayout).toEqual(SPATIAL_PLAY_LAYOUT);
+			expect(app?.windowKinds.map((row) => row.id)).toEqual([
+				SPATIAL_PLAY_SHAPE_WINDOW_ID,
+				SPATIAL_PLAY_BUILDING_WINDOW_ID,
+				SPATIAL_PLAY_ENERGY_WINDOW_ID,
+				SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
+			]);
 		});
 
 		it("uses empty declarative side tab slots", () => {
