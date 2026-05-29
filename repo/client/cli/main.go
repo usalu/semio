@@ -20245,7 +20245,7 @@ func dependencyBoundarySkipFile(file string) bool {
 		return true
 	}
 	base := filepath.Base(n)
-	if strings.HasSuffix(base, ".lint.script.ts") || strings.HasSuffix(base, ".gen.ts") {
+	if strings.HasSuffix(base, ".gen.ts") {
 		return true
 	}
 	if strings.Contains(base, ".test.") || strings.HasSuffix(base, "_test.go") || strings.HasSuffix(base, "Tests.cs") {
@@ -27793,7 +27793,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 // 🔧Fix MUST return a non-nil error when the operation fails.
 // 🔧Fix performs the fix operation on the repo context.
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	return nil, fmt.Errorf("fix was removed; handle autofix inside lint.script.ts")
+	return nil, fmt.Errorf("fix was removed; handle autofix inside script.ts policy export")
 }
 
 // 🏷️inferDefinitionKindFromLine holds the data fields for a inferDefinitionKindFromLine record.

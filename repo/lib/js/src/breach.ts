@@ -1,4 +1,4 @@
-/** 🚫BreachRecord is one lint finding emitted by a lint.script.ts (serialized to cache JSON). */
+/** 🚫BreachRecord is one policy lint finding from `script.ts` (serialized to cache JSON). */
 export type BreachPriority = "high" | "medium" | "low";
 
 export type BreachRecord = {

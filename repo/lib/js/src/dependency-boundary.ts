@@ -39,7 +39,7 @@ export function shouldSkipDependencyBoundaryFile(filePath: string): boolean {
     return true;
   }
   const base = n.split("/").pop() ?? n;
-  if (base.endsWith(".lint.script.ts") || base.endsWith(".gen.ts")) return true;
+  if (base.endsWith(".gen.ts")) return true;
   if (base.includes(".test.") || base.endsWith(".spec.ts")) return true;
   return /\.(json|md|ya?ml|lock|svg|png|jpe?g|woff2?)$/i.test(base);
 }

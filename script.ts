@@ -12,6 +12,7 @@ import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseN
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
+const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, ".repo", "🎫", "26", "05", "30", "ONLY-SCRIPT-TS-IN-MONOREPO", "embedded");
 
 //#region 🔖ScriptFramework
 /** 🧭Abstract workspace command; `run` receives argv segments after the verb (e.g. `dev mcp` → `["mcp"]`). */
@@ -47,6 +48,35 @@ function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.
 }
 //#endregion 🔖ScriptFramework
 
+//#region 🔖NativeOsScript
+/** 🖥️Runs archived native bootstrap shells from the only-script.ts ticket embed (setup|start). */
+export class NativeOsScript extends Script {
+  run(segments: string[]): void {
+    const cmd = segments[0] ?? "setup";
+    if (process.platform === "win32") {
+      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "script.ps1");
+      if (!existsSync(ps1)) {
+        console.error(`[native] missing ${ps1}; restore embedded bootstrap from ticket ONLY-SCRIPT-TS-IN-MONOREPO.`);
+        process.exit(1);
+      }
+      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root });
+      return;
+    }
+    if (process.platform === "darwin" || process.platform === "linux") {
+      const sh = join(NATIVE_BOOTSTRAP_DIR, "script.sh");
+      if (!existsSync(sh)) {
+        console.error(`[native] missing ${sh}; restore embedded bootstrap from ticket ONLY-SCRIPT-TS-IN-MONOREPO.`);
+        process.exit(1);
+      }
+      runCmd("bash", [sh, cmd], { cwd: this.root });
+      return;
+    }
+    console.error(`[native] unsupported platform ${process.platform}`);
+    process.exit(1);
+  }
+}
+//#endregion 🔖NativeOsScript
+
 //#region 🔖SetupScript
 export class SetupScript extends Script {
   run(segments: string[]): void {
@@ -56,6 +86,10 @@ export class SetupScript extends Script {
     }
     if (segments[0] === "git") {
       this.runGit();
+      return;
+    }
+    if (segments[0] === "native") {
+      new NativeOsScript(this.root).run(segments.slice(1));
       return;
     }
     this.runFull();
@@ -111,19 +145,8 @@ export class SetupScript extends Script {
 
   private runFull(): void {
     if (process.argv.includes("--with-native-os")) {
-      if (process.platform === "win32") {
-        const ps = join(this.root, "script.ps1");
-        if (existsSync(ps)) {
-          console.log("[setup] Windows native bootstrap…");
-          tryRun("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps, "setup"]);
-        }
-      } else if (process.platform === "darwin" || process.platform === "linux") {
-        const sh = join(this.root, "script.sh");
-        if (existsSync(sh)) {
-          console.log(`[setup] ${process.platform} native bootstrap…`);
-          tryRun("bash", [sh, "setup"]);
-        }
-      }
+      console.log(`[setup] ${process.platform} native bootstrap…`);
+      tryRun(BUN, [join(this.root, "script.ts"), "setup", "native"], { cwd: this.root });
     }
 
     console.log("[setup] uv sync…");
@@ -203,12 +226,8 @@ export class StartScript extends Script {
       return;
     }
 
-    if (process.platform === "win32") {
-      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(this.root, "script.ps1"), "start"], {
-        cwd: this.root,
-      });
-    } else if (process.platform === "darwin" || process.platform === "linux") {
-      runCmd("bash", [join(this.root, "script.sh"), "start"], { cwd: this.root });
+    if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
+      new NativeOsScript(this.root).run(["start"]);
     } else {
       console.log(`[start] Unsupported platform ${process.platform}.`);
     }
@@ -736,7 +755,7 @@ export class CppScript extends Script {
     if (process.platform !== "win32") return;
     if (queryVisualStudio2026InstallPath()) return;
     console.error("[cpp] Visual Studio 2026 with the Desktop development with C++ workload is required.");
-    console.error("[cpp] On native Windows run: .\\script.ps1 setup");
+    console.error("[cpp] On native Windows run: bun ./script.ts setup native");
     process.exit(1);
   }
 

@@ -8,11 +8,14 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	root,
 	resolve: {
-		alias: {
-			"@framework/playground": resolve(root, "../../core/index.ts"),
-			"@framework/playground-renderer-react": resolve(root, "index.tsx"),
-			"@ui/react": resolve(root, "../../../../ui/react/index.tsx"),
-		},
+		alias: [
+			{ find: "@framework/playground", replacement: resolve(root, "../../core/index.ts") },
+			{ find: "@framework/playground-renderer-react", replacement: resolve(root, "index.tsx") },
+			{ find: "@ui/react", replacement: resolve(root, "../../../../ui/react/index.tsx") },
+			{ find: "@puzzle/2d-react", replacement: resolve(root, "../../../../puzzle/2d/react/index.tsx") },
+			{ find: "@puzzle/3d-react", replacement: resolve(root, "../../../../puzzle/3d/react/index.tsx") },
+			{ find: "@puzzle/5d-react", replacement: resolve(root, "../../../../puzzle/5d/react/index.tsx") },
+		],
 	},
 	test: {
 		environment: "jsdom",

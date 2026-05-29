@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify
     content: Grep for no stale @puzzle/board|scene|topology|@framework/playground-react; confirm play logic imports no react; run nx test per renamed/new package and one play dev server.
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

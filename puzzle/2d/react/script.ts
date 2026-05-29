@@ -17,7 +17,7 @@ delete env.VSCODE_INSPECTOR_OPTIONS;
 if (command === "test") {
 	const wasmJs = join(cwd, "../rs/pkg/elements_board.js");
 	const wasmEnv = { ...env, ELEMENTS_BOARD_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0" };
-	spawnSync("bun", [wasmScript], { cwd, env: wasmEnv, shell: true, stdio: "inherit" });
+	spawnSync("bun", [wasmScript, "wasm"], { cwd, env: wasmEnv, shell: true, stdio: "inherit" });
 	const result = spawnSync("bunx", ["vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra], {
 		cwd,
 		env,

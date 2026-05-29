@@ -18,7 +18,7 @@ delete env.NODE_OPTIONS;
 delete env.VSCODE_INSPECTOR_OPTIONS;
 
 const repoRoot = join(cwd, "../../..");
-const wasmScript = join(cwd, "../rs/scripts/build-wasm.script.ts");
+const wasmScript = join(cwd, "../rs/script.ts");
 
 function run(args: string[], options: { cwd?: string } = {}): void {
 	const child = spawn("bun", args, {
@@ -51,16 +51,16 @@ function runSync(args: string[], options: { cwd?: string } = {}): void {
 }
 
 if (command === "dev") {
-	runSync(["bun", wasmScript]);
+	runSync(["bun", wasmScript, "wasm"]);
 	const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 	const port = process.env.BOARD_PLAY_PORT ?? "6012";
 	run(["run", "vite", "--config", "vite.config.ts", "--host", host, "--port", port, ...extra]);
 } else if (command === "build") {
-	runSync(["bun", wasmScript]);
+	runSync(["bun", wasmScript, "wasm"]);
 	runSync(["bun", "run", "vite", "build", "--config", "vite.config.ts", ...extra]);
 } else if (command === "test") {
 	runSync(["cargo", "test", "-p", "puzzle_board"], { cwd: repoRoot });
-	runSync(["bun", wasmScript]);
+	runSync(["bun", wasmScript, "wasm"]);
 	runSync(["bunx", "vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra]);
 	runSync(["bunx", "playwright", "test", "--config", "playwright.config.ts", ...extra]);
 } else {

@@ -19,7 +19,7 @@
       "inputs": [
         "{projectRoot}/Cargo.toml",
         "{projectRoot}/lib.rs",
-        "{projectRoot}/scripts/build-wasm.script.mjs",
+        "{projectRoot}/script.ts",
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/Cargo.lock"
       ],
@@ -27,7 +27,7 @@
       "options": {
         "cwd": "semio/client/lib/query",
         "commands": [
-          "bun scripts/build-wasm.script.mjs",
+          "bun script.ts wasm",
           "cargo build --release"
         ],
         "parallel": false

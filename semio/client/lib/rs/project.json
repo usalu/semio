@@ -21,7 +21,7 @@
         "{projectRoot}/lib.rs",
         "{projectRoot}/package.json",
         "{projectRoot}/.cargo/**/*",
-        "{projectRoot}/scripts/build-wasm.script.mjs",
+        "{projectRoot}/script.ts",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/bun.lock",
         "{workspaceRoot}/Cargo.toml",
@@ -30,7 +30,7 @@
       "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "semio/client/lib/rs",
-        "commands": ["bun scripts/build-wasm.script.mjs", "cargo build --release"],
+        "commands": ["bun script.ts build"],
         "parallel": false
       }
     },

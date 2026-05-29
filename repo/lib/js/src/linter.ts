@@ -285,7 +285,7 @@ export class DefinitionLinter extends BaseLinter {
   }
 }
 
-/** 🔎Resolves folder path to folder graphql row (for lint.script.ts placement). */
+/** 🔎Resolves folder path to folder graphql row (for script.ts policy placement). */
 export function resolveFolderByPath(repoRoot: string, folderPath: string): GraphNode {
   const rel = folderPath.replaceAll("\\", "/").replace(/^\/+/, "");
   const data = runCliGraphql(
