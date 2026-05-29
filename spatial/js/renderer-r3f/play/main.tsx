@@ -1,6 +1,18 @@
 /** @emoji 🎮 Vite entry: spatial.shape catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { createRoot } from "react-dom/client";
+import { ProductRuntime } from "@elements/playground";
+import {
+	PlaygroundView,
+	mountPlaygroundApp,
+	registerUiScene3DSurfaceHost,
+	type UiScene3DHostSurfaceNode,
+} from "@elements/playground/react";
+import {
+	SPATIAL_PLAY_APP_ID,
+	SPATIAL_PLAY_CONTROLLER_ID,
+	SPATIAL_PLAY_SCENE_SURFACE_ID,
+	buildSpatialPlayRuntime,
+} from "./index.ts";
 import {
 	DocumentHistory,
 	SHAPE_MODEL_DEFINITION_ID,
@@ -1184,11 +1196,50 @@ if (import.meta.vitest) {
 }
 //#endregion
 
-const el = document.getElementById("root");
-if (el && !import.meta.vitest) {
-	createRoot(el).render(
-		<StrictMode>
+//#region 🔖PlaygroundHost
+let spatialPlayChromeRegistered = false;
+
+function registerSpatialPlayChrome(): void {
+	if (spatialPlayChromeRegistered) return;
+	spatialPlayChromeRegistered = true;
+	registerUiScene3DSurfaceHost(SPATIAL_PLAY_SCENE_SURFACE_ID, SpatialPlaySurfaceHost);
+}
+
+/** @emoji 🧊 R3F viewport inside the playground golden-layout window (InteractionRepl keeps its aside). */
+function SpatialPlaySurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): ReactNode {
+	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID || node.surfaceId !== SPATIAL_PLAY_SCENE_SURFACE_ID) {
+		return <div style={{ padding: 8, fontSize: 12, color: "#f88" }}>Invalid spatial play surface binding</div>;
+	}
+	return (
+		<div style={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0, overflow: "hidden" }}>
 			<PlayApp />
-		</StrictMode>,
+		</div>
 	);
 }
+
+function SpatialPlayRoot(): ReactNode {
+	const runtimeRef = useRef<ProductRuntime | null>(null);
+	if (!runtimeRef.current) {
+		registerSpatialPlayChrome();
+		runtimeRef.current = buildSpatialPlayRuntime();
+	}
+	return (
+		<PlaygroundView
+			runtime={runtimeRef.current}
+			defaultAppId={SPATIAL_PLAY_APP_ID}
+			initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: false }}
+		/>
+	);
+}
+
+if (typeof document !== "undefined" && !import.meta.vitest) {
+	const el = document.getElementById("root");
+	if (el) {
+		mountPlaygroundApp(
+			<StrictMode>
+				<SpatialPlayRoot />
+			</StrictMode>,
+		);
+	}
+}
+//#endregion 🔖PlaygroundHost

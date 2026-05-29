@@ -14,9 +14,13 @@ export default defineConfig({
 		target: "esnext",
 	},
 	resolve: {
-		alias: {
-			"@elements/ui": path.resolve(__dirname, "../../../index.tsx"),
-		},
+		alias: [
+			{ find: "@elements/playground/react", replacement: path.resolve(__dirname, "../../../playground/react/index.tsx") },
+			{ find: "@elements/playground", replacement: path.resolve(__dirname, "../../../playground/index.ts") },
+			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../core/index.tsx") },
+			{ find: "@elements/board", replacement: path.resolve(__dirname, "../../../board/index.tsx") },
+			{ find: "@elements/scene", replacement: path.resolve(__dirname, "../../scene/index.tsx") },
+		],
 	},
 	server: {
 		fs: {

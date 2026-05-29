@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** ┬¡ãÆ┬║┬í Topology package task router: `bun ./script.ts <dev|build|test> [args├ö├ç┬¬]` ├ö├ç├Â `test` runs Vitest then Playwright. */
+/** @emoji 🧭 Topology package task router — `bun ./script.ts dev|build|test`; `test` runs Vitest then Playwright. */
 import { spawn, spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;

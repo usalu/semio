@@ -90,6 +90,11 @@ export function buildScene3dWindowBody(surfaceId: string, controllerId: string):
 	return { type: "scene3d", surfaceId, controllerId };
 }
 
+/** @emoji 📋 Canonical fullscreen 2D window body: only the infinite board canvas. */
+export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
+	return { type: "board", surfaceId, controllerId, paneId };
+}
+
 /** @emoji ✅ True when a window body is a lone surface or a short error `text` node. */
 export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 	if (node.type === "text" || node.type === "scene3d" || node.type === "board" || node.type === "table") return true;
@@ -191,6 +196,15 @@ export function createDefaultLayout(windowIds: string[], direction: "row" | "col
 }
 //#endregion 🔖Layout
 
+//#region 🔖Expertise
+/** @emoji 🎚 Surface expertise tier for chrome + label resolution. */
+export enum Expertise {
+	BEGINNER = "beginner",
+	NORMAL = "normal",
+	EXPERT = "expert",
+}
+//#endregion 🔖Expertise
+
 //#region 🔖Toolbar
 export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
 
@@ -202,6 +216,7 @@ export interface ToolItem {
 	readonly iconId?: string;
 	readonly label?: string;
 	readonly text?: string;
+	readonly title?: string;
 	readonly order?: number;
 	readonly pressed?: boolean;
 	readonly disabled?: boolean;

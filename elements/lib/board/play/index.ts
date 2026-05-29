@@ -1,28 +1,25 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/index.ts — Framework-free board play: declarative window bodies, LOD measures, product runtime wiring (no React).
+// 💻 elements/lib/board/play/index.ts — Board play shell on `@elements/playground`: declarative bodies, LOD measures, toolbar tools (no React).
 // #endregion 🧲Header
 
 import {
 	CommandBus,
 	Controller,
 	registerWindowBody,
-	registerSidePanelBody,
-	type PluginManifest,
-	type PluginModule,
-	type PluginContext,
 	ProductRuntime,
 	AppRuntime,
 	ModeRuntime,
 	WindowKindRuntime,
+	buildBoardWindowBody,
+	buildPlaygroundKindToggleTools,
 	createWindowLayout,
-	type SidePanelBodyViewContext,
+	type AppTools,
+	type ToolItem,
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type UiNode,
 	type WindowLayout,
-} from "@elements/framework";
-
-import { registerPlaygroundSidePanelBodies } from "@elements/playground";
+} from "@elements/playground";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -33,6 +30,9 @@ import {
 	type BoardDrawLodKind,
 	type BoardFixtureV1,
 	type BoardLodModeKind,
+	type BoardSelectionMethod,
+	type BoardSelectionMode,
+	type BoardSelectionTargets,
 } from "../index";
 
 //#region 🔖Ids
@@ -45,18 +45,6 @@ export const BOARD_PLAY_BOARD_SURFACE_ID = "elements.board.play.board/v1";
 export const BOARD_PLAY_BODY_KEY_OVERVIEW = "elements.board.play.overview";
 export const BOARD_PLAY_BODY_KEY_DETAIL = "elements.board.play.detail";
 export const BOARD_PLAY_BODY_KEY_SELECTION = "elements.board.play.selection";
-
-export const BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID = "elements.board.play.table.library/v1";
-export const BOARD_PLAY_TABLE_INSPECTOR_SURFACE_ID = "elements.board.play.table.inspector/v1";
-export const BOARD_PLAY_TABLE_SETTINGS_SURFACE_ID = "elements.board.play.table.settings/v1";
-
-export const BOARD_PLAY_LIBRARY_TAB_BODY_KEY = "elements.board.play.tab.library";
-export const BOARD_PLAY_INSPECTOR_TAB_BODY_KEY = "elements.board.play.tab.inspector";
-export const BOARD_PLAY_SETTINGS_TAB_BODY_KEY = "elements.board.play.tab.settings";
-
-export const BOARD_PLAY_ICON_LIBRARY = "elements.board-play.icon.library";
-export const BOARD_PLAY_ICON_INSPECTOR = "elements.board-play.icon.inspector";
-export const BOARD_PLAY_ICON_SETTINGS = "elements.board-play.icon.settings";
 
 export const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -92,11 +80,146 @@ export const BOARD_PLAY_LAYOUT: WindowLayout = {
 //#endregion 🔖Ids
 
 //#region 🔖Controller
-/** @emoji 🎛 Board play shell controller: per-pane LOD modes for declarative window measures. */
+const BOARD_PLAY_TARGET_KINDS = ["nodes", "edges", "handles"] as const;
+type BoardPlayTargetKind = (typeof BOARD_PLAY_TARGET_KINDS)[number];
+
+function boardPlayTargetLabel(kind: BoardPlayTargetKind): string {
+	if (kind === "nodes") return "Nodes";
+	if (kind === "edges") return "Edges";
+	return "Handles";
+}
+
+/** @emoji 🧰 Snapshot read by {@link buildBoardPlayToolbarTools} (host-owned play state). */
+export interface BoardPlayToolbarState {
+	readonly boardSelectionMethod: BoardSelectionMethod;
+	readonly boardSelectionMode: BoardSelectionMode;
+	readonly boardSelectionTargets: BoardSelectionTargets;
+	readonly boardGridSnapEnabled: boolean;
+	readonly boardRedrawPlaying: boolean;
+}
+
+/** @emoji 🔗 Host bridge: toolbar snapshot + commands that need React/fixture context. */
+export interface BoardPlayHostBridge {
+	getToolbarState(): BoardPlayToolbarState;
+	runHostCommand(command: string, args?: unknown): void;
+}
+
+/** @emoji 🧰 Playground {@link AppTools} for board play (selection, filter, view, create, actions). */
+export function buildBoardPlayToolbarTools(state: BoardPlayToolbarState, controllerId: string): AppTools {
+	const targetRecord: Record<BoardPlayTargetKind, boolean> = {
+		nodes: state.boardSelectionTargets.nodes,
+		edges: state.boardSelectionTargets.edges,
+		handles: state.boardSelectionTargets.handles,
+	};
+	const selectionTools: ToolItem[] = [
+		{
+			id: "board.select.rectangle",
+			kind: "toggle",
+			text: "Rectangle",
+			order: 0,
+			pressed: state.boardSelectionMethod === "rectangle",
+			controllerId,
+			command: "setSelectionMethod",
+			args: { method: "rectangle" },
+		},
+		{
+			id: "board.select.lasso",
+			kind: "toggle",
+			text: "Lasso",
+			order: 1,
+			pressed: state.boardSelectionMethod === "lasso",
+			controllerId,
+			command: "setSelectionMethod",
+			args: { method: "lasso" },
+		},
+		{
+			id: "board.select.mode.default",
+			kind: "toggle",
+			text: "Default",
+			order: 2,
+			pressed: state.boardSelectionMode === "default",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "default" },
+		},
+		{
+			id: "board.select.mode.additive",
+			kind: "toggle",
+			text: "Add",
+			order: 3,
+			pressed: state.boardSelectionMode === "additive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "additive" },
+		},
+		{
+			id: "board.select.mode.subtractive",
+			kind: "toggle",
+			text: "Subtract",
+			order: 4,
+			pressed: state.boardSelectionMode === "subtractive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "subtractive" },
+		},
+		{
+			id: "board.select.mode.invertive",
+			kind: "toggle",
+			text: "Invert",
+			order: 5,
+			pressed: state.boardSelectionMode === "invertive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "invertive" },
+		},
+		...buildPlaygroundKindToggleTools("selection", BOARD_PLAY_TARGET_KINDS, boardPlayTargetLabel, targetRecord, controllerId, "toggleSelectionTarget"),
+		{
+			id: "board.selection.clear",
+			kind: "button",
+			label: "Clear",
+			order: 20,
+			controllerId,
+			command: "clearSelection",
+		},
+	];
+	return {
+		selection: selectionTools,
+		view: [
+			{
+				id: "board.grid.snap",
+				kind: "toggle",
+				text: "Grid snap",
+				order: 0,
+				pressed: state.boardGridSnapEnabled,
+				controllerId,
+				command: "toggleGridSnap",
+			},
+		],
+		create: [
+			{ id: "board.create.circle", kind: "button", label: "Circle", order: 0, controllerId, command: "appendCircle" },
+			{ id: "board.create.rectangle", kind: "button", label: "Rectangle", order: 1, controllerId, command: "appendRectangle" },
+		],
+		actions: [
+			{
+				id: "board.redraw.play",
+				kind: "toggle",
+				text: "Redraw",
+				order: 0,
+				pressed: state.boardRedrawPlaying,
+				controllerId,
+				command: "toggleRedrawPlaying",
+			},
+			{ id: "board.redraw.handles", kind: "button", label: "Handles", title: "Redraw handles once", order: 1, controllerId, command: "redrawHandlesOnce" },
+		],
+	};
+}
+
+/** @emoji 🎛 Board play shell controller: per-pane LOD modes + playground toolbar tools. */
 export class BoardPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Board", undefined);
 	private lodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>;
 	private effectiveLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind>;
+	private hostBridge: BoardPlayHostBridge | null = null;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(BOARD_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -111,6 +234,21 @@ export class BoardPlayShellController extends Controller {
 			"board-selection": "normal",
 		};
 		this.rebuildShellMode();
+	}
+
+	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
+	setHostBridge(bridge: BoardPlayHostBridge | null): void {
+		this.hostBridge = bridge;
+		this.rebuildToolbarTools();
+	}
+
+	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest host toolbar snapshot. */
+	rebuildToolbarTools(): void {
+		if (!this.hostBridge) {
+			this.mainMode.tools = undefined;
+			return;
+		}
+		this.mainMode.tools = buildBoardPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
 	}
 
 	private lodMeasureForPane(paneId: BoardPlayPaneId): WindowMeasure {
@@ -152,10 +290,23 @@ export class BoardPlayShellController extends Controller {
 				this.effectiveLodByPane = { ...this.effectiveLodByPane, [pane]: lod };
 				break;
 			}
+			case "setSelectionMethod":
+			case "setSelectionMode":
+			case "toggleSelectionTarget":
+			case "clearSelection":
+			case "toggleGridSnap":
+			case "appendCircle":
+			case "appendRectangle":
+			case "toggleRedrawPlaying":
+			case "redrawHandlesOnce": {
+				this.hostBridge?.runHostCommand(command, args);
+				break;
+			}
 			default:
 				break;
 		}
 		this.rebuildShellMode();
+		this.rebuildToolbarTools();
 		this.emit();
 	}
 
@@ -170,7 +321,7 @@ export class BoardPlayShellController extends Controller {
 //#endregion 🔖Controller
 
 //#region 🔖DeclarativeBodies
-function boardPlayControllerFromContext(ctx: WindowBodyViewContext | SidePanelBodyViewContext): BoardPlayShellController | undefined {
+function boardPlayControllerFromContext(ctx: WindowBodyViewContext): BoardPlayShellController | undefined {
 	return ctx.runtime.getActiveApp()?.controller as BoardPlayShellController | undefined;
 }
 
@@ -179,42 +330,13 @@ function buildBoardPlayDeclarativeBody(paneId: BoardPlayPaneId): (ctx: WindowBod
 		if (!boardPlayControllerFromContext(ctx)) {
 			return { type: "text", value: "Missing board play controller" };
 		}
-		return {
-			type: "stack",
-			direction: "vertical",
-			padding: "none",
-			children: [{ type: "board", surfaceId: BOARD_PLAY_BOARD_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID, paneId }],
-		};
+		return buildBoardWindowBody(BOARD_PLAY_BOARD_SURFACE_ID, BOARD_PLAY_CONTROLLER_ID, paneId);
 	};
 }
 
 export const buildBoardPlayOverviewDeclarativeBody = buildBoardPlayDeclarativeBody("board-overview");
 export const buildBoardPlayDetailDeclarativeBody = buildBoardPlayDeclarativeBody("board-detail");
 export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeBody("board-selection");
-
-/** @emoji 📑 Declarative library side tab: table host surface only. */
-export function buildBoardPlayLibraryDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
-	if (!boardPlayControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing board play controller" };
-	}
-	return { type: "table", surfaceId: BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
-}
-
-/** @emoji 📑 Declarative selection inspector side tab: table host surface only. */
-export function buildBoardPlayInspectorDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
-	if (!boardPlayControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing board play controller" };
-	}
-	return { type: "table", surfaceId: BOARD_PLAY_TABLE_INSPECTOR_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
-}
-
-/** @emoji 📑 Declarative settings side tab: table host surface only. */
-export function buildBoardPlaySettingsDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
-	if (!boardPlayControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing board play controller" };
-	}
-	return { type: "table", surfaceId: BOARD_PLAY_TABLE_SETTINGS_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
-}
 //#endregion 🔖DeclarativeBodies
 
 /** @emoji 🧩 Registers board play window kinds on the supplied controller (layout supplied by host). */
@@ -225,31 +347,46 @@ export function attachBoardPlayWindowKinds(controller: BoardPlayShellController,
 	return app;
 }
 
-/** @emoji 🧩 Builds the board play {@link AppRuntime} with declarative side tabs. */
+/** @emoji 🧩 Builds the board play {@link AppRuntime}; side panels are tree tabs via {@link PlaygroundView} `augmentPanelTabs` only. */
 export function buildBoardPlayAppRuntime(controller: BoardPlayShellController): AppRuntime {
 	const app = attachBoardPlayWindowKinds(controller, BOARD_PLAY_LAYOUT);
-	app.leftTabs = [{ id: "board-play-library", iconId: BOARD_PLAY_ICON_LIBRARY, order: 0, bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY }];
-	app.rightTabs = [
-		{ id: "board-play-inspector", iconId: BOARD_PLAY_ICON_INSPECTOR, order: 0, bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY },
-		{ id: "board-play-settings", iconId: BOARD_PLAY_ICON_SETTINGS, order: 1, bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY },
-	];
+	app.leftTabs = [];
+	app.rightTabs = [];
 	return app;
 }
 
-/** @emoji 📝 Registers board play declarative window + side-panel bodies on the framework host. */
+/** @emoji 📝 Registers board play declarative window bodies on the playground host (side tabs are host tree panels only). */
 export function registerBoardPlayDeclarativeBodies(): void {
 	registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
 	registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
 	registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-	registerPlaygroundSidePanelBodies([
-		{ bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY, build: buildBoardPlayLibraryDeclarativePanel },
-		{ bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, build: buildBoardPlayInspectorDeclarativePanel },
-		{ bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY, build: buildBoardPlaySettingsDeclarativePanel },
-	]);
 }
 
 //#region 🔖Extension
-export const BOARD_PLAY_EXTENSION_MANIFEST: PluginManifest = {
+/** @emoji 🔌 Host context for optional board-play extension activation. */
+export interface BoardPlayPluginContext {
+	registerWindowBody(bodyKey: string, factory: (ctx: WindowBodyViewContext) => UiNode): void;
+}
+
+/** @emoji 📦 Extension manifest shape for board play (host-agnostic). */
+export interface BoardPlayExtensionManifest {
+	readonly id: string;
+	readonly label: string;
+	readonly version: string;
+	readonly contributes: {
+		readonly apps?: readonly {
+			readonly id: string;
+			readonly label: string;
+			readonly controllerId: string;
+			readonly defaultLayout: WindowLayout;
+			readonly defaultModeId: string;
+			readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly bodyKey: string }[];
+			readonly modes: readonly { readonly id: string; readonly label: string }[];
+		}[];
+	};
+}
+
+export const BOARD_PLAY_EXTENSION_MANIFEST: BoardPlayExtensionManifest = {
 	id: "elements.board-play",
 	label: "Board Play",
 	version: "0.1.0",
@@ -267,26 +404,18 @@ export const BOARD_PLAY_EXTENSION_MANIFEST: PluginManifest = {
 					{ id: "board-selection", label: "Selection", bodyKey: BOARD_PLAY_BODY_KEY_SELECTION },
 				],
 				modes: [{ id: "main", label: "Board" }],
-				leftTabs: [{ id: "board-play-library", iconId: BOARD_PLAY_ICON_LIBRARY, order: 0, bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY }],
-				rightTabs: [
-					{ id: "board-play-inspector", iconId: BOARD_PLAY_ICON_INSPECTOR, order: 0, bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY },
-					{ id: "board-play-settings", iconId: BOARD_PLAY_ICON_SETTINGS, order: 1, bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY },
-				],
 			},
 		],
 	},
 };
 
-/** @emoji 🔌 VS Code–style board play plugin: registers declarative bodies on activate. */
-export const boardPlayPlugin: PluginModule = {
+/** @emoji 🔌 Board play plugin: registers declarative bodies on activate. */
+export const boardPlayPlugin: { readonly id: string; activate(context: BoardPlayPluginContext): void } = {
 	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
-	activate(context: PluginContext): void {
+	activate(context: BoardPlayPluginContext): void {
 		context.registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
 		context.registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
 		context.registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-		context.registerSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
-		context.registerSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
-		context.registerSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
 	},
 };
 
@@ -314,30 +443,15 @@ if (import.meta.vitest) {
 				activeModeId: "main",
 				generation: 0,
 			});
-			expect(tree.type).toBe("stack");
-			if (tree.type !== "stack") return;
-			expect(tree.children[0]).toEqual({
-				type: "board",
-				surfaceId: BOARD_PLAY_BOARD_SURFACE_ID,
-				controllerId: BOARD_PLAY_CONTROLLER_ID,
-				paneId: "board-overview",
-			});
+			expect(tree).toEqual(buildBoardWindowBody(BOARD_PLAY_BOARD_SURFACE_ID, BOARD_PLAY_CONTROLLER_ID, "board-overview"));
 		});
 
-		it("declarative library panel references table host surface", () => {
+		it("buildBoardPlayRuntime wires main mode and empty side tab slots", () => {
 			const runtime = buildBoardPlayRuntime();
-			const tree = buildBoardPlayLibraryDeclarativePanel({
-				runtime,
-				windowKindId: "board-play-library",
-				bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY,
-				activeModeId: "main",
-				generation: 0,
-			});
-			expect(tree).toEqual({
-				type: "table",
-				surfaceId: BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID,
-				controllerId: BOARD_PLAY_CONTROLLER_ID,
-			});
+			const app = runtime.getActiveApp();
+			expect(app?.leftTabs).toEqual([]);
+			expect(app?.rightTabs).toEqual([]);
+			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
 		});
 	});
 }

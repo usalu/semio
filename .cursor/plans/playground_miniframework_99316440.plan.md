@@ -16,19 +16,19 @@ todos:
     status: completed
   - id: scene-controller
     content: Retarget ScenePlayShellController and buildScenePlayAppRuntime in scene/play/index.ts to the playground core.
-    status: in_progress
+    status: completed
   - id: scene-panels
     content: Replace ad-hoc scene inspector/settings React panels with declarative Tree panel definitions (sections + items) for selected Objects/Vortices/Attractions and scene lists.
-    status: pending
+    status: completed
   - id: scene-render
     content: Render scene play via playground PlaygroundView (not framework-react ProductView); remove the always-on JSON details tab; convert remaining scene React.Component classes to function components.
-    status: pending
+    status: completed
   - id: board-decouple
     content: Decouple @elements/board from @elements/playground (use framework registerSidePanelBody, drop dependency + vitest aliases).
-    status: pending
+    status: completed
   - id: validate
     content: Extend existing vitest regions and run playground/scene/board suites; runtime-verify the tree details panel and absence of the JSON snippet; close the ticket with a summary.
-    status: pending
+    status: completed
 isProject: false
 ---
 

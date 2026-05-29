@@ -5973,7 +5973,7 @@ if (import.meta.vitest) {
 					{},
 					interactionByState,
 					[{ kind: "edge", id: "e0", editable: true }],
-					{},
+					{ shift: true },
 				),
 			).toEqual([
 				{ kind: "vertex", id: "v1", editable: true },

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/system/renderer/react/scene/play/index.ts — Scene play harness: Nakagin fixture metadata, LOD controls, and localStorage keys (no React; mount via main.ts + scene-play-host).
+// 💻 elements/lib/react/scene/play/index.ts — Scene play on `@elements/playground`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -13,11 +13,13 @@ import {
 	createStackLayout,
 	type WindowBodyViewContext,
 	Expertise,
+	buildPlaygroundBrowseFilterTools,
+	buildPlaygroundBrowseSelectionTools,
 	type AppTools,
 	type ToolItem,
 	type WindowMeasure,
 	type UiNode,
-} from "@elements/framework";
+} from "@elements/playground";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
@@ -314,9 +316,20 @@ export function primaryScenePlayObjectId(selection: ScenePlaySelection): string 
 //#endregion 🔖ScenePlaySelection
 
 //#region 🔖ScenePlayController
-/** @emoji 🎬 Framework-free scene play controller: fixture, LOD, selection, and interaction counters. */
+const SCENE_PLAY_KINDS = ["object", "vortex", "attraction"] as const;
+type ScenePlayPickKind = (typeof SCENE_PLAY_KINDS)[number];
+
+function scenePlayKindLabel(kind: ScenePlayPickKind): string {
+	if (kind === "object") return "Objects";
+	if (kind === "vortex") return "Vortices";
+	return "Attractions";
+}
+
+/** @emoji 🎬 Playground scene play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class ScenePlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Scene", undefined);
+	readonly selectableKinds: Record<ScenePlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
+	readonly visibleKinds: Record<ScenePlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
 	private fixture: FixtureV1 | null;
 	private fixtureRevision: number;
 	private automaticLod: boolean;
@@ -460,8 +473,19 @@ export class ScenePlayShellController extends Controller {
 			command: "setRelocateMode",
 			args: { mode },
 		}));
-		const tools: AppTools = { actions: relocateTools };
-		this.mainMode.tools = tools;
+		this.mainMode.tools = {
+			selection: buildPlaygroundBrowseSelectionTools(SCENE_PLAY_KINDS, scenePlayKindLabel, this.selectableKinds, SCENE_PLAY_CONTROLLER_ID),
+			filter: buildPlaygroundBrowseFilterTools(SCENE_PLAY_KINDS, scenePlayKindLabel, this.visibleKinds, SCENE_PLAY_CONTROLLER_ID),
+			actions: relocateTools,
+		};
+	}
+
+	private filterSelectionByPlaygroundKinds(selection: ScenePlaySelection): ScenePlaySelection {
+		return {
+			objectIds: this.selectableKinds.object && this.visibleKinds.object ? [...selection.objectIds] : [],
+			vortexIds: this.selectableKinds.vortex && this.visibleKinds.vortex ? [...selection.vortexIds] : [],
+			attractionIds: this.selectableKinds.attraction && this.visibleKinds.attraction ? [...selection.attractionIds] : [],
+		};
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -498,14 +522,30 @@ export class ScenePlayShellController extends Controller {
 				if (mode === "translate" || mode === "rotate" || mode === "scale") this.relocateMode = mode;
 				break;
 			}
+			case "toggleSelectableKind": {
+				const { kind } = args as { kind: ScenePlayPickKind };
+				if (kind === "object" || kind === "vortex" || kind === "attraction") {
+					this.selectableKinds[kind] = !this.selectableKinds[kind];
+					this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
+				}
+				break;
+			}
+			case "toggleVisibleKind": {
+				const { kind } = args as { kind: ScenePlayPickKind };
+				if (kind === "object" || kind === "vortex" || kind === "attraction") {
+					this.visibleKinds[kind] = !this.visibleKinds[kind];
+					this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
+				}
+				break;
+			}
 			case "setSelection": {
 				const next = (args as { selection: ScenePlaySelection }).selection;
 				if (next && typeof next === "object") {
-					const resolved: ScenePlaySelection = {
+					const resolved = this.filterSelectionByPlaygroundKinds({
 						objectIds: [...(next.objectIds ?? [])],
 						vortexIds: [...(next.vortexIds ?? [])],
 						attractionIds: [...(next.attractionIds ?? [])],
-					};
+					});
 					if (scenePlaySelectionEqual(this.selection, resolved)) {
 						return;
 					}
@@ -528,7 +568,7 @@ export class ScenePlayShellController extends Controller {
 			}
 			case "noteSelection": {
 				const snap = args as SelectionSnapshot & { attractionIds?: readonly string[] };
-				const resolved: ScenePlaySelection = {
+				const resolved = this.filterSelectionByPlaygroundKinds({
 					objectIds: [...(snap.objectIds ?? [])],
 					vortexIds: [...(snap.vortexIds ?? [])],
 					attractionIds:
@@ -537,7 +577,7 @@ export class ScenePlayShellController extends Controller {
 							: snap.objectIds.length === 0 && snap.vortexIds.length === 0
 								? []
 								: [...this.selection.attractionIds],
-				};
+				});
 				if (scenePlaySelectionEqual(this.selection, resolved)) {
 					return;
 				}
@@ -708,11 +748,17 @@ export function buildScenePlayAppRuntime(controller: ScenePlayShellController): 
 	);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
-	app.rightTabs = [
-		{ id: SCENE_PLAY_INSPECTOR_TAB_ID, iconId: "elements.scene-play.icon.inspector", order: 0, bodyKey: "elements.scene.play.tab.inspector" },
-		{ id: SCENE_PLAY_SETTINGS_TAB_ID, iconId: "elements.scene-play.icon.settings", order: 1, bodyKey: "elements.scene.play.tab.settings" },
-	];
+	app.leftTabs = [];
+	app.rightTabs = [];
 	return app;
+}
+
+/** @emoji 🚀 Creates a {@link ProductRuntime} with scene play app registered. */
+export function buildScenePlayRuntime(): ProductRuntime {
+	const runtime = new ProductRuntime();
+	const controller = new ScenePlayShellController(runtime.commandBus, () => runtime.notify());
+	runtime.addApp(buildScenePlayAppRuntime(controller));
+	return runtime;
 }
 
 function sceneControllerFromContext(ctx: WindowBodyViewContext): ScenePlayShellController | undefined {

@@ -596,7 +596,18 @@ const UICanvas: React.FC<{
 //#endregion 🔖UICanvas
 
 //#region 🔖Toolbar
-type UIToolbarItem = { id: string; kind?: "separator" | "toggle"; icon?: React.ReactNode; text?: string; label?: string; order?: number; pressed?: boolean; onPressedChange?: (pressed: boolean) => void; onClick?: () => void };
+type UIToolbarItem = {
+	id: string;
+	kind?: "separator" | "toggle";
+	icon?: React.ReactNode;
+	text?: string;
+	label?: string;
+	title?: string;
+	order?: number;
+	pressed?: boolean;
+	onPressedChange?: (pressed: boolean) => void;
+	onClick?: () => void;
+};
 
 function declareToolsToViewTools(tools: AppTools | undefined, bus: CommandBus): Partial<Record<AppToolCategory, UIToolbarItem[]>> | undefined {
 	if (!tools) return undefined;
@@ -612,6 +623,7 @@ function declareToolsToViewTools(tools: AppTools | undefined, bus: CommandBus): 
 					kind: "toggle",
 					text: item.text,
 					label: item.label,
+					title: item.title,
 					order: item.order,
 					pressed: item.pressed,
 					onPressedChange: (pressed: boolean) => {
@@ -623,6 +635,7 @@ function declareToolsToViewTools(tools: AppTools | undefined, bus: CommandBus): 
 				id: item.id,
 				text: item.text,
 				label: item.label,
+				title: item.title,
 				order: item.order,
 				onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
 			};
@@ -636,17 +649,42 @@ const PlaygroundToolbar: React.FC<{ tools: Partial<Record<AppToolCategory, UIToo
 		{APP_TOOL_CATEGORY_ORDER.map((category) => {
 			const items = tools[category];
 			if (!items?.length) return null;
+			const sorted = [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 			return (
 				<ToolbarZone key={category} id={`playground.toolbar.${category}`}>
-					{items.map((item) =>
-						item.kind === "separator" ? (
-							<ToolbarDivider key={item.id} id={item.id} />
-						) : item.kind === "toggle" ? (
-							<ToolbarItem key={item.id} id={item.id} kind="toggle" pressed={item.pressed} onPressedChange={item.onPressedChange} text={item.text} />
-						) : (
-							<ToolbarItem key={item.id} id={item.id} onClick={item.onClick} text={item.text} label={item.label} />
-						),
-					)}
+					{sorted.map((item) => {
+						const tooltip = item.title ?? item.label ?? item.text;
+						if (item.kind === "separator") {
+							return <ToolbarDivider key={item.id} id={item.id} />;
+						}
+						if (item.kind === "toggle") {
+							return (
+								<ToolbarItem key={item.id}>
+									<Toggle
+										id={item.id}
+										title={tooltip}
+										text={item.text ?? item.label}
+										pressed={item.pressed ?? false}
+										onPressedChange={(pressed) => item.onPressedChange?.(pressed)}
+									/>
+								</ToolbarItem>
+							);
+						}
+						return (
+							<ToolbarItem key={item.id}>
+								<button
+									type="button"
+									id={item.id}
+									title={tooltip}
+									onClick={item.onClick}
+									className="flex cursor-pointer items-center gap-single rounded px-single py-tiny text-sm hover:bg-hover-panel"
+								>
+									{item.icon}
+									{(item.text ?? item.label) ? <span>{item.text ?? item.label}</span> : null}
+								</button>
+							</ToolbarItem>
+						);
+					})}
 				</ToolbarZone>
 			);
 		})}
@@ -686,6 +724,7 @@ export interface PlaygroundViewProps {
 	readonly slotToolbar?: React.ReactNode;
 	readonly extraFooterItems?: readonly FooterItem[];
 	readonly augmentPanelTabs?: Partial<Record<"workbench" | "details", readonly (SidePanelTabConfig | SidePanelTabDefinition)[]>>;
+	readonly onActiveWindowChange?: (windowKindId: string) => void;
 }
 
 function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: readonly (SidePanelTabConfig | SidePanelTabDefinition)[] | undefined): SidePanelTabConfig[] {
@@ -707,6 +746,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 	slotToolbar,
 	extraFooterItems,
 	augmentPanelTabs,
+	onActiveWindowChange,
 }) => {
 	React.useSyncExternalStore(
 		(onStoreChange) => runtime.subscribe(onStoreChange),
@@ -828,6 +868,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 						defaultLayout={activeApp.defaultLayout}
 						onActiveWindowChange={(windowKindId) => {
 							setActiveWindowKindId(windowKindId);
+							onActiveWindowChange?.(windowKindId);
 						}}
 					/>
 				}

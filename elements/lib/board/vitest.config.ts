@@ -3,22 +3,19 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const frameworkCore = resolve(root, "../../framework/core/index.ts");
-const frameworkReact = resolve(root, "../../framework/renderer/index.tsx");
-const frameworkReactWorkbench = frameworkReact;
-const uiCore = resolve(root, "../core/index.tsx");
+const playgroundCore = resolve(root, "../playground/index.ts");
+const playgroundReact = resolve(root, "../playground/react/index.tsx");
+const uiCore = resolve(root, "../react/core/index.tsx");
 
 /** @emoji 🧪 Vitest entry for `@elements/board` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
-		alias: {
-			"@elements/framework": frameworkCore,
-			"@elements/framework-react": frameworkReact,
-			"@elements/framework-react/workbench": frameworkReactWorkbench,
-			"@elements/playground": resolve(root, "../../playground/index.ts"),
-			"@elements/ui": uiCore,
-		},
+		alias: [
+			{ find: "@elements/playground/react", replacement: playgroundReact },
+			{ find: "@elements/playground", replacement: playgroundCore },
+			{ find: "@elements/ui", replacement: uiCore },
+		],
 	},
 	test: {
 		mode: "test",

@@ -9,8 +9,8 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@elements/framework-react", replacement: resolve(root, "../../framework/renderer/react/index.tsx") },
-			{ find: "@elements/framework", replacement: resolve(root, "../../framework/core/index.ts") },
+			{ find: "@elements/playground/react", replacement: resolve(root, "../../playground/react/index.tsx") },
+			{ find: "@elements/playground", replacement: resolve(root, "../../playground/index.ts") },
 			{ find: "@elements/ui", replacement: resolve(root, "../core/index.tsx") },
 			{ find: "@elements/board", replacement: resolve(root, "../../board/index.tsx") },
 			{ find: "@elements/scene", replacement: resolve(root, "../scene/index.tsx") },

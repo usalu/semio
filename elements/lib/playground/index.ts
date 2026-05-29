@@ -9,6 +9,7 @@ import {
 	AppRuntime,
 	ModeRuntime,
 	WindowKindRuntime,
+	buildBoardWindowBody,
 	buildScene3dWindowBody,
 	createDefaultLayout,
 	getWindowBodyFactory,
@@ -19,6 +20,41 @@ import {
 	type WindowBodyViewContext,
 	type UiNode,
 	type WindowLayout,
+} from "./core.ts";
+
+export {
+	APP_TOOL_CATEGORY_ORDER,
+	AppRuntime,
+	CommandBus,
+	Controller,
+	Expertise,
+	ModeRuntime,
+	ProductRuntime,
+	WindowKindRuntime,
+	buildBoardWindowBody,
+	buildScene3dWindowBody,
+	createDefaultLayout,
+	createStackLayout,
+	createWindowLayout,
+	getSidePanelBodyFactory,
+	getWindowBodyFactory,
+	mergeAppTools,
+	registerSidePanelBody,
+	registerWindowBody,
+	resolveAppState,
+	type AppToolCategory,
+	type AppTools,
+	type CommandDescriptor,
+	type FooterItem,
+	type JsonValue,
+	type ResolvedAppState,
+	type SidePanelBodyViewContext,
+	type SideTabSpec,
+	type ToolItem,
+	type UiNode,
+	type WindowBodyViewContext,
+	type WindowLayout,
+	type WindowMeasure,
 } from "./core.ts";
 
 //#region 🔖Ids
@@ -51,7 +87,8 @@ function createAllKindsEnabled<K extends string>(kinds: readonly K[]): Record<K,
 	return Object.fromEntries(kinds.map((kind) => [kind, true])) as Record<K, boolean>;
 }
 
-function playgroundKindToggles<K extends string>(
+/** @emoji 🎚 Kind toggle row for playground `selection` or `filter` toolbar zones. */
+export function buildPlaygroundKindToggleTools<K extends string>(
 	prefix: "selection" | "filter",
 	kinds: readonly K[],
 	labels: (kind: K) => string,
@@ -69,6 +106,40 @@ function playgroundKindToggles<K extends string>(
 		command,
 		args: { kind },
 	}));
+}
+
+/** @emoji 🧹 Clear-selection button for the playground `selection` toolbar zone. */
+export function buildPlaygroundClearSelectionTool(controllerId: string, order: number): ToolItem {
+	return {
+		id: "playground.selection.clear",
+		kind: "button",
+		label: "Clear",
+		order,
+		controllerId,
+		command: "setSelectedId",
+		args: { id: null },
+	};
+}
+
+/** @emoji 🎯 Standard playground browse selection tools (kind toggles + clear). */
+export function buildPlaygroundBrowseSelectionTools<K extends string>(
+	kinds: readonly K[],
+	labels: (kind: K) => string,
+	selectableKinds: Readonly<Record<K, boolean>>,
+	controllerId: string,
+): ToolItem[] {
+	const toggles = buildPlaygroundKindToggleTools("selection", kinds, labels, selectableKinds, controllerId, "toggleSelectableKind");
+	return [...toggles, { id: "playground.selection.separator", kind: "separator", order: kinds.length }, buildPlaygroundClearSelectionTool(controllerId, kinds.length + 1)];
+}
+
+/** @emoji 👁️ Standard playground browse filter tools (visibility kind toggles). */
+export function buildPlaygroundBrowseFilterTools<K extends string>(
+	kinds: readonly K[],
+	labels: (kind: K) => string,
+	visibleKinds: Readonly<Record<K, boolean>>,
+	controllerId: string,
+): ToolItem[] {
+	return buildPlaygroundKindToggleTools("filter", kinds, labels, visibleKinds, controllerId, "toggleVisibleKind");
 }
 //#endregion 🔖Toolbar
 
@@ -99,22 +170,9 @@ export abstract class PlaygroundController<K extends string> extends Controller 
 	}
 
 	protected rebuildBrowseModeTools(): void {
-		const separatorOrder = this.kinds.length;
 		this.browseMode.tools = {
-			selection: [
-				...playgroundKindToggles("selection", this.kinds, this.kindLabel, this.selectableKinds, this.id, "toggleSelectableKind"),
-				{ id: "playground.selection.separator", kind: "separator", order: separatorOrder },
-				{
-					id: "playground.selection.clear",
-					kind: "button",
-					label: "Clear",
-					order: separatorOrder + 1,
-					controllerId: this.id,
-					command: "setSelectedId",
-					args: { id: null },
-				},
-			],
-			filter: playgroundKindToggles("filter", this.kinds, this.kindLabel, this.visibleKinds, this.id, "toggleVisibleKind"),
+			selection: buildPlaygroundBrowseSelectionTools(this.kinds, this.kindLabel, this.selectableKinds, this.id),
+			filter: buildPlaygroundBrowseFilterTools(this.kinds, this.kindLabel, this.visibleKinds, this.id),
 		};
 	}
 
@@ -352,6 +410,13 @@ if (import.meta.vitest) {
 			const wb = bootstrapPlaygroundWorkbench(TEST_IDS, ctrl);
 			expect(wb.apps.length).toBeGreaterThan(0);
 			expect(getWindowBodyFactory(TEST_IDS.mainBodyKey)).toBeTypeOf("function");
+		});
+	});
+
+	describe("canonical window bodies", () => {
+		it("buildBoardWindowBody is canvas-only", () => {
+			const node = buildBoardWindowBody("elements.board/v1", "board-ctrl", "pane-a");
+			expect(node).toEqual({ type: "board", surfaceId: "elements.board/v1", controllerId: "board-ctrl", paneId: "pane-a" });
 		});
 	});
 

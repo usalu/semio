@@ -708,10 +708,25 @@ if (import.meta.vitest) {
 
 
 // #region 🛝PlayHost
-// #region ┬¡ãÆ┬║ÔûôHeader
-// ┬¡ãÆ├åÔòù elements/renderer/react/windows/topology/topology-play-host.tsx ├ö├ç├Â React host surfaces for the declarative topology play bundle.
-// #endregion ┬¡ãÆ┬║ÔûôHeader
 
+import React from "react";
+import { useGLTF } from "@react-three/drei";
+import { ClipboardList } from "lucide-react";
+import { LevelProvider, getLevelBgClass } from "@elements/ui";
+import { ProductRuntime } from "@elements/playground";
+import {
+	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
+	mountPlaygroundApp,
+	registerUiBoardSurfaceHost,
+	registerUiScene3DSurfaceHost,
+	registerWindowBody,
+	useApp,
+	type SidePanelTabConfig,
+	type UiBoardHostSurfaceNode,
+	type UiScene3DHostSurfaceNode,
+} from "@elements/playground/react";
 import {
 	TOPOLOGY_PLAY_APP_ID,
 	TOPOLOGY_PLAY_BOARD_BODY_KEY,
@@ -728,7 +743,7 @@ import {
 } from "./play/index.ts";
 import "./play/globals.css";
 
-//#region ┬¡ãÆ├Â├╗Snapshot
+//#region 🔖Snapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {
 	const { runtime } = useApp();
 	React.useSyncExternalStore(
@@ -739,9 +754,70 @@ function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellCont
 	const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
 	return { controller, snapshot: controller?.getSnapshot() ?? null };
 }
-//#endregion ┬¡ãÆ├Â├╗Snapshot
+//#endregion 🔖Snapshot
 
-//#region ┬¡ãÆ├Â├╗Surfaces
+//#region 🔖DetailsPanel
+function TopologyPlayStatusPanel(): React.ReactElement {
+	const { snapshot } = useTopologyPlaySnapshot();
+	if (!snapshot) {
+		return <p className="text-muted-foreground p-2 text-xs">No topology snapshot</p>;
+	}
+	return (
+		<dl className="grid gap-2 p-2 text-xs">
+			<div>
+				<dt className="text-muted-foreground font-medium">Manifest</dt>
+				<dd>{snapshot.manifestLabel ?? "—"}</dd>
+			</div>
+			<div>
+				<dt className="text-muted-foreground font-medium">Board selection</dt>
+				<dd>{snapshot.boardSelected.size} id(s)</dd>
+			</div>
+			<div>
+				<dt className="text-muted-foreground font-medium">Scene selection</dt>
+				<dd>{snapshot.sceneSelected ?? "—"}</dd>
+			</div>
+			<div>
+				<dt className="text-muted-foreground font-medium">Relocate</dt>
+				<dd>{snapshot.relocateMode}</dd>
+			</div>
+			<div>
+				<dt className="text-muted-foreground font-medium">Connect events</dt>
+				<dd>
+					board {snapshot.connectBoard} · scene {snapshot.connectScene}
+				</dd>
+			</div>
+			<div>
+				<dt className="text-muted-foreground font-medium">Proximity events</dt>
+				<dd>
+					board {snapshot.proximityBoard} · scene {snapshot.proximityScene}
+				</dd>
+			</div>
+		</dl>
+	);
+}
+
+class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "topology-play-status",
+			icon: ClipboardList,
+			order: 0,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "topology-play-status.section",
+						label: "Paired play",
+						defaultOpen: true,
+						items: [{ id: "topology-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
+					},
+				],
+			}),
+		};
+	}
+}
+//#endregion 🔖DetailsPanel
+
+//#region 🔖Surfaces
 function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
 	const { controller, snapshot } = useTopologyPlaySnapshot();
 	if (node.controllerId !== TOPOLOGY_PLAY_CONTROLLER_ID || node.surfaceId !== TOPOLOGY_PLAY_BOARD_SURFACE_ID || node.paneId !== TOPOLOGY_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
@@ -800,9 +876,9 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 		/>
 	);
 }
-//#endregion ┬¡ãÆ├Â├╗Surfaces
+//#endregion 🔖Surfaces
 
-//#region ┬¡ãÆ├Â├╗Mount
+//#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
 function registerTopologyPlayChrome(): void {
@@ -814,19 +890,35 @@ function registerTopologyPlayChrome(): void {
 	registerWindowBody(TOPOLOGY_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
 }
 
-export function createTopologyPlayElement(): React.ReactElement {
-	registerTopologyPlayChrome();
+function TopologyPlayApp(): React.ReactElement {
+	const runtimeRef = React.useRef<ProductRuntime | null>(null);
+	if (!runtimeRef.current) {
+		registerTopologyPlayChrome();
+		runtimeRef.current = buildTopologyPlayRuntime();
+	}
+	const detailTabs = React.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
 	return (
-		<LevelProvider>
-			<ProductView runtime={buildTopologyPlayRuntime()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+		<LevelProvider level="window">
+			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+				<PlaygroundView
+					runtime={runtimeRef.current}
+					defaultAppId={TOPOLOGY_PLAY_APP_ID}
+					augmentPanelTabs={{ details: detailTabs }}
+					initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: true }}
+				/>
+			</div>
 		</LevelProvider>
 	);
 }
 
-/** @emoji ┬¡ãÆ├£├ç Vite host entry: mounts topology play into `#root`. */
-export function mountTopologyPlay(): void {
-	mountReactApp(createTopologyPlayElement());
+export function createTopologyPlayElement(): React.ReactElement {
+	return <TopologyPlayApp />;
 }
-//#endregion ┬¡ãÆ├Â├╗Mount
+
+/** @emoji 🚀 Vite host entry: mounts topology play into `#root`. */
+export function mountTopologyPlay(): void {
+	mountPlaygroundApp(createTopologyPlayElement());
+}
+//#endregion 🔖Mount
 
 // #endregion 🛝PlayHost

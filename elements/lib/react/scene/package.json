@@ -12,8 +12,7 @@
 	},
 	"dependencies": {
 		"@elements/ui": "workspace:*",
-		"@elements/framework": "workspace:*",
-		"@elements/framework-react": "workspace:*",
+		"@elements/playground": "workspace:*",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.4.2",
 		"lucide-react": "^0.536.0",

@@ -16,11 +16,14 @@ export default defineConfig({
 	worker: { format: "es" },
 	plugins: [react()],
 	resolve: {
-		alias: {
-			"@spatial/js-core": coreEntry,
-			"@spatial/js-kernel-brepjs": kernelEntry,
-			"@spatial/js-machine-stately": machineStatelyEntry,
-			"@spatial/js-query": queryEntry,
-		},
+		alias: [
+			{ find: "@elements/playground/react", replacement: resolve(dir, "../../../elements/lib/playground/react/index.tsx") },
+			{ find: "@elements/playground", replacement: resolve(dir, "../../../elements/lib/playground/index.ts") },
+			{ find: "@elements/ui", replacement: resolve(dir, "../../../elements/lib/react/core/index.tsx") },
+			{ find: "@spatial/js-core", replacement: coreEntry },
+			{ find: "@spatial/js-kernel-brepjs", replacement: kernelEntry },
+			{ find: "@spatial/js-machine-stately", replacement: machineStatelyEntry },
+			{ find: "@spatial/js-query", replacement: queryEntry },
+		],
 	},
 });

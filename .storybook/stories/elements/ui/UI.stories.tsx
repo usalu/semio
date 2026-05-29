@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 .storybook/stories/elements/ui/UI.stories.tsx — Storybook harness for {@link ProductView} + {@link ProductRuntime}.
+// 💻 .storybook/stories/elements/ui/UI.stories.tsx — Storybook harness for {@link PlaygroundView} + {@link ProductRuntime}.
 // #endregion 🧲Header
 
 import {
@@ -11,10 +11,16 @@ import {
 	type CommandBus,
 	type FindItem,
 	type SearchItemSpec,
-	type SideTabSpec,
 	type AppTools,
-} from "@elements/framework";
-import { ProductView, registerElementIcon, registerSidePanelBody, registerWindowBody } from "@elements/framework-react";
+} from "@elements/playground";
+import {
+	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
+	registerTabIcon,
+	registerWindowBody,
+	type SidePanelTabConfig,
+} from "@elements/playground/react";
 import { Tree } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, File, FileText, FolderOpen, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
@@ -81,15 +87,15 @@ let storyChromeReady = false;
 function ensureStoryWorkbenchChrome(): void {
 	if (storyChromeReady) return;
 	storyChromeReady = true;
-	registerElementIcon("story.icon.file-text", <FileText size={16} />);
-	registerElementIcon("story.icon.bar-chart", <BarChart size={16} />);
-	registerElementIcon("story.icon.layers", <Layers size={16} />);
-	registerElementIcon("story.icon.settings", <Settings size={16} />);
-	registerElementIcon("story.icon.info", <Info size={16} />);
-	registerElementIcon("story.icon.undo", <Undo size={14} />);
-	registerElementIcon("story.icon.redo", <Redo size={14} />);
-	registerElementIcon("story.icon.scissors", <Scissors size={14} />);
-	registerElementIcon("story.icon.save", <Save size={14} />);
+	registerTabIcon("story.icon.file-text", FileText);
+	registerTabIcon("story.icon.bar-chart", BarChart);
+	registerTabIcon("story.icon.layers", Layers);
+	registerTabIcon("story.icon.settings", Settings);
+	registerTabIcon("story.icon.info", Info);
+	registerTabIcon("story.icon.undo", Undo);
+	registerTabIcon("story.icon.redo", Redo);
+	registerTabIcon("story.icon.scissors", Scissors);
+	registerTabIcon("story.icon.save", Save);
 	registerWindowBody("story.body.editor", () => (
 		<div className="flex h-full items-center justify-center bg-window">
 			<h2 className="text-xl font-bold">Editor Window</h2>
@@ -105,10 +111,99 @@ function ensureStoryWorkbenchChrome(): void {
 			<h2 className="text-xl font-bold">Statistics</h2>
 		</div>
 	));
-	registerSidePanelBody("story.panel.explorer", ExplorerTree);
-	registerSidePanelBody("story.panel.properties", PropertiesTree);
-	registerSidePanelBody("story.panel.metrics", MetricsTree);
-	registerSidePanelBody("story.panel.settings", () => <div className="p-2">Settings content.</div>);
+}
+
+class StoryExplorerTabDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "explorer",
+			icon: Layers,
+			order: 0,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "story.explorer.section",
+						label: "Explorer",
+						defaultOpen: true,
+						items: [{ id: "story.explorer.body", label: "Files", description: <ExplorerTree /> }],
+					},
+				],
+			}),
+		};
+	}
+}
+
+class StorySettingsTabDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "settings",
+			icon: Settings,
+			order: 1,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "story.settings.section",
+						label: "Settings",
+						defaultOpen: true,
+						items: [{ id: "story.settings.body", label: "Settings", description: <div className="p-2">Settings content.</div> }],
+					},
+				],
+			}),
+		};
+	}
+}
+
+class StoryMetricsTabDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "metrics",
+			icon: BarChart,
+			order: 0,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "story.metrics.section",
+						label: "Metrics",
+						defaultOpen: true,
+						items: [{ id: "story.metrics.body", label: "Metrics", description: <MetricsTree /> }],
+					},
+				],
+			}),
+		};
+	}
+}
+
+class StoryPropertiesTabDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "properties",
+			icon: Info,
+			order: 0,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "story.properties.section",
+						label: "Properties",
+						defaultOpen: true,
+						items: [{ id: "story.properties.body", label: "Properties", description: <PropertiesTree /> }],
+					},
+				],
+			}),
+		};
+	}
+}
+
+function storyPanelTabs(): { readonly workbench: readonly SidePanelTabConfig[]; readonly details: readonly SidePanelTabConfig[] } {
+	return {
+		workbench: [new StoryExplorerTabDefinition().resolveTab(), new StorySettingsTabDefinition().resolveTab()],
+		details: [new StoryPropertiesTabDefinition().resolveTab()],
+	};
+}
+
+function storyDashboardPanelTabs(): { readonly workbench: readonly SidePanelTabConfig[] } {
+	return {
+		workbench: [new StoryMetricsTabDefinition().resolveTab()],
+	};
 }
 
 const editorFindItems: FindItem[] = [
@@ -125,11 +220,6 @@ function buildTwoAppRuntime(): ProductRuntime {
 	ensureStoryWorkbenchChrome();
 	const runtime = new ProductRuntime();
 	const ctrl = new StoryUiController(runtime.commandBus, () => runtime.notify());
-	const editorTabsLeft: SideTabSpec[] = [
-		{ id: "explorer", iconId: "story.icon.layers", order: 0, bodyKey: "story.panel.explorer" },
-		{ id: "settings", iconId: "story.icon.settings", order: 1, bodyKey: "story.panel.settings" },
-	];
-	const editorTabsRight: SideTabSpec[] = [{ id: "properties", iconId: "story.icon.info", order: 0, bodyKey: "story.panel.properties" }];
 	const editorTools: AppTools = {
 		actions: [
 			{ id: "undo", kind: "button", iconId: "story.icon.undo", label: "Undo", order: 0, controllerId: STORY_CTRL, command: "noop" },
@@ -148,8 +238,8 @@ function buildTwoAppRuntime(): ProductRuntime {
 			new WindowKindRuntime("preview", "Preview", "story.body.preview"),
 		],
 	);
-	editorApp.leftTabs = editorTabsLeft;
-	editorApp.rightTabs = editorTabsRight;
+	editorApp.leftTabs = [];
+	editorApp.rightTabs = [];
 	editorApp.tools = editorTools;
 	editorApp.findItems = editorFindItems;
 	editorApp.onFindSelect = (itemId) => console.log("Find selected:", itemId);
@@ -165,7 +255,8 @@ function buildTwoAppRuntime(): ProductRuntime {
 		createDefaultLayout(["stats"]) as never,
 		[new WindowKindRuntime("stats", "Statistics", "story.body.stats")],
 	);
-	dashboardApp.leftTabs = [{ id: "metrics", iconId: "story.icon.bar-chart", order: 0, bodyKey: "story.panel.metrics" }];
+	dashboardApp.leftTabs = [];
+	dashboardApp.rightTabs = [];
 	dashboardApp.footerItems = [{ id: "last-updated", text: "Updated 2m ago", order: 0 }];
 	runtime.addApp(editorApp);
 	runtime.addApp(dashboardApp);
@@ -176,11 +267,17 @@ function buildTwoAppRuntime(): ProductRuntime {
 
 const meta = {
 	title: "elements/react/UI",
-	component: ProductView,
+	component: PlaygroundView,
 	parameters: { layout: "fullscreen" },
 	tags: ["autodocs"],
-	render: () => <ProductView runtime={buildTwoAppRuntime()} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
-} satisfies Meta<typeof ProductView>;
+	render: () => (
+		<PlaygroundView
+			runtime={buildTwoAppRuntime()}
+			augmentPanelTabs={storyPanelTabs()}
+			initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+		/>
+	),
+} satisfies Meta<typeof PlaygroundView>;
 
 export default meta;
 
@@ -189,7 +286,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Mobile: Story = {
-	render: () => <ProductView runtime={buildTwoAppRuntime()} mobile initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+	render: () => (
+		<PlaygroundView
+			runtime={buildTwoAppRuntime()}
+			augmentPanelTabs={storyPanelTabs()}
+			mobile
+			initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+		/>
+	),
 	parameters: {
 		viewport: { defaultViewport: "mobile1" },
 		layout: "fullscreen",
@@ -217,7 +321,16 @@ export const FullFeatured: Story = {
 		runtime.globalTools = {
 			actions: [{ id: "global-save", kind: "button", iconId: "story.icon.save", label: "Save All", order: 100, controllerId: STORY_CTRL, command: "noop" }],
 		};
-		return <ProductView runtime={runtime} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
+		return (
+			<PlaygroundView
+				runtime={runtime}
+				augmentPanelTabs={{
+					workbench: [...storyPanelTabs().workbench, ...storyDashboardPanelTabs().workbench],
+					details: storyPanelTabs().details,
+				}}
+				initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+			/>
+		);
 	},
 	play: async ({ canvasElement }) => {
 		const documentBody = canvasElement.ownerDocument.body;

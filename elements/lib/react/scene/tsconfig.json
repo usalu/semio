@@ -17,8 +17,10 @@
     "types": ["react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@elements/ui": ["../react/index.tsx"],
-      "@elements/ui/*": ["../react/*"]
+      "@elements/playground": ["../../playground/index.ts"],
+      "@elements/playground/react": ["../../playground/react/index.tsx"],
+      "@elements/ui": ["../core/index.tsx"],
+      "@elements/ui/*": ["../core/*"]
     }
   },
   "include": ["react/**/*.tsx", "play/**/*.tsx", "play/**/*.ts", "vitest.config.ts"],

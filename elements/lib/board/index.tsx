@@ -2,7 +2,51 @@
 /** @emoji 📋 `@elements/board` — WASM board renderer + React canvas + play harness (monolith). */
 // #endregion 🧲Header
 
-import type { ContextMenuItem } from "@elements/ui";
+import {
+	ContextMenuController,
+	Label,
+	Input,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	LevelProvider,
+	getLevelBgClass,
+	useElementsSurfaceChrome,
+	type ContextMenuItem,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+	type TreeDataSection,
+} from "@elements/ui";
+import { Expertise, ProductRuntime, type FooterItem } from "@elements/playground";
+import {
+	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
+	mountPlaygroundApp,
+	registerTabIcon,
+	registerUiBoardSurfaceHost,
+	registerWindowBody,
+	type SidePanelTabConfig,
+	type UiBoardHostSurfaceNode,
+} from "@elements/playground/react";
+import { ClipboardList, Library, Settings } from "lucide-react";
+import {
+	BOARD_PLAY_APP_ID,
+	BOARD_PLAY_BOARD_SURFACE_ID,
+	BOARD_PLAY_BODY_KEY_DETAIL,
+	BOARD_PLAY_BODY_KEY_OVERVIEW,
+	BOARD_PLAY_BODY_KEY_SELECTION,
+	BOARD_PLAY_CONTROLLER_ID,
+	BOARD_PLAY_DEFAULT_FIXTURE,
+	BoardPlayShellController,
+	type BoardPlayHostBridge,
+	buildBoardPlayOverviewDeclarativeBody,
+	buildBoardPlayDetailDeclarativeBody,
+	buildBoardPlaySelectionDeclarativeBody,
+	buildBoardPlayRuntime,
+} from "./play/index.ts";
 import type { ReactElement } from "react";
 import React from "react";
 import Reconciler from "react-reconciler";
@@ -1870,7 +1914,7 @@ export class BoardObject {
 }
 
 /** 🟠 Board node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
-class BoardSceneNode extends BoardObject {
+export class BoardSceneNode extends BoardObject {
 	handles: BoardSceneHandle[] = [];
 	height: number;
 	radius: number;
@@ -1991,7 +2035,7 @@ class BoardSceneNode extends BoardObject {
 }
 
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
-class BoardSceneHandle extends BoardObject {
+export class BoardSceneHandle extends BoardObject {
 	angle: number;
 	/** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
 	color: string | null;
@@ -2032,7 +2076,7 @@ class BoardSceneHandle extends BoardObject {
 }
 
 /** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
-class BoardSceneEdge extends BoardObject {
+export class BoardSceneEdge extends BoardObject {
 	/** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
 	edgeKind: string;
 	source: BoardSceneHandle;
@@ -2062,7 +2106,7 @@ class BoardSceneEdge extends BoardObject {
 }
 
 /** 🧵 Transient cubic from one {@link Handle} to another handle or a free world point (in‑progress link drag). */
-class BoardSceneWire extends BoardObject {
+export class BoardSceneWire extends BoardObject {
 	endX: number | null;
 	endY: number | null;
 	source: BoardSceneHandle;
@@ -5622,6 +5666,8 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardSceneNode, props
 		typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	instance.iconKind =
 		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
+	const nk = typeof props.nodeKind === "string" ? props.nodeKind.trim() : "";
+	instance.nodeKind = nk;
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -6218,88 +6264,6 @@ import {
 } from "react";
 import { createRoot } from "react-dom/client";
 
-import {
-  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-  BOARD_FIXTURE_DRAG_V1_MIME,
-  BOARD_HOST_EDGE,
-  BOARD_HOST_HANDLE,
-  BOARD_HOST_NODE,
-  BOARD_HOST_WIRE,
-  BOARD_LOD_DETAIL_MIN_ZOOM,
-  BOARD_NODE_TEXT_ALIGNMENT_DEFAULT,
-  BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
-  BOARD_NODE_TEXT_FONT_PX_DEFAULT,
-  Edge as BoardEdgeObject,
-  Handle as BoardHandleObject,
-  Node as BoardNodeObject,
-  BoardRenderer,
-  Wire as BoardWireObject,
-  DEFAULT_BOARD_GRID_FACTOR,
-  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-  layoutBoardFixtureForceGraph,
-  computeHandlePosition,
-  createBoardHostMount,
-  decodeBoardFixtureFromDragV1,
-  ensureElementsBoardWasmLoaded,
-  unmountBoardHostMount,
-  updateBoardHostMount,
-  type BoardChildEdgesChangePayload,
-  type BoardChildNodesChangePayload,
-  type BoardEdgeLinkPayload,
-  type BoardEdgeProps,
-  type BoardEventMap,
-  type BoardFixtureDropDetail,
-  type BoardGraphEdgeIdPayload,
-  type BoardGraphNodeIdPayload,
-  type BoardGraphWireIdPayload,
-  type BoardHandleProps,
-  type BoardHostMount,
-  type BoardHoverPayload,
-  type BoardDrawLodKind,
-  type BoardKindCatalogBundle,
-  type BoardKindCompatEntry,
-  type BoardLodZoomThresholds,
-  type BoardNodeTextAlignment,
-  boardPreselectSnapshotsEqual,
-  boardSelectionSnapshotsEqual,
-  normalizeBoardPreselectProp,
-  normalizeBoardSelectionProp,
-  type BoardPreselectSnapshot,
-  type BoardSelectionMethod,
-  type BoardSelectionMode,
-  type BoardSelectionSnapshot,
-  type BoardSelectionTargets,
-  type BoardStructureCreatePayload,
-  type BoardStructureDeletePayload,
-  type BoardWireProps,
-  type BoardWireSnapshotPayload,
-  type CameraState,
-  type FrameState,
-  type RenderMode,
-  type WorldRasterTilingKind,
-} from "./index";
-
-export {
-  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-  DEFAULT_BOARD_GRID_FACTOR,
-  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-  layoutBoardFixtureForceGraph,
-  normalizeBoardPreselectProp,
-  normalizeBoardSelectionProp,
-} from "./index";
-export type {
-  BoardDrawLodKind,
-  BoardEdgeLinkPayload,
-  BoardFixtureV1,
-  BoardForceGraphLayoutOptions,
-  BoardHoverPayload,
-  BoardLodZoomThresholds,
-  BoardPreselectSnapshot,
-  BoardSelectionSnapshot,
-} from "./index";
-
-import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
-
 //#region 🔖Kinds
 export interface BoardCanvasProps {
   camera?: Partial<CameraState>;
@@ -6566,124 +6530,6 @@ function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
 }
 
 //#region 🔖Scene Sync
-function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, descriptor: NodeDescriptor): void {
-  instance.draggable = descriptor.draggable ?? true;
-  instance.style = descriptor.style ?? null;
-  instance.userData = { ...(descriptor.userData ?? {}) };
-  instance.visible = descriptor.visible ?? true;
-  instance.root = descriptor.root === true;
-  instance.textAutofit = descriptor.textAutofit ?? false;
-  instance.textAlignment = descriptor.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
-  instance.textFontFamily = typeof descriptor.textFontFamily === "string" && descriptor.textFontFamily.trim() !== "" ? descriptor.textFontFamily.trim() : BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
-  const dsz = descriptor.textFontSize;
-  instance.textFontSize = typeof dsz === "number" && Number.isFinite(dsz) && dsz > 0 ? dsz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
-  instance.iconKind = typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== "" ? descriptor.iconKind.trim() : null;
-  instance.nodeKind = typeof descriptor.nodeKind === "string" ? descriptor.nodeKind.trim() : "";
-  renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
-  instance.setText(descriptor.text ?? null);
-  if (descriptor.shape === "rectangle") {
-    instance.setRectangleSize(descriptor.width, descriptor.height);
-  } else {
-    instance.setRadius(descriptor.radius);
-  }
-}
-
-function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescriptor, node: BoardNodeObject): void {
-  if (instance.node !== node) {
-    instance.node.detachHandle(instance);
-    node.attachHandle(instance);
-    instance.node = node;
-  }
-  instance.style = descriptor.style ?? null;
-  instance.userData = { ...(descriptor.userData ?? {}) };
-  instance.visible = descriptor.visible ?? true;
-  instance.radius = descriptor.radius ?? 8;
-  instance.handleKind = (descriptor.handleKind ?? "").trim();
-  instance.iconKind = typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== "" ? descriptor.iconKind.trim() : null;
-  const rawC = descriptor.color;
-  const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
-  instance.color = cs !== "" ? cs : null;
-  instance.setAngle(descriptor.angle);
-}
-
-function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, sourceHandle: BoardHandleObject, targetHandle: BoardHandleObject): void {
-  instance.style = descriptor.style ?? null;
-  instance.userData = { ...(descriptor.userData ?? {}) };
-  instance.visible = descriptor.visible ?? true;
-  instance.edgeKind = typeof descriptor.edgeKind === "string" ? descriptor.edgeKind.trim() : "";
-  instance.setEndpoints(sourceHandle, targetHandle);
-}
-
-function applyWireProps(instance: BoardWireObject, descriptor: WireDescriptor, sourceHandle: BoardHandleObject, targetHandle: BoardHandleObject | null): void {
-  instance.style = descriptor.style ?? null;
-  instance.userData = { ...(descriptor.userData ?? {}) };
-  instance.visible = descriptor.visible ?? true;
-  instance.wireKind = typeof descriptor.wireKind === "string" ? descriptor.wireKind.trim() : "";
-  const tid = (descriptor.target ?? "").trim();
-  const nextTarget = tid !== "" ? targetHandle : null;
-  const ex = descriptor.endX;
-  const ey = descriptor.endY;
-  const endOk = typeof ex === "number" && Number.isFinite(ex) && typeof ey === "number" && Number.isFinite(ey);
-  if (nextTarget) {
-    instance.setAnchors(sourceHandle, nextTarget, null);
-  } else if (endOk) {
-    instance.setAnchors(sourceHandle, null, { x: ex, y: ey });
-  } else {
-    instance.setAnchors(sourceHandle, null, null);
-  }
-}
-
-function nodeShapeSyncKey(descriptor: NodeDescriptor): "circle" | "rectangle" {
-  return descriptor.shape === "rectangle" ? "rectangle" : "circle";
-}
-
-function instanceShapeSyncKey(node: BoardNodeObject): "circle" | "rectangle" {
-  return node.shape;
-}
-
-function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeObject {
-  if (nodeDescriptor.shape === "rectangle") {
-    return new BoardNodeObject({
-      draggable: nodeDescriptor.draggable ?? true,
-      height: nodeDescriptor.height,
-      iconKind: nodeDescriptor.iconKind,
-      id: nodeDescriptor.id,
-      nodeKind: nodeDescriptor.nodeKind,
-      root: nodeDescriptor.root,
-      shape: "rectangle",
-      style: nodeDescriptor.style,
-      text: nodeDescriptor.text,
-      textAlignment: nodeDescriptor.textAlignment,
-      textAutofit: nodeDescriptor.textAutofit,
-      textFontFamily: nodeDescriptor.textFontFamily,
-      textFontSize: nodeDescriptor.textFontSize,
-      userData: nodeDescriptor.userData,
-      visible: nodeDescriptor.visible,
-      width: nodeDescriptor.width,
-      x: nodeDescriptor.x,
-      y: nodeDescriptor.y,
-    });
-  }
-  return new BoardNodeObject({
-    draggable: nodeDescriptor.draggable ?? true,
-    iconKind: nodeDescriptor.iconKind,
-    id: nodeDescriptor.id,
-    nodeKind: nodeDescriptor.nodeKind,
-    radius: nodeDescriptor.radius,
-    root: nodeDescriptor.root,
-    style: nodeDescriptor.style,
-    text: nodeDescriptor.text,
-    textAlignment: nodeDescriptor.textAlignment,
-    textAutofit: nodeDescriptor.textAutofit,
-    textFontFamily: nodeDescriptor.textFontFamily,
-    textFontSize: nodeDescriptor.textFontSize,
-    userData: nodeDescriptor.userData,
-    visible: nodeDescriptor.visible,
-    x: nodeDescriptor.x,
-    y: nodeDescriptor.y,
-  });
-}
-
 /** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link BoardRenderer.clearWasmHostAuthorshipForEdge}). */
 export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: BoardRenderer, descriptor: BoardSceneDescriptor): BoardSceneDescriptor {
   const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
@@ -6715,7 +6561,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: BoardRenderer
     }
     const sourceH = renderer.scene.getObjectById(link.source);
     const targetH = renderer.scene.getObjectById(link.target);
-    if (!(sourceH instanceof BoardHandleObject) || !(targetH instanceof BoardHandleObject)) {
+    if (!(sourceH instanceof BoardSceneHandle) || !(targetH instanceof BoardSceneHandle)) {
       continue;
     }
     extra.push({
@@ -6744,40 +6590,42 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
   renderer.batch(() => {
     for (const nodeDescriptor of descriptor.nodes) {
       let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
-      if (existingNode instanceof BoardNodeObject && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
+      if (existingNode instanceof BoardSceneNode && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
         renderer.scene.remove(existingNode);
         existingNode = undefined;
       }
       const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
-      const node = resolvedExisting instanceof BoardNodeObject ? resolvedExisting : newBoardNodeFromDescriptor(nodeDescriptor);
-      if (!(resolvedExisting instanceof BoardNodeObject)) {
+      const { handles: _handles, ...nodeProps } = nodeDescriptor;
+      const node = resolvedExisting instanceof BoardSceneNode ? resolvedExisting : newBoardNodeFromProps(nodeProps);
+      if (!(resolvedExisting instanceof BoardSceneNode)) {
         renderer.scene.add(node);
       }
-      applyNodeProps(renderer, node, nodeDescriptor);
+      applyNodeProps(renderer, node, nodeProps);
     }
 
     for (const handleDescriptor of descriptor.handles) {
       const parentNode = renderer.scene.getObjectById(handleDescriptor.nodeId);
-      if (!(parentNode instanceof BoardNodeObject)) {
+      if (!(parentNode instanceof BoardSceneNode)) {
         continue;
       }
       const existingHandle = renderer.scene.getObjectById(handleDescriptor.id);
-      const handle = existingHandle instanceof BoardHandleObject ? existingHandle : new BoardHandleObject({ ...handleDescriptor, node: parentNode });
-      if (!(existingHandle instanceof BoardHandleObject)) {
+      const { nodeId: _nodeId, ...handleProps } = handleDescriptor;
+      const handle = existingHandle instanceof BoardSceneHandle ? existingHandle : new BoardSceneHandle({ ...handleProps, node: parentNode });
+      if (!(existingHandle instanceof BoardSceneHandle)) {
         renderer.scene.add(handle);
       }
-      applyHandleProps(handle, handleDescriptor, parentNode);
+      applyHandleProps(handle, handleProps, parentNode);
     }
 
     for (const edgeDescriptor of descriptor.edges) {
       const sourceHandle = renderer.scene.getObjectById(edgeDescriptor.source);
       const targetHandle = renderer.scene.getObjectById(edgeDescriptor.target);
-      if (!(sourceHandle instanceof BoardHandleObject) || !(targetHandle instanceof BoardHandleObject)) {
+      if (!(sourceHandle instanceof BoardSceneHandle) || !(targetHandle instanceof BoardSceneHandle)) {
         continue;
       }
       const existingEdge = renderer.scene.getObjectById(edgeDescriptor.id);
-      const edge = existingEdge instanceof BoardEdgeObject ? existingEdge : new BoardEdgeObject({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
-      if (!(existingEdge instanceof BoardEdgeObject)) {
+      const edge = existingEdge instanceof BoardSceneEdge ? existingEdge : new BoardSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
+      if (!(existingEdge instanceof BoardSceneEdge)) {
         renderer.scene.add(edge);
       }
       applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
@@ -6785,14 +6633,14 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 
     for (const wireDescriptor of descriptor.wires) {
       const sourceHandle = renderer.scene.getObjectById(wireDescriptor.source);
-      if (!(sourceHandle instanceof BoardHandleObject)) {
+      if (!(sourceHandle instanceof BoardSceneHandle)) {
         continue;
       }
       const tid = (wireDescriptor.target ?? "").trim();
-      let targetHandle: BoardHandleObject | null = null;
+      let targetHandle: BoardSceneHandle | null = null;
       if (tid !== "") {
         const t = renderer.scene.getObjectById(tid);
-        if (!(t instanceof BoardHandleObject)) {
+        if (!(t instanceof BoardSceneHandle)) {
           continue;
         }
         targetHandle = t;
@@ -6801,9 +6649,9 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
       const ex = wireDescriptor.endX;
       const ey = wireDescriptor.endY;
       const wire =
-        existingWire instanceof BoardWireObject
+        existingWire instanceof BoardSceneWire
           ? existingWire
-          : new BoardWireObject({
+          : new BoardSceneWire({
               id: wireDescriptor.id,
               source: sourceHandle,
               target: targetHandle,
@@ -6814,7 +6662,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
               endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
               endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
             });
-      if (!(existingWire instanceof BoardWireObject)) {
+      if (!(existingWire instanceof BoardSceneWire)) {
         renderer.scene.add(wire);
       }
       applyWireProps(wire, wireDescriptor, sourceHandle, targetHandle);
@@ -7753,7 +7601,7 @@ if (boardReactVitest) {
       const targetHandle = renderer.scene.handles.get("b:h0");
       expect(sourceHandle).toBeDefined();
       expect(targetHandle).toBeDefined();
-      renderer.scene.ingestWasmEdge(new BoardEdgeObject({ id: "edge-link-99", source: sourceHandle as BoardHandleObject, target: targetHandle as BoardHandleObject }));
+      renderer.scene.ingestWasmEdge(new BoardSceneEdge({ id: "edge-link-99", source: sourceHandle as BoardSceneHandle, target: targetHandle as BoardSceneHandle }));
       renderer.wasmHostAuthoredEdgeIds.add("edge-link-99");
       renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-99", { source: "a:h0", target: "b:h0" });
       const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
@@ -7797,10 +7645,10 @@ if (boardReactVitest) {
       const targetHandle = renderer.scene.handles.get("b:h0");
       expect(sourceHandle).toBeDefined();
       expect(targetHandle).toBeDefined();
-      const edge = new BoardEdgeObject({
+      const edge = new BoardSceneEdge({
         id: "edge-link-map",
-        source: sourceHandle as BoardHandleObject,
-        target: targetHandle as BoardHandleObject,
+        source: sourceHandle as BoardSceneHandle,
+        target: targetHandle as BoardSceneHandle,
       });
       renderer.scene.ingestWasmEdge(edge);
       renderer.wasmHostAuthoredEdgeIds.add("edge-link-map");
@@ -7853,8 +7701,8 @@ if (boardReactVitest) {
       expect(renderer.scene.getObjectById("a:h0")).toBeDefined();
       expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBe(0);
       renderer.render();
-      const nodeA = renderer.scene.getObjectById("a") as BoardNodeObject;
-      const nodeB = renderer.scene.getObjectById("b") as BoardNodeObject;
+      const nodeA = renderer.scene.getObjectById("a") as BoardSceneNode;
+      const nodeB = renderer.scene.getObjectById("b") as BoardSceneNode;
       const p0 = renderer.worldToScreen(computeHandlePosition(nodeA, 0));
       const pMid = renderer.worldToScreen({ x: 140, y: 0 });
       const p1 = renderer.worldToScreen(computeHandlePosition(nodeB, Math.PI));
@@ -8000,8 +7848,8 @@ if (boardReactVitest) {
           null,
         );
       });
-      expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(BoardNodeObject);
-      expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(BoardHandleObject);
+      expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(BoardSceneNode);
+      expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(BoardSceneHandle);
       unmountBoardHostMount(hostMount);
       renderer.dispose();
     });
@@ -8025,8 +7873,8 @@ if (boardReactVitest) {
 
       const canvas = container.querySelector("canvas");
       const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
-      expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(BoardNodeObject);
-      expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(BoardHandleObject);
+      expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(BoardSceneNode);
+      expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(BoardSceneHandle);
 
       await act(async () => {
         root.unmount();
@@ -8059,8 +7907,8 @@ if (boardReactVitest) {
 
       const canvas = container.querySelector("canvas");
       const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
-      expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(BoardNodeObject);
-      expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(BoardHandleObject);
+      expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(BoardSceneNode);
+      expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(BoardSceneHandle);
 
       await act(async () => {
         root.unmount();
@@ -8087,9 +7935,9 @@ if (boardReactVitest) {
 
       const secondNode = renderer.scene.getObjectById("a");
       expect(secondNode).toBe(firstNode);
-      expect(secondNode).toBeInstanceOf(BoardNodeObject);
-      expect((secondNode as BoardNodeObject).x).toBe(40);
-      expect((secondNode as BoardNodeObject).radius).toBe(30);
+      expect(secondNode).toBeInstanceOf(BoardSceneNode);
+      expect((secondNode as BoardSceneNode).x).toBe(40);
+      expect((secondNode as BoardSceneNode).radius).toBe(30);
 
       renderer.dispose();
     });
@@ -8102,7 +7950,7 @@ if (boardReactVitest) {
         </Node>,
       );
       syncBoardScene(renderer, descriptor);
-      const h = renderer.scene.getObjectById("h1") as BoardHandleObject;
+      const h = renderer.scene.getObjectById("h1") as BoardSceneHandle;
       expect(h.handleKind).toBe("slot-a");
       renderer.dispose();
     });
@@ -8124,8 +7972,8 @@ if (boardReactVitest) {
       syncBoardScene(renderer, rectDescriptor);
       const secondNode = renderer.scene.getObjectById("a");
       expect(secondNode).not.toBe(firstNode);
-      expect((secondNode as BoardNodeObject).shape).toBe("rectangle");
-      expect((secondNode as BoardNodeObject).width).toBe(40);
+      expect((secondNode as BoardSceneNode).shape).toBe("rectangle");
+      expect((secondNode as BoardSceneNode).width).toBe(40);
       renderer.dispose();
     });
 
@@ -8161,7 +8009,7 @@ if (boardReactVitest) {
       });
       expect(readyRenderer).not.toBeNull();
       const createdRenderer = requireRenderer(readyRenderer);
-      expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(BoardEdgeObject);
+      expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(BoardSceneEdge);
 
       await act(async () => {
         root.render(
@@ -8192,7 +8040,7 @@ if (boardReactVitest) {
       syncBoardScene(createdRenderer, movedDescriptor);
       const canvasAfterMove = container.querySelector("canvas");
       const rendererAfterMove = requireRenderer((canvasAfterMove as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer);
-      const movedNode = rendererAfterMove.scene.getObjectById("a") as BoardNodeObject;
+      const movedNode = rendererAfterMove.scene.getObjectById("a") as BoardSceneNode;
       expect(movedNode.x).toBe(120);
       expect(movedNode.y).toBe(40);
       expect(rendererAfterMove.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
@@ -8278,7 +8126,10 @@ if (boardReactVitest) {
 
 
 // #region 🛝PlayHost
-const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {});
+const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
+	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+	boardFixtureMetaKindCatalogBundle(BOARD_PLAY_DEFAULT_FIXTURE) ?? {},
+);
 
 // #region 🔖Kinds
 export type { BoardPlayPaneId } from "./play/index.ts";
@@ -8513,43 +8364,61 @@ interface BoardPlayShellValue {
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
-class BoardFixtureLibraryPanelDefinition extends PureSidePanelTabDefinition {
-  resolveTab() {
-    return {
-      id: "board-play-library",
-      icon: Library,
-      order: 0,
-      tree: new StaticTreePanelDefinition({
-        sections: [{ id: "board-play-library.section", content: <BoardFixtureLibraryPanel /> }],
-      }),
-    };
-  }
+class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "board-play-library",
+			icon: Library,
+			order: 0,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "board-play-library.section",
+						label: "Library",
+						defaultOpen: true,
+						content: <BoardFixtureLibraryPanel />,
+						items: [],
+					},
+				],
+			}),
+		};
+	}
 }
 
-class BoardSelectionInspectorPanelDefinition extends PureSidePanelTabDefinition {
-  resolveTab() {
-    return {
-      id: "board-play-inspector",
-      icon: ClipboardList,
-      order: 0,
-      tree: new StaticTreePanelDefinition({
-        sections: createBoardSelectionInspectorSections(),
-      }),
-    };
-  }
+class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "board-play-inspector",
+			icon: ClipboardList,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
 }
 
 class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
-  resolveTab() {
-    return {
-      id: "board-play-settings",
-      icon: Settings,
-      order: 1,
-      tree: new StaticTreePanelDefinition({
-        sections: [{ id: "board-play-settings.section", content: <BoardPlaySettingsPanel /> }],
-      }),
-    };
-  }
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "board-play-settings",
+			icon: Settings,
+			order: 1,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "board-play-settings.section",
+						label: "Settings",
+						defaultOpen: true,
+						content: <BoardPlaySettingsPanel />,
+						items: [],
+					},
+				],
+			}),
+		};
+	}
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
@@ -8565,19 +8434,12 @@ function useBoardPlayShell(): BoardPlayShellValue {
 }
 // #endregion 🔖ShellContext
 
-// #region 🔖Toolbar
+// #region 🔖PlayRedrawHelpers
 function newBoardAuthoringId(prefix: string): string {
   if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
   }
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function boardToolbarToggleClass(active: boolean): string {
-  return [
-    "inline-flex shrink-0 items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors",
-    active ? "bg-accent text-accent-foreground border border-element" : "text-muted-foreground hover:bg-hover-panel border border-transparent",
-  ].join(" ");
 }
 
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
@@ -8633,169 +8495,7 @@ function boardPlayRedrawLayoutOpts(
   };
   return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph", redrawHandlesAfter };
 }
-
-/** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
-function BoardPlayToolbar(): ReactElement {
-  const {
-    activePaneId,
-    applyBoardRedrawHandlesOnce,
-    boardGridSnapEnabled,
-    boardSelectionMethod,
-    boardSelectionMode,
-    boardSelectionTargets,
-    camerasByPane,
-    boardRedrawPlaying,
-    patchFixture,
-    setBoardGridSnapEnabled,
-    setBoardSelectionMethod,
-    setBoardSelectionMode,
-    setBoardSelectionTargets,
-    setBoardRedrawPlaying,
-    setSelectionIds,
-  } = useBoardPlayShell();
-
-  const camera = camerasByPane[activePaneId];
-
-  const appendCircle = useCallback(() => {
-    const id = newBoardAuthoringId("node");
-    const handleId = `${id}.h0`;
-    const node: BoardFixtureCircleNodeV1 = {
-      handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
-      id,
-      radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2,
-      x: camera.x,
-      y: camera.y,
-    };
-    patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
-    setSelectionIds([id]);
-  }, [camera.x, camera.y, patchFixture, setSelectionIds]);
-
-  const appendRectangle = useCallback(() => {
-    const id = newBoardAuthoringId("node");
-    const handleId = `${id}.h0`;
-    const d = BOARD_PLAY_DEFAULT_NODE_SIZE_PX;
-    const node: BoardFixtureRectangleNodeV1 = {
-      handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
-      height: d,
-      id,
-      shape: "rectangle",
-      width: d,
-      x: camera.x,
-      y: camera.y,
-    };
-    patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
-    setSelectionIds([id]);
-  }, [camera.x, camera.y, patchFixture, setSelectionIds]);
-
-  return (
-    <div className="pointer-events-none flex w-full justify-center px-2 py-1">
-      <ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-(--toolbar-gap) px-2">
-        <ToolbarGroup className="min-w-0 items-center gap-1">
-          <ToolbarItem>
-            <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Select</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMethod === "rectangle")} title="Rectangle selection" onClick={() => setBoardSelectionMethod("rectangle")}>
-              <BoxSelect className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMethod === "lasso")} title="Lasso selection" onClick={() => setBoardSelectionMethod("lasso")}>
-              <Lasso className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMode === "default")} title="Default" onClick={() => setBoardSelectionMode("default")}>
-              <MousePointer2 className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMode === "additive")} title="Additive" onClick={() => setBoardSelectionMode("additive")}>
-              <Plus className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMode === "subtractive")} title="Subtractive" onClick={() => setBoardSelectionMode("subtractive")}>
-              <Minus className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionMode === "invertive")} title="Invertive" onClick={() => setBoardSelectionMode("invertive")}>
-              <Repeat2 className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Targets</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionTargets.nodes)} title="Select nodes" onClick={() => setBoardSelectionTargets((p) => ({ ...p, nodes: !p.nodes }))}>
-              <span className="px-0.5">Nodes</span>
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionTargets.edges)} title="Select edges" onClick={() => setBoardSelectionTargets((p) => ({ ...p, edges: !p.edges }))}>
-              <span className="px-0.5">Edges</span>
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardSelectionTargets.handles)} title="Select handles" onClick={() => setBoardSelectionTargets((p) => ({ ...p, handles: !p.handles }))}>
-              <span className="px-0.5">Handles</span>
-            </button>
-          </ToolbarItem>
-        </ToolbarGroup>
-        <ToolbarDivider />
-        <ToolbarGroup className="min-w-0 items-center gap-1">
-          <ToolbarItem>
-            <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Grid</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(boardGridSnapEnabled)} title="Snap node drags to the finest visible LOD grid" onClick={() => setBoardGridSnapEnabled(!boardGridSnapEnabled)}>
-              <Magnet className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-        </ToolbarGroup>
-        <ToolbarDivider />
-        <ToolbarGroup className="min-w-0 items-center gap-1">
-          <ToolbarItem>
-            <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Create</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(false)} title="Circle" onClick={appendCircle}>
-              <Circle className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(false)} title="Rectangle" onClick={appendRectangle}>
-              <Square className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-        </ToolbarGroup>
-        <ToolbarDivider />
-        <ToolbarGroup className="min-w-0 items-center gap-1">
-          <ToolbarItem>
-            <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Layout</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button
-              type="button"
-              className={boardToolbarToggleClass(boardRedrawPlaying)}
-              title={boardRedrawPlaying ? "Pause redraw (requestAnimationFrame; packs WASM work per frame)" : "Play redraw: as much layout work per frame as fits ~14ms budget"}
-              onClick={() => setBoardRedrawPlaying(!boardRedrawPlaying)}
-            >
-              {boardRedrawPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button type="button" className={boardToolbarToggleClass(false)} title="Redraw handles: anchors on the straight segment between node centers" onClick={() => applyBoardRedrawHandlesOnce()}>
-              <Link2 className="size-4" aria-hidden />
-            </button>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarZone>
-    </div>
-  );
-}
-// #endregion 🔖Toolbar
+// #endregion 🔖PlayRedrawHelpers
 
 // #region 🔖SettingsPanel
 /** @emoji ⚙️ Board play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
@@ -9138,9 +8838,12 @@ function registerBoardPlayChrome(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(BOARD_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+  registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+  registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+  registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+  registerTabIcon("elements.board-play.icon.library", Library);
+  registerTabIcon("elements.board-play.icon.inspector", ClipboardList);
+  registerTabIcon("elements.board-play.icon.settings", Settings);
 }
 // #endregion 🔖Panes
 
@@ -9807,124 +9510,132 @@ function InspectorEdgeBatch({
   );
 }
 
-/** @emoji 🔎 Sketchpad-style tree inspector sections for the active pane selection. */
-function createBoardSelectionInspectorSections(): TreeDataSection[] {
-  const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = useBoardPlayShell();
-  const ids = useMemo(() => [...selectionIds].sort((a, b) => a.localeCompare(b)), [selectionIds]);
-
-  const { edgeIds, handleIds, nodeIds } = useMemo(() => {
-    const nodeIds: string[] = [];
-    const handleIds: string[] = [];
-    const edgeIds: string[] = [];
-    for (const id of ids) {
-      if (findNode(fixture, id)) {
-        nodeIds.push(id);
-      } else if (findEdge(fixture, id)) {
-        edgeIds.push(id);
-      } else if (findHandleOwner(fixture, id)) {
-        handleIds.push(id);
-      }
-    }
-    return { edgeIds, handleIds, nodeIds };
-  }, [fixture, ids]);
-
-  return useMemo<TreeDataSection[]>(() => {
-    if (ids.length === 0) {
-      return [
-        {
-          content: (
-            <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element px-1 py-2">
-              <ClipboardList className="size-4 shrink-0" />
-              <div>
-                <div className="font-semibold uppercase tracking-wide">Detail</div>
-                <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
-              </div>
-            </div>
-          ),
-          id: "board-play-inspector-header.empty",
-        },
-        {
-          content: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>,
-          id: "board-play-inspector-empty",
-          label: null,
-        },
-      ];
-    }
-    const sections: TreeDataSection[] = [];
-    sections.push({
-      content: (
-        <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element px-1 py-2">
-          <ClipboardList className="size-4 shrink-0" />
-          <div>
-            <div className="font-semibold uppercase tracking-wide">Detail</div>
-            <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
-          </div>
-        </div>
-      ),
-      id: "board-play-inspector-header",
-    });
-    if (nodeIds.length > 0) {
-      sections.push({
-        content: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        defaultOpen: true,
-        id: "board-play-inspector-nodes",
-        label: `Nodes (${nodeIds.length})`,
-      });
-    }
-    if (handleIds.length > 0) {
-      sections.push({
-        content: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        defaultOpen: true,
-        id: "board-play-inspector-handles",
-        label: `Handles (${handleIds.length})`,
-      });
-    }
-    if (edgeIds.length > 0) {
-      sections.push({
-        content: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        defaultOpen: true,
-        id: "board-play-inspector-edges",
-        label: `Edges (${edgeIds.length})`,
-      });
-    }
-    if (sections.length === 0) {
-      sections.push({
-        content: (
-          <div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
-            Unknown ids: {ids.join(", ")}
-          </div>
-        ),
-        id: "board-play-inspector-unknown",
-        label: "Selection",
-      });
-    }
-    return sections;
-  }, [edgeIds, fixture, handleIds, ids, nodeIds, patchFixture, remapIdInSelections]);
+/** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
+function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSection[] {
+	const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = shell;
+	const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
+	const nodeIds: string[] = [];
+	const handleIds: string[] = [];
+	const edgeIds: string[] = [];
+	for (const id of ids) {
+		if (findNode(fixture, id)) {
+			nodeIds.push(id);
+		} else if (findEdge(fixture, id)) {
+			edgeIds.push(id);
+		} else if (findHandleOwner(fixture, id)) {
+			handleIds.push(id);
+		}
+	}
+	if (ids.length === 0) {
+		return [
+			{
+				id: "board-play-inspector.empty",
+				label: "Detail",
+				defaultOpen: true,
+				items: [
+					{
+						id: "board-play-inspector.empty.header",
+						label: `pane: ${activePaneId}`,
+						description: (
+							<p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>
+						),
+					},
+				],
+			},
+		];
+	}
+	const sections: TreeDataSection[] = [
+		{
+			id: "board-play-inspector.header",
+			label: "Detail",
+			defaultOpen: true,
+			items: [
+				{
+					id: "board-play-inspector.header.pane",
+					label: activePaneId,
+					description: (
+						<div className="text-muted-foreground text-[11px] opacity-80">
+							{ids.length} selected id{ids.length === 1 ? "" : "s"}
+						</div>
+					),
+				},
+			],
+		},
+	];
+	if (nodeIds.length > 0) {
+		sections.push({
+			id: "board-play-inspector-nodes",
+			label: `Nodes (${nodeIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "board-play-inspector-nodes.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: (
+						<InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
+					),
+				},
+			],
+		});
+	}
+	if (handleIds.length > 0) {
+		sections.push({
+			id: "board-play-inspector-handles",
+			label: `Handles (${handleIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "board-play-inspector-handles.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: (
+						<InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
+					),
+				},
+			],
+		});
+	}
+	if (edgeIds.length > 0) {
+		sections.push({
+			id: "board-play-inspector-edges",
+			label: `Edges (${edgeIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "board-play-inspector-edges.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: (
+						<InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
+					),
+				},
+			],
+		});
+	}
+	if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
+		sections.push({
+			id: "board-play-inspector-unknown",
+			label: "Selection",
+			defaultOpen: true,
+			items: [
+				{
+					id: "board-play-inspector-unknown.body",
+					label: "Unknown ids",
+					description: (
+						<div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
+							{ids.join(", ")}
+						</div>
+					),
+				},
+			],
+		});
+	}
+	return sections;
 }
 // #endregion 🔖SidePanels
 
 // #region 🔖Layout
-const boardPlayLayout: UIWindowLayout = {
-  root: {
-    kind: "row",
-    children: [
-      {
-        kind: "stack",
-        size: 50,
-        children: [createWindowLayout("board-overview", "Overview")],
-      },
-      {
-        kind: "column",
-        size: 50,
-        children: [
-          { kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
-          { kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
-        ],
-      },
-	],
-  },
-};
-
 // #endregion 🔖Layout
 
 // #region 🔖Surface
@@ -9994,7 +9705,7 @@ interface BoardPlayRedrawLoopSnapshot {
 }
 
 // #region 🔖Entrypoint
-const initialFixture = parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
+const initialFixture = BOARD_PLAY_DEFAULT_FIXTURE;
 
 function BoardPlayInner(): ReactElement {
   const [fixture, setFixtureState] = useState<BoardFixtureV1>(initialFixture);
@@ -10020,19 +9731,16 @@ function BoardPlayInner(): ReactElement {
   const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("default");
   const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
-  const boardWorkbenchRef = useRef<Workbench | null>(null);
-  if (!boardWorkbenchRef.current) {
+  const boardRuntimeRef = useRef<ProductRuntime | null>(null);
+  if (!boardRuntimeRef.current) {
     registerBoardPlayChrome();
-    const wb = new Workbench();
-    const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
-    wb.addApp(attachBoardPlayWindowKinds(ctrl, boardPlayLayout));
-    boardWorkbenchRef.current = wb;
+    boardRuntimeRef.current = buildBoardPlayRuntime();
   }
-  const boardWorkbench = boardWorkbenchRef.current;
-  const boardShellController = boardWorkbench.getActiveApp()?.controller as BoardPlayShellController | undefined;
+  const boardRuntime = boardRuntimeRef.current;
+  const boardShellController = boardRuntime.getActiveApp()?.controller as BoardPlayShellController | undefined;
   const shellGeneration = useSyncExternalStore(
-    (onStoreChange) => boardWorkbench.subscribe(onStoreChange),
-    () => boardWorkbench.generation,
+    (onStoreChange) => boardRuntime.subscribe(onStoreChange),
+    () => boardRuntime.generation,
     () => 0,
   );
   void shellGeneration;
@@ -10043,15 +9751,15 @@ function BoardPlayInner(): ReactElement {
   };
   const setBoardLodModeForPane = useCallback(
     (pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
-      boardWorkbench.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
+      boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
     },
-    [boardWorkbench.commandBus],
+    [boardRuntime.commandBus],
   );
   const setBoardEffectiveLodForPane = useCallback(
     (pane: BoardPlayPaneId, lod: BoardDrawLodKind) => {
-      boardWorkbench.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
+      boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
-    [boardWorkbench.commandBus],
+    [boardRuntime.commandBus],
   );
   const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
     if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
@@ -10735,30 +10443,143 @@ function BoardPlayInner(): ReactElement {
     ],
   );
 
-  const augmentPanelTabs = useMemo(
-    () => ({
-      workbench: [new BoardFixtureLibraryPanelDefinition().resolveTab()],
-      details: [new BoardSelectionInspectorPanelDefinition().resolveTab(), new BoardPlaySettingsPanelDefinition().resolveTab()],
-    }),
-    [],
-  );
+  // #region 🔖ToolbarHostBridge
+  const boardPlayToolbarHostRef = useRef({
+    activePaneId: "board-overview" as BoardPlayPaneId,
+    applyBoardRedrawHandlesOnce: () => {},
+    camerasByPane: triptychCamerasFromFixture(initialFixture),
+    patchFixture: (_updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {},
+    setBoardGridSnapEnabled: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setBoardRedrawPlaying: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setBoardSelectionMethod: (_value: BoardSelectionMethod) => {},
+    setBoardSelectionMode: (_value: BoardSelectionMode) => {},
+    setBoardSelectionTargets: (_value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => {},
+    setSelectionIds: (_ids: readonly string[]) => {},
+  });
+  boardPlayToolbarHostRef.current = {
+    activePaneId,
+    applyBoardRedrawHandlesOnce,
+    camerasByPane,
+    patchFixture,
+    setBoardGridSnapEnabled,
+    setBoardRedrawPlaying,
+    setBoardSelectionMethod,
+    setBoardSelectionMode,
+    setBoardSelectionTargets,
+    setSelectionIds,
+  };
 
   useEffect(() => {
-    const app = boardWorkbench.apps[0];
-    if (app) app.onActiveWindowChange = onBoardPlayActiveWindowChange;
-  }, [boardWorkbench, onBoardPlayActiveWindowChange]);
+    if (!boardShellController) {
+      return;
+    }
+    const bridge: BoardPlayHostBridge = {
+      getToolbarState: () => ({
+        boardGridSnapEnabled,
+        boardRedrawPlaying,
+        boardSelectionMethod,
+        boardSelectionMode,
+        boardSelectionTargets,
+      }),
+      runHostCommand: (command, args) => {
+        const h = boardPlayToolbarHostRef.current;
+        switch (command) {
+          case "setSelectionMethod":
+            h.setBoardSelectionMethod((args as { method: BoardSelectionMethod }).method);
+            break;
+          case "setSelectionMode":
+            h.setBoardSelectionMode((args as { mode: BoardSelectionMode }).mode);
+            break;
+          case "toggleSelectionTarget": {
+            const { kind } = args as { kind: "edges" | "handles" | "nodes" };
+            h.setBoardSelectionTargets((prev) => ({ ...prev, [kind]: !prev[kind] }));
+            break;
+          }
+          case "clearSelection":
+            h.setSelectionIds([]);
+            break;
+          case "toggleGridSnap":
+            h.setBoardGridSnapEnabled((prev) => !prev);
+            break;
+          case "appendCircle": {
+            const camera = h.camerasByPane[h.activePaneId];
+            const id = newBoardAuthoringId("node");
+            const handleId = `${id}.h0`;
+            const node: BoardFixtureCircleNodeV1 = {
+              handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
+              id,
+              radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2,
+              x: camera.x,
+              y: camera.y,
+            };
+            h.patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
+            h.setSelectionIds([id]);
+            break;
+          }
+          case "appendRectangle": {
+            const camera = h.camerasByPane[h.activePaneId];
+            const id = newBoardAuthoringId("node");
+            const handleId = `${id}.h0`;
+            const d = BOARD_PLAY_DEFAULT_NODE_SIZE_PX;
+            const node: BoardFixtureRectangleNodeV1 = {
+              handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
+              height: d,
+              id,
+              shape: "rectangle",
+              width: d,
+              x: camera.x,
+              y: camera.y,
+            };
+            h.patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
+            h.setSelectionIds([id]);
+            break;
+          }
+          case "toggleRedrawPlaying":
+            h.setBoardRedrawPlaying((prev) => !prev);
+            break;
+          case "redrawHandlesOnce":
+            h.applyBoardRedrawHandlesOnce();
+            break;
+          default:
+            break;
+        }
+      },
+    };
+    boardShellController.setHostBridge(bridge);
+    return () => boardShellController.setHostBridge(null);
+  }, [
+    applyBoardRedrawHandlesOnce,
+    boardGridSnapEnabled,
+    boardRedrawPlaying,
+    boardSelectionMethod,
+    boardSelectionMode,
+    boardSelectionTargets,
+    boardShellController,
+  ]);
+  // #endregion 🔖ToolbarHostBridge
+
+  const augmentPanelTabs = useMemo(
+    () => ({
+      workbench: [new BoardPlayLibraryPanelDefinition().resolveTab()],
+      details: [
+        new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValue)).resolveTab(),
+        new BoardPlaySettingsPanelDefinition().resolveTab(),
+      ],
+    }),
+    [shellValue],
+  );
 
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <WorkbenchView
-          workbench={boardWorkbench}
+        <PlaygroundView
+          runtime={boardRuntime}
           defaultAppId={BOARD_PLAY_APP_ID}
           augmentPanelTabs={augmentPanelTabs}
           extraFooterItems={surfaceFooterItems}
           initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
           mobile={mobile}
-          slotToolbar={<BoardPlayToolbar />}
+          onActiveWindowChange={onBoardPlayActiveWindowChange}
         />
       </BoardPlayLodRuntimeContext.Provider>
     </BoardPlayShellContext.Provider>
@@ -10781,7 +10602,7 @@ export function createBoardPlayElement(): ReactElement {
 
 /** @emoji 🚀 Vite host entry: mounts board play into `#root`. */
 export function mountBoardPlay(): void {
-  mountReactApp(createBoardPlayElement());
+  mountPlaygroundApp(createBoardPlayElement());
 }
 // #endregion 🔖Entrypoint
 

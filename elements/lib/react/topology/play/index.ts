@@ -1,6 +1,6 @@
-// #region ­ƒº▓Header
-// ­ƒÆ╗ elements/renderer/react/windows/topology/play/index.ts ÔÇö Framework-free topology play: fixture state, declarative bodies, LOD measures, and workbench wiring.
-// #endregion ­ƒº▓Header
+// #region 🧲Header
+// 💻 elements/lib/react/topology/play/index.ts — Topology play on `@elements/playground`: paired board+scene fixtures, LOD measures, relocate tools (no React).
+// #endregion 🧲Header
 
 import {
 	CommandBus,
@@ -16,9 +16,9 @@ import {
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type UiNode,
-} from "@elements/framework";
+} from "@elements/playground";
 
-import nakaginBoardJson from "../../board/play/fixtures/nakagin-capsule-tower.board.json";
+import nakaginBoardJson from "../../../board/play/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardLodAutomaticSelectLabel,
@@ -29,7 +29,7 @@ import {
 	type BoardFixtureV1,
 	type BoardLodModeKind,
 	type CameraState,
-} from "../../board/index.tsx";
+} from "../../../board/index.tsx";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	DEFAULT_MANUAL_LOD,
@@ -46,7 +46,7 @@ import {
 import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
-//#region ­ƒöûIds
+//#region 🔖Ids
 export const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
 export const TOPOLOGY_PLAY_CONTROLLER_ID = "topology-play";
 export const TOPOLOGY_PLAY_BOARD_WINDOW_ID = "topology-board";
@@ -59,9 +59,9 @@ export const TOPOLOGY_PLAY_BOARD_SURFACE_ID = "elements.topology.play.board/v1";
 export const TOPOLOGY_PLAY_SCENE_SURFACE_ID = "elements.topology.play.scene/v1";
 
 const TOPOLOGY_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-//#endregion ­ƒöûIds
+//#endregion 🔖Ids
 
-//#region ­ƒöûHelpers
+//#region 🔖Helpers
 function topologyPlayLodTierMenuLabel(tier: string): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
@@ -73,9 +73,9 @@ function topologyControllerFromContext(ctx: WindowBodyViewContext): TopologyPlay
 function sameCamera(a: CameraState | null, b: CameraState): boolean {
 	return Boolean(a && a.x === b.x && a.y === b.y && a.zoom === b.zoom);
 }
-//#endregion ­ƒöûHelpers
+//#endregion 🔖Helpers
 
-//#region ­ƒöûController
+//#region 🔖Controller
 export interface TopologyPlaySnapshot {
 	readonly manifestLabel: string | undefined;
 	readonly boardFixture: BoardFixtureV1 | null;
@@ -99,7 +99,7 @@ export interface TopologyPlaySnapshot {
 	readonly proximityScene: number;
 }
 
-/** @emoji ­ƒÄø Framework-free topology play controller shared by declarative board and scene windows. */
+/** @emoji 🎛 Topology play shell controller shared by declarative board and scene windows. */
 export class TopologyPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Topology", undefined);
 	readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
@@ -317,7 +317,7 @@ export class TopologyPlayShellController extends Controller {
 		};
 	}
 }
-//#endregion ­ƒöûController
+//#endregion 🔖Controller
 
 //#region 🔖TopologyPlayRuntime
 export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellController): AppRuntime {
@@ -331,6 +331,8 @@ export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellControl
 	);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
+	app.leftTabs = [];
+	app.rightTabs = [];
 	return app;
 }
 
@@ -342,7 +344,7 @@ export function buildTopologyPlayRuntime(): ProductRuntime {
 }
 //#endregion 🔖TopologyPlayRuntime
 
-//#region ­ƒöûDeclarativeBodies
+//#region 🔖DeclarativeBodies
 export function buildTopologyBoardDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
@@ -356,9 +358,9 @@ export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): U
 	if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
 	return buildScene3dWindowBody(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID);
 }
-//#endregion ­ƒöûDeclarativeBodies
+//#endregion 🔖DeclarativeBodies
 
-//#region ­ƒº¬Tests
+//#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("topology play fixtures", () => {
@@ -400,4 +402,4 @@ if (import.meta.vitest) {
 		});
 	});
 }
-//#endregion ­ƒº¬Tests
+//#endregion 🧪Tests

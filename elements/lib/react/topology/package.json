@@ -11,8 +11,7 @@
     "test": "bun nx run @elements/topology:test"
   },
   "dependencies": {
-    "@elements/framework": "workspace:*",
-    "@elements/framework-react": "workspace:*",
+    "@elements/playground": "workspace:*",
     "@elements/board": "workspace:*",
     "@elements/scene": "workspace:*",
     "@elements/ui": "workspace:*",

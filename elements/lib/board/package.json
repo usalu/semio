@@ -11,8 +11,6 @@
     "test": "bun nx run @elements/board:test"
   },
 	"dependencies": {
-		"@elements/framework": "workspace:*",
-		"@elements/framework-react": "workspace:*",
 		"@elements/playground": "workspace:*",
 		"@elements/ui": "workspace:*",
     "its-fine": "^2.0.0",

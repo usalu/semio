@@ -11,6 +11,8 @@
     "test": "bun nx run @spatial/js-renderer-r3f:test"
   },
   "dependencies": {
+    "@elements/playground": "workspace:*",
+    "@elements/ui": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@spatial/js-core": "workspace:*",

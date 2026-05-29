@@ -4,14 +4,14 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for board play framework wiring (`play/index.ts`). */
+/** @emoji 🧪 Vitest for board play playground wiring (`play/index.ts`). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
-			"@elements/playground": resolve(root, "../../../playground/index.ts"),
-			"@elements/ui": resolve(root, "../../core/index.tsx"),
+			"@elements/playground/react": resolve(root, "../../playground/react/index.tsx"),
+			"@elements/playground": resolve(root, "../../playground/index.ts"),
+			"@elements/ui": resolve(root, "../../react/core/index.tsx"),
 		},
 	},
 	test: {

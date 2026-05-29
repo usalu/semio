@@ -50,14 +50,18 @@ import {
 	type Scene as ThreeScene,
 	type WebGLRenderer,
 } from "three";
-import { ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@elements/framework";
+import { CommandBus, ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@elements/playground";
 import {
-	ProductView,
-	mountReactApp,
-	registerSidePanelBody,
+	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
+	mountPlaygroundApp,
+	registerTabIcon,
 	registerUiScene3DSurfaceHost,
 	useApp,
-} from "@elements/framework-react";
+	type SidePanelTabConfig,
+	type TreeDataSection,
+} from "@elements/playground/react";
 import {
 	Button,
 	Expertise,
@@ -83,9 +87,12 @@ import {
 	SCENE_PLAY_BODY_KEY,
 	SCENE_PLAY_CONTROLLER_ID,
 	SCENE_PLAY_EMPTY_SELECTION,
+	SCENE_PLAY_INSPECTOR_TAB_ID,
 	SCENE_PLAY_SCENE_SURFACE_ID,
+	SCENE_PLAY_SETTINGS_TAB_ID,
 	ScenePlayShellController,
 	buildScenePlayAppRuntime,
+	buildScenePlayRuntime,
 	buildScenePlayDeclarativeBody,
 	parseKindCatalogs,
 	parseKindCompatibility,
@@ -5297,173 +5304,249 @@ function ScenePlayKeyboardBridge(): null {
 	return null;
 }
 
-function ScenePlayInspectorPanel(): React.ReactElement {
-	const { runtime } = useApp();
-	const { snap, patchFixture, setSelection } = useScenePlayShell();
-	const bus = runtime.commandBus;
+/** @emoji 🌲 Builds inspector tree sections (sections + items) for the scene play details panel. */
+function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus: CommandBus): TreeDataSection[] {
+	const { snap, setSelection } = shell;
 	const fixture = snap.fixture;
-	const selection = snap.selection;
 	if (!fixture) {
-		return <p className="p-2 text-xs text-destructive">Invalid scene fixture</p>;
+		return [
+			{
+				id: "scene-play-inspector.invalid",
+				label: "Inspector",
+				items: [{ id: "scene-play-inspector.invalid.msg", label: "Invalid scene fixture" }],
+			},
+		];
 	}
+	const selection = snap.selection;
 	const hasSelection =
 		selection.objectIds.length > 0 || selection.vortexIds.length > 0 || selection.attractionIds.length > 0;
-	return (
-		<div className="flex min-h-0 flex-col gap-3 p-2">
-			<div className="flex items-center justify-between gap-2 border-b border-element pb-2">
-				<div className="flex items-center gap-2 text-muted-foreground">
-					<ClipboardList className="size-4 shrink-0" />
-					<div>
-						<div className="text-xs font-semibold uppercase tracking-wide">Inspector</div>
-						<div className="text-[11px] opacity-80">
-							{selection.objectIds.length} obj · {selection.vortexIds.length} vortex · {selection.attractionIds.length} attraction
+	const sections: TreeDataSection[] = [
+		{
+			id: "scene-play-inspector.header",
+			label: "Inspector",
+			defaultOpen: true,
+			items: [
+				{
+					id: "scene-play-inspector.summary",
+					label: `${selection.objectIds.length} objects · ${selection.vortexIds.length} vortices · ${selection.attractionIds.length} attractions`,
+					description: (
+						<div className="flex flex-col gap-2 pt-1">
+							{!hasSelection ? (
+								<p className="text-muted-foreground text-xs">Click an object to select. Alt+click a vortex. Pick an attraction below.</p>
+							) : null}
+							<Button
+								className="h-7 gap-1 self-start px-2"
+								disabled={!hasSelection}
+								onClick={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "deleteSelection")}
+								size="sm"
+								type="button"
+								variant="destructive"
+							>
+								<Trash2 className="size-3.5" />
+								Delete selection
+							</Button>
 						</div>
-					</div>
-				</div>
-				<Button
-					className="h-7 gap-1 px-2"
-					disabled={!hasSelection}
-					onClick={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "deleteSelection")}
-					size="sm"
-					type="button"
-					variant="destructive"
-				>
-					<Trash2 className="size-3.5" />
-					Delete
-				</Button>
-			</div>
-			{!hasSelection ? (
-				<p className="text-muted-foreground text-xs">Click an object to select. Alt+click a vortex to select it. Pick an attraction below.</p>
-			) : null}
-			{selection.objectIds.length > 0 ? (
-				<section>
-					<div className="mb-1 text-xs font-medium">Objects ({selection.objectIds.length})</div>
-					<ScenePlayInspectorObjects fixture={fixture} objectIds={selection.objectIds} />
-				</section>
-			) : null}
-			{selection.vortexIds.length > 0 ? (
-				<section>
-					<div className="mb-1 text-xs font-medium">Vortices ({selection.vortexIds.length})</div>
-					<ScenePlayInspectorVortices fixture={fixture} vortexFullIds={selection.vortexIds} />
-				</section>
-			) : null}
-			{selection.attractionIds.length > 0 ? (
-				<section>
-					<div className="mb-1 text-xs font-medium">Attractions ({selection.attractionIds.length})</div>
-					<ScenePlayInspectorAttractions attractionIds={selection.attractionIds} fixture={fixture} />
-				</section>
-			) : null}
-			<section>
-				<div className="mb-1 text-xs font-medium">Attractions in scene</div>
-				<div className="max-h-40 space-y-1 overflow-auto">
-					{fixture.attractions.map((attraction) => (
-						<button
-							key={attraction.id}
-							className="hover:bg-accent/40 w-full rounded px-1 py-0.5 text-left font-mono text-[11px]"
-							onClick={() => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] })}
-							type="button"
-						>
-							{attraction.id}: {attraction.attracting} → {attraction.attracted}
-						</button>
-					))}
-				</div>
-			</section>
-			<section>
-				<div className="mb-1 text-xs font-medium">Objects in scene</div>
-				<div className="max-h-48 space-y-1 overflow-auto">
-					{fixture.objects.map((object) => (
-						<button
-							key={object.id}
-							className="hover:bg-accent/40 w-full rounded px-1 py-0.5 text-left font-mono text-[11px]"
-							onClick={() => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] })}
-							type="button"
-						>
-							{object.id}
-							{object.label ? ` · ${object.label}` : ""}
-							{object.objectKind ? ` · ${object.objectKind}` : ""}
-						</button>
-					))}
-				</div>
-			</section>
-		</div>
-	);
+					),
+				},
+			],
+		},
+	];
+	if (selection.objectIds.length > 0) {
+		sections.push({
+			id: "scene-play-inspector.objects",
+			label: `Objects (${selection.objectIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "scene-play-inspector.objects.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: <ScenePlayInspectorObjects fixture={fixture} objectIds={selection.objectIds} />,
+				},
+			],
+		});
+	}
+	if (selection.vortexIds.length > 0) {
+		sections.push({
+			id: "scene-play-inspector.vortices",
+			label: `Vortices (${selection.vortexIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "scene-play-inspector.vortices.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: <ScenePlayInspectorVortices fixture={fixture} vortexFullIds={selection.vortexIds} />,
+				},
+			],
+		});
+	}
+	if (selection.attractionIds.length > 0) {
+		sections.push({
+			id: "scene-play-inspector.attractions",
+			label: `Attractions (${selection.attractionIds.length})`,
+			defaultOpen: true,
+			items: [
+				{
+					id: "scene-play-inspector.attractions.fields",
+					label: "Properties",
+					defaultOpen: true,
+					description: <ScenePlayInspectorAttractions attractionIds={selection.attractionIds} fixture={fixture} />,
+				},
+			],
+		});
+	}
+	sections.push({
+		id: "scene-play-inspector.scene-attractions",
+		label: "Attractions in scene",
+		defaultOpen: !hasSelection,
+		items: fixture.attractions.map((attraction) => ({
+			id: `scene-play-inspector.scene-attraction.${attraction.id}`,
+			label: attraction.id,
+			description: `${attraction.attracting} → ${attraction.attracted}`,
+			onClick: () => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] }),
+		})),
+	});
+	sections.push({
+		id: "scene-play-inspector.scene-objects",
+		label: "Objects in scene",
+		defaultOpen: true,
+		items: fixture.objects.map((object) => ({
+			id: `scene-play-inspector.scene-object.${object.id}`,
+			label: object.label ? `${object.id} · ${object.label}` : object.id,
+			description: object.objectKind ?? undefined,
+			onClick: () => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] }),
+		})),
+	});
+	return sections;
 }
 
-function ScenePlaySettingsPanel(): React.ReactElement {
-	const { runtime } = useApp();
-	const { snap } = useScenePlayShell();
-	const bus = runtime.commandBus;
-	return (
-		<div className="space-y-3 p-2">
-			<div className="flex items-center gap-2 border-b border-element pb-2 text-muted-foreground">
-				<Settings className="size-4" />
-				<div className="text-xs font-semibold uppercase tracking-wide">Scene options</div>
-			</div>
-			<Label id="scene-play.settings.selectionMode" label="Selection mode">
-				<Select
-					onValueChange={(value) => {
-						if (value === "single" || value === "additive" || value === "subtractive" || value === "toggle") {
-							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setSelectionMode", { mode: value });
-						}
-					}}
-					value={snap.selectionMode}
-				>
-					<SelectTrigger className="h-7 font-mono text-xs">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="single">single</SelectItem>
-						<SelectItem value="additive">additive</SelectItem>
-						<SelectItem value="subtractive">subtractive</SelectItem>
-						<SelectItem value="toggle">toggle</SelectItem>
-					</SelectContent>
-				</Select>
-			</Label>
-			<Label id="scene-play.settings.proximityRadius" label="Proximity radius">
-				<Input
-					className="h-7 font-mono text-xs"
-					onChange={(event) => {
-						const value = Number(event.target.value);
-						if (Number.isFinite(value) && value > 0) {
-							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setProximityRadius", { value });
-						}
-					}}
-					value={String(snap.proximityRadius)}
-				/>
-			</Label>
-			<Label id="scene-play.settings.chunkSize" label="Chunk size">
-				<Input
-					className="h-7 font-mono text-xs"
-					onChange={(event) => {
-						const value = Number(event.target.value);
-						if (Number.isFinite(value) && value > 0) {
-							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setChunkSize", { value });
-						}
-					}}
-					value={String(snap.chunkSize)}
-				/>
-			</Label>
-			<Label id="scene-play.settings.gridFactor" label="Grid factor">
-				<Input
-					className="h-7 font-mono text-xs"
-					onChange={(event) => {
-						const value = Number(event.target.value);
-						if (Number.isFinite(value) && value > 0) {
-							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setGridFactor", { value });
-						}
-					}}
-					value={String(snap.gridFactor)}
-				/>
-			</Label>
-			<div className="text-muted-foreground space-y-1 font-mono text-[11px]">
-				<div>connect: {snap.connectCount}</div>
-				<div>proximity: {snap.proximityCount}</div>
-				<div>indirect: {snap.indirectCount}</div>
-				<div>compatible: {snap.compatibleObjectsCount}</div>
-				<div>target ring: {snap.targetRingCount}</div>
-			</div>
-		</div>
-	);
+class ScenePlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: SCENE_PLAY_INSPECTOR_TAB_ID,
+			icon: ClipboardList,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
+}
+
+/** @emoji 🌲 Settings tab tree sections for scene play. */
+function buildScenePlaySettingsSections(snap: ScenePlaySnapshot, bus: CommandBus): TreeDataSection[] {
+	return [
+		{
+			id: "scene-play-settings.root",
+			label: "Scene options",
+			defaultOpen: true,
+			items: [
+				{
+					id: "scene-play-settings.selectionMode",
+					label: "Selection mode",
+					description: (
+						<Select
+							onValueChange={(value) => {
+								if (value === "single" || value === "additive" || value === "subtractive" || value === "toggle") {
+									bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setSelectionMode", { mode: value });
+								}
+							}}
+							value={snap.selectionMode}
+						>
+							<SelectTrigger className="h-7 font-mono text-xs">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="single">single</SelectItem>
+								<SelectItem value="additive">additive</SelectItem>
+								<SelectItem value="subtractive">subtractive</SelectItem>
+								<SelectItem value="toggle">toggle</SelectItem>
+							</SelectContent>
+						</Select>
+					),
+				},
+				{
+					id: "scene-play-settings.proximityRadius",
+					label: "Proximity radius",
+					description: (
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const value = Number(event.target.value);
+								if (Number.isFinite(value) && value > 0) {
+									bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setProximityRadius", { value });
+								}
+							}}
+							value={String(snap.proximityRadius)}
+						/>
+					),
+				},
+				{
+					id: "scene-play-settings.chunkSize",
+					label: "Chunk size",
+					description: (
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const value = Number(event.target.value);
+								if (Number.isFinite(value) && value > 0) {
+									bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setChunkSize", { value });
+								}
+							}}
+							value={String(snap.chunkSize)}
+						/>
+					),
+				},
+				{
+					id: "scene-play-settings.gridFactor",
+					label: "Grid factor",
+					description: (
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const value = Number(event.target.value);
+								if (Number.isFinite(value) && value > 0) {
+									bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setGridFactor", { value });
+								}
+							}}
+							value={String(snap.gridFactor)}
+						/>
+					),
+				},
+				{
+					id: "scene-play-settings.counters",
+					label: "Interaction counters",
+					description: (
+						<div className="text-muted-foreground space-y-1 font-mono text-[11px]">
+							<div>connect: {snap.connectCount}</div>
+							<div>proximity: {snap.proximityCount}</div>
+							<div>indirect: {snap.indirectCount}</div>
+							<div>compatible: {snap.compatibleObjectsCount}</div>
+							<div>target ring: {snap.targetRingCount}</div>
+						</div>
+					),
+				},
+			],
+		},
+	];
+}
+
+class ScenePlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: SCENE_PLAY_SETTINGS_TAB_ID,
+			icon: Settings,
+			order: 1,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
 }
 
 function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
@@ -5538,8 +5621,8 @@ function registerScenePlayChrome(): void {
 	scenePlayChromeRegistered = true;
 	registerUiScene3DSurfaceHost(SCENE_PLAY_SCENE_SURFACE_ID, ScenePlaySceneSurfaceHost);
 	registerWindowBody(SCENE_PLAY_BODY_KEY, buildScenePlayDeclarativeBody);
-	registerSidePanelBody("elements.scene.play.tab.inspector", ScenePlayInspectorPanel);
-	registerSidePanelBody("elements.scene.play.tab.settings", ScenePlaySettingsPanel);
+	registerTabIcon("elements.scene-play.icon.inspector", ClipboardList);
+	registerTabIcon("elements.scene-play.icon.settings", Settings);
 }
 
 function readTheme(): ElementsSurfaceTheme {
@@ -5569,17 +5652,16 @@ function readExpertise(): Expertise {
 	}
 }
 
-class PlaySurfaceFooter extends React.Component<{
-	theme: ElementsSurfaceTheme;
-	device: ElementsSurfaceDevice;
-	expertise: Expertise;
-	onTheme: (v: ElementsSurfaceTheme) => void;
-	onDevice: (v: ElementsSurfaceDevice) => void;
-	onExpertise: (v: Expertise) => void;
-}> {
-	render(): React.ReactElement {
-		const { theme, device, expertise, onDevice, onExpertise, onTheme } = this.props;
-		return (
+function PlaySurfaceFooter(props: {
+	readonly theme: ElementsSurfaceTheme;
+	readonly device: ElementsSurfaceDevice;
+	readonly expertise: Expertise;
+	readonly onTheme: (v: ElementsSurfaceTheme) => void;
+	readonly onDevice: (v: ElementsSurfaceDevice) => void;
+	readonly onExpertise: (v: Expertise) => void;
+}): React.ReactElement {
+	const { theme, device, expertise, onDevice, onExpertise, onTheme } = props;
+	return (
 			<div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
 				<span className="shrink-0 text-xs text-muted-foreground">Theme</span>
 				<Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
@@ -5615,36 +5697,33 @@ class PlaySurfaceFooter extends React.Component<{
 					</SelectContent>
 				</Select>
 			</div>
-		);
-	}
+	);
 }
 
-class PlaySceneCanvasContent extends React.Component<{
+function PlaySceneCanvasContent(props: {
 	readonly selection: SelectionSnapshot;
 	readonly selectedId: string | null;
 	readonly selectedVortexFullIds: ReadonlySet<string>;
 	readonly relocateMode: RelocateMode;
 	readonly setSelectedId: (id: string | null) => void;
-}> {
-	render(): React.ReactElement {
-		return (
-			<>
-				<ScenePlayTestBridge setSelectedId={this.props.setSelectedId} />
-				<React.Suspense fallback={null}>
-					<SceneObjects
-						selection={this.props.selection}
-						selectedObjectId={this.props.selectedId}
-						selectedVortexFullIds={this.props.selectedVortexFullIds}
-						relocate={this.props.relocateMode}
-					/>
-					<SceneAttractions />
-				</React.Suspense>
-			</>
-		);
-	}
+}): React.ReactElement {
+	return (
+		<>
+			<ScenePlayTestBridge setSelectedId={props.setSelectedId} />
+			<React.Suspense fallback={null}>
+				<SceneObjects
+					selection={props.selection}
+					selectedObjectId={props.selectedId}
+					selectedVortexFullIds={props.selectedVortexFullIds}
+					relocate={props.relocateMode}
+				/>
+				<SceneAttractions />
+			</React.Suspense>
+		</>
+	);
 }
 
-class PlaySceneCanvas extends React.Component<{
+function PlaySceneCanvas(props: {
 	readonly fixture: FixtureV1;
 	readonly kindCatalogs: KindCatalogBundle | undefined;
 	readonly kindCompatibility: readonly KindCompatEntry[];
@@ -5669,80 +5748,64 @@ class PlaySceneCanvas extends React.Component<{
 	readonly onCamera?: (camera: CameraState) => void;
 	readonly onAttractionCompatibleObjects?: (payload: AttractionCompatibleObjectsPayload) => void;
 	readonly onAttractionTargetRing?: (payload: AttractionTargetRingPayload) => void;
-}> {
-	static contextType = SceneObjectStateContext;
-	declare context: React.ContextType<typeof SceneObjectStateContext>;
-
-	render(): React.ReactElement {
-		const state = this.context as SceneObjectStateContextValue | null;
-		if (!state) {
-			throw new Error("SceneObjectStateProvider missing");
-		}
-		return (
-			<>
-				<div className="pointer-events-none absolute left-0 top-0 z-[-1] px-px py-px opacity-0">
-					<div data-e2e-scene-lod>{formatSceneLod(this.props.lodTag)}</div>
-					<div data-e2e-selected>{this.props.selectedId ?? "none"}</div>
-				</div>
-				<Canvas3D
-					className="absolute inset-0"
-					camera={this.props.fixture.camera}
-					domain={this.props.fixture.domain}
-					kindCatalogs={this.props.kindCatalogs}
-					kindCompatibility={this.props.kindCompatibility}
-					blockedVortexFullIds={this.props.blockedVortexFullIds}
-					proximityRadius={this.props.proximityRadius}
-					chunkSize={this.props.chunkSize}
-					gridFactor={this.props.gridFactor}
-					relocateMode={this.props.relocateMode}
-					selectionMode={this.props.selectionMode}
-					showLodGrid={this.props.showLodGrid}
-					gridSnapEnabled={this.props.gridSnapEnabled}
-					{...this.props.lodProps}
-					onLodChange={this.props.onLodChange}
-					onCamera={this.props.onCamera}
-					onSelect={this.props.onSelect}
-					onConnect={state.handleConnect}
-					onIndirectConnect={this.props.onIndirectConnect}
-					onProximityConnect={this.props.onProximityConnect}
-					onAttractionCompatibleObjects={this.props.onAttractionCompatibleObjects}
-					onAttractionTargetRing={this.props.onAttractionTargetRing}
-					onRelocate={state.handleRelocate}
-					selection={this.props.selection}
-				>
-					<PlaySceneCanvasContent
-						relocateMode={this.props.relocateMode}
-						selection={this.props.selection}
-						selectedId={this.props.selectedId}
-						selectedVortexFullIds={this.props.selectedVortexFullIds}
-						setSelectedId={this.props.setSelectedId}
-					/>
-				</Canvas3D>
-			</>
-		);
+}): React.ReactElement {
+	const state = useContext(SceneObjectStateContext);
+	if (!state) {
+		throw new Error("SceneObjectStateProvider missing");
 	}
+	return (
+		<>
+			<div className="pointer-events-none absolute left-0 top-0 z-[-1] px-px py-px opacity-0">
+				<div data-e2e-scene-lod>{formatSceneLod(props.lodTag)}</div>
+				<div data-e2e-selected>{props.selectedId ?? "none"}</div>
+			</div>
+			<Canvas3D
+				className="absolute inset-0"
+				camera={props.fixture.camera}
+				domain={props.fixture.domain}
+				kindCatalogs={props.kindCatalogs}
+				kindCompatibility={props.kindCompatibility}
+				blockedVortexFullIds={props.blockedVortexFullIds}
+				proximityRadius={props.proximityRadius}
+				chunkSize={props.chunkSize}
+				gridFactor={props.gridFactor}
+				relocateMode={props.relocateMode}
+				selectionMode={props.selectionMode}
+				showLodGrid={props.showLodGrid}
+				gridSnapEnabled={props.gridSnapEnabled}
+				{...props.lodProps}
+				onLodChange={props.onLodChange}
+				onCamera={props.onCamera}
+				onSelect={props.onSelect}
+				onConnect={state.handleConnect}
+				onIndirectConnect={props.onIndirectConnect}
+				onProximityConnect={props.onProximityConnect}
+				onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
+				onAttractionTargetRing={props.onAttractionTargetRing}
+				onRelocate={state.handleRelocate}
+				selection={props.selection}
+			>
+				<PlaySceneCanvasContent
+					relocateMode={props.relocateMode}
+					selection={props.selection}
+					selectedId={props.selectedId}
+					selectedVortexFullIds={props.selectedVortexFullIds}
+					setSelectedId={props.setSelectedId}
+				/>
+			</Canvas3D>
+		</>
+	);
 }
 
-interface PlayInnerState {
-	readonly theme: ElementsSurfaceTheme;
-	readonly device: ElementsSurfaceDevice;
-	readonly expertise: Expertise;
-}
+function PlayInner(): React.ReactElement {
+	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
+	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
+	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+	const cleanupSurfaceChromeRef = useRef<(() => void) | null>(null);
+	const sceneShellRef = useRef<ProductRuntime | null>(null);
 
-class PlayInner extends React.Component<{}, PlayInnerState> {
-	state: PlayInnerState = {
-		theme: readTheme(),
-		device: readDevice(),
-		expertise: readExpertise(),
-	};
-
-	private cleanupSurfaceChrome: (() => void) | null = null;
-
-	private sceneShell: ProductRuntime | null = null;
-
-	componentDidMount(): void {
-		this.applySurfaceChrome();
-		this.persistState();
+	useEffect(() => {
+		registerScenePlayChrome();
 		const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
 		if (fixture) {
 			const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
@@ -5750,60 +5813,48 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 				useGLTF.preload(url);
 			}
 		}
-	}
+	}, []);
 
-	componentDidUpdate(_prevProps: {}, prevState: Readonly<PlayInnerState>): void {
-		if (prevState.theme !== this.state.theme || prevState.device !== this.state.device || prevState.expertise !== this.state.expertise) {
-			this.applySurfaceChrome();
-			this.persistState();
-		}
-	}
+	useEffect(() => {
+		cleanupSurfaceChromeRef.current?.();
+		cleanupSurfaceChromeRef.current = applyElementsSurfaceChrome({ theme, device, expertise });
+		return () => {
+			cleanupSurfaceChromeRef.current?.();
+		};
+	}, [theme, device, expertise]);
 
-	componentWillUnmount(): void {
-		this.cleanupSurfaceChrome?.();
-	}
-
-	private applySurfaceChrome(): void {
-		this.cleanupSurfaceChrome?.();
-		this.cleanupSurfaceChrome = applyElementsSurfaceChrome({
-			theme: this.state.theme,
-			device: this.state.device,
-			expertise: this.state.expertise,
-		});
-	}
-
-	private persistState(): void {
+	useEffect(() => {
 		try {
-			localStorage.setItem(LS_THEME, this.state.theme);
-			localStorage.setItem(LS_DEVICE, this.state.device);
-			localStorage.setItem(LS_EXPERTISE, this.state.expertise);
+			localStorage.setItem(LS_THEME, theme);
+			localStorage.setItem(LS_DEVICE, device);
+			localStorage.setItem(LS_EXPERTISE, expertise);
 		} catch {}
+	}, [theme, device, expertise]);
+
+	if (!sceneShellRef.current) {
+		sceneShellRef.current = buildScenePlayRuntime();
 	}
 
-	render(): React.ReactElement {
-		registerScenePlayChrome();
-		const surfaceFooterItems: FooterItem[] = [
-			{
-				content: <PlaySurfaceFooter device={this.state.device} expertise={this.state.expertise} onDevice={(device) => this.setState({ device })} onExpertise={(expertise) => this.setState({ expertise })} onTheme={(theme) => this.setState({ theme })} theme={this.state.theme} />,
-				id: "scene-play-surface",
-				order: 0,
-			},
-		];
-		if (!this.sceneShell) {
-			const wb = new ProductRuntime();
-			const ctrl = new ScenePlayShellController(wb.commandBus, () => wb.notify());
-			wb.addApp(buildScenePlayAppRuntime(ctrl));
-			this.sceneShell = wb;
-		}
-		const runtime = this.sceneShell;
-		return (
-			<ScenePlayProductShell
-				extraFooterItems={surfaceFooterItems}
-				mobile={this.state.device === "mobile"}
-				runtime={runtime}
-			/>
-		);
-	}
+	const surfaceFooterItems: FooterItem[] = [
+		{
+			content: (
+				<PlaySurfaceFooter
+					device={device}
+					expertise={expertise}
+					onDevice={setDevice}
+					onExpertise={setExpertise}
+					onTheme={setTheme}
+					theme={theme}
+				/>
+			),
+			id: "scene-play-surface",
+			order: 0,
+		},
+	];
+
+	return (
+		<ScenePlayProductShell extraFooterItems={surfaceFooterItems} mobile={device === "mobile"} runtime={sceneShellRef.current} />
+	);
 }
 
 function ScenePlayProductShell(props: {
@@ -5833,10 +5884,22 @@ function ScenePlayProductShell(props: {
 			kindCatalogs,
 		};
 	}, [ctrl, snap, fixture, kindCatalogs]);
+	const bus = props.runtime.commandBus;
+	const detailTabs = useMemo(
+		() =>
+			shellValue
+				? [
+						new ScenePlayInspectorPanelDefinition(() => buildScenePlayInspectorSections(shellValue, bus)).resolveTab(),
+						new ScenePlaySettingsPanelDefinition(() => buildScenePlaySettingsSections(shellValue.snap, bus)).resolveTab(),
+					]
+				: [],
+		[shellValue, bus],
+	);
 	const product = (
-		<ProductView
+		<PlaygroundView
 			runtime={props.runtime}
 			defaultAppId={PLAY_APP_ID}
+			augmentPanelTabs={{ details: detailTabs }}
 			extraFooterItems={props.extraFooterItems}
 			initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: true }}
 			mobile={props.mobile}
@@ -5853,16 +5916,14 @@ function ScenePlayProductShell(props: {
 	);
 }
 
-class PlayApp extends React.Component {
-	render(): React.ReactElement {
-		return (
-			<LevelProvider level="window">
-				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-					<PlayInner />
-				</div>
-			</LevelProvider>
-		);
-	}
+function PlayApp(): React.ReactElement {
+	return (
+		<LevelProvider level="window">
+			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+				<PlayInner />
+			</div>
+		</LevelProvider>
+	);
 }
 
 export function createScenePlayElement(): React.ReactElement {
@@ -5871,7 +5932,7 @@ export function createScenePlayElement(): React.ReactElement {
 
 /** @emoji ­ƒÜÇ Vite host entry: mounts scene play into `#root`. */
 export function mountScenePlay(): void {
-	mountReactApp(createScenePlayElement());
+	mountPlaygroundApp(createScenePlayElement());
 }
 
 // #endregion 🛝PlayHost

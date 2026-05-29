@@ -18,12 +18,11 @@ export default defineConfig({
 		target: "esnext",
 	},
 	resolve: {
-		alias: {
-			"@elements/ui": path.resolve(__dirname, "../../core/index.tsx"),
-			"@elements/framework": path.resolve(__dirname, "../../../framework/core/index.ts"),
-			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/index.tsx"),
-			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/index.tsx"),
-		},
+		alias: [
+			{ find: "@elements/playground/react", replacement: path.resolve(__dirname, "../../playground/react/index.tsx") },
+			{ find: "@elements/playground", replacement: path.resolve(__dirname, "../../playground/index.ts") },
+			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../react/core/index.tsx") },
+		],
 	},
 	server: {
 		fs: {
