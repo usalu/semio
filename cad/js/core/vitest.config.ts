@@ -1,6 +1,8 @@
+// #region 🔌Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
 const jsRoot = resolve(root, "..");

@@ -9,13 +9,21 @@ Every bundle uses a single `script.ts` with subcommands (`dev`, `build`, `test`,
 - Subcommands are **`class X extends BundleScript`** with `run(segments)`.
 - Register with **`new ScriptRouter(import.meta.dir).register("dev", DevScript)`**.
 - Entry: **`await runBundleScriptMain(router, import.meta.url)`** or **`runPolicyOnlyMain`** when only `policy` applies.
-- Workspace root keeps a **`Map<string, Script>`** of pre-built instances (same `Script` base, imported from `bundle-script.ts`).
+- Workspace root keeps **`ScriptRouter`** over workspace verbs (same `Script` base, imported from `bundle-script.ts`).
 - Docs: `repo/lib/js/README.md`.
+- Shared wasm: `runWasmPackWebBuild` in `bundle-script.ts`.
+- Nested verbs: `dispatchSubcommand`.
 
 ## Native bootstrap
 
-Root `script.ps1` / `script.sh` were removed. Archived copies live in this ticket’s `embedded/` folder. Root `script.ts` runs them via `bun ./script.ts setup native` and `bun ./script.ts start` until a full TypeScript port lands in `NativeOsScript`.
+Production shells: `repo/native/bootstrap/script.ps1` and `script.sh`.  
+Invoked via `bun ./script.ts setup native` and `bun ./script.ts start` with `SEMIO_REPO_ROOT` set to the workspace root.
+
+## Neo4j migrations
+
+Production router: `repo/lib/neo4j-migrate/script.ts`.  
+Invoked via `bun ./script.ts migrate neo4j …` from the monorepo root.
 
 ## Ticket workspaces
 
-Each ticket folder should expose one `script.ts` router; one-off tasks live in plain `.ts` modules next to it (not `*.script.ts`).
+Ticket folders may keep historical copies; **production `script.ts` files must not reference `.repo/🎫` paths**. One-off tasks stay in plain `.ts` modules beside a ticket `script.ts` when needed.

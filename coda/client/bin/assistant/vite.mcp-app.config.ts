@@ -4,11 +4,13 @@
 // Summary: Mirrors semio/engine/vite.mcp-app.config.ts with @elements/ui and meshopt noop.
 // #endregion Header
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+// #endregion 🔌Adapters
 
 function zodJitlessPlugin(): Plugin {
   return {

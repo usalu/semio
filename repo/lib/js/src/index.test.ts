@@ -8,7 +8,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, findRepoRoot } from "./bundle-script.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./bundle-script.ts";
 import { defineLint } from "./script.ts";
 import type { FileLinter } from "./linter.ts";
 import {
@@ -57,6 +57,18 @@ describe("bundle-script", () => {
     const root = findRepoRoot(import.meta.dir);
     expect(existsSync(join(root, "nx.json"))).toBe(true);
   });
+
+  test("dispatchSubcommand invokes handler for first segment", () => {
+    let ran = "";
+    dispatchSubcommand(
+      ["go", "x"],
+      { go: (rest) => {
+        ran = rest.join(",");
+      } },
+      "unused",
+    );
+    expect(ran).toBe("x");
+  });
 });
 
 describe("defineLint", () => {
@@ -69,6 +81,7 @@ describe("defineLint", () => {
 describe("dependency-boundary", () => {
   test("detects adapter region marker", () => {
     expect(isAdapterBoundaryFile("pkg/foo.ts", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("pkg/main.py", "# #region 🔌Adapters\nimport fastapi")).toBe(true);
     expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
   });
 

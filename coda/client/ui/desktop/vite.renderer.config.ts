@@ -15,10 +15,12 @@
 // Configuration MUST enable the React and Tailwind CSS plugins.
 // Configuration MUST pre-bundle heavy dependencies to avoid white screen in Electron.
 
+// #region 🔌Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import type { UserConfig } from "vite";
+// #endregion 🔌Adapters
 
 const configuration: UserConfig = {
   server: {

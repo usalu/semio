@@ -1,5 +1,5 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getWorkspaceRoot } from "./cli.ts";
@@ -103,6 +103,30 @@ export async function runBundleScriptMain(
   await router.run(segments);
 }
 
+/** 🚪Workspace root `script.ts` entry (no policy dispatch). */
+export async function runWorkspaceScriptMain(router: ScriptRouter): Promise<void> {
+  await router.run(process.argv.slice(2));
+}
+
+/**
+ * 🧭Nested subcommand dispatch inside a `Script.run` implementation.
+ * `handlers` keys are the first argv segment; `defaultKey` runs when argv is empty.
+ */
+export function dispatchSubcommand(
+  segments: string[],
+  handlers: Record<string, (rest: string[]) => void | Promise<void>>,
+  usage: string,
+  defaultKey?: string,
+): void | Promise<void> {
+  const key = segments[0] ?? defaultKey;
+  const handler = key ? handlers[key] : undefined;
+  if (!handler) {
+    console.error(`usage: ${usage}`);
+    process.exit(1);
+  }
+  return handler(segments.slice(1));
+}
+
 /** 📁Walks parents until the monorepo root (`nx.json` + workspace `package.json`). */
 export function findRepoRoot(start: string): string {
   let dir = start;
@@ -177,12 +201,7 @@ export function runViteDev(
   segments: string[],
   opts: { config: string; portEnv?: string; defaultPort?: string },
 ): void {
-  const env = {
-    ...devToolingEnv(),
-    ...(process.env.WATCHPACK_POLLING !== undefined
-      ? {}
-      : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
-  };
+  const env = playPollingEnv();
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
   spawnBun(
@@ -241,6 +260,62 @@ export function runViteBunxDevPlain(bundleRoot: string, segments: string[]): voi
 /** 🦀Runs `cargo` with inherited stdio. */
 export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   runCmd("cargo", args, { cwd, env });
+}
+
+export type WasmPackWebPkg = {
+  name: string;
+  version?: string;
+  files: string[];
+  main: string;
+  module: string;
+  types: string;
+  sideEffects?: string[];
+};
+
+/** 📦`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
+export function runWasmPackWebBuild(opts: {
+  rsDir: string;
+  skipEnvVar: string;
+  logPrefix: string;
+  pkg: WasmPackWebPkg;
+  wasmBaseName: string;
+}): void {
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName } = opts;
+  if (process.env[skipEnvVar] === "1") {
+    console.log(`[${logPrefix}] ${skipEnvVar}=1 → skipping wasm-pack build`);
+    return;
+  }
+  console.log(`[${logPrefix}] wasm-pack build --release --target web --out-dir pkg --no-pack`);
+  const t0 = Date.now();
+  const res = spawnSync(
+    "bun",
+    ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"],
+    { cwd: rsDir, stdio: "inherit" },
+  );
+  if (res.status !== 0) {
+    console.error(`[${logPrefix}] wasm-pack build failed`);
+    process.exit(res.status ?? 1);
+  }
+  console.log(`[${logPrefix}] wasm-pack build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+
+  const pkgDir = join(rsDir, "pkg");
+  if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
+  const pkgJson = {
+    type: "module",
+    version: pkg.version ?? "0.1.0",
+    sideEffects: pkg.sideEffects ?? ["./snippets/*"],
+    ...pkg,
+  };
+  writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
+
+  const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
+  if (existsSync(wasmPath)) {
+    const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
+    console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm ready (${sz} MiB) + pkg/package.json restored`);
+  } else {
+    console.error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
+    process.exit(1);
+  }
 }
 
 /** 🔗Resolves `import.meta.url` of the bundle `script.ts`. */

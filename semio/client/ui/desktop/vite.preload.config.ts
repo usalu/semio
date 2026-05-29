@@ -12,9 +12,11 @@
 // Vite configuration for building the Electron preload script as a CJS library.
 // Configuration MUST externalize Electron and Node.js built-in modules.
 
+// #region 🔌Adapters
 import { defineConfig } from "vite";
 import { builtinModules } from "module";
 import path from "path";
+// #endregion 🔌Adapters
 
 // Vite build configuration for the preload script with CJS output.
 // Export MUST externalize electron and all Node.js builtins.

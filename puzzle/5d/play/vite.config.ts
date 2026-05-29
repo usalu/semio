@@ -1,9 +1,11 @@
+// #region 🔌Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import { elementsAssetsVitePlugin } from "../../../ui/styling/vite-elements-assets.ts";
+// #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../../..");

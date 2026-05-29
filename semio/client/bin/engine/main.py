@@ -15,8 +15,8 @@
 
 # #endregion 📊Header
 
-# #region ⭐Imports
-# Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
+# #region 🔌Adapters
+# Third-party and stdlib imports for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
 
 import abc
@@ -171,7 +171,7 @@ from semio_core import (
     validateKitDict,
 )
 
-# #endregion ⭐Imports
+# #endregion 🔌Adapters
 
 # #region 🪨Store
 # Store MUST provide the data access layer for kit operations via code-based routing.

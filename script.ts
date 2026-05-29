@@ -3,7 +3,7 @@
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
 import { spawn, spawnSync } from "node:child_process";
-import { Script, ScriptRouter, devToolingEnv, runCmd, tryRun } from "./repo/lib/js/src/bundle-script.ts";
+import { Script, ScriptRouter, devToolingEnv, dispatchSubcommand, runCmd, runWorkspaceScriptMain, tryRun } from "./repo/lib/js/src/bundle-script.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -13,31 +13,33 @@ import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseN
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
-const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, ".repo", "🎫", "26", "05", "30", "ONLY-SCRIPT-TS-IN-MONOREPO", "embedded");
+const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap");
+const NEO4J_MIGRATE_SCRIPT = join(WORKSPACE_ROOT, "repo", "lib", "neo4j-migrate", "script.ts");
 
 export { Script };
 
 //#region 🔖NativeOsScript
-/** 🖥️Runs archived native bootstrap shells from the only-script.ts ticket embed (setup|start). */
+/** 🖥️Runs native bootstrap shells under `repo/native/bootstrap` (setup|start). */
 export class NativeOsScript extends Script {
   run(segments: string[]): void {
     const cmd = segments[0] ?? "setup";
+    const env = { ...process.env, SEMIO_REPO_ROOT: this.root };
     if (process.platform === "win32") {
       const ps1 = join(NATIVE_BOOTSTRAP_DIR, "script.ps1");
       if (!existsSync(ps1)) {
-        console.error(`[native] missing ${ps1}; restore embedded bootstrap from ticket ONLY-SCRIPT-TS-IN-MONOREPO.`);
+        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/script.ps1.`);
         process.exit(1);
       }
-      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root });
+      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
       return;
     }
     if (process.platform === "darwin" || process.platform === "linux") {
       const sh = join(NATIVE_BOOTSTRAP_DIR, "script.sh");
       if (!existsSync(sh)) {
-        console.error(`[native] missing ${sh}; restore embedded bootstrap from ticket ONLY-SCRIPT-TS-IN-MONOREPO.`);
+        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/script.sh.`);
         process.exit(1);
       }
-      runCmd("bash", [sh, cmd], { cwd: this.root });
+      runCmd("bash", [sh, cmd], { cwd: this.root, env });
       return;
     }
     console.error(`[native] unsupported platform ${process.platform}`);
@@ -49,19 +51,19 @@ export class NativeOsScript extends Script {
 //#region 🔖SetupScript
 export class SetupScript extends Script {
   run(segments: string[]): void {
-    if (segments[0] === "postinstall") {
-      this.runPostinstall();
+    if (!segments[0]) {
+      this.runFull();
       return;
     }
-    if (segments[0] === "git") {
-      this.runGit();
-      return;
-    }
-    if (segments[0] === "native") {
-      new NativeOsScript(this.root).run(segments.slice(1));
-      return;
-    }
-    this.runFull();
+    dispatchSubcommand(
+      segments,
+      {
+        postinstall: () => this.runPostinstall(),
+        git: () => this.runGit(),
+        native: (rest) => new NativeOsScript(this.root).run(rest),
+      },
+      "bun ./script.ts setup [postinstall|git|native]",
+    );
   }
 
   private runPostinstall(): void {
@@ -606,33 +608,24 @@ function queryVisualStudio2026InstallPath(): string | undefined {
 //#region 🔖CppScript
 export class CppScript extends Script {
   run(segments: string[]): void {
-    const command = segments[0] ?? "all";
     const preset = this.resolvePreset(segments.slice(1));
-    if (command === "setup") {
-      this.runSetup();
-      return;
-    }
-    if (command === "configure") {
-      this.runConfigure(preset);
-      return;
-    }
-    if (command === "build") {
-      this.runBuild(preset);
-      return;
-    }
-    if (command === "test") {
-      this.runTest(preset);
-      return;
-    }
-    if (command === "all") {
-      this.runSetup();
-      this.runConfigure(preset);
-      this.runBuild(preset);
-      this.runTest(preset);
-      return;
-    }
-    console.error("[cpp] usage: bun ./script.ts cpp [setup|configure|build|test|all] [preset]");
-    process.exit(1);
+    dispatchSubcommand(
+      segments,
+      {
+        setup: () => this.runSetup(),
+        configure: () => this.runConfigure(preset),
+        build: () => this.runBuild(preset),
+        test: () => this.runTest(preset),
+        all: () => {
+          this.runSetup();
+          this.runConfigure(preset);
+          this.runBuild(preset);
+          this.runTest(preset);
+        },
+      },
+      "bun ./script.ts cpp [setup|configure|build|test|all] [preset]",
+      "all",
+    );
   }
 
   private resolvePreset(segments: string[]): string {
@@ -815,19 +808,20 @@ export class PurgeScript extends Script {
 //#endregion 🔖PurgeScript
 
 //#region 🔖MigrateScript
-const NEO4J_MIGRATE_TICKET = join(WORKSPACE_ROOT, ".repo", "🎫", "26", "05", "15", "NEO4J-MODULE-SHELL-REL-TYPE-HAS");
-
-/** 🧩Delegates Neo4j ticket migrations to `.repo/🎫/…/NEO4J-MODULE-SHELL-REL-TYPE-HAS/script.ts`. */
+/** 🧩Delegates Neo4j graph migrations to `repo/lib/neo4j-migrate/script.ts`. */
 export class MigrateScript extends Script {
   run(segments: string[]): void {
     if (segments[0] !== "neo4j") {
       console.error("[migrate] usage: bun ./script.ts migrate neo4j [migrate|kit-field|rename-ops|gen-domain|stitch]");
       process.exit(1);
     }
-    const ticketScript = join(NEO4J_MIGRATE_TICKET, "script.ts");
+    if (!existsSync(NEO4J_MIGRATE_SCRIPT)) {
+      console.error(`[migrate] missing ${NEO4J_MIGRATE_SCRIPT}`);
+      process.exit(1);
+    }
     const sub = segments.slice(1);
     const args = sub.length === 0 ? ["migrate"] : sub;
-    runCmd(BUN, [ticketScript, ...args], { cwd: this.root });
+    runCmd(BUN, [NEO4J_MIGRATE_SCRIPT, ...args], { cwd: this.root });
   }
 }
 //#endregion 🔖MigrateScript
@@ -849,5 +843,5 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("purge", PurgeScript)
   .register("query", QueryScript);
 
-await router.run(process.argv.slice(2));
+await runWorkspaceScriptMain(router);
 //#endregion 🔖Dispatch

@@ -4,9 +4,11 @@
 // Summary: Mirrors semio/js wasm resolution; `@semio/assets` alias for fixture imports in tests.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const semioWasmBg = path.resolve(__dirname, "../../client/lib/rs/pkg/semio_bg.wasm");

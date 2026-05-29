@@ -1,6 +1,8 @@
+// #region 🔌Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -14,8 +16,8 @@ export default defineConfig({
 			{ find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(root, "../../../framework/playground/core")}/$1` },
 			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
 			{ find: "@cad/js-core", replacement: resolve(root, "../core/index.ts") },
-			{ find: "@cad/js-kernel-brepjs", replacement: resolve(root, "../kernel-brepjs/index.ts") },
-			{ find: "@cad/js-machine-stately", replacement: resolve(root, "../machine-stately/index.ts") },
+			{ find: "@cad/js-kernel-brepjs", replacement: resolve(root, "../kernel/brepjs/index.ts") },
+			{ find: "@cad/js-machine-stately", replacement: resolve(root, "../machine/stately/index.ts") },
 			{ find: "@cad/js-query", replacement: resolve(root, "../query/index.ts") },
 		],
 	},

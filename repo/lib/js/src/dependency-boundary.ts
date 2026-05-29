@@ -5,9 +5,11 @@ import type { BreachRecord } from "./breach.ts";
 const ADAPTER_MARKERS = [
   "//#region 🔌adapter",
   "// #region 🔌adapter",
+  "# #region 🔌adapter",
   "#region 🔌adapter",
   "//#region 🔌adapters",
   "// #region 🔌adapters",
+  "# #region 🔌adapters",
   "pub mod adapters",
   "mod adapters ",
 ];

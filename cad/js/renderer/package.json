@@ -20,6 +20,7 @@
     "@cad/js-kernel-brepjs": "workspace:*",
     "@cad/js-machine-stately": "workspace:*",
     "@cad/js-query": "workspace:*",
+    "chevrotain": "^11.0.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "three": "^0.180.0"

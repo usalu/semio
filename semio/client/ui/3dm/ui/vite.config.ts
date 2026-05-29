@@ -12,6 +12,7 @@
 // Vite configuration for the 3dm React UI embedded in Rhino WebView2.
 // Configuration MUST include React and Tailwind CSS plugins.
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -24,6 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+// #endregion 🔌Adapters
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

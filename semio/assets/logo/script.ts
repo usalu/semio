@@ -18,6 +18,7 @@
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
 
 // #endregion 🔌Adapters
 
@@ -361,8 +362,6 @@ function runLogoGenerate(): void {
 }
 
 export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
-
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {

@@ -4386,6 +4386,105 @@ function Inner(props: CanvasProps) {
   );
 }
 
+export interface PlaySceneCanvasProps {
+  readonly fixture: FixtureV1;
+  readonly proximityRelocateEnabled?: boolean;
+  readonly kindCatalogs?: KindCatalogBundle;
+  readonly kindCompatibility?: readonly KindCompatEntry[];
+  readonly blockedVortexFullIds?: ReadonlySet<string>;
+  readonly lodTag?: number;
+  readonly lodProps?: Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod">;
+  readonly relocateMode?: RelocateMode;
+  readonly selection?: SelectionSnapshot;
+  readonly selectedId?: string | null;
+  readonly selectedLabel?: string | null;
+  readonly selectionMode?: SelectionMode;
+  readonly selectedVortexFullIds?: ReadonlySet<string>;
+  readonly proximityRadius?: number;
+  readonly chunkSize?: number;
+  readonly gridFactor?: number;
+  readonly showLodGrid?: boolean;
+  readonly gridSnapEnabled?: boolean;
+  readonly setSelectedId: (id: string | null) => void;
+  readonly onSelect?: (snap: SelectionSnapshot) => void;
+  readonly onIndirectConnect?: () => void;
+  readonly onProximityConnect?: () => void;
+  readonly onLodChange?: (lod: number) => void;
+  readonly onCamera?: (s: CameraState) => void;
+  readonly onAttractionCompatibleObjects?: () => void;
+  readonly onAttractionTargetRing?: () => void;
+}
+
+/** @emoji 🎬 Scene play canvas: {@link Canvas3D} wired to {@link SceneObjectStateProvider} and {@link SceneObjects}. */
+export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement {
+  const handleRelocate = useSceneObjectRelocate();
+  const handleConnect = useSceneObjectConnect();
+  const onIndirectConnect = useCallback(
+    (payload: AttractionPayload) => {
+      handleConnect(payload);
+      props.onIndirectConnect?.();
+    },
+    [handleConnect, props.onIndirectConnect],
+  );
+  const onProximityConnect = useCallback(
+    (payload: AttractionPayload) => {
+      handleConnect(payload);
+      props.onProximityConnect?.();
+    },
+    [handleConnect, props.onProximityConnect],
+  );
+  const onAttractionCompatibleObjects = useCallback(
+    (_payload: AttractionCompatibleObjectsPayload) => {
+      props.onAttractionCompatibleObjects?.();
+    },
+    [props.onAttractionCompatibleObjects],
+  );
+  const onAttractionTargetRing = useCallback(
+    (_payload: AttractionTargetRingPayload) => {
+      props.onAttractionTargetRing?.();
+    },
+    [props.onAttractionTargetRing],
+  );
+  return (
+    <Canvas3D
+      className="absolute inset-0"
+      camera={props.fixture.camera}
+      domain={props.fixture.domain}
+      chunkSize={props.chunkSize}
+      kindCatalogs={props.kindCatalogs}
+      kindCompatibility={props.kindCompatibility}
+      blockedVortexFullIds={props.blockedVortexFullIds}
+      proximityRadius={props.proximityRadius}
+      proximityRelocateEnabled={props.proximityRelocateEnabled}
+      relocateMode={props.relocateMode}
+      selectionMode={props.selectionMode}
+      selection={props.selection}
+      gridFactor={props.gridFactor}
+      showLodGrid={props.showLodGrid}
+      gridSnapEnabled={props.gridSnapEnabled}
+      onCamera={props.onCamera}
+      onLodChange={props.onLodChange}
+      onSelect={props.onSelect}
+      onConnect={handleConnect}
+      onRelocate={handleRelocate}
+      onIndirectConnect={onIndirectConnect}
+      onProximityConnect={onProximityConnect}
+      onAttractionCompatibleObjects={onAttractionCompatibleObjects}
+      onAttractionTargetRing={onAttractionTargetRing}
+      {...props.lodProps}
+    >
+      <SceneObjects
+        selection={props.selection}
+        selectedObjectId={props.selectedId}
+        selectedVortexFullIds={props.selectedVortexFullIds}
+        relocate={props.relocateMode}
+      />
+      <SceneAttractionTreeRoots />
+      <ScenePlayTestBridge setSelectedId={props.setSelectedId} />
+    </Canvas3D>
+  );
+}
+
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
   const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
   const [shellLod, setShellLod] = useState(() => formatSceneLod(DEFAULT_MANUAL_LOD));

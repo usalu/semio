@@ -1,52 +1,19 @@
 #!/usr/bin/env bun
-/** 🧩 Neo4j ticket router: `bun ./script.ts <migrate|kit-field|rename-ops|gen-domain|stitch>`. */
-import { mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
+/** 🧩 Redirect: Neo4j migrations live in `repo/lib/neo4j-migrate/` — use `bun ./script.ts migrate neo4j` from the monorepo root. */
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 
-class MigrateScript extends BundleScript {
-  async run(): Promise<void> {
-    await import("./migrate.neo4j.ts");
+let dir = import.meta.dir;
+let repoRoot = dir;
+for (let i = 0; i < 32; i++) {
+  if (existsSync(join(dir, "nx.json"))) {
+    repoRoot = dir;
+    break;
   }
+  const parent = dirname(dir);
+  if (parent === dir) break;
+  dir = parent;
 }
-
-class KitFieldScript extends BundleScript {
-  async run(): Promise<void> {
-    const { runKitFieldDeclaredIsRepair } = await import("./kit-field-declared-is.ts");
-    const cacheDir = join(this.repoRoot, ".repo", "cache", "neo4j-migrate");
-    mkdirSync(cacheDir, { recursive: true });
-    runKitFieldDeclaredIsRepair({
-      repoRoot: this.repoRoot,
-      database: process.env.NEO4J_DATABASE || "semio",
-      cacheDir,
-    });
-    console.log("[kit-field] repair ok.");
-  }
-}
-
-class RenameOpsScript extends BundleScript {
-  async run(): Promise<void> {
-    await import("./rename-operations-imperative.ts");
-  }
-}
-
-class GenDomainScript extends BundleScript {
-  async run(): Promise<void> {
-    await import("./gen-domain-operation-classes.ts");
-  }
-}
-
-class StitchScript extends BundleScript {
-  async run(): Promise<void> {
-    await import("./stitch-operation-command-migrations.ts");
-  }
-}
-
-const router = new ScriptRouter(import.meta.dir)
-  .register("migrate", MigrateScript)
-  .register("kit-field", KitFieldScript)
-  .register("rename-ops", RenameOpsScript)
-  .register("gen-domain", GenDomainScript)
-  .register("stitch", StitchScript);
-
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "migrate" });
+const migrateScript = join(repoRoot, "repo", "lib", "neo4j-migrate", "script.ts");
+execFileSync(process.execPath, [migrateScript, ...process.argv.slice(2)], { stdio: "inherit", cwd: repoRoot });

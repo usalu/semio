@@ -12,6 +12,7 @@
 // Vite build configuration for the sketchpad application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -24,6 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+// #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
   shimMain: string;

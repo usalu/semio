@@ -20273,7 +20273,9 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 	lower := strings.ToLower(content)
 	for _, marker := range []string{
 		"//#region 🔌adapter", "// #region 🔌adapter",
-		"#region 🔌adapter", "//#region 🔌adapters", "// #region 🔌adapters",
+		"# #region 🔌adapter", "#region 🔌adapter",
+		"//#region 🔌adapters", "// #region 🔌adapters",
+		"# #region 🔌adapters",
 		"pub mod adapters", "mod adapters ",
 	} {
 		if strings.Contains(lower, marker) {
