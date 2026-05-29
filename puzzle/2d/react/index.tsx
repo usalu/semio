@@ -2,6 +2,7 @@
 /** @emoji 📋 `@puzzle/2d-react` — WASM board renderer + React canvas (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { ContextMenuController, type ContextMenuItem } from "@ui/react";
 import React from "react";
 import Reconciler from "react-reconciler";
@@ -12,6 +13,7 @@ import {
 	LegacyRoot,
 	NoEventPriority,
 } from "react-reconciler/constants";
+// #endregion 🔌Adapters
 
 type BoardListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 

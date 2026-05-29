@@ -4,11 +4,14 @@
 // Auth API: whoami, key management.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { randomBytes } from "crypto";
+// #endregion 🔌Adapters
+
 import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib/db";
 import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@/lib/auth";
-import { randomBytes } from "crypto";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

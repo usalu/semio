@@ -15,7 +15,7 @@ function toYamlKey(pascal: string): string {
   return pascal.length === 0 ? pascal : pascal.charAt(0).toLowerCase() + pascal.slice(1);
 }
 
-/** @emoji 🧭 Past-participle operation stem → imperative stem (must match rename-operations-imperative.script.ts). */
+/** @emoji 🧭 Past-participle operation stem → imperative stem (must match rename-operations-imperative.ts). */
 function imperativeOperationStem(past: string): string {
   const rules: [RegExp, string][] = [
     [/^Created/, "Create"],

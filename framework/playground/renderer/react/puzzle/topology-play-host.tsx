@@ -2,8 +2,7 @@
 /** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
 // #endregion 🧲Header
 
-
-
+// #region 🔌Adapters
 import React from "react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree } from "lucide-react";
@@ -48,7 +47,7 @@ import {
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
 } from "../../../../../puzzle/5d/play/index.ts";
-
+// #endregion 🔌Adapters
 
 //#region 🔖Snapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {

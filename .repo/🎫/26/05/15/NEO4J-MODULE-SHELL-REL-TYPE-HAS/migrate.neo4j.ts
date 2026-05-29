@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 
-import { runKitFieldDeclaredIsRepair } from "./kit-field-declared-is.script.ts";
+import { runKitFieldDeclaredIsRepair } from "./kit-field-declared-is.ts";
 
 //#region 🧭Constants
 const TICKET_DIR = import.meta.dir;

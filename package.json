@@ -61,7 +61,7 @@
     "dev:scene": "bun ./script.ts dev scene",
     "dev:cad": "bun ./script.ts dev cad",
     "generate": "bun ./script.ts generate",
-    "migrate:neo4j": "bun ./.repo/🎫/26/05/15/NEO4J-MODULE-SHELL-REL-TYPE-HAS/migrate.neo4j.script.ts",
+    "migrate:neo4j": "bun ./script.ts migrate neo4j",
     "lint": "bun ./script.ts lint",
     "format": "bun ./script.ts format",
     "test": "bun ./script.ts test",

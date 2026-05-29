@@ -4,8 +4,11 @@
 // Event ingestion and listing API.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+// #endregion 🔌Adapters
+
 import { listEvents } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { publishEvent } from "@/lib/events";

@@ -4,8 +4,11 @@
 // Diff ingestion API: parses patches, indexes changed files, maps claims, detects conflicts.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+// #endregion 🔌Adapters
+
 import {
   replaceScopes,
   upsertClaim,

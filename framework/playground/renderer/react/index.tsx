@@ -2,6 +2,7 @@
 /** @emoji 🛝 `@framework/playground-renderer-react` — Playground shell renderer: {@link PlaygroundView}, declarative tree panels, and surface hosts (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import {
   App,
   Footer,
@@ -62,6 +63,7 @@ import {
   type WindowLayout,
   type WindowMeasure,
 } from "@framework/playground";
+// #endregion 🔌Adapters
 
 export type {
   AppRuntime,

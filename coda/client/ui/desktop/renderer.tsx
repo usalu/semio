@@ -13,10 +13,11 @@
 // MUST resolve the user identity before rendering the dashboard.
 // MUST communicate with coda MCP server via the preload bridge.
 
+// #region 🔌Adapters
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-
 import { elementUiI18n as i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@elements/ui";
+// #endregion 🔌Adapters
 
 import "./globals.css";
 

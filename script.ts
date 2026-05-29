@@ -845,6 +845,24 @@ export class PurgeScript extends Script {
 }
 //#endregion 🔖PurgeScript
 
+//#region 🔖MigrateScript
+const NEO4J_MIGRATE_TICKET = join(WORKSPACE_ROOT, ".repo", "🎫", "26", "05", "15", "NEO4J-MODULE-SHELL-REL-TYPE-HAS");
+
+/** 🧩Delegates Neo4j ticket migrations to `.repo/🎫/…/NEO4J-MODULE-SHELL-REL-TYPE-HAS/script.ts`. */
+export class MigrateScript extends Script {
+  run(segments: string[]): void {
+    if (segments[0] !== "neo4j") {
+      console.error("[migrate] usage: bun ./script.ts migrate neo4j [migrate|kit-field|rename-ops|gen-domain|stitch]");
+      process.exit(1);
+    }
+    const ticketScript = join(NEO4J_MIGRATE_TICKET, "script.ts");
+    const sub = segments.slice(1);
+    const args = sub.length === 0 ? ["migrate"] : sub;
+    runCmd(BUN, [ticketScript, ...args], { cwd: this.root });
+  }
+}
+//#endregion 🔖MigrateScript
+
 //#region 🔖Dispatch
 const registry = new Map<string, Script>([
   ["nx", new NxScript(WORKSPACE_ROOT)],
@@ -852,6 +870,7 @@ const registry = new Map<string, Script>([
   ["start", new StartScript(WORKSPACE_ROOT)],
   ["dev", new DevScript(WORKSPACE_ROOT)],
   ["generate", new GenerateScript(WORKSPACE_ROOT)],
+  ["migrate", new MigrateScript(WORKSPACE_ROOT)],
   ["lint", new LintScript(WORKSPACE_ROOT)],
   ["format", new FormatScript(WORKSPACE_ROOT)],
   ["test", new TestScript(WORKSPACE_ROOT)],
@@ -865,7 +884,7 @@ const registry = new Map<string, Script>([
 async function main(): Promise<void> {
   const segments = process.argv.slice(2);
   if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge|query> [segments…]");
+    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|migrate|lint|format|test|build|cpp|publish|purge|query> [segments…]");
     process.exit(1);
   }
   const verb = segments[0];

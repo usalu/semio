@@ -6,7 +6,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
@@ -38,7 +38,7 @@ import {
   treeNodeToItem,
 } from "./extension";
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // 🔒#region 🎞️Constants
 const EXPECTED_COMMANDS = [

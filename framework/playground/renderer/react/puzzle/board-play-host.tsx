@@ -2,6 +2,7 @@
 /** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import {
 	Button,
 	ContextMenuController,
@@ -99,6 +100,7 @@ import {
 	type CameraState,
 } from "@puzzle/2d-react";
 import type { Playground } from "@framework/playground";
+// #endregion 🔌Adapters
 
 const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },

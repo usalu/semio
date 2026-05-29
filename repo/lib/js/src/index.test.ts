@@ -68,4 +68,16 @@ describe("dependency-boundary", () => {
     expect(breachs.length).toBeGreaterThan(0);
     expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
   });
+
+  test("allows third-party import inside adapter region", () => {
+    const content = `// #region 🔌Adapters\nimport { NextResponse } from "next/server";\n// #endregion 🔌Adapters\nexport async function GET() { return NextResponse.json({}); }\n`;
+    const file = "repo/server/coordinator/app/api/v1/health/route.ts";
+    const breachs = dependencyBoundaryBreachesForFile(
+      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      file,
+      content,
+      file,
+    );
+    expect(breachs).toEqual([]);
+  });
 });

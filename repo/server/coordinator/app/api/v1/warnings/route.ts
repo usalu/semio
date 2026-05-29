@@ -4,7 +4,10 @@
 // Warnings listing API.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
+// #endregion 🔌Adapters
+
 import { listWarnings } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 

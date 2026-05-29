@@ -147,7 +147,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./.repo/🎫/26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN/migrate.neo4j.script.ts",
+        "command": "bun ./script.ts migrate neo4j",
         "forwardAllArgs": true
       }
     },
