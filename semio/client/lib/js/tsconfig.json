@@ -72,9 +72,7 @@
   },
   "include": [
     "index.ts",
-    "kit-store.worker.ts",
-    "graphql-contract.ts",
-    "rs-wasm-transport.ts"
+    "kit-store.worker.ts"
   ],
   "exclude": [
     "node_modules",

@@ -326,7 +326,7 @@ export function buildSpatialPlayHierarchySections(
 			? modelBranches
 			: [{ id: "spatial-play-hierarchy.modelspace.empty", label: "(empty)" }],
 	};
-	return playgroundTreePanelRootItems("spatial-play-hierarchy.root", [modelSpaceRoot]);
+	return [{ id: "spatial-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }];
 }
 //#endregion 🔖SpatialPlayHierarchy
 
@@ -574,7 +574,6 @@ export function buildSpatialPlayRuntime(): ProductRuntime {
 
 import "./globals.css";
 import type { TreeDataItem, TreeDataSection } from "@ui/react";
-import { playgroundTreePanelRootItems } from "@framework/playground/renderer/react";
 
 import {
 	StrictMode,

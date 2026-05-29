@@ -217,19 +217,19 @@ export class DevScript extends Script {
       await this.runStorybookStatic();
       return;
     }
-    if (segments[0] === "board") {
+    if (segments[0] === "2d") {
       runCmd("bun", ["nx", "run", "@puzzle/2d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "scene") {
+    if (segments[0] === "3d") {
       runCmd("bun", ["nx", "run", "@puzzle/3d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "topology" || segments[0] === "cad5d") {
+    if (segments[0] === "5d") {
       runCmd("bun", ["nx", "run", "@puzzle/5d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "cad" || segments[0] === "spatial") {
+    if (segments[0] === "cad") {
       runCmd("bun", ["nx", "run", "@cad/js/renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }

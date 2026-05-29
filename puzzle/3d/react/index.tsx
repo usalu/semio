@@ -1,21 +1,11 @@
 // #region 🔌Adapters
-import { Button, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
+import { Button, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, reactHostPort, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
 import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Trash2 } from "lucide-react";
 import React, {
   Children,
-  createContext,
   isValidElement,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
   type CSSProperties,
   type ChangeEvent,
   type MutableRefObject,
@@ -313,15 +303,15 @@ export function primarySelectionObjectId(selection: SelectionSnapshot): string |
   return selection.objectIds[0] ?? (selection.vortexIds[0] ? parseVortexFullId(selection.vortexIds[0]).objectId : null);
 }
 
-const SceneSelectionStoreContext = createContext<SelectionSnapshotStore | null>(null);
+const SceneSelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
 
 /** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
 export function useLiveSceneSelection(): SelectionSnapshot {
-  const store = useContext(SceneSelectionStoreContext);
+  const store = reactHostPort.useContext(SceneSelectionStoreContext);
   if (!store) {
     throw new Error("Scene selection store missing");
   }
-  return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  return reactHostPort.useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
@@ -534,11 +524,11 @@ export interface LodContextValue {
   readonly gridSnapEnabled: boolean;
 }
 
-const LodContext = createContext<LodContextValue | null>(null);
+const LodContext = reactHostPort.createContext<LodContextValue | null>(null);
 
 /** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
 export function useLod(): LodContextValue {
-  const v = useContext(LodContext);
+  const v = reactHostPort.useContext(LodContext);
   if (!v) throw new Error("Scene LOD missing");
   return v;
 }
@@ -560,13 +550,13 @@ function resolveMeshUrlForLod(meshByLod: readonly LodMeshEntry[] | undefined, fa
 function useResolvedSceneMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: readonly LodMeshEntry[]; readonly fallbackMeshUrl: string }): string {
   const lodCtx = useLod();
   const trackLod = lodCtx.depthVariable || (opts.meshByLod?.length ?? 0) > 0;
-  const meshByLodRef = useRef(opts.meshByLod);
+  const meshByLodRef = reactHostPort.useRef(opts.meshByLod);
   meshByLodRef.current = opts.meshByLod;
-  const fallbackRef = useRef(opts.fallbackMeshUrl);
+  const fallbackRef = reactHostPort.useRef(opts.fallbackMeshUrl);
   fallbackRef.current = opts.fallbackMeshUrl;
-  const originRef = useRef(opts.origin);
+  const originRef = reactHostPort.useRef(opts.origin);
   originRef.current = opts.origin;
-  const [url, setUrl] = useState(() => resolveMeshUrlForLod(opts.meshByLod, opts.fallbackMeshUrl, lodCtx.depthVariable ? lodCtx.lodForWorldPosition(opts.origin) : lodCtx.lod));
+  const [url, setUrl] = reactHostPort.useState(() => resolveMeshUrlForLod(opts.meshByLod, opts.fallbackMeshUrl, lodCtx.depthVariable ? lodCtx.lodForWorldPosition(opts.origin) : lodCtx.lod));
   useFrame(() => {
     if (!trackLod) return;
     const lod = lodCtx.depthVariable ? lodCtx.lodForWorldPosition(originRef.current) : lodCtx.lod;
@@ -598,14 +588,14 @@ function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
 
 function LodGridHelper() {
   const lod = useLod();
-  const grid = useMemo(() => {
+  const grid = reactHostPort.useMemo(() => {
     const step = lod.gridStepWorld;
     if (step == null || !Number.isFinite(step) || step <= 0) return null;
     const size = 12_000;
     const divs = Math.min(512, Math.max(2, Math.round(size / step)));
     return new GridHelper(size, divs, 0x8899aa, 0x445566);
   }, [lod.gridStepWorld]);
-  useEffect(
+  reactHostPort.useEffect(
     () => () => {
       grid?.dispose();
     },
@@ -629,9 +619,9 @@ function LodFrameRunner(props: {
 }) {
   const cam = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
-  const tmpT = useMemo(() => new Vector3(), []);
+  const tmpT = reactHostPort.useMemo(() => new Vector3(), []);
   const prevLod = useRef<number | null>(null);
-  const ctxSig = useRef("");
+  const ctxSig = reactHostPort.useRef("");
   useFrame(() => {
     const tgt = controls?.target ?? tmpT.set(0, 0, 0);
     const dist = cam.position.distanceTo(tgt);
@@ -669,7 +659,7 @@ function LodBridge(props: {
   readonly manualLod: number;
   readonly onLodChange?: (lod: number) => void;
 }) {
-  const tmpWorld = useMemo(() => new Vector3(), []);
+  const tmpWorld = reactHostPort.useMemo(() => new Vector3(), []);
   const lodRuntimeRef = useRef<LodRuntimeCells>({
     sceneLod: DEFAULT_MANUAL_LOD,
     depthVariable: false,
@@ -677,21 +667,21 @@ function LodBridge(props: {
     camera: null,
     tmpWorld,
   });
-  const lodForWorldPosition = useCallback((position: Vec3) => {
+  const lodForWorldPosition = reactHostPort.useCallback((position: Vec3) => {
     const r = lodRuntimeRef.current;
     if (!r.depthVariable || !r.camera) return r.sceneLod;
     r.tmpWorld.set(position[0], position[1], position[2]);
     return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);
   }, []);
-  const [sceneLod, setSceneLod] = useState(DEFAULT_MANUAL_LOD);
-  const [depthVariable, setDepthVariable] = useState(false);
-  const [gridStepWorld, setGridStepWorld] = useState<number | null>(() => lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor));
-  const onSceneLod = useCallback((patch: { readonly sceneLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
+  const [sceneLod, setSceneLod] = reactHostPort.useState(DEFAULT_MANUAL_LOD);
+  const [depthVariable, setDepthVariable] = reactHostPort.useState(false);
+  const [gridStepWorld, setGridStepWorld] = reactHostPort.useState<number | null>(() => lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor));
+  const onSceneLod = reactHostPort.useCallback((patch: { readonly sceneLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
     setSceneLod((prev) => (Math.abs(prev - patch.sceneLod) > SCENE_LOD_EPSILON ? patch.sceneLod : prev));
     setDepthVariable((prev) => (prev === patch.depthVariable ? prev : patch.depthVariable));
     setGridStepWorld((prev) => (prev === patch.gridStepWorld ? prev : patch.gridStepWorld));
   }, []);
-  const lodCtx = useMemo<LodContextValue>(
+  const lodCtx = reactHostPort.useMemo<LodContextValue>(
     () => ({
       lod: sceneLod,
       depthVariable,
@@ -1660,7 +1650,7 @@ export interface SceneObjectStateContextValue {
   readonly handleConnect: (payload: AttractionPayload) => void;
 }
 
-export const SceneObjectStateContext = createContext<SceneObjectStateContextValue | null>(null);
+export const SceneObjectStateContext = reactHostPort.createContext<SceneObjectStateContextValue | null>(null);
 
 /** @emoji ­ƒùä´©Å Central scene object records, attractions, and resolved attraction ownership. */
 export function SceneObjectStateProvider(props: {
@@ -1680,10 +1670,10 @@ export function SceneObjectStateProvider(props: {
   const syncedFixtureFingerprintRef = useRef<string | null>(null);
   const syncedPoseFingerprintRef = useRef<string | null>(null);
   const syncedFixtureRevisionRef = useRef<number | undefined>(undefined);
-  const skipExternalPoseSyncRef = useRef(false);
-  const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
-  const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
-  useEffect(() => {
+  const skipExternalPoseSyncRef = reactHostPort.useRef(false);
+  const fixtureFingerprint = reactHostPort.useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
+  const poseFingerprint = reactHostPort.useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
+  reactHostPort.useEffect(() => {
     const sceneStore = storeRef.current;
     if (!sceneStore) {
       return;
@@ -1728,7 +1718,7 @@ export function SceneObjectStateProvider(props: {
     syncedPoseFingerprintRef.current = poseFingerprint;
     sceneStore.syncPosesFromFixture(props.fixture);
   }, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
-  const handleRelocate = useCallback(
+  const handleRelocate = reactHostPort.useCallback(
     (payload: RelocatePayload) => {
       const sceneStore = storeRef.current!;
       skipExternalPoseSyncRef.current = true;
@@ -1739,7 +1729,7 @@ export function SceneObjectStateProvider(props: {
     },
     [props.onRelocate],
   );
-  const handleConnect = useCallback(
+  const handleConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       const sceneStore = storeRef.current!;
       const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
@@ -1754,12 +1744,12 @@ export function SceneObjectStateProvider(props: {
     },
     [props.onConnect],
   );
-  const value = useMemo<SceneObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
+  const value = reactHostPort.useMemo<SceneObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
   return <SceneObjectStateContext.Provider value={value}>{props.children}</SceneObjectStateContext.Provider>;
 }
 
 function useSceneObjectState(): SceneObjectStateContextValue {
-  const v = useContext(SceneObjectStateContext);
+  const v = reactHostPort.useContext(SceneObjectStateContext);
   if (!v) {
     throw new Error("SceneObjectStateProvider missing");
   }
@@ -1767,8 +1757,8 @@ function useSceneObjectState(): SceneObjectStateContextValue {
 }
 
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
-  const state = useContext(SceneObjectStateContext);
-  return useSyncExternalStore(
+  const state = reactHostPort.useContext(SceneObjectStateContext);
+  return reactHostPort.useSyncExternalStore(
     (onStoreChange) => (state ? state.store.subscribeStructure(onStoreChange) : () => {}),
     () => (state ? state.store.getBlockedVortexFullIds() : fallback),
     () => (state ? state.store.getBlockedVortexFullIds() : fallback),
@@ -1787,7 +1777,7 @@ export function useSceneObjectConnect(): (payload: AttractionPayload) => void {
 
 function useObjectRecord(objectId: string): ObjectRecord | undefined {
   const { store } = useSceneObjectState();
-  return useSyncExternalStore(
+  return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeObject(objectId, onStoreChange),
     () => store.getRecord(objectId),
     () => store.getRecord(objectId),
@@ -1796,14 +1786,14 @@ function useObjectRecord(objectId: string): ObjectRecord | undefined {
 
 function useAttractingChildIds(objectId: string): readonly string[] {
   const { store } = useSceneObjectState();
-  return useSyncExternalStore(
+  return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractingChildIds(objectId),
     () => store.getAttractingChildIds(objectId),
   );
 }
 
-const ObjectItemById = memo(function ObjectItemById(props: {
+const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
   readonly objectId: string;
   readonly selected?: boolean;
   readonly relocateActive?: boolean;
@@ -1839,7 +1829,7 @@ const ObjectItemById = memo(function ObjectItemById(props: {
 });
 
 /** @emoji ­ƒî▓ Declares attraction tree structure; meshes mount flat via {@link SceneObjects} so ids stay stable on reparent. */
-export const ObjectTreeNode = memo(function ObjectTreeNode(props: { readonly objectId: string; readonly visitedIds?: readonly string[] }) {
+export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: { readonly objectId: string; readonly visitedIds?: readonly string[] }) {
   const attracting = useAttractingChildIds(props.objectId);
   const visited = props.visitedIds ?? [];
   if (visited.includes(props.objectId)) {
@@ -1879,9 +1869,9 @@ export interface SceneObjectsProps {
 }
 
 /** @emoji ­ƒºè Renders all scene objects from central state (id-keyed; survives ownership changes). */
-export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps) {
+export const SceneObjects = reactHostPort.memo(function SceneObjects(props: SceneObjectsProps) {
   const { store } = useSceneObjectState();
-  const ids = useSyncExternalStore(
+  const ids = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getSortedObjectIds(),
     () => store.getSortedObjectIds(),
@@ -1903,9 +1893,9 @@ export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps)
 });
 
 /** @emoji ­ƒî▓ Logical attraction tree roots (wormholes) for structure-only composition. */
-export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots() {
+export const SceneAttractionTreeRoots = reactHostPort.memo(function SceneAttractionTreeRoots() {
   const { store } = useSceneObjectState();
-  const wormholeIds = useSyncExternalStore(
+  const wormholeIds = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getTree().wormholeIds,
     () => store.getTree().wormholeIds,
@@ -1920,9 +1910,9 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 });
 
 /** @emoji ­ƒº▓ Renders all attraction endpoint lines in one frame loop (avoids N├ùuseFrame churn). */
-export const SceneAttractions = memo(function SceneAttractions() {
+export const SceneAttractions = reactHostPort.memo(function SceneAttractions() {
   const { store } = useSceneObjectState();
-  const attractions = useSyncExternalStore(
+  const attractions = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractions(),
     () => store.getAttractions(),
@@ -2323,7 +2313,7 @@ export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Ob
 
 function usePooledGltf(url: string) {
   const gltf = useGLTF(url);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     gltfPoolAcquire(url);
     return () => {
       gltfPoolRelease(url);
@@ -2334,7 +2324,7 @@ function usePooledGltf(url: string) {
 
 function usePooledStyledMesh(url: string, style: MeshStyleKind) {
   const gltf = usePooledGltf(url);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (style === "original") {
       return undefined;
     }
@@ -2343,7 +2333,7 @@ function usePooledStyledMesh(url: string, style: MeshStyleKind) {
       styledMeshPoolRelease(url, style);
     };
   }, [url, style]);
-  const renderRoot = useMemo(() => {
+  const renderRoot = reactHostPort.useMemo(() => {
     if (!gltf.scene) {
       return null;
     }
@@ -2443,31 +2433,31 @@ export interface RegistryHoverValue {
 
 type RegistryCoreValue = Omit<RegistryValue, keyof RegistryDragState | keyof RegistryInteractionValue | keyof RegistryHoverValue>;
 
-const RegistryCoreContext = createContext<RegistryCoreValue | null>(null);
-const RegistryDragContext = createContext<RegistryDragState | null>(null);
-const RegistryInteractionContext = createContext<RegistryInteractionValue | null>(null);
-const RegistryHoverContext = createContext<RegistryHoverValue | null>(null);
+const RegistryCoreContext = reactHostPort.createContext<RegistryCoreValue | null>(null);
+const RegistryDragContext = reactHostPort.createContext<RegistryDragState | null>(null);
+const RegistryInteractionContext = reactHostPort.createContext<RegistryInteractionValue | null>(null);
+const RegistryHoverContext = reactHostPort.createContext<RegistryHoverValue | null>(null);
 
 function useRegistryCore(): RegistryCoreValue {
-  const v = useContext(RegistryCoreContext);
+  const v = reactHostPort.useContext(RegistryCoreContext);
   if (!v) throw new Error("Scene registry missing");
   return v;
 }
 
 function useRegistryDrag(): RegistryDragState {
-  const v = useContext(RegistryDragContext);
+  const v = reactHostPort.useContext(RegistryDragContext);
   if (!v) throw new Error("Scene registry drag missing");
   return v;
 }
 
 function useRegistryInteraction(): RegistryInteractionValue {
-  const v = useContext(RegistryInteractionContext);
+  const v = reactHostPort.useContext(RegistryInteractionContext);
   if (!v) throw new Error("Scene registry interaction missing");
   return v;
 }
 
 function useRegistryHover(): RegistryHoverValue {
-  const v = useContext(RegistryHoverContext);
+  const v = reactHostPort.useContext(RegistryHoverContext);
   if (!v) throw new Error("Scene registry hover missing");
   return v;
 }
@@ -2486,7 +2476,7 @@ function SceneHoverMissBridge(): null {
   const { clearSceneHoverAll } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const onLeave = () => {
       clearSceneHoverAll();
       invalidate();
@@ -2501,7 +2491,7 @@ function SceneHoverMissBridge(): null {
 function SceneHoverInvalidateBridge(): null {
   const { hoverTarget } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     invalidate();
   }, [hoverTarget, invalidate]);
   return null;
@@ -2511,8 +2501,8 @@ function SceneHoverInvalidateBridge(): null {
 function SceneSelectionInvalidateBridge(): null {
   const selection = useLiveSceneSelection();
   const invalidate = useThree((state) => state.invalidate);
-  const selectionKey = useMemo(() => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}`, [selection.objectIds, selection.vortexIds]);
-  useEffect(() => {
+  const selectionKey = reactHostPort.useMemo(() => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}`, [selection.objectIds, selection.vortexIds]);
+  reactHostPort.useEffect(() => {
     invalidate();
   }, [selectionKey, invalidate]);
   return null;
@@ -2536,11 +2526,11 @@ function SceneSelectionMissBridge(): null {
   const { clearSceneSelection } = useRegistryInteraction();
   const store = useStore();
   const attractionBusy = useRegistryDrag().attractionDragActive || useRegistryDrag().attractionIndirectPickAwait !== null;
-  const clearSceneSelectionRef = useRef(clearSceneSelection);
+  const clearSceneSelectionRef = reactHostPort.useRef(clearSceneSelection);
   clearSceneSelectionRef.current = clearSceneSelection;
-  const attractionBusyRef = useRef(attractionBusy);
+  const attractionBusyRef = reactHostPort.useRef(attractionBusy);
   attractionBusyRef.current = attractionBusy;
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const previous = store.getState().onPointerMissed;
     const onMiss = (event: MouseEvent) => {
       if (event.button !== 0 || attractionBusyRef.current) {
@@ -2594,8 +2584,8 @@ export function chunkDistanceVisible(args: { readonly camPos: Vector3; readonly 
 
 function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
   const { camera } = useThree();
-  const centerTmp = useMemo(() => new Vector3(), []);
-  const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
+  const centerTmp = reactHostPort.useMemo(() => new Vector3(), []);
+  const [visible, setVisible] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
   useFrame(() => {
     const camPos = camera.position;
     setVisible((prev) => {
@@ -2905,7 +2895,7 @@ function GlbMeshFrame(props: { readonly children: ReactNode }) {
 }
 
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
-export const MeshBody = memo(function MeshBody(props: MeshProps) {
+export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
   const style = props.style ?? DEFAULT_MESH_STYLE;
   const renderRoot = usePooledStyledMesh(props.meshUrl, style);
   if (!renderRoot) {
@@ -2934,7 +2924,7 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
   );
 });
 
-const PlaceholderMesh = memo(function PlaceholderMesh(props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
+const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
   const colors = meshStyleColors(props.style);
   const meshColor = colors?.meshColor ?? "#cbd5e1";
   const opacity = colors?.opacity ?? 1;
@@ -2953,7 +2943,7 @@ const PlaceholderMesh = memo(function PlaceholderMesh(props: SceneMeshPointerHan
 
 //#region ­ƒºèObject
 
-const ObjectTransformControls = memo(function ObjectTransformControls(props: {
+const ObjectTransformControls = reactHostPort.memo(function ObjectTransformControls(props: {
   readonly object: Group;
   readonly objectId: string;
   readonly mode: RelocateMode;
@@ -3008,7 +2998,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
   );
 });
 
-export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
+export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
   const group = useRef<Group>(null);
   const liveSelection = useLiveSceneSelection();
   const { registerObject, relocateMode } = useRegistryCore();
@@ -3016,24 +3006,24 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
   const { setSceneHover, clearSceneHover, isSceneHovered } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
   const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
-  const [tcTarget, setTcTarget] = useState<Group | null>(null);
+  const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
   const objectPointerHovered = isSceneHovered({ kind: "object", id: props.id });
   const registrySelected = objectMatchesSceneSelection(props.id, liveSelection);
   const selected = props.selected === true || registrySelected;
   const relocateActive = props.relocateActive === true || primarySelectionObjectId(liveSelection) === props.id;
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     registerObject(props.id, props.objectKind, group.current);
     return () => {
       registerObject(props.id, props.objectKind, null);
     };
   }, [props.id, props.objectKind, registerObject]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (group.current) setTcTarget(group.current);
   }, [selected, relocateActive, props.id]);
 
-  const linkHighlighted = useMemo(() => {
+  const linkHighlighted = reactHostPort.useMemo(() => {
     if (props.highlighted === true) {
       return true;
     }
@@ -3046,7 +3036,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
     return false;
   }, [props.highlighted, props.id, attractionCompatibleAttractedFullIds]);
 
-  const meshStyle = useMemo(
+  const meshStyle = reactHostPort.useMemo(
     () =>
       resolveMeshStyle({
         style: props.style,
@@ -3059,13 +3049,13 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
   );
   const showSelectionOutline = selected && !props.disabled;
   const invalidate = useThree((state) => state.invalidate);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (selected || showSelectionOutline) {
       invalidate();
     }
   }, [selected, showSelectionOutline, meshStyle, invalidate]);
 
-  const selectObject = useCallback(() => {
+  const selectObject = reactHostPort.useCallback(() => {
     if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
       return;
     }
@@ -3079,7 +3069,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
     setActiveRelocateObjectId(props.id);
   }, [attractionDragActive, attractionIndirectPickAwait, props.disabled, props.id, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds]);
 
-  const meshPointerHandlers = useMemo(
+  const meshPointerHandlers = reactHostPort.useMemo(
     () => ({
       onPointerDown: (e: ThreeEvent<PointerEvent>) => {
         if (e.nativeEvent.button !== 0) {
@@ -3108,8 +3098,8 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
     [clearSceneHover, props.disabled, props.id, selectObject, setSceneHover],
   );
 
-  const poseKey = useMemo(() => objectPoseKey(props.id, props.origin, props.orientation, props.scale), [props.id, props.origin, props.orientation, props.scale]);
-  useLayoutEffect(() => {
+  const poseKey = reactHostPort.useMemo(() => objectPoseKey(props.id, props.origin, props.orientation, props.scale), [props.id, props.origin, props.orientation, props.scale]);
+  reactHostPort.useLayoutEffect(() => {
     const g = group.current;
     if (!g || groupMatchesFixturePose(g, props.origin, props.orientation, props.scale)) {
       return;
@@ -3193,7 +3183,7 @@ function VortexFallbackMesh(props: {
   );
 }
 
-export const Vortex = memo(function Vortex(
+export const Vortex = reactHostPort.memo(function Vortex(
   props: VortexProps & {
     objectId: string;
     objectKind?: string;
@@ -3207,7 +3197,7 @@ export const Vortex = memo(function Vortex(
   const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
   const r = props.radius ?? 0.35;
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const getter = () => {
       if (!root.current) return null;
       updateWorldMatrixChain(root.current);
@@ -3221,7 +3211,7 @@ export const Vortex = memo(function Vortex(
     };
   }, [fullId, reg]);
 
-  const bindRoot = useCallback(
+  const bindRoot = reactHostPort.useCallback(
     (node: Group | null) => {
       root.current = node;
       if (node) {
@@ -3243,13 +3233,13 @@ export const Vortex = memo(function Vortex(
   );
 
   const lodCtx = useLod();
-  const worldPosRef = useRef(new Vector3());
-  const handleMeshByLodRef = useRef(props.handleMeshByLod);
+  const worldPosRef = reactHostPort.useRef(new Vector3());
+  const handleMeshByLodRef = reactHostPort.useRef(props.handleMeshByLod);
   handleMeshByLodRef.current = props.handleMeshByLod;
-  const handleMeshUrlRef = useRef(props.handleMeshUrl);
+  const handleMeshUrlRef = reactHostPort.useRef(props.handleMeshUrl);
   handleMeshUrlRef.current = props.handleMeshUrl;
   const trackVortexLod = lodCtx.depthVariable || (props.handleMeshByLod?.length ?? 0) > 0;
-  const [lodVisual, setLodVisual] = useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl));
+  const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl));
   const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = props.selected
     ? "attracting"
     : reg.attractionDragAttractingFullId === fullId
@@ -3262,7 +3252,7 @@ export const Vortex = memo(function Vortex(
             ? "compatible"
             : "none";
 
-  const onVortexClick = useCallback(
+  const onVortexClick = reactHostPort.useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       const pe = e.nativeEvent;
       if (pe.button !== 0) {
@@ -3280,7 +3270,7 @@ export const Vortex = memo(function Vortex(
     [fullId, props.objectId, reg],
   );
 
-  const onPointerDown = useCallback(
+  const onPointerDown = reactHostPort.useCallback(
     (e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
       const pe = e.nativeEvent;
       if (pe.button !== 0) {
@@ -3308,7 +3298,7 @@ export const Vortex = memo(function Vortex(
 
   const inIndirectRing = reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
   const linger = (reg.attractionDragActive && (reg.attractionDragAttractingFullId === fullId || reg.attractionHoverRingFullId === fullId || reg.attractionCompatibleAttractedFullIds.has(fullId))) || inIndirectRing;
-  const lingerRef = useRef(linger);
+  const lingerRef = reactHostPort.useRef(linger);
   lingerRef.current = linger;
   useFrame(() => {
     if (!trackVortexLod) return;
@@ -3327,12 +3317,12 @@ export const Vortex = memo(function Vortex(
   const pickProxy = (drawHandleBody ? false : trackVortexLod ? lodVisual.pickProxy : lodHandlePickProxy(lodCtx.lod)) && !linger;
   const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.handleMeshByLod, lodCtx.lod, props.handleMeshUrl);
 
-  const positionThree = useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
+  const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
 
   const vortexPointerHovered = reg.isSceneHovered({ kind: "vortex", fullId });
   const handleMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
 
-  const vortexPointerHoverHandlers = useMemo(
+  const vortexPointerHoverHandlers = reactHostPort.useMemo(
     () => ({
       onPointerOver: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
@@ -3372,8 +3362,8 @@ export const Vortex = memo(function Vortex(
 //#endregion ­ƒîÇVortex
 
 //#region ­ƒº▓Magnet
-export const Magnet = memo(function Magnet(props: MagnetProps & { objectOrigin: Vec3; objectOrientation?: Quat }) {
-  const positionThree = useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
+export const Magnet = reactHostPort.memo(function Magnet(props: MagnetProps & { objectOrigin: Vec3; objectOrientation?: Quat }) {
+  const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
   return (
     <mesh position={positionThree} userData={{ sceneMagnetId: props.id }}>
       <boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
@@ -3394,16 +3384,16 @@ function sceneAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): numb
   return 0;
 }
 
-const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: { readonly attractions: readonly AttractionProps[] }) {
+const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLineBatch(props: { readonly attractions: readonly AttractionProps[] }) {
   const reg = useRegistry();
-  const mat = useMemo(() => {
+  const mat = reactHostPort.useMemo(() => {
     const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
     return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, vertexColors: true });
   }, []);
-  const geo = useMemo(() => new BufferGeometry(), []);
-  const normalColor = useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
-  const hoveredColor = useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#7b827d")), []);
-  useLayoutEffect(() => {
+  const geo = reactHostPort.useMemo(() => new BufferGeometry(), []);
+  const normalColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
+  const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#7b827d")), []);
+  reactHostPort.useLayoutEffect(() => {
     const vertexCount = Math.max(props.attractions.length * 2, 2);
     geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
     geo.setAttribute("color", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
@@ -3431,7 +3421,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
     pos.needsUpdate = true;
     colors.needsUpdate = true;
   });
-  const onPointerOver = useCallback(
+  const onPointerOver = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
       if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
@@ -3445,7 +3435,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
     },
     [props.attractions, reg],
   );
-  const onPointerOut = useCallback(
+  const onPointerOut = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
       const idx = sceneAttractionIndexFromPointerEvent(e);
@@ -3456,7 +3446,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
     },
     [props.attractions, reg],
   );
-  useEffect(
+  reactHostPort.useEffect(
     () => () => {
       geo.dispose();
       mat.dispose();
@@ -3469,15 +3459,15 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
   return <lineSegments geometry={geo} material={mat} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
 });
 
-export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
+export const SceneAttraction = reactHostPort.memo(function SceneAttraction(props: AttractionProps) {
   return <SceneAttractionLineBatch attractions={[props]} />;
 });
 //#endregion ­ƒº▓SceneAttraction
 
 //#region ­ƒº▓Attraction
-export const Attraction = memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
-  const pts = useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
-  const color = useMemo(() => lineCssColor(CSS_ATTRACTION_LINE, "#f472b6"), []);
+export const Attraction = reactHostPort.memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
+  const pts = reactHostPort.useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
+  const color = reactHostPort.useMemo(() => lineCssColor(CSS_ATTRACTION_LINE, "#f472b6"), []);
   return <Line points={pts} color={color} lineWidth={2} />;
 });
 //#endregion ­ƒº▓Attraction
@@ -3500,10 +3490,10 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
   const reg = useRegistry();
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as { target: Vector3 } | null);
-  const targetScratch = useMemo(() => new Vector3(), []);
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
   const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
   const invalidate = useThree((s) => s.invalidate);
-  const reportCamera = useCallback(() => {
+  const reportCamera = reactHostPort.useCallback(() => {
     if (!props.onCamera) {
       return;
     }
@@ -3514,7 +3504,7 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
       zoom: props.zoom,
     });
   }, [camera, controls, props.onCamera, props.zoom, targetScratch]);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
   if (!props.camera) {
@@ -3543,9 +3533,9 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
 function SceneAutoFit(props: { readonly behavior?: SceneAutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
   const reg = useRegistry();
   const { camera, controls, invalidate } = useThree();
-  const targetScratch = useMemo(() => new Vector3(), []);
-  const lastKey = useRef("");
-  const hasApplied = useRef(false);
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const lastKey = reactHostPort.useRef("");
+  const hasApplied = reactHostPort.useRef(false);
   const behavior = props.behavior ?? "initial";
   const padding = props.padding ?? 1.25;
   const zoom = props.zoom ?? 1;
@@ -3581,11 +3571,11 @@ function SceneAutoFit(props: { readonly behavior?: SceneAutoFitBehavior; readonl
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
 function SceneCameraSeed(props: { readonly camera: ThreePerspectiveCamera | null; readonly position: Vec3; readonly target: Vec3 }) {
   const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
-  const seededPositionFor = useRef("");
-  const seededTargetFor = useRef("");
+  const seededPositionFor = reactHostPort.useRef("");
+  const seededTargetFor = reactHostPort.useRef("");
   const positionKey = props.position.join(",");
   const targetKey = props.target.join(",");
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const camera = props.camera;
     if (!camera) {
       return;
@@ -3609,7 +3599,7 @@ function SceneCameraSeed(props: { readonly camera: ThreePerspectiveCamera | null
 function AttractionThreeBinder() {
   const reg = useRegistry();
   const t = useThree();
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
     return () => reg.attachAttractionThreeEnv(null);
   }, [reg, t.camera, t.gl, t.scene]);
@@ -3620,7 +3610,7 @@ function AttractionWindowBridge() {
   const reg = useRegistry();
   const invalidate = useThree((s) => s.invalidate);
   const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!attractionBusy) return;
     const onMove = (e: PointerEvent) => {
       if (reg.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
@@ -3647,12 +3637,12 @@ function AttractionWindowBridge() {
 
 function AttractionRubberBand() {
   const reg = useRegistry();
-  const geo = useMemo(() => {
+  const geo = reactHostPort.useMemo(() => {
     const g = new BufferGeometry();
     g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
     return g;
   }, []);
-  const mat = useMemo(() => new LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.92, depthTest: false }), []);
+  const mat = reactHostPort.useMemo(() => new LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.92, depthTest: false }), []);
   useFrame(() => {
     const pos = geo.attributes.position as Float32BufferAttribute;
     const attractionLine = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
@@ -3674,7 +3664,7 @@ function AttractionRubberBand() {
       pos.needsUpdate = true;
     }
   });
-  useEffect(
+  reactHostPort.useEffect(
     () => () => {
       geo.dispose();
       mat.dispose();
@@ -3726,18 +3716,18 @@ function RegistryProvider({
     selectionStoreRef.current = createSelectionSnapshotStore(controlledSelection ?? EMPTY_SELECTION_SNAPSHOT);
   }
   const selectionStore = selectionStoreRef.current;
-  const controlledSelectionRef = useRef(controlledSelection);
+  const controlledSelectionRef = reactHostPort.useRef(controlledSelection);
   controlledSelectionRef.current = controlledSelection;
-  const onSelectRef = useRef(onSelect);
+  const onSelectRef = reactHostPort.useRef(onSelect);
   onSelectRef.current = onSelect;
-  const selectionModeRef = useRef(selectionMode);
+  const selectionModeRef = reactHostPort.useRef(selectionMode);
   selectionModeRef.current = selectionMode;
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (controlledSelection !== undefined) {
       selectionStore.setSnapshot(controlledSelection);
     }
   }, [controlledSelection, selectionStore]);
-  const setSelectedObjectIds = useCallback(
+  const setSelectedObjectIds = reactHostPort.useCallback(
     (ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
       const controlled = controlledSelectionRef.current;
       const current = selectionStore.getSnapshot();
@@ -3760,43 +3750,43 @@ function RegistryProvider({
     [selectionStore],
   );
   const activeRelocateObjectIdRef = useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
-  const setActiveRelocateObjectId = useCallback((id: string | null) => {
+  const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
     if (activeRelocateObjectIdRef.current === id) {
       return;
     }
     activeRelocateObjectIdRef.current = id;
   }, []);
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (controlledSelection === undefined) {
       return;
     }
     activeRelocateObjectIdRef.current = primarySelectionObjectId(controlledSelection);
   }, [controlledSelection]);
-  const liveSelection = useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
+  const liveSelection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
   const selectedObjectIds = liveSelection.objectIds;
   const activeRelocateObjectId = primarySelectionObjectId(liveSelection);
-  const [attractionDragActive, setAttractionDragActive] = useState(false);
-  const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
-  const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
-  const [attractionHoverRingFullId, setAttractionHoverRingFullId] = useState<string | null>(null);
-  const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = useState<AttractionIndirectPickAwait | null>(null);
-  const [hoverTarget, setHoverTarget] = useState<SceneHoverTarget | null>(null);
+  const [attractionDragActive, setAttractionDragActive] = reactHostPort.useState(false);
+  const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = reactHostPort.useState<string | null>(null);
+  const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = reactHostPort.useState<ReadonlySet<string>>(new Set());
+  const [attractionHoverRingFullId, setAttractionHoverRingFullId] = reactHostPort.useState<string | null>(null);
+  const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = reactHostPort.useState<AttractionIndirectPickAwait | null>(null);
+  const [hoverTarget, setHoverTarget] = reactHostPort.useState<SceneHoverTarget | null>(null);
 
-  const setSceneHover = useCallback((target: SceneHoverTarget) => {
+  const setSceneHover = reactHostPort.useCallback((target: SceneHoverTarget) => {
     setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? prev : target));
   }, []);
 
-  const clearSceneHover = useCallback((target: SceneHoverTarget) => {
+  const clearSceneHover = reactHostPort.useCallback((target: SceneHoverTarget) => {
     setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? null : prev));
   }, []);
 
-  const clearSceneHoverAll = useCallback(() => {
+  const clearSceneHoverAll = reactHostPort.useCallback(() => {
     setHoverTarget((prev) => (prev === null ? prev : null));
   }, []);
 
-  const isSceneHovered = useCallback((target: SceneHoverTarget) => sceneHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
+  const isSceneHovered = reactHostPort.useCallback((target: SceneHoverTarget) => sceneHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
 
-  const clearSceneSelection = useCallback(() => {
+  const clearSceneSelection = reactHostPort.useCallback(() => {
     clearSceneHoverAll();
     setActiveRelocateObjectId(null);
     const empty = EMPTY_SELECTION_SNAPSHOT;
@@ -3812,14 +3802,14 @@ function RegistryProvider({
     onSelectRef.current?.(empty);
   }, [clearSceneHoverAll, selectionStore, setActiveRelocateObjectId]);
 
-  const vortexGettersRef = useRef(new Map<string, VortexGetter>());
-  const vortexMetaRef = useRef(new Map<string, VortexBindingMeta>());
-  const vortexPickRef = useRef(new Map<string, Object3D>());
-  const objectGroupMap = useRef(new Map<string, Group | null>());
-  const objectKindsRef = useRef(new Map<string, string | undefined>());
+  const vortexGettersRef = reactHostPort.useRef(new Map<string, VortexGetter>());
+  const vortexMetaRef = reactHostPort.useRef(new Map<string, VortexBindingMeta>());
+  const vortexPickRef = reactHostPort.useRef(new Map<string, Object3D>());
+  const objectGroupMap = reactHostPort.useRef(new Map<string, Group | null>());
+  const objectKindsRef = reactHostPort.useRef(new Map<string, string | undefined>());
   const indirectPickRef = useRef<AttractionIndirectPickAwait | null>(null);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     indirectPickRef.current = attractionIndirectPickAwait;
   }, [attractionIndirectPickAwait]);
 
@@ -3832,41 +3822,41 @@ function RegistryProvider({
   } | null>(null);
   const attractionEndWorldRef = useRef<Vector3 | null>(null);
   const attractionThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null>(null);
-  const raycasterRef = useRef(new Raycaster());
-  const ndcRef = useRef(new Vector2());
-  const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
-  const hitScratchRef = useRef(new Vector3());
+  const raycasterRef = reactHostPort.useRef(new Raycaster());
+  const ndcRef = reactHostPort.useRef(new Vector2());
+  const planeRef = reactHostPort.useRef(new Plane(new Vector3(0, 1, 0), 0));
+  const hitScratchRef = reactHostPort.useRef(new Vector3());
 
-  const registerVortex = useCallback((fullId: string, getter: VortexGetter) => {
+  const registerVortex = reactHostPort.useCallback((fullId: string, getter: VortexGetter) => {
     vortexGettersRef.current.set(fullId, getter);
   }, []);
 
-  const unregisterVortex = useCallback((fullId: string) => {
+  const unregisterVortex = reactHostPort.useCallback((fullId: string) => {
     vortexGettersRef.current.delete(fullId);
   }, []);
 
-  const getVortexWorld = useCallback((fullId: string) => {
+  const getVortexWorld = reactHostPort.useCallback((fullId: string) => {
     const g = vortexGettersRef.current.get(fullId);
     return g ? g() : null;
   }, []);
 
-  const registerVortexBinding = useCallback((meta: VortexBindingMeta, pickRoot: Object3D | null) => {
+  const registerVortexBinding = reactHostPort.useCallback((meta: VortexBindingMeta, pickRoot: Object3D | null) => {
     vortexMetaRef.current.set(meta.fullId, meta);
     if (pickRoot) vortexPickRef.current.set(meta.fullId, pickRoot);
     else vortexPickRef.current.delete(meta.fullId);
   }, []);
 
-  const unregisterVortexBinding = useCallback((fullId: string) => {
+  const unregisterVortexBinding = reactHostPort.useCallback((fullId: string) => {
     vortexMetaRef.current.delete(fullId);
     vortexPickRef.current.delete(fullId);
   }, []);
 
-  const registerObject = useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
+  const registerObject = reactHostPort.useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
     objectGroupMap.current.set(id, group);
     objectKindsRef.current.set(id, objectKind);
   }, []);
 
-  const collectObjectGroups = useCallback((): Group[] => {
+  const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
     const out: Group[] = [];
     for (const group of objectGroupMap.current.values()) {
       if (group) out.push(group);
@@ -3874,11 +3864,11 @@ function RegistryProvider({
     return out;
   }, []);
 
-  const getObjectGroup = useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
+  const getObjectGroup = reactHostPort.useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
 
-  const getObjectKind = useCallback((id: string) => objectKindsRef.current.get(id), []);
+  const getObjectKind = reactHostPort.useCallback((id: string) => objectKindsRef.current.get(id), []);
 
-  const cancelAttractionDrag = useCallback(() => {
+  const cancelAttractionDrag = reactHostPort.useCallback(() => {
     attractionSessionRef.current = null;
     attractionEndWorldRef.current = null;
     setAttractionDragActive(false);
@@ -3890,7 +3880,7 @@ function RegistryProvider({
     onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
   }, [onAttractionTargetRing]);
 
-  const beginAttractionDragFromVortex = useCallback(
+  const beginAttractionDragFromVortex = reactHostPort.useCallback(
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
       if (indirectPickRef.current) return;
       if (blockedVortexFullIds.has(fullId)) return;
@@ -3930,14 +3920,14 @@ function RegistryProvider({
     [blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
   );
 
-  const collectPickRoots = useCallback((): Object3D[] => {
+  const collectPickRoots = reactHostPort.useCallback((): Object3D[] => {
     const out: Object3D[] = [];
     for (const p of vortexPickRef.current.values()) out.push(p);
     for (const g of objectGroupMap.current.values()) if (g) out.push(g);
     return out;
   }, []);
 
-  const updateAttractionPointer = useCallback(
+  const updateAttractionPointer = reactHostPort.useCallback(
     (clientX: number, clientY: number) => {
       const env = attractionThreeRef.current;
       const session = attractionSessionRef.current;
@@ -3993,7 +3983,7 @@ function RegistryProvider({
     [blockedVortexFullIds, collectPickRoots, lodRef, onAttractionTargetRing],
   );
 
-  const commitAttractionPointer = useCallback(
+  const commitAttractionPointer = reactHostPort.useCallback(
     (clientX: number, clientY: number) => {
       const env = attractionThreeRef.current;
       const session = attractionSessionRef.current;
@@ -4076,7 +4066,7 @@ function RegistryProvider({
     [blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect, onAttractionTargetRing, onProximityConnect],
   );
 
-  const updateIndirectPickPointer = useCallback(
+  const updateIndirectPickPointer = reactHostPort.useCallback(
     (clientX: number, clientY: number) => {
       const awaitPick = indirectPickRef.current;
       const env = attractionThreeRef.current;
@@ -4108,7 +4098,7 @@ function RegistryProvider({
     [collectPickRoots],
   );
 
-  const commitIndirectPickPointerDown = useCallback(
+  const commitIndirectPickPointerDown = reactHostPort.useCallback(
     (clientX: number, clientY: number, ev?: PointerEvent) => {
       const awaitPick = indirectPickRef.current;
       const env = attractionThreeRef.current;
@@ -4134,11 +4124,11 @@ function RegistryProvider({
     [cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
   );
 
-  const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
+  const attachAttractionThreeEnv = reactHostPort.useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
     attractionThreeRef.current = env;
   }, []);
 
-  const findNearestProximityRelocate = useCallback(
+  const findNearestProximityRelocate = reactHostPort.useCallback(
     (world: Vector3, movingObjectId: string): AttractionPayload | null => {
       if (!proximityRelocateEnabled) {
         return null;
@@ -4158,7 +4148,7 @@ function RegistryProvider({
     [proximityRadius, proximityRelocateEnabled],
   );
 
-  const coreValue = useMemo<RegistryCoreValue>(
+  const coreValue = reactHostPort.useMemo<RegistryCoreValue>(
     () => ({
       registerVortex,
       unregisterVortex,
@@ -4231,7 +4221,7 @@ function RegistryProvider({
       commitIndirectPickPointerDown,
     ],
   );
-  const interactionValue = useMemo<RegistryInteractionValue>(
+  const interactionValue = reactHostPort.useMemo<RegistryInteractionValue>(
     () => ({
       selectionMode,
       setSelectedObjectIds,
@@ -4240,7 +4230,7 @@ function RegistryProvider({
     }),
     [clearSceneSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
   );
-  const hoverValue = useMemo<RegistryHoverValue>(
+  const hoverValue = reactHostPort.useMemo<RegistryHoverValue>(
     () => ({
       hoverTarget,
       setSceneHover,
@@ -4250,7 +4240,7 @@ function RegistryProvider({
     }),
     [hoverTarget, setSceneHover, clearSceneHover, clearSceneHoverAll, isSceneHovered],
   );
-  const dragValue = useMemo<RegistryDragState>(
+  const dragValue = reactHostPort.useMemo<RegistryDragState>(
     () => ({
       attractionDragActive,
       attractionDragAttractingFullId,
@@ -4281,7 +4271,7 @@ function RegistryProvider({
 }
 
 function Chunks({ chunkSize, maxDistance, children }: { chunkSize: number; maxDistance: number; children: ReactNode }) {
-  const buckets = useMemo(() => {
+  const buckets = reactHostPort.useMemo(() => {
     const map = new Map<string, ReactNode[]>();
     Children.forEach(children, (child) => {
       if (!isValidElement(child)) return;
@@ -4320,7 +4310,7 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 function Inner(props: CanvasProps) {
   const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
   const lodRef = useRef<number>(DEFAULT_MANUAL_LOD);
-  const [sceneCamera, setSceneCamera] = useState<ThreePerspectiveCamera | null>(null);
+  const [sceneCamera, setSceneCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
@@ -4335,7 +4325,7 @@ function Inner(props: CanvasProps) {
   const zoom = camProp?.zoom ?? 1;
   const autoFitCamera = props.autoFitCamera !== false;
   const autoFitBehavior = props.autoFitBehavior ?? "initial";
-  const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
+  const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
   const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
   const blocked = useLiveBlockedVortexFullIds(blockedFallback);
   return (
@@ -4419,27 +4409,27 @@ export interface PlaySceneCanvasProps {
 export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement {
   const handleRelocate = useSceneObjectRelocate();
   const handleConnect = useSceneObjectConnect();
-  const onIndirectConnect = useCallback(
+  const onIndirectConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
       props.onIndirectConnect?.();
     },
     [handleConnect, props.onIndirectConnect],
   );
-  const onProximityConnect = useCallback(
+  const onProximityConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
       props.onProximityConnect?.();
     },
     [handleConnect, props.onProximityConnect],
   );
-  const onAttractionCompatibleObjects = useCallback(
+  const onAttractionCompatibleObjects = reactHostPort.useCallback(
     (_payload: AttractionCompatibleObjectsPayload) => {
       props.onAttractionCompatibleObjects?.();
     },
     [props.onAttractionCompatibleObjects],
   );
-  const onAttractionTargetRing = useCallback(
+  const onAttractionTargetRing = reactHostPort.useCallback(
     (_payload: AttractionTargetRingPayload) => {
       props.onAttractionTargetRing?.();
     },
@@ -4487,8 +4477,8 @@ export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
   const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
-  const [shellLod, setShellLod] = useState(() => formatSceneLod(DEFAULT_MANUAL_LOD));
-  const handleLod = useCallback(
+  const [shellLod, setShellLod] = reactHostPort.useState(() => formatSceneLod(DEFAULT_MANUAL_LOD));
+  const handleLod = reactHostPort.useCallback(
     (l: number) => {
       const label = formatSceneLod(l);
       setShellLod(label);
@@ -4518,7 +4508,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
   const { setActiveRelocateObjectId, clearSceneSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const w = window as unknown as {
       __scenePlaySelect?: (id: string) => void;
       __scenePlayActivate?: (id: string) => void;

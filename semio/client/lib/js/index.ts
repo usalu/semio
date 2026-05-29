@@ -3,11 +3,225 @@
 // GNU LGPL-3.0 or later — semio/js: stateless {@link Session} + GraphQL transport (WASM worker or inline); no client-side kit cache.
 //#endregion 🧲Header
 
-import { assertRsJsSessionOpenUri, RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
-import { GQL_RESPONSE_SELECTION, withResponseSelection } from "./graphql-kit-selection";
-import { createRsWasmGraphqlHandle } from "./rs-wasm-transport";
+//#region 🌐GraphqlContract
+/** @emoji 📜 Golden SDL path (single schema source for tooling and embedded tests). */
+export const SEMIO_GRAPHQL_GOLDEN_SCHEMA_PATH = "semio/client/schema/graphql/schema.golden.graphql" as const;
 
-export { GQL_RESPONSE_SELECTION, withResponseSelection } from "./graphql-kit-selection";
+/** @emoji 🧵 GraphQL-over-HTTP POST body — the only payload shape across the rs/js boundary. */
+export type GraphqlWirePostBody = Readonly<{
+  query: string;
+  variables: Readonly<Record<string, unknown>>;
+  operationName: string | null;
+}>;
+
+/** @emoji 🧪 Empty in-memory WASM store URI (host lifecycle only; kit state changes use GraphQL). */
+export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
+
+/** @emoji 🛑 Rejects non-empty WASM bootstrap URIs; kit JSON must use {@link Store.installProjection}. */
+export function assertRsJsSessionOpenUri(uri: string): void {
+  const t = uri.trim();
+  if (t !== RS_WASM_EMPTY_STORE_URI) {
+    throw new Error(
+      `Session.open: only ${RS_WASM_EMPTY_STORE_URI} is allowed; use Session.openInMemory() and store.installProjection(json) for kit JSON`,
+    );
+  }
+  if (t.startsWith("{") || t.startsWith("[")) {
+    throw new Error("Session.open: inline JSON is not part of the rs/js contract; use Session.openInMemory() and store.installProjection(json)");
+  }
+  if (t.includes("dev+json:")) {
+    throw new Error("Session.open: dev+json bootstrap is not part of the rs/js contract; use Session.openInMemory() and store.installProjection(json)");
+  }
+}
+//#endregion 🌐GraphqlContract
+
+//#region 🌐GraphqlKitSelection
+/** @emoji 📬 Selection for golden {@code Response} on command mutation leaves. */
+export const GQL_RESPONSE_SELECTION =
+  "ok errors { kind message requestId } result { ... on IdResult { value } }";
+
+type GqlScan = { paren: number; inString: boolean; escape: boolean };
+
+function advanceGqlScan(ch: string, st: GqlScan): void {
+  if (st.inString) {
+    if (st.escape) {
+      st.escape = false;
+      return;
+    }
+    if (ch === "\\") {
+      st.escape = true;
+      return;
+    }
+    if (ch === '"') st.inString = false;
+    return;
+  }
+  if (ch === '"') {
+    st.inString = true;
+    return;
+  }
+  if (ch === "(") st.paren++;
+  else if (ch === ")") st.paren--;
+}
+
+function findMatchingCloseBrace(s: string, openIdx: number): number {
+  if (s[openIdx] !== "{") return -1;
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  let depth = 0;
+  for (let i = openIdx; i < s.length; i++) {
+    const ch = s[i]!;
+    if (st.inString) {
+      advanceGqlScan(ch, st);
+      continue;
+    }
+    if (ch === '"') {
+      st.inString = true;
+      continue;
+    }
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function lastArgListCloseParen(s: string): number {
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  let last = -1;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    advanceGqlScan(ch, st);
+    if (!st.inString && st.paren === 0 && ch === ")") last = i;
+  }
+  return last;
+}
+
+function hasTopLevelSelectionBrace(s: string): boolean {
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    advanceGqlScan(ch, st);
+    if (!st.inString && st.paren === 0 && ch === "{") return true;
+  }
+  return false;
+}
+
+function appendResponseAfterArgs(fieldWithArgs: string): string {
+  const t = fieldWithArgs.trim();
+  if (t.includes(GQL_RESPONSE_SELECTION)) return t;
+  const closeParen = lastArgListCloseParen(t);
+  if (closeParen === -1) return `${t} { ${GQL_RESPONSE_SELECTION} }`;
+  const after = t.slice(closeParen + 1).trim();
+  if (after.startsWith("{")) {
+    const open = closeParen + 1 + t.slice(closeParen + 1).indexOf("{");
+    const close = findMatchingCloseBrace(t, open);
+    if (close === -1) return `${t} { ${GQL_RESPONSE_SELECTION} }`;
+    const head = t.slice(0, open).trimEnd();
+    const inner = t.slice(open + 1, close).trim();
+    const tail = t.slice(close + 1).trim();
+    return `${head} { ${transformKitSelectionBlock(inner)} }${tail === "" ? "" : ` ${tail}`}`;
+  }
+  return `${t.slice(0, closeParen + 1)} { ${GQL_RESPONSE_SELECTION} }`;
+}
+
+function transformKitSelectionBlock(inner: string): string {
+  if (!hasTopLevelSelectionBrace(inner)) return appendResponseAfterArgs(inner);
+  const open = inner.indexOf("{");
+  const close = findMatchingCloseBrace(inner, open);
+  if (close === -1) return appendResponseAfterArgs(inner);
+  const head = inner.slice(0, open).trimEnd();
+  const body = inner.slice(open + 1, close).trim();
+  const tail = inner.slice(close + 1).trim();
+  return `${head} { ${transformKitSelectionBlock(body)} }${tail === "" ? "" : ` ${transformKitSelectionBlock(tail)}`}`;
+}
+
+/** @emoji 📬 Appends {@link GQL_RESPONSE_SELECTION} after kit command args, not inside input objects. */
+export function withResponseSelection(kitSelection: string): string {
+  const trimmed = kitSelection.trim();
+  const open = trimmed.indexOf("{");
+  if (open === -1) return appendResponseAfterArgs(trimmed);
+  const close = findMatchingCloseBrace(trimmed, open);
+  if (close === -1) return appendResponseAfterArgs(trimmed);
+  const head = trimmed.slice(0, open).trimEnd();
+  const inner = trimmed.slice(open + 1, close).trim();
+  const tail = trimmed.slice(close + 1).trim();
+  const result = `${head} { ${transformKitSelectionBlock(inner)} }`;
+  return tail === "" ? result : `${result} ${withResponseSelection(tail)}`;
+}
+//#endregion 🌐GraphqlKitSelection
+
+//#region 🌐RsWasmTransport
+export type GraphqlExecuteFn = (requestJson: string) => Promise<string>;
+export type GraphqlSubscribeFn = (requestJson: string, onEvent: (eventJson: string) => void) => Promise<void>;
+
+/** @emoji 🌐 WASM handle — JSON GraphQL wire in/out only (no Rust DTO surface). */
+export type RsWasmGraphqlHandle = Readonly<{
+  execute: GraphqlExecuteFn;
+  subscribe: GraphqlSubscribeFn;
+  free?: () => void;
+}>;
+
+async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
+  try {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const url = await import("node:url");
+    const here = path.dirname(url.fileURLToPath(import.meta.url));
+    const candidates = [
+      path.resolve(here, "../rs/pkg/semio_bg.wasm"),
+      path.resolve(here, "../../../../semio/client/lib/rs/pkg/semio_bg.wasm"),
+    ];
+    for (const p of candidates) {
+      try {
+        const buf = await fs.readFile(p);
+        return new Uint8Array(buf);
+      } catch {
+        /* try next */
+      }
+    }
+  } catch {
+    /* non-node */
+  }
+  return undefined;
+}
+
+function defaultRsWasmSpecifier(): string {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return new URL("../rs/pkg/semio.js", import.meta.url).href;
+  }
+  return "@semio/rs-wasm";
+}
+
+/** @emoji 🛰️ Creates a WASM-backed GraphQL executor; {@code bootstrapUri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
+export async function createRsWasmGraphqlHandle(
+  bootstrapUri: string,
+  opts?: Readonly<{ wasmSpecifier?: string; wasmBytes?: Uint8Array | null }>,
+): Promise<RsWasmGraphqlHandle> {
+  if (bootstrapUri !== RS_WASM_EMPTY_STORE_URI) {
+    throw new Error(`createRsWasmGraphqlHandle: only ${RS_WASM_EMPTY_STORE_URI} is allowed; seed kit data via GraphQL after open`);
+  }
+  const wasmSpecifier = opts?.wasmSpecifier ?? defaultRsWasmSpecifier();
+  const wasmBytesPre = opts?.wasmBytes ?? (await readSemioWasmBytesFromMonorepoCandidates());
+  let mod: typeof import("@semio/rs-wasm");
+  try {
+    mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+  } catch (e) {
+    const base = e instanceof Error ? e.message : String(e);
+    throw new Error(`Failed to load @semio/rs-wasm: ${base}`, { cause: e });
+  }
+  if (typeof mod.default === "function") {
+    if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
+    else await mod.default();
+  }
+  if (typeof mod.boot === "function") mod.boot();
+  const handleUnknown = mod.KitStoreHandle.create(bootstrapUri);
+  const wasmHandle = handleUnknown instanceof Promise ? await handleUnknown : handleUnknown;
+  if (wasmHandle == null || typeof (wasmHandle as { execute?: unknown }).execute !== "function") {
+    throw new Error("KitStoreHandle.create did not return execute()");
+  }
+  return wasmHandle as RsWasmGraphqlHandle;
+}
+//#endregion 🌐RsWasmTransport
 
 //#region 🔌Adapters
 //#endregion 🔌Adapters
@@ -77,7 +291,7 @@ function assertGraphqlWireKind(document: string, kind: GraphqlWireKind): void {
 }
 
 /** @emoji 🧵 Canonical GraphQL-over-HTTP POST object: {@code query}, {@code variables}, {@code operationName} always present on the wire. */
-type GraphqlWirePostBody = Readonly<{
+type GraphqlWirePostBodyLocal = Readonly<{
   query: string;
   variables: JsonObject;
   operationName: string | null;
@@ -88,7 +302,7 @@ function normalizeGraphqlWirePostBody(body: {
   readonly query: string;
   readonly variables?: JsonObject;
   readonly operationName?: string | null;
-}): GraphqlWirePostBody {
+}): GraphqlWirePostBodyLocal {
   return {
     query: body.query,
     variables: body.variables ?? {},
@@ -434,13 +648,6 @@ export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly in
 
 /** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
 export const SEMIO_IN_MEMORY_KIT_URI = RS_WASM_EMPTY_STORE_URI;
-
-export {
-  assertRsJsSessionOpenUri,
-  RS_WASM_EMPTY_STORE_URI,
-  SEMIO_GRAPHQL_GOLDEN_SCHEMA_PATH,
-  type GraphqlWirePostBody,
-} from "./graphql-contract";
 
 function gqlString(s: string): string {
   return JSON.stringify(s);

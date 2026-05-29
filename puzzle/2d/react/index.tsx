@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { ContextMenuController, type ContextMenuItem } from "@ui/react";
+import { ContextMenuController, reactHostPort, type ContextMenuItem } from "@ui/react";
 import React from "react";
 import Reconciler from "react-reconciler";
 import {
@@ -5394,7 +5394,7 @@ let boardSchedulerPriority = NoEventPriority;
 
 /** @emoji 🧩 Static host surface required by the secondary renderer beyond board scene mutations. */
 export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
-	HostTransitionContext: React.createContext(null) as never,
+	HostTransitionContext: reactHostPort.createContext(null) as never,
 	NotPendingTransition: null,
 	acquireResource: () => null,
 	acquireSingletonInstance: () => null,
@@ -6214,17 +6214,8 @@ import {
   Children,
   Fragment,
   act,
-  createContext,
   createElement,
   isValidElement,
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
   type CSSProperties,
   type DragEvent,
   type ReactElement,
@@ -6670,9 +6661,9 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
   const hostMountRef = useRef<BoardHostMount | null>(null);
   const mountedRendererRef = useRef<BoardRenderer | null>(null);
   const Bridge = useHostMountBridge();
-  const wasmHostSceneMergeResyncEpoch = useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
+  const wasmHostSceneMergeResyncEpoch = reactHostPort.useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
       if (hostMountRef.current) {
         unmountBoardHostMount(hostMountRef.current);
@@ -6686,14 +6677,14 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
     syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
   }, [children, renderer, wasmHostSceneMergeResyncEpoch]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const cx = camera?.x ?? 0;
     const cy = camera?.y ?? 0;
     const cz = camera?.zoom ?? 1;
     renderer.setCamera(cx, cy, cz);
   }, [camera?.x, camera?.y, camera?.zoom, renderer]);
 
-  useLayoutEffect(
+  reactHostPort.useLayoutEffect(
     () => () => {
       if (hostMountRef.current) {
         unmountBoardHostMount(hostMountRef.current);
@@ -6775,27 +6766,27 @@ export function BoardCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const textOverlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
+  const [contextRenderer, setContextRenderer] = reactHostPort.useState<BoardRenderer | null>(null);
   const rendererRef = useRef<BoardRenderer | null>(null);
-  const [uncontrolledSelection, setUncontrolledSelection] = useState<BoardSelectionSnapshot>(() =>
+  const [uncontrolledSelection, setUncontrolledSelection] = reactHostPort.useState<BoardSelectionSnapshot>(() =>
     normalizeBoardSelectionProp(defaultSelection),
   );
-  const [uncontrolledPreselection, setUncontrolledPreselection] = useState<BoardPreselectSnapshot>(() =>
+  const [uncontrolledPreselection, setUncontrolledPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(() =>
     normalizeBoardPreselectProp(defaultPreselection),
   );
-  const [uncontrolledHoveredId, setUncontrolledHoveredId] = useState<string | null>(defaultHoveredId ?? null);
+  const [uncontrolledHoveredId, setUncontrolledHoveredId] = reactHostPort.useState<string | null>(defaultHoveredId ?? null);
   const selectionControlled = selection !== undefined;
   const preselectionControlled = preselection !== undefined;
   const hoveredControlled = hoveredIdProp !== undefined;
   const resolvedSelection = selectionControlled ? normalizeBoardSelectionProp(selection) : uncontrolledSelection;
   const resolvedPreselection = preselectionControlled ? normalizeBoardPreselectProp(preselection) : uncontrolledPreselection;
   const resolvedHoveredId = hoveredControlled ? (hoveredIdProp ?? null) : uncontrolledHoveredId;
-  const boardTargetMenusRef = useRef(new Map<string, ContextMenuItem[]>());
-  const [surfaceContextMenu, setSurfaceContextMenu] = useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
-  const [fixtureDragActive, setFixtureDragActive] = useState(false);
-  const fileDragDepthRef = useRef(0);
+  const boardTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
+  const [surfaceContextMenu, setSurfaceContextMenu] = reactHostPort.useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
+  const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
+  const fileDragDepthRef = reactHostPort.useRef(0);
   const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
-  const handleDragEnter = useCallback(
+  const handleDragEnter = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
@@ -6809,7 +6800,7 @@ export function BoardCanvas({
     [resolvedFixtureDragDrop],
   );
 
-  const handleDragLeave = useCallback(
+  const handleDragLeave = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
@@ -6825,7 +6816,7 @@ export function BoardCanvas({
     [resolvedFixtureDragDrop],
   );
 
-  const handleDragOver = useCallback(
+  const handleDragOver = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
@@ -6838,7 +6829,7 @@ export function BoardCanvas({
     [resolvedFixtureDragDrop],
   );
 
-  const handleDrop = useCallback(
+  const handleDrop = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
@@ -6866,7 +6857,7 @@ export function BoardCanvas({
     [onFixtureDrop, resolvedFixtureDragDrop],
   );
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -6891,7 +6882,7 @@ export function BoardCanvas({
     boardTargetMenusRef.current = next;
   }, [children, contextRenderer]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onHover && hoveredControlled)) {
       return () => undefined;
     }
@@ -6903,7 +6894,7 @@ export function BoardCanvas({
     });
   }, [contextRenderer, hoveredControlled, onHover]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer) {
       return () => undefined;
     }
@@ -6981,7 +6972,7 @@ export function BoardCanvas({
     onWireDestroy,
   ]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer) {
       return () => undefined;
     }
@@ -7004,7 +6995,7 @@ export function BoardCanvas({
     };
   }, [contextRenderer, onConnect, onIndirectConnect, onProximityConnect]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onCamera && !onViewportChange && !onPan && !onZoom)) {
       return () => undefined;
     }
@@ -7022,7 +7013,7 @@ export function BoardCanvas({
     });
   }, [contextRenderer, onCamera, onPan, onViewportChange, onZoom]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer) {
       return () => undefined;
     }
@@ -7060,7 +7051,7 @@ export function BoardCanvas({
     };
   }, [contextRenderer, onDrag, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onCreate && !onDelete)) {
       return () => undefined;
     }
@@ -7106,7 +7097,7 @@ export function BoardCanvas({
     };
   }, [contextRenderer, onCreate, onDelete]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer) {
       return () => undefined;
     }
@@ -7120,7 +7111,7 @@ export function BoardCanvas({
     });
   }, [contextMenu, contextRenderer, onContextMenu]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     if (!canvasRef.current) {
       return;
     }
@@ -7153,7 +7144,7 @@ export function BoardCanvas({
     };
   }, [renderMode]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7161,7 +7152,7 @@ export function BoardCanvas({
     renderer.setWorldRasterTilingOption(worldRasterTiling);
   }, [worldRasterTiling]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7169,7 +7160,7 @@ export function BoardCanvas({
     renderer.setGridFactor(gridFactor ?? DEFAULT_BOARD_GRID_FACTOR);
   }, [gridFactor]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7177,7 +7168,7 @@ export function BoardCanvas({
     renderer.setLodZoomThresholds(lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
   }, [lodZoomThresholds]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7185,7 +7176,7 @@ export function BoardCanvas({
     renderer.setGridSnapEnabled(gridSnapEnabled ?? false);
   }, [gridSnapEnabled]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7194,14 +7185,14 @@ export function BoardCanvas({
     renderer.setForcedDrawLod(lod);
   }, [automaticLod, lod]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!contextRenderer) {
       return;
     }
     onReady?.(contextRenderer);
   }, [contextRenderer, onReady]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7212,7 +7203,7 @@ export function BoardCanvas({
     };
   }, [contextRenderer, renderMode]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer || typeof document === "undefined" || typeof MutationObserver === "undefined") {
       return undefined;
@@ -7230,7 +7221,7 @@ export function BoardCanvas({
     };
   }, [contextRenderer, renderMode]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7241,12 +7232,12 @@ export function BoardCanvas({
   const lastSyncedControlledSelectionRef = useRef<BoardSelectionSnapshot | null>(null);
   const lastSyncedControlledPreselectionRef = useRef<BoardPreselectSnapshot | null>(null);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     lastSyncedControlledSelectionRef.current = null;
     lastSyncedControlledPreselectionRef.current = null;
   }, [contextRenderer]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7261,7 +7252,7 @@ export function BoardCanvas({
     renderer.setSelectionIdsSilent(resolvedSelection.ids);
   }, [resolvedSelection]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7276,7 +7267,7 @@ export function BoardCanvas({
     renderer.syncPreselectionSilent(resolvedPreselection);
   }, [resolvedPreselection]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7284,7 +7275,7 @@ export function BoardCanvas({
     renderer.syncHoveredIdSilent(resolvedHoveredId);
   }, [resolvedHoveredId]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7292,7 +7283,7 @@ export function BoardCanvas({
     renderer.setKindCatalogs(kindCatalogs ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
   }, [kindCatalogs]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
@@ -7300,7 +7291,7 @@ export function BoardCanvas({
     renderer.setKindCompatibility(kindCompatibility);
   }, [kindCompatibility]);
 
-  useLayoutEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
     const container = containerRef.current;
     if (!renderer || !container) {
@@ -7382,8 +7373,8 @@ export function BoardCanvas({
 /** @emoji 📶 Subscribes to {@link BoardRenderer} draw LOD band changes for window measure labels. */
 export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: BoardDrawLodKind) => void }): null {
   const renderer = useBoard();
-  const lod = useSyncExternalStore(renderer.subscribeDrawLod, renderer.getDrawLodSnapshot, renderer.getDrawLodSnapshot);
-  useEffect(() => {
+  const lod = reactHostPort.useSyncExternalStore(renderer.subscribeDrawLod, renderer.getDrawLodSnapshot, renderer.getDrawLodSnapshot);
+  reactHostPort.useEffect(() => {
     onLodChange?.(lod);
   }, [lod, onLodChange]);
   return null;
@@ -7391,7 +7382,7 @@ export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Boar
 
 /** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or secondary host tree). */
 export function useBoard(): BoardRenderer {
-  const renderer = useContext(BoardContext);
+  const renderer = reactHostPort.useContext(BoardContext);
   if (renderer) {
     return renderer;
   }
@@ -7404,32 +7395,32 @@ export function useBoard(): BoardRenderer {
 /** 📷 Read and update camera state through an external store subscription. */
 export function useCamera(): [CameraState, (camera: CameraState) => void] {
   const renderer = useBoard();
-  const snapshot = useSyncExternalStore(renderer.subscribeCamera, renderer.getCameraSnapshot, renderer.getCameraSnapshot);
+  const snapshot = reactHostPort.useSyncExternalStore(renderer.subscribeCamera, renderer.getCameraSnapshot, renderer.getCameraSnapshot);
   return [snapshot, (nextCamera) => renderer.setCamera(nextCamera.x, nextCamera.y, nextCamera.zoom)];
 }
 
 /** ✅ Subscribe to semantic selection ids without pushing React through the drag hot path. */
 export function useSelection(): BoardSelectionSnapshot {
   const renderer = useBoard();
-  return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
+  return reactHostPort.useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
 /** @emoji 👁️ Subscribe to area-select preview ids (and anchor-removed ids) on the active board renderer. */
 export function usePreselection(): BoardPreselectSnapshot {
   const renderer = useBoard();
-  return useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
+  return reactHostPort.useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
 /** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
 export function useBoardEvent<TKey extends keyof BoardEventMap>(name: TKey, handler: (payload: BoardEventMap[TKey]) => void): void {
   const renderer = useBoard();
-  useEffect(() => renderer.on(name, handler), [handler, name, renderer]);
+  reactHostPort.useEffect(() => renderer.on(name, handler), [handler, name, renderer]);
 }
 
 /** ⏱️ Subscribe to imperative frame callbacks emitted after each render pass. */
 export function useFrame(callback: (state: FrameState, dt: number) => void): void {
   const renderer = useBoard();
-  useEffect(() => renderer.subscribeFrame(callback), [callback, renderer]);
+  reactHostPort.useEffect(() => renderer.subscribeFrame(callback), [callback, renderer]);
 }
 
 /** 🔄 Imperatively request another render for the active board root. */
