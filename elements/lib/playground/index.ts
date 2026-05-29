@@ -38,6 +38,7 @@ export {
 	createWindowLayout,
 	getSidePanelBodyFactory,
 	getWindowBodyFactory,
+	listPopulatedToolCategories,
 	mergeAppTools,
 	registerSidePanelBody,
 	registerWindowBody,

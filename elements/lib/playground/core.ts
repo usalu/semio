@@ -206,9 +206,34 @@ export enum Expertise {
 //#endregion 🔖Expertise
 
 //#region 🔖Toolbar
-export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
+export type AppToolCategory =
+	| "history"
+	| "hand"
+	| "selection"
+	| "lasso"
+	| "filter"
+	| "open"
+	| "save"
+	| "transform"
+	| "create"
+	| "view"
+	| "actions"
+	| "settings";
 
-export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
+export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = [
+	"history",
+	"hand",
+	"selection",
+	"lasso",
+	"filter",
+	"open",
+	"save",
+	"transform",
+	"create",
+	"view",
+	"actions",
+	"settings",
+];
 
 export interface ToolItem {
 	readonly id: string;
@@ -240,6 +265,16 @@ export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools |
 export function countAppTools(tools?: AppTools): number {
 	if (!tools) return 0;
 	return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
+}
+
+function hasAppToolCategoryItems(items: readonly ToolItem[] | undefined): boolean {
+	return Boolean(items?.some((item) => item.kind !== "separator"));
+}
+
+/** @emoji 📂 Lists categories that have at least one non-separator tool. */
+export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[] {
+	if (!tools) return [];
+	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
 }
 //#endregion 🔖Toolbar
 

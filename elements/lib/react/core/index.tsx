@@ -19571,7 +19571,6 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, classNa
                 className={cn(option.pressed && "bg-active-base")}
                 onClick={option.onPress}
                 disabled={option.disabled}
-                text={option.label}
               >
                 {option.icon ?? option.label}
               </ButtonGroupItem>
@@ -21829,31 +21828,35 @@ function renderModeLayoutNode(
     if (node.children.length === 1) {
       return renderModeLayoutNode(node.children[0]!, windowsById, activeWindowId, onActiveWindowChange);
     }
+    const stackPanels: React.ReactNode[] = [];
+    node.children.forEach((child, index) => {
+      if (index > 0) stackPanels.push(<ResizableHandle key={`handle-${child.id}`} />);
+      stackPanels.push(
+        <ResizablePanel key={child.id} id={child.id} defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
+          {renderModeLayoutNode(child, windowsById, activeWindowId, onActiveWindowChange)}
+        </ResizablePanel>,
+      );
+    });
     return (
       <ResizablePanelGroup orientation="vertical" id={`mode-stack-${node.children.map((child) => child.id).join("-")}`}>
-        {node.children.map((child, index) => (
-          <React.Fragment key={child.id}>
-            {index > 0 ? <ResizableHandle /> : null}
-            <ResizablePanel defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
-              {renderModeLayoutNode(child, windowsById, activeWindowId, onActiveWindowChange)}
-            </ResizablePanel>
-          </React.Fragment>
-        ))}
+        {stackPanels}
       </ResizablePanelGroup>
     );
   }
 
   const orientation = node.kind === "row" ? "horizontal" : "vertical";
+  const axisPanels: React.ReactNode[] = [];
+  node.children.forEach((child, index) => {
+    if (index > 0) axisPanels.push(<ResizableHandle key={`handle-${node.kind}-${index}`} />);
+    axisPanels.push(
+      <ResizablePanel key={`${node.kind}-${index}`} defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
+        {renderModeLayoutNode(child as WindowLayoutNode, windowsById, activeWindowId, onActiveWindowChange)}
+      </ResizablePanel>,
+    );
+  });
   return (
     <ResizablePanelGroup orientation={orientation} id={`mode-axis-${node.kind}`}>
-      {node.children.map((child, index) => (
-        <React.Fragment key={`${node.kind}-${index}`}>
-          {index > 0 ? <ResizableHandle /> : null}
-          <ResizablePanel defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
-            {renderModeLayoutNode(child as WindowLayoutNode, windowsById, activeWindowId, onActiveWindowChange)}
-          </ResizablePanel>
-        </React.Fragment>
-      ))}
+      {axisPanels}
     </ResizablePanelGroup>
   );
 }
@@ -21893,13 +21896,14 @@ export interface AppProps {
   onActiveModeChange?: (modeId: string) => void;
   children?: React.ReactNode;
   className?: string;
+  chrome?: boolean;
 }
 
 /** @emoji 📱 App shell with optional mode switcher and one active mode body. */
-const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "" }) => {
+const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "", chrome = true }) => {
   const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
   const body = children ?? activeMode?.children;
-  const showModeNav = modes.length > 1 && !!onActiveModeChange;
+  const showModeNav = chrome && modes.length > 1 && !!onActiveModeChange;
 
   return (
     <div data-slot="app" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
@@ -21949,13 +21953,14 @@ export interface UiProps {
   toolbar?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  chrome?: boolean;
 }
 
 /** @emoji 🖥️ Top-level UI shell with optional app switcher and one active app body. */
-const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, toolbar, children, className = "" }) => {
+const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, toolbar, children, className = "", chrome = true }) => {
   const activeApp = apps.find((app) => app.id === activeAppId) ?? apps[0];
   const body = children ?? activeApp?.children;
-  const showAppNav = apps.length > 1 && !!onActiveAppChange;
+  const showAppNav = chrome && apps.length > 1 && !!onActiveAppChange;
 
   const navbarItems: NavbarItem[] = [];
   if (showAppNav) {
@@ -22035,14 +22040,16 @@ if (import.meta.vitest) {
 
     it("Mode lays out all windows and marks the active one", () => {
       render(
-        <Mode
-          windows={[
-            { id: "left", children: <div>Left Pane</div> },
-            { id: "right", children: <div>Right Pane</div> },
-          ]}
-          activeWindowId="right"
-          onActiveWindowChange={() => {}}
-        />,
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "left", children: <div>Left Pane</div> },
+              { id: "right", children: <div>Right Pane</div> },
+            ]}
+            activeWindowId="right"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
       );
       expect(screen.getByText("Left Pane")).toBeTruthy();
       expect(screen.getByText("Right Pane")).toBeTruthy();
@@ -22057,7 +22064,7 @@ if (import.meta.vitest) {
           status={[{ id: "status-a", content: "Ready" }]}
         />,
       );
-      expect(screen.getByText("Option A")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Option A" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
     });

@@ -52,6 +52,7 @@ import {
 	ArrowLeft,
 	ArrowRight,
 	ArrowUp,
+	ArrowRightLeft as ArrowRightLeftIcon,
 	Check as CheckIcon,
 	Filter as FilterIcon,
 	Folder,
@@ -64,6 +65,7 @@ import {
 	MoreHorizontal as MoreHorizontalIcon,
 	MousePointer2 as MousePointerIcon,
 	Plus as PlusIcon,
+	Save as SaveIcon,
 	Search,
 	Search as SearchIcon,
 	Settings2,
@@ -1174,6 +1176,10 @@ function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode 
       return <FilterIcon className="size-tiny" aria-hidden />;
     case "open":
       return <FolderOpenIcon className="size-tiny" aria-hidden />;
+    case "save":
+      return <SaveIcon className="size-tiny" aria-hidden />;
+    case "transform":
+      return <ArrowRightLeftIcon className="size-tiny" aria-hidden />;
     case "create":
       return <PlusIcon className="size-tiny" aria-hidden />;
     case "view":

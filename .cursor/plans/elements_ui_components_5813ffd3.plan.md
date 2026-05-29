@@ -22,10 +22,10 @@ todos:
     status: completed
   - id: core-tests
     content: Add inline import.meta.vitest tests in core for switching, layout split, and engagement rendering; run @elements/ui vitest.
-    status: in_progress
+    status: completed
   - id: stories
     content: Add Ui/App/Mode/Engagement stories and extend Window.stories.tsx under .storybook/stories/elements/ui/ following existing conventions; build Storybook.
-    status: pending
+    status: in_progress
   - id: rewire-renderers
     content: Refactor PlaygroundView and ProductView to map runtime -> descriptors and render <Ui>; delete Golden Layout UICanvas and golden-layout deps.
     status: pending

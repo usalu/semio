@@ -242,10 +242,35 @@ export enum Expertise {
 
 //#region 🔖Toolbar
 /** @emoji 🧰 Toolbar category ids shared by every app registration surface. */
-export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
+export type AppToolCategory =
+	| "history"
+	| "hand"
+	| "selection"
+	| "lasso"
+	| "filter"
+	| "open"
+	| "save"
+	| "transform"
+	| "create"
+	| "view"
+	| "actions"
+	| "settings";
 
 /** @emoji 📋 Default toolbar category order. */
-export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
+export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = [
+	"history",
+	"hand",
+	"selection",
+	"lasso",
+	"filter",
+	"open",
+	"save",
+	"transform",
+	"create",
+	"view",
+	"actions",
+	"settings",
+];
 
 /** @emoji 🎛 Declarative toolbar item; interactions route through {@link CommandBus}. */
 export interface ToolItem {

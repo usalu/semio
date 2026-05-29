@@ -1,0 +1,13 @@
+{
+  "title": "Spatial Play Playground Toolbar",
+  "emoji": "🛝",
+  "status": "open",
+  "description": "Transfer spatial play old aside UI (save/load, transforms, model definition focus) into proper playground app toolbar with tool categories (save, transform) and active category navigation matching ProductView UIToolbar pattern.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1497"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8cc4d2217e2d417dbca578241346be3f"
+  ]
+}

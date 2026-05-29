@@ -35,6 +35,7 @@ import {
 	SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
 	buildSpatialPlayHierarchySections,
 	buildSpatialPlayRuntime,
+	type SpatialPlayShellController,
 	spatialPlayModelDefinitionIdForPane,
 	spatialPlayModelsDigest,
 	spatialPlayPaneFromSurfaceId,
@@ -552,8 +553,6 @@ function pickShapeForModelDefinition(
 	return liveModel;
 }
 
-const PLAY_SELECT_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" } as const;
-
 //#region 🔖SpatialPlayChrome
 export interface SpatialPlayChromeSnapshot {
 	readonly modelsByDefinitionId: Record<string, Model>;
@@ -596,114 +595,6 @@ class SpatialPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 	}
 }
 //#endregion 🔖SpatialPlayChrome
-
-//#region 🔖PlayModelSpacePanel
-interface PlayModelSpacePanelProps {
-	readonly activeModelDefinitionId: string;
-	readonly modelSpaceCount: number;
-	readonly viewObjectCount: number;
-	readonly onActiveModelDefinitionId: (value: string) => void;
-	readonly onApplyTransformation: (spec: TransformationSpec) => void;
-}
-
-/** @emoji 🌌 Play aside: active model definition + transform to/from dropdowns. */
-function PlayModelSpacePanel({
-	activeModelDefinitionId,
-	modelSpaceCount,
-	viewObjectCount,
-	onActiveModelDefinitionId,
-	onApplyTransformation,
-}: PlayModelSpacePanelProps) {
-	const modelDefinitions = useMemo(() => listModelDefinitionManifests(), []);
-	const scope = useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId), [activeModelDefinitionId]);
-	const transformsTo = useMemo(
-		() => listTransformationsFromModelDefinition(activeModelDefinitionId),
-		[activeModelDefinitionId],
-	);
-	const transformsFrom = useMemo(
-		() => listTransformationsIntoModelDefinition(activeModelDefinitionId),
-		[activeModelDefinitionId],
-	);
-	return (
-		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-			<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Model definition</span>
-				<select
-					value={activeModelDefinitionId}
-					onChange={(e) => onActiveModelDefinitionId(e.target.value || SHAPE_MODEL_DEFINITION_ID)}
-					style={PLAY_SELECT_STYLE}
-				>
-					{modelDefinitions.map((row) => (
-						<option key={row.id} value={row.id}>
-							{row.label} ({row.id})
-						</option>
-					))}
-				</select>
-			</label>
-			<span style={{ opacity: 0.75, lineHeight: 1.4 }}>
-				{scope.typologies.length} typolog{scope.typologies.length === 1 ? "y" : "ies"}
-				{" · "}
-				{scope.interactions.length} interaction{scope.interactions.length === 1 ? "" : "s"}
-				{" · "}
-				{scope.attributeDefinitions.length} attribute{scope.attributeDefinitions.length === 1 ? "" : "s"}
-				{" · "}
-				{modelSpaceCount} linked model{modelSpaceCount === 1 ? "" : "s"}
-			</span>
-			{!isShapeModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
-				<span style={{ opacity: 0.75 }}>
-					{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"} in view
-				</span>
-			) : null}
-			{transformsTo.length ? (
-				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Transform To</span>
-					<select
-						defaultValue=""
-						onChange={(e) => {
-							const qid = e.target.value;
-							if (!qid) return;
-							const spec = transformsTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
-							if (spec) onApplyTransformation(spec);
-							e.target.value = "";
-						}}
-						style={PLAY_SELECT_STYLE}
-					>
-						<option value="">Select target model…</option>
-						{transformsTo.map((row) => (
-							<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-								{row.target.modelDefinition} — {row.label}
-							</option>
-						))}
-					</select>
-				</label>
-			) : null}
-			{transformsFrom.length ? (
-				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Transform From</span>
-					<select
-						defaultValue=""
-						onChange={(e) => {
-							const qid = e.target.value;
-							if (!qid) return;
-							const spec = transformsFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
-							if (spec) onApplyTransformation(spec);
-							e.target.value = "";
-						}}
-						style={PLAY_SELECT_STYLE}
-					>
-						<option value="">Select source model…</option>
-						{transformsFrom.map((row) => (
-							<option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-								{row.source.modelDefinition} — {row.label}
-							</option>
-						))}
-					</select>
-				</label>
-			) : null}
-		</div>
-	);
-}
-//#endregion
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
@@ -879,7 +770,13 @@ function useSpatialPlayModelSpace(): SpatialPlayModelSpaceValue {
 	return value;
 }
 
-function SpatialPlayModelSpaceProvider({ children }: { readonly children: ReactNode }) {
+function SpatialPlayModelSpaceProvider({
+	children,
+	shellController,
+}: {
+	readonly children: ReactNode;
+	readonly shellController: SpatialPlayShellController;
+}) {
 	const publishSpatialPlayChrome = useSpatialPlayChromePublish();
 	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(SHAPE_MODEL_DEFINITION_ID);
 	const scopedInteractions = useMemo(
@@ -1170,6 +1067,65 @@ function SpatialPlayModelSpaceProvider({ children }: { readonly children: ReactN
 		loadInputRef.current?.click();
 	}, []);
 
+	useEffect(() => {
+		const bridge = {
+			getToolbarState: () => ({
+				activeModelDefinitionId,
+				selectionCount: selectionInScope.length,
+				transformsTo: listTransformationsFromModelDefinition(activeModelDefinitionId),
+				transformsFrom: listTransformationsIntoModelDefinition(activeModelDefinitionId),
+			}),
+			runHostCommand: (command: string, args?: unknown) => {
+				switch (command) {
+					case "focusModelDefinition": {
+						const modelDefinitionId = (args as { modelDefinitionId?: string })?.modelDefinitionId;
+						if (modelDefinitionId) focusModelDefinition(modelDefinitionId);
+						break;
+					}
+					case "applyTransformation": {
+						const qid = (args as { qid?: string })?.qid;
+						if (!qid) break;
+						const spec =
+							listTransformationsFromModelDefinition(activeModelDefinitionId).find(
+								(row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid,
+							) ??
+							listTransformationsIntoModelDefinition(activeModelDefinitionId).find(
+								(row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid,
+							);
+						if (spec) void handleApplyTransformation(spec);
+						break;
+					}
+					case "saveSelected":
+						void handleSaveSelected();
+						break;
+					case "saveInPlay":
+						void handleSaveInPlay();
+						break;
+					case "saveCurrent":
+						void handleSaveCurrent();
+						break;
+					case "loadRawRequest":
+						handleLoadRawRequest();
+						break;
+					default:
+						break;
+				}
+			},
+		};
+		shellController.setHostBridge(bridge);
+		return () => shellController.setHostBridge(null);
+	}, [
+		activeModelDefinitionId,
+		focusModelDefinition,
+		handleApplyTransformation,
+		handleLoadRawRequest,
+		handleSaveCurrent,
+		handleSaveInPlay,
+		handleSaveSelected,
+		selectionInScope,
+		shellController,
+	]);
+
 	const handleLoadRaw = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (!file) return;
@@ -1296,14 +1252,16 @@ function SpatialPlayModelSpaceProvider({ children }: { readonly children: ReactN
 	return <SpatialPlayModelSpaceContext.Provider value={modelSpaceValue}>{children}</SpatialPlayModelSpaceContext.Provider>;
 }
 
-/** @emoji 🧰 Workbench details: model space controls, selection panels, files (shared across quad panes). */
+/** @emoji 📂 Hidden file input for playground Save → Load. */
+function SpatialPlayLoadInput(): ReactNode {
+	const { loadInputRef, handleLoadRaw } = useSpatialPlayModelSpace();
+	return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
+}
+
+/** @emoji 🧰 Workbench details: selection panels and shape assets (save/transform live in playground toolbar). */
 function SpatialPlayDetailsAside(): ReactNode {
 	const {
 		activeModelDefinitionId,
-		playModelSpace,
-		viewObjectCount,
-		focusModelDefinition,
-		handleApplyTransformation,
 		liveModel,
 		selectionInScope,
 		handleModelAttributesChange,
@@ -1311,23 +1269,10 @@ function SpatialPlayDetailsAside(): ReactNode {
 		shapeAssetId,
 		handleShapeAssetChange,
 		fileStatus,
-		loadInputRef,
-		handleSaveSelected,
-		handleSaveInPlay,
-		handleSaveCurrent,
-		handleLoadRawRequest,
-		handleLoadRaw,
 		shapeInteractionRuntime,
 	} = useSpatialPlayModelSpace();
 	return (
 		<>
-			<PlayModelSpacePanel
-				activeModelDefinitionId={activeModelDefinitionId}
-				modelSpaceCount={Object.keys(playModelSpace.models).length}
-				viewObjectCount={viewObjectCount}
-				onActiveModelDefinitionId={focusModelDefinition}
-				onApplyTransformation={handleApplyTransformation}
-			/>
 			<SelectionAttributesPanel
 				model={liveModel}
 				activeModelDefinitionId={activeModelDefinitionId}
@@ -1368,30 +1313,11 @@ function SpatialPlayDetailsAside(): ReactNode {
 					derived models update via transforms.
 				</span>
 			)}
-			<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Files</span>
-				<div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-					<button
-						type="button"
-						onClick={() => void handleSaveSelected()}
-						disabled={selectionInScope.length === 0}
-						style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
-					>
-						Save (Selected)
-					</button>
-					<button type="button" onClick={() => void handleSaveInPlay()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Save in play
-					</button>
-					<button type="button" onClick={() => void handleSaveCurrent()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Save (Current)
-					</button>
-					<button type="button" onClick={handleLoadRawRequest} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Load
-					</button>
-				</div>
-				<input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
-				{fileStatus ? <span style={{ color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>{fileStatus}</span> : null}
-			</div>
+			{fileStatus ? (
+				<span style={{ fontSize: 12, color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>
+					{fileStatus}
+				</span>
+			) : null}
 		</>
 	);
 }
@@ -1668,11 +1594,17 @@ class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
 
 function SpatialPlayRoot(): ReactNode {
 	const runtimeRef = useRef<ProductRuntime | null>(null);
+	const shellControllerRef = useRef<SpatialPlayShellController | null>(null);
 	const [chromeSnapshot, setChromeSnapshot] = useState<SpatialPlayChromeSnapshot | null>(null);
 	if (!runtimeRef.current) {
 		registerSpatialPlayChrome();
 		runtimeRef.current = buildSpatialPlayRuntime();
 		runtimeRef.current.setActiveAppId(SPATIAL_PLAY_APP_ID);
+		shellControllerRef.current = runtimeRef.current.getActiveApp()?.controller as SpatialPlayShellController;
+	}
+	const shellController = shellControllerRef.current;
+	if (!shellController) {
+		return null;
 	}
 	const chromeContextValue = useMemo<SpatialPlayChromeContextValue>(
 		() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }),
@@ -1707,9 +1639,10 @@ function SpatialPlayRoot(): ReactNode {
 	);
 	return (
 		<SpatialPlayChromeContext.Provider value={chromeContextValue}>
-			<SpatialPlayModelSpaceProvider>
+			<SpatialPlayModelSpaceProvider shellController={shellController}>
 				<LevelProvider level="window">
 					<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+						<SpatialPlayLoadInput />
 						<PlaygroundView
 							runtime={runtimeRef.current}
 							defaultAppId={SPATIAL_PLAY_APP_ID}

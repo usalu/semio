@@ -15,5 +15,6 @@ export default defineConfig({
 		include: ["index.tsx"],
 		includeSource: ["index.tsx"],
 		passWithNoTests: true,
+		setupFiles: [resolve(root, "vitest.setup.ts")],
 	},
 });

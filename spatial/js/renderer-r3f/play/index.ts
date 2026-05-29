@@ -12,6 +12,8 @@ import {
 	buildScene3dWindowBody,
 	createWindowLayout,
 	registerWindowBody,
+	type AppTools,
+	type ToolItem,
 	type WindowBodyViewContext,
 	type UiNode,
 	type WindowLayout,
@@ -23,14 +25,18 @@ import {
 	createInteractionRuntime,
 	listModelDefinitionManifests,
 	listModelObjectsForModelDefinition,
+	listTransformationsFromModelDefinition,
+	listTransformationsIntoModelDefinition,
 	loadSpatialInteraction,
 	Model,
 	objectPrimitiveEntries,
 	parseModelJson,
+	qualifiedTransformationId,
 	resolvePrimitiveRefKind,
 	typologyObjectPascalFromLabel,
 	type ModelTopologyHierarchyNode,
 	type SelectionTarget,
+	type TransformationSpec,
 } from "@spatial/js-core";
 
 //#region 🔖Ids
@@ -302,10 +308,107 @@ export function buildSpatialPlayHierarchySections(
 }
 //#endregion 🔖SpatialPlayHierarchy
 
+//#region 🔖Toolbar
+/** @emoji 🧰 Snapshot for {@link buildSpatialPlayToolbarTools}. */
+export interface SpatialPlayToolbarState {
+	readonly activeModelDefinitionId: string;
+	readonly selectionCount: number;
+	readonly transformsTo: readonly TransformationSpec[];
+	readonly transformsFrom: readonly TransformationSpec[];
+}
+
+/** @emoji 🔗 React host bridge for spatial play toolbar commands. */
+export interface SpatialPlayHostBridge {
+	getToolbarState(): SpatialPlayToolbarState;
+	runHostCommand(command: string, args?: unknown): void;
+}
+
+/** @emoji 🧰 Playground {@link AppTools} for spatial play (view, save, transform). */
+export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, controllerId: string): AppTools {
+	const viewTools: ToolItem[] = listModelDefinitionManifests().map((row, index) => ({
+		id: `spatial.play.view.${row.id}`,
+		kind: "toggle",
+		text: row.label,
+		title: row.id,
+		order: index,
+		pressed: state.activeModelDefinitionId === row.id,
+		controllerId,
+		command: "focusModelDefinition",
+		args: { modelDefinitionId: row.id },
+	}));
+	const saveTools: ToolItem[] = [
+		{
+			id: "spatial.play.save.selected",
+			kind: "button",
+			label: "Selected",
+			order: 0,
+			disabled: state.selectionCount === 0,
+			controllerId,
+			command: "saveSelected",
+		},
+		{
+			id: "spatial.play.save.modelspace",
+			kind: "button",
+			label: "Model space",
+			order: 1,
+			controllerId,
+			command: "saveInPlay",
+		},
+		{
+			id: "spatial.play.save.current",
+			kind: "button",
+			label: "Current",
+			order: 2,
+			controllerId,
+			command: "saveCurrent",
+		},
+		{
+			id: "spatial.play.save.load",
+			kind: "button",
+			label: "Load",
+			order: 3,
+			controllerId,
+			command: "loadRawRequest",
+		},
+	];
+	const transformTools: ToolItem[] = [
+		...state.transformsTo.map((spec, index) => ({
+			id: `spatial.play.transform.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+			kind: "button" as const,
+			label: `→ ${spec.label}`,
+			title: spec.target.modelDefinition,
+			order: index,
+			controllerId,
+			command: "applyTransformation",
+			args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
+		})),
+		...(state.transformsTo.length > 0 && state.transformsFrom.length > 0
+			? [{ id: "spatial.play.transform.separator", kind: "separator" as const, order: state.transformsTo.length }]
+			: []),
+		...state.transformsFrom.map((spec, index) => ({
+			id: `spatial.play.transform.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+			kind: "button" as const,
+			label: `← ${spec.label}`,
+			title: spec.source.modelDefinition,
+			order: state.transformsTo.length + (state.transformsTo.length > 0 && state.transformsFrom.length > 0 ? 1 : 0) + index,
+			controllerId,
+			command: "applyTransformation",
+			args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
+		})),
+	];
+	return {
+		view: viewTools,
+		save: saveTools,
+		...(transformTools.length > 0 ? { transform: transformTools } : {}),
+	};
+}
+//#endregion 🔖Toolbar
+
 //#region 🔖Controller
-/** @emoji 🎛 Spatial play shell controller (viewport tools and measures live in the React host for now). */
+/** @emoji 🎛 Spatial play shell controller: quad viewports + playground toolbar categories. */
 export class SpatialPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Spatial", undefined);
+	private hostBridge: SpatialPlayHostBridge | null = null;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -314,7 +417,35 @@ export class SpatialPlayShellController extends Controller {
 		);
 	}
 
-	override run(_command: string, _args?: unknown): void {
+	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
+	setHostBridge(bridge: SpatialPlayHostBridge | null): void {
+		this.hostBridge = bridge;
+		this.rebuildToolbarTools();
+	}
+
+	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest host toolbar snapshot. */
+	rebuildToolbarTools(): void {
+		if (!this.hostBridge) {
+			this.mainMode.tools = undefined;
+			return;
+		}
+		this.mainMode.tools = buildSpatialPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
+	}
+
+	override run(command: string, args?: unknown): void {
+		switch (command) {
+			case "focusModelDefinition":
+			case "applyTransformation":
+			case "saveSelected":
+			case "saveInPlay":
+			case "saveCurrent":
+			case "loadRawRequest":
+				this.hostBridge?.runHostCommand(command, args);
+				break;
+			default:
+				break;
+		}
+		this.rebuildToolbarTools();
 		this.emit();
 	}
 }
@@ -376,6 +507,28 @@ export function buildSpatialPlayRuntime(): ProductRuntime {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("buildSpatialPlayToolbarTools", () => {
+		it("registers view, save, and transform categories", () => {
+			const tools = buildSpatialPlayToolbarTools(
+				{
+					activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+					selectionCount: 0,
+					transformsTo: [],
+					transformsFrom: [],
+				},
+				SPATIAL_PLAY_CONTROLLER_ID,
+			);
+			expect(tools.view?.length).toBeGreaterThan(0);
+			expect(tools.save?.map((row) => row.id)).toEqual([
+				"spatial.play.save.selected",
+				"spatial.play.save.modelspace",
+				"spatial.play.save.current",
+				"spatial.play.save.load",
+			]);
+			expect(tools.save?.[0]?.disabled).toBe(true);
+		});
+	});
 
 	describe("spatial play runtime", () => {
 		it("builds quad viewport bodies for each pane", () => {
