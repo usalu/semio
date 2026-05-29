@@ -19470,6 +19470,150 @@ export { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone };
 
 // #endregion 🩻Toolbar Components
 
+// #region 🧭Shell
+
+export interface EngagementOption {
+  id: string;
+  label?: string;
+  icon?: React.ReactNode;
+  pressed?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
+}
+
+export interface EngagementInput {
+  id?: string;
+  value?: string;
+  placeholder?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: (value: string) => void;
+  disabled?: boolean;
+}
+
+export interface EngagementStatus {
+  id: string;
+  content: React.ReactNode;
+}
+
+/** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
+export interface EngagementSpec {
+  options?: EngagementOption[];
+  input?: EngagementInput;
+  status?: EngagementStatus[];
+}
+
+export interface WindowLayoutWindowNode {
+  kind: "window";
+  id: string;
+  title?: string;
+  size?: number;
+}
+
+export interface WindowLayoutStackNode {
+  kind: "stack";
+  size?: number;
+  children: readonly WindowLayoutWindowNode[];
+}
+
+export interface WindowLayoutAxisNode {
+  kind: "row" | "column";
+  size?: number;
+  children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
+}
+
+/** @emoji 🪟 Recursive resizable window layout tree for {@link Mode}. */
+export type WindowLayoutNode = WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode;
+
+/** @emoji 🪟 Builds an even horizontal split layout for the given window ids. */
+export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayoutNode {
+  if (windowIds.length === 0) return { kind: "stack", children: [] };
+  if (windowIds.length === 1) return { kind: "stack", children: [{ kind: "window", id: windowIds[0]! }] };
+  return {
+    kind: "row",
+    children: windowIds.map((id) => ({
+      kind: "stack" as const,
+      children: [{ kind: "window" as const, id }],
+    })),
+  };
+}
+
+export interface EngagementProps extends EngagementSpec {
+  className?: string;
+}
+
+/** @emoji 💬 Floating three-line engagement panel with options, input, and status rows. */
+const Engagement: React.FC<EngagementProps> = ({ options, input, status, className = "" }) => {
+  const [draft, setDraft] = React.useState(input?.value ?? "");
+  React.useEffect(() => {
+    setDraft(input?.value ?? "");
+  }, [input?.value]);
+
+  const hasOptions = !!options?.length;
+  const hasInput = !!input;
+  const hasStatus = !!status?.length;
+  if (!hasOptions && !hasInput && !hasStatus) return null;
+
+  return (
+    <div
+      data-slot="engagement"
+      className={cn(
+        "pointer-events-auto absolute bottom-single left-1/2 z-panel flex w-[min(100%,28rem)] -translate-x-1/2 flex-col gap-half rounded border border-element bg-panel p-single shadow-md",
+        className,
+      )}
+    >
+      {hasOptions ? (
+        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
+          <ButtonGroup id="engagement-options">
+            {options!.map((option) => (
+              <ButtonGroupItem
+                key={option.id}
+                id={option.id}
+                className={cn(option.pressed && "bg-active-base")}
+                onClick={option.onPress}
+                disabled={option.disabled}
+                text={option.label}
+              >
+                {option.icon ?? option.label}
+              </ButtonGroupItem>
+            ))}
+          </ButtonGroup>
+        </div>
+      ) : null}
+      {hasInput ? (
+        <Input
+          id={input!.id ?? "engagement-input"}
+          value={draft}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            input!.onChange?.(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              input!.onSubmit?.(draft);
+              event.preventDefault();
+            }
+          }}
+          placeholder={input!.placeholder}
+          disabled={input!.disabled}
+        />
+      ) : null}
+      {hasStatus ? (
+        <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
+          {status!.map((item) => (
+            <span key={item.id} data-slot="engagement-status-item">
+              {item.content}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export { Engagement };
+
+// #endregion 🧭Shell
+
 // #region 🔍Window Components
 
 // #region 🌊Window
@@ -19490,6 +19634,9 @@ export interface WindowConfig {
   onClose?: () => void;
   controls?: React.ReactNode;
   measures?: React.ReactNode;
+  engagement?: EngagementSpec;
+  active?: boolean;
+  onActivate?: () => void;
 }
 
 /**
@@ -19518,7 +19665,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures }) => {
+const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
   const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
   const windowRef = React.useRef<HTMLDivElement>(null);
@@ -19569,7 +19716,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   return (
     <LevelProvider level="window">
-      <div ref={windowRef} onDoubleClick={onDoubleClick} className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, className)}>
+      <div
+        ref={windowRef}
+        data-slot="window"
+        data-active={active ? "true" : undefined}
+        onDoubleClick={onDoubleClick}
+        onPointerDown={() => onActivate?.()}
+        className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, active && "ring-2 ring-inset ring-accent", className)}
+      >
         {headerElement
           ? renderPortalInto(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
@@ -19588,6 +19742,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               </div>
             </div>
           ) : null}
+          {engagement ? <Engagement {...engagement} /> : null}
         </div>
       </div>
     </LevelProvider>
@@ -21627,7 +21782,295 @@ export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ child
   return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
 };
 
+// #region 🧭Mode
+
+/** @emoji 🪟 Window descriptor rendered inside {@link Mode}. */
+export interface ModeWindowDescriptor extends Omit<WindowConfig, "children"> {
+  children: React.ReactNode;
+}
+
+export interface ModeProps {
+  windows: ModeWindowDescriptor[];
+  activeWindowId: string | null;
+  onActiveWindowChange?: (windowId: string) => void;
+  layout?: WindowLayoutNode;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: WindowLayoutNode): WindowLayoutNode {
+  if (layout) return layout;
+  return createEvenWindowLayout(windows.map((window) => window.id));
+}
+
+function renderModeLayoutNode(
+  node: WindowLayoutNode,
+  windowsById: ReadonlyMap<string, ModeWindowDescriptor>,
+  activeWindowId: string | null,
+  onActiveWindowChange?: (windowId: string) => void,
+): React.ReactNode {
+  if (node.kind === "window") {
+    const descriptor = windowsById.get(node.id);
+    if (!descriptor) return null;
+    const { children, engagement, ...windowProps } = descriptor;
+    return (
+      <Window
+        {...windowProps}
+        engagement={engagement}
+        active={activeWindowId === node.id}
+        onActivate={() => onActiveWindowChange?.(node.id)}
+      >
+        {children}
+      </Window>
+    );
+  }
+
+  if (node.kind === "stack") {
+    if (node.children.length === 1) {
+      return renderModeLayoutNode(node.children[0]!, windowsById, activeWindowId, onActiveWindowChange);
+    }
+    return (
+      <ResizablePanelGroup orientation="vertical" id={`mode-stack-${node.children.map((child) => child.id).join("-")}`}>
+        {node.children.map((child, index) => (
+          <React.Fragment key={child.id}>
+            {index > 0 ? <ResizableHandle /> : null}
+            <ResizablePanel defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
+              {renderModeLayoutNode(child, windowsById, activeWindowId, onActiveWindowChange)}
+            </ResizablePanel>
+          </React.Fragment>
+        ))}
+      </ResizablePanelGroup>
+    );
+  }
+
+  const orientation = node.kind === "row" ? "horizontal" : "vertical";
+  return (
+    <ResizablePanelGroup orientation={orientation} id={`mode-axis-${node.kind}`}>
+      {node.children.map((child, index) => (
+        <React.Fragment key={`${node.kind}-${index}`}>
+          {index > 0 ? <ResizableHandle /> : null}
+          <ResizablePanel defaultSize={child.size ?? 100 / node.children.length} minSize={10}>
+            {renderModeLayoutNode(child as WindowLayoutNode, windowsById, activeWindowId, onActiveWindowChange)}
+          </ResizablePanel>
+        </React.Fragment>
+      ))}
+    </ResizablePanelGroup>
+  );
+}
+
+/** @emoji 🪟 Resizable multi-pane mode shell with one active window focus. */
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "" }) => {
+  const windowsById = React.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
+  const resolvedLayout = React.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
+  const body = children ?? renderModeLayoutNode(resolvedLayout, windowsById, activeWindowId, onActiveWindowChange);
+
+  return (
+    <div data-slot="mode" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
+      <div data-slot="mode-body" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {body}
+      </div>
+    </div>
+  );
+};
+
+export { Mode };
+
+// #endregion 🧭Mode
+
+// #region 🧭App
+
+/** @emoji 📱 Mode descriptor rendered inside {@link App}. */
+export interface AppModeDescriptor {
+  id: string;
+  label?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export interface AppProps {
+  modes: AppModeDescriptor[];
+  activeModeId: string;
+  onActiveModeChange?: (modeId: string) => void;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+/** @emoji 📱 App shell with optional mode switcher and one active mode body. */
+const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "" }) => {
+  const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
+  const body = children ?? activeMode?.children;
+  const showModeNav = modes.length > 1 && !!onActiveModeChange;
+
+  return (
+    <div data-slot="app" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
+      {showModeNav ? (
+        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-single border-b border-element p-single">
+          <Select id="app.mode.select" value={activeModeId} onValueChange={onActiveModeChange}>
+            <SelectTrigger className="w-[min(100%,16rem)]">
+              <SelectValue placeholder="Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              {modes.map((mode) => (
+                <SelectItem key={mode.id} value={mode.id}>
+                  {mode.label ?? mode.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+      <div data-slot="app-body" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {body}
+      </div>
+    </div>
+  );
+};
+
+export { App };
+
+// #endregion 🧭App
+
+// #region 🧭Ui
+
+/** @emoji 🖥️ App descriptor rendered inside {@link Ui}. */
+export interface UiAppDescriptor {
+  id: string;
+  label?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export interface UiProps {
+  apps: UiAppDescriptor[];
+  activeAppId: string;
+  onActiveAppChange?: (appId: string) => void;
+  navbar?: React.ReactNode;
+  footer?: React.ReactNode;
+  toolbar?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+/** @emoji 🖥️ Top-level UI shell with optional app switcher and one active app body. */
+const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, toolbar, children, className = "" }) => {
+  const activeApp = apps.find((app) => app.id === activeAppId) ?? apps[0];
+  const body = children ?? activeApp?.children;
+  const showAppNav = apps.length > 1 && !!onActiveAppChange;
+
+  const navbarItems: NavbarItem[] = [];
+  if (showAppNav) {
+    navbarItems.push({
+      key: "appNav",
+      content: (
+        <ButtonGroup id="ui.appNav">
+          {apps.map((app) => (
+            <ButtonGroupItem
+              key={app.id}
+              id={`ui.appNav.${app.id}`}
+              className={cn(activeAppId === app.id && "bg-active-base")}
+              onClick={() => onActiveAppChange?.(app.id)}
+              text={app.label}
+            >
+              {app.icon ?? app.label ?? app.id}
+            </ButtonGroupItem>
+          ))}
+        </ButtonGroup>
+      ),
+    });
+  }
+  if (navbar) {
+    navbarItems.push({ key: "navbar", className: "flex-1 min-w-0", content: navbar });
+  }
+
+  return (
+    <div data-slot="ui" className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
+      {navbarItems.length > 0 ? <Navbar items={navbarItems} /> : null}
+      <div data-slot="ui-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {body}
+        {toolbar ? <div className="pointer-events-none absolute inset-x-0 bottom-large z-toolbar flex justify-center">{toolbar}</div> : null}
+      </div>
+      {footer ? <div data-slot="ui-footer">{footer}</div> : null}
+    </div>
+  );
+};
+
+export { Ui };
+
+// #endregion 🧭Ui
+
 // #endregion ⚙️Canvas
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  const { render, screen, fireEvent } = await import("@testing-library/react");
+
+  describe("Shell components", () => {
+    it("Ui renders the active app body", () => {
+      render(
+        <Ui
+          apps={[
+            { id: "editor", label: "Editor", children: <div>Editor Body</div> },
+            { id: "dashboard", label: "Dashboard", children: <div>Dashboard Body</div> },
+          ]}
+          activeAppId="dashboard"
+          onActiveAppChange={() => {}}
+        />,
+      );
+      expect(screen.getByText("Dashboard Body")).toBeTruthy();
+    });
+
+    it("App renders the active mode body", () => {
+      render(
+        <App
+          modes={[
+            { id: "design", label: "Design", children: <div>Design Mode</div> },
+            { id: "review", label: "Review", children: <div>Review Mode</div> },
+          ]}
+          activeModeId="review"
+          onActiveModeChange={() => {}}
+        />,
+      );
+      expect(screen.getByText("Review Mode")).toBeTruthy();
+    });
+
+    it("Mode lays out all windows and marks the active one", () => {
+      render(
+        <Mode
+          windows={[
+            { id: "left", children: <div>Left Pane</div> },
+            { id: "right", children: <div>Right Pane</div> },
+          ]}
+          activeWindowId="right"
+          onActiveWindowChange={() => {}}
+        />,
+      );
+      expect(screen.getByText("Left Pane")).toBeTruthy();
+      expect(screen.getByText("Right Pane")).toBeTruthy();
+      expect(document.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+    });
+
+    it("Engagement renders options, input, and status lines", () => {
+      render(
+        <Engagement
+          options={[{ id: "opt-a", label: "Option A", onPress: () => {} }]}
+          input={{ placeholder: "Type here" }}
+          status={[{ id: "status-a", content: "Ready" }]}
+        />,
+      );
+      expect(screen.getByText("Option A")).toBeTruthy();
+      expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
+      expect(screen.getByText("Ready")).toBeTruthy();
+    });
+
+    it("createEvenWindowLayout builds a row of stacks", () => {
+      const layout = createEvenWindowLayout(["a", "b"]);
+      expect(layout.kind).toBe("row");
+      if (layout.kind === "row") {
+        expect(layout.children).toHaveLength(2);
+      }
+    });
+  });
+}
 
 // #endregion 🔍Window Components
 

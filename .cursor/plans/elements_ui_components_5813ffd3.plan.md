@@ -4,25 +4,25 @@ overview: Build Ui, App, Mode, Window, and Engagement as canonical pure-React, p
 todos:
   - id: ticket
     content: Open a new repo-MCP ticket for the elements/react Ui-App-Mode-Window-Engagement work; associate with the most appropriate goal.
-    status: in_progress
+    status: completed
   - id: types
     content: "Add core types in elements/lib/react/core/index.tsx: WindowLayoutNode, UiAppDescriptor, AppModeDescriptor, ModeWindowDescriptor, EngagementOption/Input/Status, in a new region with emoji docstrings."
-    status: pending
+    status: completed
   - id: engagement
     content: "Implement Engagement component (floating 3-line: options buttons, input line, status components) and export it."
-    status: pending
+    status: completed
   - id: window-engagement
     content: Extend Window (WindowConfig) with engagement and active props; render Engagement overlay and active highlight.
-    status: pending
+    status: completed
   - id: mode
     content: "Implement Mode: recursive resizable multi-pane layout from WindowLayoutNode using ResizablePanelGroup, active-window focus + onActiveWindowChange."
-    status: pending
+    status: completed
   - id: app-ui
     content: Implement App (mode switcher chrome + active Mode) and Ui (app switcher chrome + active App) with navbar/footer/toolbar slots.
-    status: pending
+    status: completed
   - id: core-tests
     content: Add inline import.meta.vitest tests in core for switching, layout split, and engagement rendering; run @elements/ui vitest.
-    status: pending
+    status: in_progress
   - id: stories
     content: Add Ui/App/Mode/Engagement stories and extend Window.stories.tsx under .storybook/stories/elements/ui/ following existing conventions; build Storybook.
     status: pending

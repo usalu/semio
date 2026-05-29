@@ -1,0 +1,18 @@
+{
+  "title": "Elements Ui App Mode Window Engagement",
+  "emoji": "⚛️",
+  "status": "open",
+  "description": "Implement Ui, App, Mode, Window, Engagement as canonical pure-React components in @elements/lib/react/core, add stories, rewire framework/playground renderers to compose them, replace Golden Layout with pure-React resizable layout.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1496"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "5813ffd3",
+    "source": "C:\\git\\semio\\.cursor\\plans\\elements_ui_components_5813ffd3.plan.md"
+  },
+  "sessions": [
+    "⚪8dd9c9bd1e5a4120b3b4438efac95b94"
+  ]
+}

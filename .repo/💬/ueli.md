@@ -2618,6 +2618,12 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+Transfer the old ui into proper playground.
+A playground is an app that toolbar with tool categories (and active tool category)
+e.g. Save, Transform are both categories,
+
+---
+
 It should have 4 windows
 on the left top: shape
 on the left bottom: building
