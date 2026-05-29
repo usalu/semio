@@ -2,10 +2,12 @@
 /** @emoji 🌐 Vite plugin: serve and copy `elements/assets` at `/assets/*` (fonts, cursors, …). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { cpSync, createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import type { Connect } from "vite";
 import type { Plugin } from "vite";
+// #endregion 🔌Adapters
 
 //#region 🔖ViteElementsAssets
 function contentTypeForElementsAsset(filePath: string): string | undefined {

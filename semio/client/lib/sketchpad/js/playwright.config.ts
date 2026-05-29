@@ -14,9 +14,11 @@
 // Uses esbuild-based ESM loader hook (pw-loader.mjs) to handle CSS stubs, TypeScript
 // type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
+// #region 🔌Adapters
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+// #endregion 🔌Adapters
 
 const __dirname = resolve(fileURLToPath(import.meta.url), "..");
 const loaderImportFlag = `--import ${pathToFileURL(resolve(__dirname, "pw-loader.mjs")).href}`;

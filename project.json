@@ -143,14 +143,6 @@
         "forwardAllArgs": true
       }
     },
-    "generate-neo4j-migrate": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./script.ts migrate neo4j",
-        "forwardAllArgs": true
-      }
-    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [],

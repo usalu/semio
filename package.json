@@ -12,7 +12,6 @@
     "framework/playground/renderer/react",
     "puzzle/2d/react",
     "puzzle/2d/play",
-    "puzzle/2d/rs/pkg",
     "puzzle/3d/react",
     "puzzle/3d/play",
     "puzzle/5d/react",
@@ -61,7 +60,6 @@
     "dev:scene": "bun ./script.ts dev scene",
     "dev:cad": "bun ./script.ts dev cad",
     "generate": "bun ./script.ts generate",
-    "migrate:neo4j": "bun ./script.ts migrate neo4j",
     "lint": "bun ./script.ts lint",
     "format": "bun ./script.ts format",
     "test": "bun ./script.ts test",
@@ -110,7 +108,8 @@
     "typescript-eslint": "^8.50.1",
     "vite-plugin-singlefile": "^2.3.2",
     "vitest": "^4.0.17",
-    "eslint-plugin-storybook": "10.4.0"
+    "eslint-plugin-storybook": "10.4.0",
+    "chevrotain": "^11.0.3"
   },
   "keywords": [
     "kit-of-parts",

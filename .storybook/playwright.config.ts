@@ -5,10 +5,12 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
+// #endregion 🔌Adapters
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";

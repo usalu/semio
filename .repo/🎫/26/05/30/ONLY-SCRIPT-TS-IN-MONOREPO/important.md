@@ -19,11 +19,6 @@ Every bundle uses a single `script.ts` with subcommands (`dev`, `build`, `test`,
 Production shells: `repo/native/bootstrap/script.ps1` and `script.sh`.  
 Invoked via `bun ./script.ts setup native` and `bun ./script.ts start` with `SEMIO_REPO_ROOT` set to the workspace root.
 
-## Neo4j migrations
-
-Production router: `repo/lib/neo4j-migrate/script.ts`.  
-Invoked via `bun ./script.ts migrate neo4j …` from the monorepo root.
-
 ## Ticket workspaces
 
 Ticket folders may keep historical copies; **production `script.ts` files must not reference `.repo/🎫` paths**. One-off tasks stay in plain `.ts` modules beside a ticket `script.ts` when needed.

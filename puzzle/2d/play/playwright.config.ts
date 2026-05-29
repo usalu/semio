@@ -2,10 +2,12 @@
 // 💻 elements/client/lib/board/play/playwright.config.ts — E2E against the Vite board play harness (WebGPU raster).
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
+// #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const boardRoot = path.resolve(__dirname, "..");

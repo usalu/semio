@@ -1,6 +1,8 @@
+// #region 🔌Adapters
 import { defineConfig, devices } from "@playwright/test";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+// #endregion 🔌Adapters
 
 const playDir = dirname(fileURLToPath(import.meta.url));
 const topologyRoot = dirname(playDir);

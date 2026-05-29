@@ -6,7 +6,9 @@
 
 /// <reference lib="webworker" />
 
+//#region 🔌Adapters
 import { RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
+//#endregion 🔌Adapters
 
 //#region 🧷WasmHandle
 type WasmKitHandle = {

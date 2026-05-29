@@ -29,6 +29,7 @@ const INTERNAL_PREFIXES = [
 export function isAdapterBoundaryFile(filePath: string, content: string): boolean {
   const n = normalize(filePath).replaceAll("\\", "/").toLowerCase();
   if (n.includes("/adapters/") || n.includes("/external_adapters")) return true;
+  if (n.includes("-transport.") || n.endsWith(".worker.ts") || n.includes("kit-store.worker")) return true;
   if (n.includes("adapter")) return true;
   const lower = content.toLowerCase();
   return ADAPTER_MARKERS.some((m) => lower.includes(m));

@@ -14,7 +14,6 @@ import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseN
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap");
-const NEO4J_MIGRATE_SCRIPT = join(WORKSPACE_ROOT, "repo", "lib", "neo4j-migrate", "script.ts");
 
 export { Script };
 
@@ -807,25 +806,6 @@ export class PurgeScript extends Script {
 }
 //#endregion 🔖PurgeScript
 
-//#region 🔖MigrateScript
-/** 🧩Delegates Neo4j graph migrations to `repo/lib/neo4j-migrate/script.ts`. */
-export class MigrateScript extends Script {
-  run(segments: string[]): void {
-    if (segments[0] !== "neo4j") {
-      console.error("[migrate] usage: bun ./script.ts migrate neo4j [migrate|kit-field|rename-ops|gen-domain|stitch]");
-      process.exit(1);
-    }
-    if (!existsSync(NEO4J_MIGRATE_SCRIPT)) {
-      console.error(`[migrate] missing ${NEO4J_MIGRATE_SCRIPT}`);
-      process.exit(1);
-    }
-    const sub = segments.slice(1);
-    const args = sub.length === 0 ? ["migrate"] : sub;
-    runCmd(BUN, [NEO4J_MIGRATE_SCRIPT, ...args], { cwd: this.root });
-  }
-}
-//#endregion 🔖MigrateScript
-
 //#region 🔖Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("nx", NxScript)
@@ -833,7 +813,6 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("start", StartScript)
   .register("dev", DevScript)
   .register("generate", GenerateScript)
-  .register("migrate", MigrateScript)
   .register("lint", LintScript)
   .register("format", FormatScript)
   .register("test", TestScript)

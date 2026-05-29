@@ -1,6 +1,3 @@
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import storybook from "eslint-plugin-storybook";
-
 // #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -11,12 +8,16 @@ import storybook from "eslint-plugin-storybook";
 
 // #endregion 🧲Header
 
+// #region 🔌Adapters
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+// #endregion 🔌Adapters
+
 // #region 🗄️Configuration
 // ESLint flat configuration for the semio JS package.
 // Configuration MUST export a valid ESLint flat config array.
-
-import globals from "globals";
-import tseslint from "typescript-eslint";
 
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.

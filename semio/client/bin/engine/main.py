@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import abc
 import argparse
+import collections
 import contextlib
 import copy
 import datetime
@@ -2023,7 +2024,6 @@ _mcp_session_transactions: dict[typing.Any, Transaction] = {}
 _mcp_session_transaction_rollback: set[typing.Any] = set()
 _mcp_session_selection: dict[typing.Any, dict[str, list[str]]] = {}
 _mcp_session_camera: dict[typing.Any, dict[str, typing.Any]] = {}
-import collections
 _mcp_app_payloads: collections.OrderedDict[str, dict[str, typing.Any]] = collections.OrderedDict()
 _MCP_APP_PAYLOADS_MAX_SIZE = 100
 _mcp_app_file_blobs: dict[str, str] = {}
@@ -3923,11 +3923,13 @@ def dev():
 
 # #region 🥼Tests
 # Pytest suite lives in this module so the engine and tests share one unit of compilation.
+# #region 🔌Adapters
 import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
 from starlette.testclient import TestClient
+# #endregion 🔌Adapters
 
 engine = sys.modules[__name__]
 sys.modules["engine"] = engine

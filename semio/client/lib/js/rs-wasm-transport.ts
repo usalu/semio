@@ -3,7 +3,9 @@
 // GNU LGPL-3.0 or later — sole `@semio/rs-wasm` import site; exposes GraphQL execute/subscribe only.
 //#endregion 🧲Header
 
+//#region 🔌Adapters
 import { RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
+//#endregion 🔌Adapters
 
 export type GraphqlExecuteFn = (requestJson: string) => Promise<string>;
 export type GraphqlSubscribeFn = (requestJson: string, onEvent: (eventJson: string) => void) => Promise<void>;
