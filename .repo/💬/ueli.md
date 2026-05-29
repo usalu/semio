@@ -2601,6 +2601,12 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+selection is adhoc and buggy.
+In general the renderer has one selection per model.
+Further every interaction state can have its own selection.
+
+---
+
 Primitives are available in all modelDefinitions
 Add a general primitve section with Show and Filter.
 Add all toggles for kind of primitives.

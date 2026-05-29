@@ -755,6 +755,29 @@ export function defaultSpatialPrimitiveToggles(): Record<ModelEntityKind, boolea
 	return Object.fromEntries(SPATIAL_PRIMITIVE_KINDS.map((kind) => [kind, true])) as Record<ModelEntityKind, boolean>;
 }
 
+/** @emoji ☑️ Aggregate enabled state for a fixed-key boolean toggle map (`false` = off). */
+export type SpatialToggleGroupState = "all" | "none" | "partial";
+
+/** @emoji ☑️ Returns whether every key is on, every key is off, or the group is mixed. */
+export function spatialToggleGroupState(
+	keys: readonly string[],
+	toggles: Readonly<Record<string, boolean | undefined>>,
+): SpatialToggleGroupState {
+	if (keys.length === 0) return "none";
+	let on = 0;
+	for (const key of keys) {
+		if (toggles[key] !== false) on += 1;
+	}
+	if (on === 0) return "none";
+	if (on === keys.length) return "all";
+	return "partial";
+}
+
+/** @emoji ☑️ Sets every key in a chrome toggle group on or off. */
+export function spatialToggleGroupFill<T extends string>(keys: readonly T[], enabled: boolean): Record<T, boolean> {
+	return Object.fromEntries(keys.map((key) => [key, enabled])) as Record<T, boolean>;
+}
+
 /** @emoji 🧭 Resolves the topology entity kind for a pick target (typology object rows → `null`). */
 export function pickTargetPrimitiveKind(target: SpatialPickTarget): ModelEntityKind | null {
 	if (target.kind === "object" && !target.geometryKind) return null;
@@ -3085,6 +3108,31 @@ export function InteractionSpatialView({
 // #endregion 🪩Canvas
 
 // #region 🪩Repl
+/** @emoji ☑️ Master checkbox for a chrome toggle group (supports indeterminate partial state). */
+function SpatialChromeMasterToggle({
+	state,
+	onEnabledChange,
+	ariaLabel,
+}: {
+	readonly state: SpatialToggleGroupState;
+	readonly onEnabledChange: (enabled: boolean) => void;
+	readonly ariaLabel: string;
+}): ReactNode {
+	const inputRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		if (inputRef.current) inputRef.current.indeterminate = state === "partial";
+	}, [state]);
+	return (
+		<input
+			ref={inputRef}
+			type="checkbox"
+			aria-label={ariaLabel}
+			checked={state === "all"}
+			onChange={(e) => onEnabledChange(e.target.checked)}
+		/>
+	);
+}
+
 type ReplSuggestKind = "interaction" | "transition" | "action" | "selection";
 
 interface ReplSuggestion {
@@ -3357,31 +3405,48 @@ function replApplySelectionPick(
 	return mergeSelectionTargets(current, picked, spatialSelectionModeFromModifiers(modeModifiers));
 }
 
-function replSelectionLayerParts(
-	interactionActive: boolean,
-	activeModelDefinitionId: string | null,
-	rendererSelection: readonly SelectionTarget[],
-	interactionSelection: readonly SelectionTarget[],
-): {
-	readonly layer: readonly SelectionTarget[];
-	readonly inView: readonly SelectionTarget[];
-	readonly outOfView: readonly SelectionTarget[];
-} {
-	const layer = interactionActive ? interactionSelection : rendererSelection;
-	const entityKinds = new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID));
-	const inView: SelectionTarget[] = [];
-	const outOfView: SelectionTarget[] = [];
-	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
-	for (const target of layer) {
-		if (target.kind === "object" && target.editable === false) {
-			if (!entityKinds.has("object") || isShapeModelDefinition(mdId)) outOfView.push(target);
-			else inView.push(target);
-			continue;
-		}
-		if (entityKinds.has(target.kind)) inView.push(target);
-		else outOfView.push(target);
-	}
-	return { layer, inView, outOfView };
+/** @emoji 🗂️ Renderer highlight targets keyed by model definition id. */
+export type SpatialRendererSelectionByModel = Readonly<Record<string, readonly SelectionTarget[]>>;
+
+/** @emoji 🗂️ Interaction pick targets keyed by interaction state id (session-local). */
+export type SpatialInteractionSelectionByState = Readonly<Record<string, readonly SelectionTarget[]>>;
+
+/** @emoji 🪪 Reads renderer selection for one model definition (empty when unset). */
+export function replRendererSelectionTargets(
+	byModel: SpatialRendererSelectionByModel,
+	modelDefinitionId: string,
+): readonly SelectionTarget[] {
+	return byModel[modelDefinitionId] ?? [];
+}
+
+/** @emoji 🪪 Updates renderer selection for one model definition without touching other models. */
+export function replWithRendererSelectionTargets(
+	byModel: SpatialRendererSelectionByModel,
+	modelDefinitionId: string,
+	targets: readonly SelectionTarget[],
+): SpatialRendererSelectionByModel {
+	const prev = byModel[modelDefinitionId] ?? [];
+	if (replSelectionTargetsEqual(prev, targets)) return byModel;
+	return { ...byModel, [modelDefinitionId]: [...targets] };
+}
+
+/** @emoji 🪪 Reads interaction selection for one state (empty when unset). */
+export function replInteractionSelectionTargets(
+	byState: SpatialInteractionSelectionByState,
+	stateId: string,
+): readonly SelectionTarget[] {
+	return byState[stateId] ?? [];
+}
+
+/** @emoji 🪪 Updates interaction selection for one state without touching other states. */
+export function replWithInteractionSelectionTargets(
+	byState: SpatialInteractionSelectionByState,
+	stateId: string,
+	targets: readonly SelectionTarget[],
+): SpatialInteractionSelectionByState {
+	const prev = byState[stateId] ?? [];
+	if (replSelectionTargetsEqual(prev, targets)) return byState;
+	return { ...byState, [stateId]: [...targets] };
 }
 
 /** @emoji 🪪 Removes in-view targets of a pick kind when its selection toggle is turned off. */
@@ -3436,37 +3501,47 @@ export function replPruneSelectionByTypology(
 	});
 }
 
-/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to active model definition. */
+/** @emoji 🪪 Picks the highlight layer: interaction state selection while active, else renderer selection for the active model. */
 export function replDisplayedSelectionTargets(
 	interactionActive: boolean,
 	activeModelDefinitionId: string | null,
-	rendererSelection: readonly SelectionTarget[],
-	interactionSelection: readonly SelectionTarget[],
+	interactionState: string,
+	rendererByModel: SpatialRendererSelectionByModel,
+	interactionByState: SpatialInteractionSelectionByState,
 ): readonly SelectionTarget[] {
-	return replSelectionLayerParts(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection).inView;
+	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+	if (interactionActive) return replInteractionSelectionTargets(interactionByState, interactionState);
+	return replRendererSelectionTargets(rendererByModel, mdId);
 }
 
-/** @emoji 🪪 Merges a pick into the active selection layer without touching out-of-view targets. */
+/** @emoji 🪪 Merges a pick into the active renderer model or interaction state selection slice. */
 export function replMergeSelectionPickInView(
 	interactionActive: boolean,
 	activeModelDefinitionId: string | null,
-	rendererSelection: readonly SelectionTarget[],
-	interactionSelection: readonly SelectionTarget[],
+	interactionState: string,
+	rendererByModel: SpatialRendererSelectionByModel,
+	interactionByState: SpatialInteractionSelectionByState,
 	picked: readonly SelectionTarget[],
 	modifiers: InteractionEvent["modifiers"] = {},
 ): SelectionTarget[] {
-	const { inView, outOfView } = replSelectionLayerParts(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection);
-	return [...outOfView, ...replApplySelectionPick(inView, picked, modifiers)];
+	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+	const current = interactionActive
+		? replInteractionSelectionTargets(interactionByState, interactionState)
+		: replRendererSelectionTargets(rendererByModel, mdId);
+	return replApplySelectionPick(current, picked, modifiers);
 }
 
-/** @emoji 🪪 Applies archived interaction result to renderer selection when `archiveContext.targets` is set (including `[]`). */
+/** @emoji 🪪 Applies archived interaction result to renderer selection for the active model when `archiveContext.targets` is set (including `[]`). */
 export function replFinalizeSelection(
-	rendererSelection: readonly SelectionTarget[],
+	rendererByModel: SpatialRendererSelectionByModel,
+	activeModelDefinitionId: string | null,
 	result: InteractionSnapshot["lastResponse"],
-): readonly SelectionTarget[] {
+): SpatialRendererSelectionByModel {
 	const ctx = result?.archiveContext;
-	if (!ctx || typeof ctx !== "object" || !Object.hasOwn(ctx, "targets")) return rendererSelection;
-	return replInteractionSelectionFromContext(ctx as Record<string, unknown>);
+	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+	if (!ctx || typeof ctx !== "object" || !Object.hasOwn(ctx, "targets")) return rendererByModel;
+	const targets = replInteractionSelectionFromContext(ctx as Record<string, unknown>);
+	return replWithRendererSelectionTargets(rendererByModel, mdId, targets);
 }
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
@@ -3511,8 +3586,8 @@ export interface InteractionReplHostValues {
 	readonly dragSelection?: SpatialDragSelectionState | null;
 	readonly selectionMenu?: SpatialSelectionRequest | null;
 	readonly hoveredPickKey?: string | null;
-	readonly rendererSelection?: readonly SelectionTarget[];
-	readonly interactionSelection?: readonly SelectionTarget[];
+	readonly rendererSelectionByModel?: SpatialRendererSelectionByModel;
+	readonly interactionSelectionByState?: SpatialInteractionSelectionByState;
 	readonly interactionMenuOpen?: boolean;
 	readonly lastFinalizedInteractionId?: string;
 }
@@ -3531,8 +3606,8 @@ export interface InteractionReplHostCallbacks {
 	readonly onDragSelectionChange?: (value: SpatialDragSelectionState | null) => void;
 	readonly onSelectionMenuChange?: (value: SpatialSelectionRequest | null) => void;
 	readonly onHoveredPickKeyChange?: (key: string | null) => void;
-	readonly onRendererSelectionChange?: (targets: readonly SelectionTarget[]) => void;
-	readonly onInteractionSelectionChange?: (targets: readonly SelectionTarget[]) => void;
+	readonly onRendererSelectionByModelChange?: (value: SpatialRendererSelectionByModel) => void;
+	readonly onInteractionSelectionByStateChange?: (value: SpatialInteractionSelectionByState) => void;
 	readonly onInteractionMenuOpenChange?: (open: boolean) => void;
 	readonly onLastFinalizedInteractionIdChange?: (id: string) => void;
 	readonly onCanvasReady?: InteractionCanvasProps["onCanvasReady"];
@@ -3605,8 +3680,8 @@ export function defaultInteractionReplChromeState(): Required<
 		| "dragSelection"
 		| "selectionMenu"
 		| "hoveredPickKey"
-		| "rendererSelection"
-		| "interactionSelection"
+		| "rendererSelectionByModel"
+		| "interactionSelectionByState"
 		| "interactionMenuOpen"
 		| "lastFinalizedInteractionId"
 	>
@@ -3624,8 +3699,8 @@ export function defaultInteractionReplChromeState(): Required<
 		dragSelection: null,
 		selectionMenu: null,
 		hoveredPickKey: null,
-		rendererSelection: [],
-		interactionSelection: [],
+		rendererSelectionByModel: {},
+		interactionSelectionByState: {},
 		interactionMenuOpen: false,
 		lastFinalizedInteractionId: "",
 	};
@@ -3681,8 +3756,8 @@ export function InteractionRepl({
 	dragSelection: dragSelectionProp,
 	selectionMenu: selectionMenuProp,
 	hoveredPickKey: hoveredPickKeyProp,
-	rendererSelection: rendererSelectionProp,
-	interactionSelection: interactionSelectionProp,
+	rendererSelectionByModel: rendererSelectionByModelProp,
+	interactionSelectionByState: interactionSelectionByStateProp,
 	interactionMenuOpen: interactionMenuOpenProp,
 	lastFinalizedInteractionId: lastFinalizedInteractionIdProp,
 	onCmdLineChange,
@@ -3697,8 +3772,8 @@ export function InteractionRepl({
 	onDragSelectionChange,
 	onSelectionMenuChange,
 	onHoveredPickKeyChange,
-	onRendererSelectionChange,
-	onInteractionSelectionChange,
+	onRendererSelectionByModelChange,
+	onInteractionSelectionByStateChange,
 	onInteractionMenuOpenChange,
 	onLastFinalizedInteractionIdChange,
 	onApplyTransformation,
@@ -3799,15 +3874,15 @@ export function InteractionRepl({
 	const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
 	const [selectionMenu, setSelectionMenu] = useHostState(selectionMenuProp, onSelectionMenuChange, () => chromeDefaults.selectionMenu);
 	const [hoveredPickKey, setHoveredPickKey] = useHostState(hoveredPickKeyProp, onHoveredPickKeyChange, () => chromeDefaults.hoveredPickKey);
-	const [rendererSelection, setRendererSelection] = useHostState(
-		rendererSelectionProp,
-		onRendererSelectionChange,
-		() => [...chromeDefaults.rendererSelection],
+	const [rendererSelectionByModel, setRendererSelectionByModel] = useHostState(
+		rendererSelectionByModelProp,
+		onRendererSelectionByModelChange,
+		() => ({ ...chromeDefaults.rendererSelectionByModel }),
 	);
-	const [interactionSelection, setInteractionSelection] = useHostState(
-		interactionSelectionProp,
-		onInteractionSelectionChange,
-		() => [...chromeDefaults.interactionSelection],
+	const [interactionSelectionByState, setInteractionSelectionByState] = useHostState(
+		interactionSelectionByStateProp,
+		onInteractionSelectionByStateChange,
+		() => ({ ...chromeDefaults.interactionSelectionByState }),
 	);
 	const [interactionMenuOpen, setInteractionMenuOpen] = useHostState(interactionMenuOpenProp, onInteractionMenuOpenChange, () => chromeDefaults.interactionMenuOpen);
 	const [lastFinalizedInteractionId, setLastFinalizedInteractionId] = useHostState(
@@ -3829,7 +3904,7 @@ export function InteractionRepl({
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const numericEntryPrevStateRef = useRef(snapshot.state);
 	const setCmdLineRef = useRef(setCmdLine);
-	const rendererSelectionRef = useRef(rendererSelection);
+	const rendererSelectionByModelRef = useRef(rendererSelectionByModel);
 	const suppressAutoStartOnceRef = useRef(false);
 	const lastViewsRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number; readonly activeModelDefinitionId: string | null }>({
 		model: null,
@@ -3842,8 +3917,21 @@ export function InteractionRepl({
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const boundInteractionSession = Boolean(interactionId) && interactionActive;
 	const displayedSelectionTargets = useMemo(
-		() => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection),
-		[boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection],
+		() =>
+			replDisplayedSelectionTargets(
+				boundInteractionSession,
+				activeModelDefinitionId,
+				snapshot.state,
+				rendererSelectionByModel,
+				interactionSelectionByState,
+			),
+		[
+			boundInteractionSession,
+			activeModelDefinitionId,
+			snapshot.state,
+			rendererSelectionByModel,
+			interactionSelectionByState,
+		],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
@@ -3879,13 +3967,30 @@ export function InteractionRepl({
 			),
 		[activeModelDefinitionId, selectablePickTargets, viewFilterKindToggles],
 	);
+	const scopeTypologyIds = useMemo(() => modelDefinitionScope.typologies.map((row) => row.id), [modelDefinitionScope.typologies]);
+	const primitiveShowGroupState = useMemo(
+		() => spatialToggleGroupState(SPATIAL_PRIMITIVE_KINDS, filterPrimitiveToggles),
+		[filterPrimitiveToggles],
+	);
+	const primitiveFilterGroupState = useMemo(
+		() => spatialToggleGroupState(SPATIAL_PRIMITIVE_KINDS, selectionPrimitiveToggles),
+		[selectionPrimitiveToggles],
+	);
+	const typologyShowGroupState = useMemo(
+		() => spatialToggleGroupState(scopeTypologyIds, filterTypologyToggles),
+		[scopeTypologyIds, filterTypologyToggles],
+	);
+	const typologySelectionGroupState = useMemo(
+		() => spatialToggleGroupState(scopeTypologyIds, selectionTypologyToggles),
+		[scopeTypologyIds, selectionTypologyToggles],
+	);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
 
 	useEffect(() => {
-		rendererSelectionRef.current = rendererSelection;
-	}, [rendererSelection]);
+		rendererSelectionByModelRef.current = rendererSelectionByModel;
+	}, [rendererSelectionByModel]);
 
 	const dismissReplChrome = useCallback(() => {
 		dragCleanupRef.current?.();
@@ -3903,20 +4008,28 @@ export function InteractionRepl({
 		if (!aborted && !interactionId) return false;
 		if (!aborted) rt.cancel();
 		suppressAutoStartOnceRef.current = true;
-		setInteractionSelection([]);
+		setInteractionSelectionByState({});
 		dismissReplChrome();
 		if (interactionId) onInteractionId("");
 		onCancel?.();
 		return true;
-	}, [rt, interactionId, onInteractionId, dismissReplChrome, onCancel, setInteractionSelection]);
+	}, [rt, interactionId, onInteractionId, dismissReplChrome, onCancel, setInteractionSelectionByState]);
 
 	useEffect(() => {
 		if (!interactionId || !snapshot.lastResponse?.ok) return;
 		setLastFinalizedInteractionId(interactionId);
-		setRendererSelection((prev) => [...replFinalizeSelection(prev, snapshot.lastResponse)]);
-		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
+		setRendererSelectionByModel((prev) => replFinalizeSelection(prev, activeModelDefinitionId, snapshot.lastResponse));
+		setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
 		setCmdLine("");
-	}, [interactionId, snapshot.lastResponse, setInteractionSelection, setLastFinalizedInteractionId, setRendererSelection, setCmdLine]);
+	}, [
+		interactionId,
+		snapshot.lastResponse,
+		activeModelDefinitionId,
+		setInteractionSelectionByState,
+		setLastFinalizedInteractionId,
+		setRendererSelectionByModel,
+		setCmdLine,
+	]);
 
 	useEffect(() => {
 		if (!interactionId || !isFinalInteractionState(spec, snapshot.state)) return;
@@ -3946,10 +4059,11 @@ export function InteractionRepl({
 
 	const startRuntime = useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly ModelEntityKind[];
-		const accepted = replSelectionAccepted(accept, rendererSelectionRef.current);
-		setInteractionSelection(accepted);
+		const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+		const accepted = replSelectionAccepted(accept, replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId));
+		setInteractionSelectionByState({ [rt.getSnapshot().state]: [...accepted] });
 		await rt.send(replStartEvent(accepted));
-	}, [rt, setInteractionSelection]);
+	}, [rt, activeModelDefinitionId, setInteractionSelectionByState]);
 
 	useEffect(() => {
 		if (!interactionId) return;
@@ -4018,8 +4132,8 @@ export function InteractionRepl({
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
 		setInteractionMenuOpen(false);
-		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [interactionId, rt, setInteractionSelection]);
+		setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+	}, [interactionId, rt, setInteractionSelectionByState]);
 
 	const confirmInteractionSelection = useCallback(() => {
 		const snap = rt.getSnapshot();
@@ -4030,12 +4144,17 @@ export function InteractionRepl({
 
 	useEffect(() => {
 		if (!interactionId || !interactionActive) {
-			setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
+			setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
 			return;
 		}
 		const machineTargets = replInteractionSelectionFromContext(snapshot.context);
-		setInteractionSelection((prev) => (replSelectionTargetsEqual(prev, machineTargets) ? prev : [...machineTargets]));
-	}, [interactionId, interactionActive, snapshot.revision, snapshot.context, setInteractionSelection]);
+		setInteractionSelectionByState((prev) => {
+			const stateId = snapshot.state;
+			const current = prev[stateId] ?? [];
+			if (replSelectionTargetsEqual(current, machineTargets)) return prev;
+			return replWithInteractionSelectionTargets(prev, stateId, machineTargets);
+		});
+	}, [interactionId, interactionActive, snapshot.revision, snapshot.state, snapshot.context, setInteractionSelectionByState]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const defaultSelectionAccept = useMemo(
@@ -4059,18 +4178,38 @@ export function InteractionRepl({
 		(selection: readonly SelectionTarget[]) => {
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
-			if (boundInteractionSession) setInteractionSelection([...selection]);
-			else setRendererSelection([...selection]);
+			const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+			if (boundInteractionSession) {
+				setInteractionSelectionByState((prev) => replWithInteractionSelectionTargets(prev, snapshot.state, selection));
+			} else {
+				setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, mdId, selection));
+			}
 		},
-		[boundInteractionSession, setInteractionSelection, setRendererSelection],
+		[
+			boundInteractionSession,
+			activeModelDefinitionId,
+			snapshot.state,
+			setInteractionSelectionByState,
+			setRendererSelectionByModel,
+			setSelectionMenu,
+			setHoveredPickKey,
+		],
 	);
 
 	const applySelectionPrune = useCallback(
 		(map: (selection: readonly SelectionTarget[]) => readonly SelectionTarget[]) => {
-			setRendererSelection((prev) => [...map(prev)]);
-			setInteractionSelection((prev) => [...map(prev)]);
+			const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+			setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, mdId, map(replRendererSelectionTargets(prev, mdId))));
+			setInteractionSelectionByState((prev) => {
+				let next: SpatialInteractionSelectionByState = prev;
+				for (const stateId of Object.keys(prev)) {
+					const pruned = map(prev[stateId] ?? []);
+					next = replWithInteractionSelectionTargets(next, stateId, pruned);
+				}
+				return next;
+			});
 		},
-		[setRendererSelection, setInteractionSelection],
+		[activeModelDefinitionId, setRendererSelectionByModel, setInteractionSelectionByState],
 	);
 
 	const dispatchSelectionTargets = useCallback(
@@ -4079,15 +4218,24 @@ export function InteractionRepl({
 			const nextSelection = replMergeSelectionPickInView(
 				boundInteractionSession,
 				activeModelDefinitionId,
-				rendererSelection,
-				interactionSelection,
+				snapshot.state,
+				rendererSelectionByModel,
+				interactionSelectionByState,
 				picked,
 				modifiers,
 			);
 			commitSelection(nextSelection);
 			if (boundInteractionSession && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
-		[commitSelection, boundInteractionSession, interactionSelection, activeModelDefinitionId, rt, rendererSelection],
+		[
+			commitSelection,
+			boundInteractionSession,
+			interactionSelectionByState,
+			activeModelDefinitionId,
+			snapshot.state,
+			rt,
+			rendererSelectionByModel,
+		],
 	);
 
 	const onSelectionRequest = useCallback(
@@ -4192,8 +4340,9 @@ export function InteractionRepl({
 						replMergeSelectionPickInView(
 							boundInteractionSession,
 							activeModelDefinitionId,
-							rendererSelection,
-							interactionSelection,
+							snapshot.state,
+							rendererSelectionByModel,
+							interactionSelectionByState,
 							[selection],
 							modifiers,
 						),
@@ -4210,8 +4359,9 @@ export function InteractionRepl({
 			activeSelectionAccept,
 			commitSelection,
 			boundInteractionSession,
-			interactionSelection,
-			rendererSelection,
+			interactionSelectionByState,
+			rendererSelectionByModel,
+			snapshot.state,
 			pointerMoveActive,
 			activeModelDefinitionId,
 			effectiveSelectionKindToggles,
@@ -4312,7 +4462,15 @@ export function InteractionRepl({
 						) === "default"
 					) {
 						commitSelection(
-							replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection, [], finalState.modifiers),
+							replMergeSelectionPickInView(
+								boundInteractionSession,
+								activeModelDefinitionId,
+								snapshot.state,
+								rendererSelectionByModel,
+								interactionSelectionByState,
+								[],
+								finalState.modifiers,
+							),
 						);
 					}
 					return;
@@ -4338,10 +4496,11 @@ export function InteractionRepl({
 		commitSelection,
 		dispatchSelectionTargets,
 		boundInteractionSession,
-		interactionSelection,
+		interactionSelectionByState,
 		onSelectionRequest,
 		activeModelDefinitionId,
-		rendererSelection,
+		snapshot.state,
+		rendererSelectionByModel,
 		selectionMethod,
 		geometryPreviewTransform,
 		selectablePickTargets,
@@ -5145,7 +5304,22 @@ export function InteractionRepl({
 							{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"}
 						</span>
 					) : null}
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Primitives · Show</span>
+					<label
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							fontWeight: 600,
+							color: "#c8c8e0",
+						}}
+					>
+						<SpatialChromeMasterToggle
+							state={primitiveShowGroupState}
+							ariaLabel="Show all primitives"
+							onEnabledChange={(enabled) => setFilterPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled))}
+						/>
+						Primitives · Show
+					</label>
 					<div role="group" aria-label="Show primitives" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{SPATIAL_PRIMITIVE_KINDS.map((kind) => (
 							<label
@@ -5171,7 +5345,35 @@ export function InteractionRepl({
 							</label>
 						))}
 					</div>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Primitives · Filter</span>
+					<label
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							fontWeight: 600,
+							color: "#c8c8e0",
+						}}
+					>
+						<SpatialChromeMasterToggle
+							state={primitiveFilterGroupState}
+							ariaLabel="Filter all primitives"
+							onEnabledChange={(enabled) => {
+								setSelectionPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled));
+								setSelectionMenu(null);
+								setHoveredPickKey(null);
+								if (!enabled) {
+									applySelectionPrune((prev) => {
+										let next = prev;
+										for (const kind of SPATIAL_PRIMITIVE_KINDS) {
+											next = replPruneSelectionByPrimitive(next, kind);
+										}
+										return next;
+									});
+								}
+							}}
+						/>
+						Primitives · Filter
+					</label>
 					<div role="group" aria-label="Filter primitives" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{SPATIAL_PRIMITIVE_KINDS.map((kind) => (
 							<label
@@ -5203,7 +5405,22 @@ export function InteractionRepl({
 							</label>
 						))}
 					</div>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Typologies · Show</span>
+					<label
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							fontWeight: 600,
+							color: "#c8c8e0",
+						}}
+					>
+						<SpatialChromeMasterToggle
+							state={typologyShowGroupState}
+							ariaLabel="Show all typologies"
+							onEnabledChange={(enabled) => setFilterTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled))}
+						/>
+						Typologies · Show
+					</label>
 					<div role="group" aria-label="Show typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{modelDefinitionScope.typologies.map((typology) => {
 							const label = spatialTypologyToggleLabel(typology.id, typology.label);
@@ -5232,7 +5449,35 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
-					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Typologies · Selection</span>
+					<label
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							fontWeight: 600,
+							color: "#c8c8e0",
+						}}
+					>
+						<SpatialChromeMasterToggle
+							state={typologySelectionGroupState}
+							ariaLabel="Select all typologies"
+							onEnabledChange={(enabled) => {
+								setSelectionTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled));
+								setSelectionMenu(null);
+								setHoveredPickKey(null);
+								if (!enabled) {
+									applySelectionPrune((prev) => {
+										let next = prev;
+										for (const typologyId of scopeTypologyIds) {
+											next = replPruneSelectionByTypology(next, documentModel.model, activeModelDefinitionId, typologyId);
+										}
+										return next;
+									});
+								}
+							}}
+						/>
+						Typologies · Selection
+					</label>
 					<div role="group" aria-label="Selection typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{modelDefinitionScope.typologies.map((typology) => {
 							const label = spatialTypologyToggleLabel(typology.id, typology.label);
@@ -5658,19 +5903,21 @@ if (import.meta.vitest) {
 		});
 
 		it("scopes displayed selection to activeModelDefinitionId", () => {
-			const renderer = [
+			const rendererByModel: SpatialRendererSelectionByModel = {
+				[SHAPE_MODEL_DEFINITION_ID]: [{ kind: "face", id: "f0", editable: true }],
+				"aec.building.energy": [
+					{ kind: "face", id: "f0", editable: true },
+					{ kind: "object", id: "o0", editable: false },
+				],
+			};
+			expect(replDisplayedSelectionTargets(false, SHAPE_MODEL_DEFINITION_ID, "idle", rendererByModel, {})).toEqual([
 				{ kind: "face", id: "f0", editable: true },
-				{ kind: "object", id: "o0", editable: false },
-			] satisfies readonly SelectionTarget[];
-			expect(replDisplayedSelectionTargets(false, SHAPE_MODEL_DEFINITION_ID, renderer, [])).toEqual([{ kind: "face", id: "f0", editable: true }]);
-			expect(replDisplayedSelectionTargets(false, "aec.building.energy", renderer, [])).toEqual([
+			]);
+			expect(replDisplayedSelectionTargets(false, "aec.building.energy", "idle", rendererByModel, {})).toEqual([
 				{ kind: "face", id: "f0", editable: true },
 				{ kind: "object", id: "o0", editable: false },
 			]);
-			expect(replDisplayedSelectionTargets(false, "aec.building.structure", renderer, [])).toEqual([
-				{ kind: "face", id: "f0", editable: true },
-				{ kind: "object", id: "o0", editable: false },
-			]);
+			expect(replDisplayedSelectionTargets(false, "aec.building.structure", "idle", rendererByModel, {})).toEqual([]);
 		});
 
 		it("creates anchor and shell pick targets for spatial.shape geometry", () => {
@@ -5691,17 +5938,55 @@ if (import.meta.vitest) {
 			expect(modelDefinitionPickTargetKinds("aec.building.structure").sort()).toEqual(["edge", "face", "object", "vertex"]);
 		});
 
-		it("merges picks within active model definition without clearing out-of-scope targets", () => {
-			const renderer: SelectionTarget[] = [
-				{ kind: "wire", id: "w0", editable: true },
-				{ kind: "object", id: "o0", editable: false },
-			];
+		it("merges picks within active model definition without clearing other models", () => {
+			const rendererByModel: SpatialRendererSelectionByModel = {
+				[SHAPE_MODEL_DEFINITION_ID]: [{ kind: "wire", id: "w0", editable: true }],
+				"aec.building.energy": [{ kind: "object", id: "o0", editable: false }],
+			};
 			expect(
-				replMergeSelectionPickInView(false, SHAPE_MODEL_DEFINITION_ID, renderer, [], [{ kind: "wire", id: "w1", editable: true }], {}),
+				replMergeSelectionPickInView(
+					false,
+					SHAPE_MODEL_DEFINITION_ID,
+					"idle",
+					rendererByModel,
+					{},
+					[{ kind: "wire", id: "w1", editable: true }],
+					{},
+				),
+			).toEqual([{ kind: "wire", id: "w1", editable: true }]);
+			expect(replRendererSelectionTargets(rendererByModel, "aec.building.energy")).toEqual([{ kind: "object", id: "o0", editable: false }]);
+		});
+
+		it("keeps interaction selection isolated per state", () => {
+			const interactionByState: SpatialInteractionSelectionByState = {
+				first_corner: [{ kind: "vertex", id: "v0", editable: true }],
+				second_corner: [{ kind: "vertex", id: "v1", editable: true }],
+			};
+			expect(
+				replDisplayedSelectionTargets(true, SHAPE_MODEL_DEFINITION_ID, "first_corner", {}, interactionByState),
+			).toEqual([{ kind: "vertex", id: "v0", editable: true }]);
+			expect(
+				replMergeSelectionPickInView(
+					true,
+					SHAPE_MODEL_DEFINITION_ID,
+					"second_corner",
+					{},
+					interactionByState,
+					[{ kind: "edge", id: "e0", editable: true }],
+					{},
+				),
 			).toEqual([
-				{ kind: "object", id: "o0", editable: false },
-				{ kind: "wire", id: "w1", editable: true },
+				{ kind: "vertex", id: "v1", editable: true },
+				{ kind: "edge", id: "e0", editable: true },
 			]);
+		});
+
+		it("spatialToggleGroupState reports all, none, and partial chrome groups", () => {
+			expect(spatialToggleGroupState(["a", "b"], { a: true, b: true })).toBe("all");
+			expect(spatialToggleGroupState(["a", "b"], { a: false, b: false })).toBe("none");
+			expect(spatialToggleGroupState(["a", "b"], { a: true, b: false })).toBe("partial");
+			expect(spatialToggleGroupFill(["a", "b"], true)).toEqual({ a: true, b: true });
+			expect(spatialToggleGroupFill(["a", "b"], false)).toEqual({ a: false, b: false });
 		});
 
 		it("filterSpatialPickTargets matches topology geometryKind in selection accept", () => {

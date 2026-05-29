@@ -21,6 +21,7 @@ import {
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
+	applyRelocateToSceneFixture,
 	DEFAULT_MANUAL_LOD,
 	SCENE_LOD_SLIDER_MAX,
 	SCENE_LOD_SLIDER_MIN,
@@ -39,6 +40,7 @@ import {
 	type KindCatalogBundle,
 	type KindCompatEntry,
 	type RelocateMode,
+	type RelocatePayload,
 	type SelectionMode,
 	type SelectionSnapshot,
 	type VortexProps,
@@ -379,12 +381,26 @@ export class ScenePlayShellController extends Controller {
 			return;
 		}
 		this.fixture = next;
-		const structureChanged =
-			fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev) ||
-			fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
+		const structureChanged = fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev);
 		if (structureChanged) {
 			this.fixtureRevision += 1;
 		}
+		const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
+		if (structureChanged || poseChanged) {
+			this.emit();
+		}
+	}
+
+	/** @emoji ✋ Persists a gumball relocate on the fixture (pose-only; no structure revision). */
+	patchRelocate(payload: RelocatePayload): void {
+		if (!this.fixture) {
+			return;
+		}
+		const next = applyRelocateToSceneFixture(this.fixture, payload);
+		if (next === this.fixture) {
+			return;
+		}
+		this.fixture = next;
 		this.emit();
 	}
 
@@ -736,6 +752,27 @@ if (import.meta.vitest) {
 			expect(v?.position[0]).toBeCloseTo(-1.3, 5);
 			expect(v?.position[1]).toBeCloseTo(-1.25, 5);
 			expect(v?.position[2]).toBeCloseTo(0, 5);
+		});
+
+		it("patchFixture bumps revision only when structure changes", () => {
+			const bus = new CommandBus();
+			const wb = new ProductRuntime();
+			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
+			const base = ctrl.getFixture();
+			expect(base).not.toBeNull();
+			const revisionBefore = ctrl.getFixtureRevision();
+			ctrl.patchFixture((fixture) => ({
+				...fixture,
+				objects: fixture.objects.map((object, index) =>
+					index === 0 ? { ...object, origin: [object.origin[0]! + 1, object.origin[1]!, object.origin[2]!] as const } : object,
+				),
+			}));
+			expect(ctrl.getFixtureRevision()).toBe(revisionBefore);
+			ctrl.patchFixture((fixture) => ({
+				...fixture,
+				objects: fixture.objects.slice(0, -1),
+			}));
+			expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
 		});
 
 		it("noteSelection skips emit when selection is unchanged", () => {

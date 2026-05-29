@@ -1441,25 +1441,48 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 	}
 }
 
+/** @emoji ✋ Object ids whose fixture pose rows change for a relocate commit. */
+export function relocateAffectedObjectIds(
+	payload: RelocatePayload,
+	attractingByObjectId: ReadonlyMap<string, readonly string[]>,
+): readonly string[] {
+	const ids = [payload.objectId];
+	if (payload.mode === "translate") {
+		ids.push(...collectAttractedDescendantIds(payload.objectId, attractingByObjectId));
+	}
+	return ids;
+}
+
+function fixtureObjectFromRecord(object: FixtureObjectV1, record: ObjectRecord): FixtureObjectV1 {
+	return {
+		...object,
+		origin: record.origin,
+		...(record.orientation ? { orientation: record.orientation } : {}),
+		...(record.scale !== undefined ? { scale: record.scale } : {}),
+	};
+}
+
 /** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
 export function applyRelocateToSceneFixture(fixture: FixtureV1, payload: RelocatePayload): FixtureV1 {
 	const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
 	const next = objectStateReducer(snap, { type: "relocate", payload });
-	const objects = fixture.objects
-		.filter((object) => next.records.has(object.id))
-		.map((object) => {
-			const record = next.records.get(object.id);
-			if (!record) {
-				return object;
-			}
-			return {
-				...object,
-				origin: record.origin,
-				...(record.orientation ? { orientation: record.orientation } : {}),
-				...(record.scale !== undefined ? { scale: record.scale } : {}),
-			};
-		});
-	return { ...fixture, objects };
+	const ids = relocateAffectedObjectIds(payload, next.tree.attractingByObjectId);
+	if (!ids.length) {
+		return fixture;
+	}
+	const indexById = new Map(fixture.objects.map((object, index) => [object.id, index]));
+	const objects = fixture.objects.slice();
+	let changed = false;
+	for (const id of ids) {
+		const index = indexById.get(id);
+		const record = next.records.get(id);
+		if (index === undefined || !record) {
+			continue;
+		}
+		objects[index] = fixtureObjectFromRecord(objects[index]!, record);
+		changed = true;
+	}
+	return changed ? { ...fixture, objects } : fixture;
 }
 
 /** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
@@ -1503,9 +1526,15 @@ export function SceneObjectStateProvider(props: {
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
 	const syncedPoseFingerprintRef = useRef<string | null>(null);
 	const syncedFixtureRevisionRef = useRef<number | undefined>(undefined);
+	const skipExternalPoseSyncRef = useRef(false);
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
 	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
+		if (skipExternalPoseSyncRef.current) {
+			skipExternalPoseSyncRef.current = false;
+			syncedPoseFingerprintRef.current = poseFingerprint;
+			return;
+		}
 		if (props.fixtureRevision !== undefined && syncedFixtureRevisionRef.current !== props.fixtureRevision) {
 			syncedFixtureRevisionRef.current = props.fixtureRevision;
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
@@ -1527,6 +1556,7 @@ export function SceneObjectStateProvider(props: {
 	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
+			skipExternalPoseSyncRef.current = true;
 			dispatch({ type: "relocate", payload });
 			props.onRelocate?.(payload);
 		},
@@ -1868,12 +1898,12 @@ export function handlesAttractionCompatibleForDrag(
 //#endregion ­ƒº®Compat
 
 //#region ­ƒÄ¿MeshPaint
-const CSS_SELECTED_MESH = "var(--color-primary)";
+const CSS_SELECTED_MESH = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
 const CSS_SELECTED_LINE = "var(--color-primary)";
-const CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
-const CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
-const CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
-const CSS_HOVERED_LINE = "var(--color-accent)";
+const CSS_HIGHLIGHTED_MESH = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+const CSS_HIGHLIGHTED_LINE = "var(--color-secondary)";
+const CSS_HOVERED_MESH = "var(--color-hover-panel)";
+const CSS_HOVERED_LINE = "var(--color-hover-base)";
 const CSS_NEUTRAL_MESH = "var(--color-panel)";
 const CSS_NEUTRAL_LINE = "var(--color-element)";
 const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
@@ -1902,24 +1932,24 @@ const MESH_STYLE_HEADLESS: Record<Exclude<MeshStyleKind, "original">, MeshStyleC
 		opacity: 1,
 	},
 	hovered: {
-		meshColor: "#f0c8cc",
-		lineColor: "#ff344f",
-		emissiveColor: "#ff344f",
-		emissiveIntensity: 0.15,
+		meshColor: "#c0cdc5",
+		lineColor: "#7b827d",
+		emissiveColor: "#7b827d",
+		emissiveIntensity: 0.08,
 		opacity: 1,
 	},
 	selected: {
-		meshColor: "#ff344f",
+		meshColor: "#f0c8cc",
 		lineColor: "#ff344f",
 		emissiveColor: "#ff344f",
 		emissiveIntensity: 0.35,
 		opacity: 1,
 	},
 	highlighted: {
-		meshColor: "#ff344f",
-		lineColor: "#ff344f",
-		emissiveColor: "#ff344f",
-		emissiveIntensity: 0.28,
+		meshColor: "#c4e4d5",
+		lineColor: "#34d1bf",
+		emissiveColor: "#34d1bf",
+		emissiveIntensity: 0.2,
 		opacity: 1,
 	},
 	disabled: {
@@ -2302,18 +2332,12 @@ function useRegistryHover(): RegistryHoverValue {
 }
 
 function useRegistry(): RegistryValue {
-	const core = useRegistryCore();
-	const interaction = useRegistryInteraction();
-	const hover = useRegistryHover();
-	const drag = useRegistryDrag();
 	return {
-		...core,
-		...interaction,
-		...hover,
-		...drag,
-		selectedObjectIds: [],
-		activeRelocateObjectId: null,
-	} as RegistryValue;
+		...useRegistryCore(),
+		...useRegistryInteraction(),
+		...useRegistryHover(),
+		...useRegistryDrag(),
+	};
 }
 
 /** @emoji 🖱️ Clears exclusive hover when the pointer leaves the canvas. */
@@ -2342,6 +2366,20 @@ function SceneHoverInvalidateBridge(): null {
 	return null;
 }
 
+/** @emoji 🎯 Redraws the canvas when host-controlled selection changes. */
+function SceneSelectionInvalidateBridge(props: { readonly selection?: SelectionSnapshot }): null {
+	const invalidate = useThree((state) => state.invalidate);
+	const selectionKey = useMemo(
+		() =>
+			`${props.selection?.objectIds.join("\0") ?? ""}|${props.selection?.vortexIds.join("\0") ?? ""}`,
+		[props.selection?.objectIds, props.selection?.vortexIds],
+	);
+	useEffect(() => {
+		invalidate();
+	}, [selectionKey, invalidate]);
+	return null;
+}
+
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
 function SceneSelectionMissBridge(): null {
 	const { clearSceneSelection } = useRegistryInteraction();
@@ -2356,6 +2394,10 @@ function SceneSelectionMissBridge(): null {
 		const previous = store.getState().onPointerMissed;
 		const onMiss = (event: MouseEvent) => {
 			if (event.button !== 0 || attractionBusyRef.current) {
+				previous?.(event);
+				return;
+			}
+			if (store.getState().internal.initialHits.length > 0) {
 				previous?.(event);
 				return;
 			}
@@ -2711,6 +2753,7 @@ function nearestAttractionSnapFullId(args: {
 /** @emoji 🖱️ R3F pointer handlers for scene mesh pick targets. */
 export interface SceneMeshPointerHandlers {
 	readonly onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+	readonly onClick?: (event: ThreeEvent<MouseEvent>) => void;
 	readonly onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
 	readonly onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
 }
@@ -2718,6 +2761,7 @@ export interface SceneMeshPointerHandlers {
 export interface MeshProps extends SceneMeshPointerHandlers {
 	readonly meshUrl: string;
 	readonly style?: MeshStyleKind;
+	readonly showOutline?: boolean;
 	readonly userData?: Record<string, unknown>;
 	readonly scale?: number | [number, number, number];
 }
@@ -2735,6 +2779,7 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 		return null;
 	}
 	const scale = props.scale;
+	const outlineColor = meshStyleColors("selected")?.lineColor ?? "#ff344f";
 	return (
 		<GlbMeshFrame>
 			<Clone
@@ -2747,24 +2792,29 @@ export const MeshBody = memo(function MeshBody(props: MeshProps) {
 									: (scale as [number, number, number]),
 						}
 					: {})}
+				onClick={props.onClick}
 				onPointerDown={props.onPointerDown}
 				onPointerOut={props.onPointerOut}
 				onPointerOver={props.onPointerOver}
 				userData={props.userData}
-			/>
+			>
+				{props.showOutline ? <Outlines color={outlineColor} thickness={4} /> : null}
+			</Clone>
 		</GlbMeshFrame>
 	);
 });
 
 const PlaceholderMesh = memo(function PlaceholderMesh(
-	props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind },
+	props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean },
 ) {
 	const colors = meshStyleColors(props.style);
 	const meshColor = colors?.meshColor ?? "#cbd5e1";
 	const opacity = colors?.opacity ?? 1;
+	const outlineColor = meshStyleColors("selected")?.lineColor ?? "#ff344f";
 	return (
 		<GlbMeshFrame>
 			<mesh
+				onClick={props.onClick}
 				onPointerDown={props.onPointerDown}
 				onPointerOut={props.onPointerOut}
 				onPointerOver={props.onPointerOver}
@@ -2772,11 +2822,14 @@ const PlaceholderMesh = memo(function PlaceholderMesh(
 				<boxGeometry args={[1, 1, 1]} />
 				<meshStandardMaterial
 					color={meshColor}
+					emissive={colors?.emissiveColor}
+					emissiveIntensity={colors?.emissiveIntensity ?? 0}
 					metalness={0.05}
 					roughness={0.85}
 					transparent={opacity < 1}
 					opacity={opacity}
 				/>
+				{props.showOutline ? <Outlines color={outlineColor} thickness={4} /> : null}
 			</mesh>
 		</GlbMeshFrame>
 	);
@@ -2811,7 +2864,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 				const before = props.beforeRef.current;
 				if (!before) return;
 				const g = props.object;
-				onRelocate?.({
+				const payload: RelocatePayload = {
 					objectId: props.objectId,
 					mode: props.mode,
 					before: {
@@ -2824,10 +2877,13 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 						orientation: threeQuatToCad(g.quaternion),
 						scale: g.scale.toArray() as unknown as Vec3,
 					},
-				});
-				const cand = findNearestProximityRelocate(g.position, props.objectId);
-				if (cand) onProximityConnect?.(cand);
+				};
 				props.beforeRef.current = null;
+				onRelocate?.(payload);
+				queueMicrotask(() => {
+					const cand = findNearestProximityRelocate(g.position, props.objectId);
+					if (cand) onProximityConnect?.(cand);
+				});
 			}}
 		/>,
 		scene,
@@ -2874,35 +2930,63 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			resolveMeshStyle({
 				style: props.style,
 				disabled: props.disabled,
+				selected: props.selected,
 				highlighted: linkHighlighted,
 				hovered: props.hovered === true || objectPointerHovered,
 			}),
-		[props.style, props.disabled, props.hovered, linkHighlighted, objectPointerHovered],
+		[
+			props.style,
+			props.disabled,
+			props.selected,
+			props.hovered,
+			linkHighlighted,
+			objectPointerHovered,
+		],
 	);
 	const showSelectionOutline = props.selected && !props.disabled;
+	const invalidate = useThree((state) => state.invalidate);
+	useEffect(() => {
+		if (props.selected || showSelectionOutline) {
+			invalidate();
+		}
+	}, [props.selected, showSelectionOutline, meshStyle, invalidate]);
+
+	const selectObject = useCallback(() => {
+		if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
+			return;
+		}
+		if (selectionMode === "single") {
+			setSelectedObjectIds([props.id]);
+		} else if (selectionMode === "additive") {
+			setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
+		} else {
+			setSelectedObjectIds([props.id]);
+		}
+		setActiveRelocateObjectId(props.id);
+	}, [
+		attractionDragActive,
+		attractionIndirectPickAwait,
+		props.disabled,
+		props.id,
+		selectionMode,
+		setActiveRelocateObjectId,
+		setSelectedObjectIds,
+	]);
 
 	const meshPointerHandlers = useMemo(
 		() => ({
 			onPointerDown: (e: ThreeEvent<PointerEvent>) => {
-				const pe = e.nativeEvent;
-				if (pe.button !== 0) {
+				if (e.nativeEvent.button !== 0) {
 					return;
 				}
 				e.stopPropagation();
-				if (attractionDragActive || attractionIndirectPickAwait) {
+			},
+			onClick: (e: ThreeEvent<MouseEvent>) => {
+				if (e.nativeEvent.button !== 0) {
 					return;
 				}
-				if (props.disabled) {
-					return;
-				}
-				if (selectionMode === "single") {
-					setSelectedObjectIds([props.id]);
-				} else if (selectionMode === "additive") {
-					setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
-				} else {
-					setSelectedObjectIds([props.id]);
-				}
-				setActiveRelocateObjectId(props.id);
+				e.stopPropagation();
+				selectObject();
 			},
 			onPointerOver: (e: ThreeEvent<PointerEvent>) => {
 				e.stopPropagation();
@@ -2915,17 +2999,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				clearSceneHover({ kind: "object", id: props.id });
 			},
 		}),
-		[
-			attractionDragActive,
-			attractionIndirectPickAwait,
-			clearSceneHover,
-			props.disabled,
-			props.id,
-			selectionMode,
-			setActiveRelocateObjectId,
-			setSceneHover,
-			setSelectedObjectIds,
-		],
+		[clearSceneHover, props.disabled, props.id, selectObject, setSceneHover],
 	);
 
 	const poseKey = useMemo(
@@ -2969,11 +3043,15 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				}}
 			>
 				{resolvedMeshUrl === PLACEHOLDER_MESH_URL ? (
-					<PlaceholderMesh style={meshStyle} {...meshPointerHandlers} />
+					<PlaceholderMesh showOutline={showSelectionOutline} style={meshStyle} {...meshPointerHandlers} />
 				) : (
-					<MeshBody meshUrl={resolvedMeshUrl} style={meshStyle} {...meshPointerHandlers} />
+					<MeshBody
+						meshUrl={resolvedMeshUrl}
+						showOutline={showSelectionOutline}
+						style={meshStyle}
+						{...meshPointerHandlers}
+					/>
 				)}
-				{showSelectionOutline ? <Outlines thickness={4} color="#ff344f" /> : null}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
 			{showTc && tcTarget && (
@@ -3132,15 +3210,35 @@ export const Vortex = memo(function Vortex(
 						? "compatible"
 						: "none";
 
-	const onPointerDown = useCallback(
-		(e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
+	const onVortexClick = useCallback(
+		(e: ThreeEvent<MouseEvent>) => {
 			const pe = e.nativeEvent;
-			if (pe.button !== 0) return;
+			if (pe.button !== 0) {
+				return;
+			}
 			e.stopPropagation();
-			if (reg.blockedVortexFullIds.has(fullId)) return;
+			if (reg.blockedVortexFullIds.has(fullId)) {
+				return;
+			}
 			if (pe.altKey || pe.metaKey) {
 				reg.onSelect?.({ objectIds: [], vortexIds: [fullId] });
 				reg.setActiveRelocateObjectId(props.objectId);
+			}
+		},
+		[fullId, props.objectId, reg],
+	);
+
+	const onPointerDown = useCallback(
+		(e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
+			const pe = e.nativeEvent;
+			if (pe.button !== 0) {
+				return;
+			}
+			e.stopPropagation();
+			if (reg.blockedVortexFullIds.has(fullId)) {
+				return;
+			}
+			if (pe.altKey || pe.metaKey) {
 				return;
 			}
 			reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
@@ -3220,6 +3318,7 @@ export const Vortex = memo(function Vortex(
 			userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }}
 			data-scene-vortex={fullId}
 			visible={vis}
+			onClick={onVortexClick}
 			onPointerDown={onPointerDown}
 		>
 			{drawHandleBody && meshUrl ? (
@@ -3291,7 +3390,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 	}, []);
 	const geo = useMemo(() => new BufferGeometry(), []);
 	const normalColor = useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
-	const hoveredColor = useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#38bdf8")), []);
+	const hoveredColor = useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#7b827d")), []);
 	useLayoutEffect(() => {
 		const vertexCount = Math.max(props.attractions.length * 2, 2);
 		geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
@@ -3637,13 +3736,18 @@ function RegistryProvider({
 	onSelectRef.current = onSelect;
 	const internalSelectedRef = useRef(internalSelectedObjectIds);
 	internalSelectedRef.current = internalSelectedObjectIds;
+	const selectionModeRef = useRef(selectionMode);
+	selectionModeRef.current = selectionMode;
 	const setSelectedObjectIds = useCallback(
 		(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
 			const controlled = controlledSelectionRef.current;
 			const resolved =
 				typeof ids === "function" ? ids(controlled?.objectIds ?? internalSelectedRef.current) : ids;
 			if (controlled !== undefined) {
-				const snap: SelectionSnapshot = { objectIds: resolved, vortexIds: controlled.vortexIds };
+				const snap: SelectionSnapshot = {
+					objectIds: resolved,
+					vortexIds: selectionModeRef.current === "single" ? [] : controlled.vortexIds,
+				};
 				if (selectionSnapshotsEqual(controlled, snap)) {
 					return;
 				}
@@ -3667,6 +3771,25 @@ function RegistryProvider({
 			setActiveRelocateRevision((n) => n + 1);
 		}
 	}, []);
+	useEffect(() => {
+		if (controlledSelection === undefined) {
+			return;
+		}
+		const primary =
+			controlledSelection.objectIds[0] ??
+			(controlledSelection.vortexIds[0]
+				? parseVortexFullId(controlledSelection.vortexIds[0]).objectId
+				: null);
+		activeRelocateObjectIdRef.current = primary;
+	}, [controlledSelection]);
+	const selectedObjectIds = controlledSelection?.objectIds ?? internalSelectedObjectIds;
+	const activeRelocateObjectId =
+		controlledSelection !== undefined
+			? (controlledSelection.objectIds[0] ??
+				(controlledSelection.vortexIds[0]
+					? parseVortexFullId(controlledSelection.vortexIds[0]).objectId
+					: null))
+			: activeRelocateObjectIdRef.current;
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -4132,11 +4255,20 @@ function RegistryProvider({
 	const interactionValue = useMemo<RegistryInteractionValue>(
 		() => ({
 			selectionMode,
+			selectedObjectIds,
+			activeRelocateObjectId,
 			setSelectedObjectIds,
 			setActiveRelocateObjectId,
 			clearSceneSelection,
 		}),
-		[selectionMode, setSelectedObjectIds, setActiveRelocateObjectId, clearSceneSelection],
+		[
+			activeRelocateObjectId,
+			clearSceneSelection,
+			selectedObjectIds,
+			selectionMode,
+			setActiveRelocateObjectId,
+			setSelectedObjectIds,
+		],
 	);
 	const hoverValue = useMemo<RegistryHoverValue>(
 		() => ({
@@ -4173,6 +4305,7 @@ function RegistryProvider({
 						{children}
 						<SceneHoverMissBridge />
 						<SceneHoverInvalidateBridge />
+						<SceneSelectionInvalidateBridge selection={controlledSelection} />
 						<SceneSelectionMissBridge />
 					</RegistryDragContext.Provider>
 				</RegistryHoverContext.Provider>
@@ -4668,11 +4801,15 @@ if (import.meta.vitest) {
 			expect(neutral?.meshColor.length).toBeGreaterThan(0);
 			expect(neutral?.lineColor.length).toBeGreaterThan(0);
 		});
-		it("returns primary-toned selected and highlighted fills", () => {
+		it("uses primary only for selected mesh tokens", () => {
 			const selected = meshStyleColors("selected");
+			const hovered = meshStyleColors("hovered");
 			const highlighted = meshStyleColors("highlighted");
-			expect(selected?.meshColor).toBeTruthy();
-			expect(highlighted?.meshColor).toBeTruthy();
+			expect(selected?.lineColor).toMatch(/primary|#ff344f/i);
+			expect(hovered?.lineColor).toMatch(/hover-base|#7b827d/i);
+			expect(highlighted?.lineColor).toMatch(/secondary|#34d1bf/i);
+			expect(hovered?.lineColor).not.toMatch(/primary/i);
+			expect(highlighted?.lineColor).not.toMatch(/primary/i);
 		});
 	});
 	describe("styledMeshPoolAcquire", () => {
@@ -5360,7 +5497,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect");
 				}}
 				onRelocate={(payload) => {
-					patchFixture((fixture) => applyRelocateToSceneFixture(fixture, payload));
+					ctrl?.patchRelocate(payload);
 				}}
 			>
 				<PlaySceneCanvas

@@ -7,6 +7,7 @@ import {
 	applyTransformation,
 	isShapeModelDefinition,
 	isInteractionSessionActive,
+	isEmptyModelDiff,
 	listModelDefinitionManifests,
 	listTransformationsFromModelDefinition,
 	listTransformationsIntoModelDefinition,
@@ -47,6 +48,8 @@ import {
 	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
+	type SpatialInteractionSelectionByState,
+	type SpatialRendererSelectionByModel,
 } from "../index";
 
 //#region 🔖ConstructQueryPanel
@@ -613,10 +616,10 @@ interface PlaySessionProps {
 	readonly sessionRestartNonce: number;
 	readonly activeModelDefinitionId: string;
 	readonly onActiveModelDefinitionId: (value: string) => void;
-	readonly rendererSelection: readonly SelectionTarget[];
-	readonly onRendererSelection: (value: readonly SelectionTarget[]) => void;
-	readonly interactionSelection: readonly SelectionTarget[];
-	readonly onInteractionSelection: (value: readonly SelectionTarget[]) => void;
+	readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
+	readonly onRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
+	readonly interactionSelectionByState: SpatialInteractionSelectionByState;
+	readonly onInteractionSelectionByState: (value: SpatialInteractionSelectionByState) => void;
 	readonly modelDefinitionRevision: number;
 	readonly onModelDefinitionRevision: (revision: number) => void;
 	readonly onApplyTransformation: (spec: TransformationSpec) => void;
@@ -638,10 +641,10 @@ function PlaySession({
 	sessionRestartNonce,
 	activeModelDefinitionId,
 	onActiveModelDefinitionId,
-	rendererSelection,
-	onRendererSelection,
-	interactionSelection,
-	onInteractionSelection,
+	rendererSelectionByModel,
+	onRendererSelectionByModel,
+	interactionSelectionByState,
+	onInteractionSelectionByState,
 	modelDefinitionRevision,
 	onModelDefinitionRevision,
 	onApplyTransformation,
@@ -663,6 +666,16 @@ function PlaySession({
 		[kernel, mode, documentModel, history, activeModelDefinitionId],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
+	useEffect(() => {
+		return rt.subscribe(() => {
+			const snap = rt.getSnapshot();
+			onSnapshot(snap);
+			const res = snap.lastResponse;
+			if (res?.ok && res.diff && !isEmptyModelDiff(res.diff)) {
+				onDocumentModelChange(Model.fromJSON(documentModel.model.toJSON()));
+			}
+		});
+	}, [rt, documentModel, onSnapshot, onDocumentModelChange]);
 	const asideWithQuery = useMemo(
 		() => (
 			<>
@@ -687,10 +700,10 @@ function PlaySession({
 			sessionRestartNonce={sessionRestartNonce}
 			activeModelDefinitionId={activeModelDefinitionId}
 			onActiveModelDefinitionIdChange={onActiveModelDefinitionId}
-			rendererSelection={rendererSelection}
-			onRendererSelectionChange={onRendererSelection}
-			interactionSelection={interactionSelection}
-			onInteractionSelectionChange={onInteractionSelection}
+			rendererSelectionByModel={rendererSelectionByModel}
+			onRendererSelectionByModelChange={onRendererSelectionByModel}
+			interactionSelectionByState={interactionSelectionByState}
+			onInteractionSelectionByStateChange={onInteractionSelectionByState}
 			modelDefinitionRevision={modelDefinitionRevision}
 			onModelDefinitionRevisionChange={onModelDefinitionRevision}
 			onApplyTransformation={onApplyTransformation}
@@ -714,8 +727,8 @@ function PlayApp() {
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(emptyPlayModels);
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
-	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
-	const [interactionSelection, setInteractionSelection] = useState<readonly SelectionTarget[]>([]);
+	const [rendererSelectionByModel, setRendererSelectionByModel] = useState<SpatialRendererSelectionByModel>({});
+	const [interactionSelectionByState, setInteractionSelectionByState] = useState<SpatialInteractionSelectionByState>({});
 	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
 	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
 	const [fileStatus, setFileStatus] = useState<string>("");
@@ -812,8 +825,6 @@ function PlayApp() {
 			});
 			setActiveModelDefinitionId(nextId);
 			setModelDefinitionRevision((r) => r + 1);
-			setRendererSelection([]);
-			setInteractionSelection([]);
 		},
 		[activeModelDefinitionId, liveModel],
 	);
@@ -838,8 +849,21 @@ function PlayApp() {
 		});
 	}, []);
 	const currentSelection = useMemo(
-		() => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection),
-		[boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection],
+		() =>
+			replDisplayedSelectionTargets(
+				boundInteractionSession,
+				activeModelDefinitionId,
+				snapshot?.state ?? "idle",
+				rendererSelectionByModel,
+				interactionSelectionByState,
+			),
+		[
+			boundInteractionSession,
+			activeModelDefinitionId,
+			snapshot?.state,
+			rendererSelectionByModel,
+			interactionSelectionByState,
+		],
 	);
 	const selectionKinds = useMemo(
 		() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)),
@@ -885,8 +909,6 @@ function PlayApp() {
 	useEffect(() => {
 		history.clear();
 		setSnapshot(null);
-		setRendererSelection([]);
-		setInteractionSelection([]);
 	}, [history, modelDefinitionRevision]);
 
 	const saveBundle = useCallback(
@@ -1110,10 +1132,10 @@ function PlayApp() {
 			sessionRestartNonce={interactionBootId}
 			activeModelDefinitionId={activeModelDefinitionId}
 			onActiveModelDefinitionId={handleActiveModelDefinitionChange}
-			rendererSelection={rendererSelection}
-			onRendererSelection={setRendererSelection}
-			interactionSelection={interactionSelection}
-			onInteractionSelection={setInteractionSelection}
+			rendererSelectionByModel={rendererSelectionByModel}
+			onRendererSelectionByModel={setRendererSelectionByModel}
+			interactionSelectionByState={interactionSelectionByState}
+			onInteractionSelectionByState={setInteractionSelectionByState}
 			modelDefinitionRevision={modelDefinitionRevision}
 			onModelDefinitionRevision={setModelDefinitionRevision}
 			onApplyTransformation={handleApplyTransformation}

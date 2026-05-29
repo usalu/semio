@@ -19,7 +19,7 @@ import {
 	type WindowBodyViewContext,
 	type UiNode,
 	type WindowLayout,
-} from "@elements/framework";
+} from "./core.ts";
 
 //#region 🔖Ids
 /** @emoji 🏷 Stable ids for a single-app playground (main window + workbench + details tabs). */
