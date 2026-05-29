@@ -422,6 +422,10 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+Make sure it is 100% shell free, react only library. The shells are moved to framework or playground.
+
+---
+
 The Ui, App, Mode, Window, Engagement react components are still adhoc and miss features.
 One ui has multiple apps (one active).
 One app has multiple modes (one active).

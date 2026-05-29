@@ -1,8 +1,9 @@
 {
   "title": "Snapshot Vs Shell Notify Split",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Root fix: selection updates must not call ProductRuntime.notify() / full shell re-render. Stop emit() on snapshot-only controller commands; use notifySnapshot only. Fix ScenePlayProductShell to subscribe to snapshot not generation.",
+  "summary": "Root fix for 5s selection delay: snapshot-only controller mutations no longer call ProductRuntime.notify() (full ProductView/PlaygroundView re-render). ScenePlayShellController now uses notifySnapshot() for selection, fixture pose/structure, canvas settings, and counters; syncShell()+emit() only for LOD measure and relocate toolbar changes. patchFixture uses notifySnapshot not emit. ScenePlayProductShell and useScenePlaySnapshot subscribe to controller snapshot listeners instead of runtime.generation. PlaygroundController split shell vs snapshot notify (setSelectedId/setQuery snapshot-only). ShellModeCanvas memoizes converted layout; setActiveWindowInLayout skips no-op activeId updates.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1504"
   },

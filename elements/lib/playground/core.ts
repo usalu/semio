@@ -76,6 +76,92 @@ export interface UiTableHostSurfaceNode {
 	readonly paneId?: string;
 }
 
+/** @emoji 📂 Collapsible panel section for side-panel declarative trees. */
+export interface UiSectionNode {
+	readonly type: "section";
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly children: readonly UiNode[];
+}
+
+/** @emoji 🏷️ Labeled field wrapping one declarative control. */
+export interface UiFieldNode {
+	readonly type: "field";
+	readonly id: string;
+	readonly label: string;
+	readonly child: UiNode;
+}
+
+/** @emoji ✏️ Text or number input bound to a command. */
+export interface UiInputNode {
+	readonly type: "input";
+	readonly id: string;
+	readonly inputKind: "text" | "number";
+	readonly value: string;
+	readonly placeholder?: string;
+	readonly commit?: "change" | "blur";
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📋 Select control bound to a command (`value` in args). */
+export interface UiSelectNode {
+	readonly type: "select";
+	readonly id: string;
+	readonly value: string;
+	readonly items: readonly { readonly value: string; readonly label: string }[];
+	readonly placeholder?: string;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 🔘 Toggle control bound to a command (`pressed` in args). */
+export interface UiToggleNode {
+	readonly type: "toggle";
+	readonly id: string;
+	readonly pressed: boolean;
+	readonly text?: string;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📐 Three-axis numeric row; `value` null renders mixed placeholder. */
+export interface UiVec3Node {
+	readonly type: "vec3";
+	readonly id: string;
+	readonly value: readonly [number, number, number] | null;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📋 Read-only label/value rows. */
+export interface UiKeyValueNode {
+	readonly type: "keyValue";
+	readonly entries: readonly { readonly label: string; readonly value: string }[];
+}
+
+/** @emoji 🌿 One tree row; optional nested items and selection command. */
+export interface UiTreeItemNode {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly selected?: boolean;
+	readonly defaultOpen?: boolean;
+	readonly command?: CommandDescriptor;
+	readonly items?: readonly UiTreeItemNode[];
+}
+
+/** @emoji 🌲 Tree section for {@link UiTreeNode}. */
+export interface UiTreeSectionNode {
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly items: readonly UiTreeItemNode[];
+}
+
+/** @emoji 🌲 Workbench/details tree panel body. */
+export interface UiTreeNode {
+	readonly type: "tree";
+	readonly sections: readonly UiTreeSectionNode[];
+}
+
 export type UiNode =
 	| UiStackNode
 	| UiTextNode
@@ -83,7 +169,26 @@ export type UiNode =
 	| UiSeparatorNode
 	| UiScene3DHostSurfaceNode
 	| UiBoardHostSurfaceNode
-	| UiTableHostSurfaceNode;
+	| UiTableHostSurfaceNode
+	| UiSectionNode
+	| UiFieldNode
+	| UiInputNode
+	| UiSelectNode
+	| UiToggleNode
+	| UiVec3Node
+	| UiKeyValueNode
+	| UiTreeNode;
+
+/** @emoji 🌲 Single-root tree body for a side panel (no duplicate section title). */
+export function playgroundTreePanelRootItems(sectionId: string, items: readonly UiTreeItemNode[]): UiTreeNode {
+	if (!items.length) {
+		throw new Error("playgroundTreePanelRootItems requires at least one root item.");
+	}
+	return {
+		type: "tree",
+		sections: [{ id: sectionId, defaultOpen: true, items }],
+	};
+}
 
 /** @emoji 🧊 Canonical fullscreen 3D window body: only the infinite scene canvas. */
 export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
@@ -587,3 +692,39 @@ export function unregisterSidePanelBody(bodyKey: string): void {
 	sidePanelBodyByKey.delete(bodyKey);
 }
 //#endregion 🔖SidePanelBodyViewContext
+
+//#region 🔖Playground
+export interface PlaygroundPanelVisibility {
+	readonly leftSidePanel: boolean;
+	readonly rightSidePanel: boolean;
+}
+
+/** @emoji ⌨️ Document key routed to {@link CommandBus.dispatch} when focus is not in a field. */
+export interface PlaygroundKeybinding {
+	readonly key: string;
+	readonly controllerId: string;
+	readonly command: string;
+	readonly args?: JsonValue;
+}
+
+/** @emoji 🛝 React-free playground definition: runtime, declarative bodies, optional surface host registration. */
+export abstract class Playground {
+	abstract readonly id: string;
+	private runtimeMemo: ProductRuntime | null = null;
+
+	/** @emoji 🚀 Lazily built {@link ProductRuntime} from {@link createRuntime}. */
+	get runtime(): ProductRuntime {
+		this.runtimeMemo ??= this.createRuntime();
+		return this.runtimeMemo;
+	}
+
+	abstract createRuntime(): ProductRuntime;
+	abstract registerBodies(): void;
+
+	readonly initialPanelVisibility?: PlaygroundPanelVisibility;
+	readonly keybindings?: readonly PlaygroundKeybinding[];
+
+	/** @emoji 🧊 Override to register canvas surface hosts (library React adapters). */
+	registerSurfaceHosts(): void {}
+}
+//#endregion 🔖Playground
