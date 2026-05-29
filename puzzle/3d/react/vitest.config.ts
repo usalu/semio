@@ -10,6 +10,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
+			"@puzzle/3d-play": resolve(root, "../play/index.ts"),
 		},
 	},
 	test: {

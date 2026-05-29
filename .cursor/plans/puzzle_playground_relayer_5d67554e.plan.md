@@ -4,22 +4,22 @@ overview: Re-layer the puzzle and framework/playground packages so renderers are
 todos:
   - id: pure-renderers
     content: Rename puzzle/{2d,3d,5d}/react to @puzzle/{2d,3d,5d}-react; drop @framework/playground deps and imports so they depend only on @ui/react (5d also on 2d/3d-react); fix project.json name/cwd and vitest aliases; rename @puzzle/board-wasm -> @puzzle/2d-wasm.
-    status: in_progress
+    status: completed
   - id: playground-renderer
     content: Rename @framework/playground-react -> @framework/playground-renderer-react; add @puzzle/{2d,3d,5d}-react deps and register the puzzle canvases via registerUiBoardSurfaceHost/registerUiScene3DSurfaceHost; keep exporting renderPlayground.
-    status: in_progress
+    status: completed
   - id: playground-core
     content: Move react-free helpers that play needs (e.g. playgroundTreePanelRootItems) from the renderer into @framework/playground core so play imports them from the neutral runtime.
     status: completed
   - id: play-packages
     content: Create standalone @puzzle/{2d,3d,5d}-play packages (package.json + project.json + scripts) whose index.ts depends only on @framework/playground, with the single renderer line in main.ts; split out puzzle/<dim>/script.ts orchestration.
-    status: in_progress
+    status: completed
   - id: root-rewire
     content: Update root package.json workspaces+scripts, script.ts dev mapping, .vscode/launch.json, .storybook/main.ts aliases; run bun install to regenerate bun.lock; sanity-check nx/eslint/sln.
-    status: pending
+    status: completed
   - id: verify
     content: Grep for no stale @puzzle/board|scene|topology|@framework/playground-react; confirm play logic imports no react; run nx test per renamed/new package and one play dev server.
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

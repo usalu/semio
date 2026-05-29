@@ -644,8 +644,8 @@ if (import.meta.vitest) {
 				edges: [{ id: "e1", source: "h-root", target: "h-child" }],
 			});
 			expect(fixture).not.toBeNull();
-			const sections = buildBoardPlayHierarchySections(fixture!, [], () => {});
-			const boardRoot = sections[0]?.items?.[0];
+			const tree = buildBoardPlayHierarchySections(fixture!, [], () => {});
+			const boardRoot = tree.sections[0]?.items?.[0];
 			expect(boardRoot?.label).toBe("Board");
 			const nodesGroup = boardRoot?.items?.find((row) => row.label === "Nodes");
 			expect(nodesGroup?.items?.[0]?.id).toBe("board-play-hierarchy.node.root");

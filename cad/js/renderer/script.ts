@@ -1,9 +1,25 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@cad/js-renderer-r3f` task router: `dev` | `build` | `test`. */
+/** @emoji 🧭 `@cad/js-renderer-r3f` task router: `dev` | `build` | `test` | `policy`. */
 import { spawn, spawnSync } from "node:child_process";
+import type { FileLinter } from "../../../repo/lib/js/src/linter.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/dependency-boundary.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/src/cli.ts";
+import { dispatchPolicyArgv } from "../../../repo/lib/js/src/policy-cli.ts";
+import { defineLint } from "../../../repo/lib/js/src/script.ts";
+
+export const policyFile = "index.tsx";
+
+export const policy = defineLint("@cad/js-renderer-r3f-index", (l: FileLinter) => {
+  const repoRoot = getWorkspaceRoot();
+  const file = l.path();
+  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+});
 
 const cwd = import.meta.dir;
 const segs = process.argv.slice(2);
+if (await dispatchPolicyArgv(segs, import.meta.url)) {
+  /* exited */
+}
 const command = segs[0];
 const extra = segs.slice(1);
 

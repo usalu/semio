@@ -1484,21 +1484,17 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      const sections = buildScenePlayHierarchySections(fixture, SCENE_PLAY_EMPTY_SELECTION, {
-        onSelectObject: () => {},
-        onSelectVortex: () => {},
-        onSelectAttraction: () => {},
-      });
-      expect(sections[0]?.items?.[0]?.label).toBe("Scene");
-      expect(sections[0]?.label).toBeUndefined();
-      const objectsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Objects");
+      const tree = buildScenePlayHierarchyTree(fixture, SCENE_PLAY_EMPTY_SELECTION);
+      const sceneRoot = tree.sections[0]?.items?.[0];
+      expect(sceneRoot?.label).toBe("Scene");
+      const objectsGroup = sceneRoot?.items?.find((row) => row.label === "Objects");
       expect(objectsGroup?.items?.length).toBe(2);
       const firstObject = objectsGroup?.items?.[0];
       expect(firstObject?.label).toBe("Alpha");
       expect(firstObject?.items?.[0]?.label).toBe("Vortices");
       expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
       expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("scene-play-hierarchy.vortex.a:v1");
-      const attractionsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Attractions");
+      const attractionsGroup = sceneRoot?.items?.find((row) => row.label === "Attractions");
       expect(attractionsGroup?.items?.[0]?.id).toBe("scene-play-hierarchy.attraction.t1");
     });
 
@@ -1510,9 +1506,9 @@ if (import.meta.vitest) {
           wires: [{ id: "board.wire.link", label: "Link", name: "Link" }],
         },
       });
-      const sections = buildScenePlayKindsSections(catalogs);
-      expect(sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
-      expect(sections[0]?.items?.[0]?.label).toBe("Capsule");
+      const tree = buildScenePlayKindsTree(catalogs);
+      expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
+      expect(tree.sections[0]?.items?.[0]?.label).toBe("Capsule");
     });
 
     it("declarative window body is a lone scene3d surface", () => {

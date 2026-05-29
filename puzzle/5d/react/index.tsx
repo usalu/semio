@@ -35,7 +35,7 @@ import {
 	type KindCatalogBundle as SceneKindCatalogBundle,
 	type KindCompatEntry as SceneKindCompatEntry,
 	type RelocateMode as SceneRelocateMode,
-} from "../scene/index.tsx";
+} from "../../3d/react/index.tsx";
 // #endregion 🔌Adapters
 
 //#region ┬¡ãÆ├Â├╗TopologyFixture

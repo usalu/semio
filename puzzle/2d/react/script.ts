@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const cwd = import.meta.dir;
-const wasmScript = join(cwd, "../rs/scripts/build-wasm.script.ts");
+const wasmScript = join(cwd, "../rs/script.ts");
 const segs = process.argv.slice(2);
 const command = segs[0] ?? "test";
 const extra = segs.slice(1);

@@ -1,10 +1,26 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@cad/js-machine-stately` task router; `generate` catalogs model-definition interactions via core. */
+/** @emoji 🧭 `@cad/js-machine-stately` task router; `generate` | `test` | `policy`. */
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import type { FileLinter } from "../../../../repo/lib/js/src/linter.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/dependency-boundary.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/src/cli.ts";
+import { dispatchPolicyArgv } from "../../../../repo/lib/js/src/policy-cli.ts";
+import { defineLint } from "../../../../repo/lib/js/src/script.ts";
+
+export const policyFile = "index.ts";
+
+export const policy = defineLint("@cad/js-machine-stately-index", (l: FileLinter) => {
+  const repoRoot = getWorkspaceRoot();
+  const file = l.path();
+  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+});
 
 const cwd = import.meta.dir;
 const segs = process.argv.slice(2);
+if (await dispatchPolicyArgv(segs, import.meta.url)) {
+  /* exited */
+}
 const command = segs[0];
 const extra = segs.slice(1);
 

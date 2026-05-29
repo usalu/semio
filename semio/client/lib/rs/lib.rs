@@ -1914,7 +1914,7 @@ pub mod schema_gap_surfaces {
     macro_rules! register_gap_surface_family_connections {
         ($builder:expr, $($Name:ident),+ $(,)?) => {{
             let mut b = $builder;
-            $( b = b.register_output_type::<::crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
+            $( b = b.register_output_type::<$crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
             b
         }};
     }
@@ -1972,7 +1972,7 @@ pub mod schema_gap_surfaces {
     macro_rules! register_gap_surface_existing_relay_connections {
         ($builder:expr, $($Name:ident),+ $(,)?) => {{
             let mut b = $builder;
-            $( b = b.register_output_type::<::crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
+            $( b = b.register_output_type::<$crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
             b
         }};
     }

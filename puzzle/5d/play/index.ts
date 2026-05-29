@@ -36,7 +36,7 @@ import {
 	type CameraState,
 } from "../../2d/react/index.tsx";
 import nakaginSceneJson from "../../3d/play/fixtures/nakagin-capsule-tower.scene.json";
-import { buildScenePlayHierarchySections, SCENE_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
+import { buildScenePlayHierarchyTree, SCENE_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
 	DEFAULT_MANUAL_LOD,
 	SCENE_LOD_SLIDER_MAX,
@@ -96,11 +96,7 @@ export function buildTopologyPlayHierarchySections(
 		const sceneSelection = snapshot.sceneSelected
 			? { ...SCENE_PLAY_EMPTY_SELECTION, objectIds: [snapshot.sceneSelected] }
 			: SCENE_PLAY_EMPTY_SELECTION;
-		const sceneRoot = buildScenePlayHierarchySections(snapshot.sceneFixture, sceneSelection, {
-			onSelectObject: handlers.onSelectSceneObject,
-			onSelectVortex: handlers.onSelectSceneVortex,
-			onSelectAttraction: handlers.onSelectSceneAttraction,
-		}).sections[0]?.items?.[0];
+		const sceneRoot = buildScenePlayHierarchyTree(snapshot.sceneFixture, sceneSelection).sections[0]?.items?.[0];
 		branches.push({
 			id: "topology-play-hierarchy.scene",
 			label: "Scene",
