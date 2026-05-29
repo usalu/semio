@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Reads `elements/lib/styling/tokens.json`; emits palette CSS under `generated/` and `Elements.Styling/Generated/Palette.g.cs`. */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 const stylingRoot = import.meta.dir;
 const tokensPath = join(stylingRoot, "tokens.json");
@@ -9,7 +9,18 @@ const generatedDir = join(stylingRoot, "generated");
 const jsGeneratedDir = join(stylingRoot, "js");
 const netPaletteDir = join(stylingRoot, "net", "Elements.Styling", "Generated");
 const repoRoot = join(stylingRoot, "..", "..", "..");
+const elementsAssetsRoot = join(repoRoot, "elements", "assets");
 const semioNetPaletteDir = join(repoRoot, "semio", "client", "lib", "net", "Elements.Styling", "Generated");
+
+const GOOGLE_FONTS_UA =
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+const GOOGLE_FONT_QUERIES: Record<string, string> = {
+	"fonts/anta": "Anta",
+	"fonts/kelly-slab": "Kelly Slab",
+	"fonts/share-tech-mono": "Share Tech Mono",
+	"fonts/noto-emoji": "Noto Emoji",
+};
 
 function colorKeyToCssVar(key: string): string {
 	return `--color-${key.replaceAll("_", "-")}`;
@@ -95,6 +106,90 @@ function emitCSharpPalette(tokens: Tokens): string {
 	return lines.join("\n");
 }
 
+function googleFontsCssUrl(family: string): string {
+	const query = family.trim().replaceAll(" ", "+");
+	return `https://fonts.googleapis.com/css2?family=${query}:wght@400&display=swap`;
+}
+
+/** @emoji 🔤 Parses Google Fonts CSS into subset/index → woff2 URL. */
+function parseGoogleFontWoff2Map(css: string): Map<string, string> {
+	const map = new Map<string, string>();
+	const parts = css.split("@font-face");
+	for (const part of parts) {
+		const urlMatch = part.match(/url\((https:[^)]+\.woff2)\)/);
+		if (!urlMatch) {
+			continue;
+		}
+		const url = urlMatch[1]!;
+		const commentMatch = part.match(/\/\*\s*([^*]+?)\s*\*\//);
+		if (commentMatch) {
+			map.set(commentMatch[1]!.trim().toLowerCase(), url);
+			continue;
+		}
+		const indexMatch = url.match(/\.(\d+)\.woff2/);
+		if (indexMatch) {
+			map.set(indexMatch[1]!, url);
+		}
+	}
+	return map;
+}
+
+function resolveFontFaceUrl(src: string, woff2ByKey: Map<string, string>): string | undefined {
+	const base = src.split("/").pop()?.replace(/\.woff2$/, "") ?? "";
+	if (src.startsWith("fonts/noto-emoji/")) {
+		if (base === "emoji-400") {
+			return woff2ByKey.get("2") ?? woff2ByKey.get("0");
+		}
+		const index = base.replace(/-400$/, "");
+		return woff2ByKey.get(index) ?? woff2ByKey.get("9");
+	}
+	return woff2ByKey.get(base);
+}
+
+/** @emoji ⬇️ Downloads token {@link fontFaces} woff2 files into `elements/assets/fonts`. */
+export async function fetchElementsFonts(): Promise<void> {
+	const tokens = loadTokens();
+	const cssByFamilyDir = new Map<string, Map<string, string>>();
+	for (const [dir, family] of Object.entries(GOOGLE_FONT_QUERIES)) {
+		const res = await fetch(googleFontsCssUrl(family), { headers: { "User-Agent": GOOGLE_FONTS_UA } });
+		if (!res.ok) {
+			throw new Error(`Google Fonts CSS failed for ${family}: ${res.status}`);
+		}
+		cssByFamilyDir.set(dir, parseGoogleFontWoff2Map(await res.text()));
+	}
+	let wrote = 0;
+	for (const face of tokens.fontFaces) {
+		const dirKey = Object.keys(GOOGLE_FONT_QUERIES).find((key) => face.src.startsWith(`${key}/`));
+		if (!dirKey) {
+			throw new Error(`No Google Fonts mapping for ${face.src}`);
+		}
+		const woff2ByKey = cssByFamilyDir.get(dirKey);
+		if (!woff2ByKey?.size) {
+			throw new Error(`No woff2 entries parsed for ${dirKey}`);
+		}
+		const remoteUrl = resolveFontFaceUrl(face.src, woff2ByKey);
+		if (!remoteUrl) {
+			throw new Error(`Could not resolve woff2 URL for ${face.src}`);
+		}
+		const dest = join(elementsAssetsRoot, face.src);
+		mkdirSync(dirname(dest), { recursive: true });
+		if (existsSync(dest)) {
+			continue;
+		}
+		const fileRes = await fetch(remoteUrl);
+		if (!fileRes.ok) {
+			throw new Error(`Font download failed for ${face.src}: ${fileRes.status}`);
+		}
+		const bytes = new Uint8Array(await fileRes.arrayBuffer());
+		if (bytes.length < 4 || bytes[0] !== 0x77 || bytes[1] !== 0x4f || bytes[2] !== 0x46 || bytes[3] !== 0x32) {
+			throw new Error(`Downloaded bytes for ${face.src} are not woff2 (got ${bytes.length} bytes)`);
+		}
+		writeFileSync(dest, bytes);
+		wrote += 1;
+	}
+	console.log(`elements/lib/styling: fonts ready under elements/assets (${wrote} downloaded, ${tokens.fontFaces.length} total)`);
+}
+
 /** @emoji 🎨 Writes palette CSS fragments and C# palette constants from {@link tokens.json}. */
 export function generateStylingArtifacts(): void {
 	const tokens = loadTokens();
@@ -117,8 +212,10 @@ if (import.meta.main) {
 	if (command === "generate") {
 		generateStylingArtifacts();
 		console.log("elements/lib/styling: wrote generated/*.css, js/palette.css, Palette.g.cs");
+	} else if (command === "fonts") {
+		await fetchElementsFonts();
 	} else {
-		console.error("usage: bun ./script.ts generate");
+		console.error("usage: bun ./script.ts <generate|fonts>");
 		process.exit(1);
 	}
 }

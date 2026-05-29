@@ -20,6 +20,7 @@ import {
 	type WindowMeasure,
 	type UiNode,
 } from "@elements/playground";
+import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
@@ -118,6 +119,7 @@ export const SCENE_PLAY_CONTROLLER_ID = "scene-play";
 export const SCENE_PLAY_SCENE_SURFACE_ID = "elements.scene.play.scene/v1";
 export const SCENE_PLAY_INSPECTOR_TAB_ID = "scene-play-inspector";
 export const SCENE_PLAY_SETTINGS_TAB_ID = "scene-play-settings";
+export const SCENE_PLAY_HIERARCHY_TAB_ID = "scene-play-hierarchy";
 //#endregion 🎬Play
 
 export { parseKindCatalogs, parseKindCompatibility };
@@ -302,6 +304,102 @@ export function scenePlaySelectionEqual(a: ScenePlaySelection, b: ScenePlaySelec
 	}
 	return true;
 }
+
+//#region 🔖ScenePlayHierarchy
+export interface ScenePlayHierarchySelectHandlers {
+	readonly onSelectObject: (objectId: string) => void;
+	readonly onSelectVortex: (vortexFullId: string) => void;
+	readonly onSelectAttraction: (attractionId: string) => void;
+}
+
+/** @emoji 🌳 Nested workbench tree: Scene → Objects → Vortices; Attractions sibling group. */
+export function buildScenePlayHierarchySections(
+	fixture: FixtureV1 | null,
+	selection: ScenePlaySelection,
+	handlers: ScenePlayHierarchySelectHandlers,
+): TreeDataSection[] {
+	if (!fixture) {
+		return [
+			{
+				id: "scene-play-hierarchy.section",
+				label: "Hierarchy",
+				defaultOpen: true,
+				items: [{ id: "scene-play-hierarchy.invalid", label: "Invalid scene fixture" }],
+			},
+		];
+	}
+	const selectedObjects = new Set(selection.objectIds);
+	const selectedVortices = new Set(selection.vortexIds);
+	const selectedAttractions = new Set(selection.attractionIds);
+	const objectItems: TreeDataItem[] = fixture.objects.map((object) => {
+		const objectSelected = selectedObjects.has(object.id);
+		const vortexItems: TreeDataItem[] = object.vortices.map((vortex) => {
+			const fullId = sceneVortexFullId(object.id, vortex.id);
+			return {
+				id: `scene-play-hierarchy.vortex.${fullId}`,
+				label: vortex.label?.trim() ? `${vortex.id} · ${vortex.label}` : vortex.id,
+				description: vortex.vortexKind ?? undefined,
+				isSelected: selectedVortices.has(fullId),
+				onClick: () => handlers.onSelectVortex(fullId),
+			};
+		});
+		const vorticesGroup: TreeDataItem = {
+			id: `scene-play-hierarchy.object.${object.id}.vortices`,
+			label: "Vortices",
+			defaultOpen: true,
+			items: vortexItems.length
+				? vortexItems
+				: [{ id: `scene-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
+		};
+		return {
+			id: `scene-play-hierarchy.object.${object.id}`,
+			label: object.label?.trim() ? `${object.id} · ${object.label}` : object.id,
+			description: object.objectKind ?? undefined,
+			isSelected: objectSelected,
+			defaultOpen: true,
+			onClick: () => handlers.onSelectObject(object.id),
+			items: [vorticesGroup],
+		};
+	});
+	const objectsGroup: TreeDataItem = {
+		id: "scene-play-hierarchy.objects",
+		label: "Objects",
+		defaultOpen: true,
+		items: objectItems.length
+			? objectItems
+			: [{ id: "scene-play-hierarchy.objects.empty", label: "(none)" }],
+	};
+	const attractionItems: TreeDataItem[] = fixture.attractions.map((attraction) => ({
+		id: `scene-play-hierarchy.attraction.${attraction.id}`,
+		label: attraction.id,
+		description: `${attraction.attracting} → ${attraction.attracted}`,
+		isSelected: selectedAttractions.has(attraction.id),
+		onClick: () => handlers.onSelectAttraction(attraction.id),
+	}));
+	const attractionsGroup: TreeDataItem = {
+		id: "scene-play-hierarchy.attractions",
+		label: "Attractions",
+		defaultOpen: true,
+		items: attractionItems.length
+			? attractionItems
+			: [{ id: "scene-play-hierarchy.attractions.empty", label: "(none)" }],
+	};
+	const sceneRoot: TreeDataItem = {
+		id: "scene-play-hierarchy.scene",
+		label: "Scene",
+		defaultOpen: true,
+		items: [objectsGroup, attractionsGroup],
+	};
+	return [
+		{
+			id: "scene-play-hierarchy.section",
+			label: "Hierarchy",
+			defaultOpen: true,
+			items: [sceneRoot],
+		},
+	];
+}
+//#endregion 🔖ScenePlayHierarchy
 
 /** @emoji 🎯 Primary object id for relocate / legacy e2e hooks. */
 export function primaryScenePlayObjectId(selection: ScenePlaySelection): string | null {
@@ -550,9 +648,9 @@ export class ScenePlayShellController extends Controller {
 						return;
 					}
 					this.selection = resolved;
+					this.emit();
 				}
-				syncShell = false;
-				break;
+				return;
 			}
 			case "setSelectedId": {
 				const id = (args as { id: string | null }).id;
@@ -563,8 +661,8 @@ export class ScenePlayShellController extends Controller {
 					return;
 				}
 				this.selection = resolved;
-				syncShell = false;
-				break;
+				this.emit();
+				return;
 			}
 			case "noteSelection": {
 				const snap = args as SelectionSnapshot & { attractionIds?: readonly string[] };
@@ -582,8 +680,8 @@ export class ScenePlayShellController extends Controller {
 					return;
 				}
 				this.selection = resolved;
-				syncShell = false;
-				break;
+				this.emit();
+				return;
 			}
 			case "deleteSelection": {
 				this.applyDeleteSelection();
@@ -821,7 +919,7 @@ if (import.meta.vitest) {
 			expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
 		});
 
-		it("noteSelection skips emit when selection is unchanged", () => {
+		it("noteSelection emits when selection changes and skips emit when unchanged", () => {
 			const bus = new CommandBus();
 			const wb = new ProductRuntime();
 			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
@@ -832,9 +930,12 @@ if (import.meta.vitest) {
 				notifyCount += 1;
 			});
 			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
+			expect(notifyCount).toBe(1);
 			const afterFirst = notifyCount;
 			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
 			expect(notifyCount).toBe(afterFirst);
+			trackingCtrl.run("noteSelection", { objectIds: ["b"], vortexIds: [] });
+			expect(notifyCount).toBe(2);
 			void bus;
 			void wb;
 			void ctrl;
@@ -876,6 +977,32 @@ if (import.meta.vitest) {
 			const next = deleteSceneObjectFromFixture(base!, "b");
 			expect(next.objects.map((object) => object.id)).toEqual(["a", "c"]);
 			expect(next.attractions).toEqual([]);
+		});
+
+		it("buildScenePlayHierarchySections nests objects, vortices, and attractions", () => {
+			const fixture = parseFixtureV1({
+				schema: "elements.scene.fixture/v1",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				attractions: [{ id: "t1", attracting: "a:v1", attracted: "b:v2" }],
+				objects: [
+					{ id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
+					{ id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", position: [0, 0, 0] }] },
+				],
+			});
+			expect(fixture).not.toBeNull();
+			const sections = buildScenePlayHierarchySections(fixture, SCENE_PLAY_EMPTY_SELECTION, {
+				onSelectObject: () => {},
+				onSelectVortex: () => {},
+				onSelectAttraction: () => {},
+			});
+			expect(sections[0]?.items?.[0]?.label).toBe("Scene");
+			const objectsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Objects");
+			expect(objectsGroup?.items?.length).toBe(2);
+			const firstObject = objectsGroup?.items?.[0];
+			expect(firstObject?.items?.[0]?.label).toBe("Vortices");
+			expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("scene-play-hierarchy.vortex.a:v1");
+			const attractionsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Attractions");
+			expect(attractionsGroup?.items?.[0]?.id).toBe("scene-play-hierarchy.attraction.t1");
 		});
 
 		it("declarative window body is a lone scene3d surface", () => {

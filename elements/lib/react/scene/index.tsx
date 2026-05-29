@@ -78,7 +78,7 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@elements/ui";
-import { ClipboardList, Settings, Trash2 } from "lucide-react";
+import { ClipboardList, ListTree, Settings, Trash2 } from "lucide-react";
 import {
 	LS_DEVICE,
 	LS_EXPERTISE,
@@ -87,9 +87,11 @@ import {
 	SCENE_PLAY_BODY_KEY,
 	SCENE_PLAY_CONTROLLER_ID,
 	SCENE_PLAY_EMPTY_SELECTION,
+	SCENE_PLAY_HIERARCHY_TAB_ID,
 	SCENE_PLAY_INSPECTOR_TAB_ID,
 	SCENE_PLAY_SCENE_SURFACE_ID,
 	SCENE_PLAY_SETTINGS_TAB_ID,
+	buildScenePlayHierarchySections,
 	ScenePlayShellController,
 	buildScenePlayAppRuntime,
 	buildScenePlayRuntime,
@@ -2420,6 +2422,19 @@ function SceneSelectionInvalidateBridge(props: { readonly selection?: SelectionS
 	return null;
 }
 
+/** @emoji 🎯 True when a raycast hit belongs to a selectable scene object or vortex mesh. */
+function raycastHitTargetsScenePick(hitObject: Object3D): boolean {
+	let node: Object3D | null = hitObject;
+	while (node) {
+		const data = node.userData as Record<string, unknown> | undefined;
+		if (typeof data?.sceneObjectId === "string" || typeof data?.sceneVortexFullId === "string") {
+			return true;
+		}
+		node = node.parent;
+	}
+	return false;
+}
+
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
 function SceneSelectionMissBridge(): null {
 	const { clearSceneSelection } = useRegistryInteraction();
@@ -2437,7 +2452,8 @@ function SceneSelectionMissBridge(): null {
 				previous?.(event);
 				return;
 			}
-			if (store.getState().internal.initialHits.length > 0) {
+			const hits = store.getState().internal.initialHits;
+			if (hits.some((hit) => raycastHitTargetsScenePick(hit.object))) {
 				previous?.(event);
 				return;
 			}
@@ -5472,6 +5488,21 @@ function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus:
 	return sections;
 }
 
+class ScenePlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: SCENE_PLAY_HIERARCHY_TAB_ID,
+			icon: ListTree,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
+}
+
 class ScenePlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
 	constructor(private readonly buildSections: () => TreeDataSection[]) {
 		super();
@@ -5936,6 +5967,27 @@ function ScenePlayProductShell(props: {
 		};
 	}, [ctrl, snap, fixture, kindCatalogs]);
 	const bus = props.runtime.commandBus;
+	const selectionKey = shellValue
+		? `${shellValue.snap.selection.objectIds.join("\0")}\u0001${shellValue.snap.selection.vortexIds.join("\0")}\u0001${shellValue.snap.selection.attractionIds.join("\0")}\u0001${shellValue.snap.fixtureRevision}`
+		: "";
+	const workbenchTabs = useMemo(
+		() =>
+			shellValue
+				? [
+						new ScenePlayHierarchyPanelDefinition(() =>
+							buildScenePlayHierarchySections(shellValue.snap.fixture, shellValue.snap.selection, {
+								onSelectObject: (objectId) =>
+									shellValue.setSelection({ objectIds: [objectId], vortexIds: [], attractionIds: [] }),
+								onSelectVortex: (vortexFullId) =>
+									shellValue.setSelection({ objectIds: [], vortexIds: [vortexFullId], attractionIds: [] }),
+								onSelectAttraction: (attractionId) =>
+									shellValue.setSelection({ objectIds: [], vortexIds: [], attractionIds: [attractionId] }),
+							}),
+						).resolveTab(),
+					]
+				: [],
+		[shellValue, selectionKey],
+	);
 	const detailTabs = useMemo(
 		() =>
 			shellValue
@@ -5950,9 +6002,9 @@ function ScenePlayProductShell(props: {
 		<PlaygroundView
 			runtime={props.runtime}
 			defaultAppId={PLAY_APP_ID}
-			augmentPanelTabs={{ details: detailTabs }}
+			augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
 			extraFooterItems={props.extraFooterItems}
-			initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: true }}
+			initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
 			mobile={props.mobile}
 		/>
 	);

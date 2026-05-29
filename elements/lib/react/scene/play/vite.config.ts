@@ -5,6 +5,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 
 const repoRoot = path.resolve(__dirname, "../../../../../");
+const elementsAssetsRoot = path.resolve(repoRoot, "elements/assets");
 const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
 const threeModule = path.resolve(__dirname, "../../core/node_modules/three/build/three.module.js");
@@ -15,6 +16,29 @@ export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		react(),
+		{
+			name: "scene-play-elements-assets",
+			configureServer(server) {
+				server.middlewares.use((req, res, next) => {
+					if (!req.url?.startsWith("/assets/")) {
+						next();
+						return;
+					}
+					const rel = decodeURIComponent(req.url.slice("/assets/".length).split(/[?#]/, 1)[0] ?? "");
+					const filePath = path.resolve(elementsAssetsRoot, rel);
+					if (!filePath.startsWith(`${elementsAssetsRoot}${path.sep}`) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+						next();
+						return;
+					}
+					if (filePath.endsWith(".woff2")) {
+						res.setHeader("Content-Type", "font/woff2");
+					} else if (filePath.endsWith(".svg")) {
+						res.setHeader("Content-Type", "image/svg+xml");
+					}
+					createReadStream(filePath).pipe(res);
+				});
+			},
+		},
 		{
 			name: "scene-play-meshes",
 			configureServer(server) {

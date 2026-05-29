@@ -711,7 +711,7 @@ if (import.meta.vitest) {
 
 import React from "react";
 import { useGLTF } from "@react-three/drei";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, ListTree } from "lucide-react";
 import { LevelProvider, getLevelBgClass } from "@elements/ui";
 import { ProductRuntime } from "@elements/playground";
 import {
@@ -724,6 +724,7 @@ import {
 	registerWindowBody,
 	useApp,
 	type SidePanelTabConfig,
+	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
 } from "@elements/playground/react";
@@ -735,8 +736,10 @@ import {
 	TOPOLOGY_PLAY_CONTROLLER_ID,
 	TOPOLOGY_PLAY_SCENE_BODY_KEY,
 	TOPOLOGY_PLAY_SCENE_SURFACE_ID,
+	TOPOLOGY_PLAY_HIERARCHY_TAB_ID,
 	TopologyPlayShellController,
 	buildTopologyBoardDeclarativeBody,
+	buildTopologyPlayHierarchySections,
 	buildTopologyPlayRuntime,
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
@@ -794,6 +797,23 @@ function TopologyPlayStatusPanel(): React.ReactElement {
 			</div>
 		</dl>
 	);
+}
+
+class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(
+		private readonly buildSections: () => TreeDataSection[],
+	) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: TOPOLOGY_PLAY_HIERARCHY_TAB_ID,
+			icon: ListTree,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
 }
 
 class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
@@ -896,6 +916,35 @@ function TopologyPlayApp(): React.ReactElement {
 		registerTopologyPlayChrome();
 		runtimeRef.current = buildTopologyPlayRuntime();
 	}
+	const generation = React.useSyncExternalStore(
+		(listener) => runtimeRef.current!.subscribe(listener),
+		() => runtimeRef.current!.generation,
+		() => 0,
+	);
+	void generation;
+	const controller = runtimeRef.current.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+	const snapshot = controller?.getSnapshot() ?? null;
+	const bus = runtimeRef.current.commandBus;
+	const snapshotKey = snapshot
+		? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}`
+		: "";
+	const workbenchTabs = React.useMemo(
+		() =>
+			snapshot && controller
+				? [
+						new TopologyPlayHierarchyPanelDefinition(() =>
+							buildTopologyPlayHierarchySections(snapshot, {
+								onSelectBoard: (id) => bus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
+								onSelectSceneObject: (objectId) =>
+									bus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
+								onSelectSceneVortex: () => {},
+								onSelectSceneAttraction: () => {},
+							}),
+						).resolveTab(),
+					]
+				: [],
+		[snapshot, snapshotKey, controller, bus],
+	);
 	const detailTabs = React.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
 	return (
 		<LevelProvider level="window">
@@ -903,8 +952,8 @@ function TopologyPlayApp(): React.ReactElement {
 				<PlaygroundView
 					runtime={runtimeRef.current}
 					defaultAppId={TOPOLOGY_PLAY_APP_ID}
-					augmentPanelTabs={{ details: detailTabs }}
-					initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: true }}
+					augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
+					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
 				/>
 			</div>
 		</LevelProvider>

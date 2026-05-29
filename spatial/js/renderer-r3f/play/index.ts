@@ -15,6 +15,16 @@ import {
 	type WindowBodyViewContext,
 	type UiNode,
 } from "@elements/playground";
+import type { TreeDataItem, TreeDataSection } from "@elements/ui";
+import {
+	listModelDefinitionManifests,
+	listModelObjectsForModelDefinition,
+	objectPrimitiveEntries,
+	resolvePrimitiveRefKind,
+	typologyObjectPascalFromLabel,
+	type Model,
+	type SelectionTarget,
+} from "@spatial/js-core";
 
 //#region 🔖Ids
 export const SPATIAL_PLAY_APP_ID = "spatial-play";
@@ -23,7 +33,92 @@ export const SPATIAL_PLAY_WINDOW_ID = "spatial-viewport";
 export const SPATIAL_PLAY_WINDOW_LABEL = "Spatial";
 export const SPATIAL_PLAY_BODY_KEY = "spatial.play.viewport";
 export const SPATIAL_PLAY_SCENE_SURFACE_ID = "spatial.play.scene3d/v1";
+export const SPATIAL_PLAY_HIERARCHY_TAB_ID = "spatial-play-hierarchy";
 //#endregion 🔖Ids
+
+//#region 🔖SpatialPlayHierarchy
+function spatialPlayModelDefinitionLabel(modelDefinitionId: string): string {
+	const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
+	if (manifest?.label?.trim()) {
+		return `${manifest.label}`;
+	}
+	const tail = modelDefinitionId.split(".").pop() ?? modelDefinitionId;
+	return typologyObjectPascalFromLabel(tail.replace(/[._-]+/g, " "));
+}
+
+function spatialPlaySelectionKey(target: SelectionTarget): string {
+	return `${target.kind}:${target.id}`;
+}
+
+/** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for spatial play workbench. */
+export function buildSpatialPlayHierarchySections(
+	modelsByDefinitionId: Record<string, Model>,
+	activeModelDefinitionId: string,
+	selection: readonly SelectionTarget[],
+	onSelect: (modelDefinitionId: string, target: SelectionTarget) => void,
+): TreeDataSection[] {
+	const selectedKeys = new Set(selection.map(spatialPlaySelectionKey));
+	const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
+	const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
+	const modelBranches: TreeDataItem[] = [];
+	for (const modelDefinitionId of modelDefinitionIds) {
+		const model = modelsByDefinitionId[modelDefinitionId];
+		if (!model) {
+			continue;
+		}
+		const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
+			const objectId = String(object.id);
+			const typologyTail = object.typology.split(".").pop() ?? object.typology;
+			const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => {
+				const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
+				const primitiveId = String(primitiveRef);
+				return {
+					id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
+					label: `${slot}: ${kind} ${primitiveId}`,
+					isSelected: isSelected(kind, primitiveId),
+					onClick: () => onSelect(modelDefinitionId, { kind, id: primitiveId, editable: true }),
+				};
+			});
+			return {
+				id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
+				label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
+				description: object.typology,
+				isSelected: isSelected("object", objectId),
+				defaultOpen: true,
+				onClick: () => onSelect(modelDefinitionId, { kind: "object", id: objectId, editable: true }),
+				items: primitiveItems.length
+					? primitiveItems
+					: [{ id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
+			};
+		});
+		modelBranches.push({
+			id: `spatial-play-hierarchy.model.${modelDefinitionId}`,
+			label: spatialPlayModelDefinitionLabel(modelDefinitionId),
+			description: modelDefinitionId,
+			defaultOpen: modelDefinitionId === activeModelDefinitionId,
+			items: objectItems.length
+				? objectItems
+				: [{ id: `spatial-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
+		});
+	}
+	const modelSpaceRoot: TreeDataItem = {
+		id: "spatial-play-hierarchy.modelspace",
+		label: "ModelSpace",
+		defaultOpen: true,
+		items: modelBranches.length
+			? modelBranches
+			: [{ id: "spatial-play-hierarchy.modelspace.empty", label: "(empty)" }],
+	};
+	return [
+		{
+			id: "spatial-play-hierarchy.section",
+			label: "Hierarchy",
+			defaultOpen: true,
+			items: [modelSpaceRoot],
+		},
+	];
+}
+//#endregion 🔖SpatialPlayHierarchy
 
 //#region 🔖Controller
 /** @emoji 🎛 Spatial play shell controller (viewport tools and measures live in the React host for now). */
@@ -108,6 +203,25 @@ if (import.meta.vitest) {
 			const app = buildSpatialPlayRuntime().getActiveApp();
 			expect(app?.leftTabs).toEqual([]);
 			expect(app?.rightTabs).toEqual([]);
+		});
+
+		it("buildSpatialPlayHierarchySections nests model definitions, objects, and primitives", () => {
+			const model = new Model();
+			model.objects["plate"] = {
+				id: "plate",
+				typology: "aec.building.energy.BasePlate",
+				primitives: { surface: "solid-1" },
+			};
+			model.solids["solid-1"] = { id: "solid-1", shellIds: [] };
+			const sections = buildSpatialPlayHierarchySections(
+				{ "aec.building.energy": model },
+				"aec.building.energy",
+				[],
+				() => {},
+			);
+			expect(sections[0]?.items?.[0]?.label).toBe("ModelSpace");
+			const modelBranch = sections[0]?.items?.[0]?.items?.[0];
+			expect(modelBranch?.items?.[0]?.items?.[0]?.label).toContain("surface:");
 		});
 	});
 }

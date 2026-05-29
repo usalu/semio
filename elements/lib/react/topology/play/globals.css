@@ -1,8 +1,4 @@
-@import "tailwindcss";
-
-html,
-body,
-#root {
-	height: 100%;
-	margin: 0;
-}
+@import "../../core/globals.css";
+@source "../../..";
+@source "../..";
+@source ".";

@@ -17,7 +17,9 @@ import {
 	type WindowMeasure,
 	type UiNode,
 } from "@elements/playground";
+import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 
+import { buildBoardPlayHierarchySections } from "../../../board/play/index.ts";
 import nakaginBoardJson from "../../../board/play/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
@@ -31,6 +33,7 @@ import {
 	type CameraState,
 } from "../../../board/index.tsx";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
+import { buildScenePlayHierarchySections, SCENE_PLAY_EMPTY_SELECTION } from "../../scene/play/index.ts";
 import {
 	DEFAULT_MANUAL_LOD,
 	SCENE_LOD_SLIDER_MAX,
@@ -57,9 +60,67 @@ export const TOPOLOGY_PLAY_BOARD_BODY_KEY = "elements.topology.play.board";
 export const TOPOLOGY_PLAY_SCENE_BODY_KEY = "elements.topology.play.scene";
 export const TOPOLOGY_PLAY_BOARD_SURFACE_ID = "elements.topology.play.board/v1";
 export const TOPOLOGY_PLAY_SCENE_SURFACE_ID = "elements.topology.play.scene/v1";
+export const TOPOLOGY_PLAY_HIERARCHY_TAB_ID = "topology-play-hierarchy";
 
 const TOPOLOGY_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 //#endregion 🔖Ids
+
+//#region 🔖TopologyPlayHierarchy
+export interface TopologyPlayHierarchySelectHandlers {
+	readonly onSelectBoard: (id: string) => void;
+	readonly onSelectSceneObject: (objectId: string) => void;
+	readonly onSelectSceneVortex: (vortexFullId: string) => void;
+	readonly onSelectSceneAttraction: (attractionId: string) => void;
+}
+
+/** @emoji 🌳 Paired topology tree: manifest → Board + Scene composition subtrees. */
+export function buildTopologyPlayHierarchySections(
+	snapshot: TopologyPlaySnapshot,
+	handlers: TopologyPlayHierarchySelectHandlers,
+): TreeDataSection[] {
+	const branches: TreeDataItem[] = [];
+	if (snapshot.boardFixture) {
+		const boardRoot = buildBoardPlayHierarchySections(snapshot.boardFixture, [...snapshot.boardSelected], handlers.onSelectBoard)[0]
+			?.items?.[0];
+		branches.push({
+			id: "topology-play-hierarchy.board",
+			label: "Board",
+			defaultOpen: true,
+			items: boardRoot?.items ?? [{ id: "topology-play-hierarchy.board.empty", label: "(empty)" }],
+		});
+	}
+	if (snapshot.sceneFixture) {
+		const sceneSelection = snapshot.sceneSelected
+			? { ...SCENE_PLAY_EMPTY_SELECTION, objectIds: [snapshot.sceneSelected] }
+			: SCENE_PLAY_EMPTY_SELECTION;
+		const sceneRoot = buildScenePlayHierarchySections(snapshot.sceneFixture, sceneSelection, {
+			onSelectObject: handlers.onSelectSceneObject,
+			onSelectVortex: handlers.onSelectSceneVortex,
+			onSelectAttraction: handlers.onSelectSceneAttraction,
+		})[0]?.items?.[0];
+		branches.push({
+			id: "topology-play-hierarchy.scene",
+			label: "Scene",
+			defaultOpen: true,
+			items: sceneRoot?.items ?? [{ id: "topology-play-hierarchy.scene.empty", label: "(empty)" }],
+		});
+	}
+	const topologyRoot: TreeDataItem = {
+		id: "topology-play-hierarchy.topology",
+		label: snapshot.manifestLabel ?? "Topology",
+		defaultOpen: true,
+		items: branches.length ? branches : [{ id: "topology-play-hierarchy.topology.empty", label: "(no fixtures)" }],
+	};
+	return [
+		{
+			id: "topology-play-hierarchy.section",
+			label: "Hierarchy",
+			defaultOpen: true,
+			items: [topologyRoot],
+		},
+	];
+}
+//#endregion 🔖TopologyPlayHierarchy
 
 //#region 🔖Helpers
 function topologyPlayLodTierMenuLabel(tier: string): string {
@@ -363,6 +424,25 @@ export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): U
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	describe("topology play hierarchy", () => {
+		it("buildTopologyPlayHierarchySections includes Board and Scene branches", () => {
+			const runtime = buildTopologyPlayRuntime();
+			const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController;
+			expect(controller).toBeTruthy();
+			const sections = buildTopologyPlayHierarchySections(controller!.getSnapshot(), {
+				onSelectBoard: () => {},
+				onSelectSceneObject: () => {},
+				onSelectSceneVortex: () => {},
+				onSelectSceneAttraction: () => {},
+			});
+			const topologyRoot = sections[0]?.items?.[0];
+			expect(topologyRoot?.label).toBeTruthy();
+			const labels = topologyRoot?.items?.map((row) => row.label);
+			expect(labels).toContain("Board");
+			expect(labels).toContain("Scene");
+		});
+	});
+
 	describe("topology play fixtures", () => {
 		it("parses nakagin board and scene", () => {
 			const b = parseBoardFixtureV1(nakaginBoardJson as unknown);

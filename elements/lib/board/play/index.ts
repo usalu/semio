@@ -21,13 +21,17 @@ import {
 	type WindowLayout,
 } from "@elements/playground";
 
+import type { TreeDataItem, TreeDataSection } from "@elements/ui";
+
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
+	boardFixtureNodeCaption,
 	boardLodAutomaticSelectLabel,
 	isBoardDrawLodKind,
 	parseBoardFixtureV1,
 	type BoardDrawLodKind,
+	type BoardFixtureNodeV1,
 	type BoardFixtureV1,
 	type BoardLodModeKind,
 	type BoardSelectionMethod,
@@ -51,6 +55,8 @@ export const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", 
 export function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
+
+export const BOARD_PLAY_HIERARCHY_TAB_ID = "board-play-hierarchy";
 
 export const BOARD_PLAY_PACKAGE_ROOT = import.meta.url;
 
@@ -78,6 +84,159 @@ export const BOARD_PLAY_LAYOUT: WindowLayout = {
 	},
 };
 //#endregion 🔖Ids
+
+//#region 🔖BoardPlayHierarchy
+function boardFixtureHandleToNodeId(fixture: BoardFixtureV1): ReadonlyMap<string, string> {
+	const out = new Map<string, string>();
+	for (const node of fixture.nodes) {
+		for (const handle of node.handles) {
+			out.set(handle.id, node.id);
+		}
+	}
+	return out;
+}
+
+function boardFixtureChildrenByNodeId(fixture: BoardFixtureV1): ReadonlyMap<string, readonly string[]> {
+	const handleToNode = boardFixtureHandleToNodeId(fixture);
+	const out = new Map<string, string[]>();
+	for (const edge of fixture.edges) {
+		const parentId = handleToNode.get(edge.source);
+		const childId = handleToNode.get(edge.target);
+		if (!parentId || !childId || parentId === childId) {
+			continue;
+		}
+		const next = out.get(parentId) ?? [];
+		next.push(childId);
+		out.set(parentId, next);
+	}
+	for (const [parentId, childIds] of out) {
+		out.set(
+			parentId,
+			[...new Set(childIds)].sort((a, b) => a.localeCompare(b)),
+		);
+	}
+	return out;
+}
+
+function boardFixtureRootNodeIds(fixture: BoardFixtureV1, childrenByParent: ReadonlyMap<string, readonly string[]>): readonly string[] {
+	const explicitRoots = fixture.nodes.filter((node) => node.root).map((node) => node.id);
+	if (explicitRoots.length > 0) {
+		return [...new Set(explicitRoots)].sort((a, b) => a.localeCompare(b));
+	}
+	const childIds = new Set<string>();
+	for (const ids of childrenByParent.values()) {
+		for (const id of ids) {
+			childIds.add(id);
+		}
+	}
+	const inferred = fixture.nodes.map((node) => node.id).filter((id) => !childIds.has(id));
+	return inferred.length > 0 ? inferred.sort((a, b) => a.localeCompare(b)) : fixture.nodes.map((node) => node.id).sort((a, b) => a.localeCompare(b));
+}
+
+function boardFixtureNodeLabel(node: BoardFixtureNodeV1): string {
+	const caption = boardFixtureNodeCaption(node);
+	return caption?.trim() ? `${node.id} · ${caption}` : node.id;
+}
+
+function buildBoardFixtureNodeHierarchyItem(
+	fixture: BoardFixtureV1,
+	nodeId: string,
+	childrenByParent: ReadonlyMap<string, readonly string[]>,
+	selectedIds: ReadonlySet<string>,
+	onSelect: (id: string) => void,
+	visiting: Set<string>,
+): TreeDataItem | null {
+	if (visiting.has(nodeId)) {
+		return null;
+	}
+	const node = fixture.nodes.find((row) => row.id === nodeId);
+	if (!node) {
+		return null;
+	}
+	visiting.add(nodeId);
+	const handleItems: TreeDataItem[] = node.handles.map((handle) => ({
+		id: `board-play-hierarchy.handle.${handle.id}`,
+		label: handle.handleKind ? `${handle.id} · ${handle.handleKind}` : handle.id,
+		isSelected: selectedIds.has(handle.id),
+		onClick: () => onSelect(handle.id),
+	}));
+	const handlesGroup: TreeDataItem = {
+		id: `board-play-hierarchy.node.${nodeId}.handles`,
+		label: "Handles",
+		defaultOpen: true,
+		items: handleItems.length ? handleItems : [{ id: `board-play-hierarchy.node.${nodeId}.handles.empty`, label: "(none)" }],
+	};
+	const childItems: TreeDataItem[] = [];
+	for (const childId of childrenByParent.get(nodeId) ?? []) {
+		const childItem = buildBoardFixtureNodeHierarchyItem(fixture, childId, childrenByParent, selectedIds, onSelect, visiting);
+		if (childItem) {
+			childItems.push(childItem);
+		}
+	}
+	visiting.delete(nodeId);
+	return {
+		id: `board-play-hierarchy.node.${nodeId}`,
+		label: boardFixtureNodeLabel(node),
+		description: node.nodeKind ?? undefined,
+		isSelected: selectedIds.has(nodeId),
+		defaultOpen: true,
+		onClick: () => onSelect(nodeId),
+		items: [handlesGroup, ...childItems],
+	};
+}
+
+/** @emoji 🌳 Nested workbench tree: Board → Nodes (graph) → Handles; flat Edges group. */
+export function buildBoardPlayHierarchySections(
+	fixture: BoardFixtureV1,
+	selectionIds: readonly string[],
+	onSelect: (id: string) => void,
+): TreeDataSection[] {
+	const selectedIds = new Set(selectionIds);
+	const childrenByParent = boardFixtureChildrenByNodeId(fixture);
+	const rootIds = boardFixtureRootNodeIds(fixture, childrenByParent);
+	const visiting = new Set<string>();
+	const nodeItems: TreeDataItem[] = [];
+	for (const rootId of rootIds) {
+		const item = buildBoardFixtureNodeHierarchyItem(fixture, rootId, childrenByParent, selectedIds, onSelect, visiting);
+		if (item) {
+			nodeItems.push(item);
+		}
+	}
+	const nodesGroup: TreeDataItem = {
+		id: "board-play-hierarchy.nodes",
+		label: "Nodes",
+		defaultOpen: true,
+		items: nodeItems.length ? nodeItems : [{ id: "board-play-hierarchy.nodes.empty", label: "(none)" }],
+	};
+	const edgeItems: TreeDataItem[] = fixture.edges.map((edge) => ({
+		id: `board-play-hierarchy.edge.${edge.id}`,
+		label: edge.id,
+		description: `${edge.source} → ${edge.target}`,
+		isSelected: selectedIds.has(edge.id),
+		onClick: () => onSelect(edge.id),
+	}));
+	const edgesGroup: TreeDataItem = {
+		id: "board-play-hierarchy.edges",
+		label: "Edges",
+		defaultOpen: true,
+		items: edgeItems.length ? edgeItems : [{ id: "board-play-hierarchy.edges.empty", label: "(none)" }],
+	};
+	const boardRoot: TreeDataItem = {
+		id: "board-play-hierarchy.board",
+		label: "Board",
+		defaultOpen: true,
+		items: [nodesGroup, edgesGroup],
+	};
+	return [
+		{
+			id: "board-play-hierarchy.section",
+			label: "Hierarchy",
+			defaultOpen: true,
+			items: [boardRoot],
+		},
+	];
+}
+//#endregion 🔖BoardPlayHierarchy
 
 //#region 🔖Controller
 const BOARD_PLAY_TARGET_KINDS = ["nodes", "edges", "handles"] as const;
@@ -444,6 +603,41 @@ if (import.meta.vitest) {
 				generation: 0,
 			});
 			expect(tree).toEqual(buildBoardWindowBody(BOARD_PLAY_BOARD_SURFACE_ID, BOARD_PLAY_CONTROLLER_ID, "board-overview"));
+		});
+
+		it("buildBoardPlayHierarchySections nests root nodes, handles, and child nodes", () => {
+			const fixture = parseBoardFixtureV1({
+				schema: "elements.board.fixture/v1",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				nodes: [
+					{
+						id: "root",
+						root: true,
+						shape: "circle",
+						x: 0,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-root", angle: 0, handleKind: "board.port" }],
+					},
+					{
+						id: "child",
+						shape: "circle",
+						x: 10,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-child", angle: 0, handleKind: "board.port" }],
+					},
+				],
+				edges: [{ id: "e1", source: "h-root", target: "h-child" }],
+			});
+			expect(fixture).not.toBeNull();
+			const sections = buildBoardPlayHierarchySections(fixture!, [], () => {});
+			const boardRoot = sections[0]?.items?.[0];
+			expect(boardRoot?.label).toBe("Board");
+			const nodesGroup = boardRoot?.items?.find((row) => row.label === "Nodes");
+			expect(nodesGroup?.items?.[0]?.id).toBe("board-play-hierarchy.node.root");
+			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
+			expect(nodesGroup?.items?.[0]?.items?.[1]?.id).toBe("board-play-hierarchy.node.child");
 		});
 
 		it("buildBoardPlayRuntime wires main mode and empty side tab slots", () => {

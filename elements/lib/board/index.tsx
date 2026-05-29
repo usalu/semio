@@ -35,7 +35,7 @@ import {
 	type SidePanelTabConfig,
 	type UiBoardHostSurfaceNode,
 } from "@elements/playground/react";
-import { ClipboardList, Library, Settings } from "lucide-react";
+import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	BOARD_PLAY_APP_ID,
 	BOARD_PLAY_BOARD_SURFACE_ID,
@@ -44,8 +44,10 @@ import {
 	BOARD_PLAY_BODY_KEY_SELECTION,
 	BOARD_PLAY_CONTROLLER_ID,
 	BOARD_PLAY_DEFAULT_FIXTURE,
+	BOARD_PLAY_HIERARCHY_TAB_ID,
 	BoardPlayShellController,
 	type BoardPlayHostBridge,
+	buildBoardPlayHierarchySections,
 	buildBoardPlayOverviewDeclarativeBody,
 	buildBoardPlayDetailDeclarativeBody,
 	buildBoardPlaySelectionDeclarativeBody,
@@ -8369,12 +8371,27 @@ interface BoardPlayShellValue {
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
+class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: BOARD_PLAY_HIERARCHY_TAB_ID,
+			icon: ListTree,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
+}
+
 class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
 	resolveTab(): SidePanelTabConfig {
 		return {
 			id: "board-play-library",
 			icon: Library,
-			order: 0,
+			order: 1,
 			tree: new StaticTreePanelDefinition({
 				sections: [
 					{
@@ -10568,7 +10585,21 @@ function BoardPlayInner(): ReactElement {
   const shellValueRef = useRef(shellValue);
   shellValueRef.current = shellValue;
   const boardPlaySelectionKey = useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
-  const boardPlayWorkbenchTab = useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
+  const boardPlayFixtureKey = useMemo(
+    () =>
+      `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`,
+    [shellValue.fixture],
+  );
+  const boardPlayLibraryTab = useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
+  const boardPlayHierarchyTab = useMemo(
+    () =>
+      new BoardPlayHierarchyPanelDefinition(() =>
+        buildBoardPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) =>
+          shellValueRef.current.setSelectionIds([id]),
+        ),
+      ).resolveTab(),
+    [boardPlaySelectionKey, boardPlayFixtureKey],
+  );
   const boardPlaySettingsTab = useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
   const boardPlayInspectorTab = useMemo(
     () => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(),
@@ -10576,10 +10607,10 @@ function BoardPlayInner(): ReactElement {
   );
   const augmentPanelTabs = useMemo(
     () => ({
-      workbench: [boardPlayWorkbenchTab],
+      workbench: [boardPlayHierarchyTab, boardPlayLibraryTab],
       details: [boardPlayInspectorTab, boardPlaySettingsTab],
     }),
-    [boardPlayInspectorTab, boardPlaySettingsTab, boardPlayWorkbenchTab],
+    [boardPlayHierarchyTab, boardPlayInspectorTab, boardPlaySettingsTab, boardPlayLibraryTab],
   );
 
   return (

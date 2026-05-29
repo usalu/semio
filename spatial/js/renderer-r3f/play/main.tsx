@@ -1,17 +1,36 @@
 /** @emoji 🎮 Vite entry: spatial.shape catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
 import "./globals.css";
-import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+	StrictMode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type ChangeEvent,
+	type ReactNode,
+} from "react";
 import { ProductRuntime } from "@elements/playground";
+import { getLevelBgClass, LevelProvider } from "@elements/ui";
 import {
 	PlaygroundView,
+	PureSidePanelTabDefinition,
+	StaticTreePanelDefinition,
 	mountPlaygroundApp,
 	registerUiScene3DSurfaceHost,
+	type SidePanelTabConfig,
+	type TreeDataSection,
 	type UiScene3DHostSurfaceNode,
 } from "@elements/playground/react";
+import { ListTree } from "lucide-react";
 import {
 	SPATIAL_PLAY_APP_ID,
 	SPATIAL_PLAY_CONTROLLER_ID,
+	SPATIAL_PLAY_HIERARCHY_TAB_ID,
 	SPATIAL_PLAY_SCENE_SURFACE_ID,
+	buildSpatialPlayHierarchySections,
 	buildSpatialPlayRuntime,
 } from "./index.ts";
 import {
@@ -58,6 +77,7 @@ import {
 	SelectionAttributesPanel,
 	SelectionPropertiesPanel,
 	replDisplayedSelectionTargets,
+	replWithRendererSelectionTargets,
 	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
@@ -508,6 +528,49 @@ function pickShapeForModelDefinition(
 
 const PLAY_SELECT_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" } as const;
 
+//#region 🔖SpatialPlayChrome
+export interface SpatialPlayChromeSnapshot {
+	readonly modelsByDefinitionId: Record<string, Model>;
+	readonly activeModelDefinitionId: string;
+	readonly selection: readonly SelectionTarget[];
+	readonly selectTarget: (modelDefinitionId: string, target: SelectionTarget) => void;
+}
+
+interface SpatialPlayChromeContextValue {
+	readonly snapshot: SpatialPlayChromeSnapshot | null;
+	readonly publishSnapshot: (snapshot: SpatialPlayChromeSnapshot | null) => void;
+}
+
+const SpatialPlayChromeContext = createContext<SpatialPlayChromeContextValue | null>(null);
+
+function useSpatialPlayChrome(): SpatialPlayChromeContextValue {
+	const value = useContext(SpatialPlayChromeContext);
+	if (!value) {
+		throw new Error("useSpatialPlayChrome must be used inside SpatialPlayChromeContext.");
+	}
+	return value;
+}
+
+function useSpatialPlayChromePublish(): (snapshot: SpatialPlayChromeSnapshot | null) => void {
+	return useSpatialPlayChrome().publishSnapshot;
+}
+
+class SpatialPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {
+		super();
+	}
+
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: SPATIAL_PLAY_HIERARCHY_TAB_ID,
+			icon: ListTree,
+			order: 0,
+			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+		};
+	}
+}
+//#endregion 🔖SpatialPlayChrome
+
 //#region 🔖PlayModelSpacePanel
 interface PlayModelSpacePanelProps {
 	readonly activeModelDefinitionId: string;
@@ -730,6 +793,7 @@ function PlaySession({
 
 //#region 🔖PlayApp
 function PlayApp() {
+	const publishSpatialPlayChrome = useSpatialPlayChromePublish();
 	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(SHAPE_MODEL_DEFINITION_ID);
 	const scopedInteractions = useMemo(
 		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId),
@@ -896,6 +960,33 @@ function PlayApp() {
 			}),
 		[currentSelection, selectionKinds],
 	);
+
+	const selectHierarchyTarget = useCallback(
+		(modelDefinitionId: string, target: SelectionTarget) => {
+			if (modelDefinitionId !== activeModelDefinitionId) {
+				handleActiveModelDefinitionChange(modelDefinitionId);
+			}
+			setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, modelDefinitionId, [target]));
+		},
+		[activeModelDefinitionId, handleActiveModelDefinitionChange],
+	);
+
+	useEffect(() => {
+		publishSpatialPlayChrome({
+			modelsByDefinitionId: flushedModelsByDefinitionId,
+			activeModelDefinitionId,
+			selection: selectionInScope,
+			selectTarget: selectHierarchyTarget,
+		});
+		return () => publishSpatialPlayChrome(null);
+	}, [
+		activeModelDefinitionId,
+		flushedModelsByDefinitionId,
+		modelDefinitionRevision,
+		publishSpatialPlayChrome,
+		selectHierarchyTarget,
+		selectionInScope,
+	]);
 
 	const exportBaseName = useMemo(() => {
 		if (loadedRawName) return fileStem(loadedRawName);
@@ -1221,16 +1312,49 @@ function SpatialPlaySurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceN
 
 function SpatialPlayRoot(): ReactNode {
 	const runtimeRef = useRef<ProductRuntime | null>(null);
+	const [chromeSnapshot, setChromeSnapshot] = useState<SpatialPlayChromeSnapshot | null>(null);
 	if (!runtimeRef.current) {
 		registerSpatialPlayChrome();
 		runtimeRef.current = buildSpatialPlayRuntime();
+		runtimeRef.current.setActiveAppId(SPATIAL_PLAY_APP_ID);
 	}
+	const chromeContextValue = useMemo<SpatialPlayChromeContextValue>(
+		() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }),
+		[chromeSnapshot],
+	);
+	const chromeKey = chromeSnapshot
+		? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${Object.keys(chromeSnapshot.modelsByDefinitionId).sort().join(",")}\u0001${chromeSnapshot.modelsByDefinitionId[chromeSnapshot.activeModelDefinitionId]?.revision ?? 0}`
+		: "";
+	const workbenchTabs = useMemo(
+		() =>
+			chromeSnapshot
+				? [
+						new SpatialPlayHierarchyPanelDefinition(() =>
+							buildSpatialPlayHierarchySections(
+								chromeSnapshot.modelsByDefinitionId,
+								chromeSnapshot.activeModelDefinitionId,
+								chromeSnapshot.selection,
+								chromeSnapshot.selectTarget,
+							),
+						).resolveTab(),
+					]
+				: [],
+		[chromeSnapshot, chromeKey],
+	);
 	return (
-		<PlaygroundView
-			runtime={runtimeRef.current}
-			defaultAppId={SPATIAL_PLAY_APP_ID}
-			initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: false }}
-		/>
+		<SpatialPlayChromeContext.Provider value={chromeContextValue}>
+			<LevelProvider level="window">
+				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+					<PlaygroundView
+						runtime={runtimeRef.current}
+						defaultAppId={SPATIAL_PLAY_APP_ID}
+						augmentPanelTabs={{ workbench: workbenchTabs }}
+						initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: false }}
+						className="min-h-0 flex-1"
+					/>
+				</div>
+			</LevelProvider>
+		</SpatialPlayChromeContext.Provider>
 	);
 }
 

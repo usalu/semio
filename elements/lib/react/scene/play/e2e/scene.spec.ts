@@ -123,7 +123,8 @@ test("scene background click clears selection", async ({ page }) => {
 	if (!box) {
 		throw new Error("scene canvas missing bounding box");
 	}
-	await canvas.click({ position: { x: 8, y: 8 } });
+	const clickX = Math.max(8, Math.floor(box.width * 0.5));
+	await canvas.click({ position: { x: clickX, y: 8 } });
 	await expect(page.locator("[data-e2e-selected]")).toHaveText("none", { timeout: 15_000 });
 	expectCleanSceneConsole(messages);
 });
