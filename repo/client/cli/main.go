@@ -15419,6 +15419,7 @@ const (
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
+	BreachDependencyBoundaryDirectImport               Statute = "dependency-boundary/import/direct-third-party"
 	BreachSemioDescriptionMissingEmoji                 Statute = "semio/description/missing-emoji"
 	BreachSemioDescriptionEmojiNotUnique               Statute = "semio/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
@@ -15815,6 +15816,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "semio.* files must be self-contained and not import from UI dependencies",
 		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
+		Autofixable: false,
+	},
+	BreachDependencyBoundaryDirectImport: {
+		Kind:        BreachDependencyBoundaryDirectImport,
+		Priority:    BreachPriorityHigh,
+		Reason:      "Third-party packages must only be imported in adapter regions or adapter paths",
+		Solution:    "Move the import into a //#region 🔌Adapter (or /adapters/) module and depend on a first-party port interface elsewhere",
 		Autofixable: false,
 	},
 	BreachSemioDescriptionMissingEmoji: {
@@ -17806,17 +17814,353 @@ func FindSection(sections []Section, name string) *Section {
 
 // #endregion 📝Sections
 
-// #region 🧊Policies
-// Policy definitions, context, checkers, and individual policy implementations.
-
-// 📜PolicyFunc is a function type for policy func callbacks.
 type PolicyFunc func(ctx *PolicyContext) []Breach
 
-// 💿policies holds the data fields for a policies record.
-var policies = []PolicyDef{}
+// ­ƒÆ┐policies holds the data fields for a policies record.
+var policies = []PolicyDef{
+	{
+		ID:          "code",
+		Name:        "Code",
+		Description: "Validates source file headers, sections, and comments",
+		Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "File",
+				Description: "File header region breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups:      []Territory{},
+				Kinds: []Statute{
+					BreachCodeFileMissingHeaderRegion,
+					BreachCodeFileWrongHeaderRegionFormat,
+					BreachCodeFileMissingContributors,
+					BreachCodeFileMissingSummary,
+					BreachCodeFileMissingLicense,
+					BreachCodeFileWrongLicense,
+					BreachCodeFileMissingRequirements,
+					BreachCodeFileMissingDocs,
+				},
+			},
+			{
+				Name:        "Section",
+				Description: "Section structure breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups: []Territory{
+					{
+						Name:        "Wrong Format",
+						Description: "Section format breachs",
+						Groups: []Territory{
+							{
+								Name:        "Summary",
+								Description: "Section summary format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatSummaryTooLong,
+								},
+							},
+							{
+								Name:        "Requirements",
+								Description: "Section requirements format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatRequirementsSplitBlock,
+								},
+							},
+						},
+						Kinds: []Statute{
+							BreachCodeSectionWrongFormat,
+							BreachCodeSectionWrongFormatNewlineAfterRegion,
+							BreachCodeSectionWrongFormatDocs,
+						},
+					},
+				},
+				Kinds: []Statute{
+					BreachCodeSectionEmpty,
+					BreachCodeSectionOrphanDefinition,
+					BreachCodeSectionMissingStartName,
+					BreachCodeSectionMissingEndName,
+					BreachCodeSectionNameMismatch,
+					BreachCodeSectionMissingSummary,
+					BreachCodeSectionMissingRequirements,
+					BreachCodeSectionMissingDocs,
+				},
+			},
+			{
+				Name:        "Definition",
+				Description: "Definition documentation breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups: []Territory{
+					{
+						Name:        "Wrong Format",
+						Description: "Definition format breachs",
+						Kinds: []Statute{
+							BreachCodeDefWrongFormat,
+							BreachCodeDefNotNativeDocstring,
+						},
+					},
+				},
+				Kinds: []Statute{
+					BreachCodeDefMissingSummary,
+					BreachCodeDefMissingRequirements,
+					BreachCodeDefMissingDocs,
+				},
+			},
+			{
+				Name:        "Comment",
+				Description: "Forbidden comment breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeCommentInline,
+					BreachCodeCommentBlock,
+					BreachCodeCommentJSDoc,
+				},
+			},
+			{
+				Name:        "Requirements",
+				Description: "Specification content breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeRequirementsSyntax,
+				},
+			},
+			{
+				Name:        "Unicode",
+				Description: "Unicode character breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeUnicodeEmojiVariation,
+				},
+			},
+			{
+				Name:        "Docs",
+				Description: "Documentation file breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeDocsMissingReadme,
+				},
+			},
+			{
+				Name:        "Rust",
+				Description: "Rust-specific section breachs",
+				Scopes:      []string{"**/*.rs"},
+				Kinds: []Statute{
+					BreachCodeRustRegionComment,
+				},
+			},
+		},
+		Run: codePolicy,
+	},
+	{
+		ID:          "dev-docs",
+		Name:        "DevDocs",
+		Description: "Validates README.md and AGENTS.md documentation structure",
+		Scopes:      []string{"README.md", "AGENTS.md"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "File",
+				Description: "File documentation breachs",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingFile,
+					BreachDevDocsWrongFilePath,
+					BreachDevDocsWrongFileName,
+					BreachDevDocsWrongFileOrder,
+				},
+			},
+			{
+				Name:        "Folder",
+				Description: "Folder documentation breachs",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingFolder,
+					BreachDevDocsWrongFolderPath,
+					BreachDevDocsWrongFolderName,
+					BreachDevDocsWrongFolderOrder,
+				},
+			},
+			{
+				Name:        "Component",
+				Description: "Component documentation breachs",
+				Scopes:      []string{"README.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingComponent,
+					BreachDevDocsWrongComponentName,
+					BreachDevDocsWrongComponentOrder,
+				},
+			},
+		},
+		Run: devDocsPolicy,
+	},
+	{
+		ID:          "sketchpad",
+		Name:        "Sketchpad",
+		Description: "Validates sketchpad imports, state management, and hook patterns",
+		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Import restriction breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadImportThirdParty,
+				},
+			},
+			{
+				Name:        "State",
+				Description: "State management breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadStateMultipleMachines,
+					BreachSketchpadStateCreateActor,
+					BreachSketchpadStateYjsAppState,
+					BreachSketchpadStateForbiddenStore,
+				},
+			},
+			{
+				Name:        "Hooks",
+				Description: "Hook pattern breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadHooksNonTriadic,
+				},
+			},
+		},
+		Run: sketchpadPolicy,
+	},
+	{
+		ID:          "repo",
+		Name:        "Repo",
+		Description: "Validates strict repo command implementation parity and ticket tracking",
+		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Parity",
+				Description: "Command parity breachs",
+				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+				Kinds: []Statute{
+					BreachRepoMissingCommand,
+					BreachRepoMissingTicketTracking,
+				},
+			},
+		},
+		Run: repoPolicy,
+	},
+	{
+		ID:          "system",
+		Name:        "System",
+		Description: "Validates system configuration files like devcontainer and editor settings",
+		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Devcontainer",
+				Description: "Devcontainer configuration breachs",
+				Groups: []Territory{
+					{
+						Name:        "VSCode",
+						Description: "VSCode settings and extensions must be inside devcontainer.json",
+						Kinds: []Statute{
+							BreachSystemDevcontainerVscodeSettingsOutside,
+							BreachSystemDevcontainerVscodeExtensionsOutside,
+						},
+					},
+				},
+			},
+		},
+		Run: systemPolicy,
+	},
+	{
+		ID:          "folder",
+		Name:        "Folder",
+		Description: "Validates folder structure and detects illegal empty folders",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "Illegal",
+				Description: "Illegal folder breachs",
+				Groups: []Territory{
+					{
+						Name:        "Empty",
+						Description: "Empty folders that should be removed",
+						Kinds: []Statute{
+							BreachFolderIllegalEmpty,
+						},
+					},
+				},
+			},
+		},
+		Run: folderPolicy,
+	},
+	{
+		ID:          "file",
+		Name:        "File",
+		Description: "Validates file existence against the godfile allowlist",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Illegal",
+				Description: "Illegal file breachs",
+				Groups: []Territory{
+					{
+						Name:        "Use Godfile",
+						Description: "Files not listed in .repo/files.json godfile",
+						Kinds: []Statute{
+							BreachFileIllegalUseGodfile,
+						},
+					},
+				},
+			},
+		},
+		Run: filePolicy,
+	},
+	{
+		ID:          "semio",
+		Name:        "Semio",
+		Description: "Validates that semio.* files are self-contained and do not import UI dependencies",
+		Scopes:      []string{"**/*.{ts,tsx}"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Import restriction breachs",
+				Groups: []Territory{
+					{
+						Name:        "No Ui Dependency",
+						Description: "semio.* files must not import from UI dependencies",
+						Kinds: []Statute{
+							BreachSemioNoUiDependency,
+						},
+					},
+				},
+			},
+		},
+		Run: semioPolicy,
+	},
+	{
+		ID:          "dependency-boundary",
+		Name:        "Dependency Boundary",
+		Description: "Third-party libraries must only be imported behind adapter boundaries",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Direct third-party import breachs",
+				Scopes:      []string{"**/*"},
+				Kinds: []Statute{
+					BreachDependencyBoundaryDirectImport,
+				},
+			},
+		},
+		Run: dependencyBoundaryPolicy,
+	},
+}
 
-// 🎯FindPolicy MUST return nil when no match is found.
-// 🔎FindPolicy searches for and returns the matching policy.
+// ­ƒÄ»FindPolicy MUST return nil when no match is found.
+// ­ƒöÄFindPolicy searches for and returns the matching policy.
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -17826,14 +18170,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 	return PolicyDef{}, false
 }
 
-// 🏪GetPolicies MUST return the stored value without modification.
-// 📦GetPolicies returns the policies of the value.
+// ­ƒÅ¬GetPolicies MUST return the stored value without modification.
+// ­ƒôªGetPolicies returns the policies of the value.
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
-// 📪StreamPolicies MUST emit all matching entries and close the channel when done.
-// 🔍StreamPolicies streams the policies over a channel with optional filtering.
+// ­ƒô¬StreamPolicies MUST emit all matching entries and close the channel when done.
+// ­ƒöìStreamPolicies streams the policies over a channel with optional filtering.
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17882,7 +18226,7 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 	return nil
 }
 
-// 📝PolicyContext holds the data fields for a policy context record.
+// ­ƒôØPolicyContext holds the data fields for a policy context record.
 type PolicyContext struct {
 	Scope              Scope
 	RootDir            string
@@ -17896,8 +18240,8 @@ type PolicyContext struct {
 	filesOverride      []string
 }
 
-// 🔷NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
-// 🆕NewPolicyContext creates and returns a new PolicyContext instance.
+// ­ƒöÀNewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
+// ­ƒåòNewPolicyContext creates and returns a new PolicyContext instance.
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -17909,15 +18253,15 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	}
 }
 
-// 📄NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
-// 📄NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
+// ­ƒôäNewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
+// ­ƒôäNewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
 	return ctx
 }
 
-// 📥Files MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôÑFiles MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
@@ -17930,8 +18274,8 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 	return files, nil
 }
 
-// 🛤️ReadText MUST return the full content from the given path.
-// 🔤ReadText reads and returns the text content.
+// ­ƒøñ´©ÅReadText MUST return the full content from the given path.
+// ­ƒöñReadText reads and returns the text content.
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -17949,7 +18293,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	return content
 }
 
-// 📑Sections MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôæSections MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -17963,8 +18307,8 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 	return sections
 }
 
-// ❌ParseIgnoreDirectives MUST return an error when the input is malformed.
-// 💾ParseIgnoreDirectives parses the input and returns the ignore directives result.
+// ÔØîParseIgnoreDirectives MUST return an error when the input is malformed.
+// ­ƒÆ¥ParseIgnoreDirectives parses the input and returns the ignore directives result.
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -17986,7 +18330,7 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 	return result
 }
 
-// 🔶IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒöÂIgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -17997,8 +18341,8 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	return ignores
 }
 
-// 🔹IsIgnored MUST return true only when the condition is met.
-// ❓IsIgnored reports whether the PolicyContext is ignored.
+// ­ƒö╣IsIgnored MUST return true only when the condition is met.
+// ÔØôIsIgnored reports whether the PolicyContext is ignored.
 func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statute) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -18017,8 +18361,8 @@ func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statut
 	return false
 }
 
-// 🆕CreateBreach MUST persist the new entity and return a reference to it.
-// ⚠️CreateBreach creates a new breach and persists it.
+// ­ƒåòCreateBreach MUST persist the new entity and return a reference to it.
+// ÔÜá´©ÅCreateBreach creates a new breach and persists it.
 func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope string, line int, col int, excerpt string) Breach {
 	return Breach{
 		ID:      buildBreachID(scope, line, col),
@@ -18031,7 +18375,7 @@ func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope strin
 	}
 }
 
-// 🧲extractFileFromScope holds the data fields for a extractFileFromScope record.
+// ­ƒº▓extractFileFromScope holds the data fields for a extractFileFromScope record.
 func extractFileFromScope(scope string) string {
 
 	if idx := strings.Index(scope, "#"); idx != -1 {
@@ -18044,8 +18388,8 @@ func extractFileFromScope(scope string) string {
 	return scope
 }
 
-// 🧹FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
-// 🔷FilterIgnored filters the ignored based on the given criteria.
+// ­ƒº╣FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
+// ­ƒöÀFilterIgnored filters the ignored based on the given criteria.
 func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	var result []Breach
 	for _, v := range breachs {
@@ -18057,18 +18401,18 @@ func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	return result
 }
 
-// 🧩specKeywordPattern holds the data fields for a specKeywordPattern record.
+// ­ƒº®specKeywordPattern holds the data fields for a specKeywordPattern record.
 var specKeywordPattern = regexp.MustCompile(`\b(MUST(\s+NOT)?|SHOULD(\s+NOT)?|SHALL(\s+NOT)?|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b`)
 
-// 🔸isSpecText holds the data fields for a isSpecText record.
+// ­ƒö©isSpecText holds the data fields for a isSpecText record.
 func isSpecText(text string) bool {
 	return specKeywordPattern.MatchString(text)
 }
 
-// 📐specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
+// ­ƒôÉspecImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
 var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
 
-// ⚡specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
+// ÔÜíspecImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
 var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
 
 func hasImplementationSyntax(text string) (bool, string) {
@@ -18084,7 +18428,7 @@ func hasImplementationSyntax(text string) (bool, string) {
 	return false, ""
 }
 
-// 🔺SpecLines MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒö║SpecLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -18144,14 +18488,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🔻IsSpecLine MUST return true only when the condition is met.
-// 🐙IsSpecLine reports whether the PolicyContext is spec line.
+// ­ƒö╗IsSpecLine MUST return true only when the condition is met.
+// ­ƒÉÖIsSpecLine reports whether the PolicyContext is spec line.
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
-// ⬛IsSpecBlock MUST return true only when the condition is met.
-// 🔒IsSpecBlock reports whether the PolicyContext is spec block.
+// Ô¼øIsSpecBlock MUST return true only when the condition is met.
+// ­ƒöÆIsSpecBlock reports whether the PolicyContext is spec block.
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -18161,7 +18505,7 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 	return false
 }
 
-// ⬜SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// Ô¼£SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -18239,13 +18583,13 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🟥IsSectionDocLine MUST return true only when the condition is met.
-// 🔹IsSectionDocLine reports whether the PolicyContext is section doc line.
+// ­ƒƒÑIsSectionDocLine MUST return true only when the condition is met.
+// ­ƒö╣IsSectionDocLine reports whether the PolicyContext is section doc line.
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
-// 📖DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôûDefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	if ctx.definitionDocCache == nil {
 		ctx.definitionDocCache = make(map[string]map[int]bool)
@@ -18358,8 +18702,8 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🟧IsDefinitionDocLine MUST return true only when the condition is met.
-// ▶️IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
+// ­ƒƒºIsDefinitionDocLine MUST return true only when the condition is met.
+// ÔûÂ´©ÅIsDefinitionDocLine reports whether the PolicyContext is definition doc line.
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
@@ -18373,14 +18717,1817 @@ func randomString(n int) string {
 	return string(b)
 }
 
-// ✔️CheckPolicies is a legacy no-op; breachs come from lint scripts and `.repo/cache/breaches`.
+// Ô£ö´©ÅCheckPolicies MUST run all applicable policies and aggregate breachs.
+// Ô£ö´©ÅCheckPolicies validates the policies and returns any breachs.
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach, error) {
-	return nil, nil
+	ctx := NewPolicyContext(scope, bundles)
+	return CheckPoliciesWithContext(ctx, policyIDs)
 }
 
-// 🟨CheckPoliciesWithContext is a legacy no-op; breachs come from lint scripts and `.repo/cache/breaches`.
+// ­ƒƒ¿CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
+// ­ƒöæCheckPoliciesWithContext validates the policies with context and returns any breachs.
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
-	return nil, nil
+	var breachs []Breach
+	var policiesToRun []PolicyDef
+	if len(policyIDs) > 0 {
+		for _, p := range policies {
+			for _, id := range policyIDs {
+				if p.ID == id {
+					policiesToRun = append(policiesToRun, p)
+					break
+				}
+			}
+		}
+	} else {
+		for _, p := range policies {
+			if matchesScope(p.Scopes, ctx.Scope) {
+				policiesToRun = append(policiesToRun, p)
+			}
+		}
+	}
+	for _, policy := range policiesToRun {
+		policyBreachs := policy.Run(ctx)
+		breachs = append(breachs, policyBreachs...)
+	}
+	return breachs, nil
+}
+
+// ­ƒö¡matchesScope holds the data fields for a matchesScope record.
+func matchesScope(policyScopes []string, targetScope Scope) bool {
+	for _, pattern := range policyScopes {
+		if pattern == "*" || pattern == "**/*" {
+			return true
+		}
+		if strings.HasPrefix(pattern, "semio") {
+			if targetScope.Kind == ScopeRepo || (targetScope.Kind == ScopeTechnology && strings.HasPrefix(targetScope.TechnologyName, pattern)) {
+				return true
+			}
+		}
+		if targetScope.Kind == ScopeRepo && strings.HasPrefix(pattern, "**/*.") {
+			return true
+		}
+		if targetScope.FilePath != "" {
+			normalizedTarget := NormalizePath(targetScope.FilePath)
+			normalizedPattern := NormalizePath(pattern)
+			if matched, _ := doublestar.Match(normalizedPattern, normalizedTarget); matched {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ­ƒƒ®headerPolicy holds the data fields for a headerPolicy record.
+func headerPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	agplMarkers := []string{"GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsHeaders() {
+			continue
+		}
+		sections := ctx.Sections(file)
+		var headerSection *Section
+		for i := range sections {
+			if strings.ToLower(sections[i].Name) == "header" {
+				headerSection = &sections[i]
+				break
+			}
+		}
+		if headerSection == nil {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing header region in %s", file),
+				BreachCodeFileMissingHeaderRegion,
+				file, 0, 0, ""))
+			continue
+		}
+		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
+		headerLines := strings.Split(headerContent, "\n")
+		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
+		hasContributors := false
+		for _, line := range headerLines {
+			if contributorPattern.MatchString(line) {
+				hasContributors = true
+				break
+			}
+		}
+		if !hasContributors {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing contributors in header of %s", file),
+				BreachCodeFileMissingContributors,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		}
+		hasLicense := false
+		for _, marker := range agplMarkers {
+			if strings.Contains(headerContent, marker) {
+				hasLicense = true
+				break
+			}
+		}
+		if !hasLicense {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing license in header of %s", file),
+				BreachCodeFileMissingLicense,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		} else {
+			wrongLicenses := []string{"MIT", "Apache", "BSD"}
+			hasWrongLicense := false
+			for _, wrong := range wrongLicenses {
+				if strings.Contains(headerContent, wrong) {
+					hasWrongLicense = true
+					break
+				}
+			}
+			if strings.Contains(headerContent, "GPL") && !strings.Contains(headerContent, "AGPL") && !strings.Contains(headerContent, "LGPL") {
+				hasWrongLicense = true
+			}
+			if hasWrongLicense {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Wrong license in header of %s", file),
+					BreachCodeFileWrongLicense,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+			}
+		}
+		commentPrefix := language.CommentPrefix()
+		hasSummary := false
+		seenLicense := false
+		licenseEnd := false
+		for _, line := range headerLines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
+				continue
+			}
+			if strings.HasPrefix(trimmed, commentPrefix+" #region") || strings.HasPrefix(trimmed, commentPrefix+" #endregion") {
+				continue
+			}
+			if !strings.HasPrefix(trimmed, commentPrefix) {
+				continue
+			}
+			commentText := strings.TrimSpace(strings.TrimPrefix(trimmed, commentPrefix))
+			if commentText == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
+				continue
+			}
+
+			if contributorPattern.MatchString(line) {
+				continue
+			}
+			isLicenseLine := false
+			for _, marker := range agplMarkers {
+				if strings.Contains(line, marker) {
+					seenLicense = true
+					isLicenseLine = true
+					break
+				}
+			}
+			if isLicenseLine {
+				continue
+			}
+			if !licenseEnd && seenLicense && (strings.Contains(commentText, "without") || strings.Contains(commentText, "program") || strings.Contains(commentText, "License") || strings.Contains(commentText, "http") || strings.Contains(commentText, "version") || strings.Contains(commentText, "terms") || strings.Contains(commentText, "WARRANTY") || strings.Contains(commentText, "PURPOSE") || strings.Contains(commentText, "General Public") || strings.Contains(commentText, "redistribute") || strings.Contains(commentText, "published") || strings.Contains(commentText, "Foundation") || strings.Contains(commentText, "received")) {
+				continue
+			}
+			if isSpecText(commentText) {
+				continue
+			}
+			if strings.HasPrefix(commentText, "TODO:") {
+				continue
+			}
+			hasSummary = true
+			break
+		}
+		if !hasSummary && !isTestOrBenchmarkFile(file) {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing summary in header of %s", file),
+				BreachCodeFileMissingSummary,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒº¬isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
+func isTestOrBenchmarkFile(file string) bool {
+	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
+		return true
+	}
+	lowerPath := strings.ToLower(file)
+	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
+}
+
+// ­ƒôñisExportedDefinition holds the data fields for a isExportedDefinition record.
+func isExportedDefinition(name string, line string, langName string) bool {
+	return true
+}
+
+// ­ƒƒªrequiresDefinitionRequirements holds the data fields for a requiresDefinitionRequirements record.
+func requiresDefinitionRequirements(line string, langName string) bool {
+	trimmed := strings.TrimSpace(line)
+	switch langName {
+	case "typescript":
+		noExport := strings.TrimPrefix(trimmed, "export ")
+		noExport = strings.TrimLeft(noExport, "async abstract declare default ")
+		return strings.HasPrefix(noExport, "function ") || strings.HasPrefix(noExport, "class ")
+	case "go":
+		return strings.HasPrefix(trimmed, "func ")
+	case "python":
+		return strings.HasPrefix(trimmed, "def ") || strings.HasPrefix(trimmed, "class ") || strings.HasPrefix(trimmed, "async def ")
+	case "csharp":
+		return !strings.Contains(trimmed, " interface ") && !strings.Contains(trimmed, " enum ")
+	case "rust":
+		noPrefix := strings.TrimPrefix(trimmed, "pub ")
+		if strings.HasPrefix(noPrefix, "(") {
+			idx := strings.Index(noPrefix, ") ")
+			if idx >= 0 {
+				noPrefix = strings.TrimSpace(noPrefix[idx+2:])
+			}
+		}
+		return strings.HasPrefix(noPrefix, "fn ") || strings.HasPrefix(noPrefix, "struct ") || strings.HasPrefix(noPrefix, "impl ") || strings.HasPrefix(noPrefix, "trait ")
+	}
+	return true
+}
+
+// ­ƒƒ¬sectionPolicy holds the data fields for a sectionPolicy record.
+func sectionPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsSections() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		type stackItem struct {
+			name string
+			line int
+		}
+		var stack []stackItem
+		for i, line := range lines {
+			lineNum := i + 1
+			line = strings.TrimSuffix(line, "\r")
+			if matched, name := language.PolicySectionStartMatch(line); matched {
+				if name == "" {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
+						BreachCodeSectionMissingStartName,
+						file, lineNum, 0, strings.TrimSpace(line)))
+				}
+				stack = append(stack, stackItem{name: name, line: lineNum})
+				continue
+			}
+			if matched, endName := language.PolicySectionEndMatch(line); matched {
+				if len(stack) > 0 {
+					open := stack[len(stack)-1]
+					stack = stack[:len(stack)-1]
+					if open.name != "" {
+						if endName == "" {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
+								BreachCodeSectionMissingEndName,
+								file, lineNum, 0, strings.TrimSpace(line)))
+						} else if endName != open.name {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
+								BreachCodeSectionNameMismatch,
+								file, lineNum, 0, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
+						}
+					}
+				}
+			}
+		}
+		sections := ctx.Sections(file)
+		commentPrefix := language.CommentPrefix()
+		var checkSection func(s Section, parentPath string)
+		checkSection = func(s Section, parentPath string) {
+			sectionPath := s.Name
+			if parentPath != "" {
+				sectionPath = parentPath + "#" + s.Name
+			}
+			sectionContent := content[s.StartIndex:s.EndIndex]
+			sectionLines := strings.Split(sectionContent, "\n")
+			nonEmpty := 0
+			for _, line := range sectionLines[1 : len(sectionLines)-1] {
+				trimmed := strings.TrimSpace(line)
+				if trimmed != "" && !strings.HasPrefix(trimmed, "//") && !strings.HasPrefix(trimmed, "#") {
+					nonEmpty++
+				}
+			}
+			isExempt := s.Name == "Header"
+			if nonEmpty == 0 && len(s.Children) == 0 && !isExempt {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
+					BreachCodeSectionEmpty,
+					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine, 0, ""))
+			}
+			if s.StartLine < len(lines) && strings.TrimSpace(lines[s.StartLine]) == "" {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Blank line after region start marker in section \"%s\" in %s:%d", s.Name, file, s.StartLine+1),
+					BreachCodeSectionWrongFormatNewlineAfterRegion,
+					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine+1, 0, ""))
+			}
+			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
+				hasSummary := false
+				for i := 1; i < len(sectionLines)-1; i++ {
+					line := strings.TrimSpace(sectionLines[i])
+					if line == "" {
+						continue
+					}
+					if matched, _ := language.PolicySectionStartMatch(line); matched {
+						break
+					}
+					if matched, _ := language.PolicySectionEndMatch(line); matched {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					hasSummary = true
+				}
+				if !hasSummary {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Section \"%s\" is missing a summary comment in %s", s.Name, file),
+						BreachCodeSectionMissingSummary,
+						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
+				}
+			}
+			for _, child := range s.Children {
+				checkSection(child, sectionPath)
+			}
+		}
+		for _, s := range sections {
+			checkSection(s, "")
+		}
+		covered := make([]bool, len(lines))
+		var markCovered func(s Section)
+		markCovered = func(s Section) {
+			start := s.StartLine
+			if start < 1 {
+				start = 1
+			}
+			end := s.EndLine
+			if end < start {
+				end = start
+			}
+			if end > len(lines) {
+				end = len(lines)
+			}
+			for lineIndex := start; lineIndex <= end; lineIndex++ {
+				covered[lineIndex-1] = true
+			}
+			for _, child := range s.Children {
+				markCovered(child)
+			}
+		}
+		for _, s := range sections {
+			markCovered(s)
+		}
+		type lineRange struct {
+			start int
+			end   int
+		}
+		type defRange struct {
+			name  string
+			kind  string
+			start int
+			end   int
+		}
+		type orphanRangeInfo struct {
+			start          int
+			end            int
+			firstLine      string
+			isCommentBlock bool
+		}
+		orphanLines := make([]bool, len(lines))
+		for i, line := range lines {
+			if covered[i] {
+				continue
+			}
+			line = strings.TrimSuffix(line, "\r")
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
+				continue
+			}
+			if startMatched, _ := language.PolicySectionStartMatch(line); startMatched {
+				continue
+			}
+			if endMatched, _ := language.PolicySectionEndMatch(line); endMatched {
+				continue
+			}
+			orphanLines[i] = true
+		}
+		var orphanRanges []lineRange
+		inOrphan := false
+		startLine := 0
+		for i := 0; i < len(orphanLines); i++ {
+			if orphanLines[i] {
+				if !inOrphan {
+					inOrphan = true
+					startLine = i + 1
+				}
+			} else if inOrphan {
+				orphanRanges = append(orphanRanges, lineRange{start: startLine, end: i})
+				inOrphan = false
+			}
+		}
+		if inOrphan {
+			orphanRanges = append(orphanRanges, lineRange{start: startLine, end: len(lines)})
+		}
+		var defRanges []defRange
+		var realDefRanges []defRange
+		defExcerpts := make(map[string]string)
+		if language.SupportsDefinitions() {
+			parsedDefs := language.ParseDefinitions(content, lines)
+			for _, def := range parsedDefs {
+				defRanges = append(defRanges, defRange{name: def.Name, kind: def.Kind, start: def.Start, end: def.End})
+				realDefRanges = append(realDefRanges, defRange{name: def.Name, kind: def.Kind, start: def.Start, end: def.End})
+				defExcerpts[def.Name] = def.Excerpt
+			}
+		}
+		extraDefs := language.ExtraOrphanDefinitions(lines)
+		for _, def := range extraDefs {
+			defRanges = append(defRanges, defRange{name: def.Name, start: def.Start, end: def.End})
+			defExcerpts[def.Name] = def.Excerpt
+		}
+		var orphanInfos []orphanRangeInfo
+		for _, orphanRange := range orphanRanges {
+			firstLine := ""
+			isCommentBlock := true
+			for lineIndex := orphanRange.start; lineIndex <= orphanRange.end; lineIndex++ {
+				line := strings.TrimSuffix(lines[lineIndex-1], "\r")
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				if firstLine == "" {
+					firstLine = strings.TrimSpace(line)
+				}
+				if !strings.HasPrefix(strings.TrimSpace(line), commentPrefix) {
+					isCommentBlock = false
+				}
+			}
+			orphanInfos = append(orphanInfos, orphanRangeInfo{
+				start:          orphanRange.start,
+				end:            orphanRange.end,
+				firstLine:      firstLine,
+				isCommentBlock: isCommentBlock,
+			})
+			if isCommentBlock {
+				name := fmt.Sprintf("comment-block-%d", orphanRange.start)
+				defRanges = append(defRanges, defRange{name: name, start: orphanRange.start, end: orphanRange.end})
+				defExcerpts[name] = firstLine
+			}
+		}
+		reportedDefs := make(map[string]bool)
+		skipOrphans := isTestOrBenchmarkFile(file)
+		for _, orphanRange := range orphanInfos {
+			if skipOrphans {
+				continue
+			}
+			matched := false
+			for _, defRange := range defRanges {
+				if orphanRange.start <= defRange.end && orphanRange.end >= defRange.start {
+					if !reportedDefs[defRange.name] {
+						reportedDefs[defRange.name] = true
+						excerpt := defRange.name
+						if value, ok := defExcerpts[defRange.name]; ok && value != "" {
+							excerpt = value
+						}
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Orphan definition outside sections at %s:%d", file, defRange.start),
+							BreachCodeSectionOrphanDefinition,
+							fmt.Sprintf("%s::%s", file, defRange.name),
+							defRange.start, 0,
+							excerpt))
+					}
+					matched = true
+				}
+			}
+			if matched {
+				continue
+			}
+			name := fmt.Sprintf("orphan-block-%d", orphanRange.start)
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
+				BreachCodeSectionOrphanDefinition,
+				fmt.Sprintf("%s::%s", file, name),
+				orphanRange.start, 0,
+				orphanRange.firstLine))
+		}
+		var findSectionPathForLine func(secs []Section, lineNum int) string
+		findSectionPathForLine = func(secs []Section, lineNum int) string {
+			for _, s := range secs {
+				if lineNum < s.StartLine || lineNum > s.EndLine {
+					continue
+				}
+				childPath := findSectionPathForLine(s.Children, lineNum)
+				if childPath != "" {
+					return s.Name + "#" + childPath
+				}
+				return s.Name
+			}
+			return ""
+		}
+		for _, def := range realDefRanges {
+			isTestFile := isTestOrBenchmarkFile(file)
+			if isTestFile {
+				break
+			}
+			defLine := ""
+			if def.start-1 >= 0 && def.start-1 < len(lines) {
+				defLine = lines[def.start-1]
+			}
+			if !isExportedDefinition(def.name, defLine, language.Name()) {
+				continue
+			}
+			hasSummary := false
+			hasRequirements := false
+			isNativeDocstring := false
+			langName := language.Name()
+			if langName == "typescript" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 {
+					prevLine := strings.TrimSpace(lines[prevIdx])
+					if strings.HasSuffix(prevLine, "**/") || strings.HasSuffix(prevLine, "*/") {
+						isNativeDocstring = true
+						for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+							sline := strings.TrimSpace(lines[scanIdx])
+							isOpenLine := strings.HasPrefix(sline, "/**")
+							content := sline
+							if isOpenLine {
+								content = strings.TrimPrefix(content, "/**")
+							} else if strings.HasPrefix(content, "* ") {
+								content = content[2:]
+							} else if content == "*" || content == "*/" || content == "**/" {
+								if isOpenLine {
+									break
+								}
+								continue
+							}
+							content = strings.TrimSpace(content)
+							if strings.HasSuffix(content, "**/") || strings.HasSuffix(content, "*/") {
+								content = strings.TrimSpace(strings.TrimSuffix(strings.TrimSuffix(content, "**/"), "*/"))
+							}
+							if content == "" {
+								if isOpenLine {
+									break
+								}
+								continue
+							}
+							if strings.HasPrefix(content, "* ") {
+								content = strings.TrimSpace(content[2:])
+							}
+							if isSpecText(content) {
+								hasRequirements = true
+							} else {
+								hasSummary = true
+							}
+							if isOpenLine {
+								break
+							}
+						}
+					}
+				}
+			}
+			if langName == "csharp" || langName == "rust" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 && strings.HasPrefix(strings.TrimSpace(lines[prevIdx]), "///") {
+					isNativeDocstring = true
+					for lineIndex := prevIdx; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if !strings.HasPrefix(line, "///") {
+							break
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, "///"))
+						if commentText == "" {
+							continue
+						}
+						commentText = strings.TrimPrefix(commentText, "<summary>")
+						commentText = strings.TrimSuffix(commentText, "</summary>")
+						commentText = strings.TrimSpace(commentText)
+						if commentText == "<remarks>" || commentText == "</remarks>" || commentText == "" {
+							continue
+						}
+						if isSpecText(commentText) {
+							hasRequirements = true
+						} else {
+							hasSummary = true
+						}
+					}
+				}
+			}
+			if !isNativeDocstring && langName == "python" {
+				defLineRaw := lines[def.start-1]
+				parenDepth := 0
+				for _, ch := range defLineRaw {
+					if ch == '(' {
+						parenDepth++
+					}
+					if ch == ')' {
+						parenDepth--
+					}
+				}
+				bodyStart := def.start
+				if parenDepth > 0 {
+					for scanIdx := def.start; scanIdx < len(lines) && scanIdx < def.start+15; scanIdx++ {
+						for _, ch := range lines[scanIdx] {
+							if ch == '(' {
+								parenDepth++
+							}
+							if ch == ')' {
+								parenDepth--
+							}
+						}
+						if parenDepth <= 0 {
+							bodyStart = scanIdx + 1
+							break
+						}
+					}
+				}
+				for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+					trimmed := strings.TrimSpace(lines[bodyIdx])
+					if trimmed == "" {
+						continue
+					}
+					if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+						isNativeDocstring = true
+						quote := `"""`
+						if strings.HasPrefix(trimmed, `'''`) {
+							quote = `'''`
+						}
+						afterOpen := strings.TrimPrefix(trimmed, quote)
+						closeIdx := strings.Index(afterOpen, quote)
+						if closeIdx >= 0 {
+							content := strings.TrimSpace(afterOpen[:closeIdx])
+							if content != "" {
+								if isSpecText(content) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+						} else {
+							firstContent := strings.TrimSpace(afterOpen)
+							if firstContent != "" {
+								if isSpecText(firstContent) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+							for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+								sline := strings.TrimSpace(lines[scanIdx])
+								if sline == quote {
+									break
+								}
+								if strings.HasSuffix(sline, quote) {
+									content := strings.TrimSpace(strings.TrimSuffix(sline, quote))
+									if content != "" {
+										if isSpecText(content) {
+											hasRequirements = true
+										} else {
+											hasSummary = true
+										}
+									}
+									break
+								}
+								if sline == "" {
+									continue
+								}
+								if isSpecText(sline) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+						}
+					}
+					break
+				}
+			}
+			if langName == "python" && isNativeDocstring {
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText != "" {
+						isNativeDocstring = false
+						break
+					}
+				}
+			}
+			if !isNativeDocstring {
+				if langName == "go" {
+					isNativeDocstring = true
+				}
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					if isSpecText(commentText) {
+						hasRequirements = true
+					} else {
+						hasSummary = true
+					}
+				}
+			}
+			if !isNativeDocstring && (hasSummary || hasRequirements) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
+					BreachCodeDefNotNativeDocstring,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasSummary {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is missing a summary comment in %s:%d", def.name, file, def.start),
+					BreachCodeDefMissingSummary,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasRequirements && requiresDefinitionRequirements(defLine, language.Name()) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
+					BreachCodeDefMissingRequirements,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒôïCommentTemplateState holds the data fields for a comment template state record.
+type CommentTemplateState struct {
+	ExprDepth int
+}
+
+// ­ƒÆ¼CommentScanState holds the data fields for a comment scan state record.
+type CommentScanState struct {
+	InBlockComment          bool
+	BlockCommentStartLine   int
+	BlockCommentStartIndex  int
+	BlockCommentStartColumn int
+	BlockCommentIsJsDoc     bool
+	BlockCommentHasTodo     bool
+	InSingleQuote           bool
+	InDoubleQuote           bool
+	Templates               []CommentTemplateState
+	Escaped                 bool
+	InTodoBlock             bool
+	InRawBacktick           bool
+	InTripleDouble          bool
+	InTripleSingle          bool
+	InVerbatimString        bool
+}
+
+// ­ƒôíInTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
+func (state *CommentScanState) InTemplateRaw() bool {
+	if len(state.Templates) == 0 {
+		return false
+	}
+	return state.Templates[len(state.Templates)-1].ExprDepth == 0
+}
+
+// ­ƒƒ½commentPolicy holds the data fields for a commentPolicy record.
+func commentPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsComments() {
+			continue
+		}
+
+		lines := strings.Split(content, "\n")
+		langBreachs := language.ScanComments(ctx, file, content, lines)
+		breachs = append(breachs, langBreachs...)
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒÆátruncate holds the data fields for a truncate record.
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen]
+}
+
+// ­ƒö│requirementsPolicy holds the data fields for a requirementsPolicy record.
+func requirementsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsHeaders() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		sections := ctx.Sections(file)
+		prefix := language.CommentPrefix()
+		var headerSection *Section
+		for i := range sections {
+			if strings.ToLower(sections[i].Name) == "header" {
+				headerSection = &sections[i]
+				break
+			}
+		}
+		if headerSection != nil {
+			requirementsChildFound := false
+			for _, child := range headerSection.Children {
+				if strings.ToLower(child.Name) == "requirements" {
+					requirementsChildFound = true
+					for i := child.StartLine + 1; i < child.EndLine && i <= len(lines); i++ {
+						line := strings.TrimSpace(lines[i-1])
+						if line == "" {
+							continue
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+						if commentText == "" {
+							continue
+						}
+						if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+								BreachCodeRequirementsSyntax,
+								fmt.Sprintf("%s#Header/Requirements", file), i, 0, commentText))
+						}
+					}
+					break
+				}
+			}
+			if !requirementsChildFound {
+				for i := headerSection.StartLine + 1; i < headerSection.EndLine && i <= len(lines); i++ {
+					line := strings.TrimSpace(lines[i-1])
+					if line == "" {
+						continue
+					}
+					if !strings.HasPrefix(line, prefix) {
+						continue
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+					if commentText == "" {
+						continue
+					}
+					if !isSpecText(commentText) {
+						continue
+					}
+					if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+							BreachCodeRequirementsSyntax,
+							fmt.Sprintf("%s#Header", file), i, 0, commentText))
+					}
+				}
+			}
+		}
+		var checkSectionRequirements func(s Section)
+		checkSectionRequirements = func(s Section) {
+			if strings.ToLower(s.Name) == "header" {
+				return
+			}
+			for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
+				line := strings.TrimSpace(lines[i-1])
+				if line == "" {
+					continue
+				}
+				if !strings.HasPrefix(line, prefix) {
+					break
+				}
+				commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+				if !isSpecText(commentText) {
+					break
+				}
+				if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+						BreachCodeRequirementsSyntax,
+						fmt.Sprintf("%s#%s", file, s.Name), i, 0, commentText))
+				}
+			}
+			for _, child := range s.Children {
+				checkSectionRequirements(child)
+			}
+		}
+		for _, s := range sections {
+			checkSectionRequirements(s)
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒö▓codePolicy holds the data fields for a codePolicy record.
+func codePolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	breachs = append(breachs, headerPolicy(ctx)...)
+	breachs = append(breachs, sectionPolicy(ctx)...)
+	breachs = append(breachs, commentPolicy(ctx)...)
+	breachs = append(breachs, requirementsPolicy(ctx)...)
+	breachs = append(breachs, emojiPolicy(ctx)...)
+	breachs = append(breachs, docsPolicy(ctx)...)
+	return breachs
+}
+
+// ­ƒÿÇemojiPolicy holds the data fields for a emojiPolicy record.
+func emojiPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+
+	textDefaultEmojis := []string{
+		"\U0001F3D7",
+		"\u2328",
+		"\U0001F5B1",
+		"\U0001F5C3",
+		"\u2699",
+		"\u2696",
+		"\U0001F3F7",
+		"\U0001F6E0",
+		"\u2702",
+		"\U0001F6E1",
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		hasVS15 := strings.Contains(content, "\uFE0E")
+		hasMissingVS16 := false
+		for _, emoji := range textDefaultEmojis {
+			temp := strings.ReplaceAll(content, emoji+"\uFE0F", "")
+			if strings.Contains(temp, emoji) {
+				hasMissingVS16 = true
+				break
+			}
+		}
+
+		if hasVS15 || hasMissingVS16 {
+			lines := strings.Split(content, "\n")
+			for i, line := range lines {
+				lineHasVS15 := strings.Contains(line, "\uFE0E")
+				lineHasMissingVS16 := false
+				for _, emoji := range textDefaultEmojis {
+					temp := strings.ReplaceAll(line, emoji+"\uFE0F", "")
+					if strings.Contains(temp, emoji) {
+						lineHasMissingVS16 = true
+						break
+					}
+				}
+
+				if lineHasVS15 || lineHasMissingVS16 {
+					breachs = append(breachs, ctx.CreateBreach(
+						"Emoji must use colorful variation (VS16) and avoid text variation (VS15)",
+						BreachCodeUnicodeEmojiVariation,
+						file, i+1, 0, strings.TrimSpace(line)))
+				}
+			}
+		}
+	}
+	return breachs
+}
+
+// Ôû¬´©ÅdocsPolicy holds the data fields for a docsPolicy record.
+func docsPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind == ScopeFile || ctx.Scope.Kind == ScopeSection || ctx.Scope.Kind == ScopeDefinition {
+		return nil
+	}
+	var breachs []Breach
+	checked := make(map[string]bool)
+	for _, bundle := range ctx.Bundles {
+		bundleRoot := bundle.Root
+		if checked[bundleRoot] {
+			continue
+		}
+		checked[bundleRoot] = true
+		readmePath := filepath.Join(bundleRoot, "README.md")
+		absPath := filepath.Join(ctx.RootDir, readmePath)
+		if _, err := os.Stat(absPath); os.IsNotExist(err) {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # ­ƒÆ»Requirements sections", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+			continue
+		}
+		content := ctx.ReadText(readmePath)
+		if !strings.Contains(content, "# Summary") {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q README.md is missing # Summary section", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+		}
+		if !strings.Contains(content, "# ­ƒÆ»Requirements") {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q README.md is missing # ­ƒÆ»Requirements section", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+		}
+	}
+	return breachs
+}
+
+// Ôû½´©ÅdevDocsPolicy holds the data fields for a devDocsPolicy record.
+func devDocsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	agentsContent := ctx.ReadText("AGENTS.md")
+	if agentsContent == "" {
+		return breachs
+	}
+	codebaseStart := strings.Index(agentsContent, "\n# Codebase")
+	if codebaseStart == -1 {
+		return breachs
+	}
+	codebaseContent := agentsContent[codebaseStart:]
+	nextH1 := strings.Index(codebaseContent[1:], "\n# ")
+	if nextH1 != -1 {
+		codebaseContent = codebaseContent[:nextH1+1]
+	}
+	fileSectionRegex := regexp.MustCompile(`(?m)^## ­ƒôä\s*(.+?)\s*$`)
+	folderSectionRegex := regexp.MustCompile(`(?m)^## ­ƒôü\s*(.+?)\s*$`)
+	fileMatches := fileSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	folderMatches := folderSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	var fileSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	var folderSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	for _, match := range fileMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		fileSections = append(fileSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for _, match := range folderMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		folderSections = append(folderSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for i := 0; i < len(fileSections)-1; i++ {
+		if fileSections[i].path > fileSections[i+1].path {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
+				BreachDevDocsWrongFileOrder,
+				"AGENTS.md", fileSections[i+1].line, 0, ""))
+		}
+	}
+	for i := 0; i < len(folderSections)-1; i++ {
+		if folderSections[i].path > folderSections[i+1].path {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
+				BreachDevDocsWrongFolderOrder,
+				"AGENTS.md", folderSections[i+1].line, 0, ""))
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù¥sketchpadPolicy holds the data fields for a sketchpadPolicy record.
+func sketchpadPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	elementsFile := ""
+	for _, file := range files {
+		if strings.HasSuffix(file, "elements.tsx") {
+			elementsFile = file
+			break
+		}
+	}
+	thirdPartyPackages := []string{
+		"react", "xstate", "@radix-client", "@dnd-kit", "zustand", "immer",
+		"framer-motion", "lucide-react", "clsx", "tailwind", "three", "@react-three",
+	}
+	createMachineCount := 0
+	for _, file := range files {
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		isElementsFile := file == elementsFile
+		sections := ctx.Sections(file)
+		isStateManagementSection := func(lineNum int) bool {
+			for _, section := range sections {
+				if strings.Contains(strings.ToLower(section.Name), "state management") ||
+					strings.Contains(strings.ToLower(section.Name), "state-management") {
+					if lineNum >= section.StartLine && lineNum <= section.EndLine {
+						return true
+					}
+				}
+			}
+			return false
+		}
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !isElementsFile && strings.Contains(line, "import ") {
+				for _, pkg := range thirdPartyPackages {
+					importPattern := fmt.Sprintf(`from\s+['"]%s`, regexp.QuoteMeta(pkg))
+					if matched, _ := regexp.MatchString(importPattern, line); matched {
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
+							BreachSketchpadImportThirdParty,
+							file, lineNumber, 0, strings.TrimSpace(line)))
+						break
+					}
+				}
+			}
+			if strings.Contains(line, "createMachine(") || strings.Contains(line, "createMachine<") {
+				createMachineCount++
+				if createMachineCount > 1 {
+					breachs = append(breachs, ctx.CreateBreach(
+						"createMachine can only be used once in sketchpad",
+						BreachSketchpadStateMultipleMachines,
+						file, lineNumber, 0, strings.TrimSpace(line)))
+				}
+			}
+			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
+				breachs = append(breachs, ctx.CreateBreach(
+					"createActor is forbidden in sketchpad",
+					BreachSketchpadStateCreateActor,
+					file, lineNumber, 0, strings.TrimSpace(line)))
+			}
+			storePatterns := []string{"create(", "createStore(", "useStore("}
+			for _, pattern := range storePatterns {
+				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
+					if strings.Contains(line, "zustand") || strings.Contains(line, "store") {
+						breachs = append(breachs, ctx.CreateBreach(
+							"Stores outside of State Management sections are forbidden",
+							BreachSketchpadStateForbiddenStore,
+							file, lineNumber, 0, strings.TrimSpace(line)))
+					}
+				}
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù¢repoPolicy holds the data fields for a repoPolicy record.
+func repoPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+
+	canonicalCommands := []string{
+		"tree",
+		"ticket_open", "ticket_close", "ticket_reopen",
+		"goal_open", "goal_close", "goal_reopen",
+		"draft_create", "draft_delete",
+		"section_create", "section_move", "section_delete", "integrate", "extract",
+		"fix",
+	}
+
+	mainGoPath := "go/repo/main.go"
+	mainContent := ctx.ReadText(mainGoPath)
+	if mainContent != "" {
+		for _, cmd := range canonicalCommands {
+
+			mcpPattern := fmt.Sprintf("mcp.NewTool(\"%s\"", cmd)
+			if !strings.Contains(mainContent, mcpPattern) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Missing MCP registration for %s in go/repo/main.go", cmd),
+					BreachRepoMissingCommand,
+					mainGoPath, 1, 0, cmd))
+			}
+		}
+
+		trackingTokens := []string{
+			"ToolTicketOpen",
+			"ToolTicketClose",
+		}
+
+		for _, token := range trackingTokens {
+			if !strings.Contains(mainContent, token) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Missing ticket tracking function %s in go/repo/main.go", token),
+					BreachRepoMissingTicketTracking,
+					mainGoPath, 1, 0, token))
+			}
+		}
+	} else {
+		breachs = append(breachs, ctx.CreateBreach(
+			"Could not read go/repo/main.go for parity check",
+			BreachRepoMissingCommand,
+			mainGoPath, 1, 0, ""))
+	}
+
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù╗´©ÅsystemPolicy holds the data fields for a systemPolicy record.
+func systemPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	settingsPath := filepath.Join(ctx.RootDir, ".vscode", "settings.json")
+	if _, err := os.Stat(settingsPath); err == nil {
+		breachs = append(breachs, ctx.CreateBreach(
+			"VSCode settings.json must be inside .devcontainer/devcontainer.json customizations.vscode.settings",
+			BreachSystemDevcontainerVscodeSettingsOutside,
+			".vscode/settings.json", 1, 0, ""))
+	}
+	extensionsPath := filepath.Join(ctx.RootDir, ".vscode", "extensions.json")
+	if _, err := os.Stat(extensionsPath); err == nil {
+		breachs = append(breachs, ctx.CreateBreach(
+			"VSCode extensions.json must be inside .devcontainer/devcontainer.json customizations.vscode.extensions",
+			BreachSystemDevcontainerVscodeExtensionsOutside,
+			".vscode/extensions.json", 1, 0, ""))
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒôüfolderPolicy holds the data fields for a folderPolicy record.
+func folderPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
+	excludePrefixes := []string{
+		".git/",
+		".repo/",
+		"node_modules/",
+		".venv/",
+		".nx/",
+	}
+
+	err := filepath.WalkDir(ctx.RootDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		relPath, _ := filepath.Rel(ctx.RootDir, path)
+		relPath = NormalizePath(relPath)
+		if relPath == "." {
+			return nil
+		}
+		for _, prefix := range excludePrefixes {
+			if strings.HasPrefix(relPath+"/", prefix) {
+				return filepath.SkipDir
+			}
+		}
+
+		if isIgnoredByGitignore(filepath.Join(ctx.RootDir, relPath)) {
+			return filepath.SkipDir
+		}
+
+		f, readErr := os.Open(path)
+		if readErr != nil {
+			return nil
+		}
+		defer f.Close()
+		_, readErr = f.Readdirnames(1)
+		if readErr == io.EOF {
+			breachs = append(breachs, ctx.CreateBreach(
+				"Empty folder \""+relPath+"\" must be removed",
+				BreachFolderIllegalEmpty,
+				relPath+"/", 0, 0, relPath))
+		}
+		return nil
+	})
+	_ = err
+	return breachs
+}
+
+// Ôù╝´©ÅGodfile holds the data fields for a Godfile record.
+type Godfile struct {
+	Exact map[string]bool
+	Globs []string
+}
+
+// ­ƒöÁisGlobPattern holds the data fields for a isGlobPattern record.
+func isGlobPattern(value string) bool {
+	return strings.ContainsAny(value, "*?[{")
+}
+
+// ­ƒö┤loadGodfile holds the data fields for a loadGodfile record.
+func loadGodfile() (*Godfile, error) {
+	godfilePath := filepath.Join(rootDir, ".repo", "files.json")
+	data, err := os.ReadFile(godfilePath)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+	if err := json.Unmarshal(data, &files); err != nil {
+		return nil, err
+	}
+	result := &Godfile{
+		Exact: make(map[string]bool, len(files)),
+	}
+	for _, f := range files {
+		normalized := NormalizePath(f)
+		if isGlobPattern(normalized) {
+			result.Globs = append(result.Globs, normalized)
+			continue
+		}
+		result.Exact[normalized] = true
+	}
+	return result, nil
+}
+
+// ­ƒƒágodfileMatchesPath holds the data fields for a godfileMatchesPath record.
+func godfileMatchesPath(godfile *Godfile, relPath string) bool {
+	relPath = normalizeRepoPath(relPath)
+	if godfile.Exact[relPath] {
+		return true
+	}
+	for _, pattern := range godfile.Globs {
+		matched, err := doublestar.Match(pattern, relPath)
+		if err != nil {
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
+}
+
+// ­ƒƒífilePolicy holds the data fields for a filePolicy record.
+func filePolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
+	godfile, err := loadGodfile()
+	if err != nil {
+		return breachs
+	}
+	_ = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if isRepoExcludedPath(path) || strings.HasPrefix(d.Name(), ".git") || d.Name() == "node_modules" || d.Name() == ".venv" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if isRepoExcludedPath(path) || isGitIgnored(path) {
+			return nil
+		}
+		relPath := normalizeRepoPath(path)
+		if !godfileMatchesPath(godfile, relPath) {
+			breachs = append(breachs, ctx.CreateBreach(
+				"File \""+relPath+"\" is not listed in .repo/files.json",
+				BreachFileIllegalUseGodfile,
+				relPath, 0, 0, relPath))
+		}
+		return nil
+	})
+	return breachs
+}
+
+// ­ƒƒósemioPolicy validates that semio.* files do not import UI dependencies.
+func semioPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	uiPackages := []string{
+		"clsx", "tailwind-merge", "tailwind", "tailwindcss",
+		"three", "@react-three",
+		"react", "react-dom",
+		"framer-motion", "lucide-react",
+		"@radix-ui", "@radix-client",
+		"@dnd-kit",
+		"zustand",
+		"elements/ui",
+	}
+	for _, file := range files {
+		baseName := filepath.Base(file)
+		if !strings.HasPrefix(baseName, "semio.") {
+			continue
+		}
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !strings.Contains(line, "import ") {
+				continue
+			}
+			for _, pkg := range uiPackages {
+				importPattern := fmt.Sprintf(`from\s+['"].*%s`, regexp.QuoteMeta(pkg))
+				if matched, _ := regexp.MatchString(importPattern, line); matched {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("UI dependency '%s' is not allowed in semio.* files", pkg),
+						BreachSemioNoUiDependency,
+						file, lineNumber, 0, strings.TrimSpace(line)))
+					break
+				}
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// 🔌dependencyBoundaryPolicy flags third-party imports outside adapter boundaries.
+func dependencyBoundaryPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		if dependencyBoundarySkipFile(file) {
+			continue
+		}
+		manifestDir, thirdParty := loadThirdPartyDepsForFile(file)
+		if len(thirdParty) == 0 {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		if dependencyBoundaryFileIsAdapter(file, content) {
+			continue
+		}
+		lang := GetLanguage(file)
+		if lang == nil {
+			continue
+		}
+		importLines, _ := lang.ExtractImports(content)
+		for lineIdx, impLine := range importLines {
+			lineNumber := dependencyBoundaryImportLineNumber(content, impLine, lineIdx+1)
+			for _, spec := range parseThirdPartyImportSpecs(impLine, file) {
+				if !dependencyBoundaryIsThirdParty(spec, thirdParty) {
+					continue
+				}
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Direct import of third-party %q must live in an adapter module", spec),
+					BreachDependencyBoundaryDirectImport,
+					file, lineNumber, 0, strings.TrimSpace(impLine)))
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+func dependencyBoundarySkipFile(file string) bool {
+	n := NormalizePath(file)
+	if strings.Contains(n, "/node_modules/") || strings.Contains(n, "\\node_modules\\") {
+		return true
+	}
+	if strings.Contains(n, "/.repo/") || strings.Contains(n, "/dist/") || strings.Contains(n, "/target/") {
+		return true
+	}
+	if strings.Contains(n, "/pkg/") && (strings.HasSuffix(n, "_bg.js") || strings.HasSuffix(n, ".wasm")) {
+		return true
+	}
+	base := filepath.Base(n)
+	if strings.HasSuffix(base, ".lint.script.ts") || strings.HasSuffix(base, ".gen.ts") {
+		return true
+	}
+	if strings.Contains(base, ".test.") || strings.HasSuffix(base, "_test.go") || strings.HasSuffix(base, "Tests.cs") {
+		return true
+	}
+	switch filepath.Ext(n) {
+	case ".json", ".md", ".yaml", ".yml", ".toml", ".lock", ".svg", ".png", ".jpg", ".woff", ".woff2":
+		return true
+	}
+	return false
+}
+
+func dependencyBoundaryFileIsAdapter(file, content string) bool {
+	n := strings.ToLower(NormalizePath(file))
+	if strings.Contains(n, "/adapters/") || strings.Contains(n, "\\adapters\\") {
+		return true
+	}
+	base := strings.ToLower(filepath.Base(n))
+	if strings.Contains(base, "adapter") {
+		return true
+	}
+	lower := strings.ToLower(content)
+	for _, marker := range []string{
+		"//#region 🔌adapter", "// #region 🔌adapter",
+		"#region 🔌adapter", "//#region 🔌adapters", "// #region 🔌adapters",
+		"pub mod adapters", "mod adapters ",
+	} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string]struct{}) {
+	deps = make(map[string]struct{})
+	dir := NormalizePath(filepath.Dir(file))
+	for {
+		if dir == "." {
+			dir = ""
+		}
+		root := filepath.Join(rootDir, dir)
+		if FileExists(filepath.Join(root, "package.json")) {
+			dependencyBoundaryMergePackageJSON(filepath.Join(root, "package.json"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "Cargo.toml")) {
+			dependencyBoundaryMergeCargoToml(filepath.Join(root, "Cargo.toml"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "go.mod")) {
+			dependencyBoundaryMergeGoMod(filepath.Join(root, "go.mod"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "pyproject.toml")) {
+			dependencyBoundaryMergePyProject(filepath.Join(root, "pyproject.toml"), deps)
+			return dir, deps
+		}
+		csprojs, _ := filepath.Glob(filepath.Join(root, "*.csproj"))
+		if len(csprojs) > 0 {
+			dependencyBoundaryMergeCsproj(csprojs[0], deps)
+			return dir, deps
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return "", deps
+}
+
+func dependencyBoundaryMergePackageJSON(path string, deps map[string]struct{}) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(data, &raw) != nil {
+		return
+	}
+	for _, key := range []string{"dependencies", "devDependencies", "peerDependencies", "optionalDependencies"} {
+		if block, ok := raw[key]; ok {
+			var m map[string]string
+			if json.Unmarshal(block, &m) == nil {
+				for name, ver := range m {
+					if dependencyBoundaryIsInternalNpm(name, ver) {
+						continue
+					}
+					deps[name] = struct{}{}
+					if strings.HasPrefix(name, "@") {
+						parts := strings.SplitN(name, "/", 2)
+						if len(parts) == 2 {
+							deps[parts[0]+"/"+parts[1]] = struct{}{}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryIsInternalNpm(name, ver string) bool {
+	if strings.HasPrefix(name, "@semio/") || strings.HasPrefix(name, "@ui/") || strings.HasPrefix(name, "@cad/") ||
+		strings.HasPrefix(name, "@puzzle/") || strings.HasPrefix(name, "@framework/") || strings.HasPrefix(name, "@repo/") ||
+		strings.HasPrefix(name, "@elements/") || strings.HasPrefix(name, "@coda/") {
+		return true
+	}
+	return strings.HasPrefix(ver, "workspace:") || ver == "link:" || strings.HasPrefix(ver, "file:")
+}
+
+func dependencyBoundaryMergeCargoToml(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inDeps := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "[") {
+			inDeps = strings.HasPrefix(trim, "[dependencies]") || strings.HasPrefix(trim, "[dev-dependencies]") ||
+				strings.HasPrefix(trim, "[target.") && strings.Contains(trim, ".dependencies]")
+		}
+		if !inDeps || trim == "" || strings.HasPrefix(trim, "#") {
+			continue
+		}
+		if strings.Contains(trim, "=") && !strings.HasPrefix(trim, "[") {
+			name := strings.TrimSpace(strings.SplitN(trim, "=", 2)[0])
+			if name != "" && name != "path" {
+				deps[name] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergeGoMod(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inRequire := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "require (") {
+			inRequire = true
+			continue
+		}
+		if inRequire && trim == ")" {
+			inRequire = false
+			continue
+		}
+		if strings.HasPrefix(trim, "require ") && !strings.Contains(trim, "// indirect") {
+			fields := strings.Fields(trim)
+			if len(fields) >= 2 && !strings.HasPrefix(fields[1], "github.com/usalu/semio") {
+				deps[fields[1]] = struct{}{}
+			}
+		}
+		if inRequire {
+			fields := strings.Fields(trim)
+			if len(fields) >= 1 && !strings.HasPrefix(fields[0], "module") {
+				deps[fields[0]] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergePyProject(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inDeps := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "[") {
+			inDeps = strings.Contains(trim, "dependencies") || strings.Contains(trim, "optional-dependencies")
+		}
+		if inDeps && strings.Contains(trim, "=") && !strings.HasPrefix(trim, "[") {
+			name := strings.TrimSpace(strings.SplitN(trim, "=", 2)[0])
+			if name != "" {
+				deps[strings.ReplaceAll(name, "\"", "")] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergeCsproj(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	re := regexp.MustCompile(`<PackageReference\s+Include="([^"]+)"`)
+	for _, m := range re.FindAllStringSubmatch(data, -1) {
+		if len(m) > 1 {
+			deps[m[1]] = struct{}{}
+		}
+	}
+}
+
+func parseThirdPartyImportSpecs(importLine, file string) []string {
+	var specs []string
+	ext := strings.ToLower(filepath.Ext(file))
+	switch ext {
+	case ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs":
+		re := regexp.MustCompile(`(?:from|import)\s+['"]([^'"]+)['"]`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".go":
+		re := regexp.MustCompile(`"([^"]+)"`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 && !strings.HasPrefix(m[1], "github.com/usalu/semio") {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".py":
+		re := regexp.MustCompile(`^(?:from|import)\s+([a-zA-Z0-9_\.]+)`)
+		if m := re.FindStringSubmatch(strings.TrimSpace(importLine)); len(m) > 1 {
+			specs = append(specs, strings.SplitN(m[1], ".", 2)[0])
+		}
+	case ".cs":
+		re := regexp.MustCompile(`using\s+([A-Za-z0-9_.]+)`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".rs":
+		re := regexp.MustCompile(`(?:use|extern\s+crate)\s+([a-zA-Z0-9_:]+)`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				crate := strings.SplitN(m[1], "::", 2)[0]
+				specs = append(specs, crate)
+			}
+		}
+	}
+	return specs
+}
+
+func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) {
+	if spec == "" || strings.HasPrefix(spec, ".") || strings.HasPrefix(spec, "/") {
+		return false
+	}
+	if _, ok := deps[spec]; ok {
+		return true
+	}
+	if strings.HasPrefix(spec, "@") {
+		parts := strings.SplitN(spec, "/", 2)
+		if len(parts) == 2 {
+			if _, ok := deps[parts[0]+"/"+parts[1]]; ok {
+				return true
+			}
+		}
+	}
+	for dep := range deps {
+		if strings.HasPrefix(spec, dep) || strings.HasPrefix(dep, spec) {
+			return true
+		}
+		if strings.Contains(dep, "/") && strings.HasPrefix(spec, strings.SplitN(dep, "/", 2)[0]) {
+			return true
+		}
+	}
+	// Rust/Python root module heuristic
+	root := spec
+	if i := strings.IndexAny(spec, "./:"); i > 0 {
+		root = spec[:i]
+	}
+	if i := strings.Index(spec, "::"); i > 0 {
+		root = spec[:i]
+	}
+	if _, ok := deps[root]; ok {
+		return true
+	}
+	return false
+}
+
+func dependencyBoundaryImportLineNumber(content, importLine string, fallback int) int {
+	idx := strings.Index(content, importLine)
+	if idx < 0 {
+		return fallback
+	}
+	return strings.Count(content[:idx], "\n") + 1
 }
 
 // #endregion 🧊Policies

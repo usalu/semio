@@ -28,9 +28,6 @@ import { Expertise, ProductRuntime, type FooterItem } from "@framework/playgroun
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
-	registerTabIcon,
-	registerUiBoardSurfaceHost,
-	registerWindowBody,
 	type UiBoardHostSurfaceNode,
 } from "@framework/playground-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
@@ -8873,7 +8870,8 @@ function BoardPlayBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurface
 
 let boardPlayChromeRegistered = false;
 
-function registerBoardPlayChrome(): void {
+/** @emoji 🧊 Registers board play surface host, window bodies, and tab icons (called from `@framework/playground-renderer-react`). */
+export function registerBoardPlaySurfaceHosts(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(BOARD_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
@@ -9774,7 +9772,7 @@ function BoardPlayInner(): ReactElement {
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
   const boardRuntimeRef = useRef<ProductRuntime | null>(null);
   if (!boardRuntimeRef.current) {
-    registerBoardPlayChrome();
+    registerBoardPlaySurfaceHosts();
     boardRuntimeRef.current = buildBoardPlayRuntime();
   }
   const boardRuntime = boardRuntimeRef.current;

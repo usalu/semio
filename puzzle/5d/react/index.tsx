@@ -900,7 +900,8 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 //#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
-function registerTopologyPlayChrome(): void {
+/** @emoji 🧊 Registers topology play board+scene surface hosts (called from `@framework/playground-renderer-react`). */
+export function registerTopologyPlaySurfaceHosts(): void {
 	if (topologyPlayChromeRegistered) return;
 	topologyPlayChromeRegistered = true;
 	registerUiBoardSurfaceHost(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);

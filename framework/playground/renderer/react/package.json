@@ -10,6 +10,9 @@
 	},
 	"dependencies": {
 		"@framework/playground": "workspace:*",
+		"@puzzle/2d-react": "workspace:*",
+		"@puzzle/3d-react": "workspace:*",
+		"@puzzle/5d-react": "workspace:*",
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.536.0",

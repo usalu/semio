@@ -8,6 +8,11 @@ import {
 } from "../../../../generate.neo4j.gen.ts";
 import { defineLint } from "./script.ts";
 import type { FileLinter } from "./linter.ts";
+import {
+  dependencyBoundaryBreachesForFile,
+  isAdapterBoundaryFile,
+  parseTsImportSpecs,
+} from "./dependency-boundary.ts";
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
@@ -38,5 +43,29 @@ describe("defineLint", () => {
   test("returns same function", () => {
     const f = defineLint("x", (_l: FileLinter) => []);
     expect(typeof f).toBe("function");
+  });
+});
+
+describe("dependency-boundary", () => {
+  test("detects adapter region marker", () => {
+    expect(isAdapterBoundaryFile("pkg/foo.ts", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
+  });
+
+  test("parseTsImportSpecs extracts module", () => {
+    expect(parseTsImportSpecs(`import { z } from "zod";`)).toEqual(["zod"]);
+  });
+
+  test("flags direct third-party import outside adapter", () => {
+    const content = `import { z } from "zod";\nexport const a = 1;\n`;
+    const file = "semio/client/lib/js/boundary-probe.ts";
+    const breachs = dependencyBoundaryBreachesForFile(
+      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      file,
+      content,
+      file,
+    );
+    expect(breachs.length).toBeGreaterThan(0);
+    expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
   });
 });
