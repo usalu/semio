@@ -9,7 +9,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@ui/react": resolve(root, "../../ui/react/index.tsx"),
+			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
 		},
 	},
 	test: {

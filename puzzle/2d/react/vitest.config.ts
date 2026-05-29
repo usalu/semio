@@ -8,7 +8,10 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	root,
 	resolve: {
-		alias: [{ find: "@ui/react", replacement: resolve(root, "../../ui/react/index.tsx") }],
+		alias: [
+			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
+			{ find: "@puzzle/2d-wasm", replacement: resolve(root, "../rs/pkg/elements_board.js") },
+		],
 	},
 	test: {
 		mode: "test",

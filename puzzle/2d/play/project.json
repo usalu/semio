@@ -27,7 +27,6 @@
       }
     },
     "test": {
-      "dependsOn": ["@puzzle/2d-react:test"],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "puzzle/2d/play",

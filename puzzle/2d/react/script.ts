@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `@puzzle/2d-react` task router: `bun ./script.ts test [args…]`. */
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const cwd = import.meta.dir;
@@ -14,7 +15,9 @@ delete env.NODE_OPTIONS;
 delete env.VSCODE_INSPECTOR_OPTIONS;
 
 if (command === "test") {
-	spawnSync("bun", [wasmScript], { cwd, env, shell: true, stdio: "inherit" });
+	const wasmJs = join(cwd, "../rs/pkg/elements_board.js");
+	const wasmEnv = { ...env, ELEMENTS_BOARD_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0" };
+	spawnSync("bun", [wasmScript], { cwd, env: wasmEnv, shell: true, stdio: "inherit" });
 	const result = spawnSync("bunx", ["vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra], {
 		cwd,
 		env,
