@@ -16008,7 +16008,8 @@ const TreeRowAlignmentContext = React.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
 const PropertyValueColumnContext = React.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
-const detailPanelHeaderLineCenterPx = 11;
+const treeRowHeightPx = 24;
+const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const detailPanelPropertyLabelColumnWidthPx = 96;
 const detailPanelPropertyInlineGapPx = 8;
 const detailPanelPropertyStackedRowGapPx = 4;
@@ -16023,14 +16024,12 @@ const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + 7;
 const treeRowInlineGapPx = 6;
 const treeToggleSlotWidthPx = 14;
-const treeRowVerticalPaddingPx = 3;
+const treeRowVerticalPaddingPx = 0;
 const treeBranchRowGapPx = 0;
-const treeSectionContentPaddingTopPx = 6;
-const treeItemContentPaddingTopPx = 2;
-const treeCompactSiblingGapPx = 2;
-const treeArchetypeSwitchGapPx = 6;
-const treeSubtreeGapPx = 6;
-const treeEmptyRowGapPx = 24;
+const treeSectionContentPaddingTopPx = 0;
+const treeItemContentPaddingTopPx = 0;
+const treeCompactSiblingGapPx = 0;
+const treeSubtreeGapPx = 0;
 const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
@@ -16045,16 +16044,7 @@ const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties => ({
   rowGap: `${treeBranchRowGapPx}px`,
   ...(topPaddingPx > 0 ? { paddingTop: `${topPaddingPx}px` } : {}),
 });
-const isCompactTreeLeafKind = (kind: string): boolean => kind === "leaf" || kind === "property";
-const getTreeSiblingGapPx = (previousKind: string, currentKind: string): number => {
-  if (isCompactTreeLeafKind(previousKind) && currentKind === "group") {
-    return Math.max(treeArchetypeSwitchGapPx, treeEmptyRowGapPx);
-  }
-  if (isCompactTreeLeafKind(previousKind) && isCompactTreeLeafKind(currentKind)) {
-    return treeCompactSiblingGapPx;
-  }
-  return currentKind === previousKind ? treeCompactSiblingGapPx : treeArchetypeSwitchGapPx;
-};
+const getTreeSiblingGapPx = (_previousKind: string, _currentKind: string): number => treeCompactSiblingGapPx;
 const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties => ({
   gridTemplateColumns: `${treeGutterWidthPx(level, multiplier)}px minmax(0, 1fr)`,
   columnGap: `${treeGutterToContentGapPx}px`,
@@ -16674,7 +16664,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
-  const rowClassName = cn("relative hover:bg-hover-panel select-none overflow-hidden group min-w-0", isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowClassName = cn("relative h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden group min-w-0", isExpandable ? "cursor-foldable" : "cursor-selectable", className);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
@@ -16687,7 +16677,6 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         data-tree-row-kind="section"
         id={id}
         className={rowClassName}
-        style={{ height: "20px" }}
         draggable={draggable}
         onPointerEnter={() => {
           setIsHovered(true);
@@ -16744,7 +16733,6 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           data-tree-row-kind="section"
           id={id}
           className={rowClassName}
-          style={{ height: "20px" }}
           role="button"
           draggable={draggable}
           onPointerEnter={() => {
@@ -23070,12 +23058,12 @@ if (treeVitest) {
   const { describe, expect, it, vi } = treeVitest;
 
   describe("tree helpers", () => {
-    it("adds an empty-row-sized gap before a same-depth group row after a leaf/property row", () => {
-      expect(getTreeSiblingGapPx("leaf", "group")).toBe(treeEmptyRowGapPx);
-      expect(getTreeSiblingGapPx("property", "group")).toBe(treeEmptyRowGapPx);
+    it("uses a single compact sibling gap for every row-kind transition", () => {
+      expect(getTreeSiblingGapPx("leaf", "group")).toBe(treeCompactSiblingGapPx);
+      expect(getTreeSiblingGapPx("property", "group")).toBe(treeCompactSiblingGapPx);
       expect(getTreeSiblingGapPx("property", "property")).toBe(treeCompactSiblingGapPx);
       expect(getTreeSiblingGapPx("group", "group")).toBe(treeCompactSiblingGapPx);
-      expect(getTreeSiblingGapPx("content", "group")).toBe(treeArchetypeSwitchGapPx);
+      expect(getTreeSiblingGapPx("content", "group")).toBe(treeCompactSiblingGapPx);
     });
 
     it("normalizes selected ids for single and multiple selection", () => {
@@ -23161,7 +23149,7 @@ if (treeVitest) {
       expect(markup).not.toContain("margin-left:13px");
       expect(markup).not.toContain("gap-[6px]");
       expect(markup).toContain('data-slot="tree-branch-elbow"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:11px;left:7px;width:10px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:12px;left:7px;width:10px"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -23196,7 +23184,7 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-row"');
       expect(markup).toContain('data-tree-row-kind="property"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:11px;left:7px;width:10px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:12px;left:7px;width:10px"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -23354,7 +23342,7 @@ if (treeVitest) {
       expect(selectMarkup).toContain('data-detail-panel-control="fill"');
     });
 
-    it("renders section and item content slots with expanded section header spacing", () => {
+    it("renders section and item content slots flush under their headers", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
           <TreeSection id="tooltip.manual" defaultOpen={true}>
@@ -23369,9 +23357,10 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-section-content"');
       expect(markup).toContain('data-slot="tree-item-content"');
-      expect(markup).toContain('data-slot="tree-section-content" data-tree-owner-kind="section" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px;padding-top:6px"');
-      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px;padding-top:2px"');
-      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col"');
+      expect(markup).toContain('data-slot="tree-section-content" data-tree-owner-kind="section" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px"');
+      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px"');
+      expect(markup).not.toContain("padding-top:6px");
+      expect(markup).not.toContain("padding-top:2px");
       expect(markup).not.toContain("margin-bottom:12px");
     });
 

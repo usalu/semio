@@ -3,9 +3,11 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { elementsAssetsVitePlugin } from "../../../../elements/lib/styling/vite-elements-assets.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../");
+const elementsAssetsRoot = resolve(repoRoot, "elements/assets");
 const jsRoot = resolve(dir, "../..");
 const reactRoot = resolve(jsRoot, "node_modules/react");
 const reactDomRoot = resolve(jsRoot, "node_modules/react-dom");
@@ -21,7 +23,7 @@ export default defineConfig({
 	publicDir: false,
 	assetsInclude: ["**/*.wasm"],
 	worker: { format: "es" },
-	plugins: [tailwindcss(), react()],
+	plugins: [elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react()],
 	server: {
 		fs: {
 			allow: [repoRoot],

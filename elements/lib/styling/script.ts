@@ -51,7 +51,7 @@ function loadTokens(): Tokens {
 }
 
 function emitPaletteFonts(tokens: Tokens): string {
-	const assetBase = "../../../../assets";
+	const assetBase = "/assets";
 	const lines: string[] = [
 		"/* Generated from elements/lib/styling/tokens.json — run `bun ./script.ts generate` from elements/lib/styling. */",
 	];

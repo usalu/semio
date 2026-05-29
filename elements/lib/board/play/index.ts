@@ -21,6 +21,7 @@ import {
 	type WindowLayout,
 } from "@elements/playground";
 
+import { playgroundTreePanelRootItems } from "@elements/playground/react";
 import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
@@ -227,14 +228,7 @@ export function buildBoardPlayHierarchySections(
 		defaultOpen: true,
 		items: [nodesGroup, edgesGroup],
 	};
-	return [
-		{
-			id: "board-play-hierarchy.section",
-			label: "Hierarchy",
-			defaultOpen: true,
-			items: [boardRoot],
-		},
-	];
+	return playgroundTreePanelRootItems("board-play-hierarchy.root", [boardRoot]);
 }
 //#endregion 🔖BoardPlayHierarchy
 

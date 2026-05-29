@@ -78,7 +78,7 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@elements/ui";
-import { ClipboardList, ListTree, Settings, Trash2 } from "lucide-react";
+import { ClipboardList, ListTree, Settings, Tags, Trash2 } from "lucide-react";
 import {
 	LS_DEVICE,
 	LS_EXPERTISE,
@@ -365,6 +365,53 @@ export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapsh
 		}
 	}
 	return true;
+}
+
+const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [] };
+
+/** @emoji 🔔 External selection store for synchronous pick feedback under controlled hosts. */
+export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT) {
+	let snapshot = initial;
+	const listeners = new Set<() => void>();
+	return {
+		subscribe(listener: () => void): () => void {
+			listeners.add(listener);
+			return () => listeners.delete(listener);
+		},
+		getSnapshot(): SelectionSnapshot {
+			return snapshot;
+		},
+		setSnapshot(next: SelectionSnapshot, equal: (left: SelectionSnapshot, right: SelectionSnapshot) => boolean = selectionSnapshotsEqual): void {
+			if (equal(snapshot, next)) {
+				return;
+			}
+			snapshot = next;
+			for (const listener of listeners) {
+				listener();
+			}
+		},
+	};
+}
+
+export type SelectionSnapshotStore = ReturnType<typeof createSelectionSnapshotStore>;
+
+/** @emoji 🎯 Primary object id for relocate chrome (direct pick or parent of selected vortex). */
+export function primarySelectionObjectId(selection: SelectionSnapshot): string | null {
+	return (
+		selection.objectIds[0] ??
+		(selection.vortexIds[0] ? parseVortexFullId(selection.vortexIds[0]).objectId : null)
+	);
+}
+
+const SceneSelectionStoreContext = createContext<SelectionSnapshotStore | null>(null);
+
+/** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
+export function useLiveSceneSelection(): SelectionSnapshot {
+	const store = useContext(SceneSelectionStoreContext);
+	if (!store) {
+		throw new Error("Scene selection store missing");
+	}
+	return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
@@ -2729,12 +2776,12 @@ function SceneHoverInvalidateBridge(): null {
 }
 
 /** @emoji 🎯 Redraws the canvas when host-controlled selection changes. */
-function SceneSelectionInvalidateBridge(props: { readonly selection?: SelectionSnapshot }): null {
+function SceneSelectionInvalidateBridge(): null {
+	const selection = useLiveSceneSelection();
 	const invalidate = useThree((state) => state.invalidate);
 	const selectionKey = useMemo(
-		() =>
-			`${props.selection?.objectIds.join("\0") ?? ""}|${props.selection?.vortexIds.join("\0") ?? ""}`,
-		[props.selection?.objectIds, props.selection?.vortexIds],
+		() => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}`,
+		[selection.objectIds, selection.vortexIds],
 	);
 	useEffect(() => {
 		invalidate();
@@ -3304,6 +3351,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 
 export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const group = useRef<Group>(null);
+	const liveSelection = useLiveSceneSelection();
 	const { registerObject, relocateMode } = useRegistryCore();
 	const { selectionMode, setSelectedObjectIds, setActiveRelocateObjectId } = useRegistryInteraction();
 	const { setSceneHover, clearSceneHover, isSceneHovered } = useRegistryHover();
@@ -3312,6 +3360,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const objectPointerHovered = isSceneHovered({ kind: "object", id: props.id });
+	const registrySelected = objectMatchesSceneSelection(props.id, liveSelection);
+	const selected = props.selected === true || registrySelected;
+	const relocateActive = props.relocateActive === true || primarySelectionObjectId(liveSelection) === props.id;
 
 	useEffect(() => {
 		registerObject(props.id, props.objectKind, group.current);
@@ -3322,7 +3373,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 
 	useEffect(() => {
 		if (group.current) setTcTarget(group.current);
-	}, [props.selected, props.relocateActive, props.id]);
+	}, [selected, relocateActive, props.id]);
 
 	const linkHighlighted = useMemo(() => {
 		if (props.highlighted === true) {
@@ -3342,26 +3393,26 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			resolveMeshStyle({
 				style: props.style,
 				disabled: props.disabled,
-				selected: props.selected,
+				selected,
 				highlighted: linkHighlighted,
 				hovered: props.hovered === true || objectPointerHovered,
 			}),
 		[
 			props.style,
 			props.disabled,
-			props.selected,
+			selected,
 			props.hovered,
 			linkHighlighted,
 			objectPointerHovered,
 		],
 	);
-	const showSelectionOutline = props.selected && !props.disabled;
+	const showSelectionOutline = selected && !props.disabled;
 	const invalidate = useThree((state) => state.invalidate);
 	useEffect(() => {
-		if (props.selected || showSelectionOutline) {
+		if (selected || showSelectionOutline) {
 			invalidate();
 		}
-	}, [props.selected, showSelectionOutline, meshStyle, invalidate]);
+	}, [selected, showSelectionOutline, meshStyle, invalidate]);
 
 	const selectObject = useCallback(() => {
 		if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
@@ -4143,67 +4194,60 @@ function RegistryProvider({
 	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
 	onRelocate?: (p: RelocatePayload) => void;
 }) {
-	const [internalSelectedObjectIds, setInternalSelectedObjectIds] = useState<readonly string[]>([]);
+	const selectionStoreRef = useRef<SelectionSnapshotStore>();
+	if (!selectionStoreRef.current) {
+		selectionStoreRef.current = createSelectionSnapshotStore(controlledSelection ?? EMPTY_SELECTION_SNAPSHOT);
+	}
+	const selectionStore = selectionStoreRef.current;
 	const controlledSelectionRef = useRef(controlledSelection);
 	controlledSelectionRef.current = controlledSelection;
 	const onSelectRef = useRef(onSelect);
 	onSelectRef.current = onSelect;
-	const internalSelectedRef = useRef(internalSelectedObjectIds);
-	internalSelectedRef.current = internalSelectedObjectIds;
 	const selectionModeRef = useRef(selectionMode);
 	selectionModeRef.current = selectionMode;
+	useEffect(() => {
+		if (controlledSelection !== undefined) {
+			selectionStore.setSnapshot(controlledSelection);
+		}
+	}, [controlledSelection, selectionStore]);
 	const setSelectedObjectIds = useCallback(
 		(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
 			const controlled = controlledSelectionRef.current;
-			const resolved =
-				typeof ids === "function" ? ids(controlled?.objectIds ?? internalSelectedRef.current) : ids;
+			const current = selectionStore.getSnapshot();
+			const resolved = typeof ids === "function" ? ids(current.objectIds) : ids;
+			const snap: SelectionSnapshot = {
+				objectIds: resolved,
+				vortexIds: controlled && selectionModeRef.current !== "single" ? controlled.vortexIds : [],
+			};
+			selectionStore.setSnapshot(snap);
+			const primary = primarySelectionObjectId(snap);
+			activeRelocateObjectIdRef.current = primary;
 			if (controlled !== undefined) {
-				const snap: SelectionSnapshot = {
-					objectIds: resolved,
-					vortexIds: selectionModeRef.current === "single" ? [] : controlled.vortexIds,
-				};
-				if (selectionSnapshotsEqual(controlled, snap)) {
-					return;
+				if (!selectionSnapshotsEqual(controlled, snap)) {
+					onSelectRef.current?.(snap);
 				}
-				onSelectRef.current?.(snap);
 				return;
 			}
-			internalSelectedRef.current = resolved;
-			setInternalSelectedObjectIds(resolved);
 			onSelectRef.current?.({ objectIds: resolved, vortexIds: [] });
 		},
-		[],
+		[selectionStore],
 	);
-	const [, setActiveRelocateRevision] = useState(0);
-	const activeRelocateObjectIdRef = useRef<string | null>(null);
+	const activeRelocateObjectIdRef = useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
 	const setActiveRelocateObjectId = useCallback((id: string | null) => {
 		if (activeRelocateObjectIdRef.current === id) {
 			return;
 		}
 		activeRelocateObjectIdRef.current = id;
-		if (controlledSelectionRef.current === undefined) {
-			setActiveRelocateRevision((n) => n + 1);
-		}
 	}, []);
 	useEffect(() => {
 		if (controlledSelection === undefined) {
 			return;
 		}
-		const primary =
-			controlledSelection.objectIds[0] ??
-			(controlledSelection.vortexIds[0]
-				? parseVortexFullId(controlledSelection.vortexIds[0]).objectId
-				: null);
-		activeRelocateObjectIdRef.current = primary;
+		activeRelocateObjectIdRef.current = primarySelectionObjectId(controlledSelection);
 	}, [controlledSelection]);
-	const selectedObjectIds = controlledSelection?.objectIds ?? internalSelectedObjectIds;
-	const activeRelocateObjectId =
-		controlledSelection !== undefined
-			? (controlledSelection.objectIds[0] ??
-				(controlledSelection.vortexIds[0]
-					? parseVortexFullId(controlledSelection.vortexIds[0]).objectId
-					: null))
-			: activeRelocateObjectIdRef.current;
+	const liveSelection = useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
+	const selectedObjectIds = liveSelection.objectIds;
+	const activeRelocateObjectId = primarySelectionObjectId(liveSelection);
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -4231,18 +4275,18 @@ function RegistryProvider({
 	const clearSceneSelection = useCallback(() => {
 		clearSceneHoverAll();
 		setActiveRelocateObjectId(null);
+		const empty = EMPTY_SELECTION_SNAPSHOT;
+		selectionStore.setSnapshot(empty);
 		const controlled = controlledSelectionRef.current;
 		if (controlled !== undefined) {
 			if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0) {
 				return;
 			}
-			onSelectRef.current?.({ objectIds: [], vortexIds: [] });
+			onSelectRef.current?.(empty);
 			return;
 		}
-		internalSelectedRef.current = [];
-		setInternalSelectedObjectIds([]);
-		onSelectRef.current?.({ objectIds: [], vortexIds: [] });
-	}, [clearSceneHoverAll, setActiveRelocateObjectId]);
+		onSelectRef.current?.(empty);
+	}, [clearSceneHoverAll, selectionStore, setActiveRelocateObjectId]);
 
 	const vortexGettersRef = useRef(new Map<string, VortexGetter>());
 	const vortexMetaRef = useRef(new Map<string, VortexBindingMeta>());
@@ -4674,20 +4718,11 @@ function RegistryProvider({
 	const interactionValue = useMemo<RegistryInteractionValue>(
 		() => ({
 			selectionMode,
-			selectedObjectIds,
-			activeRelocateObjectId,
 			setSelectedObjectIds,
 			setActiveRelocateObjectId,
 			clearSceneSelection,
 		}),
-		[
-			activeRelocateObjectId,
-			clearSceneSelection,
-			selectedObjectIds,
-			selectionMode,
-			setActiveRelocateObjectId,
-			setSelectedObjectIds,
-		],
+		[clearSceneSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
 	);
 	const hoverValue = useMemo<RegistryHoverValue>(
 		() => ({
@@ -4717,19 +4752,21 @@ function RegistryProvider({
 	);
 
 	return (
-		<RegistryCoreContext.Provider value={coreValue}>
-			<RegistryInteractionContext.Provider value={interactionValue}>
-				<RegistryHoverContext.Provider value={hoverValue}>
-					<RegistryDragContext.Provider value={dragValue}>
-						{children}
-						<SceneHoverMissBridge />
-						<SceneHoverInvalidateBridge />
-						<SceneSelectionInvalidateBridge selection={controlledSelection} />
-						<SceneSelectionMissBridge />
-					</RegistryDragContext.Provider>
-				</RegistryHoverContext.Provider>
-			</RegistryInteractionContext.Provider>
-		</RegistryCoreContext.Provider>
+		<SceneSelectionStoreContext.Provider value={selectionStore}>
+			<RegistryCoreContext.Provider value={coreValue}>
+				<RegistryInteractionContext.Provider value={interactionValue}>
+					<RegistryHoverContext.Provider value={hoverValue}>
+						<RegistryDragContext.Provider value={dragValue}>
+							{children}
+							<SceneHoverMissBridge />
+							<SceneHoverInvalidateBridge />
+							<SceneSelectionInvalidateBridge />
+							<SceneSelectionMissBridge />
+						</RegistryDragContext.Provider>
+					</RegistryHoverContext.Provider>
+				</RegistryInteractionContext.Provider>
+			</RegistryCoreContext.Provider>
+		</SceneSelectionStoreContext.Provider>
 	);
 }
 

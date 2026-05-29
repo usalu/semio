@@ -180,6 +180,14 @@ export function playgroundStaticTreePanel(config: TreePanelConfig): StaticTreePa
 	return new StaticTreePanelDefinition(config);
 }
 
+/** @emoji 🌲 Single tree body for a side-panel tab (no duplicate section title; the tab is the panel name). */
+export function playgroundTreePanelRootItems(sectionId: string, items: TreeDataItem[]): TreeDataSection[] {
+	if (!items.length) {
+		throw new Error("playgroundTreePanelRootItems requires at least one root item.");
+	}
+	return [{ id: sectionId, defaultOpen: true, items }];
+}
+
 function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
 	if (typeof (tree as TreePanelDefinition).resolveTree === "function") {
 		const config = (tree as TreePanelDefinition).resolveTree();

@@ -20,6 +20,7 @@ import {
 	type WindowMeasure,
 	type UiNode,
 } from "@elements/playground";
+import { playgroundTreePanelRootItems } from "@elements/playground/react";
 import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
@@ -40,8 +41,12 @@ import {
 	type CameraState,
 	type FixtureObjectV1,
 	type FixtureV1,
+	type EdgeKindCatalogEntry,
+	type HandleKindCatalogEntry,
 	type KindCatalogBundle,
 	type KindCompatEntry,
+	type NodeKindCatalogEntry,
+	type WireKindCatalogEntry,
 	type RelocateMode,
 	type RelocatePayload,
 	type SelectionMode,
@@ -120,6 +125,7 @@ export const SCENE_PLAY_SCENE_SURFACE_ID = "elements.scene.play.scene/v1";
 export const SCENE_PLAY_INSPECTOR_TAB_ID = "scene-play-inspector";
 export const SCENE_PLAY_SETTINGS_TAB_ID = "scene-play-settings";
 export const SCENE_PLAY_HIERARCHY_TAB_ID = "scene-play-hierarchy";
+export const SCENE_PLAY_KINDS_TAB_ID = "scene-play-kinds";
 //#endregion 🎬Play
 
 export { parseKindCatalogs, parseKindCompatibility };
@@ -344,14 +350,9 @@ export function buildScenePlayHierarchySections(
 	handlers: ScenePlayHierarchySelectHandlers,
 ): TreeDataSection[] {
 	if (!fixture) {
-		return [
-			{
-				id: "scene-play-hierarchy.section",
-				label: "Hierarchy",
-				defaultOpen: true,
-				items: [{ id: "scene-play-hierarchy.invalid", label: "Invalid scene fixture" }],
-			},
-		];
+		return playgroundTreePanelRootItems("scene-play-hierarchy.root", [
+			{ id: "scene-play-hierarchy.invalid", label: "Invalid scene fixture" },
+		]);
 	}
 	const selectedObjects = new Set(selection.objectIds);
 	const selectedVortices = new Set(selection.vortexIds);
@@ -413,16 +414,62 @@ export function buildScenePlayHierarchySections(
 		defaultOpen: true,
 		items: [objectsGroup, attractionsGroup],
 	};
-	return [
-		{
-			id: "scene-play-hierarchy.section",
-			label: "Hierarchy",
-			defaultOpen: true,
-			items: [sceneRoot],
-		},
-	];
+	return playgroundTreePanelRootItems("scene-play-hierarchy.root", [sceneRoot]);
 }
 //#endregion 🔖ScenePlayHierarchy
+
+//#region 🔖ScenePlayKinds
+type ScenePlayKindCatalogEntry = NodeKindCatalogEntry | HandleKindCatalogEntry | WireKindCatalogEntry | EdgeKindCatalogEntry;
+
+function scenePlayKindCatalogEntryLabel(entry: ScenePlayKindCatalogEntry): string {
+	const display = entry.label?.trim() || entry.name?.trim();
+	return display && display.length > 0 ? display : entry.id;
+}
+
+function scenePlayKindCatalogSection(
+	sectionId: string,
+	label: string,
+	entries: readonly ScenePlayKindCatalogEntry[] | undefined,
+): TreeDataSection | null {
+	if (!entries?.length) {
+		return null;
+	}
+	const items: TreeDataItem[] = [...entries]
+		.sort((a, b) => scenePlayKindCatalogEntryLabel(a).localeCompare(scenePlayKindCatalogEntryLabel(b)))
+		.map((entry) => ({
+			id: `${sectionId}.${entry.id}`,
+			label: scenePlayKindCatalogEntryLabel(entry),
+			description: entry.id,
+		}));
+	return {
+		id: sectionId,
+		label,
+		defaultOpen: true,
+		items,
+	};
+}
+
+/** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Attractions (and Edges when catalogued). */
+export function buildScenePlayKindsSections(catalogs: KindCatalogBundle | undefined): TreeDataSection[] {
+	const sections = [
+		scenePlayKindCatalogSection("scene-play-kinds.objects", "Objects", catalogs?.nodes),
+		scenePlayKindCatalogSection("scene-play-kinds.vortices", "Vortices", catalogs?.handles),
+		scenePlayKindCatalogSection("scene-play-kinds.attractions", "Attractions", catalogs?.wires),
+		scenePlayKindCatalogSection("scene-play-kinds.edges", "Edges", catalogs?.edges),
+	].filter((section): section is TreeDataSection => section !== null);
+	if (!sections.length) {
+		return [
+			{
+				id: "scene-play-kinds.empty",
+				label: "Kinds",
+				defaultOpen: true,
+				items: [{ id: "scene-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
+			},
+		];
+	}
+	return sections;
+}
+//#endregion 🔖ScenePlayKinds
 
 /** @emoji 🎯 Primary object id for relocate / legacy e2e hooks. */
 export function primaryScenePlayObjectId(selection: ScenePlaySelection): string | null {
@@ -1048,6 +1095,7 @@ if (import.meta.vitest) {
 				onSelectAttraction: () => {},
 			});
 			expect(sections[0]?.items?.[0]?.label).toBe("Scene");
+			expect(sections[0]?.label).toBeUndefined();
 			const objectsGroup = sections[0]?.items?.[0]?.items?.find((row) => row.label === "Objects");
 			expect(objectsGroup?.items?.length).toBe(2);
 			const firstObject = objectsGroup?.items?.[0];

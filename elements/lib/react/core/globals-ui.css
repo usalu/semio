@@ -85,36 +85,14 @@
 } */
 
 /* #region ❄️TreeSpacing
-/* Structure-driven spacing for tree inspector hierarchy.
- * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).
- * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.
- * Tier 3 – Top-level property sections: strongest gap + visual divider.
+/* Vertical rhythm is owned by TreeBranchContent (margin-top via layout effect).
+ * Section wrappers only get a divider between adjacent top-level sections.
  */
 
-/* Tier 3: Visual divider + spacing between adjacent top-level sections. */
 [data-slot="tree-section-wrapper"] + [data-slot="tree-section-wrapper"] {
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  padding-top: 16px;
-  margin-top: 10px;
-}
-
-/* Tier 2: Larger gap when a new expandable group row follows another group's content. */
-[data-slot="tree-section-content"] > [data-slot="tree-item-content"] + [data-slot="tree-item-row"],
-[data-slot="tree-item-content"] > [data-slot="tree-item-content"] + [data-slot="tree-item-row"] {
-  padding-top: 12px;
-}
-
-/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */
-[data-slot="tree-section-content"] > [data-slot="tree-item-row"][data-tree-group] + [data-slot="tree-item-row"][data-tree-group],
-[data-slot="tree-item-content"] > [data-slot="tree-item-row"][data-tree-group] + [data-slot="tree-item-row"][data-tree-group] {
-  padding-top: 12px;
-}
-
-/* Tier 2: property-item groups (grid layout items). */
-[data-slot="tree-section-content"] > [data-slot="tree-property-item"] + [data-slot="tree-property-item"],
-[data-slot="tree-item-content"] > [data-slot="tree-property-item"] + [data-slot="tree-property-item"],
-[data-slot="tree-property-content"] > [data-slot="tree-property-item"] + [data-slot="tree-property-item"] {
   padding-top: 8px;
+  margin-top: 8px;
 }
 /* #endregion ❄️*/
 

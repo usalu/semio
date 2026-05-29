@@ -1,0 +1,14 @@
+{
+  "title": "Fix Elements Tree Row Spacing",
+  "emoji": "🌳",
+  "status": "closed",
+  "description": "Fix inconsistent vertical spacing inside elements React tree (hierarchy panel): minimal equal spacing, no gaps in guide lines, uniform row heights.",
+  "summary": "Unified elements tree vertical rhythm: removed CSS tier-2 padding (12px/8px) that stacked with JS margins, zeroed branch/sibling/subtree gaps and content padding so rows sit flush, aligned section headers to 24px row height, and centered guide elbows at 12px.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1502"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯apps",
+  "sessions": [
+    "⚪2f3aa313dd6d4466ac6824a72dec16fb"
+  ]
+}

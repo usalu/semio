@@ -19,6 +19,7 @@ import {
 	type UiNode,
 	type WindowLayout,
 } from "@elements/playground";
+import { playgroundTreePanelRootItems } from "@elements/playground/react";
 import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 import {
 	SHAPE_MODEL_DEFINITION_ID,
@@ -311,14 +312,7 @@ export function buildSpatialPlayHierarchySections(
 			? modelBranches
 			: [{ id: "spatial-play-hierarchy.modelspace.empty", label: "(empty)" }],
 	};
-	return [
-		{
-			id: "spatial-play-hierarchy.section",
-			label: "Hierarchy",
-			defaultOpen: true,
-			items: [modelSpaceRoot],
-		},
-	];
+	return playgroundTreePanelRootItems("spatial-play-hierarchy.root", [modelSpaceRoot]);
 }
 //#endregion 🔖SpatialPlayHierarchy
 
