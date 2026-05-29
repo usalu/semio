@@ -7,13 +7,13 @@ todos:
     status: cancelled
   - id: core-uinode
     content: Extend UiNode vocabulary (section/field/input/select/toggle/vec3/keyValue/tree) and move playgroundTreePanelRootItems into core.ts; add Playground abstract base.
-    status: in_progress
+    status: completed
   - id: react-renderer
     content: Extend UiRenderer for new nodes; render rightTabs declaratively + drop augmentPanelTabs; add PlaygroundShell (generic surface chrome + keybindings) and renderPlayground.
-    status: pending
+    status: completed
   - id: scene
     content: Add ScenePlayground class, convert scene inspector/settings/hierarchy/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
-    status: pending
+    status: in_progress
   - id: topology
     content: Add TopologyPlayground class, convert status/hierarchy panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
     status: pending

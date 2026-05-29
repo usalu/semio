@@ -727,4 +727,29 @@ export abstract class Playground {
 	/** @emoji 🧊 Override to register canvas surface hosts (library React adapters). */
 	registerSurfaceHosts(): void {}
 }
+
+export const PLAYGROUND_LS_THEME = "elements.playground.surface.theme";
+export const PLAYGROUND_LS_DEVICE = "elements.playground.surface.device";
+export const PLAYGROUND_LS_EXPERTISE = "elements.playground.surface.expertise";
+
+export type PlaygroundSurfaceTheme = "system" | "light" | "dark";
+export type PlaygroundSurfaceDevice = "desktop" | "tablet" | "mobile";
+
+/** @emoji 🌓 Parses persisted playground surface theme. */
+export function parsePlaygroundStoredTheme(raw: string | null): PlaygroundSurfaceTheme {
+	if (raw === "light" || raw === "dark" || raw === "system") return raw;
+	return "system";
+}
+
+/** @emoji 📱 Parses persisted playground surface device. */
+export function parsePlaygroundStoredDevice(raw: string | null): PlaygroundSurfaceDevice {
+	if (raw === "desktop" || raw === "tablet" || raw === "mobile") return raw;
+	return "desktop";
+}
+
+/** @emoji 🎚 Parses persisted playground surface expertise. */
+export function parsePlaygroundStoredExpertise(raw: string | null): Expertise {
+	if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
+	return Expertise.NORMAL;
+}
 //#endregion 🔖Playground

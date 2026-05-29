@@ -18,7 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "@elements/playground": ["../../playground/index.ts"],
-      "@elements/playground/react": ["../../playground/react/index.tsx"],
+      "@elements/playground/react": ["../../playground/renderer/react/index.tsx"],
       "@elements/ui": ["../core/index.tsx"],
       "@elements/ui/*": ["../core/*"]
     }
