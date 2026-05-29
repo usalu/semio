@@ -51,6 +51,18 @@ function spatialPlaySelectionKey(target: SelectionTarget): string {
 	return `${target.kind}:${target.id}`;
 }
 
+/** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision + object counts). */
+export function spatialPlayModelsDigest(modelsByDefinitionId: Record<string, Model>): string {
+	return Object.keys(modelsByDefinitionId)
+		.sort((a, b) => a.localeCompare(b))
+		.map((modelDefinitionId) => {
+			const model = modelsByDefinitionId[modelDefinitionId];
+			if (!model) return `${modelDefinitionId}:missing`;
+			return `${modelDefinitionId}:${model.revision}:${Object.keys(model.objects).length}`;
+		})
+		.join("|");
+}
+
 /** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for spatial play workbench. */
 export function buildSpatialPlayHierarchySections(
 	modelsByDefinitionId: Record<string, Model>,
@@ -204,6 +216,25 @@ if (import.meta.vitest) {
 			const app = buildSpatialPlayRuntime().getActiveApp();
 			expect(app?.leftTabs).toEqual([]);
 			expect(app?.rightTabs).toEqual([]);
+		});
+
+		it("spatialPlayModelsDigest changes when object rows are added", () => {
+			const model = parseModelJson({
+				schema: "spatial.model/v1",
+				revision: 0,
+				objects: {},
+				geometry: { anchors: [], vertices: [], edges: [], wires: [], faces: [], shells: [], solids: [] },
+			});
+			expect(model).not.toBeNull();
+			const before = spatialPlayModelsDigest({ "spatial.shape": model! });
+			model!.objects["box1"] = {
+				id: "box1",
+				typology: "spatial.shape.primitive.box",
+				primitives: { solid: "solid-1" },
+			};
+			model!.bump();
+			const after = spatialPlayModelsDigest({ "spatial.shape": model! });
+			expect(after).not.toBe(before);
 		});
 
 		it("buildSpatialPlayHierarchySections nests model definitions, objects, and primitives", () => {

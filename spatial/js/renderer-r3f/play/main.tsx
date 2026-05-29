@@ -16,8 +16,8 @@ import { ProductRuntime } from "@elements/playground";
 import { getLevelBgClass, LevelProvider } from "@elements/ui";
 import {
 	PlaygroundView,
+	CallbackTreePanelDefinition,
 	PureSidePanelTabDefinition,
-	StaticTreePanelDefinition,
 	mountPlaygroundApp,
 	registerUiScene3DSurfaceHost,
 	type SidePanelTabConfig,
@@ -32,6 +32,7 @@ import {
 	SPATIAL_PLAY_SCENE_SURFACE_ID,
 	buildSpatialPlayHierarchySections,
 	buildSpatialPlayRuntime,
+	spatialPlayModelsDigest,
 } from "./index.ts";
 import {
 	DocumentHistory,
@@ -565,7 +566,7 @@ class SpatialPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 			id: SPATIAL_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+			tree: new CallbackTreePanelDefinition(() => this.buildSections()),
 		};
 	}
 }
@@ -749,9 +750,10 @@ function PlaySession({
 			const res = snap.lastResponse;
 			if (res?.ok && res.diff && !isEmptyModelDiff(res.diff)) {
 				onDocumentModelChange(Model.fromJSON(documentModel.model.toJSON()));
+				onModelDefinitionRevision((revision) => revision + 1);
 			}
 		});
-	}, [rt, documentModel, onSnapshot, onDocumentModelChange]);
+	}, [rt, documentModel, onSnapshot, onDocumentModelChange, onModelDefinitionRevision]);
 	const asideWithQuery = useMemo(
 		() => (
 			<>
@@ -878,7 +880,7 @@ function PlayApp() {
 	const flushedModelsByDefinitionId = useMemo(() => {
 		const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
 		return ensureDerivedModelInSpace(flushed, activeModelDefinitionId);
-	}, [activeModelDefinitionId, liveModel, modelsByDefinitionId]);
+	}, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
 	const playModelSpace = useMemo(
 		() => modelSpaceFromRecord(flushedModelsByDefinitionId),
@@ -971,6 +973,11 @@ function PlayApp() {
 		[activeModelDefinitionId, handleActiveModelDefinitionChange],
 	);
 
+	const flushedModelsDigest = useMemo(
+		() => spatialPlayModelsDigest(flushedModelsByDefinitionId),
+		[flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision],
+	);
+
 	useEffect(() => {
 		publishSpatialPlayChrome({
 			modelsByDefinitionId: flushedModelsByDefinitionId,
@@ -982,6 +989,7 @@ function PlayApp() {
 	}, [
 		activeModelDefinitionId,
 		flushedModelsByDefinitionId,
+		flushedModelsDigest,
 		modelDefinitionRevision,
 		publishSpatialPlayChrome,
 		selectHierarchyTarget,
@@ -1322,21 +1330,25 @@ function SpatialPlayRoot(): ReactNode {
 		() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }),
 		[chromeSnapshot],
 	);
+	const chromeSnapshotRef = useRef(chromeSnapshot);
+	chromeSnapshotRef.current = chromeSnapshot;
 	const chromeKey = chromeSnapshot
-		? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${Object.keys(chromeSnapshot.modelsByDefinitionId).sort().join(",")}\u0001${chromeSnapshot.modelsByDefinitionId[chromeSnapshot.activeModelDefinitionId]?.revision ?? 0}`
+		? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
 		: "";
 	const workbenchTabs = useMemo(
 		() =>
 			chromeSnapshot
 				? [
-						new SpatialPlayHierarchyPanelDefinition(() =>
-							buildSpatialPlayHierarchySections(
-								chromeSnapshot.modelsByDefinitionId,
-								chromeSnapshot.activeModelDefinitionId,
-								chromeSnapshot.selection,
-								chromeSnapshot.selectTarget,
-							),
-						).resolveTab(),
+						new SpatialPlayHierarchyPanelDefinition(() => {
+							const snap = chromeSnapshotRef.current;
+							if (!snap) return [];
+							return buildSpatialPlayHierarchySections(
+								snap.modelsByDefinitionId,
+								snap.activeModelDefinitionId,
+								snap.selection,
+								snap.selectTarget,
+							);
+						}).resolveTab(),
 					]
 				: [],
 		[chromeSnapshot, chromeKey],

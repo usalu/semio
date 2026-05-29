@@ -142,6 +142,17 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
 	}
 }
 
+/** @emoji 🌲 Tree panel that rebuilds sections on every {@link TreePanelDefinition.resolveTree} call. */
+export class CallbackTreePanelDefinition implements TreePanelDefinition {
+	constructor(private readonly buildSections: () => TreeDataSection[]) {}
+
+	resolveTree(): TreePanelConfig {
+		const config: TreePanelConfig = { sections: this.buildSections() };
+		enforcePlaygroundTreePanel(config);
+		return config;
+	}
+}
+
 /** @emoji 🌲 Factory for a static {@link StaticTreePanelDefinition}. */
 export function playgroundStaticTreePanel(config: TreePanelConfig): StaticTreePanelDefinition {
 	return new StaticTreePanelDefinition(config);
