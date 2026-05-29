@@ -84,6 +84,8 @@ describe("dependency-boundary", () => {
     expect(isAdapterBoundaryFile("pkg/main.py", "# #region 🔌Adapters\nimport fastapi")).toBe(true);
     expect(isAdapterBoundaryFile("semio/client/lib/js/rs-wasm-transport.ts", "export async function x() {}")).toBe(true);
     expect(isAdapterBoundaryFile("semio/client/lib/js/kit-store.worker.ts", "export async function x() {}")).toBe(true);
+    expect(isAdapterBoundaryFile("coda/client/bin/assistant/mcp-app.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("framework/platform/renderer/react/index.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
   });
 

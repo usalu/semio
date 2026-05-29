@@ -27,6 +27,6 @@ export default defineConfig({
 		testTimeout: 120_000,
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.tsx", "play/index.ts", "play/main.tsx"],
+		include: ["index.tsx", "play/main.tsx"],
 	},
 });

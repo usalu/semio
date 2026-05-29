@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "cad/js/machine-stately",
+        "cwd": "cad/js/machine/stately",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
@@ -14,7 +14,7 @@
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "cad/js/machine-stately",
+        "cwd": "cad/js/machine/stately",
         "command": "bun ./script.ts generate",
         "forwardAllArgs": true
       }

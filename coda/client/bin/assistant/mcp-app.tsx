@@ -4,12 +4,14 @@
 // Summary: Host iframe renders workspace payload from show_coda_workspace with panel tabs.
 // #endregion Header
 
-import { Card, CardGrid, i18next, initReactI18next } from "@ui/react";
+// #region 🔌Adapters
+import { Card, CardGrid, i18next, initReactI18next, reactHostPort } from "@ui/react";
 import "@ui/react/globals.css";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
+// #endregion 🔌Adapters
 
 i18next.use(initReactI18next).init({
   lng: "en",
@@ -119,12 +121,12 @@ function WorkspaceBody({ payload, activePanel }: { payload: Record<string, unkno
 function McpShell() {
   useDocumentTheme();
   const app = useApp() as McpApp | null;
-  const [panel, setPanel] = useState<string>(() => {
+  const [panel, setPanel] = reactHostPort.useState<string>(() => {
     const root = document.getElementById("root");
     return root?.getAttribute("data-coda-panel") ?? "dashboard";
   });
 
-  const payload = useMemo(() => {
+  const payload = reactHostPort.useMemo(() => {
     const tool = app?.toolResponse;
     const sc = tool?.structuredContent as Record<string, unknown> | undefined;
     if (sc && sc.kind === "coda-workspace") return sc;

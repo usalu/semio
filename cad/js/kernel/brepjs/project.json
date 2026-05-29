@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "cad/js/kernel-brepjs",
+        "cwd": "cad/js/kernel/brepjs",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

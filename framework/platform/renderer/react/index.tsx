@@ -16,6 +16,7 @@ export {
 	getLevelDivideElementClass,
 } from "@ui/react";
 
+// #region 🔌Adapters
 import {
 	APP_TOOL_CATEGORY_ORDER,
 	countAppTools,
@@ -126,7 +127,9 @@ import {
 	useMediaQuery,
 	type ContextMenuItem,
 	type NavbarItem,
+	reactHostPort,
 } from "@ui/react";
+// #endregion 🔌Adapters
 
 //#region 📦shell-chrome-types.tsx
 
@@ -687,7 +690,7 @@ const ShellModeCanvas: React.FC<{
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
 }> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
-  const windows = React.useMemo<ModeWindowDescriptor[]>(
+  const windows = reactHostPort.useMemo<ModeWindowDescriptor[]>(
     () =>
       windowKinds.map((windowKind) => {
         const WindowComponent = windowKind.component;
@@ -709,7 +712,7 @@ const ShellModeCanvas: React.FC<{
       }),
     [windowKinds],
   );
-  const shellLayout = React.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
+  const shellLayout = reactHostPort.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
 
   return (
     <Mode
@@ -748,9 +751,9 @@ const UISearch: React.FC<{
   placeholder?: string;
   emptyMessage?: string;
 }> = ({ items, open, onOpenChange, placeholder = "Search...", emptyMessage = "No results found." }) => {
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = reactHostPort.useState("");
 
-  const fuse = React.useMemo(
+  const fuse = reactHostPort.useMemo(
     () =>
       new Fuse(items, {
         keys: [
@@ -764,12 +767,12 @@ const UISearch: React.FC<{
     [items],
   );
 
-  const results = React.useMemo(() => {
+  const results = reactHostPort.useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
     return items.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UISearchItem>);
   }, [fuse, query, items]);
 
-  const grouped = React.useMemo(() => {
+  const grouped = reactHostPort.useMemo(() => {
     const groups: Record<string, FuseResult<UISearchItem>[]> = {};
     results.forEach((result) => {
       const category = result.item.category || "";
@@ -779,7 +782,7 @@ const UISearch: React.FC<{
     return groups;
   }, [results]);
 
-  const handleSelect = React.useCallback(
+  const handleSelect = reactHostPort.useCallback(
     (item: UISearchItem) => {
       onOpenChange(false);
       setQuery("");
@@ -855,26 +858,26 @@ function areFindItemsShallowEqual(previousItems: UIFindItem[], nextItems: UIFind
  * Wraps children and exposes find items + trigger via context.
  **/
 export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [findItems, setFindItems] = React.useState<UIFindItem[]>([]);
-  const onFindItemCallbackRef = React.useRef<((itemId: string) => void) | undefined>(undefined);
+  const [findItems, setFindItems] = reactHostPort.useState<UIFindItem[]>([]);
+  const onFindItemCallbackRef = reactHostPort.useRef<((itemId: string) => void) | undefined>(undefined);
 
-  const setFindItemsStable = React.useCallback((items: UIFindItem[]) => {
+  const setFindItemsStable = reactHostPort.useCallback((items: UIFindItem[]) => {
     setFindItems((previousItems) => {
       return areFindItemsShallowEqual(previousItems, items) ? previousItems : items;
     });
   }, []);
 
-  const setOnFindItem = React.useCallback((callback: ((itemId: string) => void) | undefined) => {
+  const setOnFindItem = reactHostPort.useCallback((callback: ((itemId: string) => void) | undefined) => {
     onFindItemCallbackRef.current = callback;
   }, []);
 
-  const triggerFindItem = React.useCallback((itemId: string) => {
+  const triggerFindItem = reactHostPort.useCallback((itemId: string) => {
     if (onFindItemCallbackRef.current) {
       onFindItemCallbackRef.current(itemId);
     }
   }, []);
 
-  const contextValue = React.useMemo(() => ({ findItems, setFindItems: setFindItemsStable, setOnFindItem, triggerFindItem }), [findItems, setFindItemsStable, setOnFindItem, triggerFindItem]);
+  const contextValue = reactHostPort.useMemo(() => ({ findItems, setFindItems: setFindItemsStable, setOnFindItem, triggerFindItem }), [findItems, setFindItemsStable, setOnFindItem, triggerFindItem]);
   return <UIFindContext.Provider value={contextValue}>{children}</UIFindContext.Provider>;
 };
 
@@ -882,7 +885,7 @@ export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ childr
  * Hook to access the find context. Throws if used outside UIFindProvider.
  **/
 export function useUIFind(): UIFindContextValue {
-  const context = React.useContext(UIFindContext);
+  const context = reactHostPort.useContext(UIFindContext);
   if (!context) throw new Error("useUIFind must be used within UIFindProvider");
   return context;
 }
@@ -891,7 +894,7 @@ export function useUIFind(): UIFindContextValue {
  * Hook to access the find context. Returns null if outside UIFindProvider.
  **/
 export function useUIFindSafe(): UIFindContextValue | null {
-  return React.useContext(UIFindContext);
+  return reactHostPort.useContext(UIFindContext);
 }
 
 /**
@@ -904,12 +907,12 @@ const UIFind: React.FC<{
   placeholder?: string;
   emptyMessage?: string;
 }> = ({ open, onOpenChange, placeholder = "Find...", emptyMessage = "No results found." }) => {
-  const [query, setQuery] = React.useState("");
-  const findContext = React.useContext(UIFindContext);
+  const [query, setQuery] = reactHostPort.useState("");
+  const findContext = reactHostPort.useContext(UIFindContext);
   const findItems = findContext?.findItems || [];
   const triggerFindItem = findContext?.triggerFindItem;
 
-  const fuse = React.useMemo(
+  const fuse = reactHostPort.useMemo(
     () =>
       new Fuse(findItems, {
         keys: [
@@ -923,12 +926,12 @@ const UIFind: React.FC<{
     [findItems],
   );
 
-  const results = React.useMemo(() => {
+  const results = reactHostPort.useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
     return findItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UIFindItem>);
   }, [fuse, query, findItems]);
 
-  const grouped = React.useMemo(() => {
+  const grouped = reactHostPort.useMemo(() => {
     const groups: Record<string, FuseResult<UIFindItem>[]> = {};
     results.forEach((result) => {
       const category = result.item.category || "";
@@ -938,7 +941,7 @@ const UIFind: React.FC<{
     return groups;
   }, [results]);
 
-  const handleSelect = React.useCallback(
+  const handleSelect = reactHostPort.useCallback(
     (item: UIFindItem) => {
       onOpenChange(false);
       setQuery("");
@@ -1054,7 +1057,7 @@ function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode 
 }
 
 const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
-  const sorted = React.useMemo(() => sortToolbarItems(items), [items]);
+  const sorted = reactHostPort.useMemo(() => sortToolbarItems(items), [items]);
   return (
     <>
       {sorted.map((item) => {
@@ -1096,10 +1099,10 @@ const UIToolbar: React.FC<{
   className?: string;
 }> = ({ tools, className }) => {
   const { t } = useTranslation();
-  const populatedCategories = React.useMemo(() => listPopulatedToolbarViewCategories(tools), [tools]);
-  const [activeCategory, setActiveCategory] = React.useState<AppToolCategory | null>(null);
+  const populatedCategories = reactHostPort.useMemo(() => listPopulatedToolbarViewCategories(tools), [tools]);
+  const [activeCategory, setActiveCategory] = reactHostPort.useState<AppToolCategory | null>(null);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (populatedCategories.length === 0) {
       setActiveCategory(null);
       return;
@@ -1263,7 +1266,7 @@ export const AppContext = React.createContext<AppContextValue | undefined>(undef
 
 /** @emoji 🪝 Returns the active {@link ProductRuntime} shell context from the nearest {@link AppContext}. */
 export function useApp(): AppContextValue {
-	const ctx = React.useContext(AppContext);
+	const ctx = reactHostPort.useContext(AppContext);
 	if (!ctx) throw new Error("useApp must be used within a ProductView");
 	return ctx;
 }
@@ -1296,7 +1299,7 @@ export function useUIHistory(initialUri = "/"): {
 	readonly goUp: () => void;
 	readonly navigate: (uri: string) => void;
 } {
-	const [history, setHistory] = React.useState<UIHistory>({
+	const [history, setHistory] = reactHostPort.useState<UIHistory>({
 		entries: [{ uri: initialUri }],
 		index: 0,
 	});
@@ -1307,20 +1310,20 @@ export function useUIHistory(initialUri = "/"): {
 	const canGoUp = segments.length > 0;
 	const parentUri = canGoUp ? `/${segments.slice(0, -1).join("/")}` : null;
 
-	const goBack = React.useCallback(() => {
+	const goBack = reactHostPort.useCallback(() => {
 		setHistory((prev) => (prev.index > 0 ? { ...prev, index: prev.index - 1 } : prev));
 	}, []);
-	const goForward = React.useCallback(() => {
+	const goForward = reactHostPort.useCallback(() => {
 		setHistory((prev) => (prev.index < prev.entries.length - 1 ? { ...prev, index: prev.index + 1 } : prev));
 	}, []);
-	const goUp = React.useCallback(() => {
+	const goUp = reactHostPort.useCallback(() => {
 		if (!canGoUp || parentUri === null) return;
 		setHistory((prev) => {
 			const newEntries = prev.entries.slice(0, prev.index + 1);
 			return { entries: [...newEntries, { uri: parentUri }], index: newEntries.length };
 		});
 	}, [canGoUp, parentUri]);
-	const navigate = React.useCallback((targetUri: string) => {
+	const navigate = reactHostPort.useCallback((targetUri: string) => {
 		setHistory((prev) => {
 			const newEntries = prev.entries.slice(0, prev.index + 1);
 			return { entries: [...newEntries, { uri: targetUri }], index: newEntries.length };
@@ -1695,7 +1698,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 	if (!component) {
 		component = function ShellDeclarativeWindowBody() {
 			const { runtime, activeModeId } = useApp();
-			const generation = React.useSyncExternalStore(
+			const generation = reactHostPort.useSyncExternalStore(
 				(listener) => runtime.subscribe(listener),
 				() => runtime.generation,
 				() => 0,
@@ -1724,7 +1727,7 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	if (!component) {
 		component = function ShellDeclarativeSidePanelBody() {
 			const { runtime, activeModeId } = useApp();
-			const generation = React.useSyncExternalStore(
+			const generation = reactHostPort.useSyncExternalStore(
 				(listener) => runtime.subscribe(listener),
 				() => runtime.generation,
 				() => 0,
@@ -1907,7 +1910,7 @@ const ProductFindItemsSync: React.FC<{
 }> = ({ findItems, onFindSelect }) => {
 	const { setFindItems, setOnFindItem } = useUIFind();
 	const resolvedFindItems = findItems ?? [];
-	React.useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setFindItems(resolvedFindItems);
 		setOnFindItem(onFindSelect);
 	}, [findItems, onFindSelect, resolvedFindItems, setFindItems, setOnFindItem]);
@@ -2092,20 +2095,20 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	extraFooterItems,
 	augmentPanelTabs,
 }) => {
-	const shellGen = React.useSyncExternalStore(
+	const shellGen = reactHostPort.useSyncExternalStore(
 		(onStoreChange) => runtime.subscribe(onStoreChange),
 		() => runtime.generation,
 		() => 0,
 	);
 	void shellGen;
 
-	React.useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (defaultAppId) {
 			runtime.setActiveAppId(defaultAppId);
 		}
 	}, [defaultAppId, runtime]);
 
-	React.useEffect(() => {
+	reactHostPort.useEffect(() => {
 		runtime.uri = uriProp;
 		runtime.onNavigate = onNavigate;
 		runtime.onGoBack = onGoBack;
@@ -2120,18 +2123,18 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		runtime.notify();
 	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, runtime]);
 
-	const [leftPanelSize, setLeftPanelSize] = React.useState(280);
-	const [rightPanelSize, setRightPanelSize] = React.useState(300);
-	const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>(() => ({
+	const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
+	const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
+	const [panelVisibility, setPanelVisibility] = reactHostPort.useState<UIPanelVisibility>(() => ({
 		leftSidePanel: initialPanelVisibility?.leftSidePanel ?? false,
 		rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
 	}));
-	const [mobilePanelVisible, setMobilePanelVisible] = React.useState(false);
-	const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = React.useState<Exclude<AppPanelKind, "workbench">>("details");
-	const [activeMobilePanelKind, setActiveMobilePanelKind] = React.useState<AppPanelKind>("workbench");
-	const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = React.useState<string | undefined>(undefined);
-	const [searchOpen, setSearchOpen] = React.useState(false);
-	const [findOpen, setFindOpen] = React.useState(false);
+	const [mobilePanelVisible, setMobilePanelVisible] = reactHostPort.useState(false);
+	const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = reactHostPort.useState<Exclude<AppPanelKind, "workbench">>("details");
+	const [activeMobilePanelKind, setActiveMobilePanelKind] = reactHostPort.useState<AppPanelKind>("workbench");
+	const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = reactHostPort.useState<string | undefined>(undefined);
+	const [searchOpen, setSearchOpen] = reactHostPort.useState(false);
+	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
 
@@ -2156,13 +2159,13 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		[],
 	);
 
-	const togglePanel = React.useCallback((panel: keyof UIPanelVisibility) => {
+	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
 	}, []);
 
 	const resolvedApps = runtime.apps;
 	const activeAppId = runtime.activeAppId;
-	const setActiveAppId = React.useCallback(
+	const setActiveAppId = reactHostPort.useCallback(
 		(id: string) => {
 			runtime.setActiveAppId(id);
 		},
@@ -2193,16 +2196,16 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		activeAppBase.setActiveModeId(id);
 		runtime.notify();
 	};
-	const [activeWindowKindId, setActiveWindowKindId] = React.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
+	const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 
-	React.useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setActiveWindowKindId((previous) => {
 			if (previous && activeApp.windowKinds.some((windowKind) => windowKind.id === previous)) return previous;
 			return findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds);
 		});
 	}, [activeApp.defaultLayout, activeApp.windowKinds]);
 
-	const handleActiveWindowChange = React.useCallback(
+	const handleActiveWindowChange = reactHostPort.useCallback(
 		(windowKindId: string) => {
 			setActiveWindowKindId(windowKindId);
 			activeApp.onActiveWindowChange?.(windowKindId);
@@ -2210,17 +2213,17 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		[activeApp],
 	);
 
-	const mergedTools = React.useMemo(
+	const mergedTools = reactHostPort.useMemo(
 		() => mergeToolbarViewTools(declareToolsToViewTools(runtime.globalTools, runtime.commandBus), declareToolsToViewTools(activeApp.tools, runtime.commandBus)),
 		[activeApp.tools, runtime, shellGen],
 	);
 	const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
-	const openDesktopLeftPanel = React.useCallback((pressed: boolean) => {
+	const openDesktopLeftPanel = reactHostPort.useCallback((pressed: boolean) => {
 		setPanelVisibility((prev) => ({ ...prev, leftSidePanel: pressed }));
 	}, []);
 
-	const openDesktopRightPanel = React.useCallback(
+	const openDesktopRightPanel = reactHostPort.useCallback(
 		(kind: Exclude<AppPanelKind, "workbench">, pressed: boolean) => {
 			if (pressed) {
 				setActiveDesktopRightPanelKind(kind);
@@ -2232,7 +2235,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		[activeDesktopRightPanelKind],
 	);
 
-	const openMobilePanel = React.useCallback(
+	const openMobilePanel = reactHostPort.useCallback(
 		(kind: AppPanelKind, pressed: boolean) => {
 			if (pressed) {
 				setActiveMobilePanelKind(kind);
@@ -2367,7 +2370,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		...(extraFooterItems ?? []),
 	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-	const searchItemsResolved = React.useMemo(
+	const searchItemsResolved = reactHostPort.useMemo(
 		() =>
 			resolveCommandPaletteItems(runtime, activeApp, activeWindowKindId).map((row) => ({
 				id: row.id,
@@ -2380,7 +2383,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		[runtime, activeApp, activeWindowKindId, shellGen],
 	);
 
-	const goldenWindowKinds = React.useMemo(
+	const goldenWindowKinds = reactHostPort.useMemo(
 		() => resolvedWindowKindsOverride ?? windowKindsToGolden(activeApp.windowKinds, runtime.commandBus),
 		[activeApp.windowKinds, resolvedWindowKindsOverride, runtime.commandBus],
 	);

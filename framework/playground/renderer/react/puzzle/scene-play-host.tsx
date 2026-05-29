@@ -2,6 +2,7 @@
 /** @emoji 🛝 Scene play React chrome in `@framework/playground/renderer/react/puzzle/scene` (not in `@puzzle/3d/play`). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { LevelProvider, getLevelBgClass } from "@ui/react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree, Settings, Tags } from "lucide-react";
@@ -43,6 +44,7 @@ import {
 	parseKindCompatibility,
 	type ScenePlaySnapshot,
 } from "@puzzle/3d/play";
+// #endregion 🔌Adapters
 
 function useScenePlayController(): ScenePlayShellController | undefined {
 	const { runtime } = useApp();
