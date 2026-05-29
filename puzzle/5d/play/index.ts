@@ -399,7 +399,6 @@ export function buildTopologyPlayRuntime(): ProductRuntime {
 /** @emoji 🛝 Topology play harness as a single {@link Playground} instance. */
 export class TopologyPlayground extends Playground {
 	readonly id = TOPOLOGY_PLAY_APP_ID;
-	readonly puzzleChrome = "topology" as const;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
 	createRuntime(): ProductRuntime {

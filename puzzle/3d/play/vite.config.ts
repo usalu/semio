@@ -1,73 +1,60 @@
+// #region 🧲Header
+/** @emoji 🛝 Vite dev/build for `@puzzle/3d-play` (mesh middleware + three aliases). */
+// #endregion 🧲Header
+
 // #region 🔌Adapters
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import path from "node:path";
-import { defineConfig } from "vite";
-import { elementsAssetsVitePlugin } from "../../../ui/styling/vite-elements-assets.ts";
+import { fileURLToPath } from "node:url";
+import type { Plugin } from "vite";
+import { createPlaygroundPlayViteConfig } from "../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
-const repoRoot = path.resolve(__dirname, "../../..");
-const elementsAssetsRoot = path.resolve(repoRoot, "ui/assets");
+const playDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(playDir, "../../..");
 const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
 const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = path.resolve(repoRoot, "node_modules/three");
 
-export default defineConfig({
-	root: __dirname,
-	plugins: [
-		...elementsAssetsVitePlugin(elementsAssetsRoot),
-		tailwindcss(),
-		react(),
-		{
-			name: "scene-play-meshes",
-			configureServer(server) {
-				server.middlewares.use((req, res, next) => {
-					if (!req.url?.startsWith("/meshes/")) {
-						next();
-						return;
-					}
-					const rawName = decodeURIComponent(req.url.slice("/meshes/".length).split(/[?#]/, 1)[0] ?? "");
-					const filePath =
-						rawName === "placeholder.glb" ? sharedPlaceholderMesh : path.resolve(meshRoot, rawName);
-					if (!filePath.startsWith(`${meshRoot}${path.sep}`) || !existsSync(filePath) || !statSync(filePath).isFile()) {
-						if (filePath !== sharedPlaceholderMesh) {
-							next();
-							return;
-						}
-					}
-					if (!existsSync(filePath) || !statSync(filePath).isFile()) {
-						next();
-						return;
-					}
-					res.setHeader("Content-Type", "model/gltf-binary");
-					createReadStream(filePath).pipe(res);
-				});
-			},
-		},
+const scenePlayMeshes: Plugin = {
+	name: "scene-play-meshes",
+	configureServer(server) {
+		server.middlewares.use((req, res, next) => {
+			if (!req.url?.startsWith("/meshes/")) {
+				next();
+				return;
+			}
+			const rawName = decodeURIComponent(req.url.slice("/meshes/".length).split(/[?#]/, 1)[0] ?? "");
+			const filePath =
+				rawName === "placeholder.glb" ? sharedPlaceholderMesh : path.resolve(meshRoot, rawName);
+			if (!filePath.startsWith(`${meshRoot}${path.sep}`) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+				if (filePath !== sharedPlaceholderMesh) {
+					next();
+					return;
+				}
+			}
+			if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+				next();
+				return;
+			}
+			res.setHeader("Content-Type", "model/gltf-binary");
+			createReadStream(filePath).pipe(res);
+		});
+	},
+};
+
+export default createPlaygroundPlayViteConfig({
+	playDir,
+	repoRoot,
+	extraPlugins: [scenePlayMeshes],
+	extraAliases: [
+		{ find: "@puzzle/3d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: /^three$/, replacement: threeModule },
+		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
-	server: {
-		fs: {
-			allow: [repoRoot],
-		},
-	},
-	build: {
-		target: "esnext",
-		outDir: "dist",
-		emptyOutDir: true,
-	},
-	resolve: {
-		alias: [
-			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
-			{ find: "@framework/playground-renderer-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
-			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
-			{ find: "@puzzle/3d-react", replacement: path.resolve(__dirname, "../react/index.tsx") },
-			{ find: /^three$/, replacement: threeModule },
-			{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
-		],
-		dedupe: ["react", "react-dom", "three"],
-	},
+	build: { outDir: "dist", emptyOutDir: true },
+	resolveDedupe: ["react", "react-dom", "three"],
 	optimizeDeps: {
 		include: [
 			"react",
@@ -78,8 +65,6 @@ export default defineConfig({
 			"@react-three/fiber",
 			"@react-three/drei",
 		],
-		esbuildOptions: {
-			target: "esnext",
-		},
+		esbuildOptions: { target: "esnext" },
 	},
 });

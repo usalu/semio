@@ -4,8 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+#region 🔌Adapters
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#endregion 🔌Adapters
 
 namespace Semio.Store;
 
@@ -15,12 +18,12 @@ public static class StoreGraphqlWire
 {
     /// <summary>🧵 Canonical POST body: <c>query</c>, <c>variables</c>, <c>operationName</c> always present.</summary>
     public static string PostBodyJson(string query, JObject? variables = null, string? operationName = null) =>
-        JsonConvert.SerializeObject(new JObject
+        SemioJson.Codec.Serialize(new JObject
         {
             ["query"] = query,
             ["variables"] = variables ?? new JObject(),
             ["operationName"] = operationName == null ? JValue.CreateNull() : operationName,
-        }, Formatting.None);
+        });
 
     /// <summary>🛑 Enforces golden-schema split: <c>Query</c> vs <c>Mutation</c> roots only.</summary>
     public static void AssertOperationKind(string document, string kind)
@@ -72,7 +75,7 @@ public static class StoreGraphql
         "query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }";
 
     /// <summary>🧵 GraphQL string literal for variables.</summary>
-    public static string GqlString(string s) => JsonConvert.SerializeObject(s);
+    public static string GqlString(string s) => SemioJson.Codec.Serialize(s);
 
     /// <summary>🧵 GraphQL ID list literal.</summary>
     public static string GqlIdList(IEnumerable<string> ids) =>

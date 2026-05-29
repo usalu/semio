@@ -5,6 +5,9 @@
   "description": "puzzle · 3d play harness (renderer-neutral runtime + Vite entry)",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
   "scripts": {
     "dev": "bun nx run @puzzle/3d-play:dev",
     "build": "bun nx run @puzzle/3d-play:build",

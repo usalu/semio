@@ -3,11 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Semio.Store;
+
+#region 🔌Adapters
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using Semio.Store;
 using Formatting = Newtonsoft.Json.Formatting;
+#endregion 🔌Adapters
 
 namespace Semio;
 
@@ -26,9 +29,8 @@ public static class SemioDiff
     public static KitDiffValidationResult ValidateKitDiff(Kit kit, KitDiff diff, bool heal = false)
     {
         var ctx = new KitDiffValidationContext { Heal = heal };
-        var json = KitDiffValidationJson;
-        var kitObj = JObject.Parse(JsonConvert.SerializeObject(kit, json));
-        var diffObj = JObject.Parse(JsonConvert.SerializeObject(diff, json));
+        var kitObj = JObject.Parse(SemioJson.Codec.SerializeKitDiffValidation(kit));
+        var diffObj = JObject.Parse(SemioJson.Codec.SerializeKitDiffValidation(diff));
         JObject? outDiff = heal ? (JObject)diffObj.DeepClone() : null;
         var refs = RefSets.FromKit(kitObj);
         RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "types", "type", "types", null, refs);
@@ -51,7 +53,7 @@ public static class SemioDiff
         if (heal && outDiff != null)
         {
             if (outDiff.Properties().Any())
-                diffOut = JsonConvert.DeserializeObject<KitDiff>(outDiff.ToString(Formatting.None), json);
+                diffOut = SemioJson.Codec.DeserializeKitDiffValidation<KitDiff>(outDiff.ToString(Formatting.None));
             else
                 diffOut = new KitDiff();
         }
@@ -64,11 +66,6 @@ public static class SemioDiff
         };
     }
 
-    private static readonly JsonSerializerSettings KitDiffValidationJson = new()
-    {
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        NullValueHandling = NullValueHandling.Include
-    };
 
     private sealed class KitDiffValidationContext
     {

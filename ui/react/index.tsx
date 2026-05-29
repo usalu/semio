@@ -141,6 +141,27 @@ export interface ThreeHostPort {
 }
 // #endregion 🔌Ports
 
+// #region 🔌PortWiring
+/** @emoji 🔌 Default host ports — inject test doubles via module assignment before render. */
+export let reactHostPort: ReactHostPort = {
+  createElement: React.createElement,
+  useState: React.useState,
+  useEffect: React.useEffect,
+};
+
+/** @emoji 🔌 Default diagram host port wired to @xyflow/react adapters. */
+export let flowHostPort: FlowHostPort = {
+  flow: ReactFlow,
+  provider: ReactFlowProvider,
+};
+
+/** @emoji 🔌 Default R3F host port wired to fiber/drei adapters. */
+export let threeHostPort: ThreeHostPort = {
+  canvas: ThreeCanvas,
+  drei: { OrbitControls, Grid },
+};
+// #endregion 🔌PortWiring
+
 // #region 🎼Utilities
 
 // Generic utility and type definitions that make .elements/ui self-contained.

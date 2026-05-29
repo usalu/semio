@@ -585,7 +585,6 @@ export function buildBoardPlayRuntime(): ProductRuntime {
 /** @emoji 🛝 Board play harness as a single {@link Playground} instance. */
 export class BoardPlayground extends Playground {
 	readonly id = BOARD_PLAY_APP_ID;
-	readonly puzzleChrome = "board" as const;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
 	createRuntime(): ProductRuntime {

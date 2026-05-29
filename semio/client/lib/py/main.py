@@ -91,6 +91,19 @@ class GraphQlSchemaPort(typing.Protocol):
     """📜 GraphQL schema host port (graphene in 🔌Adapters implements)."""
 
     def object_type(self, name: str, **fields: typing.Any) -> typing.Any: ...
+
+
+class _StdlibJsonCodec:
+    """📜 stdlib json adapter for {@link JsonCodecPort}."""
+
+    def loads(self, data: str) -> typing.Any:
+        return json.loads(data)
+
+    def dumps(self, value: typing.Any) -> str:
+        return json.dumps(value)
+
+
+json_codec: JsonCodecPort = _StdlibJsonCodec()
 # #endregion 🔌Ports
 
 # #region 🧩PydanticCompatibility
