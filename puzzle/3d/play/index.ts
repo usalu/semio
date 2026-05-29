@@ -1315,7 +1315,7 @@ export function buildScenePlayKindsPanelBody(ctx: WindowBodyViewContext): UiNode
 }
 
 /** @emoji 🛝 Scene play harness as a single {@link Playground} instance. */
-export class ScenePlayground extends Playground {
+export class Playground3d extends Playground {
   readonly id = PLAY_APP_ID;
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
   readonly keybindings = [

@@ -5,16 +5,10 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
+import { reactHostPort } from "@ui/react";
 import { Line, OrbitControls, Text } from "@react-three/drei";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
-	Suspense,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	useSyncExternalStore,
 	type CSSProperties,
 	type KeyboardEvent,
 	type ReactNode,
@@ -178,7 +172,7 @@ export function useTessellation(
 ): MeshTransfer | null {
 	const [mesh, setMesh] = useState<MeshTransfer | null>(null);
 	const rafRef = useRef(0);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!kernel || !solid) {
 			setMesh(null);
 			return;
@@ -237,7 +231,7 @@ export function useDocumentMeshes(
 ): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
 	const [meshes, setMeshes] = useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
 	const revision = model.revision;
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!kernel) {
 			setMeshes([]);
 			return;
@@ -1251,7 +1245,7 @@ export function createSpatialPickEvent(
 // #region 🖼️DisplayPrimitives
 function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const p = item.params;
-	const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), []);
+	const edgeGeo = reactHostPort.useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), []);
 	if (!p) return null;
 	const a = readVec3(p.cornerA);
 	const b = readVec3(p.cornerB);
@@ -1379,8 +1373,8 @@ function GeometryTargetWireframes({
 	readonly color: string;
 	readonly opacity: number;
 }): ReactNode {
-	const buckets = useMemo(() => geometryBuckets(geometry), [geometry]);
-	const segments = useMemo(() => {
+	const buckets = reactHostPort.useMemo(() => geometryBuckets(geometry), [geometry]);
+	const segments = reactHostPort.useMemo(() => {
 		const out: (readonly [Vec3, Vec3])[] = [];
 		for (const target of targets) {
 			for (const [a, b] of geometryEntityWireSegments(buckets, target.kind, target.id)) {
@@ -1423,8 +1417,8 @@ function GeometryTargetPreviewMeshes({
 	readonly color: string;
 	readonly opacity: number;
 }): ReactNode {
-	const buckets = useMemo(() => geometryBuckets(geometry), [geometry]);
-	const solids = useMemo(() => {
+	const buckets = reactHostPort.useMemo(() => geometryBuckets(geometry), [geometry]);
+	const solids = reactHostPort.useMemo(() => {
 		const out: { readonly key: string; readonly center: Vec3; readonly size: Vec3 }[] = [];
 		for (const target of targets) {
 			const pts = geometryEntityPointsForPickTarget(buckets, target).map(transform);
@@ -1470,7 +1464,7 @@ function PreviewItem({
 	if (!p) return null;
 	const previewKind = typeof p.previewKind === "string" ? p.previewKind : "preview";
 	const targets = parseDisplaySelectionTargets(p.targets);
-	const transform = useMemo(() => transformPointsForPreviewKind(previewKind, p), [previewKind, p]);
+	const transform = reactHostPort.useMemo(() => transformPointsForPreviewKind(previewKind, p), [previewKind, p]);
 	const points = readVec3Array(p.points);
 	const cursor = readVec3(p.cursor);
 	const prevPoint = readVec3(p.prevPoint);
@@ -2337,11 +2331,11 @@ function GeometryFactoryWireframeLayer({
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly visible?: boolean;
 }): ReactNode {
-	const segments = useMemo(() => {
+	const segments = reactHostPort.useMemo(() => {
 		if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
 		return collectGeometryEdgeSegments(geometryBuckets(geometry));
 	}, [geometry]);
-	const edgeGeometry = useMemo(() => {
+	const edgeGeometry = reactHostPort.useMemo(() => {
 		if (!segments.length) return null;
 		const pos = new Float32Array(segments.length * 6);
 		for (let i = 0; i < segments.length; i++) {
@@ -2358,7 +2352,7 @@ function GeometryFactoryWireframeLayer({
 		geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 		return geo;
 	}, [segments]);
-	useEffect(() => () => edgeGeometry?.dispose(), [edgeGeometry]);
+	reactHostPort.useEffect(() => () => edgeGeometry?.dispose(), [edgeGeometry]);
 	if (!visible || !edgeGeometry) return null;
 	return (
 		<lineSegments geometry={edgeGeometry} raycast={raycastNone} renderOrder={0}>
@@ -2401,26 +2395,26 @@ export function SpatialPickGeometryLayer({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const targets = useMemo(
+	const targets = reactHostPort.useMemo(
 		() => createSpatialPickTargets(geometry, activeModelDefinitionId),
 		[geometry, topoRevision, modelDefinitionRevision, activeModelDefinitionId],
 	);
-	const viewTargets = useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
-	const pinnedTargetKeys = useMemo(() => {
+	const viewTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
+	const pinnedTargetKeys = reactHostPort.useMemo(() => {
 		const keys = new Set<string>();
 		if (hoveredTargetKey) keys.add(hoveredTargetKey);
 		if (selectedTargetKey) keys.add(selectedTargetKey);
 		selectedTargetKeys?.forEach((key) => keys.add(key));
 		return keys;
 	}, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
-	const renderedTargets = useMemo(() => {
+	const renderedTargets = reactHostPort.useMemo(() => {
 		return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys);
 	}, [viewTargets, filterKindToggles, pinnedTargetKeys]);
-	const selectableTargets = useMemo(
+	const selectableTargets = reactHostPort.useMemo(
 		() => filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles),
 		[viewTargets, selectionAccept, selectionKindToggles],
 	);
-	const requestSelection = useCallback(
+	const requestSelection = reactHostPort.useCallback(
 		(target: SpatialPickTarget, event: ThreeEvent<PointerEvent>) => {
 			if (!hostSelectionEnabled || !onSelectionRequest || selectionAccept.length === 0) return;
 			event.stopPropagation();
@@ -2541,12 +2535,12 @@ export function resolveFaceInfoFromTriangleIndex(
 
 /** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
 function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTransfer; readonly visible?: boolean }): ReactNode {
-	const geometry = useMemo(() => {
+	const geometry = reactHostPort.useMemo(() => {
 		const geo = new THREE.BufferGeometry();
 		geo.setAttribute("position", new THREE.BufferAttribute(data.edges, 3));
 		return geo;
 	}, [data.edges]);
-	useEffect(() => () => geometry.dispose(), [geometry]);
+	reactHostPort.useEffect(() => () => geometry.dispose(), [geometry]);
 	if (!visible) return null;
 	return (
 		<lineSegments geometry={geometry} raycast={raycastNone}>
@@ -2575,18 +2569,18 @@ export function TessellatedCommitMesh({
 	onFacePointerMove,
 	onFacePointerDown,
 }: TessellatedCommitMeshProps): ReactNode {
-	const geometry = useMemo(
+	const geometry = reactHostPort.useMemo(
 		() => buildBufferGeometryFromMeshTransfer(data),
 		[data.position, data.normal, data.index, data.faceGroups],
 	);
-	useEffect(() => () => geometry.dispose(), [geometry]);
+	reactHostPort.useEffect(() => () => geometry.dispose(), [geometry]);
 	if (!showFaces && !showEdges) return null;
-	const faceInfoById = useMemo(() => {
+	const faceInfoById = reactHostPort.useMemo(() => {
 		const map = new Map<string, FaceInfo>();
 		for (const info of data.faceInfos) map.set(String(info.entityId), info);
 		return map;
 	}, [data.faceInfos]);
-	const resolveFace = useCallback(
+	const resolveFace = reactHostPort.useCallback(
 		(event: ThreeEvent<PointerEvent>) => {
 			const group = findFaceGroupAt(data.faceGroups, event.faceIndex ?? -1);
 			if (!group) return null;
@@ -2679,7 +2673,7 @@ export function CommittedMeshLayer({
 // #region 🪝Hooks
 /** @emoji 🪝 Memoized `createInteractionRuntime` for React hosts. */
 export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
-	return useMemo(() => createInteractionRuntime(spec, opts), [spec, opts]);
+	return reactHostPort.useMemo(() => createInteractionRuntime(spec, opts), [spec, opts]);
 }
 
 /** @emoji 🪝 Subscribes to `InteractionRuntime` revision updates for React hosts. */
@@ -2705,7 +2699,7 @@ export function useHostState<T>(
 	const [internal, setInternal] = useState(initial);
 	const isControlled = controlled !== undefined;
 	const value = isControlled ? controlled : internal;
-	const setValue = useCallback(
+	const setValue = reactHostPort.useCallback(
 		(next: T | ((prev: T) => T)) => {
 			if (isControlled) {
 				const resolved = resolveHostStateNext(controlled as T, next);
@@ -2795,13 +2789,13 @@ export function SpatialAutoFit({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const bounds = useMemo(
+	const bounds = reactHostPort.useMemo(
 		() => mergeSpatialSceneBounds(boundsFromMeshTransfers(meshes), boundsFromSpatialPickGeometry(geometry)),
 		[meshes, geometry, geometryRevision],
 	);
 	const lastKey = useRef("");
 	const hasApplied = useRef(false);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!bounds) return;
 		const meshKey = meshes.map((m, i) => meshTransferContentKey(m, i)).join("|");
 		const key = `${geometryRevision}:${meshKey}`;
@@ -2838,7 +2832,7 @@ export function applySpatialAutoFitCamera(
 /** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
 function InvalidateOnRevision({ revision }: { readonly revision: string | number }): null {
 	const invalidate = useThree((state) => state.invalidate);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		invalidate();
 	}, [revision, invalidate]);
 	return null;
@@ -2847,7 +2841,7 @@ function InvalidateOnRevision({ revision }: { readonly revision: string | number
 /** @emoji 🎯 Redraws when host selection pick keys change (demand frameloop). */
 function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selectionKey: string }): null {
 	const invalidate = useThree((state) => state.invalidate);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		invalidate();
 	}, [selectionKey, invalidate]);
 	return null;
@@ -3059,19 +3053,19 @@ export function InteractionSpatialView({
 	theme = defaultInteractionSpatialViewTheme,
 	slots,
 }: InteractionSpatialViewProps): ReactNode {
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		bindScenePreviewKernel(previewKernel);
 	}, [previewKernel]);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		onSnapshotStateChange?.(snapshot.state);
 	}, [snapshot.state, onSnapshotStateChange]);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		onSnapshotRevisionChange?.(snapshot.revision);
 	}, [snapshot.revision, onSnapshotRevisionChange]);
 	const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
 	const gridDivisions = resolvedTheme.gridDivisions ?? 40;
 	const gridSize = resolvedTheme.gridSize ?? 40;
-	const gridHelper = useMemo(() => {
+	const gridHelper = reactHostPort.useMemo(() => {
 		const g = new THREE.GridHelper(gridSize, gridDivisions, 0x3a3a55, 0x1c1c28);
 		g.rotation.x = Math.PI / 2;
 		g.position.set(0, 0, 0.002);
@@ -3080,14 +3074,14 @@ export function InteractionSpatialView({
 		});
 		return g;
 	}, [gridDivisions, gridSize]);
-	const layerMeshes = useMemo(() => {
+	const layerMeshes = reactHostPort.useMemo(() => {
 		if (committedMeshes?.length) return committedMeshes;
 		if (committedMesh) return [{ solid: solidRef("committed"), mesh: committedMesh }];
 		return [];
 	}, [committedMeshes, committedMesh]);
-	const autoFitSources = useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
+	const autoFitSources = reactHostPort.useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
 	const ctx = snapshot.context;
-	const geometryPreviewTransform = useMemo(
+	const geometryPreviewTransform = reactHostPort.useMemo(
 		() => geometryPreviewTransformFromDisplay(displayModel ?? snapshot.display),
 		[displayModel, snapshot.display],
 	);
@@ -3108,7 +3102,7 @@ export function InteractionSpatialView({
 		Boolean(onScenePointerMove) &&
 		origin !== null;
 	const pickPlaneEnabled = interactionSpatialGroundPickPlaneEnabled(snapshot, pickEnabled, selectionAccept);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		onPickEnabledChange?.(pickPlaneEnabled);
 	}, [pickPlaneEnabled, onPickEnabledChange]);
 	const onGroundPickEvent = (point: Vec3) => {
@@ -3129,7 +3123,7 @@ export function InteractionSpatialView({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const sceneVisibility = useMemo(
+	const sceneVisibility = reactHostPort.useMemo(
 		() => resolveSpatialSceneVisibility(activeModelDefinitionId, filterKindToggles),
 		[activeModelDefinitionId, filterKindToggles],
 	);
@@ -3224,7 +3218,7 @@ function SpatialChromeMasterToggle({
 	readonly ariaLabel: string;
 }): ReactNode {
 	const inputRef = useRef<HTMLInputElement>(null);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (inputRef.current) inputRef.current.indeterminate = state === "partial";
 	}, [state]);
 	return (
@@ -3651,7 +3645,7 @@ export function replFinalizeSelection(
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
 export function useDocumentHistory(): DocumentHistory {
-	return useMemo(() => new DocumentHistory(), []);
+	return reactHostPort.useMemo(() => new DocumentHistory(), []);
 }
 
 /** @emoji 🪩 Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
@@ -3674,7 +3668,7 @@ export function getReplHistoryPresentation(
 /** @emoji 🪩 Subscribes to runtime revisions and derives REPL undo/redo labels. */
 export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpec, history: DocumentHistory) {
 	const snap = useInteractionSnapshot(rt);
-	return useMemo(() => getReplHistoryPresentation(spec, snap, history), [spec, snap, history]);
+	return reactHostPort.useMemo(() => getReplHistoryPresentation(spec, snap, history), [spec, snap, history]);
 }
 
 /** @emoji 🎛️ Optional controlled chrome state for {@link InteractionRepl}. */
@@ -3913,17 +3907,17 @@ export function InteractionRepl({
 	const snapshot = useInteractionSnapshot(rt);
 	const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
 	const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.model, tessTolerance);
-	const documentArchivedBoxLayouts = useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
-	const allArchivedBoxLayouts = useMemo(
+	const documentArchivedBoxLayouts = reactHostPort.useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
+	const allArchivedBoxLayouts = reactHostPort.useMemo(
 		() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts],
 		[documentArchivedBoxLayouts, archivedBoxLayouts],
 	);
-	const baseDisplay = useMemo(() => replBaseDisplayForHistory(snapshot), [snapshot]);
-	const mergedDisplay = useMemo(
+	const baseDisplay = reactHostPort.useMemo(() => replBaseDisplayForHistory(snapshot), [snapshot]);
+	const mergedDisplay = reactHostPort.useMemo(
 		() => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts),
 		[baseDisplay, allArchivedBoxLayouts],
 	);
-	const chromeDefaults = useMemo(() => defaultInteractionReplChromeState(), []);
+	const chromeDefaults = reactHostPort.useMemo(() => defaultInteractionReplChromeState(), []);
 	const [cmdLine, setCmdLine] = useHostState(cmdLineProp, onCmdLineChange, () => chromeDefaults.cmdLine);
 	const [activeIndex, setActiveIndex] = useHostState(activeSuggestionIndexProp, onActiveSuggestionIndexChange, () => chromeDefaults.activeSuggestionIndex);
 	const [filterTypologyToggles, setFilterTypologyToggles] = useHostState(
@@ -3952,7 +3946,7 @@ export function InteractionRepl({
 		() => chromeDefaults.activeModelDefinitionId,
 	);
 	const mdIdForView = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
-	const committedMeshesForView = useMemo(
+	const committedMeshesForView = reactHostPort.useMemo(
 		() => (modelDefinitionUsesGeometryPicking(mdIdForView) ? committedMeshes : []),
 		[committedMeshes, mdIdForView],
 	);
@@ -3962,20 +3956,20 @@ export function InteractionRepl({
 		onModelDefinitionRevisionChange,
 		() => chromeDefaults.modelDefinitionRevision,
 	);
-	const modelDefinitions = useMemo(() => listModelDefinitionManifests(), []);
-	const transformsFrom = useMemo(
+	const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
+	const transformsFrom = reactHostPort.useMemo(
 		() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId],
 	);
-	const transformsTo = useMemo(
+	const transformsTo = reactHostPort.useMemo(
 		() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId],
 	);
-	const modelDefinitionScope = useMemo(
+	const modelDefinitionScope = reactHostPort.useMemo(
 		() => resolveModelDefinitionScope(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId],
 	);
-	const scopedInteractions = useMemo(
+	const scopedInteractions = reactHostPort.useMemo(
 		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId, modelDefinitionRevision],
 	);
@@ -4000,14 +3994,14 @@ export function InteractionRepl({
 		() => chromeDefaults.lastFinalizedInteractionId,
 	);
 	const [canvasBinding, setCanvasBinding] = useState<{ readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement } | null>(null);
-	const handleCanvasReady = useCallback(
+	const handleCanvasReady = reactHostPort.useCallback(
 		(binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => {
 			setCanvasBinding(binding);
 			onCanvasReady?.(binding);
 		},
 		[onCanvasReady],
 	);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		onSnapshotChange?.(snapshot);
 	}, [snapshot, onSnapshotChange]);
 	const cmdRef = useRef<HTMLInputElement>(null);
@@ -4025,7 +4019,7 @@ export function InteractionRepl({
 	const cameraNavigatingRef = useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const boundInteractionSession = Boolean(interactionId) && interactionActive;
-	const displayedSelectionTargets = useMemo(
+	const displayedSelectionTargets = reactHostPort.useMemo(
 		() =>
 			replDisplayedSelectionTargets(
 				boundInteractionSession,
@@ -4042,37 +4036,37 @@ export function InteractionRepl({
 			interactionSelectionByState,
 		],
 	);
-	const selectedPickKeys = useMemo(() => {
+	const selectedPickKeys = reactHostPort.useMemo(() => {
 		const keys = new Set(displayedSelectionTargets.map(spatialSelectionTargetKey));
 		return pinnedPickTargetKeys(keys);
 	}, [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
-	const selectionInvalidateKey = useMemo(() => [...selectedPickKeys].sort().join("\0"), [selectedPickKeys]);
-	const geometryPreviewTransform = useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
+	const selectionInvalidateKey = reactHostPort.useMemo(() => [...selectedPickKeys].sort().join("\0"), [selectedPickKeys]);
+	const geometryPreviewTransform = reactHostPort.useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
 	const pickSourceGeometry = geometry ?? pickGeometryProp;
 	const pickSourceRevision =
 		pickSourceGeometry && typeof pickSourceGeometry === "object" && "revision" in pickSourceGeometry
 			? Number((pickSourceGeometry as { revision?: unknown }).revision)
 			: 0;
-	const pickTargets = useMemo(
+	const pickTargets = reactHostPort.useMemo(
 		() => createSpatialPickTargets(pickSourceGeometry, activeModelDefinitionId),
 		[pickSourceGeometry, pickSourceRevision, modelDefinitionRevision, activeModelDefinitionId],
 	);
-	const activeTypologyIds = useMemo(() => modelDefinitionTypologyIds(activeModelDefinitionId), [activeModelDefinitionId]);
-	const scopedPickTargets = useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeModelDefinitionId), [pickTargets, activeModelDefinitionId]);
-	const visiblePickTargets = useMemo(() => {
+	const activeTypologyIds = reactHostPort.useMemo(() => modelDefinitionTypologyIds(activeModelDefinitionId), [activeModelDefinitionId]);
+	const scopedPickTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeModelDefinitionId), [pickTargets, activeModelDefinitionId]);
+	const visiblePickTargets = reactHostPort.useMemo(() => {
 		const showPrimitives = filterSpatialPickTargetsForPrimitiveToggles(scopedPickTargets, filterPrimitiveToggles);
 		return filterSpatialPickTargetsForTypologyToggles(showPrimitives, filterTypologyToggles, activeTypologyIds);
 	}, [scopedPickTargets, filterPrimitiveToggles, filterTypologyToggles, activeTypologyIds]);
-	const viewFilterKindToggles = useMemo(
+	const viewFilterKindToggles = reactHostPort.useMemo(
 		() => spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, visiblePickTargets),
 		[activeModelDefinitionId, visiblePickTargets],
 	);
-	const selectablePickTargets = useMemo(() => {
+	const selectablePickTargets = reactHostPort.useMemo(() => {
 		const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
 		return filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
 	}, [visiblePickTargets, selectionPrimitiveToggles, selectionTypologyToggles, activeTypologyIds]);
-	const effectiveSelectionKindToggles = useMemo(
+	const effectiveSelectionKindToggles = reactHostPort.useMemo(
 		() =>
 			intersectSpatialPickKindToggles(
 				viewFilterKindToggles,
@@ -4080,32 +4074,32 @@ export function InteractionRepl({
 			),
 		[activeModelDefinitionId, selectablePickTargets, viewFilterKindToggles],
 	);
-	const scopeTypologyIds = useMemo(() => modelDefinitionScope.typologies.map((row) => row.id), [modelDefinitionScope.typologies]);
-	const primitiveShowGroupState = useMemo(
+	const scopeTypologyIds = reactHostPort.useMemo(() => modelDefinitionScope.typologies.map((row) => row.id), [modelDefinitionScope.typologies]);
+	const primitiveShowGroupState = reactHostPort.useMemo(
 		() => spatialToggleGroupState(SPATIAL_PRIMITIVE_KINDS, filterPrimitiveToggles),
 		[filterPrimitiveToggles],
 	);
-	const primitiveFilterGroupState = useMemo(
+	const primitiveFilterGroupState = reactHostPort.useMemo(
 		() => spatialToggleGroupState(SPATIAL_PRIMITIVE_KINDS, selectionPrimitiveToggles),
 		[selectionPrimitiveToggles],
 	);
-	const typologyShowGroupState = useMemo(
+	const typologyShowGroupState = reactHostPort.useMemo(
 		() => spatialToggleGroupState(scopeTypologyIds, filterTypologyToggles),
 		[scopeTypologyIds, filterTypologyToggles],
 	);
-	const typologySelectionGroupState = useMemo(
+	const typologySelectionGroupState = reactHostPort.useMemo(
 		() => spatialToggleGroupState(scopeTypologyIds, selectionTypologyToggles),
 		[scopeTypologyIds, selectionTypologyToggles],
 	);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		rendererSelectionByModelRef.current = rendererSelectionByModel;
 	}, [rendererSelectionByModel]);
 
-	const dismissReplChrome = useCallback(() => {
+	const dismissReplChrome = reactHostPort.useCallback(() => {
 		dragCleanupRef.current?.();
 		dragCleanupRef.current = null;
 		dragSelectionRef.current = null;
@@ -4116,7 +4110,7 @@ export function InteractionRepl({
 		setInteractionMenuOpen(false);
 	}, []);
 
-	const cancelActiveInteraction = useCallback(() => {
+	const cancelActiveInteraction = reactHostPort.useCallback(() => {
 		const aborted = abortActiveInteractionSession(rt);
 		if (!aborted && !interactionId) return false;
 		if (!aborted) rt.cancel();
@@ -4128,7 +4122,7 @@ export function InteractionRepl({
 		return true;
 	}, [rt, interactionId, onInteractionId, dismissReplChrome, onCancel, setInteractionSelectionByState]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!interactionId || !snapshot.lastResponse?.ok) return;
 		setLastFinalizedInteractionId(interactionId);
 		setRendererSelectionByModel((prev) => replFinalizeSelection(prev, activeModelDefinitionId, snapshot.lastResponse));
@@ -4144,12 +4138,12 @@ export function InteractionRepl({
 		setCmdLine,
 	]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!interactionId || !isFinalInteractionState(spec, snapshot.state)) return;
 		setCmdLine("");
 	}, [interactionId, spec, snapshot.state, setCmdLine]);
 
-	const handleEscapeKey = useCallback(() => {
+	const handleEscapeKey = reactHostPort.useCallback(() => {
 		if (selectionMenu !== null) {
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
@@ -4170,7 +4164,7 @@ export function InteractionRepl({
 		}
 	}, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction, onEscape, setSelectionMenu, setHoveredPickKey]);
 
-	const startRuntime = useCallback(async () => {
+	const startRuntime = reactHostPort.useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly ModelEntityKind[];
 		const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 		const accepted = replSelectionAccepted(accept, replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId));
@@ -4178,7 +4172,7 @@ export function InteractionRepl({
 		await rt.send(replStartEvent(accepted));
 	}, [rt, activeModelDefinitionId, setInteractionSelectionByState]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!interactionId) return;
 		if (suppressAutoStartOnceRef.current) {
 			suppressAutoStartOnceRef.current = false;
@@ -4187,13 +4181,13 @@ export function InteractionRepl({
 		void startRuntime();
 	}, [interactionId, startRuntime]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
 		rt.cancel();
 		void startRuntime();
 	}, [sessionRestartNonce, rt, startRuntime]);
 
-	const repeatCurrentInteraction = useCallback(() => {
+	const repeatCurrentInteraction = reactHostPort.useCallback(() => {
 		rt.cancel();
 		void startRuntime();
 	}, [rt, startRuntime]);
@@ -4202,12 +4196,12 @@ export function InteractionRepl({
 	const hostPickingEnabled = replHostGeometryPickingEnabled(interactionId, spec, snapshot.state);
 	const showPickLayer = replGeometryPickLayerVisible(mdIdForView);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
 	}, [geometry, snapshot.state, modelDefinitionRevision]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 		const typologyDefaults = defaultSpatialTypologyTogglesForModelDefinition(mdId);
 		const primitiveDefaults = defaultSpatialPrimitiveToggles();
@@ -4230,7 +4224,7 @@ export function InteractionRepl({
 		setLastFinalizedInteractionId,
 	]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setCmdLine("");
 		setActiveIndex(0);
 		setSelectionMenu(null);
@@ -4239,14 +4233,14 @@ export function InteractionRepl({
 		setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
 	}, [interactionId, rt, setInteractionSelectionByState]);
 
-	const confirmInteractionSelection = useCallback(() => {
+	const confirmInteractionSelection = reactHostPort.useCallback(() => {
 		const snap = rt.getSnapshot();
 		if (!interactionCanConfirmSelection(spec, snap.state, snap.context, scenePreview())) return false;
 		void rt.send({ kind: "confirm", modifiers: {} });
 		return true;
 	}, [rt, spec]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!interactionId || !interactionActive) {
 			setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
 			return;
@@ -4271,12 +4265,12 @@ export function InteractionRepl({
 		setInteractionSelectionByState,
 	]);
 
-	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
-	const defaultSelectionAccept = useMemo(
+	const runtimeSelectionAccept = reactHostPort.useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
+	const defaultSelectionAccept = reactHostPort.useMemo(
 		() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID),
 		[activeModelDefinitionId],
 	);
-	const activeSelectionAccept = useMemo((): readonly ModelEntityKind[] => {
+	const activeSelectionAccept = reactHostPort.useMemo((): readonly ModelEntityKind[] => {
 		if (runtimeSelectionAccept.length > 0) {
 			const allowed = new Set(defaultSelectionAccept);
 			return runtimeSelectionAccept.filter((kind) => allowed.has(kind));
@@ -4284,12 +4278,12 @@ export function InteractionRepl({
 		if (boundInteractionSession && runtimeSelectionAccept.length === 0) return [];
 		return defaultSelectionAccept;
 	}, [runtimeSelectionAccept, boundInteractionSession, defaultSelectionAccept]);
-	const viewObjectCount = useMemo(() => {
+	const viewObjectCount = reactHostPort.useMemo(() => {
 		if (isShapeModelDefinition(activeModelDefinitionId)) return 0;
 		return countViewObjectsForModelDefinition(documentModel.model, mdIdForView);
 	}, [activeModelDefinitionId, documentModel.model, mdIdForView, modelDefinitionRevision]);
 
-	const commitSelection = useCallback(
+	const commitSelection = reactHostPort.useCallback(
 		(selection: readonly SelectionTarget[]) => {
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
@@ -4311,7 +4305,7 @@ export function InteractionRepl({
 		],
 	);
 
-	const applySelectionPrune = useCallback(
+	const applySelectionPrune = reactHostPort.useCallback(
 		(map: (selection: readonly SelectionTarget[]) => readonly SelectionTarget[]) => {
 			const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 			setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, mdId, map(replRendererSelectionTargets(prev, mdId))));
@@ -4327,7 +4321,7 @@ export function InteractionRepl({
 		[activeModelDefinitionId, setRendererSelectionByModel, setInteractionSelectionByState],
 	);
 
-	const dispatchSelectionTargets = useCallback(
+	const dispatchSelectionTargets = reactHostPort.useCallback(
 		(targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
 			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
 			const nextSelection = replMergeSelectionPickInView(
@@ -4353,7 +4347,7 @@ export function InteractionRepl({
 		],
 	);
 
-	const onSelectionRequest = useCallback(
+	const onSelectionRequest = reactHostPort.useCallback(
 		(request: SpatialSelectionRequest) => {
 			onSelectionRequestProp?.(request);
 			if (request.targets.length === 1) {
@@ -4366,7 +4360,7 @@ export function InteractionRepl({
 		[dispatchSelectionTargets, onSelectionRequestProp, setSelectionMenu, setHoveredPickKey],
 	);
 
-	const onHoverTarget = useCallback(
+	const onHoverTarget = reactHostPort.useCallback(
 		(target: SpatialPickTarget | null) => {
 			const key = target ? spatialPickTargetKey(target) : null;
 			setHoveredPickKey((prev) => (prev === key ? prev : key));
@@ -4375,7 +4369,7 @@ export function InteractionRepl({
 		[onHoverTargetProp, setHoveredPickKey],
 	);
 
-	const onCameraNavigate = useCallback(
+	const onCameraNavigate = reactHostPort.useCallback(
 		(active: boolean) => {
 			cameraNavigatingRef.current = active;
 			if (active) onHoverTarget(null);
@@ -4384,7 +4378,7 @@ export function InteractionRepl({
 		[onHoverTarget, onCameraNavigateProp],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const canvas = canvasBinding?.domElement;
 		const camera = canvasBinding?.camera;
 		if (!canvas || !camera || !hostPickingEnabled) return;
@@ -4417,7 +4411,7 @@ export function InteractionRepl({
 		};
 	}, [canvasBinding, hostPickingEnabled, selectablePickTargets, onHoverTarget]);
 
-	const pointerMoveActive = useMemo(() => {
+	const pointerMoveActive = reactHostPort.useMemo(() => {
 		const si = snapshot.spatialInteraction;
 		return (
 			si.spatialGroundPick &&
@@ -4427,7 +4421,7 @@ export function InteractionRepl({
 		);
 	}, [snapshot.state, snapshot.spatialInteraction]);
 
-	const onSpatialInteractionEvent = useCallback(
+	const onSpatialInteractionEvent = reactHostPort.useCallback(
 		(ev: InteractionEvent) => {
 			onInteractionEventProp?.(ev);
 			if (ev.kind === "pointer.down") {
@@ -4484,7 +4478,7 @@ export function InteractionRepl({
 		],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const canvas = canvasBinding?.domElement;
 		const camera = canvasBinding?.camera;
 		if (!canvas || !camera || !hostPickingEnabled || activeSelectionAccept.length === 0) return;
@@ -4622,7 +4616,7 @@ export function InteractionRepl({
 		hostPickingEnabled,
 	]);
 
-	const dispatchTransition = useCallback(
+	const dispatchTransition = reactHostPort.useCallback(
 		(row: InteractionKeybindRow) => {
 			onTransitionRun?.(row);
 			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, model: documentModel.model });
@@ -4631,9 +4625,9 @@ export function InteractionRepl({
 		[rt, spec.id, documentModel.model, onTransitionRun],
 	);
 
-	const transitionRows = useMemo(() => listKeyedInteractionTransitions(spec, snapshot.state), [spec, snapshot.state]);
+	const transitionRows = reactHostPort.useMemo(() => listKeyedInteractionTransitions(spec, snapshot.state), [spec, snapshot.state]);
 
-	const allSuggestions = useMemo((): ReplSuggestion[] => {
+	const allSuggestions = reactHostPort.useMemo((): ReplSuggestion[] => {
 		const out: ReplSuggestion[] = [];
 		for (const p of scopedInteractions) {
 			out.push({
@@ -4682,25 +4676,25 @@ export function InteractionRepl({
 		return out;
 	}, [scopedInteractions, transitionRows, modelDefinitionScope, onInteractionId, dispatchTransition, rt]);
 
-	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
-	const interactionMatches = useMemo(() => replInteractionSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
-	const completionSuffix = useMemo(
+	const filtered = reactHostPort.useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+	const interactionMatches = reactHostPort.useMemo(() => replInteractionSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+	const completionSuffix = reactHostPort.useMemo(
 		() => replActiveCompletionSuffix(cmdLine, filtered, activeIndex),
 		[cmdLine, filtered, activeIndex],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setActiveIndex((i) => (filtered.length ? Math.min(i, filtered.length - 1) : 0));
 	}, [filtered.length, cmdLine]);
 
-	const runSuggestion = useCallback((s: ReplSuggestion) => {
+	const runSuggestion = reactHostPort.useCallback((s: ReplSuggestion) => {
 		s.onRun();
 		setCmdLine("");
 		setActiveIndex(0);
 		setInteractionMenuOpen(false);
 	}, []);
 
-	const runInteractionIdFromSpace = useCallback(
+	const runInteractionIdFromSpace = reactHostPort.useCallback(
 		(id: string | null): boolean => {
 			if (!id) return false;
 			onInteractionId(id);
@@ -4712,9 +4706,9 @@ export function InteractionRepl({
 		[onInteractionId],
 	);
 
-	const replCmdLineValue = useCallback((): string => cmdRef.current?.value ?? cmdLine, [cmdLine]);
+	const replCmdLineValue = reactHostPort.useCallback((): string => cmdRef.current?.value ?? cmdLine, [cmdLine]);
 
-	const tryCommitNumericEntry = useCallback(async (): Promise<boolean> => {
+	const tryCommitNumericEntry = reactHostPort.useCallback(async (): Promise<boolean> => {
 		const snap = rt.getSnapshot();
 		const state = snap.state;
 		if (!interactionInNumericEntryState(spec, state)) return false;
@@ -4732,7 +4726,7 @@ export function InteractionRepl({
 		return true;
 	}, [replCmdLineValue, rt, spec, setCmdLine]);
 
-	const trySubmitLine = useCallback((): boolean => {
+	const trySubmitLine = reactHostPort.useCallback((): boolean => {
 		const raw = cmdLine.trim();
 		if (!raw) return false;
 		if (onCommandSubmit?.(raw)) {
@@ -4763,7 +4757,7 @@ export function InteractionRepl({
 		return false;
 	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine, activeModelDefinitionId]);
 
-	const runTransitionRow = useCallback(
+	const runTransitionRow = reactHostPort.useCallback(
 		(row: InteractionKeybindRow) => {
 			if (row.eventKind.startsWith("set.")) {
 				setCmdLine(row.key);
@@ -4775,7 +4769,7 @@ export function InteractionRepl({
 		[dispatchTransition],
 	);
 
-	const onInputKeyDown = useCallback(
+	const onInputKeyDown = reactHostPort.useCallback(
 		(e: KeyboardEvent<HTMLInputElement>) => {
 			if (e.key === "Escape") {
 				e.preventDefault();
@@ -4853,7 +4847,7 @@ export function InteractionRepl({
 		],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const state = snapshot.state;
 		const lengthEntry = interactionLengthEntryForState(spec, state);
 		const scalarEntry = interactionScalarEntryForState(spec, state);
@@ -4871,7 +4865,7 @@ export function InteractionRepl({
 		if (applyEv) void rt.send(applyEv);
 	}, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const onWinCapture = (e: globalThis.KeyboardEvent) => {
 			if (e.defaultPrevented || e.isComposing) return;
 			const t = e.target;
@@ -4969,7 +4963,7 @@ export function InteractionRepl({
 		onRedo,
 	]);
 
-	const onScenePointerMove = useCallback(
+	const onScenePointerMove = reactHostPort.useCallback(
 		(p: Vec3) => {
 			const event = createSpatialPickEvent("pointer.move", p, null);
 			void rt.send(event);
@@ -5692,8 +5686,8 @@ export function SelectionAttributesPanel({
 	selectionCount,
 	onModelChange,
 }: SelectionAttributesPanelProps): ReactNode {
-	const target = useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
-	const definitions = useMemo(
+	const target = reactHostPort.useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
+	const definitions = reactHostPort.useMemo(
 		() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []),
 		[activeModelDefinitionId, target],
 	);
@@ -5838,16 +5832,16 @@ export function SelectionPropertiesPanel({
 	selection,
 	selectionCount,
 }: SelectionPropertiesPanelProps): ReactNode {
-	const objectRow = useMemo(() => {
+	const objectRow = reactHostPort.useMemo(() => {
 		const objectTarget = selection.find((row) => row.kind === "object");
 		return objectTarget ? (model.objects[objectTarget.id] ?? null) : null;
 	}, [model, selection]);
-	const definitions = useMemo(
+	const definitions = reactHostPort.useMemo(
 		() => (objectRow ? listApplicablePropertyDefinitionsForModelDefinition(activeModelDefinitionId, model, objectRow) : []),
 		[activeModelDefinitionId, model, objectRow],
 	);
 	const [values, setValues] = useState<Readonly<Record<string, Record<string, unknown>>>>({});
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!objectRow || !definitions.length) {
 			setValues({});
 			return;

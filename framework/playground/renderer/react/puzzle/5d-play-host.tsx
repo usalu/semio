@@ -269,7 +269,7 @@ const topologyPlayChromeBoot: PlaygroundChromeBoot = {
 };
 
 /** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/main.ts`). */
-export function bootTopologyPlay(playground: Playground, rootId = "root"): void {
+export function boot5dPlay(playground: Playground, rootId = "root"): void {
 	bootPlayground(playground, topologyPlayChromeBoot, rootId);
 }
 

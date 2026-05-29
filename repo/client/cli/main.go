@@ -20284,6 +20284,7 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 		"# #region 🔌adapter", "#region 🔌adapter",
 		"//#region 🔌adapters", "// #region 🔌adapters",
 		"# #region 🔌adapters",
+		"//#region 🌐rswasmtransport", "// #region 🌐rswasmtransport",
 		"pub mod adapters", "mod adapters ",
 	} {
 		if strings.Contains(lower, marker) {

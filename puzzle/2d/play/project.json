@@ -8,7 +8,7 @@
         "cwd": "puzzle/2d/play",
         "command": "bun ./script.ts dev",
         "env": {
-          "BOARD_PLAY_PORT": "6012",
+          "PUZZLE_2D_PLAY_PORT": "6012",
           "NODE_OPTIONS": "",
           "NX_NATIVE_COMMAND_RUNNER": "false",
           "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
@@ -32,7 +32,7 @@
         "cwd": "puzzle/2d/play",
         "command": "bun ./script.ts test",
         "env": {
-          "BOARD_PLAY_PORT": "6027"
+          "PUZZLE_2D_PLAY_PORT": "6027"
         },
         "forwardAllArgs": true
       }

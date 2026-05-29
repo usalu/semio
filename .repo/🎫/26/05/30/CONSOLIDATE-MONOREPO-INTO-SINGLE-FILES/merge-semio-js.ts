@@ -36,6 +36,9 @@ wasm = wasm.replace(
 const block = `//#region 🌐GraphqlContract\n${contract}//#endregion 🌐GraphqlContract\n\n//#region 🌐GraphqlKitSelection\n${kitSel}//#endregion 🌐GraphqlKitSelection\n\n//#region 🌐RsWasmTransport\n${wasm}//#endregion 🌐RsWasmTransport\n\n`;
 
 index = index.replace(/^(#\/\/endregion 🧲Header\r?\n)/m, `$1\n${block}`);
+if (!index.includes("//#region 🌐GraphqlContract")) {
+  throw new Error("merge failed: GraphqlContract region missing after insert");
+}
 
 index = index.replace(
   /export \{\r?\n  assertRsJsSessionOpenUri,\r?\n  RS_WASM_EMPTY_STORE_URI,\r?\n  SEMIO_GRAPHQL_GOLDEN_SCHEMA_PATH,\r?\n  type GraphqlWirePostBody,\r?\n\} from "\.\/graphql-contract";\r?\n\r?\n/m,

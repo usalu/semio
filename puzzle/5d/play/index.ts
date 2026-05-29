@@ -397,7 +397,7 @@ export function buildTopologyPlayRuntime(): ProductRuntime {
 }
 
 /** @emoji 🛝 Topology play harness as a single {@link Playground} instance. */
-export class TopologyPlayground extends Playground {
+export class Playground5d extends Playground {
 	readonly id = TOPOLOGY_PLAY_APP_ID;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 

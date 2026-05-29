@@ -11,7 +11,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const boardRoot = path.resolve(__dirname, "..");
-const playPort = process.env.BOARD_PLAY_PORT ?? "6027";
+const playPort = process.env.PUZZLE_2D_PLAY_PORT ?? "6027";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playPort}`;
 /** Use real Chrome/Edge for WebGPU: `BOARD_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …` (bundled Chromium may lack an adapter on some Windows setups). */
 const rawChannel = process.env.BOARD_PLAYWRIGHT_CHANNEL;
@@ -50,7 +50,7 @@ export default defineConfig({
 	webServer: {
 		command: `bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${playPort}`,
 		cwd: boardRoot,
-		env: { ...process.env, BOARD_PLAY_PORT: playPort },
+		env: { ...process.env, PUZZLE_2D_PLAY_PORT: playPort },
 		url: `${baseURL}/`,
 		/** Avoid picking up an unrelated process already bound to the play port (stale local dev servers). */
 		reuseExistingServer: false,

@@ -1,6 +1,6 @@
 // #region 🧲Header
-// 💻 .storybook/board.spec.ts
-// Specs: End-to-end checks for the elements board canvas inside the aggregated Storybook static build.
+// 💻 .storybook/puzzle-2d.spec.ts
+// Specs: End-to-end checks for the puzzle 2d canvas inside the aggregated Storybook static build.
 // Summary: Covers selection, wheel zoom, LOD labels, and monolithic vs world-clip raster paths.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header

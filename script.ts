@@ -516,7 +516,7 @@ export class TestScript extends Script {
     });
     try {
       await this.waitForUrl(new URL("index.html", baseUrl).href, 120000);
-      runCmd("bunx", ["playwright", "test", ".storybook/board.spec.ts", "--config", ".storybook/playwright.config.ts"], {
+      runCmd("bunx", ["playwright", "test", ".storybook/puzzle-2d.spec.ts", "--config", ".storybook/playwright.config.ts"], {
         cwd: this.root,
         env: {
           ...process.env,

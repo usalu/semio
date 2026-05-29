@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const playDir = dirname(fileURLToPath(import.meta.url));
 const topologyRoot = dirname(playDir);
-const port = process.env.TOPOLOGY_PLAY_PORT ?? "6035";
+const port = process.env.PUZZLE_5D_PLAY_PORT ?? "6035";
 
 export default defineConfig({
 	testDir: join(playDir, "e2e"),

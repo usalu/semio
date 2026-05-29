@@ -6405,7 +6405,7 @@ interface BoardSceneDescriptor {
 //#endregion 🔖Kinds
 
 //#region 🔖Context
-const BoardContext = createContext<BoardRenderer | null>(null);
+const BoardContext = reactHostPort.createContext<BoardRenderer | null>(null);
 let activeBoardRenderer: BoardRenderer | null = null;
 
 //#endregion 🔖Context

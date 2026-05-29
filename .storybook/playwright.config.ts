@@ -22,7 +22,7 @@ const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127
 
 export default defineConfig({
 	testDir: storybookDir,
-	testMatch: ["board.spec.ts"],
+	testMatch: ["puzzle-2d.spec.ts"],
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,

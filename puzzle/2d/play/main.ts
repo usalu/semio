@@ -1,8 +1,8 @@
 // #region 🧲Header
-/** @emoji 🛝 Board play Vite entry via {@link bootBoardPlay}. */
+/** @emoji 🛝 Puzzle 2d play Vite entry via {@link boot2dPlay}. */
 // #endregion 🧲Header
 
-import { bootBoardPlay } from "@framework/playground/renderer/react/puzzle/board";
-import { BoardPlayground } from "./index.ts";
+import { boot2dPlay } from "@framework/playground/renderer/react/puzzle/2d";
+import { Playground2d } from "./index.ts";
 
-bootBoardPlay(new BoardPlayground());
+boot2dPlay(new Playground2d());

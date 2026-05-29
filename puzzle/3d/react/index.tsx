@@ -620,7 +620,7 @@ function LodFrameRunner(props: {
   const cam = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
   const tmpT = reactHostPort.useMemo(() => new Vector3(), []);
-  const prevLod = useRef<number | null>(null);
+  const prevLod = reactHostPort.useRef<number | null>(null);
   const ctxSig = reactHostPort.useRef("");
   useFrame(() => {
     const tgt = controls?.target ?? tmpT.set(0, 0, 0);
@@ -660,7 +660,7 @@ function LodBridge(props: {
   readonly onLodChange?: (lod: number) => void;
 }) {
   const tmpWorld = reactHostPort.useMemo(() => new Vector3(), []);
-  const lodRuntimeRef = useRef<LodRuntimeCells>({
+  const lodRuntimeRef = reactHostPort.useRef<LodRuntimeCells>({
     sceneLod: DEFAULT_MANUAL_LOD,
     depthVariable: false,
     distanceReference: props.distanceReference,
@@ -1660,16 +1660,16 @@ export function SceneObjectStateProvider(props: {
   readonly onRelocate?: (payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => void;
   readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
-  const storeRef = useRef<SceneObjectStore | null>(null);
+  const storeRef = reactHostPort.useRef<SceneObjectStore | null>(null);
   if (!storeRef.current) {
     const store = new SceneObjectStore();
     store.initFromFixture(props.fixture);
     storeRef.current = store;
   }
   const store = storeRef.current;
-  const syncedFixtureFingerprintRef = useRef<string | null>(null);
-  const syncedPoseFingerprintRef = useRef<string | null>(null);
-  const syncedFixtureRevisionRef = useRef<number | undefined>(undefined);
+  const syncedFixtureFingerprintRef = reactHostPort.useRef<string | null>(null);
+  const syncedPoseFingerprintRef = reactHostPort.useRef<string | null>(null);
+  const syncedFixtureRevisionRef = reactHostPort.useRef<number | undefined>(undefined);
   const skipExternalPoseSyncRef = reactHostPort.useRef(false);
   const fixtureFingerprint = reactHostPort.useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
   const poseFingerprint = reactHostPort.useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
@@ -2999,13 +2999,13 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
 });
 
 export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
-  const group = useRef<Group>(null);
+  const group = reactHostPort.useRef<Group>(null);
   const liveSelection = useLiveSceneSelection();
   const { registerObject, relocateMode } = useRegistryCore();
   const { selectionMode, setSelectedObjectIds, setActiveRelocateObjectId } = useRegistryInteraction();
   const { setSceneHover, clearSceneHover, isSceneHovered } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
-  const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
+  const beforeRef = reactHostPort.useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
   const objectPointerHovered = isSceneHovered({ kind: "object", id: props.id });
   const registrySelected = objectMatchesSceneSelection(props.id, liveSelection);
@@ -3192,7 +3192,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
     selected?: boolean;
   },
 ) {
-  const root = useRef<Group | null>(null);
+  const root = reactHostPort.useRef<Group | null>(null);
   const reg = useRegistry();
   const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
   const r = props.radius ?? 0.35;
@@ -3711,7 +3711,7 @@ function RegistryProvider({
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
   onRelocate?: (p: RelocatePayload) => void;
 }) {
-  const selectionStoreRef = useRef<SelectionSnapshotStore>();
+  const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
   if (!selectionStoreRef.current) {
     selectionStoreRef.current = createSelectionSnapshotStore(controlledSelection ?? EMPTY_SELECTION_SNAPSHOT);
   }
@@ -3749,7 +3749,7 @@ function RegistryProvider({
     },
     [selectionStore],
   );
-  const activeRelocateObjectIdRef = useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
+  const activeRelocateObjectIdRef = reactHostPort.useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
   const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
     if (activeRelocateObjectIdRef.current === id) {
       return;
@@ -3807,21 +3807,21 @@ function RegistryProvider({
   const vortexPickRef = reactHostPort.useRef(new Map<string, Object3D>());
   const objectGroupMap = reactHostPort.useRef(new Map<string, Group | null>());
   const objectKindsRef = reactHostPort.useRef(new Map<string, string | undefined>());
-  const indirectPickRef = useRef<AttractionIndirectPickAwait | null>(null);
+  const indirectPickRef = reactHostPort.useRef<AttractionIndirectPickAwait | null>(null);
 
   reactHostPort.useEffect(() => {
     indirectPickRef.current = attractionIndirectPickAwait;
   }, [attractionIndirectPickAwait]);
 
-  const attractionSessionRef = useRef<{
+  const attractionSessionRef = reactHostPort.useRef<{
     attractingFullId: string;
     attractingObjectId: string;
     attractingCtx: AttractionHandleContext;
     compat: Set<string>;
     snapAttractedFullId: string | null;
   } | null>(null);
-  const attractionEndWorldRef = useRef<Vector3 | null>(null);
-  const attractionThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null>(null);
+  const attractionEndWorldRef = reactHostPort.useRef<Vector3 | null>(null);
+  const attractionThreeRef = reactHostPort.useRef<{ camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null>(null);
   const raycasterRef = reactHostPort.useRef(new Raycaster());
   const ndcRef = reactHostPort.useRef(new Vector2());
   const planeRef = reactHostPort.useRef(new Plane(new Vector3(0, 1, 0), 0));
@@ -4309,7 +4309,7 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 
 function Inner(props: CanvasProps) {
   const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
-  const lodRef = useRef<number>(DEFAULT_MANUAL_LOD);
+  const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
   const [sceneCamera, setSceneCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;

@@ -10,6 +10,8 @@ const ADAPTER_MARKERS = [
   "//#region 🔌adapters",
   "// #region 🔌adapters",
   "# #region 🔌adapters",
+  "//#region 🌐rswasmtransport",
+  "// #region 🌐rswasmtransport",
   "pub mod adapters",
   "mod adapters ",
 ];

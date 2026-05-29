@@ -601,13 +601,13 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧭cad",
+      "name": "dev:cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/renderer:dev",
+      "command": "bun run dev:cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SPATIAL_R3F_PLAY_PORT": "6020"
+        "CAD_JS_RENDERER_PLAY_PORT": "6020"
       },
       "presentation": {
         "group": "3_dev",
@@ -620,13 +620,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏁board",
+      "name": "dev:puzzle:2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/2d/play:dev",
+      "command": "bun run dev:puzzle:2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BOARD_PLAY_PORT": "6012"
+        "PUZZLE_2D_PLAY_PORT": "6012"
       },
       "presentation": {
         "group": "3_dev",
@@ -639,13 +639,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️scene",
+      "name": "dev:puzzle:3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/3d/play:dev",
+      "command": "bun run dev:puzzle:3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SCENE_PLAY_PORT": "6013"
+        "PUZZLE_3D_PLAY_PORT": "6013"
       },
       "presentation": {
         "group": "3_dev",
@@ -658,13 +658,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🌐topology",
+      "name": "dev:puzzle:5d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/5d/play:dev",
+      "command": "bun run dev:puzzle:5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TOPOLOGY_PLAY_PORT": "6014"
+        "PUZZLE_5D_PLAY_PORT": "6014"
       },
       "presentation": {
         "group": "3_dev",

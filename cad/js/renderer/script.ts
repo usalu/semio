@@ -25,7 +25,7 @@ class DevScript extends BundleScript {
   run(segments: string[]): void {
     runViteDev(this.root, segments, {
       config: "play/vite.config.ts",
-      portEnv: "SPATIAL_R3F_PLAY_PORT",
+      portEnv: "CAD_JS_RENDERER_PLAY_PORT",
       defaultPort: "6020",
     });
   }

@@ -25,7 +25,7 @@ import {
 import nakaginCapsuleTowerBoardFixture from "../../../../puzzle/2d/play/fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {
-	title: "elements/board",
+	title: "puzzle/2d",
 	component: BoardCanvas,
 	parameters: {
 		layout: "fullscreen",

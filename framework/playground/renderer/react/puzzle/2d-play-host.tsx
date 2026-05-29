@@ -2604,7 +2604,7 @@ const boardPlayChromeBoot: PlaygroundChromeBoot = {
 };
 
 /** @emoji 🛝 Board play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
-export function bootBoardPlay(playground: Playground, rootId = "root"): void {
+export function boot2dPlay(playground: Playground, rootId = "root"): void {
 	bootPlayground(playground, boardPlayChromeBoot, rootId);
 }
 

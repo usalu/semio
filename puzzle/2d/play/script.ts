@@ -18,7 +18,7 @@ const wasmScript = join(import.meta.dir, "../rs/script.ts");
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runViteBunxDev(this.root, segments, { portEnv: "BOARD_PLAY_PORT", defaultPort: "6012" });
+    runViteBunxDev(this.root, segments, { portEnv: "PUZZLE_2D_PLAY_PORT", defaultPort: "6012" });
   }
 }
 

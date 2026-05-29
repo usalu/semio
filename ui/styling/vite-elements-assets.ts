@@ -106,9 +106,9 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 	const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
 		{ find: "@framework/playground/renderer/react/shell", replacement: rendererIndex },
 		{ find: "@framework/playground/renderer/react/boot", replacement: rendererIndex },
-		{ find: "@framework/playground/renderer/react/puzzle/board", replacement: resolve(rendererRoot, "puzzle/board-play-host.tsx") },
-		{ find: "@framework/playground/renderer/react/puzzle/scene", replacement: resolve(rendererRoot, "puzzle/scene-play-host.tsx") },
-		{ find: "@framework/playground/renderer/react/puzzle/topology", replacement: resolve(rendererRoot, "puzzle/topology-play-host.tsx") },
+		{ find: "@framework/playground/renderer/react/puzzle/2d", replacement: resolve(rendererRoot, "puzzle/2d-play-host.tsx") },
+		{ find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(rendererRoot, "puzzle/3d-play-host.tsx") },
+		{ find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "puzzle/5d-play-host.tsx") },
 		{ find: "@framework/playground/renderer/react", replacement: rendererIndex },
 		{ find: "@framework/playground", replacement: playgroundCore },
 		{ find: "@ui/react", replacement: uiReact },

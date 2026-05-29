@@ -583,7 +583,7 @@ export function buildBoardPlayRuntime(): ProductRuntime {
 }
 
 /** @emoji 🛝 Board play harness as a single {@link Playground} instance. */
-export class BoardPlayground extends Playground {
+export class Playground2d extends Playground {
 	readonly id = BOARD_PLAY_APP_ID;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 

@@ -1,8 +1,8 @@
 // #region 🧲Header
-/** @emoji 🛝 Scene play Vite entry via {@link bootScenePlay}. */
+/** @emoji 🛝 Puzzle 3d play Vite entry via {@link boot3dPlay}. */
 // #endregion 🧲Header
 
-import { bootScenePlay } from "@framework/playground/renderer/react/puzzle/scene";
-import { ScenePlayground } from "./index.ts";
+import { boot3dPlay } from "@framework/playground/renderer/react/puzzle/3d";
+import { Playground3d } from "./index.ts";
 
-bootScenePlay(new ScenePlayground());
+boot3dPlay(new Playground3d());

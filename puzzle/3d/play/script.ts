@@ -13,7 +13,7 @@ import {
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, segments, { portEnv: "SCENE_PLAY_PORT", defaultPort: "6013", clearViteCache: true });
+    runViteBunxDev(this.root, segments, { portEnv: "PUZZLE_3D_PLAY_PORT", defaultPort: "6013", clearViteCache: true });
   }
 }
 

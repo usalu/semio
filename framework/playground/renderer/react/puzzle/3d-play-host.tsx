@@ -211,6 +211,6 @@ const scenePlayChromeBoot: PlaygroundChromeBoot = {
 };
 
 /** @emoji 🛝 Scene play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
-export function bootScenePlay(playground: Playground, rootId = "root"): void {
+export function boot3dPlay(playground: Playground, rootId = "root"): void {
 	bootPlayground(playground, scenePlayChromeBoot, rootId);
 }

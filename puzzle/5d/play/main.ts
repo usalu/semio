@@ -1,8 +1,8 @@
 // #region 🧲Header
-/** @emoji 🛝 Topology play Vite entry via {@link bootTopologyPlay}. */
+/** @emoji 🛝 Puzzle 5d play Vite entry via {@link boot5dPlay}. */
 // #endregion 🧲Header
 
-import { bootTopologyPlay } from "@framework/playground/renderer/react/puzzle/topology";
-import { TopologyPlayground } from "./index.ts";
+import { boot5dPlay } from "@framework/playground/renderer/react/puzzle/5d";
+import { Playground5d } from "./index.ts";
 
-bootTopologyPlay(new TopologyPlayground());
+boot5dPlay(new Playground5d());

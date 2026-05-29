@@ -8,7 +8,7 @@
         "cwd": "puzzle/3d/play",
         "command": "bun ./script.ts dev",
         "env": {
-          "SCENE_PLAY_PORT": "6013",
+          "PUZZLE_3D_PLAY_PORT": "6013",
           "NODE_OPTIONS": "",
           "NX_NATIVE_COMMAND_RUNNER": "false",
           "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
@@ -33,7 +33,7 @@
         "cwd": "puzzle/3d/play",
         "command": "bun ./script.ts test",
         "env": {
-          "SCENE_PLAY_PORT": "6028"
+          "PUZZLE_3D_PLAY_PORT": "6028"
         },
         "forwardAllArgs": true
       }
