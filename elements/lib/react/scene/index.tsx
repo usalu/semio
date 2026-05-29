@@ -1585,8 +1585,15 @@ export class SceneObjectStore {
 		wormholeIds: [],
 	};
 	private structureEpoch = 0;
+	private sortedObjectIdsCache: readonly string[] = [];
+	private blockedVortexFullIdsCache: ReadonlySet<string> = new Set();
 	private readonly objectListeners = new Map<string, Set<SceneObjectStoreListener>>();
 	private readonly structureListeners = new Set<SceneObjectStoreListener>();
+
+	private refreshStructureCaches(): void {
+		this.sortedObjectIdsCache = [...this.records.keys()].sort();
+		this.blockedVortexFullIdsCache = blockedVortexFullIdsFromAttractions(this.attractions);
+	}
 
 	subscribeStructure(listener: SceneObjectStoreListener): () => void {
 		this.structureListeners.add(listener);
@@ -1619,7 +1626,11 @@ export class SceneObjectStore {
 	}
 
 	getSortedObjectIds(): readonly string[] {
-		return [...this.records.keys()].sort();
+		return this.sortedObjectIdsCache;
+	}
+
+	getBlockedVortexFullIds(): ReadonlySet<string> {
+		return this.blockedVortexFullIdsCache;
 	}
 
 	getAttractions(): readonly AttractionProps[] {
@@ -1636,6 +1647,7 @@ export class SceneObjectStore {
 
 	private bumpStructure(): void {
 		this.structureEpoch += 1;
+		this.refreshStructureCaches();
 		for (const listener of this.structureListeners) {
 			listener();
 		}
@@ -1912,10 +1924,8 @@ function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet
 	const state = useContext(SceneObjectStateContext);
 	return useSyncExternalStore(
 		(onStoreChange) => (state ? state.store.subscribeStructure(onStoreChange) : () => {}),
-		() =>
-			state ? blockedVortexFullIdsFromAttractions(state.store.getAttractions()) : fallback,
-		() =>
-			state ? blockedVortexFullIdsFromAttractions(state.store.getAttractions()) : fallback,
+		() => (state ? state.store.getBlockedVortexFullIds() : fallback),
+		() => (state ? state.store.getBlockedVortexFullIds() : fallback),
 	);
 }
 
