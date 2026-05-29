@@ -585,11 +585,12 @@ const ShellModeCanvas: React.FC<{
 			}),
 		[windowKinds],
 	);
+	const shellLayout = React.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
 
 	return (
 		<Mode
 			windows={windows}
-			layout={convertFrameworkLayoutToShellLayout(defaultLayout)}
+			layout={shellLayout}
 			activeWindowId={activeWindowId}
 			onActiveWindowChange={onActiveWindowChange}
 			className="h-full w-full"

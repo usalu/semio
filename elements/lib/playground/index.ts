@@ -155,6 +155,7 @@ export abstract class PlaygroundController<K extends string> extends Controller 
 	focusedKind: PlaygroundFocusFilter<K> = "all";
 	query = "";
 	selectedId: string | null = null;
+	private snapshotListeners = new Set<() => void>();
 
 	protected constructor(
 		controllerId: string,
@@ -170,11 +171,28 @@ export abstract class PlaygroundController<K extends string> extends Controller 
 		this.rebuildBrowseModeTools();
 	}
 
+	/** @emoji 🔔 Subscribes to browse-state updates without shell generation bumps. */
+	subscribeSnapshot(listener: () => void): () => void {
+		this.snapshotListeners.add(listener);
+		return () => this.snapshotListeners.delete(listener);
+	}
+
+	protected notifySnapshot(): void {
+		for (const listener of this.snapshotListeners) {
+			listener();
+		}
+	}
+
 	protected rebuildBrowseModeTools(): void {
 		this.browseMode.tools = {
 			selection: buildPlaygroundBrowseSelectionTools(this.kinds, this.kindLabel, this.selectableKinds, this.id),
 			filter: buildPlaygroundBrowseFilterTools(this.kinds, this.kindLabel, this.visibleKinds, this.id),
 		};
+	}
+
+	protected syncShell(): void {
+		this.rebuildBrowseModeTools();
+		this.emit();
 	}
 
 	/** @emoji ✅ Domain hook: whether `id` may be selected given current kind toggles. */
@@ -187,40 +205,44 @@ export abstract class PlaygroundController<K extends string> extends Controller 
 		}
 	}
 
-	protected handlePlaygroundCommand(command: string, args?: unknown): boolean {
+	protected handlePlaygroundCommand(command: string, args?: unknown): "shell" | "snapshot" | false {
 		switch (command) {
 			case "toggleSelectableKind": {
 				const { kind } = args as { kind: K };
 				this.selectableKinds[kind] = !this.selectableKinds[kind];
-				return true;
+				return "shell";
 			}
 			case "toggleVisibleKind": {
 				const { kind } = args as { kind: K };
 				this.visibleKinds[kind] = !this.visibleKinds[kind];
-				return true;
+				return "shell";
 			}
 			case "setSelectedId": {
 				const { id } = args as { id: string | null };
 				if (!id || this.canSelectId(id)) this.selectedId = id;
-				return true;
+				return "snapshot";
 			}
 			case "setFocusedKind": {
 				this.focusedKind = (args as { kind: PlaygroundFocusFilter<K> }).kind;
-				return true;
+				return "snapshot";
 			}
 			case "setQuery": {
 				this.query = (args as { query: string }).query;
-				return true;
+				return "snapshot";
 			}
 			default:
 				return false;
 		}
 	}
 
-	protected finishPlaygroundCommand(): void {
+	protected finishPlaygroundCommand(notify: "shell" | "snapshot"): void {
 		this.ensureSelectionValidity();
-		this.rebuildBrowseModeTools();
-		this.emit();
+		if (notify === "shell") {
+			this.syncShell();
+			this.notifySnapshot();
+			return;
+		}
+		this.notifySnapshot();
 	}
 }
 //#endregion 🔖Controller
@@ -382,9 +404,9 @@ if (import.meta.vitest) {
 		}
 
 		override run(command: string, args?: unknown): void {
-			if (this.handlePlaygroundCommand(command, args)) {
-				this.finishPlaygroundCommand();
-				return;
+			const notify = this.handlePlaygroundCommand(command, args);
+			if (notify) {
+				this.finishPlaygroundCommand(notify);
 			}
 		}
 	}

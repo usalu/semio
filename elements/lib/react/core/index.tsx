@@ -21952,6 +21952,7 @@ function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, size
 function setActiveWindowInLayout(layout: WindowLayoutNode, windowId: string): WindowLayoutNode {
   return mapLayoutStacks(layout, (stack) => {
     if (!stack.children.some((child) => child.id === windowId)) return stack;
+    if (stack.activeId === windowId) return stack;
     return { ...stack, activeId: windowId };
   });
 }
@@ -22359,10 +22360,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const activateWindow = React.useCallback(
     (windowId: string) => {
+      if (activeWindowId === windowId) return;
       setLayoutState((prev) => setActiveWindowInLayout(prev, windowId));
       onActiveWindowChange?.(windowId);
     },
-    [onActiveWindowChange],
+    [activeWindowId, onActiveWindowChange],
   );
 
   const closeWindow = React.useCallback(

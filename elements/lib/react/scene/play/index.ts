@@ -557,6 +557,12 @@ export class ScenePlayShellController extends Controller {
 		}
 	}
 
+	/** @emoji 🐚 Rebuilds mode chrome and bumps shell generation (toolbar, window measures). */
+	private syncShell(): void {
+		this.rebuildShellMode();
+		this.emit();
+	}
+
 	getFixture(): FixtureV1 | null {
 		return this.fixture;
 	}
@@ -581,7 +587,7 @@ export class ScenePlayShellController extends Controller {
 		}
 		const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
 		if (structureChanged || poseChanged) {
-			this.emit();
+			this.notifySnapshot();
 		}
 	}
 
@@ -672,17 +678,18 @@ export class ScenePlayShellController extends Controller {
 	}
 
 	override run(command: string, args?: unknown): void {
-		let syncShell = true;
 		switch (command) {
 			case "setAutoLod": {
 				const pressed = (args as { pressed?: boolean }).pressed;
 				if (typeof pressed === "boolean") this.automaticLod = pressed;
-				break;
+				this.syncShell();
+				return;
 			}
 			case "setDepthLod": {
 				const pressed = (args as { pressed?: boolean }).pressed;
 				if (typeof pressed === "boolean") this.depthVariableLod = pressed;
-				break;
+				this.syncShell();
+				return;
 			}
 			case "setManualLod": {
 				const value = (args as { value?: number }).value;
@@ -690,20 +697,22 @@ export class ScenePlayShellController extends Controller {
 					this.lodSlider = value;
 					this.manualLod = lodFromSliderValue(value);
 				}
-				break;
+				this.syncShell();
+				return;
 			}
 			case "setEffectiveLod": {
 				const lod = (args as { lod: number }).lod;
 				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
 					this.lodTag = lod;
+					this.notifySnapshot();
 				}
-				syncShell = false;
-				break;
+				return;
 			}
 			case "setRelocateMode": {
 				const mode = (args as { mode: RelocateMode }).mode;
 				if (mode === "translate" || mode === "rotate" || mode === "scale") this.relocateMode = mode;
-				break;
+				this.syncShell();
+				return;
 			}
 			case "toggleSelectableKind": {
 				const { kind } = args as { kind: ScenePlayPickKind };
@@ -711,7 +720,9 @@ export class ScenePlayShellController extends Controller {
 					this.selectableKinds[kind] = !this.selectableKinds[kind];
 					this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
 				}
-				break;
+				this.syncShell();
+				this.notifySnapshot();
+				return;
 			}
 			case "toggleVisibleKind": {
 				const { kind } = args as { kind: ScenePlayPickKind };
@@ -719,7 +730,9 @@ export class ScenePlayShellController extends Controller {
 					this.visibleKinds[kind] = !this.visibleKinds[kind];
 					this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
 				}
-				break;
+				this.syncShell();
+				this.notifySnapshot();
+				return;
 			}
 			case "setSelection": {
 				const next = (args as { selection: ScenePlaySelection }).selection;
@@ -734,7 +747,6 @@ export class ScenePlayShellController extends Controller {
 					}
 					this.selection = resolved;
 					this.notifySnapshot();
-					this.emit();
 				}
 				return;
 			}
@@ -748,7 +760,6 @@ export class ScenePlayShellController extends Controller {
 				}
 				this.selection = resolved;
 				this.notifySnapshot();
-				this.emit();
 				return;
 			}
 			case "noteSelection": {
@@ -768,76 +779,82 @@ export class ScenePlayShellController extends Controller {
 				}
 				this.selection = resolved;
 				this.notifySnapshot();
-				this.emit();
 				return;
 			}
 			case "deleteSelection": {
 				this.applyDeleteSelection();
-				break;
+				return;
 			}
 			case "setSelectionMode": {
 				const mode = (args as { mode: SelectionMode }).mode;
 				if (mode === "single" || mode === "additive" || mode === "subtractive" || mode === "toggle") {
 					this.selectionMode = mode;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "setProximityRadius": {
 				const value = (args as { value: number }).value;
 				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
 					this.proximityRadius = value;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "setChunkSize": {
 				const value = (args as { value: number }).value;
 				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
 					this.chunkSize = value;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "setGridFactor": {
 				const value = (args as { value: number }).value;
 				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
 					this.gridFactor = value;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "setShowLodGrid": {
 				const pressed = (args as { pressed?: boolean }).pressed;
 				if (typeof pressed === "boolean") {
 					this.showLodGrid = pressed;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "setGridSnapEnabled": {
 				const pressed = (args as { pressed?: boolean }).pressed;
 				if (typeof pressed === "boolean") {
 					this.gridSnapEnabled = pressed;
+					this.notifySnapshot();
 				}
-				break;
+				return;
 			}
 			case "noteProximity":
 				this.proximityCount += 1;
-				break;
+				this.notifySnapshot();
+				return;
 			case "noteConnect":
 				this.connectCount += 1;
-				break;
+				this.notifySnapshot();
+				return;
 			case "noteIndirect":
 				this.indirectCount += 1;
-				break;
+				this.notifySnapshot();
+				return;
 			case "noteCompatibleObjects":
 				this.compatibleObjectsCount += 1;
-				break;
+				this.notifySnapshot();
+				return;
 			case "noteTargetRing":
 				this.targetRingCount += 1;
-				break;
+				this.notifySnapshot();
+				return;
 			default:
-				break;
-		}
-		if (syncShell) {
-			this.rebuildShellMode();
-			this.emit();
+				return;
 		}
 	}
 
@@ -865,6 +882,7 @@ export class ScenePlayShellController extends Controller {
 			return next;
 		});
 		this.selection = SCENE_PLAY_EMPTY_SELECTION;
+		this.notifySnapshot();
 	}
 
 	getSnapshot(): ScenePlaySnapshot {
@@ -1009,42 +1027,36 @@ if (import.meta.vitest) {
 			expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
 		});
 
-		it("noteSelection emits when selection changes and skips emit when unchanged", () => {
-			const bus = new CommandBus();
-			const wb = new ProductRuntime();
-			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
-			let notifyCount = 0;
+		it("noteSelection notifies snapshot listeners without shell generation", () => {
 			const trackingBus = new CommandBus();
 			const trackingWb = new ProductRuntime();
+			let shellNotifyCount = 0;
 			const trackingCtrl = new ScenePlayShellController(trackingBus, () => {
-				notifyCount += 1;
+				shellNotifyCount += 1;
 			});
-			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
-			expect(notifyCount).toBe(1);
-			const afterFirst = notifyCount;
-			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
-			expect(notifyCount).toBe(afterFirst);
-			trackingCtrl.run("noteSelection", { objectIds: ["b"], vortexIds: [] });
-			expect(notifyCount).toBe(2);
-			void bus;
-			void wb;
-			void ctrl;
-		});
-
-		it("subscribeSnapshot notifies listeners on noteSelection", () => {
-			const trackingBus = new CommandBus();
-			const trackingCtrl = new ScenePlayShellController(trackingBus, () => undefined);
 			let snapshotCount = 0;
 			const unsubscribe = trackingCtrl.subscribeSnapshot(() => {
 				snapshotCount += 1;
 			});
 			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
 			expect(snapshotCount).toBe(1);
+			expect(shellNotifyCount).toBe(0);
 			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
 			expect(snapshotCount).toBe(1);
 			trackingCtrl.run("noteSelection", { objectIds: ["b"], vortexIds: [] });
 			expect(snapshotCount).toBe(2);
+			expect(shellNotifyCount).toBe(0);
 			unsubscribe();
+		});
+
+		it("setAutoLod still bumps shell generation", () => {
+			const trackingBus = new CommandBus();
+			let shellNotifyCount = 0;
+			const trackingCtrl = new ScenePlayShellController(trackingBus, () => {
+				shellNotifyCount += 1;
+			});
+			trackingCtrl.run("setAutoLod", { pressed: true });
+			expect(shellNotifyCount).toBe(1);
 		});
 
 		it("deleteSelection removes selected fixture rows and clears selection", () => {

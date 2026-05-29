@@ -5446,12 +5446,6 @@ if (import.meta.vitest) {
 
 function useScenePlayController(): ScenePlayShellController | undefined {
 	const { runtime } = useApp();
-	const generation = React.useSyncExternalStore(
-		(onStoreChange) => runtime.subscribe(onStoreChange),
-		() => runtime.generation,
-		() => 0,
-	);
-	void generation;
 	return runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
 }
 
@@ -6421,17 +6415,11 @@ function ScenePlayProductShell(props: {
 	readonly mobile: boolean;
 }): React.ReactElement {
 	const ctrl = props.runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
-	const generation = React.useSyncExternalStore(
-		(onStoreChange) => props.runtime.subscribe(onStoreChange),
-		() => props.runtime.generation,
-		() => 0,
-	);
-	void generation;
-	const snap = ctrl?.getSnapshot();
-	const fixture = snap?.fixture;
+	const snap = useScenePlaySnapshot();
+	const fixture = snap.fixture;
 	const kindCatalogs = fixture ? parseKindCatalogs(fixture.meta) : undefined;
 	const shellValue = useMemo<ScenePlayShellContextValue | null>(() => {
-		if (!ctrl || !snap || !fixture) {
+		if (!ctrl || !fixture) {
 			return null;
 		}
 		return {

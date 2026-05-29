@@ -1,0 +1,13 @@
+{
+  "title": "Snapshot Vs Shell Notify Split",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Root fix: selection updates must not call ProductRuntime.notify() / full shell re-render. Stop emit() on snapshot-only controller commands; use notifySnapshot only. Fix ScenePlayProductShell to subscribe to snapshot not generation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1504"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪c02fb0744c1d4693a6bc8d20c63996b7"
+  ]
+}
