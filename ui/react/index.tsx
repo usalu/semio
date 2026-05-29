@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 💻 elements/ui/index.tsx
+// 💻 ui/react/index.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // 2026 Kinan Sarakbi <kinan.sarak@gmail.com>
@@ -195,7 +195,7 @@ export const HostThreeCanvas = threeHostPort.canvas;
 
 // #region 🎼Utilities
 
-// Generic utility and type definitions that make .elements/ui self-contained.
+// Generic utility and type definitions that make @ui/react self-contained.
 // These MUST NOT depend on any external semio package.
 
 /**

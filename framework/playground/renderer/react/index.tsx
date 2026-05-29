@@ -757,7 +757,7 @@ export interface PlaygroundContextValue {
   activeModeId: string | null;
 }
 
-export const PlaygroundContext = React.createContext<PlaygroundContextValue | undefined>(undefined);
+export const PlaygroundContext = reactHostPort.createContext<PlaygroundContextValue | undefined>(undefined);
 
 /** @emoji 🪝 Returns the active {@link ProductRuntime} from the nearest {@link PlaygroundView}. */
 export function useApp(): PlaygroundContextValue {

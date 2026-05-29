@@ -59,11 +59,11 @@
         }
       }
     },
-    "dev-storybook-puzzle-board": {
+    "dev-storybook-puzzle-2d": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook puzzle board",
+        "command": "bun ./script.ts dev storybook puzzle 2d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"

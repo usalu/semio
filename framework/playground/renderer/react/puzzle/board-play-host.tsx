@@ -406,7 +406,7 @@ const BoardPlayShellContext = reactHostPort.createContext<BoardPlayShellValue | 
 const BoardPlayLodRuntimeContext = reactHostPort.createContext<((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
 
 function useBoardPlayShell(): BoardPlayShellValue {
-  const value = useContext(BoardPlayShellContext);
+  const value = reactHostPort.useContext(BoardPlayShellContext);
   if (!value) {
     throw new Error("useBoardPlayShell must be used inside BoardPlayShellContext.");
   }
@@ -761,7 +761,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
   } = useBoardPlayShell();
   const camera = camerasByPane[paneId];
   const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
-  const reportEffectiveLod = useContext(BoardPlayLodRuntimeContext);
+  const reportEffectiveLod = reactHostPort.useContext(BoardPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const selection = reactHostPort.useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = reactHostPort.useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
@@ -1695,10 +1695,10 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   const fixtureRef = useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
   const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
-  const boardPlayPaneCamerasBaselineRef = useRef(boardPlayPaneCamerasBaseline);
+  const boardPlayPaneCamerasBaselineRef = reactHostPort.useRef(boardPlayPaneCamerasBaseline);
   boardPlayPaneCamerasBaselineRef.current = boardPlayPaneCamerasBaseline;
   const [activePaneId, setActivePaneId] = reactHostPort.useState<BoardPlayPaneId>("board-overview");
-  const activePaneIdRef = useRef(activePaneId);
+  const activePaneIdRef = reactHostPort.useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
   const [selectionIds, setSelectionIdsState] = reactHostPort.useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
   const [preselection, setPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
@@ -1715,7 +1715,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   const [boardSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = reactHostPort.useState(false);
   const boardShellController = boardRuntime.getActiveApp()?.controller as BoardPlayShellController | undefined;
-  const shellGeneration = useSyncExternalStore(
+  const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => boardRuntime.subscribe(onStoreChange),
     () => boardRuntime.generation,
     () => 0,
@@ -1757,7 +1757,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = reactHostPort.useState(28);
   const [treeLayoutDirection, setTreeLayoutDirection] = reactHostPort.useState<BoardHierarchicalTreeDirectionKind>("downwards");
 
-  const boardRedrawPlayingRef = useRef(boardRedrawPlaying);
+  const boardRedrawPlayingRef = reactHostPort.useRef(boardRedrawPlaying);
   boardRedrawPlayingRef.current = boardRedrawPlaying;
 
   reactHostPort.useEffect(() => {
@@ -1891,21 +1891,21 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
 
   const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
-  const skipNextCameraBasisResyncRef = useRef(false);
-  const prevBoardRedrawPlayingRef = useRef(false);
+  const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
+  const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
   const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState> | null>(null);
   const cameraDisplayOverrideRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
-  const suppressCameraBasisSyncRef = useRef(false);
+  const suppressCameraBasisSyncRef = reactHostPort.useRef(false);
   const cameraPlayEndAnimRafRef = useRef<number | null>(null);
   const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
   const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
-  const lastPlayingForCameraEaseRef = useRef(false);
+  const lastPlayingForCameraEaseRef = reactHostPort.useRef(false);
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
   const nodesRedrawEaseFromRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
   /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
-  const nodesRedrawEaseGenerationRef = useRef(0);
+  const nodesRedrawEaseGenerationRef = reactHostPort.useRef(0);
 
   const syncBaselineFromViewportCamera = reactHostPort.useCallback((cam: CameraState) => {
     if (boardRedrawPlayingRef.current) {
@@ -2148,8 +2148,8 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     }
   }, [cameraDisplayOverrideByPane]);
 
-  const redrawPlayingRef = useRef(false);
-  const redrawProgressiveEpochRef = useRef(0);
+  const redrawPlayingRef = reactHostPort.useRef(false);
+  const redrawProgressiveEpochRef = reactHostPort.useRef(0);
   const redrawLoopSnapshotRef = useRef<BoardPlayRedrawLoopSnapshot>({
     activePaneId: "board-overview",
     boardRedrawHandlesAfterNodes: false,
@@ -2421,7 +2421,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   );
 
   // #region 🔖ToolbarHostBridge
-  const boardPlayToolbarHostRef = useRef({
+  const boardPlayToolbarHostRef = reactHostPort.useRef({
     activePaneId: "board-overview" as BoardPlayPaneId,
     applyBoardRedrawHandlesOnce: () => {},
     camerasByPane: triptychCamerasFromFixture(initialFixture),
@@ -2535,7 +2535,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   ]);
   // #endregion 🔖ToolbarHostBridge
 
-  const shellValueRef = useRef(shellValue);
+  const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
   const boardPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
   const boardPlayFixtureKey = reactHostPort.useMemo(

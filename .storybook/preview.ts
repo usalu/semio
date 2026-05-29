@@ -11,10 +11,10 @@ import { Expertise } from "@ui/react";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
-declare const __STORYBOOK_LOAD_ELEMENTS__: boolean;
+declare const __STORYBOOK_LOAD_UI__: boolean;
 
 //#region 🔖ScopeStyles
-if (__STORYBOOK_LOAD_ELEMENTS__) {
+if (__STORYBOOK_LOAD_UI__) {
 	await import("../ui/react/globals.css");
 }
 //#endregion 🔖ScopeStyles

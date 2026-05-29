@@ -841,7 +841,7 @@ export interface UIFindContextValue {
   triggerFindItem: (itemId: string) => void;
 }
 
-const UIFindContext = React.createContext<UIFindContextValue | null>(null);
+const UIFindContext = reactHostPort.createContext<UIFindContextValue | null>(null);
 const EMPTY_UI_FIND_ITEMS: UIFindItem[] = [];
 
 function areFindItemsShallowEqual(previousItems: UIFindItem[], nextItems: UIFindItem[]): boolean {
@@ -1262,7 +1262,7 @@ export interface AppContextValue {
 	goUp: () => void;
 }
 
-export const AppContext = React.createContext<AppContextValue | undefined>(undefined);
+export const AppContext = reactHostPort.createContext<AppContextValue | undefined>(undefined);
 
 /** @emoji 🪝 Returns the active {@link ProductRuntime} shell context from the nearest {@link AppContext}. */
 export function useApp(): AppContextValue {

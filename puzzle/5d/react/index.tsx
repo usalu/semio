@@ -523,9 +523,9 @@ export interface TopologyBoardPaneProps {
 	readonly board?: Omit<BoardCanvasProps, "children">;
 }
 
-export const TopologyBoardPane = memo(function TopologyBoardPane(props: TopologyBoardPaneProps) {
+export const TopologyBoardPane = reactHostPort.memo(function TopologyBoardPane(props: TopologyBoardPaneProps) {
 	const lockedIds = props.lockedIds ?? new Set<string>();
-	const markers = useMemo(
+	const markers = reactHostPort.useMemo(
 		() =>
 			topologyBoardMarkersFromFixture({
 				fixture: props.fixture,
@@ -566,7 +566,7 @@ export interface TopologyScenePaneProps {
 	readonly blockedVortexFullIds?: ReadonlySet<string>;
 }
 
-const TopologySceneCanvas = memo(function TopologySceneCanvas(
+const TopologySceneCanvas = reactHostPort.memo(function TopologySceneCanvas(
 	props: TopologyScenePaneProps & { readonly blocked: ReadonlySet<string> },
 ) {
 	const onRelocate = useSceneObjectRelocate();
@@ -590,11 +590,11 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 	);
 });
 
-export const TopologyScenePane = memo(function TopologyScenePane(props: TopologyScenePaneProps) {
+export const TopologyScenePane = reactHostPort.memo(function TopologyScenePane(props: TopologyScenePaneProps) {
 	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromAttractions(props.fixture.attractions);
 	return (
 		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
-			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes├ö├ç┬¬</div>}>
+			<reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes├ö├ç┬¬</div>}>
 				<SceneObjectStateProvider
 					fixture={props.fixture}
 					onConnect={props.bindings.scene.onConnect}
@@ -602,7 +602,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 				>
 					<TopologySceneCanvas {...props} blocked={blocked} />
 				</SceneObjectStateProvider>
-			</Suspense>
+			</reactHostPort.Suspense>
 		</div>
 	);
 });

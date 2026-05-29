@@ -110,10 +110,10 @@
       }
     },
     {
-      "name": "dev:storybook:puzzle:board",
+      "name": "dev:storybook:puzzle:2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:puzzle:board",
+      "command": "bun run dev:storybook:puzzle:2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"

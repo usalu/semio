@@ -1,6 +1,6 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
-// Specs: Vite single-file MCP App bundle for coda (elements/ui + ext-apps).
+// Specs: Vite single-file MCP App bundle for coda (@ui/react + ext-apps).
 // Summary: Mirrors semio/engine/vite.mcp-app.config.ts with @ui/react and meshopt noop.
 // #endregion Header
 

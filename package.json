@@ -52,7 +52,7 @@
     "dev:storybook": "bun nx run workspace:dev-storybook",
     "dev:storybook:ui": "bun nx run workspace:dev-storybook-ui",
     "dev:storybook:puzzle": "bun nx run workspace:dev-storybook-puzzle",
-    "dev:storybook:puzzle:board": "bun nx run workspace:dev-storybook-puzzle-board",
+    "dev:storybook:puzzle:2d": "bun nx run workspace:dev-storybook-puzzle-2d",
     "dev:storybook:semio": "bun nx run workspace:dev-storybook-semio",
     "dev:storybook:semio:algorithms": "bun nx run workspace:dev-storybook-semio-algorithms",
     "dev:storybook:semio:ui": "bun nx run workspace:dev-storybook-semio-ui",
