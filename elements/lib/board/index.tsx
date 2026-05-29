@@ -283,6 +283,16 @@ export function boardFixtureMetaKindCatalogBundle(raw: unknown): BoardKindCatalo
 	return out;
 }
 
+/** @emoji 🔗 Returns `meta.kindCompatibility` from raw board fixture JSON when present. */
+export function boardFixtureMetaKindCompatibility(raw: unknown): readonly BoardKindCompatEntry[] | undefined {
+	if (!raw || typeof raw !== "object") return undefined;
+	const meta = (raw as Record<string, unknown>).meta;
+	if (!meta || typeof meta !== "object") return undefined;
+	const entries = (meta as Record<string, unknown>).kindCompatibility;
+	if (!Array.isArray(entries)) return undefined;
+	return entries as readonly BoardKindCompatEntry[];
+}
+
 function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string {
 	const handles = (bundle.handles ?? [])
 		.map((e) => {

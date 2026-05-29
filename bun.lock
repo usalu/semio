@@ -77,8 +77,6 @@
       "name": "@elements/board",
       "version": "0.1.0",
       "dependencies": {
-        "@elements/framework": "workspace:*",
-        "@elements/framework-react": "workspace:*",
         "@elements/playground": "workspace:*",
         "@elements/ui": "workspace:*",
         "its-fine": "^2.0.0",
@@ -112,7 +110,6 @@
         "@elements/ui": "workspace:*",
         "clsx": "^2.1.1",
         "fuse.js": "^7.1.0",
-        "golden-layout": "^2.6.0",
         "lucide-react": "^0.536.0",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
@@ -128,9 +125,16 @@
       "name": "@elements/playground",
       "version": "0.1.0",
       "dependencies": {
-        "@elements/framework": "workspace:*",
+        "@elements/ui": "workspace:*",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.536.0",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "tailwind-merge": "^3.3.1",
       },
       "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
         "typescript": "^5.9.3",
       },
     },
@@ -220,8 +224,7 @@
       "name": "@elements/scene",
       "version": "0.1.0",
       "dependencies": {
-        "@elements/framework": "workspace:*",
-        "@elements/framework-react": "workspace:*",
+        "@elements/playground": "workspace:*",
         "@elements/ui": "workspace:*",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
@@ -247,8 +250,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@elements/board": "workspace:*",
-        "@elements/framework": "workspace:*",
-        "@elements/framework-react": "workspace:*",
+        "@elements/playground": "workspace:*",
         "@elements/scene": "workspace:*",
         "@elements/ui": "workspace:*",
         "@react-three/drei": "^10.7.7",
@@ -454,6 +456,7 @@
         "@semio/react": "*",
         "@semio/ui": "*",
         "fflate": "^0.8.2",
+        "golden-layout": "^2.6.0",
         "three": "^0.182.0",
       },
       "devDependencies": {

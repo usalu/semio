@@ -693,6 +693,7 @@ const ShellModeCanvas: React.FC<{
         const WindowComponent = windowKind.component;
         return {
           id: windowKind.id,
+          title: windowKind.label,
           showControls: true,
           controls: windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
           measures: windowKind.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,

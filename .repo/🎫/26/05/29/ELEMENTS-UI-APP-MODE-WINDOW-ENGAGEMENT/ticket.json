@@ -2,8 +2,8 @@
   "title": "Elements Ui App Mode Window Engagement",
   "emoji": "⚛️",
   "status": "closed",
-  "description": "Implement Ui, App, Mode, Window, Engagement as canonical pure-React components in @elements/lib/react/core, add stories, rewire framework/playground renderers to compose them, replace Golden Layout with pure-React resizable layout.",
-  "summary": "Implemented canonical pure-React shell components Ui, App, Mode, Window (extended), and Engagement in @elements/ui with resizable multi-pane Mode layout (react-resizable-panels), active-window focus, and floating three-line Engagement overlay. Replaced Golden Layout UICanvas with ShellModeCanvas in @elements/framework-react and @elements/playground/react; ProductView and PlaygroundView now compose Ui/App/ShellModeCanvas. Added Storybook stories (Ui, App, Mode, Engagement) and extended Window.stories. Removed golden-layout dependency and CSS. All vitest suites pass for @elements/ui (82), @elements/framework-react (7), and @elements/playground (8).",
+  "description": "Reimplement Golden Layout-style docking in pure React Mode (tab stacks, resize, drag-dock, maximize, close; no persistence/popout). Restore golden-layout for sketchpad LayoutCanvas.",
+  "summary": "Reimplemented Golden Layout-style docking in pure React inside Mode: tab stacks (one visible window per stack), resizable row/column splits via react-resizable-panels, pointer drag-to-reorder/move/split with drop indicators, stack maximize/restore, and per-tab close. Extended WindowLayoutStackNode.activeId and ModeWindowDescriptor.title; added layout tree utils. Removed dead Golden Layout header portal from Window. Wired tab titles through ShellModeCanvas in framework and playground renderers. Restored golden-layout dependency and .lm_* CSS for sketchpad. Added Mode vitest coverage and TabStack/MaximizeStack stories. Fixed vitest duplicate-run config and boardFixtureMetaKindCompatibility export. All vitest pass: @elements/ui (45), @elements/framework-react (7), @elements/playground (8).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1496"
   },

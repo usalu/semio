@@ -564,6 +564,7 @@ const ShellModeCanvas: React.FC<{
 				const WindowComponent = windowKind.component;
 				return {
 					id: windowKind.id,
+					title: windowKind.label,
 					showControls: true,
 					measures: windowKind.measures,
 					engagement: windowKind.engagement,

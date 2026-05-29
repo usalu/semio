@@ -4,34 +4,34 @@ overview: Reimplement Golden Layout's full window-docking behavior in pure React
 todos:
   - id: ticket
     content: Reopen the repo-MCP ticket for the elements Mode docking reimplementation.
-    status: in_progress
+    status: completed
   - id: core-types-utils
     content: "Extend WindowLayoutStackNode (activeId) + ModeWindowDescriptor (title); add Mode tree utils: normalizeLayoutToStacks, reconcileWindows, removeWindowFromLayout, insertWindowAsTab, splitWithWindow, applyAxisSizes."
-    status: pending
+    status: completed
   - id: tabbar-stack
     content: Implement DockTabBar (tabs, per-tab close, active highlight, maximize/restore control) and DockStack (tabbar + active window body, rect ref registration).
-    status: pending
+    status: completed
   - id: render-resize
     content: Implement recursive renderNode using ResizablePrimitive Group/Panel/Separator for axes with onLayoutChanged size capture; normalize window leaves into stacks; maximize overlay.
-    status: pending
+    status: completed
   - id: dock-drag
     content: "Implement useDockDrag: pointer-based tab drag with floating ghost, drop-zone hit-testing (center/edges/outer), drop indicator overlay, and tree mutation on drop (reorder/move/split)."
-    status: pending
+    status: completed
   - id: window-cleanup
     content: Remove dead Golden Layout header-portal code from Window; ensure stack header owns maximize/close while keeping controls/measures/engagement overlays.
-    status: pending
+    status: completed
   - id: renderer-titles
     content: Thread tab titles via windowKind.label in framework + playground ShellModeCanvas and convertFrameworkLayoutNodeToShellLayout.
-    status: pending
+    status: completed
   - id: sketchpad-restore
     content: Restore golden-layout dependency + base CSS/.lm_ overrides (recovered from commit 8d5dba003) for the still-Golden-Layout sketchpad/semio surface broken by the prior removal.
-    status: pending
+    status: completed
   - id: tests-stories
     content: Extend core inline vitest (tabs visibility, close+collapse, split/remove utils, maximize); update Mode stories (tab stacks, drag-dock, maximize); run vitest + build Storybook.
-    status: pending
+    status: completed
   - id: verify-close
     content: Runtime-verify spatial play host + sketchpad (tabs, drag-dock, resize, maximize, close), run lint, then close the ticket.
-    status: pending
+    status: completed
 isProject: false
 ---
 
