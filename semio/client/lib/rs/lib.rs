@@ -464,7 +464,7 @@ pub mod external_adapters {
 
 pub mod id {
     //! 🆔 Immutable uuid-v7 wrapper used by every entity.
-    use crate::external_adapters::crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+    use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
     use std::fmt;
 
     /// @emoji 🆔 Opaque node identifier (uuidv7 string); GraphQL wire name `ID` per target schema.

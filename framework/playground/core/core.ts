@@ -724,6 +724,9 @@ export abstract class Playground {
 	readonly initialPanelVisibility?: PlaygroundPanelVisibility;
 	readonly keybindings?: readonly PlaygroundKeybinding[];
 
+	/** @emoji 🧩 When set, {@link renderPlayground} mounts puzzle-specific React chrome from `@framework/playground-renderer-react`. */
+	readonly puzzleChrome?: "board" | "topology";
+
 	/** @emoji 🧊 Override to register canvas surface hosts (library React adapters). */
 	registerSurfaceHosts(): void {}
 }

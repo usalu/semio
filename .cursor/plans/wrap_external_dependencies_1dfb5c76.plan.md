@@ -4,28 +4,28 @@ overview: "Establish a repo-wide ports-and-adapters discipline so no package imp
 todos:
   - id: policy
     content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language plugin extractImports)
-    status: in_progress
+    status: completed
   - id: rust-semio
     content: Wrap third-party deps in the Rust `semio` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
-    status: pending
+    status: completed
   - id: transport
     content: Normalize the GraphQL/transport boundary end-to-end across Rust architect, @semio/js, .NET StoreClient, and Python store wire onto explicit ports
-    status: pending
+    status: completed
   - id: ui-react-3d
     content: Port @ui/react (Radix, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js) and shared three/R3F usage in puzzle scene/topology and cad renderer behind interfaces + adapters
-    status: pending
+    status: completed
   - id: dotnet
     content: Wrap Semio.cs third-party deps (Newtonsoft.Json, FluentValidation, QuikGraph, SharpGLTF, Svg, Refit) behind C# interfaces + adapters
-    status: pending
+    status: completed
   - id: python
     content: Wrap Python deps in semio py + engine (sqlalchemy/sqlmodel, ifcopenshell, trimesh, graphene, pydantic, networkx) and coda assistant (rdflib, owlready2, fastmcp, starlette/uvicorn) behind Protocols + adapters
-    status: pending
+    status: completed
   - id: go
     content: Wrap repo/client/cli deps (cobra, bleve, graphql-go, mcp-go, sqlite, yaml.v3, sprig) and coordinator deps behind Go interfaces + adapters
-    status: pending
+    status: completed
   - id: hosts
     content: Wrap host-specific SDKs last (RhinoCommon, Grasshopper, WebView2, Electron, Next coordinator) behind adapters at their natural boundaries
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Topology play React host — entry-only; imported from play/main.ts. */
+/** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
 // #endregion 🧲Header
 
 
@@ -22,7 +22,16 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "../index.tsx";
+import {
+	buildTopologyDualSurfaceBindings,
+	topologyMirrorConnectHandlers,
+	topologyMirrorProximityHandlers,
+	TopologyBoardPane,
+	TopologyScenePane,
+	topologySceneChromeDefaults,
+} from "@puzzle/5d-react";
+import type { Playground } from "@framework/playground";
 import {
 	TOPOLOGY_PLAY_APP_ID,
 	TOPOLOGY_PLAY_BOARD_BODY_KEY,
@@ -38,8 +47,7 @@ import {
 	buildTopologyPlayRuntime,
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
-} from "./index.ts";
-import "./globals.css";
+} from "../../../../../puzzle/5d/play/index.ts";
 
 
 //#region 🔖Snapshot
@@ -207,21 +215,16 @@ export function registerTopologyPlaySurfaceHosts(): void {
 	registerWindowBody(TOPOLOGY_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
 }
 
-function TopologyPlayApp(): React.ReactElement {
-	const runtimeRef = React.useRef<ProductRuntime | null>(null);
-	if (!runtimeRef.current) {
-		registerTopologyPlayChrome();
-		runtimeRef.current = buildTopologyPlayRuntime();
-	}
+function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
 	const generation = React.useSyncExternalStore(
-		(listener) => runtimeRef.current!.subscribe(listener),
-		() => runtimeRef.current!.generation,
+		(listener) => runtime.subscribe(listener),
+		() => runtime.generation,
 		() => 0,
 	);
 	void generation;
-	const controller = runtimeRef.current.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+	const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
 	const snapshot = controller?.getSnapshot() ?? null;
-	const bus = runtimeRef.current.commandBus;
+	const bus = runtime.commandBus;
 	const snapshotKey = snapshot
 		? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}`
 		: "";
@@ -247,7 +250,7 @@ function TopologyPlayApp(): React.ReactElement {
 		<LevelProvider level="window">
 			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
 				<PlaygroundView
-					runtime={runtimeRef.current}
+					runtime={runtime}
 					defaultAppId={TOPOLOGY_PLAY_APP_ID}
 					augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
 					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
@@ -257,14 +260,11 @@ function TopologyPlayApp(): React.ReactElement {
 	);
 }
 
-export function createTopologyPlayElement(): React.ReactElement {
-	return <TopologyPlayApp />;
+/** @emoji 🚀 Mounts topology play chrome for a {@link Playground} (called from {@link renderPlayground}). */
+export function mountTopologyPlayChrome(playground: Playground, rootId = "root"): void {
+	mountPlaygroundApp(<TopologyPlayChrome runtime={playground.runtime} />, rootId);
 }
 
-/** @emoji 🚀 Vite host entry: mounts topology play into `#root`. */
-export function mountTopologyPlay(): void {
-	mountPlaygroundApp(createTopologyPlayElement());
-}
 //#endregion 🔖Mount
 
 // #endregion 🛝PlayHost

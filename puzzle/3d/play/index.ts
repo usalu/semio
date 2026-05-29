@@ -1314,13 +1314,6 @@ export function buildScenePlayKindsPanelBody(ctx: WindowBodyViewContext): UiNode
   return buildScenePlayKindsTree(catalogs);
 }
 
-let scenePlaySurfaceHostRegistrar: (() => void) | null = null;
-
-/** @emoji 🧊 Registers the scene play React surface host registrar (set from {@link registerSceneSurfaceHosts} in scene index). */
-export function setScenePlaySurfaceHostRegistrar(registrar: (() => void) | null): void {
-  scenePlaySurfaceHostRegistrar = registrar;
-}
-
 /** @emoji 🛝 Scene play harness as a single {@link Playground} instance. */
 export class ScenePlayground extends Playground {
   readonly id = PLAY_APP_ID;
@@ -1342,9 +1335,6 @@ export class ScenePlayground extends Playground {
     registerSidePanelBody(SCENE_PLAY_SETTINGS_BODY_KEY, buildScenePlaySettingsBody);
   }
 
-  override registerSurfaceHosts(): void {
-    scenePlaySurfaceHostRegistrar?.();
-  }
 }
 //#endregion 🔖ScenePlayController
 

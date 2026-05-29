@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Scene play React host — entry-only; imported from play/main.ts. */
+/** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
 // #endregion 🧲Header
 
 import { LevelProvider, getLevelBgClass } from "@ui/react";
@@ -13,7 +13,7 @@ import {
 	useApp,
 	type UiScene3DHostSurfaceNode,
 } from "@framework/playground-renderer-react";
-import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
+import nakaginSceneFixtureJson from "../../../../../puzzle/3d/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	PlaySceneCanvas,
 	SceneObjectStateProvider,
@@ -27,7 +27,7 @@ import {
 	DEFAULT_MANUAL_LOD,
 	type FixtureV1,
 	type RelocatePayload,
-} from "../react/index.tsx";
+} from "@puzzle/3d-react";
 import {
 	SCENE_PLAY_BODY_KEY,
 	SCENE_PLAY_CONTROLLER_ID,
@@ -39,9 +39,8 @@ import {
 	SCENE_PLAY_SCENE_SURFACE_ID,
 	ScenePlayShellController,
 	buildScenePlayDeclarativeBody,
-	setScenePlaySurfaceHostRegistrar,
 	type ScenePlaySnapshot,
-} from "./index.ts";
+} from "../../../../../puzzle/3d/play/index.ts";
 
 
 function useScenePlayController(): ScenePlayShellController | undefined {
@@ -196,6 +195,5 @@ export function registerSceneSurfaceHosts(): void {
   }
 }
 
-setScenePlaySurfaceHostRegistrar(registerSceneSurfaceHosts);
 
 // #endregion 🛝PlayHost

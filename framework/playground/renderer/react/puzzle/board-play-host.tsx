@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Board play React host — entry-only; imported from play/main.ts. */
+/** @emoji 🛝 Puzzle play React chrome in `@framework/playground-renderer-react` (not in play packages). */
 // #endregion 🧲Header
 
 import {
@@ -22,7 +22,7 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@ui/react";
-import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
+import { Expertise, ProductRuntime, type FooterItem, type UiTreeNode } from "@framework/playground";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -32,6 +32,7 @@ import {
 	type UiBoardHostSurfaceNode,
 } from "@framework/playground-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
+import type { ReactElement } from "react";
 import {
 	createContext,
 	useCallback,
@@ -58,11 +59,42 @@ import {
 	buildBoardPlayDetailDeclarativeBody,
 	buildBoardPlaySelectionDeclarativeBody,
 	buildBoardPlayRuntime,
-	setBoardPlaySurfaceHostRegistrar,
 	type BoardPlayPaneId,
-} from "./index.ts";
-import * as Board from "../react/index.tsx";
-
+} from "../../../../../puzzle/2d/play/index.ts";
+import {
+	mergeBoardKindCatalogBundleByRowId,
+	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+	boardFixtureMetaKindCatalogBundle,
+	parseBoardFixtureV1,
+	BoardCanvas,
+	Node,
+	Handle,
+	Edge,
+	Wire,
+	newBoardAuthoringId,
+	encodeBoardFixtureForDragV1,
+	BOARD_FIXTURE_DRAG_V1_MIME,
+	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
+	BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
+	BOARD_LOD_MODE_AUTOMATIC,
+	BoardPaneChrome,
+	BoardStructuralDeleteReporter,
+	BoardPlayRedrawProgressReset,
+	nakaginBoardMarkers,
+	type BoardFixtureV1,
+	type BoardFixtureNodeV1,
+	type BoardFixtureRectangleNodeV1,
+	type BoardFixtureHandleV1,
+	type BoardFixtureEdgeV1,
+	type BoardFixtureDropDetail,
+	type BoardDrawLodKind,
+	type BoardLodModeKind,
+	type BoardSelectionMethod,
+	type BoardSelectionMode,
+	type BoardSelectionTargets,
+	type CameraState,
+} from "@puzzle/2d-react";
+import type { Playground } from "@framework/playground";
 
 const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
@@ -70,7 +102,7 @@ const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 );
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "./index.ts";
+export type { BoardPlayPaneId } from "../../../../../puzzle/2d/play/index.ts";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -303,7 +335,7 @@ interface BoardPlayShellValue {
 }
 
 class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-	constructor(private readonly buildSections: () => TreeDataSection[]) {
+	constructor(private readonly buildTree: () => UiTreeNode) {
 		super();
 	}
 
@@ -312,7 +344,7 @@ class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 			id: BOARD_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections }),
 		};
 	}
 }
@@ -1663,7 +1695,7 @@ interface BoardPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = BOARD_PLAY_DEFAULT_FIXTURE;
 
-function BoardPlayInner(): ReactElement {
+function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntime }): ReactElement {
   const [fixture, setFixtureState] = useState<BoardFixtureV1>(initialFixture);
   const fixtureRef = useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
@@ -1687,12 +1719,6 @@ function BoardPlayInner(): ReactElement {
   const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("default");
   const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
-  const boardRuntimeRef = useRef<ProductRuntime | null>(null);
-  if (!boardRuntimeRef.current) {
-    registerBoardPlaySurfaceHosts();
-    boardRuntimeRef.current = buildBoardPlayRuntime();
-  }
-  const boardRuntime = boardRuntimeRef.current;
   const boardShellController = boardRuntime.getActiveApp()?.controller as BoardPlayShellController | undefined;
   const shellGeneration = useSyncExternalStore(
     (onStoreChange) => boardRuntime.subscribe(onStoreChange),
@@ -2562,24 +2588,21 @@ function BoardPlayInner(): ReactElement {
   );
 }
 
-function BoardPlayApp(): ReactElement {
+function BoardPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): ReactElement {
   return (
     <LevelProvider level="window">
       <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-        <BoardPlayInner />
+        <BoardPlayInner boardRuntime={runtime} />
       </div>
     </LevelProvider>
   );
 }
 
-export function createBoardPlayElement(): ReactElement {
-  return <BoardPlayApp />;
+/** @emoji 🚀 Mounts board play chrome for a {@link Playground} (called from {@link renderPlayground}). */
+export function mountBoardPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<BoardPlayChrome runtime={playground.runtime} />, rootId);
 }
 
-/** @emoji 🚀 Vite host entry: mounts board play into `#root`. */
-export function mountBoardPlay(): void {
-  mountPlaygroundApp(createBoardPlayElement());
-}
 // #endregion 🔖Entrypoint
 
 // #endregion 🛝PlayHost

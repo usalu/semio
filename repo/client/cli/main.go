@@ -13,6 +13,7 @@
 
 package client
 
+// #region 🔌Adapters
 import (
 	"bufio"
 	"bytes"
@@ -60,6 +61,7 @@ import (
 	"gopkg.in/yaml.v3"
 	_ "modernc.org/sqlite"
 )
+// #endregion 🔌Adapters
 
 // #endregion 🤸Preamble
 

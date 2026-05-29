@@ -2,7 +2,7 @@
 /** @emoji 🔍 `@cad/js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
 // #endregion 🧲Header
 
-// #region 📥Imports
+// #region 🔌Adapters
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstNode, IToken } from "chevrotain";
 import {
@@ -39,7 +39,7 @@ import {
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
-// #endregion 📥Imports
+// #endregion 🔌Adapters
 
 // #region Lexer
 const WhiteSpace = createToken({

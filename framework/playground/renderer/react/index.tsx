@@ -62,6 +62,9 @@ import {
   type WindowLayout,
   type WindowMeasure,
 } from "@framework/playground";
+import { mountBoardPlayChrome } from "./puzzle/board-play-host.tsx";
+import { mountTopologyPlayChrome } from "./puzzle/topology-play-host.tsx";
+import { registerPuzzleReactHosts } from "./puzzle/register-puzzle-hosts.ts";
 
 export type {
   AppRuntime,
@@ -976,10 +979,19 @@ export function mountPlaygroundApp(element: React.ReactElement, rootId = "root")
 /** @emoji 🚀 Alias for {@link mountPlaygroundApp}. */
 export const mountReactApp = mountPlaygroundApp;
 
-/** @emoji 🛝 Boots a {@link Playground} definition and mounts {@link PlaygroundView}. */
+/** @emoji 🛝 Boots a {@link Playground} definition and mounts {@link PlaygroundView} or puzzle chrome. */
 export function renderPlayground(playground: Playground, rootId = "root"): void {
+  registerPuzzleReactHosts();
   playground.registerBodies();
   playground.registerSurfaceHosts();
+  if (playground.puzzleChrome === "board") {
+    mountBoardPlayChrome(playground, rootId);
+    return;
+  }
+  if (playground.puzzleChrome === "topology") {
+    mountTopologyPlayChrome(playground, rootId);
+    return;
+  }
   mountPlaygroundApp(
     <PlaygroundView runtime={playground.runtime} initialPanelVisibility={playground.initialPanelVisibility} />,
     rootId,

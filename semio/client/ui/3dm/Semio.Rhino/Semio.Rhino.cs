@@ -8,8 +8,8 @@
 
 #endregion 📱Header
 
-#region ⌛Imports
-// Callers MUST import all required namespaces listed here.
+#region 🔌Adapters
+// Host SDK imports (RhinoCommon, WebView2, Newtonsoft) MUST stay in this region.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -39,7 +39,21 @@ using RhinoLayer = global::Rhino.DocObjects.Layer;
 using Type = Semio.Type;
 using File = Semio.File;
 
-#endregion ⌛Imports
+#endregion 🔌Adapters
+
+#region 🔌Ports
+/// <summary>🦏 Rhino document host port (RhinoCommon adapter in 🔌Adapters).</summary>
+public interface IRhinoDocumentHost
+{
+    RhinoDoc ActiveDoc { get; }
+}
+
+/// <summary>🌐 WebView2 host port for embedded React UI.</summary>
+public interface IWebViewHost
+{
+    Task NavigateAsync(string uri);
+}
+#endregion 🔌Ports
 
 #region ⭐AssemblyAttributes
 // Assembly-level attributes required by Rhino to identify this plugin.

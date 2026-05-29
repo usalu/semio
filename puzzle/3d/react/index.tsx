@@ -1,3 +1,4 @@
+// #region 🔌Adapters
 import { Button, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
 import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
@@ -50,6 +51,7 @@ import {
   type Scene as ThreeScene,
   type WebGLRenderer,
 } from "three";
+// #endregion 🔌Adapters
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
@@ -4893,7 +4895,3 @@ if (import.meta.vitest) {
     });
   });
 }
-
-// #region ­ƒº▓Header
-// ­ƒÆ╗ elements/client/lib/system/renderer/react/scene/scene-play-host.tsx ÔÇö Host outside play bundle: scene play React tree and mount.
-// #endregion ­ƒº▓Header

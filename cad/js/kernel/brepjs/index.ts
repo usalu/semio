@@ -4,7 +4,7 @@
 /** @emoji 🧭 `@cad/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
-// #region 📥Imports
+// #region 🔌Adapters
 import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
 import {
 	box,
@@ -90,7 +90,7 @@ import {
 	type TypologyRef,
 } from "@cad/js-core";
 export { kernelGeometry };
-// #endregion 📥Imports
+// #endregion 🔌Adapters
 
 // #region 🧱kernelGeometry
 

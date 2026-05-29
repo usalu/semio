@@ -5,6 +5,7 @@
 import {
 	CommandBus,
 	Controller,
+	Playground,
 	registerWindowBody,
 	ProductRuntime,
 	AppRuntime,
@@ -13,16 +14,16 @@ import {
 	buildBoardWindowBody,
 	buildPlaygroundKindToggleTools,
 	createWindowLayout,
+	playgroundTreePanelRootItems,
 	type AppTools,
 	type ToolItem,
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type UiNode,
+	type UiTreeItemNode,
+	type UiTreeNode,
 	type WindowLayout,
 } from "@framework/playground";
-
-import { playgroundTreePanelRootItems } from "@framework/playground-renderer-react";
-import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -38,7 +39,7 @@ import {
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
 	type BoardSelectionTargets,
-} from "../index";
+} from "../react/index.tsx";
 
 //#region 🔖Ids
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
@@ -146,7 +147,7 @@ function buildBoardFixtureNodeHierarchyItem(
 	selectedIds: ReadonlySet<string>,
 	onSelect: (id: string) => void,
 	visiting: Set<string>,
-): TreeDataItem | null {
+): UiTreeItemNode | null {
 	if (visiting.has(nodeId)) {
 		return null;
 	}
@@ -155,19 +156,19 @@ function buildBoardFixtureNodeHierarchyItem(
 		return null;
 	}
 	visiting.add(nodeId);
-	const handleItems: TreeDataItem[] = node.handles.map((handle) => ({
+	const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
 		id: `board-play-hierarchy.handle.${handle.id}`,
 		label: handle.handleKind ? `${handle.id} · ${handle.handleKind}` : handle.id,
 		isSelected: selectedIds.has(handle.id),
 		onClick: () => onSelect(handle.id),
 	}));
-	const handlesGroup: TreeDataItem = {
+	const handlesGroup: UiTreeItemNode = {
 		id: `board-play-hierarchy.node.${nodeId}.handles`,
 		label: "Handles",
 		defaultOpen: true,
 		items: handleItems.length ? handleItems : [{ id: `board-play-hierarchy.node.${nodeId}.handles.empty`, label: "(none)" }],
 	};
-	const childItems: TreeDataItem[] = [];
+	const childItems: UiTreeItemNode[] = [];
 	for (const childId of childrenByParent.get(nodeId) ?? []) {
 		const childItem = buildBoardFixtureNodeHierarchyItem(fixture, childId, childrenByParent, selectedIds, onSelect, visiting);
 		if (childItem) {
@@ -191,38 +192,38 @@ export function buildBoardPlayHierarchySections(
 	fixture: BoardFixtureV1,
 	selectionIds: readonly string[],
 	onSelect: (id: string) => void,
-): TreeDataSection[] {
+): UiTreeNode {
 	const selectedIds = new Set(selectionIds);
 	const childrenByParent = boardFixtureChildrenByNodeId(fixture);
 	const rootIds = boardFixtureRootNodeIds(fixture, childrenByParent);
 	const visiting = new Set<string>();
-	const nodeItems: TreeDataItem[] = [];
+	const nodeItems: UiTreeItemNode[] = [];
 	for (const rootId of rootIds) {
 		const item = buildBoardFixtureNodeHierarchyItem(fixture, rootId, childrenByParent, selectedIds, onSelect, visiting);
 		if (item) {
 			nodeItems.push(item);
 		}
 	}
-	const nodesGroup: TreeDataItem = {
+	const nodesGroup: UiTreeItemNode = {
 		id: "board-play-hierarchy.nodes",
 		label: "Nodes",
 		defaultOpen: true,
 		items: nodeItems.length ? nodeItems : [{ id: "board-play-hierarchy.nodes.empty", label: "(none)" }],
 	};
-	const edgeItems: TreeDataItem[] = fixture.edges.map((edge) => ({
+	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
 		id: `board-play-hierarchy.edge.${edge.id}`,
 		label: edge.id,
 		description: `${edge.source} → ${edge.target}`,
 		isSelected: selectedIds.has(edge.id),
 		onClick: () => onSelect(edge.id),
 	}));
-	const edgesGroup: TreeDataItem = {
+	const edgesGroup: UiTreeItemNode = {
 		id: "board-play-hierarchy.edges",
 		label: "Edges",
 		defaultOpen: true,
 		items: edgeItems.length ? edgeItems : [{ id: "board-play-hierarchy.edges.empty", label: "(none)" }],
 	};
-	const boardRoot: TreeDataItem = {
+	const boardRoot: UiTreeItemNode = {
 		id: "board-play-hierarchy.board",
 		label: "Board",
 		defaultOpen: true,
@@ -579,6 +580,24 @@ export function buildBoardPlayRuntime(): ProductRuntime {
 	const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
 	runtime.addApp(buildBoardPlayAppRuntime(ctrl));
 	return runtime;
+}
+
+/** @emoji 🛝 Board play harness as a single {@link Playground} instance. */
+export class BoardPlayground extends Playground {
+	readonly id = BOARD_PLAY_APP_ID;
+	readonly puzzleChrome = "board" as const;
+	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
+
+	createRuntime(): ProductRuntime {
+		const runtime = new ProductRuntime();
+		const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
+		runtime.addApp(buildBoardPlayAppRuntime(ctrl));
+		return runtime;
+	}
+
+	registerBodies(): void {
+		registerBoardPlayDeclarativeBodies();
+	}
 }
 //#endregion 🔖Extension
 

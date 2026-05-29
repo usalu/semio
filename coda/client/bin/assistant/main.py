@@ -15,8 +15,8 @@
 
 # #endregion 📊Header
 
-# #region ⭐Imports
-# Imports MUST include standard library, third-party FastMCP, and module-level configuration.
+# #region 🔌Adapters
+# Third-party imports MUST stay in this region (FastMCP, rdflib, owlready2, starlette, uvicorn).
 
 """coda - ACC design assistant. Runs as MCP server or Electron sidecar binary."""
 
@@ -59,7 +59,7 @@ _PROPERTY_KIND_MEASURE_KINDS = {
     "category": ["include", "exclude"],
 }
 
-# #endregion Imports
+# #endregion 🔌Adapters
 
 # #region CodaMcpAppRuntime
 # MCP App HTTP helpers share the streamable-http port; stdio mode omits fetchUrl on tool payloads.

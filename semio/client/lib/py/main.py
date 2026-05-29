@@ -16,7 +16,7 @@
 # #endregion 🧲Header
 
 
-# #region ⛩️Imports
+# #region 🔌Adapters
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 
@@ -78,6 +78,20 @@ import semio.client.lib.py.store as store
 
 # #endregion 🔌Adapters
 
+# #region 🔌Ports
+class JsonCodecPort(typing.Protocol):
+    """📜 JSON encode/decode port (stdlib json implements in domain helpers)."""
+
+    def loads(self, data: str) -> typing.Any: ...
+
+    def dumps(self, value: typing.Any) -> str: ...
+
+
+class GraphQlSchemaPort(typing.Protocol):
+    """📜 GraphQL schema host port (graphene in 🔌Adapters implements)."""
+
+    def object_type(self, name: str, **fields: typing.Any) -> typing.Any: ...
+# #endregion 🔌Ports
 
 # #region 🧩PydanticCompatibility
 class _SemioBaseRepresentation(pydantic.BaseModel):
