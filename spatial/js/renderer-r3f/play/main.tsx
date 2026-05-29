@@ -830,6 +830,7 @@ function PlayApp() {
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
 		[spec, snapshot],
 	);
+	const boundInteractionSession = Boolean(interactionId) && interactionActive;
 	const handleSnapshotChange = useCallback((next: InteractionSnapshot) => {
 		setSnapshot((prev) => {
 			if (prev && prev.revision === next.revision && prev.state === next.state) return prev;
@@ -837,8 +838,8 @@ function PlayApp() {
 		});
 	}, []);
 	const currentSelection = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection),
-		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection),
+		[boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
 	const selectionKinds = useMemo(
 		() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)),

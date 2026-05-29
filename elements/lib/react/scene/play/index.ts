@@ -273,6 +273,32 @@ export function selectionSnapshotToPlaySelection(
 	};
 }
 
+/** @emoji 🎯 True when two selection snapshots match (skips redundant shell updates). */
+export function scenePlaySelectionEqual(a: ScenePlaySelection, b: ScenePlaySelection): boolean {
+	if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length) {
+		return false;
+	}
+	if (a.attractionIds.length !== b.attractionIds.length) {
+		return false;
+	}
+	for (let i = 0; i < a.objectIds.length; i += 1) {
+		if (a.objectIds[i] !== b.objectIds[i]) {
+			return false;
+		}
+	}
+	for (let i = 0; i < a.vortexIds.length; i += 1) {
+		if (a.vortexIds[i] !== b.vortexIds[i]) {
+			return false;
+		}
+	}
+	for (let i = 0; i < a.attractionIds.length; i += 1) {
+		if (a.attractionIds[i] !== b.attractionIds[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 /** @emoji 🎯 Primary object id for relocate / legacy e2e hooks. */
 export function primaryScenePlayObjectId(selection: ScenePlaySelection): string | null {
 	if (selection.objectIds[0]) {
@@ -459,24 +485,34 @@ export class ScenePlayShellController extends Controller {
 			case "setSelection": {
 				const next = (args as { selection: ScenePlaySelection }).selection;
 				if (next && typeof next === "object") {
-					this.selection = {
+					const resolved: ScenePlaySelection = {
 						objectIds: [...(next.objectIds ?? [])],
 						vortexIds: [...(next.vortexIds ?? [])],
 						attractionIds: [...(next.attractionIds ?? [])],
 					};
+					if (scenePlaySelectionEqual(this.selection, resolved)) {
+						return;
+					}
+					this.selection = resolved;
 				}
+				syncShell = false;
 				break;
 			}
 			case "setSelectedId": {
 				const id = (args as { id: string | null }).id;
-				this.selection = id
+				const resolved: ScenePlaySelection = id
 					? { objectIds: [id], vortexIds: [], attractionIds: [] }
 					: SCENE_PLAY_EMPTY_SELECTION;
+				if (scenePlaySelectionEqual(this.selection, resolved)) {
+					return;
+				}
+				this.selection = resolved;
+				syncShell = false;
 				break;
 			}
 			case "noteSelection": {
 				const snap = args as SelectionSnapshot & { attractionIds?: readonly string[] };
-				this.selection = {
+				const resolved: ScenePlaySelection = {
 					objectIds: [...(snap.objectIds ?? [])],
 					vortexIds: [...(snap.vortexIds ?? [])],
 					attractionIds:
@@ -486,6 +522,11 @@ export class ScenePlayShellController extends Controller {
 								? []
 								: [...this.selection.attractionIds],
 				};
+				if (scenePlaySelectionEqual(this.selection, resolved)) {
+					return;
+				}
+				this.selection = resolved;
+				syncShell = false;
 				break;
 			}
 			case "deleteSelection": {
@@ -562,18 +603,25 @@ export class ScenePlayShellController extends Controller {
 		if (!this.fixture) {
 			return;
 		}
-		let next = this.fixture;
-		for (const objectId of this.selection.objectIds) {
-			next = deleteSceneObjectFromFixture(next, objectId);
+		const objectIds = [...this.selection.objectIds];
+		const vortexIds = [...this.selection.vortexIds];
+		const attractionIds = [...this.selection.attractionIds];
+		if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0) {
+			return;
 		}
-		for (const vortexFullId of this.selection.vortexIds) {
-			next = deleteSceneVortexFromFixture(next, vortexFullId);
-		}
-		for (const attractionId of this.selection.attractionIds) {
-			next = deleteSceneAttractionFromFixture(next, attractionId);
-		}
-		this.fixture = next;
-		this.fixtureRevision += 1;
+		this.patchFixture((fixture) => {
+			let next = fixture;
+			for (const objectId of objectIds) {
+				next = deleteSceneObjectFromFixture(next, objectId);
+			}
+			for (const vortexFullId of vortexIds) {
+				next = deleteSceneVortexFromFixture(next, vortexFullId);
+			}
+			for (const attractionId of attractionIds) {
+				next = deleteSceneAttractionFromFixture(next, attractionId);
+			}
+			return next;
+		});
 		this.selection = SCENE_PLAY_EMPTY_SELECTION;
 	}
 
@@ -688,6 +736,43 @@ if (import.meta.vitest) {
 			expect(v?.position[0]).toBeCloseTo(-1.3, 5);
 			expect(v?.position[1]).toBeCloseTo(-1.25, 5);
 			expect(v?.position[2]).toBeCloseTo(0, 5);
+		});
+
+		it("noteSelection skips emit when selection is unchanged", () => {
+			const bus = new CommandBus();
+			const wb = new ProductRuntime();
+			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
+			let notifyCount = 0;
+			const trackingBus = new CommandBus();
+			const trackingWb = new ProductRuntime();
+			const trackingCtrl = new ScenePlayShellController(trackingBus, () => {
+				notifyCount += 1;
+			});
+			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
+			const afterFirst = notifyCount;
+			trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [] });
+			expect(notifyCount).toBe(afterFirst);
+			void bus;
+			void wb;
+			void ctrl;
+		});
+
+		it("deleteSelection removes selected fixture rows and clears selection", () => {
+			const bus = new CommandBus();
+			const wb = new ProductRuntime();
+			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
+			const before = ctrl.getSnapshot().fixture;
+			expect(before).not.toBeNull();
+			const target = before!.objects[0]!;
+			const countBefore = before!.objects.length;
+			ctrl.run("setSelection", {
+				selection: { objectIds: [target.id], vortexIds: [], attractionIds: [] },
+			});
+			ctrl.run("deleteSelection");
+			const snap = ctrl.getSnapshot();
+			expect(snap.fixture?.objects.some((object) => object.id === target.id)).toBe(false);
+			expect(snap.fixture?.objects.length).toBe(countBefore - 1);
+			expect(snap.selection).toEqual(SCENE_PLAY_EMPTY_SELECTION);
 		});
 
 		it("deleteSceneObjectFromFixture removes child vortices and stale attractions", () => {

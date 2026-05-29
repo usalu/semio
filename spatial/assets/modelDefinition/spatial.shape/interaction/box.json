@@ -62,7 +62,10 @@
       {
         "state": "first_corner_height",
         "event": "set.height",
-        "field": "height"
+        "field": "height",
+        "commit": "confirm",
+        "axisAnchor": "corner",
+        "axisFloor": "origin"
       }
     ]
   },

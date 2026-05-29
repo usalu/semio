@@ -2611,6 +2611,9 @@ Make sure that for selected primitives the attributes are shown and can be edite
 
 All interactions when possible should use the input. Make sure to setup the correct mechanisms.
 e.g. box interaction after one point was selected, a number can be typed in and the number should limit the length of the line. the display should keep on showing the cursor with a thin line to it but the line that is drawn just for the length.
+e.g. when in box after pressing the first point, the state is selecting the diagonal. The length should contrain the diagonal. When pressing the second diagonal point then pressing a number should cap the height.
+After an interaction is finalized, the input number should be cleared.
+e.g. in box when inside the height selection, it only grows in one direction. make sure to display the cursor with the fine height line and the extact height line where it is (either number or with no number the cursor closest point on the height line)
 
 ---
 

@@ -729,6 +729,8 @@ export interface InteractionLengthEntrySpec {
   readonly state: string;
   readonly anchor: string;
   readonly field: string;
+  /** @emoji ✅ Host commit on Enter/Space (`pointer.down` default, `confirm` for scalar-like steps). */
+  readonly commit?: "pointer.down" | "confirm";
 }
 
 /** @emoji 🔢 One state where REPL digits set a scalar context field live (`set.height`, `set.radius`, …). */
@@ -736,6 +738,13 @@ export interface InteractionScalarEntrySpec {
   readonly state: string;
   readonly event: string;
   readonly field: string;
+  /** @emoji ✅ Host commit on Enter/Space (defaults to `confirm`). */
+  readonly commit?: "pointer.down" | "confirm";
+  /** @emoji 📍 Context path to Vec3 for axis XY (Z from `axisFloor` when set). */
+  readonly axisAnchor?: string;
+  /** @emoji 📍 Context path to Vec3 whose Z is the axis floor (defaults to `axisAnchor`). */
+  readonly axisFloor?: string;
+  readonly axis?: readonly [number, number, number];
 }
 
 /** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction). */
@@ -3922,8 +3931,150 @@ export function interactionScalarEntryForState(spec: InteractionSpec, state: str
   return mergeInteractionSpatial(spec).scalarEntry.find((row) => row.state === state) ?? null;
 }
 
+/** @emoji 🔢 True when `state` accepts live REPL numeric entry (length or scalar). */
+export function interactionInNumericEntryState(spec: InteractionSpec, state: string): boolean {
+  return interactionLengthEntryForState(spec, state) !== null || interactionScalarEntryForState(spec, state) !== null;
+}
+
+/** @emoji 🔢 Parses REPL `cmdLine` as a live numeric value (`null` = empty, `undefined` = invalid). */
+export function parseNumericCommandLine(cmdLine: string): number | null | undefined {
+  const t = cmdLine.trim();
+  if (!t) return null;
+  if (!/^\d*\.?\d*$/.test(t)) return undefined;
+  const v = Number(t);
+  if (!Number.isFinite(v) || v <= 0) return undefined;
+  return v;
+}
+
+/** @emoji 🔢 Locked numeric value from context when live entry already applied. */
+export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
+  const lengthEntry = interactionLengthEntryForState(spec, state);
+  if (lengthEntry) {
+    const lock = ctx[LENGTH_LOCK_CTX];
+    if (typeof lock === "number" && Number.isFinite(lock) && lock > 0) return lock;
+  }
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (scalarEntry) {
+    const heightLock = ctx[HEIGHT_LOCK_CTX];
+    if (typeof heightLock === "number" && Number.isFinite(heightLock) && heightLock > 0) return heightLock;
+    const v = ctx[scalarEntry.field];
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) return v;
+  }
+  return null;
+}
+
+/** @emoji 🔢 `set.length` / `set.height` event to apply a numeric value in the active entry state. */
+export function interactionNumericEntryApplyEvent(spec: InteractionSpec, state: string, value: number): InteractionEvent | null {
+  const lengthEntry = interactionLengthEntryForState(spec, state);
+  if (lengthEntry) return { kind: "set.length", value, modifiers: {} };
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (scalarEntry) return { kind: scalarEntry.event, value, modifiers: {} };
+  return null;
+}
+
+function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): Vec3 | null {
+  const fromField = readInteractionContextVec3(ctx, entry.field);
+  if (fromField) return fromField;
+  const lock = positiveLengthLock(ctx);
+  if (lock == null) return null;
+  const raw = lengthEntryRawPoint(ctx, entry);
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  if (!raw || !anchor) return null;
+  return clampPointAlongDirection(anchor, raw, lock);
+}
+
+/** @emoji 🔢 Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
+export function interactionNumericEntryCommitEvent(
+  spec: InteractionSpec,
+  state: string,
+  ctx: Record<string, unknown>,
+): InteractionEvent | null {
+  const lengthEntry = interactionLengthEntryForState(spec, state);
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (!lengthEntry && !scalarEntry) return null;
+  const st = findState(spec, state);
+  if (!st?.on) return null;
+  const events = new Set(st.on.map((h) => h.event));
+  const commitKind =
+    scalarEntry?.commit ?? lengthEntry?.commit ?? (scalarEntry ? "confirm" : events.has("pointer.down") ? "pointer.down" : "confirm");
+  if (commitKind === "pointer.down" && events.has("pointer.down") && lengthEntry) {
+    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    if (point) return { kind: "pointer.down", point, modifiers: {} };
+    return null;
+  }
+  if (commitKind === "confirm" && events.has("confirm")) return { kind: "confirm", modifiers: {} };
+  if (events.has("pointer.down") && lengthEntry) {
+    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    if (point) return { kind: "pointer.down", point, modifiers: {} };
+  }
+  if (events.has("confirm")) return { kind: "confirm", modifiers: {} };
+  return null;
+}
+
 const LENGTH_LOCK_CTX = "__lengthLock";
+const HEIGHT_LOCK_CTX = "__heightLock";
+const SCALAR_AXIS_T_CTX = "__scalarAxisT";
 const CURSOR_RAW_CTX = "__cursorRaw";
+
+const DEFAULT_SCALAR_AXIS: Vec3 = [0, 0, 1];
+
+/** @emoji 📏 Axis base for scalar rubber-band (`axisAnchor` XY + `axisFloor` Z). */
+export function scalarEntryAxisBase(ctx: Record<string, unknown>, entry: InteractionScalarEntrySpec): Vec3 | null {
+  if (!entry.axisAnchor) return null;
+  const anchor = readInteractionContextVec3(ctx, entry.axisAnchor);
+  if (!anchor) return null;
+  const floorPath = entry.axisFloor ?? entry.axisAnchor;
+  const floor = readInteractionContextVec3(ctx, floorPath);
+  const floorZ = floor ? floor[2] : anchor[2];
+  return [anchor[0], anchor[1], floorZ];
+}
+
+/** @emoji 📏 Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
+export function projectPointOnScalarAxis(
+  base: Vec3,
+  axis: Vec3,
+  raw: Vec3,
+): { readonly projected: Vec3; readonly t: number } {
+  const ax = axis[0];
+  const ay = axis[1];
+  const az = axis[2];
+  const len = Math.hypot(ax, ay, az) || 1;
+  const ux = ax / len;
+  const uy = ay / len;
+  const uz = az / len;
+  const t = (raw[0] - base[0]) * ux + (raw[1] - base[1]) * uy + (raw[2] - base[2]) * uz;
+  return {
+    projected: [base[0] + ux * t, base[1] + uy * t, base[2] + uz * t],
+    t,
+  };
+}
+
+function scalarEntryAxis(entry: InteractionScalarEntrySpec): Vec3 {
+  const a = entry.axis;
+  if (a && a.length === 3) return [a[0], a[1], a[2]];
+  return DEFAULT_SCALAR_AXIS;
+}
+
+function positiveHeightLock(ctx: Record<string, unknown>): number | null {
+  const lock = ctx[HEIGHT_LOCK_CTX];
+  return typeof lock === "number" && Number.isFinite(lock) && lock > 0 ? lock : null;
+}
+
+function scalarHeightFromAxisT(t: number): number {
+  return Math.max(0.01, Math.abs(t));
+}
+
+function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3 {
+  const ax = axis[0];
+  const ay = axis[1];
+  const az = axis[2];
+  const len = Math.hypot(ax, ay, az) || 1;
+  const ux = ax / len;
+  const uy = ay / len;
+  const uz = az / len;
+  const sign = signedT < 0 ? -1 : 1;
+  return [base[0] + ux * height * sign, base[1] + uy * height * sign, base[2] + uz * height * sign];
+}
 
 /** @emoji 📏 Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
 export function parseInteractionContextPath(path: string): readonly PathSegment[] {
@@ -4005,6 +4156,8 @@ function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: Interact
 
 function clearInteractionLengthEntryFields(ctx: Record<string, unknown>): void {
   delete ctx[LENGTH_LOCK_CTX];
+  delete ctx[HEIGHT_LOCK_CTX];
+  delete ctx[SCALAR_AXIS_T_CTX];
   delete ctx[CURSOR_RAW_CTX];
 }
 
@@ -4214,6 +4367,61 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         role: "prompt",
         params: { text: String(lock), position: mid },
       });
+    }
+  }
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (scalarEntry?.axisAnchor) {
+    const base = scalarEntryAxisBase(context, scalarEntry);
+    const axis = scalarEntryAxis(scalarEntry);
+    const heightLock = positiveHeightLock(context);
+    const fieldVal = context[scalarEntry.field];
+    const height =
+      heightLock ??
+      (typeof fieldVal === "number" && Number.isFinite(fieldVal) && fieldVal > 0 ? fieldVal : null);
+    if (base && height != null) {
+      const raw = readInteractionContextVec3(context, CURSOR_RAW_CTX);
+      const signedT =
+        typeof context[SCALAR_AXIS_T_CTX] === "number" && Number.isFinite(context[SCALAR_AXIS_T_CTX])
+          ? (context[SCALAR_AXIS_T_CTX] as number)
+          : height;
+      const top = scalarTopOnAxis(base, axis, height, signedT);
+      items.push({
+        kind: "segment",
+        id: `${state}-scalar-height`,
+        role: "height",
+        params: { from: base, to: top },
+      });
+      if (raw) {
+        const projected = heightLock != null ? top : projectPointOnScalarAxis(base, axis, raw).projected;
+        items.push({
+          kind: "point",
+          id: `${state}-scalar-cursor`,
+          role: "cursor",
+          params: { position: heightLock != null ? raw : projected },
+        });
+        if (heightLock != null) {
+          items.push({
+            kind: "segment",
+            id: `${state}-scalar-guide`,
+            role: "guide",
+            params: { from: top, to: raw },
+          });
+          const mid: Vec3 = [(top[0] + raw[0]) / 2, (top[1] + raw[1]) / 2, (top[2] + raw[2]) / 2];
+          items.push({
+            kind: "label",
+            id: `${state}-scalar-label`,
+            role: "prompt",
+            params: { text: String(heightLock), position: mid },
+          });
+        } else {
+          items.push({
+            kind: "segment",
+            id: `${state}-scalar-guide`,
+            role: "guide",
+            params: { from: projected, to: raw },
+          });
+        }
+      }
     }
   }
   return { items };
@@ -4589,14 +4797,34 @@ export class InteractionRuntime {
     this.emit();
   }
 
+  private applyScalarAxisPointer(event: InteractionEvent): boolean {
+    const entry = interactionScalarEntryForState(this.spec, this.sm.getState());
+    if (!entry?.axisAnchor || (event.kind !== "pointer.move" && event.kind !== "pointer.down")) return false;
+    const point = event.point;
+    if (!Array.isArray(point) || point.length < 3) return false;
+    const raw: Vec3 = [Number(point[0]), Number(point[1]), Number(point[2])];
+    const ctx = this.sm.getContext();
+    ctx[CURSOR_RAW_CTX] = raw;
+    const base = scalarEntryAxisBase(ctx, entry);
+    if (!base) return false;
+    const axis = scalarEntryAxis(entry);
+    const { t } = projectPointOnScalarAxis(base, axis, raw);
+    ctx[SCALAR_AXIS_T_CTX] = t;
+    const lock = positiveHeightLock(ctx);
+    ctx[entry.field] = lock ?? scalarHeightFromAxisT(t);
+    return true;
+  }
+
   private handleScalarEntry(event: InteractionEvent): void {
     const entry = interactionScalarEntryForState(this.spec, this.sm.getState());
     if (!entry || entry.event !== event.kind) return;
     const ctx = this.sm.getContext();
     const rawVal = event.value;
     if (typeof rawVal === "number" && Number.isFinite(rawVal) && rawVal > 0) {
+      ctx[HEIGHT_LOCK_CTX] = rawVal;
       ctx[entry.field] = rawVal;
     } else if (rawVal == null) {
+      delete ctx[HEIGHT_LOCK_CTX];
       delete ctx[entry.field];
     }
     this.emit();
@@ -4774,6 +5002,10 @@ export class InteractionRuntime {
     const scalarEntry = interactionScalarEntryForState(this.spec, this.sm.getState());
     if (scalarEntry && event.kind === scalarEntry.event) {
       this.handleScalarEntry(event);
+      return;
+    }
+    if (this.applyScalarAxisPointer(event)) {
+      this.emit();
       return;
     }
     if (event.kind === "selection.changed") {
@@ -6492,6 +6724,52 @@ if (import.meta.vitest) {
       expect(corner[1]).toBeCloseTo(0, 5);
     });
 
+    it("scalar axis pointer.move sets height from projection along +Z", async () => {
+      class StubKernel extends BrepjsKernel {
+        async createBoxFromCorners() {
+          return solidRef("stub");
+        }
+        async volume() {
+          return 0;
+        }
+        async tessellate() {
+          return emptyMeshTransfer();
+        }
+      }
+      const spec = buildBoxInteractionSpec();
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("first_corner_height");
+      await rt.send({ kind: "pointer.move", point: [9, 9, 4.2] as Vec3, modifiers: {} });
+      expect(rt.getSnapshot().context.height).toBeCloseTo(4.2, 5);
+      expect(rt.getSnapshot().context.__scalarAxisT).toBeCloseTo(4.2, 5);
+    });
+
+    it("resolveDisplay injects height line, cursor, and guide for scalar entry", () => {
+      const spec = buildBoxInteractionSpec();
+      const ctx: Record<string, unknown> = {
+        origin: [0, 0, 0] as Vec3,
+        corner: [2, 3, 0] as Vec3,
+        height: 3,
+        __scalarAxisT: 3,
+        __cursorRaw: [5, 6, 4] as Vec3,
+      };
+      const d = resolveDisplay(spec, "first_corner_height", ctx);
+      expect(d.items.some((i) => i.id === "first_corner_height-scalar-height")).toBe(true);
+      expect(d.items.some((i) => i.id === "first_corner_height-scalar-cursor" && i.role === "cursor")).toBe(true);
+      expect(d.items.some((i) => i.id === "first_corner_height-scalar-guide" && i.role === "guide")).toBe(true);
+      const heightSeg = d.items.find((i) => i.id === "first_corner_height-scalar-height");
+      expect(heightSeg?.kind).toBe("segment");
+      if (heightSeg?.kind === "segment") {
+        expect(heightSeg.params.to[2]).toBeCloseTo(3, 5);
+      }
+    });
+
     it("set.height live entry keeps first_corner_height until confirm", async () => {
       class StubKernel extends BrepjsKernel {
         async createBoxFromCorners() {
@@ -6607,6 +6885,46 @@ if (import.meta.vitest) {
       const cursor = rt.getSnapshot().context.cursor as Vec3;
       expect(cursor).toEqual([10, 0, 0]);
       expect(rt.getSnapshot().context.__lengthLock).toBeNull();
+    });
+
+    it("interactionNumericEntryCommitEvent uses pointer.down for length and confirm for scalar", () => {
+      const line = requireSpatialInteraction("curve.line");
+      const box = buildBoxInteractionSpec();
+      const ctx = { points: { start: [0, 0, 0] as Vec3 }, cursor: [3, 0, 0] as Vec3 };
+      expect(interactionNumericEntryCommitEvent(line, "end_of_line", ctx)?.kind).toBe("pointer.down");
+      expect(interactionNumericEntryCommitEvent(box, "first_corner_height", { height: 2 })?.kind).toBe("confirm");
+    });
+
+    it("interactionNumericEntryCommitEvent pointer.down from length lock without field", () => {
+      const box = buildBoxInteractionSpec();
+      const ctx = { origin: [0, 0, 0] as Vec3, diagA: [0, 0, 0] as Vec3, __lengthLock: 4 };
+      const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx);
+      expect(ev?.kind).toBe("pointer.down");
+      if (ev?.kind === "pointer.down") {
+        expect(ev.point[0]).toBeCloseTo(4, 5);
+        expect(ev.point[1]).toBeCloseTo(0, 5);
+      }
+    });
+
+    it("Enter commit applies length then pointer.down on line rubber-band", async () => {
+      class StubKernel extends BrepjsKernel {
+        async curveLine() {
+          return { diff: EMPTY_MODEL_DIFF };
+        }
+      }
+      const spec = requireSpatialInteraction("curve.line");
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
+      const commitEv = interactionNumericEntryCommitEvent(spec, rt.getSnapshot().state, rt.getSnapshot().context);
+      expect(commitEv?.kind).toBe("pointer.down");
+      await rt.send(commitEv!);
+      expect(rt.getSnapshot().state).toBe("committed");
     });
 
     it("pointer.down while locked commits clamped point", async () => {

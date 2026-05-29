@@ -69,7 +69,13 @@ import {
 	listKeyedInteractionTransitions,
 	interactionLengthEntryForState,
 	interactionScalarEntryForState,
+	interactionInNumericEntryState,
+	interactionNumericEntryApplyEvent,
+	interactionNumericEntryCommitEvent,
+	interactionNumericEntryLockedValue,
+	parseNumericCommandLine,
 	isFinalInteractionState,
+	mergeInteractionSpatial,
 	Model,
 	type InteractionEvent,
 	type InteractionKeybindRow,
@@ -560,6 +566,7 @@ const GEOMETRY_KIND_TO_OBJECT_PICK: Partial<Record<ModelEntityKind, SpatialGeome
 	edge: "edge",
 	wire: "edge",
 	face: "face",
+	shell: "face",
 	solid: "object",
 	anchor: "vertex",
 };
@@ -1182,10 +1189,15 @@ export function filterSpatialPickTargets(
 	accept: readonly ModelEntityKind[] = [],
 	toggles: SpatialPickKindToggles = {},
 ): SpatialPickTarget[] {
+	const acceptSet = accept.length > 0 ? new Set(accept) : null;
 	const acceptKinds = spatialPickKindsForSelectionAccept(accept);
-	return targets.filter(
-		(target) => toggles[target.kind] !== false && (!acceptKinds || acceptKinds.has(target.kind)),
-	);
+	return targets.filter((target) => {
+		if (toggles[target.kind] === false) return false;
+		if (!acceptKinds) return true;
+		if (acceptKinds.has(target.kind)) return true;
+		const primitive = pickTargetPrimitiveKind(target);
+		return primitive !== null && (acceptSet?.has(primitive) ?? false);
+	});
 }
 
 /** @emoji 🧲 Creates a statechart event carrying snapped point plus selected geometry metadata. */
@@ -1300,6 +1312,7 @@ function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const b = readVec3(p.to);
 	if (!a || !b) return null;
 	const guide = item.role === "guide";
+	const heightLine = item.role === "height";
 	return (
 		<Line
 			raycast={raycastNone}
@@ -1307,8 +1320,8 @@ function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
 				[a[0], a[1], a[2]],
 				[b[0], b[1], b[2]],
 			]}
-			color={guide ? "#5a7088" : "#88eeff"}
-			lineWidth={guide ? 1 : 2}
+			color={guide ? "#5a7088" : heightLine ? "#66e8ff" : "#88eeff"}
+			lineWidth={guide ? 1 : heightLine ? 2.5 : 2}
 			dashed={guide}
 			{...(guide ? { dashSize: 0.12, gapSize: 0.08 } : {})}
 		/>
@@ -2182,9 +2195,16 @@ function spatialSelectionTarget(target: SpatialPickTarget): SelectionTarget {
 	return { kind: geometryKind, id: target.id, editable: true };
 }
 
-/** @emoji 🎯 Host geometry picking stays on without a bound interaction or once the session reaches a final state. */
+/** @emoji 🎯 Host geometry picking when browse is idle, session finished, or interaction defers picks (`pickDisabledStates`). */
 export function replHostGeometryPickingEnabled(interactionId: string, spec: InteractionSpec, state: string): boolean {
-	return !interactionId || !isInteractionSessionActive(spec, state);
+	if (!interactionId) return true;
+	if (!isInteractionSessionActive(spec, state)) return true;
+	return mergeInteractionSpatial(spec).pickDisabledStates.includes(state);
+}
+
+/** @emoji 👁️ Pick-target overlay visible whenever the active model definition uses factory geometry picking. */
+export function replGeometryPickLayerVisible(modelDefinitionId: string | null): boolean {
+	return modelDefinitionUsesGeometryPicking(modelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
 }
 
 /** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
@@ -2196,7 +2216,7 @@ export function pickHoverTargetFromRay(
 	return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles)[0] ?? null;
 }
 
-/** @emoji 📌 Keeps hover/selection overlays visible even when the normal visibility filter hides their kind. */
+/** @emoji 📌 Renders visibility-enabled pick highlights plus pinned hover/selection targets. */
 export function resolveSpatialPickTargetsToRender(
 	viewTargets: readonly SpatialPickTarget[],
 	filterKindToggles: SpatialPickKindToggles = {},
@@ -2204,12 +2224,14 @@ export function resolveSpatialPickTargetsToRender(
 ): SpatialPickTarget[] {
 	const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
 	const enabledTargets = filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles);
-	const out = enabledTargets.filter((target) => {
+	const seen = new Set<string>();
+	const out: SpatialPickTarget[] = [];
+	for (const target of enabledTargets) {
 		const key = spatialPickTargetKey(target);
-		if (pinnedKeys.has(key)) return true;
-		return target.kind === "vertex";
-	});
-	const seen = new Set(out.map(spatialPickTargetKey));
+		if (seen.has(key)) continue;
+		out.push(target);
+		seen.add(key);
+	}
 	for (const target of viewTargets) {
 		const key = spatialPickTargetKey(target);
 		if (!pinnedKeys.has(key) || seen.has(key)) continue;
@@ -2986,7 +3008,7 @@ export function InteractionSpatialView({
 		() => resolveSpatialSceneVisibility(activeModelDefinitionId, filterKindToggles),
 		[activeModelDefinitionId, filterKindToggles],
 	);
-	const scenePickGeometry = pickGeometryProp ?? geometry;
+	const scenePickGeometry = geometry ?? pickGeometryProp;
 	const pickGeometryRevision =
 		scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry
 			? Number((scenePickGeometry as { revision?: unknown }).revision)
@@ -3117,12 +3139,7 @@ function replBuildDispatchEvent(
 
 /** @emoji 📏 Parses REPL `cmdLine` as a live direct-distance value (`null` = empty, `undefined` = not numeric). */
 export function replLengthEntryLiveValue(cmdLine: string): number | null | undefined {
-	const t = cmdLine.trim();
-	if (!t) return null;
-	if (!/^\d*\.?\d*$/.test(t)) return undefined;
-	const v = Number(t);
-	if (!Number.isFinite(v) || v <= 0) return undefined;
-	return v;
+	return parseNumericCommandLine(cmdLine);
 }
 
 function replTryParseValueInteraction(line: string, spec: InteractionSpec, state: string): InteractionEvent | null {
@@ -3823,21 +3840,22 @@ export function InteractionRepl({
 	const dragCleanupRef = useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
+	const boundInteractionSession = Boolean(interactionId) && interactionActive;
 	const displayedSelectionTargets = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection),
-		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection),
+		[boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
 	const geometryPreviewTransform = useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
-	const pickGeometry = pickGeometryProp ?? geometry;
-	const pickGeometryRevision =
-		pickGeometry && typeof pickGeometry === "object" && "revision" in pickGeometry
-			? Number((pickGeometry as { revision?: unknown }).revision)
+	const pickSourceGeometry = geometry ?? pickGeometryProp;
+	const pickSourceRevision =
+		pickSourceGeometry && typeof pickSourceGeometry === "object" && "revision" in pickSourceGeometry
+			? Number((pickSourceGeometry as { revision?: unknown }).revision)
 			: 0;
 	const pickTargets = useMemo(
-		() => createSpatialPickTargets(pickGeometry, activeModelDefinitionId),
-		[pickGeometry, pickGeometryRevision, modelDefinitionRevision, activeModelDefinitionId],
+		() => createSpatialPickTargets(pickSourceGeometry, activeModelDefinitionId),
+		[pickSourceGeometry, pickSourceRevision, modelDefinitionRevision, activeModelDefinitionId],
 	);
 	const activeTypologyIds = useMemo(() => modelDefinitionTypologyIds(activeModelDefinitionId), [activeModelDefinitionId]);
 	const scopedPickTargets = useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeModelDefinitionId), [pickTargets, activeModelDefinitionId]);
@@ -3849,25 +3867,18 @@ export function InteractionRepl({
 		() => spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, visiblePickTargets),
 		[activeModelDefinitionId, visiblePickTargets],
 	);
-	const effectiveSelectionKindToggles = useMemo(() => {
+	const selectablePickTargets = useMemo(() => {
 		const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
-		const selectableTargets = filterSpatialPickTargetsForTypologyToggles(
-			filterPrimitives,
-			selectionTypologyToggles,
-			activeTypologyIds,
-		);
-		return intersectSpatialPickKindToggles(
-			viewFilterKindToggles,
-			spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, selectableTargets),
-		);
-	}, [
-		activeModelDefinitionId,
-		activeTypologyIds,
-		selectionTypologyToggles,
-		selectionPrimitiveToggles,
-		viewFilterKindToggles,
-		visiblePickTargets,
-	]);
+		return filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
+	}, [visiblePickTargets, selectionPrimitiveToggles, selectionTypologyToggles, activeTypologyIds]);
+	const effectiveSelectionKindToggles = useMemo(
+		() =>
+			intersectSpatialPickKindToggles(
+				viewFilterKindToggles,
+				spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, selectablePickTargets),
+			),
+		[activeModelDefinitionId, selectablePickTargets, viewFilterKindToggles],
+	);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
@@ -3962,6 +3973,7 @@ export function InteractionRepl({
 
 	const modelRevision = documentModel.model.revision;
 	const hostPickingEnabled = replHostGeometryPickingEnabled(interactionId, spec, snapshot.state);
+	const showPickLayer = replGeometryPickLayerVisible(mdIdForView);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -4017,13 +4029,13 @@ export function InteractionRepl({
 	}, [rt, spec]);
 
 	useEffect(() => {
-		if (!interactionActive) {
+		if (!interactionId || !interactionActive) {
 			setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 			return;
 		}
 		const machineTargets = replInteractionSelectionFromContext(snapshot.context);
 		setInteractionSelection((prev) => (replSelectionTargetsEqual(prev, machineTargets) ? prev : [...machineTargets]));
-	}, [interactionActive, snapshot.revision, snapshot.context, setInteractionSelection]);
+	}, [interactionId, interactionActive, snapshot.revision, snapshot.context, setInteractionSelection]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const defaultSelectionAccept = useMemo(
@@ -4035,9 +4047,9 @@ export function InteractionRepl({
 			const allowed = new Set(defaultSelectionAccept);
 			return runtimeSelectionAccept.filter((kind) => allowed.has(kind));
 		}
-		if (interactionActive) return [];
+		if (boundInteractionSession && runtimeSelectionAccept.length === 0) return [];
 		return defaultSelectionAccept;
-	}, [runtimeSelectionAccept, interactionActive, defaultSelectionAccept]);
+	}, [runtimeSelectionAccept, boundInteractionSession, defaultSelectionAccept]);
 	const viewObjectCount = useMemo(() => {
 		if (isShapeModelDefinition(activeModelDefinitionId)) return 0;
 		return countViewObjectsForModelDefinition(documentModel.model, mdIdForView);
@@ -4047,10 +4059,10 @@ export function InteractionRepl({
 		(selection: readonly SelectionTarget[]) => {
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
-			if (interactionActive) setInteractionSelection([...selection]);
+			if (boundInteractionSession) setInteractionSelection([...selection]);
 			else setRendererSelection([...selection]);
 		},
-		[interactionActive, setInteractionSelection, setRendererSelection],
+		[boundInteractionSession, setInteractionSelection, setRendererSelection],
 	);
 
 	const applySelectionPrune = useCallback(
@@ -4065,7 +4077,7 @@ export function InteractionRepl({
 		(targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
 			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
 			const nextSelection = replMergeSelectionPickInView(
-				interactionActive,
+				boundInteractionSession,
 				activeModelDefinitionId,
 				rendererSelection,
 				interactionSelection,
@@ -4073,9 +4085,9 @@ export function InteractionRepl({
 				modifiers,
 			);
 			commitSelection(nextSelection);
-			if (interactionActive && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
+			if (boundInteractionSession && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
-		[commitSelection, interactionActive, interactionSelection, activeModelDefinitionId, rt, rendererSelection],
+		[commitSelection, boundInteractionSession, interactionSelection, activeModelDefinitionId, rt, rendererSelection],
 	);
 
 	const onSelectionRequest = useCallback(
@@ -4127,9 +4139,9 @@ export function InteractionRepl({
 				{ x: event.clientX, y: event.clientY },
 				camera,
 				rect,
-				scopedPickTargets,
+				selectablePickTargets,
 				[],
-				effectiveSelectionKindToggles,
+				{},
 			);
 			onHoverTarget(hits[0] ?? null);
 		};
@@ -4140,7 +4152,7 @@ export function InteractionRepl({
 			canvas.removeEventListener("pointermove", onMove);
 			canvas.removeEventListener("pointerleave", onLeave);
 		};
-	}, [canvasBinding, hostPickingEnabled, scopedPickTargets, effectiveSelectionKindToggles, onHoverTarget]);
+	}, [canvasBinding, hostPickingEnabled, selectablePickTargets, onHoverTarget]);
 
 	const pointerMoveActive = useMemo(() => {
 		const si = snapshot.spatialInteraction;
@@ -4178,7 +4190,7 @@ export function InteractionRepl({
 					const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
 					commitSelection(
 						replMergeSelectionPickInView(
-							interactionActive,
+							boundInteractionSession,
 							activeModelDefinitionId,
 							rendererSelection,
 							interactionSelection,
@@ -4186,7 +4198,7 @@ export function InteractionRepl({
 							modifiers,
 						),
 					);
-					if (interactionActive) void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
+					if (boundInteractionSession) void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
 					return;
 				}
 			}
@@ -4197,7 +4209,7 @@ export function InteractionRepl({
 			rt,
 			activeSelectionAccept,
 			commitSelection,
-			interactionActive,
+			boundInteractionSession,
 			interactionSelection,
 			rendererSelection,
 			pointerMoveActive,
@@ -4271,9 +4283,9 @@ export function InteractionRepl({
 						finalState.currentClient,
 						camera,
 						rect,
-						scopedPickTargets,
+						selectablePickTargets,
 						activeSelectionAccept,
-						effectiveSelectionKindToggles,
+						{},
 					);
 					if (candidates.length === 0) return;
 					onSelectionRequest({
@@ -4286,11 +4298,11 @@ export function InteractionRepl({
 				}
 				const targets = spatialPickTargetsFromScreenSelection(
 					{ ...finalState, coverage: spatialSelectionCoverageFromPath(finalState.path) },
-					scopedPickTargets,
+					selectablePickTargets,
 					camera,
 					canvas.getBoundingClientRect(),
 					activeSelectionAccept,
-					effectiveSelectionKindToggles,
+					{},
 					geometryPreviewTransform,
 				);
 				if (targets.length === 0) {
@@ -4300,7 +4312,7 @@ export function InteractionRepl({
 						) === "default"
 					) {
 						commitSelection(
-							replMergeSelectionPickInView(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection, [], finalState.modifiers),
+							replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, rendererSelection, interactionSelection, [], finalState.modifiers),
 						);
 					}
 					return;
@@ -4325,14 +4337,14 @@ export function InteractionRepl({
 		canvasBinding,
 		commitSelection,
 		dispatchSelectionTargets,
-		interactionActive,
+		boundInteractionSession,
 		interactionSelection,
 		onSelectionRequest,
 		activeModelDefinitionId,
 		rendererSelection,
 		selectionMethod,
 		geometryPreviewTransform,
-		effectiveSelectionKindToggles,
+		selectablePickTargets,
 		hostPickingEnabled,
 	]);
 
@@ -4426,6 +4438,26 @@ export function InteractionRepl({
 		[onInteractionId],
 	);
 
+	const replCmdLineValue = useCallback((): string => cmdRef.current?.value ?? cmdLine, [cmdLine]);
+
+	const tryCommitNumericEntry = useCallback(async (): Promise<boolean> => {
+		const snap = rt.getSnapshot();
+		const state = snap.state;
+		if (!interactionInNumericEntryState(spec, state)) return false;
+		const parsed = parseNumericCommandLine(replCmdLineValue());
+		const value = parsed !== null && parsed !== undefined ? parsed : interactionNumericEntryLockedValue(spec, state, snap.context);
+		if (value == null) return false;
+		const applyEv = interactionNumericEntryApplyEvent(spec, state, value);
+		if (applyEv) await rt.send(applyEv);
+		const after = rt.getSnapshot();
+		const commitEv = interactionNumericEntryCommitEvent(spec, after.state, after.context);
+		if (!commitEv) return false;
+		await rt.send(commitEv);
+		setCmdLine("");
+		setInteractionMenuOpen(false);
+		return true;
+	}, [replCmdLineValue, rt, spec, setCmdLine]);
+
 	const trySubmitLine = useCallback((): boolean => {
 		const raw = cmdLine.trim();
 		if (!raw) return false;
@@ -4478,6 +4510,17 @@ export function InteractionRepl({
 			}
 			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
 				e.preventDefault();
+				if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
+					const snap = rt.getSnapshot();
+					const parsed = parseNumericCommandLine(replCmdLineValue());
+					if (
+						parsed !== undefined &&
+						(parsed !== null || interactionNumericEntryLockedValue(spec, snap.state, snap.context) != null)
+					) {
+						void tryCommitNumericEntry();
+						return;
+					}
+				}
 				const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId);
 				if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
 				setInteractionMenuOpen(false);
@@ -4509,12 +4552,31 @@ export function InteractionRepl({
 				e.preventDefault();
 				setInteractionMenuOpen(false);
 				if (!cmdLine.trim() && confirmInteractionSelection()) return;
+				if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
+					void tryCommitNumericEntry();
+					return;
+				}
 				if (trySubmitLine()) return;
 				if (filtered.length) runSuggestion(filtered[activeIndex]!);
 				return;
 			}
 		},
-		[cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection],
+		[
+			cmdLine,
+			allSuggestions,
+			filtered,
+			activeIndex,
+			runSuggestion,
+			trySubmitLine,
+			tryCommitNumericEntry,
+			replCmdLineValue,
+			handleEscapeKey,
+			lastFinalizedInteractionId,
+			runInteractionIdFromSpace,
+			confirmInteractionSelection,
+			spec,
+			rt,
+		],
 	);
 
 	useEffect(() => {
@@ -4528,13 +4590,11 @@ export function InteractionRepl({
 			(prevScalar && (!scalarEntry || prevScalar.state !== scalarEntry.state));
 		if (leftNumeric) setCmdLine("");
 		numericEntryPrevStateRef.current = state;
-		const live = replLengthEntryLiveValue(cmdLine);
+		const live = parseNumericCommandLine(cmdLine);
 		if (live === undefined) return;
-		if (lengthEntry) {
-			void rt.send({ kind: "set.length", value: live, modifiers: {} });
-			return;
-		}
-		if (scalarEntry) void rt.send({ kind: scalarEntry.event, value: live, modifiers: {} });
+		if (live === null) return;
+		const applyEv = interactionNumericEntryApplyEvent(spec, state, live);
+		if (applyEv) void rt.send(applyEv);
 	}, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
 	useEffect(() => {
@@ -4565,6 +4625,16 @@ export function InteractionRepl({
 			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
+				const snap = rt.getSnapshot();
+				if (interactionInNumericEntryState(spec, snap.state)) {
+					const line = cmdRef.current?.value ?? cmdLine;
+					const parsed = parseNumericCommandLine(line);
+					const locked = interactionNumericEntryLockedValue(spec, snap.state, snap.context);
+					if (parsed !== undefined && (parsed !== null || locked != null)) {
+						void tryCommitNumericEntry();
+						return;
+					}
+				}
 				if (!cmdLine.trim() && confirmInteractionSelection()) return;
 				const matches = replPaletteRows(cmdLine, allSuggestions);
 				const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId);
@@ -4591,6 +4661,11 @@ export function InteractionRepl({
 				e.stopPropagation();
 				if (!cmdLine.trim() && confirmInteractionSelection()) return;
 				cmdRef.current?.focus();
+				const snap = rt.getSnapshot();
+				if (interactionInNumericEntryState(spec, snap.state)) {
+					void tryCommitNumericEntry();
+					return;
+				}
 				if (cmdLine.trim()) void trySubmitLine();
 				return;
 			}
@@ -4603,7 +4678,22 @@ export function InteractionRepl({
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, cmdLine, allSuggestions, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo]);
+	}, [
+		rt,
+		spec,
+		cmdLine,
+		allSuggestions,
+		trySubmitLine,
+		tryCommitNumericEntry,
+		handleEscapeKey,
+		interactionActive,
+		repeatCurrentInteraction,
+		lastFinalizedInteractionId,
+		runInteractionIdFromSpace,
+		confirmInteractionSelection,
+		onUndo,
+		onRedo,
+	]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -4646,7 +4736,7 @@ export function InteractionRepl({
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
-						pickGeometry={pickGeometry}
+						pickGeometry={pickSourceGeometry}
 						committedMeshes={committedMeshesForView}
 						activeModelDefinitionId={activeModelDefinitionId}
 						modelDefinitionRevision={modelDefinitionRevision}
@@ -4659,7 +4749,7 @@ export function InteractionRepl({
 						selectedTargetKey={selectedPickKey}
 						selectedTargetKeys={selectedPickKeys}
 						hostSelectionEnabled={hostPickingEnabled}
-						showPickLayer={hostPickingEnabled}
+						showPickLayer={showPickLayer}
 						onSelectionRequest={onSelectionRequest}
 						onCameraNavigate={onCameraNavigate}
 						autoFitMeshes={autoFitMeshes}
@@ -5435,6 +5525,15 @@ if (import.meta.vitest) {
 	const { describe, it, expect } = import.meta.vitest;
 
 	describe("@spatial/js-renderer-r3f interaction adapter", () => {
+		it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
+			const spec = loadSpatialInteraction("primitive.box");
+			expect(replHostGeometryPickingEnabled("primitive.box", spec, "first_corner")).toBe(false);
+			expect(replHostGeometryPickingEnabled("primitive.box", spec, "ready")).toBe(true);
+			expect(replHostGeometryPickingEnabled("primitive.box", spec, "committed")).toBe(true);
+			expect(replHostGeometryPickingEnabled("primitive.box", spec, "idle")).toBe(true);
+			expect(replHostGeometryPickingEnabled("", spec, "first_corner")).toBe(true);
+		});
+
 		it("keeps active spatial ground picks enabled when host geometry selection is disabled", () => {
 			const snapshot = {
 				state: "first_corner",
@@ -5603,6 +5702,24 @@ if (import.meta.vitest) {
 				{ kind: "object", id: "o0", editable: false },
 				{ kind: "wire", id: "w1", editable: true },
 			]);
+		});
+
+		it("filterSpatialPickTargets matches topology geometryKind in selection accept", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "face", geometryKind: "shell", id: "sh0", point: [0, 0, 0] },
+				{ kind: "vertex", geometryKind: "anchor", id: "a0", point: [1, 0, 0] },
+			];
+			expect(filterSpatialPickTargets(targets, ["shell"], {}).map(spatialPickTargetKey)).toEqual(["face:sh0"]);
+			expect(filterSpatialPickTargets(targets, ["anchor"], {}).map(spatialPickTargetKey)).toEqual(["vertex:a0"]);
+		});
+
+		it("resolveSpatialPickTargetsToRender draws all enabled kinds", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "vertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "edge", geometryKind: "edge", id: "e0", point: [0, 0, 0], points: [[0, 0, 0], [1, 0, 0]] },
+			];
+			expect(resolveSpatialPickTargetsToRender(targets, { edge: false }).map(spatialPickTargetKey)).toEqual(["vertex:v0"]);
+			expect(resolveSpatialPickTargetsToRender(targets, {}).map(spatialPickTargetKey).sort()).toEqual(["edge:e0", "vertex:v0"]);
 		});
 	});
 }
