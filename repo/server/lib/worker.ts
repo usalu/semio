@@ -10,7 +10,7 @@
 // - Retries failed Discord deliveries with exponential backoff.
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import PgBoss from "pg-boss";
 import {
   getPool,
@@ -18,7 +18,7 @@ import {
   markDiscordDeliveryFailed,
 } from "./db";
 import { sendDiscordMessage } from "./events";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // 🗄️#region ⏱️Config
 const DATABASE_URL =

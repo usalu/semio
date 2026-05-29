@@ -9,9 +9,9 @@
 // - Event kinds match the Go EventKind constants.
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import { insertEvent, insertDiscordDelivery, newId, type Event } from "./db";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region 🌡️Publish
 // Publish an event: persist to DB and queue Discord delivery.

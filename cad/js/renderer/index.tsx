@@ -4,7 +4,7 @@
 /** @emoji 🎬 `@cad/js-renderer-r3f` — R3F renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
-// #region 📥Imports
+// #region 🔌Adapters
 import { Line, OrbitControls, Text } from "@react-three/drei";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
@@ -118,7 +118,7 @@ type WireRecord = kernelGeometry.WireRecord;
 
 export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js-kernel-brepjs";
-// #endregion 📥Imports
+// #endregion 🔌Adapters
 
 // #region ⚡R3FPreviewKernel
 /** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */

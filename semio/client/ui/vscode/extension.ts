@@ -13,11 +13,11 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region 🛕KitFileDetection
 // Kit file detection MUST match the naming conventions used across the semio workspace.

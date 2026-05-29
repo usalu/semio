@@ -12,14 +12,14 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 // Imports MUST use Node.js file APIs, path helpers, and DOM parsing for SVG extraction.
 
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region ⚙️Kinds
 // Kinds MUST describe the parsed SVG transform and path state for each animation frame.

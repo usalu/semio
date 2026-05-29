@@ -2,6 +2,7 @@
 /** @emoji 🔗 `@puzzle/5d-react` — paired board + scene surfaces + play harness (monolith). */
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import type { ContextMenuItem } from "@ui/react";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
@@ -35,6 +36,7 @@ import {
 	type KindCompatEntry as SceneKindCompatEntry,
 	type RelocateMode as SceneRelocateMode,
 } from "../scene/index.tsx";
+// #endregion 🔌Adapters
 
 //#region ┬¡ãÆ├Â├╗TopologyFixture
 /** @emoji ┬¡ãÆ├┤├ñ Parsed `elements.topology.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */

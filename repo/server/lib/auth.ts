@@ -11,11 +11,11 @@
 // - No fallback "allow all" behavior.
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getDeveloperByApiKeyHash, type Developer } from "./db";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // 🔷#region 🩻Hashing
 export function hashApiKey(key: string): string {

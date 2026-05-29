@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 // Imports MUST include React, semio types, Lucide icons from assets, and ReactDOM.
 
 import React, { useCallback, useState } from "react";
@@ -17,7 +17,7 @@ import { Kit, type Type as SemioType, type Design, type Representation } from "@
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
 import "./globals.css";
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region ⚗️WebViewGlobal
 // Global type augmentation for the WebView2 chrome.webview API.

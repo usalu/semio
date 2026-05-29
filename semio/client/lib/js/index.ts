@@ -9,8 +9,8 @@ import { createRsWasmGraphqlHandle } from "./rs-wasm-transport";
 
 export { GQL_RESPONSE_SELECTION, withResponseSelection } from "./graphql-kit-selection";
 
-//#region 📥KitImports
-//#endregion 📥KitImports
+//#region 🔌Adapters
+//#endregion 🔌Adapters
 
 export type ID = string
 

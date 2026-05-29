@@ -10,9 +10,9 @@
 // - All timestamps are timestamptz.
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import { Pool, type PoolClient } from "pg";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region ⏱️Config
 // 🗄️Database configuration from environment variables.

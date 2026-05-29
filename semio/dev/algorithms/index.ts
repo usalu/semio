@@ -7,7 +7,7 @@
 
 /// <reference types="vite/client" />
 
-// #region 📥Imports
+// #region 🔌Adapters
 import {
   AlgorithmApp,
   WindowKind,
@@ -28,7 +28,7 @@ import * as React from "react";
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/assets";
 
 import { openSessionInMemory, type Store as JsStore } from "@semio/js";
-// #endregion 📥Imports
+// #endregion 🔌Adapters
 
 // #region 🧾GqlWire
 /** @emoji 🧾 Local GraphQL response fragment object (replaces re-exported @semio/js wire types). */

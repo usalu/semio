@@ -10,7 +10,7 @@
 // - Events are published for all lifecycle transitions.
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -23,7 +23,7 @@ import {
 } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { publishEvent } from "@/lib/events";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // 🎫#region 🎄Schemas
 const TicketOpenSchema = z.object({

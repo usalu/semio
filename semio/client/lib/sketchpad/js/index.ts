@@ -10,10 +10,10 @@
 
 // #endregion ðŸ§²Header
 // #region ðŸŽ¨Sketchpad
-// #region â›©ï¸Imports
+// #region 🔌Adapters
 // External and internal module imports.
 
-// #region â›©ï¸Imports
+// #region 🔌Adapters
 
 import type { Author, Concept, Connection, Connector, Design, Folder, Piece, Port, Quality, Representation, File as SemioFile, Tag, Type } from "@semio/js";
 import { Camera, Kit, Session } from "@semio/js";
@@ -1028,7 +1028,7 @@ export type PersistenceFactory = (syncDoc: SyncDoc, key: string) => PersistenceP
 
 // #endregion ðŸ‚PersistenceProviders
 
-// #endregion â›©ï¸Imports
+// #endregion 🔌Adapters
 
 // #region ðŸ“Shared
 
@@ -4316,7 +4316,7 @@ export const getPortCompatibilityState = (candidatePortId: string | undefined, s
 
 // #region ðŸ·ï¸Tutorials
 
-// #endregion ðŸ·ï¸Imports
+// #endregion 🔌Adapters
 
 // #region ðŸŽ–ï¸Components
 
@@ -5458,10 +5458,10 @@ export class TutorialStore {
 // #region ðŸŽŠkitSelectionHelper
 // Consolidated from kitSelectionHelper.ts
 
-// #region â›©ï¸Imports
+// #region 🔌Adapters
 // Imports MUST include icon width constant and kit selection types.
 
-// #endregion â›©ï¸Imports
+// #endregion 🔌Adapters
 
 // #region âš™ï¸Types
 // Types MUST define selection value extraction for KitAppSelection dimensions.
@@ -6038,7 +6038,7 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
 
 // #region ðŸ›Žï¸SketchpadCore
 
-// #endregion ðŸ›Žï¸Imports
+// #endregion 🔌Adapters
 
 // #region ðŸŽ¼Utilities
 // Utilities MUST provide the utilities functionality.
@@ -23413,10 +23413,10 @@ export { Sketchpad };
 // #region â±ï¸Kit
 // Consolidated from Kit.tsx
 
-// #region â›©ï¸Imports
+// #region 🔌Adapters
 // Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
-// #endregion â›©ï¸Imports
+// #endregion 🔌Adapters
 
 // #region ðŸ—ï¸Design Family Helpers
 // Design family helper functions MUST traverse the design hierarchy to collect related design IDs.
@@ -42915,7 +42915,7 @@ export const docsConfig: AppConfig = {
 // Â­Æ’Ã¶Ã€#region Â­Æ’Ã¶Â«Home
 const useHome = useHomeApp;
 
-// #endregion Â­Æ’Ã¶Â«Imports
+// #endregion 🔌Adapters
 
 // #region Â­Æ’Ã´Ã¯Types
 // Home app type definitions MUST be declared here.

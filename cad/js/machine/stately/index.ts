@@ -2,7 +2,7 @@
 /** @emoji 🎭 `@cad/js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
-// #region 📥Imports
+// #region 🔌Adapters
 import { createActor, setup } from "xstate";
 import {
 	applyTransition,
@@ -29,7 +29,7 @@ import {
 	type VertexRef,
 	type WireRef,
 } from "@cad/js-core";
-// #endregion 📥Imports
+// #endregion 🔌Adapters
 
 // #region 🎭AdvanceEvent
 type StatelyAdvance = { type: "__advance"; interactionKind: string; branch: number };

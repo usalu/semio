@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 // Imports MUST include VS Code API, Node.js utilities, and semio validation.
 
 // import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
@@ -48,7 +48,7 @@ export type RepoEvent = {
   error?: { message?: string; fatal?: boolean };
   done?: { exit_code?: number };
 };
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region 🎞️Constants
 // Constants MUST define static configuration for diagnostics and UI strings.
