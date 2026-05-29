@@ -1,9 +1,8 @@
-// #region ­ƒº▓Header
-// ­ƒÆ╗ elements/client/lib/system/renderer/react/scene/play/main.ts ÔÇö Vite entry (plain TS): delegates to {@link mountScenePlay} in `scene-play-host.tsx`.
-// #endregion ­ƒº▓Header
+// #region 🧲Header
+// 💻 elements/lib/react/scene/play/main.ts — Vite entry: mounts scene play via {@link renderPlayground}.
+// #endregion 🧲Header
 
-//#region ­ƒöûMount
-void import("../index.tsx").then((m) => {
-	m.mountScenePlay();
-});
-//#endregion ­ƒöûMount
+import { renderPlayground } from "@elements/playground/react";
+import { ScenePlayground } from "./index.ts";
+
+renderPlayground(new ScenePlayground());
