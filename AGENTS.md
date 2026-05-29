@@ -7,6 +7,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - `project.json` MUST only call `script.ts <command> <subcommand...> <args>`.
     - `package.json` MUST call `nx` to run `scripts.ts <command> <subcommand...> <args>`.
     - Extend the script functionality from `./script.ts`.
+    - You MUST NOT create any other script files other than `script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - All devs are using `launch.json` and never use the cli.

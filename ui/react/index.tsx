@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
@@ -118,7 +118,28 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { initReactI18next, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { twMerge } from "tailwind-merge";
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
+
+// #region 🔌Ports
+/** @emoji ⚛️ Host surface for React runtime wiring (implemented by 🔌Adapters). */
+export interface ReactHostPort {
+  readonly createElement: typeof React.createElement;
+  readonly useState: typeof React.useState;
+  readonly useEffect: typeof React.useEffect;
+}
+
+/** @emoji 🕸️ Host surface for diagram runtime (implemented by 🔌Adapters). */
+export interface FlowHostPort {
+  readonly flow: typeof ReactFlow;
+  readonly provider: typeof ReactFlowProvider;
+}
+
+/** @emoji 🧊 Host surface for three.js / R3F (implemented by 🔌Adapters). */
+export interface ThreeHostPort {
+  readonly canvas: typeof ThreeCanvas;
+  readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
+}
+// #endregion 🔌Ports
 
 // #region 🎼Utilities
 

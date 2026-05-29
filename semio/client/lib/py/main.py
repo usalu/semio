@@ -76,7 +76,7 @@ import pytransform3d.rotations
 
 import semio.client.lib.py.store as store
 
-# #endregion ⛩️Imports
+# #endregion 🔌Adapters
 
 
 # #region 🧩PydanticCompatibility

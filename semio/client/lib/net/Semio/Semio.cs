@@ -13,8 +13,8 @@
 
 
 
-#region ⛩️Imports
-// Callers MUST import all required namespaces listed here.
+#region 🔌Adapters
+// Third-party imports MUST stay in this region; domain code uses port types below.
 using System.Collections;
 using System.Collections.Immutable;
 using System.Drawing;
@@ -49,7 +49,26 @@ using SharpGLTF.Scenes;
 using GltfRepresentation = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion ⛩️Imports
+#endregion 🔌Adapters
+
+#region 🔌Ports
+/// <summary>📜 JSON codec port implemented by Newtonsoft in 🔌Adapters.</summary>
+public interface ISemioJsonCodec
+{
+    string Serialize(object value);
+    T Deserialize<T>(string json);
+}
+
+/// <summary>📜 Newtonsoft-backed JSON codec adapter.</summary>
+public sealed class NewtonsoftSemioJsonCodec : ISemioJsonCodec
+{
+    public static readonly NewtonsoftSemioJsonCodec Instance = new();
+
+    public string Serialize(object value) => JsonConvert.SerializeObject(value);
+
+    public T Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json)!;
+}
+#endregion 🔌Ports
 
 
 

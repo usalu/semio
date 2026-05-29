@@ -20261,6 +20261,9 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 	if strings.Contains(n, "/adapters/") || strings.Contains(n, "\\adapters\\") {
 		return true
 	}
+	if strings.Contains(n, "/external_adapters") || strings.HasSuffix(n, "external_adapters.rs") {
+		return true
+	}
 	base := strings.ToLower(filepath.Base(n))
 	if strings.Contains(base, "adapter") {
 		return true
