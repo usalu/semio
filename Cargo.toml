@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "puzzle/2d/rs",
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",

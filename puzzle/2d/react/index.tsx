@@ -40,13 +40,13 @@ import initBoardWasm, {
 	boardRedrawLayoutFixtureJson,
 	BoardSession,
 	initSync,
-} from "../rs/pkg/puzzle_board.js";
+} from "../rs/pkg/elements_board.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
-	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_board_bg.wasm");
+	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/elements_board_bg.wasm");
 	initSync({ module: readFileSync(wasmPath) });
 } else {
 	await initBoardWasm();
