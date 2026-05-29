@@ -28,7 +28,9 @@ const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
 const frameworkPlaygroundDir = resolve(repoRootPath, "framework/playground/core");
 const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/playground/renderer/react");
-const puzzleBoardDir = resolve(repoRootPath, "puzzle/2d");
+const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
+const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
+const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
@@ -64,7 +66,9 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground-renderer-react"] = toVitePath(frameworkPlaygroundReactDir);
-		alias["@puzzle/2d-react"] = toVitePath(puzzleBoardDir);
+		alias["@puzzle/2d-react"] = toVitePath(puzzle2dReactDir);
+		alias["@puzzle/3d-react"] = toVitePath(puzzle3dReactDir);
+		alias["@puzzle/5d-react"] = toVitePath(puzzle5dReactDir);
 		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
 	if (loadSemioStack) {

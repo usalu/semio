@@ -56,7 +56,7 @@ import {
   type SelectionSnapshot,
   type VortexProps,
   type WireKindCatalogEntry,
-} from "../index.tsx";
+} from "../react/index.tsx";
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 
 //#region 🧾Meta

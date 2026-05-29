@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@puzzle/5d-play",
+  "version": "0.1.0",
+  "description": "puzzle · 5d topology play harness (renderer-neutral runtime + Vite entry)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun nx run @puzzle/5d-play:dev",
+    "build": "bun nx run @puzzle/5d-play:build",
+    "test": "bun nx run @puzzle/5d-play:test"
+  },
+  "dependencies": {
+    "@framework/playground": "workspace:*"
+  },
+  "devDependencies": {
+    "@framework/playground-renderer-react": "workspace:*",
+    "@playwright/test": "^1.57.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "puzzle/5d/play"
+  },
+  "bundleKind": "application"
+}

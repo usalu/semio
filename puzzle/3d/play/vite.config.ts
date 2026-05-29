@@ -52,7 +52,7 @@ export default defineConfig({
 	},
 	build: {
 		target: "esnext",
-		outDir: "play/dist",
+		outDir: "dist",
 		emptyOutDir: true,
 	},
 	resolve: {
@@ -60,6 +60,7 @@ export default defineConfig({
 			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
 			{ find: "@framework/playground-renderer-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
 			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
+			{ find: "@puzzle/3d-react", replacement: path.resolve(__dirname, "../react/index.tsx") },
 			{ find: /^three$/, replacement: threeModule },
 			{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 		],

@@ -4,13 +4,11 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@puzzle/3d-react` (react + play sources with `import.meta.vitest`). */
+/** @emoji 🧪 Vitest for `@puzzle/3d-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@framework/playground-renderer-react": resolve(root, "../../framework/playground/renderer/react/index.tsx"),
-			"@framework/playground": resolve(root, "../../framework/playground/core/index.ts"),
 			"@ui/react": resolve(root, "../../ui/react/index.tsx"),
 		},
 	},
@@ -19,8 +17,8 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.ts", "index.tsx", "play/index.ts"],
-		includeSource: ["index.ts", "index.tsx", "play/index.ts"],
+		include: ["index.tsx"],
+		includeSource: ["index.tsx"],
 		passWithNoTests: true,
 	},
 });
