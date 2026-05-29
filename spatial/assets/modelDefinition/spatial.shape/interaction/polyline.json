@@ -15,7 +15,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "next_point_of_polyline",
+        "anchor": "points.@last",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

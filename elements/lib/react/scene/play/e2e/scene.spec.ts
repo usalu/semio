@@ -62,6 +62,14 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
+test("scene play inspector panel is visible", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
+	await expect(page.getByText("Inspector", { exact: true })).toBeVisible({ timeout: 30_000 });
+	expectCleanSceneConsole(messages);
+});
+
 test("scene selection hook updates label", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");

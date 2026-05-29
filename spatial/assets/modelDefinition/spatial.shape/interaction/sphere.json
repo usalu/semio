@@ -15,7 +15,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "radius",
+        "anchor": "points.center",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

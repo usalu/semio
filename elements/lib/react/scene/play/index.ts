@@ -27,12 +27,21 @@ import {
 	formatSceneLod,
 	lodFromSliderValue,
 	parseFixtureV1,
+	parseVortexFullId,
+	fixturePoseFingerprint,
+	fixtureStateFingerprint,
 	sceneLodCanvasProps,
 	sliderValueFromLod,
+	type AttractionProps,
+	type CameraState,
+	type FixtureObjectV1,
 	type FixtureV1,
 	type KindCatalogBundle,
 	type KindCompatEntry,
 	type RelocateMode,
+	type SelectionMode,
+	type SelectionSnapshot,
+	type VortexProps,
 } from "../index.tsx";
 
 //#region 🧾Meta
@@ -103,40 +112,266 @@ export const SCENE_PLAY_WINDOW_LABEL = "Scene";
 export const SCENE_PLAY_BODY_KEY = "elements.scene.play.window";
 export const SCENE_PLAY_CONTROLLER_ID = "scene-play";
 export const SCENE_PLAY_SCENE_SURFACE_ID = "elements.scene.play.scene/v1";
+export const SCENE_PLAY_INSPECTOR_TAB_ID = "scene-play-inspector";
+export const SCENE_PLAY_SETTINGS_TAB_ID = "scene-play-settings";
 //#endregion 🎬Play
 
 export { parseKindCatalogs, parseKindCompatibility };
+
+//#region 🔖ScenePlaySelection
+/** @emoji 🎯 Play harness selection: objects, vortex full ids, and attractions. */
+export interface ScenePlaySelection extends SelectionSnapshot {
+	readonly attractionIds: readonly string[];
+}
+
+export const SCENE_PLAY_EMPTY_SELECTION: ScenePlaySelection = {
+	objectIds: [],
+	vortexIds: [],
+	attractionIds: [],
+};
+
+/** @emoji 🔗 Canonical `objectId:vortexId` for fixture vortex rows. */
+export function sceneVortexFullId(objectId: string, vortexId: string): string {
+	return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
+}
+
+/** @emoji 🗑️ Removes an object and any attractions touching it or its vortices. */
+export function deleteSceneObjectFromFixture(fixture: FixtureV1, objectId: string): FixtureV1 {
+	const removedVortexFullIds = new Set<string>();
+	for (const object of fixture.objects) {
+		if (object.id !== objectId) {
+			continue;
+		}
+		for (const vortex of object.vortices) {
+			removedVortexFullIds.add(sceneVortexFullId(objectId, vortex.id));
+		}
+	}
+	return {
+		...fixture,
+		objects: fixture.objects.filter((object) => object.id !== objectId),
+		attractions: fixture.attractions.filter((attraction) => {
+			const sourceObjectId = parseVortexFullId(attraction.attracting).objectId;
+			const targetObjectId = parseVortexFullId(attraction.attracted).objectId;
+			if (sourceObjectId === objectId || targetObjectId === objectId) {
+				return false;
+			}
+			return !removedVortexFullIds.has(attraction.attracting) && !removedVortexFullIds.has(attraction.attracted);
+		}),
+	};
+}
+
+/** @emoji 🗑️ Removes one vortex and stale attractions that referenced it. */
+export function deleteSceneVortexFromFixture(fixture: FixtureV1, vortexFullId: string): FixtureV1 {
+	const { objectId } = parseVortexFullId(vortexFullId);
+	return {
+		...fixture,
+		objects: fixture.objects.map((object) =>
+			object.id !== objectId
+				? object
+				: {
+						...object,
+						vortices: object.vortices.filter((vortex) => sceneVortexFullId(objectId, vortex.id) !== vortexFullId),
+					},
+		),
+		attractions: fixture.attractions.filter(
+			(attraction) => attraction.attracting !== vortexFullId && attraction.attracted !== vortexFullId,
+		),
+	};
+}
+
+/** @emoji 🗑️ Drops a single attraction row. */
+export function deleteSceneAttractionFromFixture(fixture: FixtureV1, attractionId: string): FixtureV1 {
+	return {
+		...fixture,
+		attractions: fixture.attractions.filter((attraction) => attraction.id !== attractionId),
+	};
+}
+
+function patchSceneObject(
+	objects: readonly FixtureObjectV1[],
+	objectId: string,
+	patch: (object: FixtureObjectV1) => FixtureObjectV1,
+): FixtureObjectV1[] {
+	return objects.map((object) => (object.id === objectId ? patch(object) : object));
+}
+
+/** @emoji ✏️ Updates fields on one fixture object. */
+export function updateSceneObjectInFixture(
+	fixture: FixtureV1,
+	objectId: string,
+	patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">>,
+): FixtureV1 {
+	return {
+		...fixture,
+		objects: patchSceneObject(fixture.objects, objectId, (object) => ({ ...object, ...patch })),
+	};
+}
+
+/** @emoji ✏️ Updates one vortex on an object. */
+export function updateSceneVortexInFixture(
+	fixture: FixtureV1,
+	vortexFullId: string,
+	patch: Partial<VortexProps>,
+): FixtureV1 {
+	const { objectId, vortexId } = parseVortexFullId(vortexFullId);
+	return {
+		...fixture,
+		objects: patchSceneObject(fixture.objects, objectId, (object) => ({
+			...object,
+			vortices: object.vortices.map((vortex) => {
+				const fullId = sceneVortexFullId(objectId, vortex.id);
+				if (fullId !== vortexFullId && vortex.id !== vortexId) {
+					return vortex;
+				}
+				return { ...vortex, ...patch, id: vortex.id };
+			}),
+		})),
+	};
+}
+
+/** @emoji ✏️ Updates one attraction row. */
+export function updateSceneAttractionInFixture(
+	fixture: FixtureV1,
+	attractionId: string,
+	patch: Partial<AttractionProps>,
+): FixtureV1 {
+	return {
+		...fixture,
+		attractions: fixture.attractions.map((attraction) =>
+			attraction.id === attractionId ? { ...attraction, ...patch } : attraction,
+		),
+	};
+}
+
+/** @emoji 📷 True when two camera states match within epsilon (avoids redundant fixture writes). */
+export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1e-3): boolean {
+	for (let i = 0; i < 3; i += 1) {
+		if (Math.abs(a.position[i]! - b.position[i]!) > epsilon) return false;
+		if (Math.abs(a.target[i]! - b.target[i]!) > epsilon) return false;
+	}
+	return Math.abs(a.zoom - b.zoom) <= epsilon;
+}
+
+/** @emoji 📷 Writes camera fields on the fixture; returns the same reference when unchanged. */
+export function updateSceneCameraInFixture(fixture: FixtureV1, camera: Partial<CameraState>): FixtureV1 {
+	const nextCamera: CameraState = { ...fixture.camera, ...camera };
+	if (cameraStateNearEqual(fixture.camera, nextCamera)) {
+		return fixture;
+	}
+	return { ...fixture, camera: nextCamera };
+}
+
+/** @emoji 🎯 Maps {@link SelectionSnapshot} to play selection (attractions filled separately). */
+export function selectionSnapshotToPlaySelection(
+	snap: SelectionSnapshot,
+	attractionIds: readonly string[] = [],
+): ScenePlaySelection {
+	return {
+		objectIds: snap.objectIds,
+		vortexIds: snap.vortexIds,
+		attractionIds,
+	};
+}
+
+/** @emoji 🎯 Primary object id for relocate / legacy e2e hooks. */
+export function primaryScenePlayObjectId(selection: ScenePlaySelection): string | null {
+	if (selection.objectIds[0]) {
+		return selection.objectIds[0];
+	}
+	if (selection.vortexIds[0]) {
+		return parseVortexFullId(selection.vortexIds[0]).objectId;
+	}
+	return null;
+}
+//#endregion 🔖ScenePlaySelection
 
 //#region 🔖ScenePlayController
 /** @emoji 🎬 Framework-free scene play controller: fixture, LOD, selection, and interaction counters. */
 export class ScenePlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Scene", undefined);
-	readonly fixture: FixtureV1 | null;
+	private fixture: FixtureV1 | null;
+	private fixtureRevision: number;
 	private automaticLod: boolean;
 	private depthVariableLod: boolean;
 	private manualLod: number;
 	private lodSlider: number;
 	private lodTag: number;
 	private relocateMode: RelocateMode;
-	private selectedId: string | null;
+	private selection: ScenePlaySelection;
+	private selectionMode: SelectionMode;
+	private proximityRadius: number;
+	private chunkSize: number;
+	private gridFactor: number;
+	private showLodGrid: boolean;
+	private gridSnapEnabled: boolean;
 	private proximityCount: number;
 	private connectCount: number;
 	private indirectCount: number;
+	private compatibleObjectsCount: number;
+	private targetRingCount: number;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SCENE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
+		this.fixtureRevision = 0;
 		this.automaticLod = true;
 		this.depthVariableLod = false;
 		this.manualLod = DEFAULT_MANUAL_LOD;
 		this.lodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
 		this.lodTag = DEFAULT_MANUAL_LOD;
 		this.relocateMode = "translate";
-		this.selectedId = null;
+		this.selection = SCENE_PLAY_EMPTY_SELECTION;
+		this.selectionMode = "single";
+		this.proximityRadius = 24;
+		this.chunkSize = 256;
+		this.gridFactor = 10;
+		this.showLodGrid = false;
+		this.gridSnapEnabled = true;
 		this.proximityCount = 0;
 		this.connectCount = 0;
 		this.indirectCount = 0;
+		this.compatibleObjectsCount = 0;
+		this.targetRingCount = 0;
 		this.rebuildShellMode();
+	}
+
+	getFixture(): FixtureV1 | null {
+		return this.fixture;
+	}
+
+	getFixtureRevision(): number {
+		return this.fixtureRevision;
+	}
+
+	patchFixture(updater: (prev: FixtureV1) => FixtureV1): void {
+		if (!this.fixture) {
+			return;
+		}
+		const prev = this.fixture;
+		const next = updater(prev);
+		if (next === prev) {
+			return;
+		}
+		this.fixture = next;
+		const structureChanged =
+			fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev) ||
+			fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
+		if (structureChanged) {
+			this.fixtureRevision += 1;
+		}
+		this.emit();
+	}
+
+	/** @emoji 📷 Persists orbit camera on the fixture without bumping structure revision or re-emitting React state. */
+	setCamera(camera: Partial<CameraState>): void {
+		if (!this.fixture) {
+			return;
+		}
+		const next = updateSceneCameraInFixture(this.fixture, camera);
+		if (next === this.fixture) {
+			return;
+		}
+		this.fixture = next;
 	}
 
 	private lodMeasures(): readonly WindowMeasure[] {
@@ -221,12 +456,82 @@ export class ScenePlayShellController extends Controller {
 				if (mode === "translate" || mode === "rotate" || mode === "scale") this.relocateMode = mode;
 				break;
 			}
+			case "setSelection": {
+				const next = (args as { selection: ScenePlaySelection }).selection;
+				if (next && typeof next === "object") {
+					this.selection = {
+						objectIds: [...(next.objectIds ?? [])],
+						vortexIds: [...(next.vortexIds ?? [])],
+						attractionIds: [...(next.attractionIds ?? [])],
+					};
+				}
+				break;
+			}
 			case "setSelectedId": {
-				this.selectedId = (args as { id: string | null }).id;
+				const id = (args as { id: string | null }).id;
+				this.selection = id
+					? { objectIds: [id], vortexIds: [], attractionIds: [] }
+					: SCENE_PLAY_EMPTY_SELECTION;
 				break;
 			}
 			case "noteSelection": {
-				this.selectedId = (args as { objectIds: readonly string[] }).objectIds[0] ?? null;
+				const snap = args as SelectionSnapshot & { attractionIds?: readonly string[] };
+				this.selection = {
+					objectIds: [...(snap.objectIds ?? [])],
+					vortexIds: [...(snap.vortexIds ?? [])],
+					attractionIds:
+						snap.attractionIds !== undefined
+							? [...snap.attractionIds]
+							: snap.objectIds.length === 0 && snap.vortexIds.length === 0
+								? []
+								: [...this.selection.attractionIds],
+				};
+				break;
+			}
+			case "deleteSelection": {
+				this.applyDeleteSelection();
+				break;
+			}
+			case "setSelectionMode": {
+				const mode = (args as { mode: SelectionMode }).mode;
+				if (mode === "single" || mode === "additive" || mode === "subtractive" || mode === "toggle") {
+					this.selectionMode = mode;
+				}
+				break;
+			}
+			case "setProximityRadius": {
+				const value = (args as { value: number }).value;
+				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+					this.proximityRadius = value;
+				}
+				break;
+			}
+			case "setChunkSize": {
+				const value = (args as { value: number }).value;
+				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+					this.chunkSize = value;
+				}
+				break;
+			}
+			case "setGridFactor": {
+				const value = (args as { value: number }).value;
+				if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+					this.gridFactor = value;
+				}
+				break;
+			}
+			case "setShowLodGrid": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") {
+					this.showLodGrid = pressed;
+				}
+				break;
+			}
+			case "setGridSnapEnabled": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") {
+					this.gridSnapEnabled = pressed;
+				}
 				break;
 			}
 			case "noteProximity":
@@ -238,6 +543,12 @@ export class ScenePlayShellController extends Controller {
 			case "noteIndirect":
 				this.indirectCount += 1;
 				break;
+			case "noteCompatibleObjects":
+				this.compatibleObjectsCount += 1;
+				break;
+			case "noteTargetRing":
+				this.targetRingCount += 1;
+				break;
 			default:
 				break;
 		}
@@ -247,9 +558,29 @@ export class ScenePlayShellController extends Controller {
 		}
 	}
 
+	private applyDeleteSelection(): void {
+		if (!this.fixture) {
+			return;
+		}
+		let next = this.fixture;
+		for (const objectId of this.selection.objectIds) {
+			next = deleteSceneObjectFromFixture(next, objectId);
+		}
+		for (const vortexFullId of this.selection.vortexIds) {
+			next = deleteSceneVortexFromFixture(next, vortexFullId);
+		}
+		for (const attractionId of this.selection.attractionIds) {
+			next = deleteSceneAttractionFromFixture(next, attractionId);
+		}
+		this.fixture = next;
+		this.fixtureRevision += 1;
+		this.selection = SCENE_PLAY_EMPTY_SELECTION;
+	}
+
 	getSnapshot(): ScenePlaySnapshot {
 		return {
 			fixture: this.fixture,
+			fixtureRevision: this.fixtureRevision,
 			lodProps: sceneLodCanvasProps({
 				automaticLod: this.automaticLod,
 				depthVariableLod: this.depthVariableLod,
@@ -260,10 +591,19 @@ export class ScenePlayShellController extends Controller {
 			automaticLod: this.automaticLod,
 			depthVariableLod: this.depthVariableLod,
 			relocateMode: this.relocateMode,
-			selectedId: this.selectedId,
+			selection: this.selection,
+			selectedId: primaryScenePlayObjectId(this.selection),
+			selectionMode: this.selectionMode,
+			proximityRadius: this.proximityRadius,
+			chunkSize: this.chunkSize,
+			gridFactor: this.gridFactor,
+			showLodGrid: this.showLodGrid,
+			gridSnapEnabled: this.gridSnapEnabled,
 			proximityCount: this.proximityCount,
 			connectCount: this.connectCount,
 			indirectCount: this.indirectCount,
+			compatibleObjectsCount: this.compatibleObjectsCount,
+			targetRingCount: this.targetRingCount,
 		};
 	}
 }
@@ -271,16 +611,26 @@ export class ScenePlayShellController extends Controller {
 /** @emoji 📸 Host-consumed scene play state (no React/DOM). */
 export interface ScenePlaySnapshot {
 	readonly fixture: FixtureV1 | null;
+	readonly fixtureRevision: number;
 	readonly lodProps: ReturnType<typeof sceneLodCanvasProps>;
 	readonly lodTag: number;
 	readonly lodSlider: number;
 	readonly automaticLod: boolean;
 	readonly depthVariableLod: boolean;
 	readonly relocateMode: RelocateMode;
+	readonly selection: ScenePlaySelection;
 	readonly selectedId: string | null;
+	readonly selectionMode: SelectionMode;
+	readonly proximityRadius: number;
+	readonly chunkSize: number;
+	readonly gridFactor: number;
+	readonly showLodGrid: boolean;
+	readonly gridSnapEnabled: boolean;
 	readonly proximityCount: number;
 	readonly connectCount: number;
 	readonly indirectCount: number;
+	readonly compatibleObjectsCount: number;
+	readonly targetRingCount: number;
 }
 
 export function buildScenePlayAppRuntime(controller: ScenePlayShellController): AppRuntime {
@@ -294,6 +644,10 @@ export function buildScenePlayAppRuntime(controller: ScenePlayShellController): 
 	);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
+	app.rightTabs = [
+		{ id: SCENE_PLAY_INSPECTOR_TAB_ID, iconId: "elements.scene-play.icon.inspector", order: 0, bodyKey: "elements.scene.play.tab.inspector" },
+		{ id: SCENE_PLAY_SETTINGS_TAB_ID, iconId: "elements.scene-play.icon.settings", order: 1, bodyKey: "elements.scene.play.tab.settings" },
+	];
 	return app;
 }
 
@@ -334,6 +688,26 @@ if (import.meta.vitest) {
 			expect(v?.position[0]).toBeCloseTo(-1.3, 5);
 			expect(v?.position[1]).toBeCloseTo(-1.25, 5);
 			expect(v?.position[2]).toBeCloseTo(0, 5);
+		});
+
+		it("deleteSceneObjectFromFixture removes child vortices and stale attractions", () => {
+			const base = parseFixtureV1({
+				schema: "elements.scene.fixture/v1",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				attractions: [
+					{ id: "t1", attracting: "a:v1", attracted: "b:v2" },
+					{ id: "t2", attracting: "b:v2", attracted: "c:v3" },
+				],
+				objects: [
+					{ id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
+					{ id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", position: [0, 0, 0] }] },
+					{ id: "c", meshUrl: "/m.glb", origin: [2, 0, 0], vortices: [{ id: "v3", position: [0, 0, 0] }] },
+				],
+			});
+			expect(base).not.toBeNull();
+			const next = deleteSceneObjectFromFixture(base!, "b");
+			expect(next.objects.map((object) => object.id)).toEqual(["a", "c"]);
+			expect(next.attractions).toEqual([]);
 		});
 
 		it("declarative window body is a lone scene3d surface", () => {

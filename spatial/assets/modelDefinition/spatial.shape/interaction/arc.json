@@ -16,7 +16,19 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "start_of_arc",
+        "anchor": "points.center",
+        "field": "cursor"
+      },
+      {
+        "state": "end_point_or_angle",
+        "anchor": "points.start",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

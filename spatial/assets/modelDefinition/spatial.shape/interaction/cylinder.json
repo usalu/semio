@@ -16,7 +16,19 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "radius",
+        "anchor": "points.base",
+        "field": "cursor"
+      },
+      {
+        "state": "end_of_cylinder",
+        "anchor": "points.base",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

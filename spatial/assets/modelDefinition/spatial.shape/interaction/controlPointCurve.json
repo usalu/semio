@@ -15,7 +15,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "next_control_point",
+        "anchor": "points.@last",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

@@ -15,7 +15,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "other_corner_or_length",
+        "anchor": "points.cornerA",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

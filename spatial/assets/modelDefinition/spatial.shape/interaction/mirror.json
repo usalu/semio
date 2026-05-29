@@ -15,7 +15,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "end_of_mirror_plane",
+        "anchor": "points.mirrorStart",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

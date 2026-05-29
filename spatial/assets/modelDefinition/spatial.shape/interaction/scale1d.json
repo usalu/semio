@@ -16,7 +16,19 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "scale_factor_or_first_reference_point",
+        "anchor": "points.origin",
+        "field": "cursor"
+      },
+      {
+        "state": "second_reference_point",
+        "anchor": "points.axisPoint",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

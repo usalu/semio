@@ -162,3 +162,7 @@ A property definition is a schema for the property shape of a property.
 ## Transformation
 
 A transformation derives a target model for a target model definition from a source model for a source model definition.
+
+# Construct
+
+Construct is cypher-like language for querying, calling actions, binding, etc.

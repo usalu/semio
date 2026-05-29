@@ -14,7 +14,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "extrusion_distance",
+        "anchor": "prevPoint",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

@@ -149,7 +149,33 @@
         "groundPointerMoveStates": { "type": "array", "items": { "type": "string" } },
         "heightDragStates": { "type": "array", "items": { "type": "string" } },
         "verticalRodStates": { "type": "array", "items": { "type": "string" } },
-        "heightConfirmState": { "type": ["string", "null"] }
+        "heightConfirmState": { "type": ["string", "null"] },
+        "lengthEntry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "anchor", "field"],
+            "properties": {
+              "state": { "type": "string", "minLength": 1 },
+              "anchor": { "type": "string", "minLength": 1 },
+              "field": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "scalarEntry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "event", "field"],
+            "properties": {
+              "state": { "type": "string", "minLength": 1 },
+              "event": { "type": "string", "minLength": 1 },
+              "field": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
       }
     },
     "selectionSpec": {

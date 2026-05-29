@@ -50,7 +50,14 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "lengthEntry": [
+      {
+        "state": "point_to_copy_to",
+        "anchor": "from",
+        "field": "cursor"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

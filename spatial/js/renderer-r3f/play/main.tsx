@@ -18,6 +18,7 @@ import {
 	parseModelJson,
 	qualifiedTransformationId,
 	resolveModelDefinitionScope,
+	typologyObjectPascalFromLabel,
 	type InteractionSnapshot,
 	type InteractionRuntime,
 	type InteractionSpec,
@@ -509,10 +510,6 @@ function PlayModelSpacePanel({
 }: PlayModelSpacePanelProps) {
 	const modelDefinitions = useMemo(() => listModelDefinitionManifests(), []);
 	const scope = useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId), [activeModelDefinitionId]);
-	const selectionKinds = useMemo(
-		() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId),
-		[activeModelDefinitionId],
-	);
 	const transformsTo = useMemo(
 		() => listTransformationsFromModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
@@ -546,7 +543,6 @@ function PlayModelSpacePanel({
 				{" · "}
 				{modelSpaceCount} linked model{modelSpaceCount === 1 ? "" : "s"}
 			</span>
-			<span style={{ opacity: 0.75 }}>Select: {selectionKinds.join(", ")}</span>
 			{!isShapeModelDefinition(activeModelDefinitionId) && viewObjectCount > 0 ? (
 				<span style={{ opacity: 0.75 }}>
 					{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"} in view
@@ -1123,6 +1119,16 @@ function PlayApp() {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, it, expect } = import.meta.vitest;
+
+	describe("spatial play typology chrome", () => {
+		it("lists energy typologies from model definition scope", () => {
+			const scope = resolveModelDefinitionScope("aec.building.energy");
+			const labels = scope.typologies.map((row) => typologyObjectPascalFromLabel(row.label));
+			expect(labels).toContain("BasePlate");
+			expect(labels).toContain("ExternalWall");
+			expect(labels).toContain("Roof");
+		});
+	});
 
 	describe("spatial play model bootstrap", () => {
 		it("emptyPlayModels always seeds spatial.shape", () => {

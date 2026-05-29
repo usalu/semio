@@ -716,6 +716,20 @@ export interface InteractionSpec {
 /** @emoji 📞 How hosts may start an interaction (`standalone` vs nested-only `callable`). */
 export type InteractionInvocation = "standalone" | "callable";
 
+/** @emoji 📏 One rubber-band state where REPL digits clamp distance along the cursor ray. */
+export interface InteractionLengthEntrySpec {
+  readonly state: string;
+  readonly anchor: string;
+  readonly field: string;
+}
+
+/** @emoji 🔢 One state where REPL digits set a scalar context field live (`set.height`, `set.radius`, …). */
+export interface InteractionScalarEntrySpec {
+  readonly state: string;
+  readonly event: string;
+  readonly field: string;
+}
+
 /** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction). */
 export interface InteractionSpatialConfig {
   readonly spatialGroundPick?: boolean;
@@ -724,6 +738,8 @@ export interface InteractionSpatialConfig {
   readonly heightDragStates?: readonly string[];
   readonly verticalRodStates?: readonly string[];
   readonly heightConfirmState?: string | null;
+  readonly lengthEntry?: readonly InteractionLengthEntrySpec[];
+  readonly scalarEntry?: readonly InteractionScalarEntrySpec[];
 }
 
 /** @emoji 📞 Resolved invocation for an interaction document. */
@@ -1995,13 +2011,9 @@ export function listAttributeDefinitionsForModelDefinitionEntity(
   return listAttributeDefinitionsForModelDefinition(modelDefinitionId).filter((defn) => attributeDefinitionAppliesToEntity(defn, entityKind));
 }
 
-/** @emoji 🧲 True when the model definition needs factory-geometry pick targets (not only typology objects). */
-export function modelDefinitionUsesGeometryPicking(modelDefinitionId: string): boolean {
-  if (isShapeModelDefinition(modelDefinitionId)) return true;
-  for (const kind of modelDefinitionSelectionEntityKinds(modelDefinitionId)) {
-    if ((TOPOLOGY_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) return true;
-  }
-  return false;
+/** @emoji 🧲 True when the active model definition exposes factory-geometry pick targets (all definitions). */
+export function modelDefinitionUsesGeometryPicking(_modelDefinitionId: string): boolean {
+  return true;
 }
 
 /** @emoji 📋 String/number/boolean/record options from an attribute value schema. */
@@ -2424,11 +2436,10 @@ export function listSelectionOperationsForModelDefinition(modelDefinitionId: str
   return selectionOperationsForModelDefinitionFromActions(modelDefinitionId);
 }
 
-/** @emoji 🧭 Selection entity kinds available while a model definition is active. */
+/** @emoji 🧭 Selection entity kinds available while a model definition is active (factory primitives + objects). */
 export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
-  if (isShapeModelDefinition(modelDefinitionId)) return [...TOPOLOGY_MODEL_ENTITY_KINDS];
   const entityKindIds = new Set<string>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
-  const kinds = new Set<ModelEntityKind>(["object"]);
+  const kinds = new Set<ModelEntityKind>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object"]);
   for (const defn of listAttributeDefinitionsForModelDefinition(modelDefinitionId)) {
     for (const kind of defn.targets) {
       if (entityKindIds.has(kind)) kinds.add(kind as ModelEntityKind);
@@ -2437,7 +2448,8 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
       if (entityKindIds.has(kind)) kinds.add(kind as ModelEntityKind);
     }
   }
-  return [...kinds];
+  return TOPOLOGY_MODEL_ENTITY_KINDS.filter((kind) => kinds.has(kind))
+    .concat([...kinds].filter((kind) => !TOPOLOGY_MODEL_ENTITY_KINDS.includes(kind as (typeof TOPOLOGY_MODEL_ENTITY_KINDS)[number])));
 }
 
 /** @emoji 🧭 Object rows owned by typologies declared under a model definition. */
@@ -3865,6 +3877,8 @@ export interface InteractionSpatialResolved {
   readonly heightDragStates: readonly string[];
   readonly verticalRodStates: readonly string[];
   readonly heightConfirmState: string | null;
+  readonly lengthEntry: readonly InteractionLengthEntrySpec[];
+  readonly scalarEntry: readonly InteractionScalarEntrySpec[];
 }
 
 /** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `InteractionSpatialView`. */
@@ -3878,7 +3892,105 @@ export function mergeInteractionSpatial(spec: InteractionSpec): InteractionSpati
     heightDragStates: i?.heightDragStates ?? [],
     verticalRodStates: i?.verticalRodStates ?? [],
     heightConfirmState: i?.heightConfirmState === undefined ? null : i.heightConfirmState,
+    lengthEntry: i?.lengthEntry ?? [],
+    scalarEntry: i?.scalarEntry ?? [],
   };
+}
+
+/** @emoji 📏 Resolved direct-distance entry config for `state` (from `interaction.lengthEntry`). */
+export function interactionLengthEntryForState(spec: InteractionSpec, state: string): InteractionLengthEntrySpec | null {
+  return mergeInteractionSpatial(spec).lengthEntry.find((row) => row.state === state) ?? null;
+}
+
+/** @emoji 🔢 Resolved live scalar entry config for `state` (from `interaction.scalarEntry`). */
+export function interactionScalarEntryForState(spec: InteractionSpec, state: string): InteractionScalarEntrySpec | null {
+  return mergeInteractionSpatial(spec).scalarEntry.find((row) => row.state === state) ?? null;
+}
+
+const LENGTH_LOCK_CTX = "__lengthLock";
+const CURSOR_RAW_CTX = "__cursorRaw";
+
+/** @emoji 📏 Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
+export function parseInteractionContextPath(path: string): readonly PathSegment[] {
+  const parts = path.split(".").filter((p) => p.length > 0);
+  const segs: PathSegment[] = [];
+  for (const part of parts) {
+    if (part === "@last") {
+      segs.push({ kind: "index", index: -1 });
+    } else {
+      segs.push({ kind: "field", name: part });
+    }
+  }
+  return segs;
+}
+
+function readContextPathValue(root: Record<string, unknown>, segments: readonly PathSegment[]): unknown {
+  let cur: unknown = root;
+  for (const seg of segments) {
+    if (cur === null || cur === undefined) return undefined;
+    if (seg.kind === "field") {
+      if (typeof cur !== "object" || Array.isArray(cur)) return undefined;
+      cur = (cur as Record<string, unknown>)[seg.name];
+    } else {
+      if (!Array.isArray(cur)) return undefined;
+      const idx = seg.index < 0 ? cur.length + seg.index : seg.index;
+      cur = cur[idx];
+    }
+  }
+  return cur;
+}
+
+/** @emoji 📏 Reads a `Vec3` from `context` at dotted `path` (supports `points.@last`). */
+export function readInteractionContextVec3(ctx: Record<string, unknown>, path: string): Vec3 | null {
+  const raw = readContextPathValue(ctx, parseInteractionContextPath(path));
+  if (!Array.isArray(raw) || raw.length < 3) return null;
+  const x = Number(raw[0]);
+  const y = Number(raw[1]);
+  const z = Number(raw[2]);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
+  return [x, y, z];
+}
+
+/** @emoji 📏 Writes a `Vec3` into `context` at dotted `path`. */
+export function writeInteractionContextVec3(ctx: Record<string, unknown>, path: string, value: Vec3): void {
+  writePathSegments(ctx, parseInteractionContextPath(path), value);
+}
+
+/** @emoji 📏 Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
+export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3 {
+  const dx = target[0] - anchor[0];
+  const dy = target[1] - anchor[1];
+  const dz = target[2] - anchor[2];
+  const d = Math.hypot(dx, dy, dz);
+  if (d < 1e-9) return [target[0], target[1], target[2]];
+  const s = length / d;
+  return [anchor[0] + dx * s, anchor[1] + dy * s, anchor[2] + dz * s];
+}
+
+function positiveLengthLock(ctx: Record<string, unknown>): number | null {
+  const lock = ctx[LENGTH_LOCK_CTX];
+  return typeof lock === "number" && Number.isFinite(lock) && lock > 0 ? lock : null;
+}
+
+function lengthEntryRawPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): Vec3 | null {
+  const raw = readInteractionContextVec3(ctx, CURSOR_RAW_CTX) ?? readInteractionContextVec3(ctx, entry.field);
+  if (raw) return raw;
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  if (!anchor) return null;
+  return [anchor[0] + 1, anchor[1], anchor[2]];
+}
+
+function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, raw: Vec3, lock: number): void {
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  if (!anchor) return;
+  const clamped = clampPointAlongDirection(anchor, raw, lock);
+  writeInteractionContextVec3(ctx, entry.field, clamped);
+  if (entry.field === "cursor" && "prevPoint" in ctx) ctx.prevPoint = anchor;
+}
+
+function clearInteractionLengthEntryFields(ctx: Record<string, unknown>): void {
+  delete ctx[LENGTH_LOCK_CTX];
+  delete ctx[CURSOR_RAW_CTX];
 }
 
 /** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
@@ -4060,6 +4172,33 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         break;
       default:
         break;
+    }
+  }
+  const entry = interactionLengthEntryForState(spec, state);
+  const lock = positiveLengthLock(context);
+  const cursorRaw = readInteractionContextVec3(context, CURSOR_RAW_CTX);
+  if (entry && lock != null && cursorRaw) {
+    const anchor = readInteractionContextVec3(context, entry.anchor);
+    if (anchor) {
+      items.push({
+        kind: "point",
+        id: `${state}-length-cursor`,
+        role: "cursor",
+        params: { position: cursorRaw },
+      });
+      items.push({
+        kind: "segment",
+        id: `${state}-length-guide`,
+        role: "guide",
+        params: { from: anchor, to: cursorRaw },
+      });
+      const mid: Vec3 = [(anchor[0] + cursorRaw[0]) / 2, (anchor[1] + cursorRaw[1]) / 2, (anchor[2] + cursorRaw[2]) / 2];
+      items.push({
+        kind: "label",
+        id: `${state}-length-label`,
+        role: "prompt",
+        params: { text: String(lock), position: mid },
+      });
     }
   }
   return { items };
@@ -4382,6 +4521,7 @@ export class InteractionRuntime {
       if (!r.transient) {
         this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
         this.snapRedoStack.length = 0;
+        clearInteractionLengthEntryFields(this.sm.getContext());
       }
       await this.startChildCall(r.childCall);
       this.emit();
@@ -4390,8 +4530,61 @@ export class InteractionRuntime {
     if (!r.transient) {
       this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
       this.snapRedoStack.length = 0;
+      if (this.sm.getState() !== beforeState) clearInteractionLengthEntryFields(this.sm.getContext());
     }
     await this.continueHostSessionAfterEngineSend();
+  }
+
+  private preprocessLengthEntryEvent(event: InteractionEvent): InteractionEvent {
+    if (event.kind !== "pointer.move" && event.kind !== "pointer.down") return event;
+    const entry = interactionLengthEntryForState(this.spec, this.sm.getState());
+    if (!entry) return event;
+    const point = event.point;
+    if (!Array.isArray(point) || point.length < 3) return event;
+    const raw: Vec3 = [Number(point[0]), Number(point[1]), Number(point[2])];
+    const ctx = this.sm.getContext();
+    ctx[CURSOR_RAW_CTX] = raw;
+    const lock = positiveLengthLock(ctx);
+    if (lock == null) return event;
+    const anchor = readInteractionContextVec3(ctx, entry.anchor);
+    if (!anchor) return event;
+    return { ...event, point: clampPointAlongDirection(anchor, raw, lock) };
+  }
+
+  private handleSetLength(event: InteractionEvent): void {
+    const entry = interactionLengthEntryForState(this.spec, this.sm.getState());
+    const ctx = this.sm.getContext();
+    const rawVal = event.value;
+    const lock = typeof rawVal === "number" && Number.isFinite(rawVal) && rawVal > 0 ? rawVal : null;
+    if (lock == null) {
+      ctx[LENGTH_LOCK_CTX] = null;
+      this.emit();
+      return;
+    }
+    ctx[LENGTH_LOCK_CTX] = lock;
+    if (!entry) {
+      this.emit();
+      return;
+    }
+    const raw = lengthEntryRawPoint(ctx, entry);
+    if (raw) {
+      ctx[CURSOR_RAW_CTX] = raw;
+      applyLengthEntryToContext(ctx, entry, raw, lock);
+    }
+    this.emit();
+  }
+
+  private handleScalarEntry(event: InteractionEvent): void {
+    const entry = interactionScalarEntryForState(this.spec, this.sm.getState());
+    if (!entry || entry.event !== event.kind) return;
+    const ctx = this.sm.getContext();
+    const rawVal = event.value;
+    if (typeof rawVal === "number" && Number.isFinite(rawVal) && rawVal > 0) {
+      ctx[entry.field] = rawVal;
+    } else if (rawVal == null) {
+      delete ctx[entry.field];
+    }
+    this.emit();
   }
 
   private canCommit(): boolean {
@@ -4559,6 +4752,15 @@ export class InteractionRuntime {
       this.emit();
       return;
     }
+    if (event.kind === "set.length") {
+      this.handleSetLength(event);
+      return;
+    }
+    const scalarEntry = interactionScalarEntryForState(this.spec, this.sm.getState());
+    if (scalarEntry && event.kind === scalarEntry.event) {
+      this.handleScalarEntry(event);
+      return;
+    }
     if (event.kind === "selection.changed") {
       const sel = getActiveSelectionSpec(this.spec, this.sm.getState());
       const sev = event as SelectionEvent;
@@ -4573,7 +4775,8 @@ export class InteractionRuntime {
     }
     const beforeState = this.sm.getState();
     const beforeCtx = this.cloneCtx(this.sm.getContext());
-    const r = await this.sm.send(event, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
+    const routed = this.preprocessLengthEntryEvent(event);
+    const r = await this.sm.send(routed, this.opts.kernel, this.opts.document.model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     await this.handleEngineSendResult(r, beforeState, beforeCtx);
   }
 
@@ -6222,6 +6425,9 @@ if (import.meta.vitest) {
       await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("first_corner_height");
+      expect(rt.getSnapshot().context.height).toBe(4);
+      await rt.send({ kind: "confirm", modifiers: {} });
       const snap = rt.getSnapshot();
       const res = snap.lastResponse!;
       expect(snap.state).toBe("committed");
@@ -6242,6 +6448,173 @@ if (import.meta.vitest) {
         cornerB: [2, 3, 0],
         height: 4,
       });
+    });
+
+    it("set.length clamps diagonal from diagA without prior pointer move", async () => {
+      class StubKernel extends BrepjsKernel {
+        async createBoxFromCorners() {
+          return solidRef("stub");
+        }
+        async volume() {
+          return 0;
+        }
+        async tessellate() {
+          return emptyMeshTransfer();
+        }
+      }
+      const spec = buildBoxInteractionSpec();
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "mode.diagonal" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("diagonal_rubber");
+      await rt.send({ kind: "set.length", value: 5, modifiers: {} });
+      const corner = rt.getSnapshot().context.corner as Vec3;
+      expect(corner[0]).toBeCloseTo(5, 5);
+      expect(corner[1]).toBeCloseTo(0, 5);
+    });
+
+    it("set.height live entry keeps first_corner_height until confirm", async () => {
+      class StubKernel extends BrepjsKernel {
+        async createBoxFromCorners() {
+          return solidRef("stub");
+        }
+        async volume() {
+          return 0;
+        }
+        async tessellate() {
+          return emptyMeshTransfer();
+        }
+      }
+      const spec = buildBoxInteractionSpec();
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.height", value: 3.5, modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("first_corner_height");
+      expect(rt.getSnapshot().context.height).toBe(3.5);
+    });
+
+    it("set.length clamps rubber-band corner from origin on first footprint edge", async () => {
+      class StubKernel extends BrepjsKernel {
+        async createBoxFromCorners() {
+          return solidRef("stub");
+        }
+        async volume() {
+          return 0;
+        }
+        async tessellate() {
+          return emptyMeshTransfer();
+        }
+      }
+      const spec = buildBoxInteractionSpec();
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
+      const snap = rt.getSnapshot();
+      expect(snap.state).toBe("first_corner_other_or_length");
+      const corner = snap.context.corner as Vec3;
+      expect(corner[0]).toBeCloseTo(1.5, 5);
+      expect(corner[1]).toBeCloseTo(2, 5);
+      expect(snap.display.items.some((i) => i.id === "first_corner_other_or_length-length-guide")).toBe(true);
+    });
+  });
+
+  describe("@spatial/js-core interaction length entry", () => {
+    it("interactionLengthEntryForState resolves shipped line rubber-band", () => {
+      const spec = requireSpatialInteraction("curve.line");
+      expect(interactionLengthEntryForState(spec, "end_of_line")).toEqual({
+        state: "end_of_line",
+        anchor: "points.start",
+        field: "cursor",
+      });
+    });
+
+    it("readInteractionContextVec3 supports points.@last on arrays", () => {
+      const ctx = { points: [[0, 0, 0], [1, 2, 3]] as Vec3[] };
+      expect(readInteractionContextVec3(ctx, "points.@last")).toEqual([1, 2, 3]);
+    });
+
+    it("clampPointAlongDirection preserves direction and length", () => {
+      expect(clampPointAlongDirection([0, 0, 0], [3, 4, 0], 2.5)).toEqual([1.5, 2, 0]);
+    });
+
+    it("set.length clamps cursor along anchor direction", async () => {
+      class StubKernel extends BrepjsKernel {
+        async curveLine() {
+          return { diff: EMPTY_MODEL_DIFF };
+        }
+      }
+      const spec = requireSpatialInteraction("curve.line");
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
+      const snap = rt.getSnapshot();
+      const cursor = snap.context.cursor as Vec3;
+      expect(cursor[0]).toBeCloseTo(1.5, 5);
+      expect(cursor[1]).toBeCloseTo(2, 5);
+      expect(snap.context.__lengthLock).toBe(2.5);
+      expect(snap.display.items.some((i) => i.id === "end_of_line-length-guide")).toBe(true);
+    });
+
+    it("set.length null unlocks and pointer.move follows cursor again", async () => {
+      class StubKernel extends BrepjsKernel {
+        async curveLine() {
+          return { diff: EMPTY_MODEL_DIFF };
+        }
+      }
+      const spec = requireSpatialInteraction("curve.line");
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
+      await rt.send({ kind: "set.length", value: null, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [10, 0, 0] as Vec3, modifiers: {} });
+      const cursor = rt.getSnapshot().context.cursor as Vec3;
+      expect(cursor).toEqual([10, 0, 0]);
+      expect(rt.getSnapshot().context.__lengthLock).toBeNull();
+    });
+
+    it("pointer.down while locked commits clamped point", async () => {
+      class StubKernel extends BrepjsKernel {
+        async curveLine() {
+          return { diff: EMPTY_MODEL_DIFF };
+        }
+      }
+      const spec = requireSpatialInteraction("curve.line");
+      const rt = createInteractionRuntime(spec, {
+        kernel: new StubKernel() as unknown as SpatialKernel,
+        document: { model: new Model(), nodes: [] },
+      });
+      await rt.send({ kind: "start" });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
+      await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [3, 4, 0] as Vec3, modifiers: {} });
+      const snap = rt.getSnapshot();
+      const end = (snap.context.points as Record<string, Vec3>).end;
+      expect(end[0]).toBeCloseTo(1.5, 5);
+      expect(end[1]).toBeCloseTo(2, 5);
+      expect(snap.context.__lengthLock).toBeUndefined();
     });
   });
 
@@ -6711,6 +7084,7 @@ if (import.meta.vitest) {
           { kind: "pointer.down", point: p(0, 0), modifiers: MOD },
           { kind: "pointer.down", point: p(3, 2), modifiers: MOD },
           { kind: "set.height", value: 1.25, modifiers: MOD },
+          { kind: "confirm", modifiers: MOD },
         ],
         assert: ({ after }) => expect(after.solids).toBeGreaterThanOrEqual(1),
       },

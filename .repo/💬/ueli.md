@@ -707,6 +707,13 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+Complete it. Add all props, onX callbacks, options, etc.
+Make sure that play displays and allows to modify all information.
+e.g. all objects can be deleted (and that it deletes all child vortices with it and stale attractions)
+e.g. object, vortex, etc are selectable and play shows all the details of the selection (with changable input, dropdown as for kinds, etc)
+
+---
+
 The extension must be written in cad-coordinate system but all e.g. glb imports are in glb coordinate system. e.g. currently the objects are flipped the cad z axis is currently on the cad y axis.
 
 ---
@@ -2591,6 +2598,19 @@ The passthrough components MUST show all available information. A lot of params 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
 
 ## 🗿spatial
+
+---
+
+Primitives are available in all modelDefinitions
+Add a general primitve section with Show and Filter.
+Add all toggles for kind of primitives.
+Make sure that primitives can be selected.
+Make sure that for selected primitives the attributes are shown and can be edited (added/updated/edited). Make sure to only list the attributeKinds of the modelDefinition.
+
+---
+
+All interactions when possible should use the input. Make sure to setup the correct mechanisms.
+e.g. box interaction after one point was selected, a number can be typed in and the number should limit the length of the line. the display should keep on showing the cursor with a thin line to it but the line that is drawn just for the length.
 
 ---
 

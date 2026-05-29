@@ -1,4 +1,4 @@
-import { Clone, Line, OrbitControls, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
+import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import React, {
 	Children,
@@ -14,12 +14,15 @@ import React, {
 	useReducer,
 	useRef,
 	useState,
+	type ChangeEvent,
 	type CSSProperties,
 	type MutableRefObject,
 	type ReactElement,
 	type ReactNode,
 } from "react";
 import {
+	Box3,
+	BoxGeometry,
 	BufferGeometry,
 	Color,
 	EdgesGeometry,
@@ -48,9 +51,18 @@ import {
 	type WebGLRenderer,
 } from "three";
 import { ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@elements/framework";
-import { ProductView, mountReactApp, registerUiScene3DSurfaceHost, useApp } from "@elements/framework-react";
 import {
+	ProductView,
+	mountReactApp,
+	registerSidePanelBody,
+	registerUiScene3DSurfaceHost,
+	useApp,
+} from "@elements/framework-react";
+import {
+	Button,
 	Expertise,
+	Input,
+	Label,
 	LevelProvider,
 	Select,
 	SelectContent,
@@ -62,6 +74,7 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@elements/ui";
+import { ClipboardList, Settings, Trash2 } from "lucide-react";
 import {
 	LS_DEVICE,
 	LS_EXPERTISE,
@@ -69,6 +82,7 @@ import {
 	PLAY_APP_ID,
 	SCENE_PLAY_BODY_KEY,
 	SCENE_PLAY_CONTROLLER_ID,
+	SCENE_PLAY_EMPTY_SELECTION,
 	SCENE_PLAY_SCENE_SURFACE_ID,
 	ScenePlayShellController,
 	buildScenePlayAppRuntime,
@@ -78,6 +92,11 @@ import {
 	parseStoredDevice,
 	parseStoredExpertise,
 	parseStoredTheme,
+	sceneVortexFullId,
+	updateSceneAttractionInFixture,
+	updateSceneObjectInFixture,
+	updateSceneVortexInFixture,
+	type ScenePlaySelection,
 	type ScenePlaySnapshot,
 } from "./play/index.ts";
 import nakaginSceneFixtureJson from "./play/fixtures/nakagin-capsule-tower.scene.json";
@@ -377,6 +396,8 @@ export interface CanvasProps {
 	/** @emoji 📶 Emits whenever the resolved scene-level LOD changes. */
 	onLodChange?: (lod: number) => void;
 	onSelect?: (snap: SelectionSnapshot) => void;
+	/** @emoji 🎯 When set, canvas selection is controlled by the host (e.g. scene play inspector). */
+	selection?: SelectionSnapshot;
 	onRelocate?: (p: RelocatePayload) => void;
 	onConnect?: (p: AttractionPayload) => void;
 	onIndirectConnect?: (p: AttractionPayload) => void;
@@ -1193,6 +1214,7 @@ interface ObjectStateSnapshot {
 
 type ObjectStateAction =
 	| { readonly type: "init"; readonly fixture: FixtureV1 }
+	| { readonly type: "syncPoses"; readonly fixture: FixtureV1 }
 	| { readonly type: "relocate"; readonly payload: RelocatePayload }
 	| { readonly type: "addAttraction"; readonly attraction: AttractionProps }
 	| { readonly type: "removeObject"; readonly objectId: string };
@@ -1370,6 +1392,45 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 	}
 }
 
+/** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
+export function applyRelocateToSceneFixture(fixture: FixtureV1, payload: RelocatePayload): FixtureV1 {
+	const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
+	const next = objectStateReducer(snap, { type: "relocate", payload });
+	const objects = fixture.objects
+		.filter((object) => next.records.has(object.id))
+		.map((object) => {
+			const record = next.records.get(object.id);
+			if (!record) {
+				return object;
+			}
+			return {
+				...object,
+				origin: record.origin,
+				...(record.orientation ? { orientation: record.orientation } : {}),
+				...(record.scale !== undefined ? { scale: record.scale } : {}),
+			};
+		});
+	return { ...fixture, objects };
+}
+
+/** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
+export function applyConnectToSceneFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
+	const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
+	const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
+	const next = objectStateReducer(snap, {
+		type: "addAttraction",
+		attraction: {
+			id: attractionId,
+			attracting: payload.attracting as AttractionProps["attracting"],
+			attracted: payload.attracted as AttractionProps["attracted"],
+		},
+	});
+	if (next.attractions.length === snap.attractions.length) {
+		return fixture;
+	}
+	return { ...fixture, attractions: [...next.attractions] };
+}
+
 export interface SceneObjectStateContextValue {
 	readonly snapshot: ObjectStateSnapshot;
 	readonly dispatch: (action: ObjectStateAction) => void;
@@ -1382,6 +1443,7 @@ export const SceneObjectStateContext = createContext<SceneObjectStateContextValu
 /** @emoji ­ƒùä´©Å Central scene object records, attractions, and resolved attraction ownership. */
 export function SceneObjectStateProvider(props: {
 	readonly fixture: FixtureV1;
+	readonly fixtureRevision?: number;
 	readonly children: ReactNode;
 	readonly onRelocate?: (payload: RelocatePayload) => void;
 	readonly onConnect?: (payload: AttractionPayload) => void;
@@ -1391,9 +1453,20 @@ export function SceneObjectStateProvider(props: {
 	);
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
 	const syncedPoseFingerprintRef = useRef<string | null>(null);
+	const syncedFixtureRevisionRef = useRef<number | undefined>(undefined);
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
 	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
+		if (props.fixtureRevision !== undefined && syncedFixtureRevisionRef.current !== props.fixtureRevision) {
+			syncedFixtureRevisionRef.current = props.fixtureRevision;
+			if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
+				return;
+			}
+			syncedFixtureFingerprintRef.current = fixtureFingerprint;
+			syncedPoseFingerprintRef.current = poseFingerprint;
+			dispatch({ type: "init", fixture: props.fixture });
+			return;
+		}
 		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
 			syncedPoseFingerprintRef.current = poseFingerprint;
@@ -1405,7 +1478,7 @@ export function SceneObjectStateProvider(props: {
 		}
 		syncedPoseFingerprintRef.current = poseFingerprint;
 		dispatch({ type: "syncPoses", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint, poseFingerprint]);
+	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			dispatch({ type: "relocate", payload });
@@ -1477,6 +1550,7 @@ function useAttractingChildIds(objectId: string): readonly string[] {
 const ObjectItemById = memo(function ObjectItemById(props: {
 	readonly objectId: string;
 	readonly selected?: boolean;
+	readonly selectedVortexFullIds?: ReadonlySet<string>;
 	readonly relocate?: RelocateMode | false;
 }) {
 	const record = useObjectRecord(props.objectId);
@@ -1498,16 +1572,20 @@ const ObjectItemById = memo(function ObjectItemById(props: {
 			selected={props.selected}
 			relocate={props.relocate}
 		>
-			{record.vortices.map((v) => (
-				<Vortex
-					key={v.id}
-					objectId={record.id}
-					objectKind={record.objectKind}
-					objectOrigin={record.origin}
-					objectOrientation={record.orientation}
-					{...v}
-				/>
-			))}
+			{record.vortices.map((vortex) => {
+				const fullId = sceneVortexFullId(record.id, vortex.id);
+				return (
+					<Vortex
+						key={vortex.id}
+						objectId={record.id}
+						objectKind={record.objectKind}
+						objectOrigin={record.origin}
+						objectOrientation={record.orientation}
+						selected={props.selectedVortexFullIds?.has(fullId)}
+						{...vortex}
+					/>
+				);
+			})}
 		</ObjectItem>
 	);
 });
@@ -1532,8 +1610,26 @@ export const ObjectTreeNode = memo(function ObjectTreeNode(props: {
 	);
 });
 
+/** @emoji 🎯 True when an object is part of the current selection (directly or via a selected vortex). */
+export function objectMatchesSceneSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
+	if (!selection) {
+		return false;
+	}
+	if (selection.objectIds.includes(objectId)) {
+		return true;
+	}
+	for (const vortexFullId of selection.vortexIds) {
+		if (parseVortexFullId(vortexFullId).objectId === objectId) {
+			return true;
+		}
+	}
+	return false;
+}
+
 export interface SceneObjectsProps {
+	readonly selection?: SelectionSnapshot;
 	readonly selectedObjectId?: string | null;
+	readonly selectedVortexFullIds?: ReadonlySet<string>;
 	readonly relocate?: RelocateMode | false;
 }
 
@@ -1547,7 +1643,8 @@ export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps)
 				<ObjectItemById
 					key={id}
 					objectId={id}
-					selected={props.selectedObjectId === id}
+					selected={objectMatchesSceneSelection(id, props.selection) || props.selectedObjectId === id}
+					selectedVortexFullIds={props.selectedVortexFullIds}
 					relocate={props.relocate}
 				/>
 			))}
@@ -1745,6 +1842,8 @@ interface MeshStyleColors {
 	readonly opacity: number;
 }
 
+const meshStyleColorCache = new Map<Exclude<MeshStyleKind, "original">, MeshStyleColors>();
+
 const MESH_STYLE_HEADLESS: Record<Exclude<MeshStyleKind, "original">, MeshStyleColors> = {
 	neutral: {
 		meshColor: "#eeeadb",
@@ -1809,6 +1908,10 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 	if (style === "original") {
 		return null;
 	}
+	const cached = meshStyleColorCache.get(style);
+	if (cached) {
+		return cached;
+	}
 	const fb = MESH_STYLE_HEADLESS[style];
 	const meshExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
 		neutral: CSS_NEUTRAL_MESH,
@@ -1824,13 +1927,15 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 		highlighted: CSS_HIGHLIGHTED_LINE,
 		disabled: CSS_DISABLED_LINE,
 	};
-	return {
+	const resolved = {
 		meshColor: resolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
 		lineColor: resolveCssColor("color", lineExprs[style], fb.lineColor),
 		emissiveColor: resolveCssColor("color", lineExprs[style], fb.emissiveColor),
 		emissiveIntensity: fb.emissiveIntensity,
 		opacity: fb.opacity,
 	};
+	meshStyleColorCache.set(style, resolved);
+	return resolved;
 }
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
@@ -2045,6 +2150,7 @@ export interface RegistryValue {
 	registerVortexBinding(meta: VortexBindingMeta, pickRoot: Object3D | null): void;
 	unregisterVortexBinding(fullId: string): void;
 	registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
+	collectObjectGroups(): readonly Group[];
 	getObjectGroup(id: string): Group | null;
 	getObjectKind(id: string): string | undefined;
 	kindCatalogs: KindCatalogBundle | undefined;
@@ -2283,6 +2389,65 @@ export function updateWorldMatrixChain(leaf: Object3D): void {
 	for (let i = chain.length - 1; i >= 0; i--) {
 		chain[i]!.updateMatrixWorld(false);
 	}
+}
+
+export type SceneAutoFitBehavior = "initial" | "changes";
+
+export function sceneAutoFitShouldRun(
+	behavior: SceneAutoFitBehavior,
+	key: string,
+	lastKey: string,
+	hasApplied: boolean,
+): boolean {
+	if (!key || key === lastKey) return false;
+	return behavior === "changes" || !hasApplied;
+}
+
+/** @emoji 📐 Axis-aligned bounds of registered scene object groups (camera auto-fit). */
+export function boundsFromObjectGroups(groups: readonly Group[]): { readonly center: Vec3; readonly radius: number } | null {
+	if (!groups.length) return null;
+	const box = new Box3();
+	const sizeScratch = new Vector3();
+	const centerScratch = new Vector3();
+	let has = false;
+	for (const group of groups) {
+		updateWorldMatrixChain(group);
+		const part = new Box3().setFromObject(group, true);
+		if (!Number.isFinite(part.min.x) || !Number.isFinite(part.max.x)) continue;
+		if (part.isEmpty()) continue;
+		part.getSize(sizeScratch);
+		if (sizeScratch.lengthSq() < 1e-12) continue;
+		if (!has) {
+			box.copy(part);
+			has = true;
+		} else {
+			box.union(part);
+		}
+	}
+	if (!has) return null;
+	box.getCenter(centerScratch);
+	box.getSize(sizeScratch);
+	const radius = sizeScratch.length() / 2;
+	return { center: threeVec3ToCad(centerScratch), radius: Math.max(radius, 0.5) };
+}
+
+/** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
+export function applySceneAutoFitCamera(
+	camera: ThreePerspectiveCamera,
+	bounds: { readonly center: Vec3; readonly radius: number },
+	padding = 1.25,
+	controls?: { readonly target: Vector3; update?: () => void } | null,
+): void {
+	const centerThree = cadVec3ToThree(bounds.center);
+	const dist = Math.max(bounds.radius * padding, 2);
+	camera.position.set(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85);
+	if (controls?.target) {
+		controls.target.set(centerThree[0], centerThree[1], centerThree[2]);
+		controls.update?.();
+	} else {
+		camera.lookAt(centerThree[0], centerThree[1], centerThree[2]);
+	}
+	camera.updateProjectionMatrix();
 }
 
 function vector3IsFinite(v: Vector3): boolean {
@@ -2548,10 +2713,17 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				disabled: props.disabled,
 				selected: props.selected,
 				highlighted: linkHighlighted,
-				hovered: props.hovered === true || pointerHovered,
+				hovered: props.hovered === true,
 			}),
-		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted],
 	);
+	const showHoverOutline =
+		pointerHovered &&
+		!props.disabled &&
+		!props.selected &&
+		!linkHighlighted &&
+		props.hovered !== true &&
+		meshStyle === DEFAULT_MESH_STYLE;
 
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
@@ -2562,9 +2734,15 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			if (props.disabled) {
 				return;
 			}
+			const snap: SelectionSnapshot = { objectIds: [props.id], vortexIds: [] };
 			if (selectionMode === "single") {
 				setSelectedObjectIds([props.id]);
-				onSelect?.({ objectIds: [props.id], vortexIds: [] });
+				onSelect?.(snap);
+			} else if (selectionMode === "additive") {
+				setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
+				onSelect?.(snap);
+			} else {
+				onSelect?.(snap);
 			}
 			setActiveRelocateObjectId(props.id);
 		},
@@ -2580,8 +2758,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		],
 	);
 
-	const handlePointerOver = useCallback(
-		() => {
+	const handlePointerEnter = useCallback(
+		(e: { stopPropagation: () => void }) => {
+			e.stopPropagation();
 			if (!props.disabled) {
 				setPointerHovered(true);
 			}
@@ -2589,7 +2768,8 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		[props.disabled],
 	);
 
-	const handlePointerOut = useCallback(() => {
+	const handlePointerLeave = useCallback((e: { stopPropagation: () => void }) => {
+		e.stopPropagation();
 		setPointerHovered(false);
 	}, []);
 
@@ -2627,8 +2807,8 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				ref={group}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
-				onPointerOver={handlePointerOver}
-				onPointerOut={handlePointerOut}
+				onPointerEnter={handlePointerEnter}
+				onPointerLeave={handlePointerLeave}
 				userData={{
 					sceneObjectId: props.id,
 					sceneMeshStyle: meshStyle,
@@ -2642,6 +2822,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				) : (
 					<MeshBody meshUrl={resolvedMeshUrl} style={meshStyle} />
 				)}
+				{showHoverOutline ? <Outlines thickness={3} color="#ff344f" /> : null}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
 			{showTc && tcTarget && (
@@ -2717,7 +2898,13 @@ function VortexFallbackMesh(props: {
 }
 
 export const Vortex = memo(function Vortex(
-	props: VortexProps & { objectId: string; objectKind?: string; objectOrigin: Vec3; objectOrientation?: Quat },
+	props: VortexProps & {
+		objectId: string;
+		objectKind?: string;
+		objectOrigin: Vec3;
+		objectOrientation?: Quat;
+		selected?: boolean;
+	},
 ) {
 	const root = useRef<Group | null>(null);
 	const reg = useRegistry();
@@ -2770,15 +2957,17 @@ export const Vortex = memo(function Vortex(
 	const [lodVisual, setLodVisual] = useState<VortexLodVisual>(() =>
 		vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl),
 	);
-	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
+	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = props.selected
 		? "attracting"
-		: reg.attractionHoverRingFullId === fullId
-			? "ring"
-			: reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true
-				? "indirectRing"
-				: reg.attractionCompatibleAttractedFullIds.has(fullId)
-					? "compatible"
-					: "none";
+		: reg.attractionDragAttractingFullId === fullId
+			? "attracting"
+			: reg.attractionHoverRingFullId === fullId
+				? "ring"
+				: reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true
+					? "indirectRing"
+					: reg.attractionCompatibleAttractedFullIds.has(fullId)
+						? "compatible"
+						: "none";
 
 	const onPointerDown = useCallback(
 		(e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
@@ -2786,6 +2975,11 @@ export const Vortex = memo(function Vortex(
 			if (pe.button !== 0) return;
 			e.stopPropagation();
 			if (reg.blockedVortexFullIds.has(fullId)) return;
+			if (pe.altKey || pe.metaKey) {
+				reg.onSelect?.({ objectIds: [props.objectId], vortexIds: [fullId] });
+				reg.setActiveRelocateObjectId(props.objectId);
+				return;
+			}
 			reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
 			const el = pe.currentTarget instanceof Element ? pe.currentTarget : null;
 			if (el && typeof (el as HTMLElement).setPointerCapture === "function") {
@@ -2955,10 +3149,28 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region ­ƒÄ¼Scene
-function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null }) {
+function OrbitGated(props: {
+	readonly camera: ThreePerspectiveCamera | null;
+	readonly zoom: number;
+	readonly onCamera?: (state: CameraState) => void;
+}) {
 	const reg = useRegistry();
+	const { camera } = useThree();
+	const controls = useThree((s) => s.controls as { target: Vector3 } | null);
+	const targetScratch = useMemo(() => new Vector3(), []);
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	const invalidate = useThree((s) => s.invalidate);
+	const reportCamera = useCallback(() => {
+		if (!props.onCamera) {
+			return;
+		}
+		const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
+		props.onCamera({
+			position: threeVec3ToCad(camera.position),
+			target: threeVec3ToCad(tgt),
+			zoom: props.zoom,
+		});
+	}, [camera, controls, props.onCamera, props.zoom, targetScratch]);
 	useEffect(() => {
 		invalidate();
 	}, [gate, invalidate]);
@@ -2975,10 +3187,57 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null }) {
 			enableZoom
 			onChange={() => invalidate()}
 			onStart={() => invalidate()}
-			onEnd={() => invalidate()}
+			onEnd={() => {
+				invalidate();
+				reportCamera();
+			}}
 			mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }}
 		/>
 	);
+}
+
+/** @emoji 🛰️ Frames orbit camera to loaded object bounds once meshes are measurable (initial load fit). */
+function SceneAutoFit(props: {
+	readonly behavior?: SceneAutoFitBehavior;
+	readonly padding?: number;
+	readonly zoom?: number;
+	readonly onCamera?: (state: CameraState) => void;
+}): null {
+	const reg = useRegistry();
+	const { camera, controls, invalidate } = useThree();
+	const targetScratch = useMemo(() => new Vector3(), []);
+	const lastKey = useRef("");
+	const hasApplied = useRef(false);
+	const behavior = props.behavior ?? "initial";
+	const padding = props.padding ?? 1.25;
+	const zoom = props.zoom ?? 1;
+	useFrame(() => {
+		if (behavior === "initial" && hasApplied.current) {
+			return;
+		}
+		const groups = reg.collectObjectGroups();
+		if (!groups.length) return;
+		const key = groups
+			.map((group) => group.uuid)
+			.sort()
+			.join("|");
+		if (!sceneAutoFitShouldRun(behavior, key, lastKey.current, hasApplied.current)) return;
+		const bounds = boundsFromObjectGroups(groups);
+		if (!bounds) return;
+		lastKey.current = key;
+		hasApplied.current = true;
+		if (!(camera instanceof ThreePerspectiveCamera)) return;
+		const orbit = controls as { target: Vector3; update?: () => void } | null;
+		applySceneAutoFitCamera(camera, bounds, padding, orbit);
+		invalidate();
+		const tgt = orbit?.target ?? targetScratch.set(...cadVec3ToThree(bounds.center));
+		props.onCamera?.({
+			position: threeVec3ToCad(camera.position),
+			target: threeVec3ToCad(tgt),
+			zoom,
+		});
+	});
+	return null;
 }
 
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
@@ -3095,34 +3354,6 @@ function AttractionRubberBand() {
 	return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
-function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: CameraState) => void }) {
-	const { camera } = useThree();
-	const controls = useThree((s) => s.controls as { target: Vector3 } | null);
-	const targetScratch = useMemo(() => new Vector3(), []);
-	const last = useRef("");
-	useFrame(() => {
-		if (!onCamera) {
-			return;
-		}
-		const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
-		const snap = JSON.stringify({
-			p: camera.position.toArray(),
-			t: tgt.toArray(),
-			z: zoom,
-		});
-		if (snap === last.current) {
-			return;
-		}
-		last.current = snap;
-		onCamera({
-			position: threeVec3ToCad(camera.position),
-			target: threeVec3ToCad(tgt),
-			zoom,
-		});
-	});
-	return null;
-}
-
 function RegistryProvider({
 	children,
 	lodRef,
@@ -3132,6 +3363,7 @@ function RegistryProvider({
 	proximityRadius,
 	selectionMode,
 	relocateMode,
+	selection: controlledSelection,
 	onSelect,
 	onConnect,
 	onProximityConnect,
@@ -3148,6 +3380,7 @@ function RegistryProvider({
 	proximityRadius: number;
 	selectionMode: SelectionMode;
 	relocateMode: RelocateMode;
+	selection?: SelectionSnapshot;
 	onSelect?: (snap: SelectionSnapshot) => void;
 	onConnect?: (p: AttractionPayload) => void;
 	onProximityConnect?: (p: AttractionPayload) => void;
@@ -3156,8 +3389,35 @@ function RegistryProvider({
 	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
 	onRelocate?: (p: RelocatePayload) => void;
 }) {
-	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
+	const [internalSelectedObjectIds, setInternalSelectedObjectIds] = useState<readonly string[]>([]);
+	const selectedObjectIds = controlledSelection?.objectIds ?? internalSelectedObjectIds;
+	const setSelectedObjectIds = useCallback(
+		(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
+			if (controlledSelection !== undefined) {
+				const resolved = typeof ids === "function" ? ids(controlledSelection.objectIds) : ids;
+				onSelect?.({
+					objectIds: resolved,
+					vortexIds: controlledSelection.vortexIds,
+				});
+				return;
+			}
+			setInternalSelectedObjectIds(ids);
+		},
+		[controlledSelection, onSelect],
+	);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
+	const selectionControlled = controlledSelection !== undefined;
+	const selectionPrimaryObjectId = controlledSelection?.objectIds[0] ?? null;
+	const selectionPrimaryVortexId = controlledSelection?.vortexIds[0] ?? null;
+	useEffect(() => {
+		if (!selectionControlled) {
+			return;
+		}
+		const primary =
+			selectionPrimaryObjectId ??
+			(selectionPrimaryVortexId ? parseVortexFullId(selectionPrimaryVortexId).objectId : null);
+		setActiveRelocateObjectId(primary);
+	}, [selectionControlled, selectionPrimaryObjectId, selectionPrimaryVortexId]);
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -3216,6 +3476,14 @@ function RegistryProvider({
 	const registerObject = useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
 		objectGroupMap.current.set(id, group);
 		objectKindsRef.current.set(id, objectKind);
+	}, []);
+
+	const collectObjectGroups = useCallback((): Group[] => {
+		const out: Group[] = [];
+		for (const group of objectGroupMap.current.values()) {
+			if (group) out.push(group);
+		}
+		return out;
 	}, []);
 
 	const getObjectGroup = useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
@@ -3519,6 +3787,7 @@ function RegistryProvider({
 			registerVortexBinding,
 			unregisterVortexBinding,
 			registerObject,
+			collectObjectGroups,
 			getObjectGroup,
 			getObjectKind,
 			kindCatalogs,
@@ -3560,6 +3829,7 @@ function RegistryProvider({
 			registerVortexBinding,
 			unregisterVortexBinding,
 			registerObject,
+			collectObjectGroups,
 			getObjectGroup,
 			getObjectKind,
 			kindCatalogs,
@@ -3689,6 +3959,8 @@ function Inner(props: CanvasProps) {
 	const pos = (camProp?.position ?? [420, -420, 320]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 0, 40]) as Vec3;
 	const zoom = camProp?.zoom ?? 1;
+	const autoFitCamera = props.autoFitCamera !== false;
+	const autoFitBehavior = props.autoFitBehavior ?? "initial";
 	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
 	const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
 	const blocked = useLiveBlockedVortexFullIds(blockedFallback);
@@ -3701,6 +3973,7 @@ function Inner(props: CanvasProps) {
 			proximityRadius={proximityRadius}
 			selectionMode={props.selectionMode ?? "single"}
 			relocateMode={props.relocateMode ?? "translate"}
+			selection={props.selection}
 			onSelect={props.onSelect}
 			onConnect={props.onConnect}
 			onProximityConnect={props.onProximityConnect}
@@ -3722,11 +3995,13 @@ function Inner(props: CanvasProps) {
 			>
 				<PerspectiveCamera ref={setSceneCamera} makeDefault near={0.2} far={500_000} fov={50} />
 				<SceneCameraSeed camera={sceneCamera} position={pos} target={tgt} />
-				<OrbitGated camera={sceneCamera} />
+				<OrbitGated camera={sceneCamera} onCamera={props.onCamera} zoom={zoom} />
+				{autoFitCamera ? (
+					<SceneAutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} />
+				) : null}
 				<AttractionThreeBinder />
 				<AttractionWindowBridge />
 				<AttractionRubberBand />
-				<CameraReporter zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
 				<Chunks chunkSize={chunkSize} maxDistance={maxDist}>
@@ -3868,6 +4143,60 @@ if (import.meta.vitest) {
 			expect(a).not.toBe(b);
 		});
 	});
+	describe("boundsFromObjectGroups", () => {
+		it("returns null for empty input", () => {
+			expect(boundsFromObjectGroups([])).toBeNull();
+		});
+		it("measures mesh geometry in world space", () => {
+			const root = new Group();
+			const mesh = new Mesh(new BoxGeometry(10, 20, 30));
+			root.add(mesh);
+			applyObjectPose(root, [5, 0, 0], [0, 0, 0, 1], 1);
+			const bounds = boundsFromObjectGroups([root]);
+			expect(bounds).not.toBeNull();
+			expect(bounds!.radius).toBeGreaterThan(5);
+		});
+	});
+	describe("sceneAutoFitShouldRun", () => {
+		it("runs once for initial behavior", () => {
+			expect(sceneAutoFitShouldRun("initial", "a", "", false)).toBe(true);
+			expect(sceneAutoFitShouldRun("initial", "a", "a", true)).toBe(false);
+			expect(sceneAutoFitShouldRun("initial", "b", "a", true)).toBe(false);
+		});
+		it("refits when the object-group key changes in changes behavior", () => {
+			expect(sceneAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
+		});
+	});
+	describe("cameraStateNearEqual", () => {
+		it("detects position and zoom deltas", async () => {
+			const { cameraStateNearEqual, updateSceneCameraInFixture } = await import("./play/index.ts");
+			const base = {
+				position: [1, 2, 3] as const,
+				target: [0, 0, 0] as const,
+				zoom: 1,
+			};
+			expect(cameraStateNearEqual(base, { ...base, position: [1.0001, 2, 3] })).toBe(true);
+			expect(cameraStateNearEqual(base, { ...base, position: [2, 2, 3] })).toBe(false);
+			const fixture = {
+				schema: "elements.scene.fixture/v1" as const,
+				domain: "architecture" as const,
+				camera: base,
+				objects: [],
+				attractions: [],
+			};
+			const moved = updateSceneCameraInFixture(fixture, { position: [2, 2, 3] });
+			expect(moved).not.toBe(fixture);
+			const same = updateSceneCameraInFixture(fixture, { position: [1.0001, 2, 3] });
+			expect(same).toBe(fixture);
+		});
+	});
+	describe("applySceneAutoFitCamera", () => {
+		it("offsets camera from bounds center", () => {
+			const camera = new ThreePerspectiveCamera(50, 1, 0.1, 10_000);
+			applySceneAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
+			expect(camera.position.length()).toBeGreaterThan(10);
+		});
+	});
 	describe("cadVec3ToThree", () => {
 		it("maps CAD Z-up to Three Y-up", () => {
 			const zUp = cadVec3ToThree([0, 0, 1]);
@@ -3902,6 +4231,19 @@ if (import.meta.vitest) {
 			expect(world.x).toBeCloseTo(expected[0], 5);
 			expect(world.y).toBeCloseTo(expected[1], 5);
 			expect(world.z).toBeCloseTo(expected[2], 5);
+		});
+	});
+	describe("objectMatchesSceneSelection", () => {
+		it("matches object id and parent of selected vortex", () => {
+			expect(
+				objectMatchesSceneSelection("a", { objectIds: ["a"], vortexIds: [] }),
+			).toBe(true);
+			expect(
+				objectMatchesSceneSelection("b", { objectIds: [], vortexIds: ["b:link"] }),
+			).toBe(true);
+			expect(
+				objectMatchesSceneSelection("c", { objectIds: ["a"], vortexIds: ["b:link"] }),
+			).toBe(false);
 		});
 	});
 	describe("parseFixtureV1", () => {
@@ -4157,7 +4499,7 @@ if (import.meta.vitest) {
 // #endregion ­ƒº▓Header
 
 
-function useScenePlaySnapshot(): ScenePlaySnapshot {
+function useScenePlayController(): ScenePlayShellController | undefined {
 	const { runtime } = useApp();
 	const generation = React.useSyncExternalStore(
 		(onStoreChange) => runtime.subscribe(onStoreChange),
@@ -4165,27 +4507,513 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 		() => 0,
 	);
 	void generation;
-	const ctrl = runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
+	return runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
+}
+
+function useScenePlaySnapshot(): ScenePlaySnapshot {
+	const ctrl = useScenePlayController();
 	return (
 		ctrl?.getSnapshot() ?? {
 			fixture: null,
+			fixtureRevision: 0,
 			lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
 			lodTag: DEFAULT_MANUAL_LOD,
 			lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
 			automaticLod: true,
 			depthVariableLod: false,
 			relocateMode: "translate",
+			selection: SCENE_PLAY_EMPTY_SELECTION,
 			selectedId: null,
+			selectionMode: "single",
+			proximityRadius: 24,
+			chunkSize: 256,
+			gridFactor: 10,
+			showLodGrid: false,
+			gridSnapEnabled: true,
 			proximityCount: 0,
 			connectCount: 0,
 			indirectCount: 0,
+			compatibleObjectsCount: 0,
+			targetRingCount: 0,
 		}
+	);
+}
+
+interface ScenePlayShellContextValue {
+	readonly snap: ScenePlaySnapshot;
+	readonly patchFixture: (updater: (prev: FixtureV1) => FixtureV1) => void;
+	readonly setSelection: (selection: ScenePlaySelection) => void;
+	readonly kindCatalogs: KindCatalogBundle | undefined;
+}
+
+const ScenePlayShellContext = createContext<ScenePlayShellContextValue | null>(null);
+
+function useScenePlayShell(): ScenePlayShellContextValue {
+	const value = useContext(ScenePlayShellContext);
+	if (!value) {
+		throw new Error("ScenePlayShellContext missing");
+	}
+	return value;
+}
+
+function scenePlayAllEqual<T>(values: readonly T[]): boolean {
+	if (values.length <= 1) {
+		return true;
+	}
+	const first = values[0];
+	for (let i = 1; i < values.length; i += 1) {
+		if (values[i] !== first) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function ScenePlayVec3Row(props: {
+	readonly id: string;
+	readonly label: string;
+	readonly values: readonly Vec3[];
+	readonly uniform: boolean;
+	readonly onChange: (next: Vec3) => void;
+}): React.ReactElement {
+	const value = props.uniform ? props.values[0]! : ([Number.NaN, Number.NaN, Number.NaN] as Vec3);
+	return (
+		<Label id={props.id} label={props.label}>
+			<div className="grid grid-cols-3 gap-1">
+				{(["x", "y", "z"] as const).map((axis, index) => (
+					<Input
+						key={`${props.id}.${axis}`}
+						className="h-7 font-mono text-xs"
+						onChange={(event: ChangeEvent<HTMLInputElement>) => {
+							const parsed = Number(event.target.value);
+							if (!Number.isFinite(parsed)) {
+								return;
+							}
+							const next: Vec3 = [...value];
+							next[index] = parsed;
+							props.onChange(next);
+						}}
+						placeholder={props.uniform ? axis : "—"}
+						value={props.uniform ? String(value[index]) : ""}
+					/>
+				))}
+			</div>
+		</Label>
+	);
+}
+
+function ScenePlayInspectorObjects(props: {
+	readonly fixture: FixtureV1;
+	readonly objectIds: readonly string[];
+}): React.ReactElement {
+	const { patchFixture, setSelection } = useScenePlayShell();
+	const { kindCatalogs } = useScenePlayShell();
+	const idSet = useMemo(() => new Set(props.objectIds), [props.objectIds]);
+	const objects = useMemo(
+		() => props.fixture.objects.filter((object) => idSet.has(object.id)),
+		[props.fixture.objects, idSet],
+	);
+	const nodeKinds = kindCatalogs?.nodes ?? [];
+	const labels = objects.map((object) => object.label ?? "");
+	const labelUniform = scenePlayAllEqual(labels);
+	const kinds = objects.map((object) => object.objectKind ?? "");
+	const kindUniform = scenePlayAllEqual(kinds);
+	const wormholes = objects.map((object) => object.wormhole === true);
+	const wormholeUniform = scenePlayAllEqual(wormholes);
+	return (
+		<div className="space-y-3 border-l border-element/60 pl-2">
+			{props.objectIds.length === 1 ? (
+				<Label id="scene-play.inspector.object.id" label="Id">
+					<Input
+						className="h-7 font-mono text-xs"
+						defaultValue={props.objectIds[0]}
+						key={props.objectIds[0]}
+						onBlur={(event) => {
+							const nextId = event.currentTarget.value.trim();
+							const oldId = props.objectIds[0];
+							if (!oldId || !nextId || nextId === oldId) {
+								return;
+							}
+							patchFixture((fixture) => ({
+								...fixture,
+								objects: fixture.objects.map((object) => (object.id === oldId ? { ...object, id: nextId } : object)),
+							}));
+							setSelection({ objectIds: [nextId], vortexIds: [], attractionIds: [] });
+						}}
+					/>
+				</Label>
+			) : null}
+			<Label id="scene-play.inspector.object.label" label="Label">
+				<Input
+					className="h-7 font-mono text-xs"
+					onChange={(event) => {
+						const label = event.target.value;
+						for (const objectId of props.objectIds) {
+							patchFixture((fixture) => updateSceneObjectInFixture(fixture, objectId, { label }));
+						}
+					}}
+					placeholder={labelUniform ? undefined : "Mixed"}
+					value={labelUniform ? labels[0] ?? "" : ""}
+				/>
+			</Label>
+			<Label id="scene-play.inspector.object.kind" label="Object kind">
+				<Select
+					onValueChange={(value) => {
+						for (const objectId of props.objectIds) {
+							patchFixture((fixture) => updateSceneObjectInFixture(fixture, objectId, { objectKind: value }));
+						}
+					}}
+					value={kindUniform ? kinds[0] ?? "" : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={kindUniform ? "kind" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						{nodeKinds.map((entry) => (
+							<SelectItem key={entry.id} value={entry.id}>
+								{entry.label ?? entry.name ?? entry.id}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
+			<Label id="scene-play.inspector.object.wormhole" label="Wormhole">
+				<Select
+					onValueChange={(value) => {
+						const wormhole = value === "true";
+						for (const objectId of props.objectIds) {
+							patchFixture((fixture) => updateSceneObjectInFixture(fixture, objectId, { wormhole }));
+						}
+					}}
+					value={wormholeUniform ? String(wormholes[0]) : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={wormholeUniform ? "wormhole" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="true">true</SelectItem>
+						<SelectItem value="false">false</SelectItem>
+					</SelectContent>
+				</Select>
+			</Label>
+			<ScenePlayVec3Row
+				id="scene-play.inspector.object.origin"
+				label="Origin"
+				onChange={(origin) => {
+					for (const objectId of props.objectIds) {
+						patchFixture((fixture) => updateSceneObjectInFixture(fixture, objectId, { origin }));
+					}
+				}}
+				uniform={scenePlayAllEqual(objects.map((object) => object.origin))}
+				values={objects.map((object) => object.origin)}
+			/>
+		</div>
+	);
+}
+
+function ScenePlayInspectorVortices(props: {
+	readonly fixture: FixtureV1;
+	readonly vortexFullIds: readonly string[];
+}): React.ReactElement {
+	const { patchFixture, kindCatalogs } = useScenePlayShell();
+	const handleKinds = kindCatalogs?.handles ?? [];
+	const rows = useMemo(() => {
+		const out: { fullId: string; objectId: string; vortex: VortexProps }[] = [];
+		for (const fullId of props.vortexFullIds) {
+			const { objectId, vortexId } = parseVortexFullId(fullId);
+			const object = props.fixture.objects.find((entry) => entry.id === objectId);
+			const vortex = object?.vortices.find((entry) => sceneVortexFullId(objectId, entry.id) === fullId || entry.id === vortexId);
+			if (object && vortex) {
+				out.push({ fullId, objectId, vortex });
+			}
+		}
+		return out;
+	}, [props.fixture.objects, props.vortexFullIds]);
+	return (
+		<div className="space-y-3 border-l border-element/60 pl-2">
+			{rows.map((row) => (
+				<div key={row.fullId} className="space-y-2 rounded border border-element/40 p-2">
+					<div className="font-mono text-[11px] text-muted-foreground">{row.fullId}</div>
+					<Label id={`scene-play.inspector.vortex.kind.${row.fullId}`} label="Vortex kind">
+						<Select
+							onValueChange={(value) => {
+								patchFixture((fixture) => updateSceneVortexInFixture(fixture, row.fullId, { vortexKind: value }));
+							}}
+							value={row.vortex.vortexKind ?? ""}
+						>
+							<SelectTrigger className="h-7 font-mono text-xs">
+								<SelectValue placeholder="kind" />
+							</SelectTrigger>
+							<SelectContent>
+								{handleKinds.map((entry) => (
+									<SelectItem key={entry.id} value={entry.id}>
+										{entry.label ?? entry.name ?? entry.id}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</Label>
+					<ScenePlayVec3Row
+						id={`scene-play.inspector.vortex.position.${row.fullId}`}
+						label="Position"
+						onChange={(position) => {
+							patchFixture((fixture) => updateSceneVortexInFixture(fixture, row.fullId, { position }));
+						}}
+						uniform
+						values={[row.vortex.position]}
+					/>
+					<Label id={`scene-play.inspector.vortex.radius.${row.fullId}`} label="Radius">
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const radius = Number(event.target.value);
+								if (!Number.isFinite(radius)) {
+									return;
+								}
+								patchFixture((fixture) => updateSceneVortexInFixture(fixture, row.fullId, { radius }));
+							}}
+							value={String(row.vortex.radius ?? 0.35)}
+						/>
+					</Label>
+				</div>
+			))}
+		</div>
+	);
+}
+
+function ScenePlayInspectorAttractions(props: {
+	readonly fixture: FixtureV1;
+	readonly attractionIds: readonly string[];
+}): React.ReactElement {
+	const { patchFixture, kindCatalogs } = useScenePlayShell();
+	const wireKinds = kindCatalogs?.wires ?? [];
+	const attractions = useMemo(
+		() => props.fixture.attractions.filter((attraction) => props.attractionIds.includes(attraction.id)),
+		[props.attractionIds, props.fixture.attractions],
+	);
+	return (
+		<div className="space-y-3 border-l border-element/60 pl-2">
+			{attractions.map((attraction) => (
+				<div key={attraction.id} className="space-y-2 rounded border border-element/40 p-2">
+					<div className="font-mono text-[11px] text-muted-foreground">{attraction.id}</div>
+					<Label id={`scene-play.inspector.attraction.attracting.${attraction.id}`} label="Attracting">
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const attracting = event.target.value.trim() as AttractionProps["attracting"];
+								patchFixture((fixture) => updateSceneAttractionInFixture(fixture, attraction.id, { attracting }));
+							}}
+							value={attraction.attracting}
+						/>
+					</Label>
+					<Label id={`scene-play.inspector.attraction.attracted.${attraction.id}`} label="Attracted">
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(event) => {
+								const attracted = event.target.value.trim() as AttractionProps["attracted"];
+								patchFixture((fixture) => updateSceneAttractionInFixture(fixture, attraction.id, { attracted }));
+							}}
+							value={attraction.attracted}
+						/>
+					</Label>
+					<Label id={`scene-play.inspector.attraction.kind.${attraction.id}`} label="Attraction kind">
+						<Select
+							onValueChange={(value) => {
+								patchFixture((fixture) => updateSceneAttractionInFixture(fixture, attraction.id, { attractionKind: value }));
+							}}
+							value={attraction.attractionKind ?? ""}
+						>
+							<SelectTrigger className="h-7 font-mono text-xs">
+								<SelectValue placeholder="kind" />
+							</SelectTrigger>
+							<SelectContent>
+								{wireKinds.map((entry) => (
+									<SelectItem key={entry.id} value={entry.id}>
+										{entry.label ?? entry.name ?? entry.id}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</Label>
+				</div>
+			))}
+		</div>
+	);
+}
+
+function ScenePlayInspectorPanel(): React.ReactElement {
+	const { runtime } = useApp();
+	const { snap, patchFixture, setSelection } = useScenePlayShell();
+	const bus = runtime.commandBus;
+	const fixture = snap.fixture;
+	const selection = snap.selection;
+	if (!fixture) {
+		return <p className="p-2 text-xs text-destructive">Invalid scene fixture</p>;
+	}
+	const hasSelection =
+		selection.objectIds.length > 0 || selection.vortexIds.length > 0 || selection.attractionIds.length > 0;
+	return (
+		<div className="flex min-h-0 flex-col gap-3 p-2">
+			<div className="flex items-center justify-between gap-2 border-b border-element pb-2">
+				<div className="flex items-center gap-2 text-muted-foreground">
+					<ClipboardList className="size-4 shrink-0" />
+					<div>
+						<div className="text-xs font-semibold uppercase tracking-wide">Inspector</div>
+						<div className="text-[11px] opacity-80">
+							{selection.objectIds.length} obj · {selection.vortexIds.length} vortex · {selection.attractionIds.length} attraction
+						</div>
+					</div>
+				</div>
+				<Button
+					className="h-7 gap-1 px-2"
+					disabled={!hasSelection}
+					onClick={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "deleteSelection")}
+					size="sm"
+					type="button"
+					variant="destructive"
+				>
+					<Trash2 className="size-3.5" />
+					Delete
+				</Button>
+			</div>
+			{!hasSelection ? (
+				<p className="text-muted-foreground text-xs">Click an object to select. Alt+click a vortex to select it. Pick an attraction below.</p>
+			) : null}
+			{selection.objectIds.length > 0 ? (
+				<section>
+					<div className="mb-1 text-xs font-medium">Objects ({selection.objectIds.length})</div>
+					<ScenePlayInspectorObjects fixture={fixture} objectIds={selection.objectIds} />
+				</section>
+			) : null}
+			{selection.vortexIds.length > 0 ? (
+				<section>
+					<div className="mb-1 text-xs font-medium">Vortices ({selection.vortexIds.length})</div>
+					<ScenePlayInspectorVortices fixture={fixture} vortexFullIds={selection.vortexIds} />
+				</section>
+			) : null}
+			{selection.attractionIds.length > 0 ? (
+				<section>
+					<div className="mb-1 text-xs font-medium">Attractions ({selection.attractionIds.length})</div>
+					<ScenePlayInspectorAttractions attractionIds={selection.attractionIds} fixture={fixture} />
+				</section>
+			) : null}
+			<section>
+				<div className="mb-1 text-xs font-medium">Attractions in scene</div>
+				<div className="max-h-40 space-y-1 overflow-auto">
+					{fixture.attractions.map((attraction) => (
+						<button
+							key={attraction.id}
+							className="hover:bg-accent/40 w-full rounded px-1 py-0.5 text-left font-mono text-[11px]"
+							onClick={() => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] })}
+							type="button"
+						>
+							{attraction.id}: {attraction.attracting} → {attraction.attracted}
+						</button>
+					))}
+				</div>
+			</section>
+			<section>
+				<div className="mb-1 text-xs font-medium">Objects in scene</div>
+				<div className="max-h-48 space-y-1 overflow-auto">
+					{fixture.objects.map((object) => (
+						<button
+							key={object.id}
+							className="hover:bg-accent/40 w-full rounded px-1 py-0.5 text-left font-mono text-[11px]"
+							onClick={() => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] })}
+							type="button"
+						>
+							{object.id}
+							{object.label ? ` · ${object.label}` : ""}
+							{object.objectKind ? ` · ${object.objectKind}` : ""}
+						</button>
+					))}
+				</div>
+			</section>
+		</div>
+	);
+}
+
+function ScenePlaySettingsPanel(): React.ReactElement {
+	const { runtime } = useApp();
+	const { snap } = useScenePlayShell();
+	const bus = runtime.commandBus;
+	return (
+		<div className="space-y-3 p-2">
+			<div className="flex items-center gap-2 border-b border-element pb-2 text-muted-foreground">
+				<Settings className="size-4" />
+				<div className="text-xs font-semibold uppercase tracking-wide">Scene options</div>
+			</div>
+			<Label id="scene-play.settings.selectionMode" label="Selection mode">
+				<Select
+					onValueChange={(value) => {
+						if (value === "single" || value === "additive" || value === "subtractive" || value === "toggle") {
+							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setSelectionMode", { mode: value });
+						}
+					}}
+					value={snap.selectionMode}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="single">single</SelectItem>
+						<SelectItem value="additive">additive</SelectItem>
+						<SelectItem value="subtractive">subtractive</SelectItem>
+						<SelectItem value="toggle">toggle</SelectItem>
+					</SelectContent>
+				</Select>
+			</Label>
+			<Label id="scene-play.settings.proximityRadius" label="Proximity radius">
+				<Input
+					className="h-7 font-mono text-xs"
+					onChange={(event) => {
+						const value = Number(event.target.value);
+						if (Number.isFinite(value) && value > 0) {
+							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setProximityRadius", { value });
+						}
+					}}
+					value={String(snap.proximityRadius)}
+				/>
+			</Label>
+			<Label id="scene-play.settings.chunkSize" label="Chunk size">
+				<Input
+					className="h-7 font-mono text-xs"
+					onChange={(event) => {
+						const value = Number(event.target.value);
+						if (Number.isFinite(value) && value > 0) {
+							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setChunkSize", { value });
+						}
+					}}
+					value={String(snap.chunkSize)}
+				/>
+			</Label>
+			<Label id="scene-play.settings.gridFactor" label="Grid factor">
+				<Input
+					className="h-7 font-mono text-xs"
+					onChange={(event) => {
+						const value = Number(event.target.value);
+						if (Number.isFinite(value) && value > 0) {
+							bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setGridFactor", { value });
+						}
+					}}
+					value={String(snap.gridFactor)}
+				/>
+			</Label>
+			<div className="text-muted-foreground space-y-1 font-mono text-[11px]">
+				<div>connect: {snap.connectCount}</div>
+				<div>proximity: {snap.proximityCount}</div>
+				<div>indirect: {snap.indirectCount}</div>
+				<div>compatible: {snap.compatibleObjectsCount}</div>
+				<div>target ring: {snap.targetRingCount}</div>
+			</div>
+		</div>
 	);
 }
 
 function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
 	const { runtime } = useApp();
 	const bus = runtime.commandBus;
+	const ctrl = useScenePlayController();
 	if (node.controllerId !== SCENE_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid scene viewport binding</div>;
 	}
@@ -4196,9 +5024,26 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 	const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
 	const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
 	const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
+	const selectedVortexFullIds = useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
+	const patchFixture = useCallback(
+		(updater: (prev: FixtureV1) => FixtureV1) => {
+			ctrl?.patchFixture(updater);
+		},
+		[ctrl],
+	);
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0">
-			<SceneObjectStateProvider fixture={snap.fixture} onConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect")}>
+			<SceneObjectStateProvider
+				fixture={snap.fixture}
+				fixtureRevision={snap.fixtureRevision}
+				onConnect={(payload) => {
+					patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
+					bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect");
+				}}
+				onRelocate={(payload) => {
+					patchFixture((fixture) => applyRelocateToSceneFixture(fixture, payload));
+				}}
+			>
 				<PlaySceneCanvas
 					fixture={snap.fixture}
 					kindCatalogs={kindCatalogs}
@@ -4207,12 +5052,23 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					lodTag={snap.lodTag}
 					lodProps={snap.lodProps}
 					relocateMode={snap.relocateMode}
+					selection={snap.selection}
 					selectedId={snap.selectedId}
+					selectionMode={snap.selectionMode}
+					selectedVortexFullIds={selectedVortexFullIds}
+					proximityRadius={snap.proximityRadius}
+					chunkSize={snap.chunkSize}
+					gridFactor={snap.gridFactor}
+					showLodGrid={snap.showLodGrid}
+					gridSnapEnabled={snap.gridSnapEnabled}
 					setSelectedId={(id) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
 					onSelect={(selection) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteSelection", selection)}
 					onIndirectConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteIndirect")}
 					onProximityConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteProximity")}
-					onLodChange={undefined}
+					onLodChange={(lod) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
+					onCamera={(camera) => ctrl?.setCamera(camera)}
+					onAttractionCompatibleObjects={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
+					onAttractionTargetRing={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteTargetRing")}
 				/>
 			</SceneObjectStateProvider>
 		</div>
@@ -4226,6 +5082,8 @@ function registerScenePlayChrome(): void {
 	scenePlayChromeRegistered = true;
 	registerUiScene3DSurfaceHost(SCENE_PLAY_SCENE_SURFACE_ID, ScenePlaySceneSurfaceHost);
 	registerWindowBody(SCENE_PLAY_BODY_KEY, buildScenePlayDeclarativeBody);
+	registerSidePanelBody("elements.scene.play.tab.inspector", ScenePlayInspectorPanel);
+	registerSidePanelBody("elements.scene.play.tab.settings", ScenePlaySettingsPanel);
 }
 
 function readTheme(): ElementsSurfaceTheme {
@@ -4306,7 +5164,9 @@ class PlaySurfaceFooter extends React.Component<{
 }
 
 class PlaySceneCanvasContent extends React.Component<{
+	readonly selection: SelectionSnapshot;
 	readonly selectedId: string | null;
+	readonly selectedVortexFullIds: ReadonlySet<string>;
 	readonly relocateMode: RelocateMode;
 	readonly setSelectedId: (id: string | null) => void;
 }> {
@@ -4315,7 +5175,12 @@ class PlaySceneCanvasContent extends React.Component<{
 			<>
 				<ScenePlayTestBridge setSelectedId={this.props.setSelectedId} />
 				<React.Suspense fallback={null}>
-					<SceneObjects selectedObjectId={this.props.selectedId} relocate={this.props.relocateMode} />
+					<SceneObjects
+						selection={this.props.selection}
+						selectedObjectId={this.props.selectedId}
+						selectedVortexFullIds={this.props.selectedVortexFullIds}
+						relocate={this.props.relocateMode}
+					/>
 					<SceneAttractions />
 				</React.Suspense>
 			</>
@@ -4331,12 +5196,23 @@ class PlaySceneCanvas extends React.Component<{
 	readonly lodTag: number;
 	readonly lodProps: Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod">;
 	readonly relocateMode: RelocateMode;
+	readonly selection: ScenePlaySelection;
+	readonly selectionMode: SelectionMode;
+	readonly selectedVortexFullIds: ReadonlySet<string>;
+	readonly proximityRadius: number;
+	readonly chunkSize: number;
+	readonly gridFactor: number;
+	readonly showLodGrid: boolean;
+	readonly gridSnapEnabled: boolean;
 	readonly selectedId: string | null;
 	readonly setSelectedId: (id: string | null) => void;
-	readonly onSelect: (snap: { objectIds: readonly string[] }) => void;
+	readonly onSelect: (snap: SelectionSnapshot) => void;
 	readonly onIndirectConnect: () => void;
 	readonly onProximityConnect: () => void;
 	readonly onLodChange?: (lod: number) => void;
+	readonly onCamera?: (camera: CameraState) => void;
+	readonly onAttractionCompatibleObjects?: (payload: AttractionCompatibleObjectsPayload) => void;
+	readonly onAttractionTargetRing?: (payload: AttractionTargetRingPayload) => void;
 }> {
 	static contextType = SceneObjectStateContext;
 	declare context: React.ContextType<typeof SceneObjectStateContext>;
@@ -4359,19 +5235,32 @@ class PlaySceneCanvas extends React.Component<{
 					kindCatalogs={this.props.kindCatalogs}
 					kindCompatibility={this.props.kindCompatibility}
 					blockedVortexFullIds={this.props.blockedVortexFullIds}
-					proximityRadius={24}
+					proximityRadius={this.props.proximityRadius}
+					chunkSize={this.props.chunkSize}
+					gridFactor={this.props.gridFactor}
 					relocateMode={this.props.relocateMode}
-					showLodGrid
-					gridSnapEnabled
+					selectionMode={this.props.selectionMode}
+					showLodGrid={this.props.showLodGrid}
+					gridSnapEnabled={this.props.gridSnapEnabled}
 					{...this.props.lodProps}
 					onLodChange={this.props.onLodChange}
+					onCamera={this.props.onCamera}
 					onSelect={this.props.onSelect}
 					onConnect={state.handleConnect}
 					onIndirectConnect={this.props.onIndirectConnect}
 					onProximityConnect={this.props.onProximityConnect}
+					onAttractionCompatibleObjects={this.props.onAttractionCompatibleObjects}
+					onAttractionTargetRing={this.props.onAttractionTargetRing}
 					onRelocate={state.handleRelocate}
+					selection={this.props.selection}
 				>
-					<PlaySceneCanvasContent relocateMode={this.props.relocateMode} selectedId={this.props.selectedId} setSelectedId={this.props.setSelectedId} />
+					<PlaySceneCanvasContent
+						relocateMode={this.props.relocateMode}
+						selection={this.props.selection}
+						selectedId={this.props.selectedId}
+						selectedVortexFullIds={this.props.selectedVortexFullIds}
+						setSelectedId={this.props.setSelectedId}
+					/>
 				</Canvas3D>
 			</>
 		);
@@ -4452,14 +5341,54 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 		}
 		const runtime = this.sceneShell;
 		return (
-			<ProductView
-				runtime={runtime}
-				defaultAppId={PLAY_APP_ID}
+			<ScenePlayProductShell
 				extraFooterItems={surfaceFooterItems}
 				mobile={this.state.device === "mobile"}
+				runtime={runtime}
 			/>
 		);
 	}
+}
+
+function ScenePlayProductShell(props: {
+	readonly runtime: ProductRuntime;
+	readonly extraFooterItems: FooterItem[];
+	readonly mobile: boolean;
+}): React.ReactElement {
+	const ctrl = props.runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
+	const generation = React.useSyncExternalStore(
+		(onStoreChange) => props.runtime.subscribe(onStoreChange),
+		() => props.runtime.generation,
+		() => 0,
+	);
+	void generation;
+	const snap = ctrl?.getSnapshot();
+	const fixture = snap?.fixture;
+	const kindCatalogs = fixture ? parseKindCatalogs(fixture.meta) : undefined;
+	const shellValue = useMemo<ScenePlayShellContextValue | null>(() => {
+		if (!ctrl || !snap || !fixture) {
+			return null;
+		}
+		return {
+			snap,
+			patchFixture: (updater) => ctrl.patchFixture(updater),
+			setSelection: (selection) => ctrl.run("setSelection", { selection }),
+			kindCatalogs,
+		};
+	}, [ctrl, snap, fixture, kindCatalogs]);
+	const product = (
+		<ProductView
+			runtime={props.runtime}
+			defaultAppId={PLAY_APP_ID}
+			extraFooterItems={props.extraFooterItems}
+			initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: true }}
+			mobile={props.mobile}
+		/>
+	);
+	if (!shellValue) {
+		return product;
+	}
+	return <ScenePlayShellContext.Provider value={shellValue}>{product}</ScenePlayShellContext.Provider>;
 }
 
 class PlayApp extends React.Component {

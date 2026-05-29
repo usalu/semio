@@ -30,7 +30,41 @@
     "verticalRodStates": [
       "vertical_end"
     ],
-    "heightConfirmState": "first_corner_height"
+    "heightConfirmState": "first_corner_height",
+    "lengthEntry": [
+      {
+        "state": "first_corner_other_or_length",
+        "anchor": "origin",
+        "field": "corner"
+      },
+      {
+        "state": "diagonal_rubber",
+        "anchor": "diagA",
+        "field": "corner"
+      },
+      {
+        "state": "cube_diagonal_rubber",
+        "anchor": "diagA",
+        "field": "corner"
+      },
+      {
+        "state": "cube_other_corner",
+        "anchor": "origin",
+        "field": "corner"
+      },
+      {
+        "state": "center_corner",
+        "anchor": "rectCenter",
+        "field": "corner"
+      }
+    ],
+    "scalarEntry": [
+      {
+        "state": "first_corner_height",
+        "event": "set.height",
+        "field": "height"
+      }
+    ]
   },
   "requires": {
     "kernel": {
@@ -1572,7 +1606,6 @@
             "event": "set.height",
             "transitions": [
               {
-                "target": "ready",
                 "key": "h",
                 "label": "Apply typed height",
                 "effects": [

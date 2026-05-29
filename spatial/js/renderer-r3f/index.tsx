@@ -53,6 +53,9 @@ import {
 	derivePropertyValue,
 	listApplicablePropertyDefinitionsForModelDefinition,
 	listTypologiesForModelDefinition,
+	typologyObjectPascalFromLabel,
+	objectPrimitiveEntries,
+	resolvePrimitiveRefKind,
 	validateAttributeValue,
 	resolveModelDefinitionScope,
 	type AttributeDefinitionSpec,
@@ -63,6 +66,9 @@ import {
 	loadSpatialInteraction,
 	parseModelJson,
 	listKeyedInteractionTransitions,
+	interactionLengthEntryForState,
+	interactionScalarEntryForState,
+	isFinalInteractionState,
 	Model,
 	type InteractionEvent,
 	type InteractionKeybindRow,
@@ -591,6 +597,9 @@ function kernelGeometryKindForObjectPick(
 /** @emoji 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
 
+/** @emoji 👁️ Per-typology on/off map for play chrome (`false` disables show or selection). */
+export type SpatialTypologyToggles = Partial<Record<string, boolean>>;
+
 export interface SpatialPickTarget {
 	readonly kind: SpatialPickTargetKind;
 	readonly id: string;
@@ -598,6 +607,8 @@ export interface SpatialPickTarget {
 	readonly points?: readonly Vec3[];
 	/** @emoji 🧭 Kernel-private geometry entity kind for primitive picks (e.g. `wire` vs `edge`). */
 	readonly geometryKind?: ModelEntityKind;
+	/** @emoji 🏷️ Typology id when the target belongs to a model-definition object row. */
+	readonly typologyId?: string;
 }
 
 export interface SpatialSelectionRequest {
@@ -673,6 +684,56 @@ export function modelDefinitionPickTargetKinds(modelDefinitionId: string | null)
 export function defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionId: string | null): Record<SpatialPickTargetKind, boolean> {
 	const allowed = new Set(modelDefinitionPickTargetKinds(modelDefinitionId));
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, allowed.has(kind)])) as Record<SpatialPickTargetKind, boolean>;
+}
+
+/** @emoji 👁️ Typology ids declared on the active model definition (sorted). */
+export function modelDefinitionTypologyIds(modelDefinitionId: string | null): readonly string[] {
+	return listTypologiesForModelDefinition(modelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID)
+		.map((row) => row.id)
+		.sort((a, b) => a.localeCompare(b));
+}
+
+/** @emoji 👁️ Default all typologies on the active model definition enabled for show/selection. */
+export function defaultSpatialTypologyTogglesForModelDefinition(modelDefinitionId: string | null): Record<string, boolean> {
+	return Object.fromEntries(modelDefinitionTypologyIds(modelDefinitionId).map((id) => [id, true]));
+}
+
+/** @emoji 🏷️ Short typology label for play chrome (`Base Plate` → `BasePlate`). */
+export function spatialTypologyToggleLabel(typologyId: string, label?: string): string {
+	if (label?.trim()) return typologyObjectPascalFromLabel(label);
+	const tail = typologyId.split(".").pop() ?? typologyId;
+	return typologyObjectPascalFromLabel(tail.replace(/[._-]+/g, " "));
+}
+
+function typologyToggleAllowsTarget(
+	target: SpatialPickTarget,
+	toggles: SpatialTypologyToggles,
+	typologyIds: readonly string[],
+): boolean {
+	if (target.typologyId) return toggles[target.typologyId] !== false;
+	return typologyIds.some((id) => toggles[id] !== false);
+}
+
+/** @emoji 👁️ Filters pick targets by typology show/selection toggles. */
+export function filterSpatialPickTargetsForTypologyToggles(
+	targets: readonly SpatialPickTarget[],
+	toggles: SpatialTypologyToggles,
+	typologyIds: readonly string[],
+): SpatialPickTarget[] {
+	return targets.filter((target) => typologyToggleAllowsTarget(target, toggles, typologyIds));
+}
+
+/** @emoji 👁️ Derives per-kind toggles from typology-filtered targets (scene layers + legacy gates). */
+export function spatialPickKindTogglesFromTypologyFilteredTargets(
+	modelDefinitionId: string | null,
+	visibleTargets: readonly SpatialPickTarget[],
+): SpatialPickKindToggles {
+	const allowed = new Set(modelDefinitionPickTargetKinds(modelDefinitionId));
+	const merged: SpatialPickKindToggles = {};
+	for (const kind of SPATIAL_PICK_TARGET_KINDS) {
+		merged[kind] = allowed.has(kind) && visibleTargets.some((target) => target.kind === kind);
+	}
+	return merged;
 }
 
 /** @emoji 👁️ Resolves which scene layers stay visible for geometry edit vs typology object picking. */
@@ -924,6 +985,66 @@ function modelObjectPickPoints(model: Model, row: SpatialObjectRecord): readonly
 	return geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 }
 
+function collectSolidTopologyMemberIds(buckets: ReturnType<typeof geometryBuckets>, solidId: string): ReadonlySet<string> {
+	const out = new Set<string>();
+	const solid = buckets.solids[solidId];
+	if (!solid) return out;
+	const visitShell = (shellId: string): void => {
+		if (out.has(`shell:${shellId}`)) return;
+		out.add(`shell:${shellId}`);
+		const shell = buckets.shells[shellId];
+		if (!shell) return;
+		for (const faceId of shell.faceIds) visitFace(faceId);
+	};
+	const visitFace = (faceId: string): void => {
+		if (out.has(`face:${faceId}`)) return;
+		out.add(`face:${faceId}`);
+		const face = buckets.faces[faceId];
+		if (!face) return;
+		for (const wireId of face.wireIds) visitWire(wireId);
+	};
+	const visitWire = (wireId: string): void => {
+		if (out.has(`wire:${wireId}`)) return;
+		out.add(`wire:${wireId}`);
+		const wire = buckets.wires[wireId];
+		if (!wire) return;
+		for (const edgeId of wire.edgeIds) visitEdge(edgeId);
+	};
+	const visitEdge = (edgeId: string): void => {
+		if (out.has(`edge:${edgeId}`)) return;
+		out.add(`edge:${edgeId}`);
+		const edge = buckets.edges[edgeId];
+		if (!edge) return;
+		for (const vertexId of edge.vertexIds) out.add(`vertex:${vertexId}`);
+	};
+	out.add(`solid:${solidId}`);
+	for (const shellId of solid.shellIds) visitShell(shellId);
+	return out;
+}
+
+function buildGeometryTypologyIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
+	const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
+	const buckets = geometryBuckets(model);
+	const out = new Map<string, string>();
+	for (const row of Object.values(model.objects)) {
+		if (!typologyIds.has(row.typology)) continue;
+		for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
+			const kind = resolvePrimitiveRefKind(model, primitiveRef);
+			if (kind === "solid") {
+				for (const key of collectSolidTopologyMemberIds(buckets, primitiveRef)) out.set(key, row.typology);
+				continue;
+			}
+			out.set(`${kind}:${primitiveRef}`, row.typology);
+		}
+	}
+	for (const anchor of geometryRecords(buckets.anchors)) {
+		const attachment = anchor.attachment;
+		const mapped = out.get(`${attachment.kind}:${attachment.id}`);
+		if (mapped) out.set(`anchor:${anchor.id}`, mapped);
+	}
+	return out;
+}
+
 function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: string): readonly SpatialPickTarget[] {
 	const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
 	const targets: SpatialPickTarget[] = [];
@@ -937,51 +1058,53 @@ function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: st
 			id: String(row.id),
 			point,
 			points: points.length ? points : undefined,
+			typologyId: row.typology,
 		});
 	}
 	return targets;
-}
-
-function pickKindEnabledForSelectionAccept(accept: readonly ModelEntityKind[], pickKind: SpatialPickTargetKind): boolean {
-	if (accept.length === 0) return true;
-	const mapped = spatialPickKindsForSelectionAccept(accept);
-	return mapped ? mapped.has(pickKind) : true;
 }
 
 function appendTopologySpatialPickTargets(
 	targets: SpatialPickTarget[],
 	buckets: ReturnType<typeof geometryBuckets>,
 	entityKinds: ReadonlySet<ModelEntityKind>,
+	geometryTypologyIndex: ReadonlyMap<string, string>,
 ): void {
+	const withTypology = (
+		target: Omit<SpatialPickTarget, "typologyId"> & { readonly geometryKind: ModelEntityKind },
+	): SpatialPickTarget => ({
+		...target,
+		typologyId: geometryTypologyIndex.get(`${target.geometryKind}:${target.id}`),
+	});
 	if (entityKinds.has("anchor")) {
 		for (const anchor of geometryRecords(buckets.anchors)) {
-			targets.push({ kind: "vertex", geometryKind: "anchor", id: anchor.id, point: anchor.position });
+			targets.push(withTypology({ kind: "vertex", geometryKind: "anchor", id: anchor.id, point: anchor.position }));
 		}
 	}
 	if (entityKinds.has("vertex")) {
 		for (const vertex of geometryRecords(buckets.vertices)) {
-			targets.push({ kind: "vertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
+			targets.push(withTypology({ kind: "vertex", geometryKind: "vertex", id: vertex.id, point: vertex.position }));
 		}
 	}
 	if (entityKinds.has("edge")) {
 		for (const edge of geometryRecords(buckets.edges)) {
 			const points = geometryEdgePoints(buckets.vertices, edge);
 			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "edge", geometryKind: "edge", id: edge.id, point, points });
+			if (point) targets.push(withTypology({ kind: "edge", geometryKind: "edge", id: edge.id, point, points }));
 		}
 	}
 	if (entityKinds.has("wire")) {
 		for (const wire of geometryRecords(buckets.wires)) {
 			const points = geometryWirePoints(buckets.vertices, buckets.edges, wire);
 			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "edge", geometryKind: "wire", id: wire.id, point, points });
+			if (point) targets.push(withTypology({ kind: "edge", geometryKind: "wire", id: wire.id, point, points }));
 		}
 	}
 	if (entityKinds.has("face")) {
 		for (const face of geometryRecords(buckets.faces)) {
 			const points = geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
 			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "face", geometryKind: "face", id: face.id, point, points });
+			if (point) targets.push(withTypology({ kind: "face", geometryKind: "face", id: face.id, point, points }));
 		}
 	}
 	if (entityKinds.has("shell")) {
@@ -989,7 +1112,7 @@ function appendTopologySpatialPickTargets(
 			const segments = geometryEntityWireSegments(buckets, "shell", shell.id);
 			const points = segments.flatMap(([a, b]) => [a, b]);
 			const point = geometryPointCentroid(points);
-			if (point) targets.push({ kind: "face", geometryKind: "shell", id: shell.id, point, points: points.length ? points : undefined });
+			if (point) targets.push(withTypology({ kind: "face", geometryKind: "shell", id: shell.id, point, points: points.length ? points : undefined }));
 		}
 	}
 	if (entityKinds.has("solid")) {
@@ -998,7 +1121,7 @@ function appendTopologySpatialPickTargets(
 		for (const cell of geometryRecords(buckets.solids)) {
 			const points = geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 			const point = geometryPointCentroid(points) ?? allCenter;
-			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
+			if (point) targets.push(withTypology({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all }));
 		}
 	}
 }
@@ -1014,8 +1137,9 @@ export function createSpatialPickTargets(
 	if (!model) return [];
 	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
 	const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
+	const geometryTypologyIndex = buildGeometryTypologyIndex(model, mdId);
 	const targets: SpatialPickTarget[] = [];
-	if (modelDefinitionUsesGeometryPicking(mdId)) appendTopologySpatialPickTargets(targets, buckets, entityKinds);
+	if (modelDefinitionUsesGeometryPicking(mdId)) appendTopologySpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex);
 	if (entityKinds.has("object") && !isShapeModelDefinition(mdId)) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
 	return targets;
 }
@@ -1142,6 +1266,7 @@ function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const a = readVec3(p.from);
 	const b = readVec3(p.to);
 	if (!a || !b) return null;
+	const guide = item.role === "guide";
 	return (
 		<Line
 			raycast={raycastNone}
@@ -1149,9 +1274,10 @@ function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
 				[a[0], a[1], a[2]],
 				[b[0], b[1], b[2]],
 			]}
-			color="#88eeff"
-			lineWidth={2}
-			dashed={false}
+			color={guide ? "#5a7088" : "#88eeff"}
+			lineWidth={guide ? 1 : 2}
+			dashed={guide}
+			{...(guide ? { dashSize: 0.12, gapSize: 0.08 } : {})}
 		/>
 	);
 }
@@ -2956,6 +3082,16 @@ function replBuildDispatchEvent(
 	return { kind: row.eventKind, modifiers: {} };
 }
 
+/** @emoji 📏 Parses REPL `cmdLine` as a live direct-distance value (`null` = empty, `undefined` = not numeric). */
+export function replLengthEntryLiveValue(cmdLine: string): number | null | undefined {
+	const t = cmdLine.trim();
+	if (!t) return null;
+	if (!/^\d*\.?\d*$/.test(t)) return undefined;
+	const v = Number(t);
+	if (!Number.isFinite(v) || v <= 0) return undefined;
+	return v;
+}
+
 function replTryParseValueInteraction(line: string, spec: InteractionSpec, state: string): InteractionEvent | null {
 	const t = line.trim();
 	const m = t.match(/^(\S+)\s+(.+)$/);
@@ -3218,6 +3354,26 @@ export function replPruneSelectionByKind(
 	return selection.filter((target) => !geometryKinds.includes(target.kind) && selectionTargetPickKind(target) !== kind);
 }
 
+/** @emoji 🪪 Removes in-view selection rows for a typology when its selection toggle is turned off. */
+export function replPruneSelectionByTypology(
+	selection: readonly SelectionTarget[],
+	model: Model,
+	activeModelDefinitionId: string | null,
+	typologyId: string,
+): SelectionTarget[] {
+	const typologyIds = modelDefinitionTypologyIds(activeModelDefinitionId);
+	if (!typologyIds.includes(typologyId)) return [...selection];
+	const index = buildGeometryTypologyIndex(model, activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
+	return selection.filter((target) => {
+		if (target.kind === "object" && target.editable === false) {
+			const row = model.objects[target.id];
+			return row?.typology !== typologyId;
+		}
+		const geometryKind = target.kind === "object" ? "solid" : target.kind;
+		return index.get(`${geometryKind}:${target.id}`) !== typologyId;
+	});
+}
+
 /** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to active model definition. */
 export function replDisplayedSelectionTargets(
 	interactionActive: boolean,
@@ -3283,8 +3439,8 @@ export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpe
 export interface InteractionReplHostValues {
 	readonly cmdLine?: string;
 	readonly activeSuggestionIndex?: number;
-	readonly filterKindToggles?: Record<SpatialPickTargetKind, boolean>;
-	readonly selectionKindToggles?: Record<SpatialPickTargetKind, boolean>;
+	readonly filterTypologyToggles?: SpatialTypologyToggles;
+	readonly selectionTypologyToggles?: SpatialTypologyToggles;
 	readonly activeModelDefinitionId?: string | null;
 	readonly selectionMethod?: SpatialSelectionMethod;
 	readonly modelDefinitionRevision?: number;
@@ -3301,8 +3457,8 @@ export interface InteractionReplHostValues {
 export interface InteractionReplHostCallbacks {
 	readonly onCmdLineChange?: (value: string) => void;
 	readonly onActiveSuggestionIndexChange?: (index: number) => void;
-	readonly onFilterKindTogglesChange?: (value: Record<SpatialPickTargetKind, boolean>) => void;
-	readonly onSelectionKindTogglesChange?: (value: Record<SpatialPickTargetKind, boolean>) => void;
+	readonly onFilterTypologyTogglesChange?: (value: SpatialTypologyToggles) => void;
+	readonly onSelectionTypologyTogglesChange?: (value: SpatialTypologyToggles) => void;
 	readonly onActiveModelDefinitionIdChange?: (value: string) => void;
 	readonly onSelectionMethodChange?: (value: SpatialSelectionMethod) => void;
 	readonly onModelDefinitionRevisionChange?: (revision: number) => void;
@@ -3351,8 +3507,8 @@ export interface InteractionReplLayoutProps {
 		| "displayModel"
 		| "modelDefinitionRevision"
 		| "activeModelDefinitionId"
-		| "filterKindToggles"
-		| "selectionKindToggles"
+		| "filterTypologyToggles"
+		| "selectionTypologyToggles"
 		| "hoveredTargetKey"
 		| "selectedTargetKey"
 		| "selectedTargetKeys"
@@ -3373,8 +3529,8 @@ export function defaultInteractionReplChromeState(): Required<
 		InteractionReplHostValues,
 		| "cmdLine"
 		| "activeSuggestionIndex"
-		| "filterKindToggles"
-		| "selectionKindToggles"
+		| "filterTypologyToggles"
+		| "selectionTypologyToggles"
 		| "activeModelDefinitionId"
 		| "selectionMethod"
 		| "modelDefinitionRevision"
@@ -3390,8 +3546,8 @@ export function defaultInteractionReplChromeState(): Required<
 	return {
 		cmdLine: "",
 		activeSuggestionIndex: 0,
-		filterKindToggles: defaultSpatialPickKindTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
-		selectionKindToggles: defaultSpatialPickKindTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
+		filterTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
+		selectionTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
 		activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
 		selectionMethod: "rectangle",
 		modelDefinitionRevision: 0,
@@ -3445,8 +3601,8 @@ export function InteractionRepl({
 	tessellationTolerance,
 	cmdLine: cmdLineProp,
 	activeSuggestionIndex: activeSuggestionIndexProp,
-	filterKindToggles: filterKindTogglesProp,
-	selectionKindToggles: selectionKindTogglesProp,
+	filterTypologyToggles: filterTypologyTogglesProp,
+	selectionTypologyToggles: selectionTypologyTogglesProp,
 	activeModelDefinitionId: activeModelDefinitionIdProp,
 	selectionMethod: selectionMethodProp,
 	modelDefinitionRevision: modelDefinitionRevisionProp,
@@ -3459,8 +3615,8 @@ export function InteractionRepl({
 	lastFinalizedInteractionId: lastFinalizedInteractionIdProp,
 	onCmdLineChange,
 	onActiveSuggestionIndexChange,
-	onFilterKindTogglesChange,
-	onSelectionKindTogglesChange,
+	onFilterTypologyTogglesChange,
+	onSelectionTypologyTogglesChange,
 	onActiveModelDefinitionIdChange,
 	onSelectionMethodChange,
 	onModelDefinitionRevisionChange,
@@ -3512,8 +3668,16 @@ export function InteractionRepl({
 	const chromeDefaults = useMemo(() => defaultInteractionReplChromeState(), []);
 	const [cmdLine, setCmdLine] = useHostState(cmdLineProp, onCmdLineChange, () => chromeDefaults.cmdLine);
 	const [activeIndex, setActiveIndex] = useHostState(activeSuggestionIndexProp, onActiveSuggestionIndexChange, () => chromeDefaults.activeSuggestionIndex);
-	const [filterKindToggles, setFilterKindToggles] = useHostState(filterKindTogglesProp, onFilterKindTogglesChange, () => chromeDefaults.filterKindToggles);
-	const [selectionKindToggles, setSelectionKindToggles] = useHostState(selectionKindTogglesProp, onSelectionKindTogglesChange, () => chromeDefaults.selectionKindToggles);
+	const [filterTypologyToggles, setFilterTypologyToggles] = useHostState(
+		filterTypologyTogglesProp,
+		onFilterTypologyTogglesChange,
+		() => chromeDefaults.filterTypologyToggles,
+	);
+	const [selectionTypologyToggles, setSelectionTypologyToggles] = useHostState(
+		selectionTypologyTogglesProp,
+		onSelectionTypologyTogglesChange,
+		() => chromeDefaults.selectionTypologyToggles,
+	);
 	const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(
 		activeModelDefinitionIdProp,
 		onActiveModelDefinitionIdChange,
@@ -3579,6 +3743,7 @@ export function InteractionRepl({
 		onSnapshotChange?.(snapshot);
 	}, [snapshot, onSnapshotChange]);
 	const cmdRef = useRef<HTMLInputElement>(null);
+	const numericEntryPrevStateRef = useRef(snapshot.state);
 	const setCmdLineRef = useRef(setCmdLine);
 	const rendererSelectionRef = useRef(rendererSelection);
 	const suppressAutoStartOnceRef = useRef(false);
@@ -3595,18 +3760,6 @@ export function InteractionRepl({
 		() => replDisplayedSelectionTargets(interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection),
 		[interactionActive, activeModelDefinitionId, rendererSelection, interactionSelection],
 	);
-	const viewFilterKindToggles = useMemo((): SpatialPickKindToggles => {
-		const allowed = new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
-		const merged: SpatialPickKindToggles = {};
-		for (const kind of SPATIAL_PICK_TARGET_KINDS) {
-			merged[kind] = allowed.has(kind) && filterKindToggles[kind] !== false;
-		}
-		return merged;
-	}, [filterKindToggles, activeModelDefinitionId]);
-	const effectiveSelectionKindToggles = useMemo(
-		() => intersectSpatialPickKindToggles(viewFilterKindToggles, selectionKindToggles),
-		[selectionKindToggles, viewFilterKindToggles],
-	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
 	const geometryPreviewTransform = useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
@@ -3619,7 +3772,27 @@ export function InteractionRepl({
 		() => createSpatialPickTargets(pickGeometry, activeModelDefinitionId),
 		[pickGeometry, pickGeometryRevision, modelDefinitionRevision, activeModelDefinitionId],
 	);
+	const activeTypologyIds = useMemo(() => modelDefinitionTypologyIds(activeModelDefinitionId), [activeModelDefinitionId]);
 	const scopedPickTargets = useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeModelDefinitionId), [pickTargets, activeModelDefinitionId]);
+	const visiblePickTargets = useMemo(
+		() => filterSpatialPickTargetsForTypologyToggles(scopedPickTargets, filterTypologyToggles, activeTypologyIds),
+		[scopedPickTargets, filterTypologyToggles, activeTypologyIds],
+	);
+	const viewFilterKindToggles = useMemo(
+		() => spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, visiblePickTargets),
+		[activeModelDefinitionId, visiblePickTargets],
+	);
+	const effectiveSelectionKindToggles = useMemo(() => {
+		const selectableTargets = filterSpatialPickTargetsForTypologyToggles(
+			visiblePickTargets,
+			selectionTypologyToggles,
+			activeTypologyIds,
+		);
+		return intersectSpatialPickKindToggles(
+			viewFilterKindToggles,
+			spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, selectableTargets),
+		);
+	}, [activeModelDefinitionId, activeTypologyIds, selectionTypologyToggles, viewFilterKindToggles, visiblePickTargets]);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
@@ -3656,7 +3829,13 @@ export function InteractionRepl({
 		setLastFinalizedInteractionId(interactionId);
 		setRendererSelection((prev) => [...replFinalizeSelection(prev, snapshot.lastResponse)]);
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [interactionId, snapshot.lastResponse, setInteractionSelection, setLastFinalizedInteractionId, setRendererSelection]);
+		setCmdLine("");
+	}, [interactionId, snapshot.lastResponse, setInteractionSelection, setLastFinalizedInteractionId, setRendererSelection, setCmdLine]);
+
+	useEffect(() => {
+		if (!interactionId || !isFinalInteractionState(spec, snapshot.state)) return;
+		setCmdLine("");
+	}, [interactionId, spec, snapshot.state, setCmdLine]);
 
 	const handleEscapeKey = useCallback(() => {
 		if (selectionMenu !== null) {
@@ -3716,15 +3895,25 @@ export function InteractionRepl({
 
 	useEffect(() => {
 		const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
-		const defaults = defaultSpatialPickKindTogglesForModelDefinition(mdId);
-		setFilterKindToggles(defaults);
-		setSelectionKindToggles(defaults);
+		const defaults = defaultSpatialTypologyTogglesForModelDefinition(mdId);
+		setFilterTypologyToggles(defaults);
+		setSelectionTypologyToggles(defaults);
 		const allowed = listSpatialInteractionsForModelDefinition(mdId);
 		if (interactionId && !allowed.some((row) => row.id === interactionId)) onInteractionId("");
 		setLastFinalizedInteractionId("");
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [activeModelDefinitionId, modelDefinitionRevision, interactionId, onInteractionId, setFilterKindToggles, setSelectionKindToggles, setRendererSelection, setInteractionSelection, setLastFinalizedInteractionId]);
+	}, [
+		activeModelDefinitionId,
+		modelDefinitionRevision,
+		interactionId,
+		onInteractionId,
+		setFilterTypologyToggles,
+		setSelectionTypologyToggles,
+		setRendererSelection,
+		setInteractionSelection,
+		setLastFinalizedInteractionId,
+	]);
 
 	useEffect(() => {
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
@@ -3769,7 +3958,6 @@ export function InteractionRepl({
 		if (interactionActive) return [];
 		return defaultSelectionAccept;
 	}, [runtimeSelectionAccept, interactionActive, defaultSelectionAccept]);
-	const activePickKinds = useMemo(() => [...spatialPickKindsForActiveView(activeModelDefinitionId)], [activeModelDefinitionId]);
 	const viewObjectCount = useMemo(() => {
 		if (isShapeModelDefinition(activeModelDefinitionId)) return 0;
 		return countViewObjectsForModelDefinition(documentModel.model, mdIdForView);
@@ -4250,6 +4438,26 @@ export function InteractionRepl({
 	);
 
 	useEffect(() => {
+		const state = snapshot.state;
+		const lengthEntry = interactionLengthEntryForState(spec, state);
+		const scalarEntry = interactionScalarEntryForState(spec, state);
+		const prevLength = interactionLengthEntryForState(spec, numericEntryPrevStateRef.current);
+		const prevScalar = interactionScalarEntryForState(spec, numericEntryPrevStateRef.current);
+		const leftNumeric =
+			(prevLength && (!lengthEntry || prevLength.state !== lengthEntry.state)) ||
+			(prevScalar && (!scalarEntry || prevScalar.state !== scalarEntry.state));
+		if (leftNumeric) setCmdLine("");
+		numericEntryPrevStateRef.current = state;
+		const live = replLengthEntryLiveValue(cmdLine);
+		if (live === undefined) return;
+		if (lengthEntry) {
+			void rt.send({ kind: "set.length", value: live, modifiers: {} });
+			return;
+		}
+		if (scalarEntry) void rt.send({ kind: scalarEntry.event, value: live, modifiers: {} });
+	}, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
+
+	useEffect(() => {
 		const onWinCapture = (e: globalThis.KeyboardEvent) => {
 			if (e.defaultPrevented || e.isComposing) return;
 			const t = e.target;
@@ -4365,7 +4573,7 @@ export function InteractionRepl({
 						displayModel={mergedDisplay}
 						renderDisplayItem={renderDisplayItem}
 						selectionAccept={hostPickingEnabled ? activeSelectionAccept : []}
-						filterKindToggles={filterKindToggles}
+						filterKindToggles={viewFilterKindToggles}
 						selectionKindToggles={effectiveSelectionKindToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
@@ -4767,65 +4975,13 @@ export function InteractionRepl({
 							{viewObjectCount} object{viewObjectCount === 1 ? "" : "s"}
 						</span>
 					) : null}
-					<span>Selection method</span>
-					<div role="group" aria-label="Selection method" style={{ display: "flex", gap: 6 }}>
-						{(["rectangle", "lasso"] as const).map((method) => {
-							const active = selectionMethod === method;
-							return (
-								<button
-									key={method}
-									type="button"
-									onClick={() => setSelectionMethod(method)}
-									style={{
-										padding: "5px 8px",
-										borderRadius: 999,
-										border: active ? "1px solid #77aaff" : "1px solid #2a2a3a",
-										background: active ? "#1f3656" : "#12121c",
-										color: "#e8e8f0",
-										cursor: "pointer",
-										fontSize: 12,
-										textTransform: "capitalize",
-									}}
-								>
-									{method}
-								</button>
-							);
-						})}
-					</div>
-					<span>Show kinds</span>
-					<div role="group" aria-label="Show kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{activePickKinds.map((kind) => (
-							<label
-								key={`filter-${kind}`}
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: 4,
-									padding: "3px 6px",
-									border: "1px solid #2a2a3a",
-									borderRadius: 999,
-									background: filterKindToggles[kind] ? "#1a3040" : "#12121c",
-								}}
-							>
-								<input
-									type="checkbox"
-									checked={filterKindToggles[kind]}
-									onChange={(e) => {
-										setFilterKindToggles((prev) => ({ ...prev, [kind]: e.target.checked }));
-									}}
-								/>
-								{kind}
-							</label>
-						))}
-					</div>
-
-					<span>Selection kinds</span>
-					<div role="group" aria-label="Selection kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{activePickKinds.map((kind) => {
-							const accepted = pickKindEnabledForSelectionAccept(activeSelectionAccept, kind);
+					<span>Show</span>
+					<div role="group" aria-label="Show typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+						{modelDefinitionScope.typologies.map((typology) => {
+							const label = spatialTypologyToggleLabel(typology.id, typology.label);
 							return (
 								<label
-									key={`select-${kind}`}
+									key={`show-${typology.id}`}
 									style={{
 										display: "flex",
 										alignItems: "center",
@@ -4833,54 +4989,58 @@ export function InteractionRepl({
 										padding: "3px 6px",
 										border: "1px solid #2a2a3a",
 										borderRadius: 999,
-										opacity: accepted ? 1 : 0.45,
-										background: selectionKindToggles[kind] ? "#1a2638" : "#12121c",
+										background: filterTypologyToggles[typology.id] !== false ? "#1a3040" : "#12121c",
 									}}
 								>
 									<input
 										type="checkbox"
-										checked={selectionKindToggles[kind]}
+										checked={filterTypologyToggles[typology.id] !== false}
 										onChange={(e) => {
-											const checked = e.target.checked;
-											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
-											setSelectionMenu(null);
-											setHoveredPickKey(null);
-											if (!checked) applySelectionPrune((prev) => replPruneSelectionByKind(prev, activeModelDefinitionId, kind));
+											setFilterTypologyToggles((prev) => ({ ...prev, [typology.id]: e.target.checked }));
 										}}
 									/>
-									{kind}
+									{label}
 								</label>
 							);
 						})}
 					</div>
-					{modelDefinitionScope.selectionOperations.length ? (
-						<>
-							<span>Selection commands</span>
-							<div role="group" aria-label="Selection commands" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-								{modelDefinitionScope.selectionOperations.map((defn) => (
-									<button
-										key={defn.id}
-										type="button"
-										title={defn.id}
-										onClick={() => {
-											void rt.query(`CALL ${defn.id}({}) YIELD data.targets AS targets`);
+					<span>Selection</span>
+					<div role="group" aria-label="Selection typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+						{modelDefinitionScope.typologies.map((typology) => {
+							const label = spatialTypologyToggleLabel(typology.id, typology.label);
+							return (
+								<label
+									key={`select-${typology.id}`}
+									style={{
+										display: "flex",
+										alignItems: "center",
+										gap: 4,
+										padding: "3px 6px",
+										border: "1px solid #2a2a3a",
+										borderRadius: 999,
+										background: selectionTypologyToggles[typology.id] !== false ? "#1a2638" : "#12121c",
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={selectionTypologyToggles[typology.id] !== false}
+										onChange={(e) => {
+											const checked = e.target.checked;
+											setSelectionTypologyToggles((prev) => ({ ...prev, [typology.id]: checked }));
+											setSelectionMenu(null);
+											setHoveredPickKey(null);
+											if (!checked) {
+												applySelectionPrune((prev) =>
+													replPruneSelectionByTypology(prev, documentModel.model, activeModelDefinitionId, typology.id),
+												);
+											}
 										}}
-										style={{
-											padding: "4px 8px",
-											borderRadius: 999,
-											border: "1px solid #2a2a3a",
-											background: "#12121c",
-											color: "#e8e8f0",
-											cursor: "pointer",
-											fontSize: 12,
-										}}
-									>
-										{defn.label}
-									</button>
-								))}
-							</div>
-						</>
-					) : null}
+									/>
+									{label}
+								</label>
+							);
+						})}
+					</div>
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
 					{interactionId ? (
@@ -5106,8 +5266,8 @@ if (import.meta.vitest) {
 		it("creates snap and selection metadata for geometry targets", () => {
 			const model = new Model();
 			model.vertices.v0 = { id: "v0" as VertexRef, position: [1, 2, 3] };
-			const targets = createSpatialPickTargets(model.toJSON());
-			expect(targets).toEqual([{ kind: "vertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3] }]);
+			const targets = createSpatialPickTargets(model);
+			expect(targets).toEqual([{ kind: "vertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3], typologyId: undefined }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
 				point: [9, 9, 9],
@@ -5169,10 +5329,30 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("defaultInteractionReplChromeState seeds spatial.shape geometry edit by default", () => {
+		it("defaultInteractionReplChromeState seeds spatial.shape typology toggles by default", () => {
 			const chrome = defaultInteractionReplChromeState();
 			expect(chrome.activeModelDefinitionId).toBe(SHAPE_MODEL_DEFINITION_ID);
-			expect(chrome.filterKindToggles.vertex).toBe(true);
+			expect(chrome.filterTypologyToggles["spatial.shape.primitive.box"]).toBe(true);
+		});
+
+		it("spatialTypologyToggleLabel uses typology label pascal case", () => {
+			expect(spatialTypologyToggleLabel("energy.energy.baseplate", "Base Plate")).toBe("BasePlate");
+			expect(spatialTypologyToggleLabel("spatial.shape.primitive.box", "Box")).toBe("Box");
+		});
+
+		it("filterSpatialPickTargetsForTypologyToggles hides typology object picks", async () => {
+			const model = new Model();
+			const cell = solidRef("c0");
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			model.objects["hull"] = {
+				id: "hull" as ObjectRef,
+				typology: "energy.energy.hull",
+				primitives: { solid: String(cell) },
+			};
+			const targets = createSpatialPickTargets(model, "aec.building.energy");
+			const typologyIds = modelDefinitionTypologyIds("aec.building.energy");
+			const visible = filterSpatialPickTargetsForTypologyToggles(targets, { "energy.energy.hull": false }, typologyIds);
+			expect(visible.some((row) => row.typologyId === "energy.energy.hull")).toBe(false);
 		});
 
 		it("scopes displayed selection to activeModelDefinitionId", () => {
