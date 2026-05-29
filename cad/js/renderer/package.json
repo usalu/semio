@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@framework/playground": "workspace:*",
-    "@framework/playground-react": "workspace:*",
+    "@framework/playground-renderer-react": "workspace:*",
     "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",

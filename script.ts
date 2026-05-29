@@ -229,11 +229,11 @@ export class DevScript extends Script {
       return;
     }
     if (segments[0] === "board") {
-      runCmd("bun", ["nx", "run", "@puzzle/board:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@puzzle/2d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "scene") {
-      runCmd("bun", ["nx", "run", "@puzzle/scene:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@puzzle/3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "cad" || segments[0] === "spatial") {

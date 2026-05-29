@@ -1,19 +1,19 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@puzzle/topology",
+  "name": "@puzzle/5d-react",
   "version": "0.1.0",
   "description": "elements Ôö¼├Ç topology (board + scene)",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun nx run @puzzle/topology:dev",
-    "build": "bun nx run @puzzle/topology:build",
-    "test": "bun nx run @puzzle/topology:test"
+    "dev": "bun nx run @puzzle/5d-react:dev",
+    "build": "bun nx run @puzzle/5d-react:build",
+    "test": "bun nx run @puzzle/5d-react:test"
   },
   "dependencies": {
     "@framework/playground": "workspace:*",
-    "@puzzle/board": "workspace:*",
-    "@puzzle/scene": "workspace:*",
+    "@puzzle/2d-react": "workspace:*",
+    "@puzzle/3d-react": "workspace:*",
     "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",

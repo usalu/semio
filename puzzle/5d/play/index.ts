@@ -17,7 +17,7 @@ import {
 	type WindowMeasure,
 	type UiNode,
 } from "@framework/playground";
-import { playgroundTreePanelRootItems } from "@framework/playground-react";
+import { playgroundTreePanelRootItems } from "@framework/playground-renderer-react";
 import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
 import { buildBoardPlayHierarchySections } from "../../../board/play/index.ts";

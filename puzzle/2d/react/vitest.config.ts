@@ -7,12 +7,12 @@ const playgroundCore = resolve(root, "../../framework/playground/core/index.ts")
 const playgroundReact = resolve(root, "../../framework/playground/renderer/react/index.tsx");
 const uiCore = resolve(root, "../../ui/react/index.tsx");
 
-/** @emoji 🧪 Vitest entry for `@puzzle/board` inlined source tests (`import.meta.vitest` blocks). */
+/** @emoji 🧪 Vitest entry for `@puzzle/2d-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@framework/playground-react", replacement: playgroundReact },
+			{ find: "@framework/playground-renderer-react", replacement: playgroundReact },
 			{ find: "@framework/playground", replacement: playgroundCore },
 			{ find: "@ui/react", replacement: uiCore },
 		],

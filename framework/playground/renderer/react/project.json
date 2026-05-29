@@ -1,5 +1,5 @@
 {
-	"name": "@framework/playground-react",
+	"name": "@framework/playground-renderer-react",
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {

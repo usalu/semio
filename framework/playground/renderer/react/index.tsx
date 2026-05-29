@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 `@framework/playground-react` — Playground shell renderer: {@link PlaygroundView}, declarative tree panels, and surface hosts (depends only on `@ui/react`). */
+/** @emoji 🛝 `@framework/playground-renderer-react` — Playground shell renderer: {@link PlaygroundView}, declarative tree panels, and surface hosts (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
 import {

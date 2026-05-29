@@ -1,11 +1,11 @@
 // #region 🧲Header
-/** @emoji 🔗 `@puzzle/topology` — paired board + scene surfaces + play harness (monolith). */
+/** @emoji 🔗 `@puzzle/5d-react` — paired board + scene surfaces + play harness (monolith). */
 // #endregion 🧲Header
 
 import type { ContextMenuItem } from "@ui/react";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
-/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/board` and `@puzzle/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
+/** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/2d-react` and `@puzzle/3d-react` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
 
 import {
 	boardFixtureMetaKindCatalogBundle,
@@ -18,8 +18,8 @@ import {
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
 	type CameraState as BoardCameraState,
-} from "@puzzle/board";
-import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/board";
+} from "@puzzle/2d-react";
+import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/2d-react";
 import {
 	Canvas3D as Scene,
 	SceneAttractions,
@@ -706,7 +706,6 @@ if (import.meta.vitest) {
 	});
 }
 
-
 // #region 🛝PlayHost
 
 import React from "react";
@@ -727,7 +726,7 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-react";
+} from "@framework/playground-renderer-react";
 import {
 	TOPOLOGY_PLAY_APP_ID,
 	TOPOLOGY_PLAY_BOARD_BODY_KEY,
@@ -743,8 +742,8 @@ import {
 	buildTopologyPlayRuntime,
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
-} from "./play/index.ts";
-import "./play/globals.css";
+} from "./index.ts";
+import "./globals.css";
 
 //#region 🔖Snapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {

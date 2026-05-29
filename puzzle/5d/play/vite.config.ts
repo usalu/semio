@@ -17,11 +17,11 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@framework/playground-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground-renderer-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
 			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
 			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
-			{ find: "@puzzle/board", replacement: path.resolve(__dirname, "../../2d/index.tsx") },
-			{ find: "@puzzle/scene", replacement: path.resolve(__dirname, "../../3d/index.tsx") },
+			{ find: "@puzzle/2d-react", replacement: path.resolve(__dirname, "../../2d/index.tsx") },
+			{ find: "@puzzle/3d-react", replacement: path.resolve(__dirname, "../../3d/index.tsx") },
 		],
 	},
 	server: {

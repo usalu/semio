@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/scene",
+  "name": "@puzzle/3d-react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

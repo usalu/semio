@@ -34,7 +34,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@framework/playground-react", replacement: resolve(dir, "../../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground-renderer-react", replacement: resolve(dir, "../../../../framework/playground/renderer/react/index.tsx") },
 			{ find: "@framework/playground", replacement: resolve(dir, "../../../../framework/playground/core/index.ts") },
 			{ find: "@ui/react", replacement: resolve(dir, "../../../../ui/react/index.tsx") },
 			{ find: "@cad/js-core", replacement: coreEntry },

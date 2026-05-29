@@ -58,7 +58,7 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{ find: "@ui/react", replacement: path.resolve(__dirname, "../../../ui/react/index.tsx") },
-			{ find: "@framework/playground-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
+			{ find: "@framework/playground-renderer-react", replacement: path.resolve(__dirname, "../../../framework/playground/renderer/react/index.tsx") },
 			{ find: "@framework/playground", replacement: path.resolve(__dirname, "../../../framework/playground/core/index.ts") },
 			{ find: /^three$/, replacement: threeModule },
 			{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },

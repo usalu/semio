@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@framework/playground-react` task router — `bun ./script.ts test`. */
+/** @emoji 🧭 `@framework/playground-renderer-react` task router — `bun ./script.ts test`. */
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

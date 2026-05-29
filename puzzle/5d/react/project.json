@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/topology",
+  "name": "@puzzle/5d-react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

@@ -4,7 +4,7 @@ overview: Re-layer the puzzle and framework/playground packages so renderers are
 todos:
   - id: pure-renderers
     content: Rename puzzle/{2d,3d,5d}/react to @puzzle/{2d,3d,5d}-react; drop @framework/playground deps and imports so they depend only on @ui/react (5d also on 2d/3d-react); fix project.json name/cwd and vitest aliases; rename @puzzle/board-wasm -> @puzzle/2d-wasm.
-    status: pending
+    status: in_progress
   - id: playground-renderer
     content: Rename @framework/playground-react -> @framework/playground-renderer-react; add @puzzle/{2d,3d,5d}-react deps and register the puzzle canvases via registerUiBoardSurfaceHost/registerUiScene3DSurfaceHost; keep exporting renderPlayground.
     status: pending

@@ -25,7 +25,7 @@ import {
 	type SidePanelTabConfig,
 	type TreeDataSection,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-react";
+} from "@framework/playground-renderer-react";
 import { ListTree, Shapes } from "lucide-react";
 import {
 	SPATIAL_PLAY_APP_ID,

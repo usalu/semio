@@ -1,4 +1,3 @@
-import { CommandBus, ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@framework/playground";
 import { Button, Expertise, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
 import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
@@ -51,25 +50,6 @@ import {
   type Scene as ThreeScene,
   type WebGLRenderer,
 } from "three";
-import { registerTabIcon, registerUiScene3DSurfaceHost, registerWindowBody, useApp } from "@framework/playground-react";
-import nakaginSceneFixtureJson from "./play/fixtures/nakagin-capsule-tower.scene.json";
-import "./play/globals.css";
-import {
-  SCENE_PLAY_BODY_KEY,
-  SCENE_PLAY_CONTROLLER_ID,
-  SCENE_PLAY_EMPTY_SELECTION,
-  SCENE_PLAY_ICON_HIERARCHY,
-  SCENE_PLAY_ICON_INSPECTOR,
-  SCENE_PLAY_ICON_KINDS,
-  SCENE_PLAY_ICON_SETTINGS,
-  SCENE_PLAY_SCENE_SURFACE_ID,
-  ScenePlayShellController,
-  buildScenePlayDeclarativeBody,
-  parseKindCatalogs,
-  parseKindCompatibility,
-  setScenePlaySurfaceHostRegistrar,
-  type ScenePlaySnapshot,
-} from "./play/index.ts";
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
@@ -4914,7 +4894,64 @@ if (import.meta.vitest) {
   });
 }
 
-// #region 🛝PlayHost
+/** @emoji 🛝 Scene play React host — entry-only via play/main.ts. */
+import { Expertise, type FooterItem } from "@framework/playground";
+import {
+	Button,
+	Input,
+	Label,
+	LevelProvider,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	applyElementsSurfaceChrome,
+	getLevelBgClass,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+} from "@ui/react";
+import { useGLTF } from "@react-three/drei";
+import React, { useCallback, useMemo, useSyncExternalStore, type ReactElement } from "react";
+import {
+	registerTabIcon,
+	registerUiScene3DSurfaceHost,
+	registerWindowBody,
+	useApp,
+	type UiScene3DHostSurfaceNode,
+} from "@framework/playground-renderer-react";
+import { ClipboardList, ListTree, Settings, Tags } from "lucide-react";
+import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
+import {
+	PlaySceneCanvas,
+	SceneObjectStateProvider,
+	parseFixtureV1,
+	applyConnectToSceneFixture,
+	applyRelocateToSceneFixture,
+	blockedVortexFullIdsFromAttractions,
+	parseKindCatalogs,
+	parseKindCompatibility,
+	sceneLodCanvasProps,
+	sliderValueFromLod,
+	DEFAULT_MANUAL_LOD,
+	type FixtureV1,
+	type RelocatePayload,
+} from "../react/index.tsx";
+import {
+	SCENE_PLAY_BODY_KEY,
+	SCENE_PLAY_CONTROLLER_ID,
+	SCENE_PLAY_EMPTY_SELECTION,
+	SCENE_PLAY_ICON_HIERARCHY,
+	SCENE_PLAY_ICON_INSPECTOR,
+	SCENE_PLAY_ICON_KINDS,
+	SCENE_PLAY_ICON_SETTINGS,
+	SCENE_PLAY_SCENE_SURFACE_ID,
+	ScenePlayShellController,
+	buildScenePlayDeclarativeBody,
+	setScenePlaySurfaceHostRegistrar,
+	type ScenePlaySnapshot,
+} from "./index.ts";
+
 // #region ­ƒº▓Header
 // ­ƒÆ╗ elements/client/lib/system/renderer/react/scene/scene-play-host.tsx ÔÇö Host outside play bundle: scene play React tree and mount.
 // #endregion ­ƒº▓Header

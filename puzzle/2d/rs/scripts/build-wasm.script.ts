@@ -33,7 +33,7 @@ if (process.env.ELEMENTS_BOARD_SKIP_WASM_BUILD === "1") {
 
 if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
 const pkgJson = {
-	name: "@puzzle/board-wasm",
+	name: "@puzzle/2d-wasm",
 	type: "module",
 	version: "0.1.0",
 	files: ["puzzle_board_bg.wasm", "puzzle_board.js", "puzzle_board.d.ts", "puzzle_board_bg.wasm.d.ts"],

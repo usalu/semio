@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📋 `@puzzle/board` — WASM board renderer + React canvas + play harness (monolith). */
+/** @emoji 📋 `@puzzle/2d-react` — WASM board renderer + React canvas (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
 import {
@@ -23,19 +23,28 @@ import {
 	type ElementsSurfaceTheme,
 	type TreeDataSection,
 } from "@ui/react";
+
 import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
 import {
 	PlaygroundView,
-	PureSidePanelTabDefinition,
-	StaticTreePanelDefinition,
 	mountPlaygroundApp,
 	registerTabIcon,
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
-	type SidePanelTabConfig,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-react";
+} from "@framework/playground-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useSyncExternalStore,
+	type ReactNode,
+} from "react";
 import {
 	BOARD_PLAY_APP_ID,
 	BOARD_PLAY_BOARD_SURFACE_ID,
@@ -46,14 +55,14 @@ import {
 	BOARD_PLAY_DEFAULT_FIXTURE,
 	BOARD_PLAY_HIERARCHY_TAB_ID,
 	BoardPlayShellController,
-	type BoardPlayHostBridge,
 	buildBoardPlayHierarchySections,
 	buildBoardPlayOverviewDeclarativeBody,
 	buildBoardPlayDetailDeclarativeBody,
 	buildBoardPlaySelectionDeclarativeBody,
 	buildBoardPlayRuntime,
-} from "./play/index.ts";
-import type { ReactElement } from "react";
+	type BoardPlayPaneId,
+} from "../play/index.ts";
+
 import React from "react";
 import Reconciler from "react-reconciler";
 import {
@@ -5521,7 +5530,7 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	registerSuspenseInstanceRetry: () => { },
 	releaseResource: () => null,
 	releaseSingletonInstance: () => null,
-	rendererPackageName: "@puzzle/board",
+	rendererPackageName: "@puzzle/2d-react",
 	rendererVersion: "0.1.0",
 	replaceContainerChildren: () => { },
 	resetFormInstance: () => { },
@@ -8141,15 +8150,13 @@ if (boardReactVitest) {
 }
 //#endregion 🔖Vitest
 
-
-// #region 🛝PlayHost
 const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
 	boardFixtureMetaKindCatalogBundle(BOARD_PLAY_DEFAULT_FIXTURE) ?? {},
 );
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "./play/index.ts";
+export type { BoardPlayPaneId } from "./index.ts";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [

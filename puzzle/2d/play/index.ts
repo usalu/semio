@@ -21,7 +21,7 @@ import {
 	type WindowLayout,
 } from "@framework/playground";
 
-import { playgroundTreePanelRootItems } from "@framework/playground-react";
+import { playgroundTreePanelRootItems } from "@framework/playground-renderer-react";
 import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
