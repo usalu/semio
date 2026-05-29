@@ -700,6 +700,7 @@ function PlaySession({
 	);
 	return (
 		<InteractionRepl
+			fillHost
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={onInteractionId}
@@ -1212,7 +1213,7 @@ function SpatialPlaySurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceN
 		return <div style={{ padding: 8, fontSize: 12, color: "#f88" }}>Invalid spatial play surface binding</div>;
 	}
 	return (
-		<div style={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0, overflow: "hidden" }}>
+		<div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">
 			<PlayApp />
 		</div>
 	);

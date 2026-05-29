@@ -2374,21 +2374,28 @@ export function SpatialPickGeometryLayer({
 	activeModelDefinitionId = SHAPE_MODEL_DEFINITION_ID,
 	modelDefinitionRevision = 0,
 	geometryPreviewTransform = null,
+	selectionAccept = [],
+	selectionKindToggles = {},
 	filterKindToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
+	hostSelectionEnabled = false,
+	onSelectionRequest,
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly activeModelDefinitionId?: string | null;
 	readonly modelDefinitionRevision?: number;
 	readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly selectionAccept?: readonly ModelEntityKind[];
+	readonly selectionKindToggles?: SpatialPickKindToggles;
 	/** @emoji 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
 	readonly filterKindToggles?: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly selectedTargetKeys?: ReadonlySet<string> | null;
+	readonly hostSelectionEnabled?: boolean;
+	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 }): ReactNode {
 	const topoRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
@@ -2409,6 +2416,23 @@ export function SpatialPickGeometryLayer({
 	const renderedTargets = useMemo(() => {
 		return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys);
 	}, [viewTargets, filterKindToggles, pinnedTargetKeys]);
+	const selectableTargets = useMemo(
+		() => filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles),
+		[viewTargets, selectionAccept, selectionKindToggles],
+	);
+	const requestSelection = useCallback(
+		(target: SpatialPickTarget, event: ThreeEvent<PointerEvent>) => {
+			if (!hostSelectionEnabled || !onSelectionRequest || selectionAccept.length === 0) return;
+			event.stopPropagation();
+			onSelectionRequest({
+				targets: [target],
+				point: target.point,
+				client: { x: event.nativeEvent.clientX, y: event.nativeEvent.clientY },
+				modifiers: pointerModifiersFromNativeEvent(event.nativeEvent),
+			});
+		},
+		[hostSelectionEnabled, onSelectionRequest, selectionAccept.length],
+	);
 	return (
 		<group>
 			{renderedTargets.map((target) => (
@@ -2421,7 +2445,73 @@ export function SpatialPickGeometryLayer({
 					selectedTargetKeys={selectedTargetKeys}
 				/>
 			))}
+			{hostSelectionEnabled && onSelectionRequest
+				? selectableTargets.map((target) => (
+						<SpatialPickHitTarget key={`hit:${target.kind}:${target.id}`} target={target} geometryPreviewTransform={geometryPreviewTransform} onPick={requestSelection} />
+					))
+				: null}
 		</group>
+	);
+}
+
+/** @emoji 🖱️ Invisible pick proxy for a spatial target (visual highlight is on {@link SpatialPickTargetNode}). */
+function SpatialPickHitTarget({
+	target,
+	geometryPreviewTransform = null,
+	onPick,
+}: {
+	readonly target: SpatialPickTarget;
+	readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
+	readonly onPick: (target: SpatialPickTarget, event: ThreeEvent<PointerEvent>) => void;
+}): ReactNode {
+	const mapPt = geometryPreviewTransform ?? ((p: Vec3) => p);
+	const displayPoint = mapPt(target.point);
+	const displayPoints = target.points?.map(mapPt);
+	if (target.kind === "vertex") {
+		return (
+			<mesh
+				position={displayPoint}
+				visible={false}
+				onPointerDown={(event) => {
+					if (event.button !== 0) return;
+					onPick(target, event);
+				}}
+			>
+				<sphereGeometry args={[0.14, 8, 8]} />
+				<meshBasicMaterial transparent opacity={0} depthWrite={false} />
+			</mesh>
+		);
+	}
+	if (displayPoints && displayPoints.length >= 2 && target.kind === "edge") {
+		return (
+			<Line
+				visible={false}
+				points={displayPoints.map((p) => [p[0], p[1], p[2]])}
+				lineWidth={12}
+				onPointerDown={(event) => {
+					if (event.button !== 0) return;
+					onPick(target, event);
+				}}
+			>
+				<meshBasicMaterial transparent opacity={0} />
+			</Line>
+		);
+	}
+	const bounds = displayPoints ? targetBounds(displayPoints) : null;
+	if (!bounds) return null;
+	return (
+		<mesh
+			position={bounds.center}
+			scale={bounds.size}
+			visible={false}
+			onPointerDown={(event) => {
+				if (event.button !== 0) return;
+				onPick(target, event);
+			}}
+		>
+			<boxGeometry args={[1, 1, 1]} />
+			<meshBasicMaterial transparent opacity={0} depthWrite={false} />
+		</mesh>
 	);
 }
 // #endregion 🧲GeometryInteraction
@@ -2754,6 +2844,15 @@ function InvalidateOnRevision({ revision }: { readonly revision: string | number
 	return null;
 }
 
+/** @emoji 🎯 Redraws when host selection pick keys change (demand frameloop). */
+function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selectionKey: string }): null {
+	const invalidate = useThree((state) => state.invalidate);
+	useEffect(() => {
+		invalidate();
+	}, [selectionKey, invalidate]);
+	return null;
+}
+
 /** @emoji 🔄 Keeps demand frameloop alive while the camera moves (playground `Invalidator`). */
 function SpatialInvalidator(): null {
 	const { controls, camera } = useThree();
@@ -2944,6 +3043,9 @@ export function InteractionSpatialView({
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
+	selectionKindToggles = {},
+	hostSelectionEnabled = false,
+	onSelectionRequest,
 	onCameraNavigate,
 	onCommittedFacePointerDown,
 	onCommittedFacePointerMove,
@@ -3040,7 +3142,7 @@ export function InteractionSpatialView({
 		<>
 			{slots?.beforeScene}
 			<InvalidateOnRevision
-				revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}`}
+				revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`}
 			/>
 			<SpatialInvalidator />
 			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
@@ -3070,10 +3172,13 @@ export function InteractionSpatialView({
 					modelDefinitionRevision={modelDefinitionRevision}
 					geometryPreviewTransform={geometryPreviewTransform}
 					selectionAccept={selectionAccept}
+					selectionKindToggles={selectionKindToggles}
 					filterKindToggles={filterKindToggles}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
 					selectedTargetKeys={selectedTargetKeys}
+					hostSelectionEnabled={hostSelectionEnabled}
+					onSelectionRequest={onSelectionRequest}
 				/>
 			) : null}
 			{heightMoveOn && origin && corner ? (
@@ -3635,6 +3740,8 @@ export interface InteractionReplLayoutProps {
 	readonly rootStyle?: CSSProperties;
 	readonly asideStyle?: CSSProperties;
 	readonly showAside?: boolean;
+	/** @emoji 📐 Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
+	readonly fillHost?: boolean;
 	/** @emoji 🙈 Hides model-definition and transformation dropdowns (e.g. play hosts them in `asideExtra`). */
 	readonly hideModelDefinitionControls?: boolean;
 	readonly frameloop?: InteractionCanvasProps["frameloop"];
@@ -3796,6 +3903,8 @@ export function InteractionRepl({
 	rootStyle,
 	asideStyle,
 	showAside = true,
+	fillHost = false,
+	asideHost = null,
 	hideModelDefinitionControls = false,
 	frameloop = "always",
 	canvas: canvasOverrides,
@@ -3933,8 +4042,12 @@ export function InteractionRepl({
 			interactionSelectionByState,
 		],
 	);
-	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
+	const selectedPickKeys = useMemo(() => {
+		const keys = new Set(displayedSelectionTargets.map(spatialSelectionTargetKey));
+		return pinnedPickTargetKeys(keys);
+	}, [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
+	const selectionInvalidateKey = useMemo(() => [...selectedPickKeys].sort().join("\0"), [selectedPickKeys]);
 	const geometryPreviewTransform = useMemo(() => geometryPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
 	const pickSourceGeometry = geometry ?? pickGeometryProp;
 	const pickSourceRevision =
@@ -4138,14 +4251,25 @@ export function InteractionRepl({
 			setInteractionSelectionByState((prev) => (Object.keys(prev).length === 0 ? prev : {}));
 			return;
 		}
+		const stateId = snapshot.state;
 		const machineTargets = replInteractionSelectionFromContext(snapshot.context);
 		setInteractionSelectionByState((prev) => {
-			const stateId = snapshot.state;
 			const current = prev[stateId] ?? [];
+			if (hostPickingEnabled && machineTargets.length === 0 && current.length > 0) {
+				return prev;
+			}
 			if (replSelectionTargetsEqual(current, machineTargets)) return prev;
 			return replWithInteractionSelectionTargets(prev, stateId, machineTargets);
 		});
-	}, [interactionId, interactionActive, snapshot.revision, snapshot.state, snapshot.context, setInteractionSelectionByState]);
+	}, [
+		interactionId,
+		interactionActive,
+		hostPickingEnabled,
+		snapshot.revision,
+		snapshot.state,
+		snapshot.context,
+		setInteractionSelectionByState,
+	]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const defaultSelectionAccept = useMemo(
@@ -4869,15 +4993,19 @@ export function InteractionRepl({
 		<div
 			style={{
 				display: "flex",
-				height: "100vh",
+				flexDirection: fillHost ? "column" : "row",
+				height: fillHost ? "100%" : "100vh",
+				minHeight: 0,
+				width: "100%",
 				fontFamily: "system-ui",
 				color: "#e8e8f0",
 				background: "#080810",
 				...rootStyle,
 			}}
 		>
-			<div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+			<div style={{ flex: 1, minWidth: 0, minHeight: 0, position: "relative" }}>
 				<InteractionCanvas {...canvasOverrides} frameloop={frameloop} onCanvasReady={handleCanvasReady}>
+					<InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
 					<InteractionSpatialView
 						previewKernel={rt.previewKernel()}
 						snapshot={snapshot}
@@ -5011,10 +5139,13 @@ export function InteractionRepl({
 			{showAside ? (
 			<aside
 				style={{
-					width: 360,
+					width: fillHost ? "100%" : 360,
+					maxHeight: fillHost ? "45%" : undefined,
+					flexShrink: fillHost ? 0 : undefined,
 					padding: 12,
 					background: "#12121c",
-					borderLeft: "1px solid #2a2a3a",
+					borderLeft: fillHost ? undefined : "1px solid #2a2a3a",
+					borderTop: fillHost ? "1px solid #2a2a3a" : undefined,
 					display: "flex",
 					flexDirection: "column",
 					gap: 10,
@@ -5540,7 +5671,7 @@ export function InteractionRepl({
 
 /** @emoji ­ƒ╝´©Å Canvas-only {@link InteractionRepl} (no model-definition aside); full host props and `on*` callbacks. */
 export function InteractionReplViewport(props: InteractionReplProps): ReactNode {
-	return <InteractionRepl {...props} showAside={false} />;
+	return <InteractionRepl {...props} showAside={false} fillHost />;
 }
 
 export interface SelectionAttributesPanelProps {
@@ -5946,6 +6077,12 @@ if (import.meta.vitest) {
 				),
 			).toEqual([{ kind: "wire", id: "w1", editable: true }]);
 			expect(replRendererSelectionTargets(rendererByModel, "aec.building.energy")).toEqual([{ kind: "object", id: "o0", editable: false }]);
+		});
+
+		it("maps selection target keys to pick target keys for highlights", () => {
+			const keys = pinnedPickTargetKeys(new Set(["shell:sh0" as string]));
+			expect(keys.has("shell:sh0")).toBe(true);
+			expect(keys.has("face:sh0")).toBe(true);
 		});
 
 		it("keeps interaction selection isolated per state", () => {

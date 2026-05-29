@@ -3,7 +3,9 @@
 // #endregion 🧲Header
 
 import {
+	Button,
 	ContextMenuController,
+	IconSelector,
 	Label,
 	Input,
 	Select,
@@ -11,6 +13,7 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
+	Slider,
 	LevelProvider,
 	getLevelBgClass,
 	useElementsSurfaceChrome,
@@ -8617,12 +8620,12 @@ function BoardPlaySettingsPanel(): ReactElement {
             </Label>
           </>
         )}
-        <Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
+        <Button className="h-8 w-full text-xs" id="board-play-redraw-nodes" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
           Redraw nodes
         </Button>
         <div className="text-muted-foreground border-t border-element pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
         <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
-        <Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
+        <Button className="h-8 w-full text-xs" id="board-play-redraw-handles" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
           Redraw handles
         </Button>
         <p className="text-muted-foreground text-[11px] leading-snug">
@@ -10562,15 +10565,21 @@ function BoardPlayInner(): ReactElement {
   ]);
   // #endregion 🔖ToolbarHostBridge
 
+  const shellValueRef = useRef(shellValue);
+  shellValueRef.current = shellValue;
+  const boardPlaySelectionKey = useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
+  const boardPlayWorkbenchTab = useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
+  const boardPlaySettingsTab = useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
+  const boardPlayInspectorTab = useMemo(
+    () => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(),
+    [boardPlaySelectionKey],
+  );
   const augmentPanelTabs = useMemo(
     () => ({
-      workbench: [new BoardPlayLibraryPanelDefinition().resolveTab()],
-      details: [
-        new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValue)).resolveTab(),
-        new BoardPlaySettingsPanelDefinition().resolveTab(),
-      ],
+      workbench: [boardPlayWorkbenchTab],
+      details: [boardPlayInspectorTab, boardPlaySettingsTab],
     }),
-    [shellValue],
+    [boardPlayInspectorTab, boardPlaySettingsTab, boardPlayWorkbenchTab],
   );
 
   return (

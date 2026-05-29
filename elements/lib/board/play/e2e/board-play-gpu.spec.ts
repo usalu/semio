@@ -4,7 +4,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-async function gotoBoardPlayReady(page: Page): Promise<void> {
+async function gotoBoardPlayShell(page: Page): Promise<void> {
 	const errors: string[] = [];
 	page.on("pageerror", (error) => errors.push(error.message));
 	await page.goto("/", { waitUntil: "load", timeout: 180_000 });
@@ -19,6 +19,11 @@ async function gotoBoardPlayReady(page: Page): Promise<void> {
 		await workbenchToggle.click();
 	}
 	await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 60_000 });
+}
+
+async function gotoBoardPlayReady(page: Page): Promise<void> {
+	await gotoBoardPlayShell(page);
+	await expect(page.locator('[data-testid="board-canvas"]').first()).toBeVisible({ timeout: 120_000 });
 	await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
 }
 
@@ -77,17 +82,15 @@ test.describe("board play", () => {
 		page.on("pageerror", (err) => {
 			errors.push(err.message);
 		});
-		await gotoBoardPlayReady(page);
+		await gotoBoardPlayShell(page);
 		const handlesToolbar = page.locator('button[title^="Redraw handles"]');
 		await expect(handlesToolbar).toBeVisible({ timeout: 120_000 });
 		await handlesToolbar.click();
 		await page.locator("#board-play-settings").click();
-		const redrawNodes = page.getByRole("button", { name: "Redraw nodes", exact: true });
-		const redrawHandlesPanel = page.getByRole("button", { name: "Redraw handles", exact: true });
-		await expect(redrawNodes).toBeVisible({ timeout: 120_000 });
-		await expect(redrawHandlesPanel).toBeVisible();
-		await redrawNodes.click();
-		await redrawHandlesPanel.click();
+		await expect(page.locator("#board-play-redraw-nodes")).toBeVisible({ timeout: 120_000 });
+		await expect(page.locator("#board-play-redraw-handles")).toBeVisible();
+		await page.locator("#board-play-redraw-nodes").click();
+		await page.locator("#board-play-redraw-handles").click();
 		await handlesToolbar.click();
 		await page.waitForTimeout(100);
 		expect(errors.filter((text) => !text.includes("[DEBUG] BoardRenderer GPU surface init failed NoCompatibleDevice"))).toEqual([]);

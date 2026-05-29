@@ -1273,7 +1273,8 @@ type ObjectStateAction =
 	| { readonly type: "syncPoses"; readonly fixture: FixtureV1 }
 	| { readonly type: "relocate"; readonly payload: RelocatePayload }
 	| { readonly type: "addAttraction"; readonly attraction: AttractionProps }
-	| { readonly type: "removeObject"; readonly objectId: string };
+	| { readonly type: "removeObject"; readonly objectId: string }
+	| { readonly type: "removeObjects"; readonly objectIds: readonly string[] };
 
 function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, ObjectRecord> {
 	const map = new Map<string, ObjectRecord>();
@@ -1391,6 +1392,22 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 				const s = parseVortexFullId(attraction.attracting).objectId;
 				const tg = parseVortexFullId(attraction.attracted).objectId;
 				return s !== action.objectId && tg !== action.objectId;
+			});
+			return buildSnapshot(records, attractions, state.version + 1);
+		}
+		case "removeObjects": {
+			if (action.objectIds.length === 0) {
+				return state;
+			}
+			const remove = new Set(action.objectIds);
+			const records = new Map(state.records);
+			for (const objectId of remove) {
+				records.delete(objectId);
+			}
+			const attractions = state.attractions.filter((attraction) => {
+				const s = parseVortexFullId(attraction.attracting).objectId;
+				const tg = parseVortexFullId(attraction.attracted).objectId;
+				return !remove.has(s) && !remove.has(tg);
 			});
 			return buildSnapshot(records, attractions, state.version + 1);
 		}
@@ -1546,13 +1563,29 @@ export function SceneObjectStateProvider(props: {
 			syncedFixtureRevisionRef.current = props.fixtureRevision;
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
 			syncedPoseFingerprintRef.current = poseFingerprint;
-			dispatch({ type: "init", fixture: props.fixture });
+			const prevIds = new Set(snapshot.records.keys());
+			const nextIds = new Set(props.fixture.objects.map((object) => object.id));
+			const removed = [...prevIds].filter((id) => !nextIds.has(id));
+			const added = [...nextIds].filter((id) => !prevIds.has(id));
+			if (removed.length > 0 && added.length === 0) {
+				dispatch({ type: "removeObjects", objectIds: removed });
+			} else {
+				dispatch({ type: "init", fixture: props.fixture });
+			}
 			return;
 		}
 		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
 			syncedPoseFingerprintRef.current = poseFingerprint;
-			dispatch({ type: "init", fixture: props.fixture });
+			const prevIds = new Set(snapshot.records.keys());
+			const nextIds = new Set(props.fixture.objects.map((object) => object.id));
+			const removed = [...prevIds].filter((id) => !nextIds.has(id));
+			const added = [...nextIds].filter((id) => !prevIds.has(id));
+			if (removed.length > 0 && added.length === 0) {
+				dispatch({ type: "removeObjects", objectIds: removed });
+			} else {
+				dispatch({ type: "init", fixture: props.fixture });
+			}
 			return;
 		}
 		if (syncedPoseFingerprintRef.current === poseFingerprint) {
@@ -1560,7 +1593,7 @@ export function SceneObjectStateProvider(props: {
 		}
 		syncedPoseFingerprintRef.current = poseFingerprint;
 		dispatch({ type: "syncPoses", fixture: props.fixture });
-	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
+	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint, snapshot.records]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			skipExternalPoseSyncRef.current = true;
