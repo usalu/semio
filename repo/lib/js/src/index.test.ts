@@ -6,6 +6,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
+import { BundleScript, ScriptRouter, findRepoRoot } from "./bundle-script.ts";
 import { defineLint } from "./script.ts";
 import type { FileLinter } from "./linter.ts";
 import {
@@ -36,6 +37,25 @@ describe("Neo4j graph database registry", () => {
     const names = getAllNeo4jGraphExportSpecs(env).map((s) => joinNeo4jGraphDatabaseName(s));
     expect(names).toContain("foo");
     expect(names).toContain("bar-baz");
+  });
+});
+
+describe("bundle-script", () => {
+  test("ScriptRouter usage lists registered commands", () => {
+    class A extends BundleScript {
+      run(): void {}
+    }
+    const router = new ScriptRouter(import.meta.dir).register("a", A).register("b", A);
+    expect(router.hasCommands()).toBe(true);
+    expect(router.usage()).toContain("a");
+    expect(router.usage()).toContain("b");
+  });
+
+  test("findRepoRoot reaches monorepo from repo/lib/js/src", () => {
+    const root = findRepoRoot(import.meta.dir);
+    const { existsSync } = require("node:fs");
+    const { join } = require("node:path");
+    expect(existsSync(join(root, "nx.json"))).toBe(true);
   });
 });
 

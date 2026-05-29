@@ -1,18 +1,25 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@framework/playground-renderer-react` task router — `bun ./script.ts test`. */
-import { spawnSync } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+/** 🧭 `@framework/playground-renderer-react` task router: `bun ./script.ts test|policy`. */
+import type { FileLinter } from "../../../../repo/lib/js/src/linter.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/dependency-boundary.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/src/cli.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/bundle-script.ts";
+import { defineLint } from "../../../../repo/lib/js/src/script.ts";
 
-const command = process.argv[2];
-const here = dirname(fileURLToPath(import.meta.url));
+export const policyFile = "index.tsx";
 
-if (command === "test") {
-	const result = spawnSync("bun", ["x", "vitest", "run", "--config", join(here, "vitest.config.ts"), "--passWithNoTests"], {
-		stdio: "inherit",
-		cwd: here,
-	});
-	process.exit(result.status ?? 1);
+export const policy = defineLint("@framework/playground-renderer-react-index", (l: FileLinter) => {
+  const repoRoot = getWorkspaceRoot();
+  const file = l.path();
+  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+});
+
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runVitest(this.root, segments);
+  }
 }
-console.error("usage: bun ./script.ts test");
-process.exit(1);
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url);

@@ -2,7 +2,8 @@
 /**
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
-import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { Script, devToolingEnv, runCmd, tryRun } from "./repo/lib/js/src/bundle-script.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -14,39 +15,7 @@ const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, ".repo", "🎫", "26", "05", "30", "ONLY-SCRIPT-TS-IN-MONOREPO", "embedded");
 
-//#region 🔖ScriptFramework
-/** 🧭Abstract workspace command; `run` receives argv segments after the verb (e.g. `dev mcp` → `["mcp"]`). */
-export abstract class Script {
-  constructor(protected readonly root: string) {}
-  abstract run(segments: string[]): void | Promise<void>;
-}
-
-function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  execFileSync(cmd, args, {
-    stdio: "inherit",
-    cwd: opts.cwd ?? WORKSPACE_ROOT,
-    env: opts.env ?? process.env,
-  });
-}
-
-function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
-  const env = { ...process.env, ...extra };
-  delete env.NODE_OPTIONS;
-  delete env.VSCODE_INSPECTOR_OPTIONS;
-  env.NX_NATIVE_COMMAND_RUNNER ??= "false";
-  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
-  env.NX_TUI ??= "false";
-  return env;
-}
-
-function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  try {
-    runCmd(cmd, args, opts);
-  } catch {
-    /* optional */
-  }
-}
-//#endregion 🔖ScriptFramework
+export { Script };
 
 //#region 🔖NativeOsScript
 /** 🖥️Runs archived native bootstrap shells from the only-script.ts ticket embed (setup|start). */

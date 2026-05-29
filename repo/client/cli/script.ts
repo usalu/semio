@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Repo CLI bundle policy: `bun ./script.ts policy` lints `main.go`. */
 import type { FileLinter } from "../../lib/js/src/linter.ts";
-import { dispatchPolicyArgv } from "../../lib/js/src/policy-cli.ts";
+import { runPolicyOnlyMain } from "../../lib/js/src/bundle-script.ts";
 import { defineLint } from "../../lib/js/src/script.ts";
 
 export const policyFile = "main.go";
@@ -23,10 +23,4 @@ export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
   return [];
 });
 
-const segs = process.argv.slice(2);
-if (await dispatchPolicyArgv(segs, import.meta.url)) {
-  /* exited */
-} else {
-  console.error("usage: bun ./script.ts policy");
-  process.exit(1);
-}
+await runPolicyOnlyMain(import.meta.url);

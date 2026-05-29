@@ -20,8 +20,6 @@ import {
 	parseFixtureV1,
 	applyConnectToSceneFixture,
 	blockedVortexFullIdsFromAttractions,
-	parseKindCatalogs,
-	parseKindCompatibility,
 	sceneLodCanvasProps,
 	sliderValueFromLod,
 	DEFAULT_MANUAL_LOD,
@@ -39,6 +37,8 @@ import {
 	SCENE_PLAY_SCENE_SURFACE_ID,
 	ScenePlayShellController,
 	buildScenePlayDeclarativeBody,
+	parseKindCatalogs,
+	parseKindCompatibility,
 	type ScenePlaySnapshot,
 } from "../../../../../puzzle/3d/play/index.ts";
 

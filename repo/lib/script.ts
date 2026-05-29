@@ -4,7 +4,7 @@ import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { FolderLinter } from "./js/src/linter.ts";
 import { getWorkspaceRoot } from "./js/src/cli.ts";
-import { dispatchPolicyArgv } from "./js/src/policy-cli.ts";
+import { runPolicyOnlyMain } from "./js/src/bundle-script.ts";
 import { defineLint } from "./js/src/script.ts";
 
 export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
@@ -27,10 +27,4 @@ export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
   ];
 });
 
-const segs = process.argv.slice(2);
-if (await dispatchPolicyArgv(segs, import.meta.url)) {
-  /* exited */
-} else {
-  console.error("usage: bun ./script.ts policy");
-  process.exit(1);
-}
+await runPolicyOnlyMain(import.meta.url);

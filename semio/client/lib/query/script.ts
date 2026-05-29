@@ -2,14 +2,11 @@
 /** 🏛️ `@semio/architect` — `bun script.ts <build|test|wasm>`. */
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
 
-const root = resolve(import.meta.dir);
-const bun = process.execPath;
-const pkgDir = join(root, "pkg");
-const pkgJsonPath = join(pkgDir, "package.json");
-
-function runWasmBuild(): void {
+function runWasmBuild(root: string): void {
+  const pkgDir = join(root, "pkg");
   if (process.env.SEMIO_SKIP_WASM_BUILD === "1") {
     console.log("[architect] SEMIO_SKIP_WASM_BUILD=1 → skipping wasm-pack build");
   } else {
@@ -38,7 +35,7 @@ function runWasmBuild(): void {
     types: "architect.d.ts",
     sideEffects: ["./snippets/*"],
   };
-  writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
+  writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
   const wasmPath = join(pkgDir, "architect_bg.wasm");
   if (existsSync(wasmPath)) {
@@ -50,19 +47,28 @@ function runWasmBuild(): void {
   }
 }
 
-function run(cmd: string, args: string[]): void {
-  execFileSync(cmd, args, { stdio: "inherit", cwd: root });
+class WasmScript extends BundleScript {
+  run(): void {
+    runWasmBuild(this.root);
+  }
 }
 
-const sub = process.argv[2] ?? "test";
-if (sub === "build") {
-  runWasmBuild();
-  run("cargo", ["build", "--release"]);
-} else if (sub === "wasm") {
-  runWasmBuild();
-} else if (sub === "test") {
-  run("cargo", ["test", ...process.argv.slice(3)]);
-} else {
-  console.error("usage: bun script.ts <build|test|wasm>");
-  process.exit(1);
+class BuildScript extends BundleScript {
+  run(): void {
+    runWasmBuild(this.root);
+    execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: this.root });
+  }
 }
+
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: this.root });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("wasm", WasmScript)
+  .register("build", BuildScript)
+  .register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

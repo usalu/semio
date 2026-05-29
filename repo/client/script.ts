@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { BundleLinter } from "../lib/js/src/linter.ts";
 import { getWorkspaceRoot } from "../lib/js/src/cli.ts";
-import { dispatchPolicyArgv } from "../lib/js/src/policy-cli.ts";
+import { runPolicyOnlyMain } from "../lib/js/src/bundle-script.ts";
 import { defineLint } from "../lib/js/src/script.ts";
 
 export const policy = defineLint("repo-client-bundle", (l: BundleLinter) => {
@@ -21,10 +21,4 @@ export const policy = defineLint("repo-client-bundle", (l: BundleLinter) => {
   ];
 });
 
-const segs = process.argv.slice(2);
-if (await dispatchPolicyArgv(segs, import.meta.url)) {
-  /* exited */
-} else {
-  console.error("usage: bun ./script.ts policy");
-  process.exit(1);
-}
+await runPolicyOnlyMain(import.meta.url);

@@ -1,3 +1,4 @@
+export * from "./bundle-script.ts";
 export * from "./breach.ts";
 export * from "./cli.ts";
 export * from "./linter.ts";

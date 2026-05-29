@@ -3,12 +3,9 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
 
-const rsDir = import.meta.dir;
-const pkgDir = join(rsDir, "pkg");
-const pkgJsonPath = join(pkgDir, "package.json");
-
-function runWasmBuild(): void {
+function runWasmBuild(rsDir: string): void {
   if (process.env.SEMIO_SKIP_WASM_BUILD === "1") {
     console.log("[semio/rs] SEMIO_SKIP_WASM_BUILD=1 → skipping wasm-pack build");
     return;
@@ -26,6 +23,7 @@ function runWasmBuild(): void {
   }
   console.log(`[semio/rs] wasm-pack build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
+  const pkgDir = join(rsDir, "pkg");
   if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
   const pkgJson = {
     name: "@semio/rs-wasm",
@@ -37,7 +35,7 @@ function runWasmBuild(): void {
     types: "semio.d.ts",
     sideEffects: ["./snippets/*"],
   };
-  writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
+  writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
   const wasmPath = join(pkgDir, "semio_bg.wasm");
   if (existsSync(wasmPath)) {
@@ -49,15 +47,28 @@ function runWasmBuild(): void {
   }
 }
 
-const sub = process.argv[2] ?? "wasm";
-if (sub === "wasm") {
-  runWasmBuild();
-} else if (sub === "build") {
-  runWasmBuild();
-  execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: rsDir });
-} else if (sub === "test") {
-  execFileSync("cargo", ["test", ...process.argv.slice(3)], { stdio: "inherit", cwd: rsDir });
-} else {
-  console.error("usage: bun ./script.ts <wasm|build|test>");
-  process.exit(1);
+class WasmScript extends BundleScript {
+  run(): void {
+    runWasmBuild(this.root);
+  }
 }
+
+class BuildScript extends BundleScript {
+  run(): void {
+    runWasmBuild(this.root);
+    execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: this.root });
+  }
+}
+
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: this.root });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("wasm", WasmScript)
+  .register("build", BuildScript)
+  .register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

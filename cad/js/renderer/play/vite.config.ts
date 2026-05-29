@@ -8,9 +8,8 @@ import { elementsAssetsVitePlugin } from "../../../../ui/styling/vite-elements-a
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../");
 const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
-const jsRoot = resolve(dir, "../..");
-const reactRoot = resolve(jsRoot, "node_modules/react");
-const reactDomRoot = resolve(jsRoot, "node_modules/react-dom");
+const reactRoot = resolve(repoRoot, "node_modules/react");
+const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "ui/react/node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "ui/react/node_modules/three");
 const coreEntry = resolve(dir, "../../core/index.ts");

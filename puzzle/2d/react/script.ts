@@ -1,31 +1,42 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/2d-react` task router: `bun ./script.ts test [args…]`. */
-import { spawnSync } from "node:child_process";
+/** 🧭 `@puzzle/2d-react` task router: `bun ./script.ts test|policy [args…]`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import type { FileLinter } from "../../../repo/lib/js/src/linter.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/dependency-boundary.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/src/cli.ts";
+import {
+  BundleScript,
+  ScriptRouter,
+  devToolingEnv,
+  runBun,
+  runBundleScriptMain,
+  runVitest,
+} from "../../../repo/lib/js/src/bundle-script.ts";
+import { defineLint } from "../../../repo/lib/js/src/script.ts";
 
-const cwd = import.meta.dir;
-const wasmScript = join(cwd, "../rs/script.ts");
-const segs = process.argv.slice(2);
-const command = segs[0] ?? "test";
-const extra = segs.slice(1);
+export const policyFile = "index.tsx";
 
-const env = { ...process.env };
-delete env.NODE_OPTIONS;
-delete env.VSCODE_INSPECTOR_OPTIONS;
+export const policy = defineLint("@puzzle/2d-react-index", (l: FileLinter) => {
+  const repoRoot = getWorkspaceRoot();
+  const file = l.path();
+  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+});
 
-if (command === "test") {
-	const wasmJs = join(cwd, "../rs/pkg/elements_board.js");
-	const wasmEnv = { ...env, ELEMENTS_BOARD_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0" };
-	spawnSync("bun", [wasmScript, "wasm"], { cwd, env: wasmEnv, shell: true, stdio: "inherit" });
-	const result = spawnSync("bunx", ["vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra], {
-		cwd,
-		env,
-		shell: true,
-		stdio: "inherit",
-	});
-	process.exit(result.status ?? 1);
+const wasmScript = join(import.meta.dir, "../rs/script.ts");
+
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    const wasmJs = join(this.root, "../rs/pkg/elements_board.js");
+    const wasmEnv = {
+      ...devToolingEnv(),
+      ELEMENTS_BOARD_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0",
+    };
+    runBun([wasmScript, "wasm"], this.root, wasmEnv);
+    runVitest(this.root, segments);
+  }
 }
 
-console.error("usage: bun ./script.ts test [args…]");
-process.exit(1);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
