@@ -3,8 +3,8 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import type { ContextMenuItem } from "@ui/react";
-import { Suspense, memo, useMemo, type ReactElement } from "react";
+import { reactHostPort, type ContextMenuItem } from "@ui/react";
+import type { ReactElement } from "react";
 
 /** ┬¡ãÆ├Â┬í Topology pairs board WASM with scene R3F under one dual-surface contract; `@puzzle/2d/react` and `@puzzle/3d/react` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
 

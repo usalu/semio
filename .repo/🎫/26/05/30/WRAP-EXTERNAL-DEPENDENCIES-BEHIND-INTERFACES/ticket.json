@@ -1,7 +1,7 @@
 {
   "title": "Wrap External Dependencies Behind Interfaces",
   "emoji": "🔌",
-  "status": "closed",
+  "status": "open",
   "description": "Wrap External Dependencies Behind Interfaces",
   "summary": "Non-semio port wiring: coda MCP app + desktop renderer use @ui/react reactHostPort for hooks; @framework/platform renderer react wrapped in 🔌Adapters and routed hooks via reactHostPort; playground scene-play-host adapter region; lint.script.ts for coda mcp-app and platform renderer. No changes under semio/. Tests 12/12 pass.",
   "github": {
@@ -15,6 +15,7 @@
     "⚪d1ef225f09624edea7d0304e84a43fbe",
     "⚪cf1e4ebc191048d9827d352d6a4fb2a4",
     "⚪cb7d31b0b4f14573b9efbee93477a830",
-    "⚪45035f59e15d4e36aa8f04b170812e0c"
+    "⚪45035f59e15d4e36aa8f04b170812e0c",
+    "⚪4b3ee625bdd84851b2016529e9d33c8c"
   ]
 }

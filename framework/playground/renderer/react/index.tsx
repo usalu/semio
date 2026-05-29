@@ -35,6 +35,7 @@ import {
   type TreePanelConfig,
   type TreePanelDefinition,
   type TreePanelSource,
+  reactHostPort,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 import type { LucideIcon } from "lucide-react";
@@ -100,6 +101,7 @@ export {
   registerSidePanelBody,
   registerWindowBody,
   resolveAppState,
+  playgroundTreePanelRootItems,
 } from "@framework/playground";
 
 function cnPlay(...inputs: ClassValue[]): string {
@@ -151,14 +153,6 @@ export class CallbackTreePanelDefinition implements TreePanelDefinition {
 /** @emoji 🌲 Factory for a static {@link StaticTreePanelDefinition}. */
 export function playgroundStaticTreePanel(config: TreePanelConfig): StaticTreePanelDefinition {
   return new StaticTreePanelDefinition(config);
-}
-
-/** @emoji 🌲 Single tree body for a side-panel tab (no duplicate section title; the tab is the panel name). */
-export function playgroundTreePanelRootItems(sectionId: string, items: TreeDataItem[]): TreeDataSection[] {
-  if (!items.length) {
-    throw new Error("playgroundTreePanelRootItems requires at least one root item.");
-  }
-  return [{ id: sectionId, defaultOpen: true, items }];
 }
 
 function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
@@ -338,7 +332,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
   if (!component) {
     component = function ShellDeclarativeWindowBody() {
       const { runtime, activeModeId } = useApp();
-      const generation = React.useSyncExternalStore(
+      const generation = reactHostPort.useSyncExternalStore(
         (listener) => runtime.subscribe(listener),
         () => runtime.generation,
         () => 0,
@@ -503,7 +497,7 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
   if (!component) {
     component = function ShellDeclarativeSidePanelBody() {
       const { runtime, activeModeId } = useApp();
-      const generation = React.useSyncExternalStore(
+      const generation = reactHostPort.useSyncExternalStore(
         (listener) => runtime.subscribe(listener),
         () => runtime.generation,
         () => 0,
@@ -532,7 +526,7 @@ const ShellModeCanvas: React.FC<{
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
 }> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
-  const windows = React.useMemo<ModeWindowDescriptor[]>(
+  const windows = reactHostPort.useMemo<ModeWindowDescriptor[]>(
     () =>
       windowKinds.map((windowKind) => {
         const WindowComponent = windowKind.component;
@@ -551,7 +545,7 @@ const ShellModeCanvas: React.FC<{
       }),
     [windowKinds],
   );
-  const shellLayout = React.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
+  const shellLayout = reactHostPort.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
 
   return <Mode windows={windows} layout={shellLayout} activeWindowId={activeWindowId} onActiveWindowChange={onActiveWindowChange} className="h-full w-full" />;
 };
@@ -659,7 +653,7 @@ function declareToolsToViewTools(tools: AppTools | undefined, bus: CommandBus): 
 }
 
 const PlaygroundToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
-  const sorted = React.useMemo(() => sortToolbarItems(items), [items]);
+  const sorted = reactHostPort.useMemo(() => sortToolbarItems(items), [items]);
   return (
     <>
       {sorted.map((item) => {
@@ -696,10 +690,10 @@ const PlaygroundToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({
 
 /** @emoji 🧰 Playground toolbar: category toggles with one active category exposing its tools. */
 const PlaygroundToolbar: React.FC<{ tools: Partial<Record<AppToolCategory, UIToolbarItem[]>> }> = ({ tools }) => {
-  const populatedCategories = React.useMemo(() => listPopulatedToolbarCategories(tools), [tools]);
-  const [activeCategory, setActiveCategory] = React.useState<AppToolCategory | null>(null);
+  const populatedCategories = reactHostPort.useMemo(() => listPopulatedToolbarCategories(tools), [tools]);
+  const [activeCategory, setActiveCategory] = reactHostPort.useState<AppToolCategory | null>(null);
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (populatedCategories.length === 0) {
       setActiveCategory(null);
       return;
@@ -767,7 +761,7 @@ export const PlaygroundContext = React.createContext<PlaygroundContextValue | un
 
 /** @emoji 🪝 Returns the active {@link ProductRuntime} from the nearest {@link PlaygroundView}. */
 export function useApp(): PlaygroundContextValue {
-  const ctx = React.useContext(PlaygroundContext);
+  const ctx = reactHostPort.useContext(PlaygroundContext);
   if (!ctx) throw new Error("useApp must be used within PlaygroundView");
   return ctx;
 }
@@ -795,19 +789,19 @@ function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: reado
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, defaultAppId, className, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
-  React.useSyncExternalStore(
+  reactHostPort.useSyncExternalStore(
     (onStoreChange) => runtime.subscribe(onStoreChange),
     () => runtime.generation,
     () => 0,
   );
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (defaultAppId) runtime.setActiveAppId(defaultAppId);
   }, [defaultAppId, runtime]);
 
-  const [leftPanelSize, setLeftPanelSize] = React.useState(280);
-  const [rightPanelSize, setRightPanelSize] = React.useState(300);
-  const [panelVisibility, setPanelVisibility] = React.useState<PlaygroundPanelVisibility>(() => ({
+  const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
+  const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
+  const [panelVisibility, setPanelVisibility] = reactHostPort.useState<PlaygroundPanelVisibility>(() => ({
     leftSidePanel: initialPanelVisibility?.leftSidePanel ?? false,
     rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
   }));
@@ -827,16 +821,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
   const mergedTools = declareToolsToViewTools(activeApp.tools, bus);
   const hasToolbarTools = mergedTools && APP_TOOL_CATEGORY_ORDER.some((c) => mergedTools[c]?.some((i) => i.kind !== "separator"));
 
-  const [activeWindowKindId, setActiveWindowKindId] = React.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
+  const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 
-  React.useEffect(() => {
+  reactHostPort.useEffect(() => {
     setActiveWindowKindId((previous) => {
       if (previous && activeApp.windowKinds.some((wk) => wk.id === previous)) return previous;
       return findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds);
     });
   }, [activeApp.defaultLayout, activeApp.windowKinds]);
 
-  const goldenWindowKinds = React.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
+  const goldenWindowKinds = reactHostPort.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
 
   const footerItems: FooterItem[] = [
     ...(activeApp.footerItems.map((item) => ({

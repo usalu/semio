@@ -22,6 +22,7 @@ import {
 	type ContextMenuItem,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
+	reactHostPort,
 } from "@ui/react";
 import { Expertise, ProductRuntime, type FooterItem, type UiTreeNode } from "@framework/playground";
 import {
@@ -38,18 +39,7 @@ import {
 } from "@framework/playground/renderer/react/shell";
 import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground/renderer/react/boot";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
-import type { ReactElement } from "react";
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	useSyncExternalStore,
-	type ReactNode,
-} from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
 	BOARD_PLAY_APP_ID,
 	BOARD_PLAY_BOARD_SURFACE_ID,
@@ -411,9 +401,9 @@ class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
 	}
 }
 
-const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
+const BoardPlayShellContext = reactHostPort.createContext<BoardPlayShellValue | null>(null);
 
-const BoardPlayLodRuntimeContext = createContext<((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
+const BoardPlayLodRuntimeContext = reactHostPort.createContext<((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
 
 function useBoardPlayShell(): BoardPlayShellValue {
   const value = useContext(BoardPlayShellContext);
@@ -687,13 +677,13 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1): ReactElement {
 /** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. */
 function BoardStructuralDeleteReporter(): null {
   const { applyStructuralDelete } = useBoardPlayShell();
-  const onEdgeDelete = useCallback(
+  const onEdgeDelete = reactHostPort.useCallback(
     (event: { id: string }) => {
       applyStructuralDelete("edge", event.id);
     },
     [applyStructuralDelete],
   );
-  const onNodeDelete = useCallback(
+  const onNodeDelete = reactHostPort.useCallback(
     (event: { id: string }) => {
       applyStructuralDelete("node", event.id);
     },
@@ -707,7 +697,7 @@ function BoardStructuralDeleteReporter(): null {
 /** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. */
 function BoardPlayRedrawProgressReset(): null {
   const { boardRedrawPlaying, resetBoardRedrawProgressiveEpoch } = useBoardPlayShell();
-  const handler = useCallback(() => {
+  const handler = reactHostPort.useCallback(() => {
     if (!boardRedrawPlaying) {
       return;
     }
@@ -772,11 +762,11 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
   const camera = camerasByPane[paneId];
   const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
   const reportEffectiveLod = useContext(BoardPlayLodRuntimeContext);
-  const onLodChange = useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
-  const selection = useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
-  const onSelect = useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
-  const onPreselect = useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
-  const onHover = useCallback(
+  const onLodChange = reactHostPort.useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
+  const selection = reactHostPort.useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
+  const onSelect = reactHostPort.useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
+  const onPreselect = reactHostPort.useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
+  const onHover = reactHostPort.useCallback(
     (payload: { id: string | null }) => {
       setHoverForPane(paneId, payload.id);
     },
@@ -899,7 +889,7 @@ function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureN
 function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
   const { fixture: dragFixture, label, preview } = props;
   const dragProps = useNativeDragAndDrop(
-    useMemo(
+    reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
           event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
@@ -924,7 +914,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
   const { fixture } = useBoardPlayShell();
 
   const shelfDragProps = useNativeDragAndDrop(
-    useMemo(
+    reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
           event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
@@ -1037,7 +1027,7 @@ function normalizeAngleRad(t: number): number {
 function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const setFromClient = useCallback(
+  const setFromClient = reactHostPort.useCallback(
     (clientX: number, clientY: number) => {
       const el = ref.current;
       if (!el) {
@@ -1053,7 +1043,7 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
     [onChange],
   );
 
-  const pointerController = useMemo(
+  const pointerController = reactHostPort.useMemo(
     () =>
       new PointerDragController<HTMLDivElement>({
         onStart: (event) => {
@@ -1133,8 +1123,8 @@ function InspectorNodeBatch({
   patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
-  const idSet = useMemo(() => new Set(nodeIds), [nodeIds]);
-  const targets = useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is BoardFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
+  const idSet = reactHostPort.useMemo(() => new Set(nodeIds), [nodeIds]);
+  const targets = reactHostPort.useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is BoardFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
 
   const textValues = targets.map((n) => boardFixtureNodeCaption(n) ?? "");
   const textUniform = allEqual(textValues);
@@ -1165,7 +1155,7 @@ function InspectorNodeBatch({
   const wValue = wUniform ? widths[0] : Number.NaN;
   const hValue = hUniform ? heights[0] : Number.NaN;
 
-  const patchNodes = useCallback(
+  const patchNodes = reactHostPort.useCallback(
     (updater: (n: BoardFixtureNodeV1) => BoardFixtureNodeV1) => {
       patchFixture((prev) => ({
         ...prev,
@@ -1175,7 +1165,7 @@ function InspectorNodeBatch({
     [idSet, patchFixture],
   );
 
-  const onText = useCallback(
+  const onText = reactHostPort.useCallback(
     (next: string) => {
       const trimmed = next.trim();
       patchNodes((n) =>
@@ -1185,7 +1175,7 @@ function InspectorNodeBatch({
     [patchNodes],
   );
 
-  const onIconKind = useCallback(
+  const onIconKind = reactHostPort.useCallback(
     (next: string) => {
       const t = next.trim();
       patchNodes((n) => ({ ...n, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
@@ -1193,7 +1183,7 @@ function InspectorNodeBatch({
     [patchNodes],
   );
 
-  const onShape = useCallback(
+  const onShape = reactHostPort.useCallback(
     (next: "circle" | "rectangle") => {
       patchNodes((n) => {
         if (next === "rectangle" && !nodeIsRectangle(n)) {
@@ -1307,8 +1297,8 @@ function InspectorHandleBatch({
   patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
-  const idSet = useMemo(() => new Set(handleIds), [handleIds]);
-  const handles = useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is BoardFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
+  const idSet = reactHostPort.useMemo(() => new Set(handleIds), [handleIds]);
+  const handles = reactHostPort.useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is BoardFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
   const angles = handles.map((h) => h.angle);
   const angleUniform = allEqual(angles);
   const angleValue = angleUniform ? angles[0]! : 0;
@@ -1320,7 +1310,7 @@ function InspectorHandleBatch({
   const iconKindUniform = allEqual(iconKinds);
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
 
-  const patchHandles = useCallback(
+  const patchHandles = reactHostPort.useCallback(
     (updater: (h: BoardFixtureHandleV1) => BoardFixtureHandleV1) => {
       patchFixture((prev) => ({
         ...prev,
@@ -1333,7 +1323,7 @@ function InspectorHandleBatch({
     [idSet, patchFixture],
   );
 
-  const onIconKind = useCallback(
+  const onIconKind = reactHostPort.useCallback(
     (next: string) => {
       const t = next.trim();
       patchHandles((h) => ({ ...h, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
@@ -1420,15 +1410,15 @@ function InspectorEdgeBatch({
   patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
-  const idSet = useMemo(() => new Set(edgeIds), [edgeIds]);
-  const edges = useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is BoardFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
+  const idSet = reactHostPort.useMemo(() => new Set(edgeIds), [edgeIds]);
+  const edges = reactHostPort.useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is BoardFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
   const sources = edges.map((e) => e.source);
   const targets = edges.map((e) => e.target);
   const sourceUniform = allEqual(sources);
   const targetUniform = allEqual(targets);
-  const handleOptions = useMemo(() => listHandleIds(fixture), [fixture]);
+  const handleOptions = reactHostPort.useMemo(() => listHandleIds(fixture), [fixture]);
 
-  const patchEdges = useCallback(
+  const patchEdges = reactHostPort.useCallback(
     (updater: (e: BoardFixtureEdgeV1) => BoardFixtureEdgeV1) => {
       patchFixture((prev) => ({
         ...prev,
@@ -1701,29 +1691,29 @@ interface BoardPlayRedrawLoopSnapshot {
 const initialFixture = BOARD_PLAY_DEFAULT_FIXTURE;
 
 function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntime }): ReactElement {
-  const [fixture, setFixtureState] = useState<BoardFixtureV1>(initialFixture);
+  const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
   const fixtureRef = useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
-  const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = useState<Record<BoardPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
+  const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
   const boardPlayPaneCamerasBaselineRef = useRef(boardPlayPaneCamerasBaseline);
   boardPlayPaneCamerasBaselineRef.current = boardPlayPaneCamerasBaseline;
-  const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
+  const [activePaneId, setActivePaneId] = reactHostPort.useState<BoardPlayPaneId>("board-overview");
   const activePaneIdRef = useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
-  const [selectionIds, setSelectionIdsState] = useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
-  const [preselection, setPreselection] = useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoverSourcePane, setHoverSourcePane] = useState<BoardPlayPaneId | null>(null);
+  const [selectionIds, setSelectionIdsState] = reactHostPort.useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
+  const [preselection, setPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
+  const [hoveredId, setHoveredId] = reactHostPort.useState<string | null>(null);
+  const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<BoardPlayPaneId | null>(null);
   const hoverSourcePaneRef = useRef<BoardPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
-  const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
-  const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
-  const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+  const [theme, setTheme] = reactHostPort.useState<ElementsSurfaceTheme>(readTheme);
+  const [device, setDevice] = reactHostPort.useState<ElementsSurfaceDevice>(readDevice);
+  const [expertise, setExpertise] = reactHostPort.useState<Expertise>(readExpertise);
   const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
-  const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
-  const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("default");
-  const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
-  const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
+  const [boardSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
+  const [boardSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
+  const [boardSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
+  const [boardGridSnapEnabled, setBoardGridSnapEnabled] = reactHostPort.useState(false);
   const boardShellController = boardRuntime.getActiveApp()?.controller as BoardPlayShellController | undefined;
   const shellGeneration = useSyncExternalStore(
     (onStoreChange) => boardRuntime.subscribe(onStoreChange),
@@ -1736,41 +1726,41 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     "board-overview": BOARD_LOD_MODE_AUTOMATIC,
     "board-selection": BOARD_LOD_MODE_AUTOMATIC,
   };
-  const setBoardLodModeForPane = useCallback(
+  const setBoardLodModeForPane = reactHostPort.useCallback(
     (pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
       boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
     },
     [boardRuntime.commandBus],
   );
-  const setBoardEffectiveLodForPane = useCallback(
+  const setBoardEffectiveLodForPane = reactHostPort.useCallback(
     (pane: BoardPlayPaneId, lod: BoardDrawLodKind) => {
       boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
     [boardRuntime.commandBus],
   );
-  const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
+  const onBoardPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
     if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
       setActivePaneId(windowKindId);
     }
   }, []);
-  const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
-  const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
-  const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
-  const [forceLayoutGravity, setForceLayoutGravity] = useState(0.012);
-  const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = useState(80);
-  const [boardRedrawPlayMaxItersPerFrame, setBoardRedrawPlayMaxItersPerFrame] = useState(96);
-  const [boardRedrawProgressiveEnabled, setBoardRedrawProgressiveEnabled] = useState(true);
-  const [boardRedrawProgressiveAutoStopMs, setBoardRedrawProgressiveAutoStopMs] = useState(3000);
-  const [boardRedrawMode, setBoardRedrawMode] = useState<BoardRedrawModeKind>("force-graph");
-  const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = useState(false);
-  const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = useState(120);
-  const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = useState(28);
-  const [treeLayoutDirection, setTreeLayoutDirection] = useState<BoardHierarchicalTreeDirectionKind>("downwards");
+  const [boardRedrawPlaying, setBoardRedrawPlaying] = reactHostPort.useState(false);
+  const [forceLayoutFullIterations, setForceLayoutFullIterations] = reactHostPort.useState(200);
+  const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = reactHostPort.useState(64);
+  const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(0.012);
+  const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = reactHostPort.useState(80);
+  const [boardRedrawPlayMaxItersPerFrame, setBoardRedrawPlayMaxItersPerFrame] = reactHostPort.useState(96);
+  const [boardRedrawProgressiveEnabled, setBoardRedrawProgressiveEnabled] = reactHostPort.useState(true);
+  const [boardRedrawProgressiveAutoStopMs, setBoardRedrawProgressiveAutoStopMs] = reactHostPort.useState(3000);
+  const [boardRedrawMode, setBoardRedrawMode] = reactHostPort.useState<BoardRedrawModeKind>("force-graph");
+  const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = reactHostPort.useState(false);
+  const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = reactHostPort.useState(120);
+  const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = reactHostPort.useState(28);
+  const [treeLayoutDirection, setTreeLayoutDirection] = reactHostPort.useState<BoardHierarchicalTreeDirectionKind>("downwards");
 
   const boardRedrawPlayingRef = useRef(boardRedrawPlaying);
   boardRedrawPlayingRef.current = boardRedrawPlaying;
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     try {
       localStorage.setItem(LS_THEME, theme);
     } catch {
@@ -1778,7 +1768,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     }
   }, [theme]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     try {
       localStorage.setItem(LS_DEVICE, device);
     } catch {
@@ -1786,7 +1776,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     }
   }, [device]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     try {
       localStorage.setItem(LS_EXPERTISE, expertise);
     } catch {
@@ -1794,7 +1784,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     }
   }, [expertise]);
 
-  const surfaceFooterItems = useMemo<FooterItem[]>(
+  const surfaceFooterItems = reactHostPort.useMemo<FooterItem[]>(
     () => [
       {
         content: <BoardPlaySurfaceFooter device={device} expertise={expertise} onDevice={setDevice} onExpertise={setExpertise} onTheme={setTheme} theme={theme} />,
@@ -1805,7 +1795,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     [device, expertise, theme],
   );
 
-  const applyStructuralDelete = useCallback((kind: "edge" | "node", id: string) => {
+  const applyStructuralDelete = reactHostPort.useCallback((kind: "edge" | "node", id: string) => {
     const pruneSelections = (removeIds: readonly string[]): void => {
       const remove = new Set(removeIds);
       setSelectionIdsState((prev) => new Set([...prev].filter((x) => !remove.has(x))));
@@ -1837,7 +1827,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     pruneSelections([id, ...handleIds]);
   }, []);
 
-  const setFixture = useCallback((next: BoardFixtureV1) => {
+  const setFixture = reactHostPort.useCallback((next: BoardFixtureV1) => {
     setFixtureState(next);
     setSelectionIdsState(selectionSeedForFixture(next));
     setPreselection(BOARD_PRESELECT_EMPTY);
@@ -1847,15 +1837,15 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
   }, []);
 
-  const patchFixture = useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
+  const patchFixture = reactHostPort.useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
     setFixtureState((prev) => updater(prev));
   }, []);
 
-  const setSelectionIds = useCallback((ids: readonly string[]) => {
+  const setSelectionIds = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
   }, []);
 
-  const setHoverPane = useCallback((pane: BoardPlayPaneId) => {
+  const setHoverPane = reactHostPort.useCallback((pane: BoardPlayPaneId) => {
     if (hoverSourcePaneRef.current === pane) {
       return;
     }
@@ -1863,13 +1853,13 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setHoverSourcePane(pane);
   }, []);
 
-  const setHoverForPane = useCallback((pane: BoardPlayPaneId, id: string | null) => {
+  const setHoverForPane = reactHostPort.useCallback((pane: BoardPlayPaneId, id: string | null) => {
     hoverSourcePaneRef.current = pane;
     setHoverSourcePane(pane);
     setHoveredId(id);
   }, []);
 
-  const clearHoverForPane = useCallback((pane: BoardPlayPaneId) => {
+  const clearHoverForPane = reactHostPort.useCallback((pane: BoardPlayPaneId) => {
     if (hoverSourcePaneRef.current !== pane) {
       return;
     }
@@ -1878,7 +1868,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setHoveredId(null);
   }, []);
 
-  const handleCanvasFixtureDrop = useCallback(
+  const handleCanvasFixtureDrop = reactHostPort.useCallback(
     (pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
       const merged = mergePaletteNodeFromDrop(detail);
@@ -1892,7 +1882,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     [patchFixture, setFixture, setSelectionIds],
   );
 
-  const remapIdInSelections = useCallback((replacedId: string, replacementId: string) => {
+  const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {
     if (replacedId === replacementId) {
       return;
     }
@@ -1903,7 +1893,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = useRef(false);
   const prevBoardRedrawPlayingRef = useRef(false);
-  const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
+  const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState> | null>(null);
   const cameraDisplayOverrideRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
   const suppressCameraBasisSyncRef = useRef(false);
@@ -1911,13 +1901,13 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
   const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
   const lastPlayingForCameraEaseRef = useRef(false);
-  const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = useState(0);
+  const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
   const nodesRedrawEaseFromRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
   /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
   const nodesRedrawEaseGenerationRef = useRef(0);
 
-  const syncBaselineFromViewportCamera = useCallback((cam: CameraState) => {
+  const syncBaselineFromViewportCamera = reactHostPort.useCallback((cam: CameraState) => {
     if (boardRedrawPlayingRef.current) {
       return;
     }
@@ -1938,7 +1928,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     });
   }, []);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (boardRedrawPlaying) {
       return;
     }
@@ -1953,7 +1943,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     cameraBasisFixtureRef.current = fixture;
   }, [fixture, boardRedrawPlaying]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const prevPlaying = prevBoardRedrawPlayingRef.current;
     const playJustStarted = boardRedrawPlaying && !prevPlaying;
 
@@ -1986,7 +1976,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
   }, [boardRedrawPlaying, fixture]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!boardRedrawPlaying) {
       boardPlayRedrawCameraChaseRef.current = null;
       return;
@@ -2010,7 +2000,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     });
   }, [boardRedrawPlaying, fixture]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (boardRedrawPlaying) {
       lastPlayingForCameraEaseRef.current = true;
       return () => {
@@ -2085,7 +2075,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
 
   const camerasByPane = cameraDisplayOverrideByPane ?? boardPlayPaneCamerasBaseline;
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (nodesRedrawCameraEaseTick === 0) {
       return;
     }
@@ -2147,7 +2137,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     };
   }, [nodesRedrawCameraEaseTick]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (cameraDisplayOverrideByPane === null) {
       return;
     }
@@ -2176,7 +2166,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     treeLayoutSiblingGap: 28,
   });
 
-  const resetBoardRedrawProgressiveEpoch = useCallback(() => {
+  const resetBoardRedrawProgressiveEpoch = reactHostPort.useCallback(() => {
     redrawProgressiveEpochRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
   }, []);
 
@@ -2196,11 +2186,11 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     treeLayoutSiblingGap,
   };
 
-  const applyBoardRedrawHandlesOnce = useCallback(() => {
+  const applyBoardRedrawHandlesOnce = reactHostPort.useCallback(() => {
     patchFixture((prev) => layoutBoardFixtureRedrawHandles(prev));
   }, [patchFixture]);
 
-  const applyBoardRedrawOnce = useCallback(() => {
+  const applyBoardRedrawOnce = reactHostPort.useCallback(() => {
     if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
       cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
       boardPlayNodesRedrawCameraAnimRafRef.current = null;
@@ -2247,7 +2237,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     treeLayoutSiblingGap,
   ]);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!boardRedrawPlaying) {
       redrawPlayingRef.current = false;
       return;
@@ -2328,7 +2318,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     };
   }, [boardRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
 
-  const shellValue = useMemo<BoardPlayShellValue>(
+  const shellValue = reactHostPort.useMemo<BoardPlayShellValue>(
     () => ({
       activePaneId,
       applyBoardRedrawHandlesOnce,
@@ -2456,7 +2446,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setSelectionIds,
   };
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     if (!boardShellController) {
       return;
     }
@@ -2547,14 +2537,14 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
 
   const shellValueRef = useRef(shellValue);
   shellValueRef.current = shellValue;
-  const boardPlaySelectionKey = useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
-  const boardPlayFixtureKey = useMemo(
+  const boardPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
+  const boardPlayFixtureKey = reactHostPort.useMemo(
     () =>
       `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`,
     [shellValue.fixture],
   );
-  const boardPlayLibraryTab = useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
-  const boardPlayHierarchyTab = useMemo(
+  const boardPlayLibraryTab = reactHostPort.useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
+  const boardPlayHierarchyTab = reactHostPort.useMemo(
     () =>
       new BoardPlayHierarchyPanelDefinition(() =>
         buildBoardPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) =>
@@ -2563,12 +2553,12 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
       ).resolveTab(),
     [boardPlaySelectionKey, boardPlayFixtureKey],
   );
-  const boardPlaySettingsTab = useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
-  const boardPlayInspectorTab = useMemo(
+  const boardPlaySettingsTab = reactHostPort.useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
+  const boardPlayInspectorTab = reactHostPort.useMemo(
     () => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(),
     [boardPlaySelectionKey],
   );
-  const augmentPanelTabs = useMemo(
+  const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [boardPlayHierarchyTab, boardPlayLibraryTab],
       details: [boardPlayInspectorTab, boardPlaySettingsTab],

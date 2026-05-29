@@ -3,10 +3,10 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { LevelProvider, getLevelBgClass } from "@ui/react";
+import { LevelProvider, getLevelBgClass, reactHostPort } from "@ui/react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree, Settings, Tags } from "lucide-react";
-import React, { useCallback, useMemo, useSyncExternalStore } from "react";
+import type React from "react";
 import type { Playground } from "@framework/playground";
 import {
 	PlaygroundView,
@@ -53,7 +53,7 @@ function useScenePlayController(): ScenePlayShellController | undefined {
 
 function useScenePlaySnapshot(): ScenePlaySnapshot {
 	const ctrl = useScenePlayController();
-	return useSyncExternalStore(
+	return reactHostPort.useSyncExternalStore(
 		(onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
 		() =>
 			ctrl?.getSnapshot() ?? {
@@ -121,14 +121,14 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 	const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
 	const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
 	const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
-	const selectedVortexFullIds = useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
-	const patchFixture = useCallback(
+	const selectedVortexFullIds = reactHostPort.useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
+	const patchFixture = reactHostPort.useCallback(
 		(updater: (prev: FixtureV1) => FixtureV1) => {
 			ctrl?.patchFixture(updater);
 		},
 		[ctrl],
 	);
-	const onRelocatePersist = useCallback(
+	const onRelocatePersist = reactHostPort.useCallback(
 		(payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => {
 			ctrl?.patchRelocate(payload, attractingByObjectId);
 		},

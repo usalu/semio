@@ -185,6 +185,16 @@ export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = pr
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
+/** 🥖Spawns `bunx` asynchronously; exits with child code. */
+export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
+  const child = spawn(process.execPath, ["x", ...args], { cwd, env, shell: false, stdio: "inherit" });
+  child.on("exit", (code) => process.exit(code ?? 0));
+  child.on("error", (error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
 /** 🥖Spawns `bun` asynchronously; exits with child code. */
 export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   const child = spawn(process.execPath, args, { cwd, env, shell: true, stdio: "inherit" });

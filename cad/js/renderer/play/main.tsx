@@ -2190,11 +2190,6 @@ if (import.meta.vitest) {
 			expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
 		});
 	});
-}
-
-//#region 🧪Tests
-if (import.meta.vitest) {
-	const { describe, it, expect } = import.meta.vitest;
 
 	describe("spatial play typology chrome", () => {
 		it("lists energy typologies from model definition scope", () => {
@@ -2235,4 +2230,4 @@ if (import.meta.vitest) {
 		});
 	});
 }
-//#endregion
+//#endregion 🧪Tests

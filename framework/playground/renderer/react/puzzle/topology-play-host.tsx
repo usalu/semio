@@ -6,7 +6,7 @@
 import React from "react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree } from "lucide-react";
-import { LevelProvider, getLevelBgClass } from "@ui/react";
+import { LevelProvider, getLevelBgClass, reactHostPort } from "@ui/react";
 import { ProductRuntime } from "@framework/playground";
 import {
 	PlaygroundView,
@@ -53,7 +53,7 @@ import {
 //#region 🔖Snapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {
 	const { runtime } = useApp();
-	React.useSyncExternalStore(
+	reactHostPort.useSyncExternalStore(
 		(listener) => runtime.subscribe(listener),
 		() => runtime.generation,
 		() => 0,
@@ -174,8 +174,8 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 	if (node.controllerId !== TOPOLOGY_PLAY_CONTROLLER_ID || node.surfaceId !== TOPOLOGY_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid topology scene binding</div>;
 	}
-	const meshUrls = React.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
-	React.useEffect(() => {
+	const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
+	reactHostPort.useEffect(() => {
 		for (const url of meshUrls) useGLTF.preload(url);
 	}, [meshUrls]);
 	const bindings = buildTopologyDualSurfaceBindings({
@@ -214,7 +214,7 @@ export function registerTopologyPlaySurfaceHosts(): void {
 }
 
 function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
-	const generation = React.useSyncExternalStore(
+	const generation = reactHostPort.useSyncExternalStore(
 		(listener) => runtime.subscribe(listener),
 		() => runtime.generation,
 		() => 0,
@@ -226,7 +226,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
 	const snapshotKey = snapshot
 		? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}`
 		: "";
-	const workbenchTabs = React.useMemo(
+	const workbenchTabs = reactHostPort.useMemo(
 		() =>
 			snapshot && controller
 				? [
@@ -243,7 +243,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
 				: [],
 		[snapshot, snapshotKey, controller, bus],
 	);
-	const detailTabs = React.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
+	const detailTabs = reactHostPort.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
 	return (
 		<LevelProvider level="window">
 			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
