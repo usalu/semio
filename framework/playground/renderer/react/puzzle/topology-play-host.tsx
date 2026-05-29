@@ -104,9 +104,7 @@ function TopologyPlayStatusPanel(): React.ReactElement {
 }
 
 class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-	constructor(
-		private readonly buildSections: () => TreeDataSection[],
-	) {
+	constructor(private readonly buildTree: () => import("@framework/playground").UiTreeNode) {
 		super();
 	}
 
@@ -115,7 +113,7 @@ class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 			id: TOPOLOGY_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
 		};
 	}
 }

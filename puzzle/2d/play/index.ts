@@ -229,7 +229,7 @@ export function buildBoardPlayHierarchySections(
 		defaultOpen: true,
 		items: [nodesGroup, edgesGroup],
 	};
-	return playgroundTreePanelRootItems("board-play-hierarchy.root", [boardRoot]);
+	return playgroundTreePanelRootItems("board-play-hierarchy.root", [boardRoot]) as UiTreeNode;
 }
 //#endregion 🔖BoardPlayHierarchy
 

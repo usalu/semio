@@ -344,7 +344,7 @@ class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 			id: BOARD_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections }),
+			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
 		};
 	}
 }

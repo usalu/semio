@@ -7,13 +7,13 @@ todos:
     status: in_progress
   - id: playground-renderer
     content: Rename @framework/playground-react -> @framework/playground-renderer-react; add @puzzle/{2d,3d,5d}-react deps and register the puzzle canvases via registerUiBoardSurfaceHost/registerUiScene3DSurfaceHost; keep exporting renderPlayground.
-    status: pending
+    status: in_progress
   - id: playground-core
     content: Move react-free helpers that play needs (e.g. playgroundTreePanelRootItems) from the renderer into @framework/playground core so play imports them from the neutral runtime.
-    status: pending
+    status: completed
   - id: play-packages
     content: Create standalone @puzzle/{2d,3d,5d}-play packages (package.json + project.json + scripts) whose index.ts depends only on @framework/playground, with the single renderer line in main.ts; split out puzzle/<dim>/script.ts orchestration.
-    status: pending
+    status: in_progress
   - id: root-rewire
     content: Update root package.json workspaces+scripts, script.ts dev mapping, .vscode/launch.json, .storybook/main.ts aliases; run bun install to regenerate bun.lock; sanity-check nx/eslint/sln.
     status: pending

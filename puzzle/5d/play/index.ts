@@ -16,12 +16,14 @@ import {
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type UiNode,
+	Playground,
+	playgroundTreePanelRootItems,
+	type UiTreeItemNode,
+	type UiTreeNode,
 } from "@framework/playground";
-import { playgroundTreePanelRootItems } from "@framework/playground-renderer-react";
-import type { TreeDataItem, TreeDataSection } from "@ui/react";
 
-import { buildBoardPlayHierarchySections } from "../../../board/play/index.ts";
-import nakaginBoardJson from "../../../board/play/fixtures/nakagin-capsule-tower.board.json";
+import { buildBoardPlayHierarchySections } from "../../2d/play/index.ts";
+import nakaginBoardJson from "../../2d/play/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardLodAutomaticSelectLabel,
@@ -32,9 +34,9 @@ import {
 	type BoardFixtureV1,
 	type BoardLodModeKind,
 	type CameraState,
-} from "../../../board/index.tsx";
-import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
-import { buildScenePlayHierarchySections, SCENE_PLAY_EMPTY_SELECTION } from "../../scene/play/index.ts";
+} from "../../2d/react/index.tsx";
+import nakaginSceneJson from "../../3d/play/fixtures/nakagin-capsule-tower.scene.json";
+import { buildScenePlayHierarchySections, SCENE_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
 	DEFAULT_MANUAL_LOD,
 	SCENE_LOD_SLIDER_MAX,
@@ -46,8 +48,8 @@ import {
 	sliderValueFromLod,
 	type FixtureV1 as SceneFixtureV1,
 	type RelocateMode as SceneRelocateMode,
-} from "../../scene/index.tsx";
-import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../index.tsx";
+} from "../../3d/react/index.tsx";
+import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../react/index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
 //#region 🔖Ids
@@ -78,11 +80,11 @@ export interface TopologyPlayHierarchySelectHandlers {
 export function buildTopologyPlayHierarchySections(
 	snapshot: TopologyPlaySnapshot,
 	handlers: TopologyPlayHierarchySelectHandlers,
-): TreeDataSection[] {
-	const branches: TreeDataItem[] = [];
+): UiTreeNode {
+	const branches: UiTreeItemNode[] = [];
 	if (snapshot.boardFixture) {
-		const boardRoot = buildBoardPlayHierarchySections(snapshot.boardFixture, [...snapshot.boardSelected], handlers.onSelectBoard)[0]
-			?.items?.[0];
+		const boardRoot = buildBoardPlayHierarchySections(snapshot.boardFixture, [...snapshot.boardSelected], handlers.onSelectBoard)
+			.sections[0]?.items?.[0];
 		branches.push({
 			id: "topology-play-hierarchy.board",
 			label: "Board",
@@ -98,7 +100,7 @@ export function buildTopologyPlayHierarchySections(
 			onSelectObject: handlers.onSelectSceneObject,
 			onSelectVortex: handlers.onSelectSceneVortex,
 			onSelectAttraction: handlers.onSelectSceneAttraction,
-		})[0]?.items?.[0];
+		}).sections[0]?.items?.[0];
 		branches.push({
 			id: "topology-play-hierarchy.scene",
 			label: "Scene",
@@ -106,7 +108,7 @@ export function buildTopologyPlayHierarchySections(
 			items: sceneRoot?.items ?? [{ id: "topology-play-hierarchy.scene.empty", label: "(empty)" }],
 		});
 	}
-	const topologyRoot: TreeDataItem = {
+	const topologyRoot: UiTreeItemNode = {
 		id: "topology-play-hierarchy.topology",
 		label: snapshot.manifestLabel ?? "Topology",
 		defaultOpen: true,
@@ -397,6 +399,21 @@ export function buildTopologyPlayRuntime(): ProductRuntime {
 	runtime.addApp(buildTopologyPlayAppRuntime(controller));
 	return runtime;
 }
+
+/** @emoji 🛝 Topology play harness as a single {@link Playground} instance. */
+export class TopologyPlayground extends Playground {
+	readonly id = TOPOLOGY_PLAY_APP_ID;
+	readonly puzzleChrome = "topology" as const;
+	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
+
+	createRuntime(): ProductRuntime {
+		return buildTopologyPlayRuntime();
+	}
+
+	registerBodies(): void {
+		/* window bodies registered with surface hosts in {@link registerTopologyPlaySurfaceHosts} */
+	}
+}
 //#endregion 🔖TopologyPlayRuntime
 
 //#region 🔖DeclarativeBodies
@@ -423,13 +440,13 @@ if (import.meta.vitest) {
 			const runtime = buildTopologyPlayRuntime();
 			const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController;
 			expect(controller).toBeTruthy();
-			const sections = buildTopologyPlayHierarchySections(controller!.getSnapshot(), {
+			const tree = buildTopologyPlayHierarchySections(controller!.getSnapshot(), {
 				onSelectBoard: () => {},
 				onSelectSceneObject: () => {},
 				onSelectSceneVortex: () => {},
 				onSelectSceneAttraction: () => {},
 			});
-			const topologyRoot = sections[0]?.items?.[0];
+			const topologyRoot = tree.sections[0]?.items?.[0];
 			expect(topologyRoot?.label).toBeTruthy();
 			const labels = topologyRoot?.items?.map((row) => row.label);
 			expect(labels).toContain("Board");
