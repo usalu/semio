@@ -13,8 +13,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@cad/js/core": resolve(root, "index.ts"),
-			"@cad/js/kernel/brepjs": resolve(jsRoot, "kernel-brepjs/index.ts"),
-			"@cad/js/machine/stately": resolve(jsRoot, "machine-stately/index.ts"),
+			"@cad/js/kernel/brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
+			"@cad/js/machine/stately": resolve(jsRoot, "machine/stately/index.ts"),
 			"@cad/js/query": resolve(jsRoot, "query/index.ts"),
 		},
 	},

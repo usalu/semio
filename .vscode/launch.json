@@ -321,7 +321,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🏛️architect🧪test",
+      "name": "🛠️dev👤semio🧮query🧪test",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/query:test",
@@ -332,7 +332,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🏛️architect🦀build",
+      "name": "🛠️dev👤semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/query:build",
@@ -343,7 +343,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🏛️architect🌐wasm",
+      "name": "🛠️dev👤semio🧮query🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts query wasm",

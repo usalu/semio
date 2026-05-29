@@ -7,8 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { cpSync, createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
-import type { Connect } from "vite";
-import type { Plugin } from "vite";
+import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 // #endregion 🔌Adapters
 
@@ -103,18 +102,28 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 	const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
 	const playgroundCore = resolve(repoRoot, "framework/playground/core/core.ts");
 	const uiReact = resolve(repoRoot, "ui/react/index.tsx");
+	const rendererIndex = resolve(rendererRoot, "index.tsx");
 	const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
-		{ find: "@framework/playground/renderer/react/shell", replacement: resolve(rendererRoot, "shell.tsx") },
-		{ find: "@framework/playground/renderer/react/boot", replacement: resolve(rendererRoot, "boot-playground.ts") },
+		{ find: "@framework/playground/renderer/react/shell", replacement: rendererIndex },
+		{ find: "@framework/playground/renderer/react/boot", replacement: rendererIndex },
 		{ find: "@framework/playground/renderer/react/puzzle/board", replacement: resolve(rendererRoot, "puzzle/board-play-host.tsx") },
 		{ find: "@framework/playground/renderer/react/puzzle/scene", replacement: resolve(rendererRoot, "puzzle/scene-play-host.tsx") },
 		{ find: "@framework/playground/renderer/react/puzzle/topology", replacement: resolve(rendererRoot, "puzzle/topology-play-host.tsx") },
-		{ find: "@framework/playground/renderer/react", replacement: resolve(rendererRoot, "index.tsx") },
+		{ find: "@framework/playground/renderer/react", replacement: rendererIndex },
+		{ find: "@framework/playground-renderer-react/shell", replacement: rendererIndex },
+		{ find: "@framework/playground-renderer-react/boot", replacement: rendererIndex },
+		{ find: "@framework/playground-renderer-react/puzzle/board", replacement: resolve(rendererRoot, "puzzle/board-play-host.tsx") },
+		{ find: "@framework/playground-renderer-react/puzzle/scene", replacement: resolve(rendererRoot, "puzzle/scene-play-host.tsx") },
+		{ find: "@framework/playground-renderer-react/puzzle/topology", replacement: resolve(rendererRoot, "puzzle/topology-play-host.tsx") },
+		{ find: "@framework/playground-renderer-react", replacement: rendererIndex },
 		{ find: "@framework/playground", replacement: playgroundCore },
 		{ find: "@ui/react", replacement: uiReact },
 		{ find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
 		{ find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
 		{ find: "@puzzle/5d/play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
+		{ find: "@puzzle/2d/react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+		{ find: "@puzzle/3d/react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+		{ find: "@puzzle/5d/react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
 	];
 	return defineConfig({
 		root: playDir,

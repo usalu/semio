@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@puzzle/2d/react",
   "version": "0.1.0",
-  "description": "elements · board",
+  "description": "puzzle · 2d react",
   "type": "module",
   "private": true,
   "scripts": {

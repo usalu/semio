@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@puzzle/5d/react",
   "version": "0.1.0",
-  "description": "elements Ôö¼├Ç topology (board + scene)",
+  "description": "puzzle · 5d react",
   "type": "module",
   "private": true,
   "scripts": {

@@ -81,7 +81,7 @@ export default defineConfig({
   root: __dirname,
   resolve: {
     alias: {
-      "@ui/react": path.resolve(__dirname, "../../elements/ui"),
+      "@ui/react": path.resolve(__dirname, "../../../ui/react"),
     },
   },
   build: {

@@ -51,10 +51,10 @@
         "./*"
       ],
       "@ui/react": [
-        "../../elements/ui"
+        "../../../ui/react"
       ],
       "@ui/react/*": [
-        "../../elements/ui/*"
+        "../../../ui/react/*"
       ],
       "@semio/assets": [
         "../assets"

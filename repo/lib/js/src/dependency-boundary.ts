@@ -21,7 +21,6 @@ const INTERNAL_PREFIXES = [
   "@puzzle/",
   "@framework/",
   "@repo/",
-  "@elements/",
   "@coda/",
 ];
 
