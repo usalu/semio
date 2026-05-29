@@ -11,6 +11,7 @@ export default defineConfig({
 		alias: [
 			{ find: "@framework/playground-react", replacement: resolve(root, "../../../framework/playground/renderer/react/index.tsx") },
 			{ find: "@framework/playground", replacement: resolve(root, "../../../framework/playground/core/index.ts") },
+			{ find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(root, "../../../framework/playground/core")}/$1` },
 			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
 			{ find: "@cad/js-core", replacement: resolve(root, "../core/index.ts") },
 			{ find: "@cad/js-kernel-brepjs", replacement: resolve(root, "../kernel-brepjs/index.ts") },

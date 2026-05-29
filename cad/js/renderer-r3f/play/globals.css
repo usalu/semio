@@ -1,5 +1,5 @@
-@import "../../../../elements/lib/react/core/globals.css";
-@source "../../../../elements/lib/playground";
-@source "../../../../elements/lib/react/core";
+@import "../../../../ui/react/globals.css";
+@source "../../../../framework/playground/core";
+@source "../../../../ui/react";
 @source "..";
 @source ".";

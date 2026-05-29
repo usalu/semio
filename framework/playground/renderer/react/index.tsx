@@ -79,7 +79,7 @@ export type {
   WindowBodyViewContext,
   WindowKindRuntime,
   WindowLayout,
-} from "../../core.js";
+} from "@framework/playground";
 
 export {
   APP_TOOL_CATEGORY_ORDER,
@@ -98,7 +98,7 @@ export {
   registerSidePanelBody,
   registerWindowBody,
   resolveAppState,
-} from "../../index.js";
+} from "@framework/playground";
 
 function cnPlay(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));

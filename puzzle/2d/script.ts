@@ -18,7 +18,7 @@ const env = {
 delete env.NODE_OPTIONS;
 delete env.VSCODE_INSPECTOR_OPTIONS;
 
-const repoRoot = join(cwd, "../../../..");
+const repoRoot = join(cwd, "../..");
 
 function run(args: string[], options: { cwd?: string } = {}): void {
   const child = spawn("bun", args, {

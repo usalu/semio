@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify
     content: "Verify: grep shows no remaining @elements/*/@spatial/* workspace refs in scope; run bun nx build/test per renamed package and dev:cad/board/scene/storybook:ui to confirm runtime resolution. Close tickets with file summaries."
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
