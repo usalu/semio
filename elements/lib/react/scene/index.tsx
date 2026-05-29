@@ -435,6 +435,8 @@ export interface CanvasProps {
 	/** @emoji ­ƒÜ½ Vortex full ids (`objectId:vortexId`) that already terminate an attraction and cannot start or receive a new attraction. */
 	blockedVortexFullIds?: ReadonlySet<string>;
 	proximityRadius?: number;
+	/** @emoji 🔗 When false, skip O(vortices) proximity scan on gumball release (e.g. fixtures with no attractions). */
+	proximityRelocateEnabled?: boolean;
 	relocateMode?: RelocateMode;
 	selectionMode?: SelectionMode;
 	/** @emoji 📶 When true (default), orbit camera distance drives scene LOD. */
@@ -1572,6 +1574,15 @@ export function applyRelocateToSceneFixture(
 
 const ATTRACTING_CHILDREN_EMPTY: readonly string[] = [];
 
+/** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
+function scheduleSceneRelocateCommit(run: () => void): void {
+	if (typeof requestIdleCallback === "function") {
+		requestIdleCallback(run, { timeout: 120 });
+		return;
+	}
+	queueMicrotask(run);
+}
+
 type SceneObjectStoreListener = () => void;
 
 /** @emoji 🗄️ Scene object records with per-id subscriptions so gumball commit does not re-render every mesh. */
@@ -1728,7 +1739,8 @@ export class SceneObjectStore {
 		return true;
 	}
 
-	applyRelocate(payload: RelocatePayload): void {
+	/** @emoji ✋ Updates record poses for a relocate; optionally notifies per-object subscribers (skip on gumball release). */
+	applyRelocate(payload: RelocatePayload, notify = true): void {
 		const root = this.records.get(payload.objectId);
 		if (!root) {
 			return;
@@ -1768,8 +1780,10 @@ export class SceneObjectStore {
 				notifyIds.push(id);
 			}
 		}
-		for (const objectId of notifyIds) {
-			this.notifyObject(objectId);
+		if (notify) {
+			for (const objectId of notifyIds) {
+				this.notifyObject(objectId);
+			}
 		}
 	}
 
@@ -1881,11 +1895,10 @@ export function SceneObjectStateProvider(props: {
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			const sceneStore = storeRef.current!;
-			const attractingByObjectId = sceneStore.getTree().attractingByObjectId;
 			skipExternalPoseSyncRef.current = true;
-			sceneStore.applyRelocate(payload);
-			queueMicrotask(() => {
-				props.onRelocate?.(payload, attractingByObjectId);
+			sceneStore.applyRelocate(payload, false);
+			scheduleSceneRelocateCommit(() => {
+				props.onRelocate?.(payload, sceneStore.getTree().attractingByObjectId);
 			});
 		},
 		[props.onRelocate],
@@ -2584,6 +2597,7 @@ export interface RegistryValue {
 	kindCompatibility: readonly KindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
 	proximityRadius: number;
+	proximityRelocateEnabled: boolean;
 	selectedObjectIds: readonly string[];
 	setSelectedObjectIds(ids: readonly string[]): void;
 	selectionMode: SelectionMode;
@@ -2926,6 +2940,38 @@ export function objectPoseKey(
 }
 
 /** @emoji ­ƒôì Writes fixture pose onto an object group; avoids R3F controlled transforms so vortex children follow relocate. */
+function groupMatchesFixturePose(
+	group: Group,
+	origin: Vec3,
+	orientation: Quat | undefined,
+	scale: number | Vec3 | undefined,
+): boolean {
+	const p = cadVec3ToThree(origin);
+	if (
+		Math.abs(group.position.x - p[0]) > 1e-5 ||
+		Math.abs(group.position.y - p[1]) > 1e-5 ||
+		Math.abs(group.position.z - p[2]) > 1e-5
+	) {
+		return false;
+	}
+	const q = quatToThree(orientation);
+	if (Math.abs(group.quaternion.x - q.x) > 1e-5 || Math.abs(group.quaternion.y - q.y) > 1e-5) {
+		return false;
+	}
+	if (Math.abs(group.quaternion.z - q.z) > 1e-5 || Math.abs(group.quaternion.w - q.w) > 1e-5) {
+		return false;
+	}
+	const s = scaleToThree(scale);
+	if (
+		Math.abs(group.scale.x - s.x) > 1e-5 ||
+		Math.abs(group.scale.y - s.y) > 1e-5 ||
+		Math.abs(group.scale.z - s.z) > 1e-5
+	) {
+		return false;
+	}
+	return true;
+}
+
 export function applyObjectPose(
 	group: Group,
 	origin: Vec3,
@@ -3207,7 +3253,8 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 	readonly translationSnap: number | undefined;
 	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
 }) {
-	const { onRelocate, findNearestProximityRelocate, onProximityConnect } = useRegistryCore();
+	const { onRelocate, findNearestProximityRelocate, onProximityConnect, proximityRelocateEnabled } =
+		useRegistryCore();
 	const scene = useThree((s) => s.scene);
 	return createPortal(
 		<TransformControls
@@ -3242,7 +3289,10 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 				};
 				props.beforeRef.current = null;
 				onRelocate?.(payload);
-				queueMicrotask(() => {
+				if (!proximityRelocateEnabled) {
+					return;
+				}
+				scheduleSceneRelocateCommit(() => {
 					const cand = findNearestProximityRelocate(g.position, props.objectId);
 					if (cand) onProximityConnect?.(cand);
 				});
@@ -3370,11 +3420,11 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	);
 	useLayoutEffect(() => {
 		const g = group.current;
-		if (!g) {
+		if (!g || groupMatchesFixturePose(g, props.origin, props.orientation, props.scale)) {
 			return;
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
-	}, [poseKey]);
+	}, [poseKey, props.origin, props.orientation, props.scale]);
 	const lodCtx = useLod();
 	const resolvedMeshUrl = useResolvedSceneMeshUrl({
 		origin: props.origin,
@@ -4063,6 +4113,7 @@ function RegistryProvider({
 	kindCompatibility,
 	blockedVortexFullIds,
 	proximityRadius,
+	proximityRelocateEnabled = true,
 	selectionMode,
 	relocateMode,
 	selection: controlledSelection,
@@ -4080,6 +4131,7 @@ function RegistryProvider({
 	kindCompatibility: readonly KindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
 	proximityRadius: number;
+	proximityRelocateEnabled?: boolean;
 	selectionMode: SelectionMode;
 	relocateMode: RelocateMode;
 	selection?: SelectionSnapshot;
@@ -4534,6 +4586,9 @@ function RegistryProvider({
 
 	const findNearestProximityRelocate = useCallback(
 		(world: Vector3, movingObjectId: string): AttractionPayload | null => {
+			if (!proximityRelocateEnabled) {
+				return null;
+			}
 			let best: { d: number; id: string } | null = null;
 			for (const [fullId, getter] of vortexGettersRef.current) {
 				if (fullId.startsWith(`${movingObjectId}:`)) continue;
@@ -4546,7 +4601,7 @@ function RegistryProvider({
 			if (!best) return null;
 			return { attracting: `${movingObjectId}:link`, attracted: best.id };
 		},
-		[proximityRadius],
+		[proximityRadius, proximityRelocateEnabled],
 	);
 
 	const coreValue = useMemo<RegistryCoreValue>(
@@ -4564,6 +4619,7 @@ function RegistryProvider({
 			kindCompatibility,
 			blockedVortexFullIds,
 			proximityRadius,
+			proximityRelocateEnabled,
 			relocateMode,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
@@ -4596,6 +4652,7 @@ function RegistryProvider({
 			kindCompatibility,
 			blockedVortexFullIds,
 			proximityRadius,
+			proximityRelocateEnabled,
 			relocateMode,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
@@ -4722,7 +4779,13 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 }
 
 function Inner(props: CanvasProps) {
-	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
+	const {
+		camera: camProp,
+		chunkSize = 256,
+		proximityRadius = 12,
+		proximityRelocateEnabled = true,
+		children,
+	} = props;
 	const lodRef = useRef<number>(DEFAULT_MANUAL_LOD);
 	const [sceneCamera, setSceneCamera] = useState<ThreePerspectiveCamera | null>(null);
 	const domain = props.domain ?? DEFAULT_DOMAIN;
@@ -4750,6 +4813,7 @@ function Inner(props: CanvasProps) {
 			kindCompatibility={props.kindCompatibility}
 			blockedVortexFullIds={blocked}
 			proximityRadius={proximityRadius}
+			proximityRelocateEnabled={proximityRelocateEnabled}
 			selectionMode={props.selectionMode ?? "single"}
 			relocateMode={props.relocateMode ?? "translate"}
 			selection={props.selection}
@@ -5955,6 +6019,13 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 		},
 		[ctrl],
 	);
+	const onRelocatePersist = useCallback(
+		(payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => {
+			ctrl?.patchRelocate(payload, attractingByObjectId);
+		},
+		[ctrl],
+	);
+	const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0">
 			<SceneObjectStateProvider
@@ -5964,12 +6035,11 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
 					bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect");
 				}}
-				onRelocate={(payload, attractingByObjectId) => {
-					ctrl?.patchRelocate(payload, attractingByObjectId);
-				}}
+				onRelocate={onRelocatePersist}
 			>
 				<PlaySceneCanvas
 					fixture={snap.fixture}
+					proximityRelocateEnabled={proximityRelocateEnabled}
 					kindCatalogs={kindCatalogs}
 					kindCompatibility={kindCompatibility}
 					blockedVortexFullIds={blockedVortexFullIds}
@@ -6121,6 +6191,7 @@ function PlaySceneCanvas(props: {
 	readonly selectionMode: SelectionMode;
 	readonly selectedVortexFullIds: ReadonlySet<string>;
 	readonly proximityRadius: number;
+	readonly proximityRelocateEnabled: boolean;
 	readonly chunkSize: number;
 	readonly gridFactor: number;
 	readonly showLodGrid: boolean;
@@ -6154,6 +6225,7 @@ function PlaySceneCanvas(props: {
 				kindCompatibility={props.kindCompatibility}
 				blockedVortexFullIds={props.blockedVortexFullIds}
 				proximityRadius={props.proximityRadius}
+				proximityRelocateEnabled={props.proximityRelocateEnabled}
 				chunkSize={props.chunkSize}
 				gridFactor={props.gridFactor}
 				relocateMode={props.relocateMode}

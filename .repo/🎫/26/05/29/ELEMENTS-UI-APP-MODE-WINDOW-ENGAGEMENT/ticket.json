@@ -3,7 +3,7 @@
   "emoji": "⚛️",
   "status": "closed",
   "description": "Reimplement Golden Layout-style docking in pure React Mode (tab stacks, resize, drag-dock, maximize, close; no persistence/popout). Restore golden-layout for sketchpad LayoutCanvas.",
-  "summary": "Reimplemented Golden Layout-style docking in pure React inside Mode: tab stacks (one visible window per stack), resizable row/column splits via react-resizable-panels, pointer drag-to-reorder/move/split with drop indicators, stack maximize/restore, and per-tab close. Extended WindowLayoutStackNode.activeId and ModeWindowDescriptor.title; added layout tree utils. Removed dead Golden Layout header portal from Window. Wired tab titles through ShellModeCanvas in framework and playground renderers. Restored golden-layout dependency and .lm_* CSS for sketchpad. Added Mode vitest coverage and TabStack/MaximizeStack stories. Fixed vitest duplicate-run config and boardFixtureMetaKindCompatibility export. All vitest pass: @elements/ui (45), @elements/framework-react (7), @elements/playground (8).",
+  "summary": "Refined Mode dock drag preview UX: dragged tab/window pops out as a small floating preview while moving; on valid drop targets the float hides and feedback snaps to the landing spot—tab-only chip + insert line + stack body highlight for tab merges, edge band + compact window preview for splits. Source tab collapses and source body shows placeholder during drag. Fixed same-stack reorder index mapping when the drag source is excluded from tab-bar hit testing (readLayoutAtPath + clamp to shortened stack length). All 47 vitest tests pass; Storybook QuadLayout drag verified merging Detail into Overview tab stack.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1496"
   },
@@ -14,6 +14,7 @@
     "local": "elements_ui_components_5813ffd3.plan.md"
   },
   "sessions": [
-    "⚪8dd9c9bd1e5a4120b3b4438efac95b94"
+    "⚪8dd9c9bd1e5a4120b3b4438efac95b94",
+    "⚪db7fe7151701426a9b91a7e4984f67a9"
   ]
 }
