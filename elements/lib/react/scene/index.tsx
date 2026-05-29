@@ -11,9 +11,9 @@ import React, {
 	useEffect,
 	useLayoutEffect,
 	useMemo,
-	useReducer,
 	useRef,
 	useState,
+	useSyncExternalStore,
 	type ChangeEvent,
 	type CSSProperties,
 	type MutableRefObject,
@@ -1508,14 +1508,21 @@ export function applyRelocateToSceneFixture(
 		return fixture;
 	}
 	const indexById = new Map(fixture.objects.map((object, index) => [object.id, index]));
-	const objects = fixture.objects.slice();
+	let objects: FixtureObjectV1[] | null = null;
 	let changed = false;
+	const objectAt = (index: number) => (objects ? objects[index]! : fixture.objects[index]!);
+	const setObjectAt = (index: number, next: FixtureObjectV1) => {
+		if (!objects) {
+			objects = fixture.objects.slice();
+		}
+		objects[index] = next;
+	};
 	const writePose = (id: string, origin: Vec3, orientation: Quat, scale: Vec3) => {
 		const index = indexById.get(id);
 		if (index === undefined) {
 			return;
 		}
-		const cur = objects[index]!;
+		const cur = objectAt(index);
 		const nextScale = normalizeRecordScale(scale);
 		const nextOrient = orientation;
 		if (
@@ -1530,12 +1537,12 @@ export function applyRelocateToSceneFixture(
 		) {
 			return;
 		}
-		objects[index] = {
+		setObjectAt(index, {
 			...cur,
 			origin,
 			orientation: nextOrient,
 			scale: nextScale,
-		};
+		});
 		changed = true;
 	};
 	writePose(
@@ -1551,7 +1558,7 @@ export function applyRelocateToSceneFixture(
 			if (index === undefined) {
 				continue;
 			}
-			const cur = objects[index]!;
+			const cur = objectAt(index);
 			writePose(
 				id,
 				vec3Add(cur.origin, delta),
@@ -1560,7 +1567,208 @@ export function applyRelocateToSceneFixture(
 			);
 		}
 	}
-	return changed ? { ...fixture, objects } : fixture;
+	return changed && objects ? { ...fixture, objects } : fixture;
+}
+
+const ATTRACTING_CHILDREN_EMPTY: readonly string[] = [];
+
+type SceneObjectStoreListener = () => void;
+
+/** @emoji 🗄️ Scene object records with per-id subscriptions so gumball commit does not re-render every mesh. */
+export class SceneObjectStore {
+	private records = new Map<string, ObjectRecord>();
+	private attractions: readonly AttractionProps[] = [];
+	private tree: SceneAttractionTree = {
+		parentByObjectId: new Map(),
+		attractingByObjectId: new Map(),
+		wormholeDistanceByObjectId: new Map(),
+		wormholeIds: [],
+	};
+	private structureEpoch = 0;
+	private readonly objectListeners = new Map<string, Set<SceneObjectStoreListener>>();
+	private readonly structureListeners = new Set<SceneObjectStoreListener>();
+
+	subscribeStructure(listener: SceneObjectStoreListener): () => void {
+		this.structureListeners.add(listener);
+		return () => {
+			this.structureListeners.delete(listener);
+		};
+	}
+
+	subscribeObject(objectId: string, listener: SceneObjectStoreListener): () => void {
+		let listeners = this.objectListeners.get(objectId);
+		if (!listeners) {
+			listeners = new Set();
+			this.objectListeners.set(objectId, listeners);
+		}
+		listeners.add(listener);
+		return () => {
+			listeners!.delete(listener);
+			if (listeners!.size === 0) {
+				this.objectListeners.delete(objectId);
+			}
+		};
+	}
+
+	getStructureEpoch(): number {
+		return this.structureEpoch;
+	}
+
+	getRecord(objectId: string): ObjectRecord | undefined {
+		return this.records.get(objectId);
+	}
+
+	getSortedObjectIds(): readonly string[] {
+		return [...this.records.keys()].sort();
+	}
+
+	getAttractions(): readonly AttractionProps[] {
+		return this.attractions;
+	}
+
+	getTree(): SceneAttractionTree {
+		return this.tree;
+	}
+
+	getAttractingChildIds(objectId: string): readonly string[] {
+		return this.tree.attractingByObjectId.get(objectId) ?? ATTRACTING_CHILDREN_EMPTY;
+	}
+
+	private bumpStructure(): void {
+		this.structureEpoch += 1;
+		for (const listener of this.structureListeners) {
+			listener();
+		}
+	}
+
+	private notifyObject(objectId: string): void {
+		const listeners = this.objectListeners.get(objectId);
+		if (!listeners) {
+			return;
+		}
+		for (const listener of listeners) {
+			listener();
+		}
+	}
+
+	private replaceFromSnapshot(next: ObjectStateSnapshot): void {
+		this.records = new Map(next.records);
+		this.attractions = next.attractions;
+		this.tree = next.tree;
+		this.bumpStructure();
+	}
+
+	initFromFixture(fixture: FixtureV1): void {
+		const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
+		this.replaceFromSnapshot(snap);
+	}
+
+	syncPosesFromFixture(fixture: FixtureV1): void {
+		const changed: string[] = [];
+		for (const object of fixture.objects) {
+			const cur = this.records.get(object.id);
+			if (!cur) {
+				continue;
+			}
+			const nextOrigin = object.origin;
+			const nextOrientation = object.orientation;
+			const nextScale = object.scale;
+			if (
+				cur.origin[0] === nextOrigin[0] &&
+				cur.origin[1] === nextOrigin[1] &&
+				cur.origin[2] === nextOrigin[2] &&
+				cur.orientation?.[0] === nextOrientation?.[0] &&
+				cur.orientation?.[1] === nextOrientation?.[1] &&
+				cur.orientation?.[2] === nextOrientation?.[2] &&
+				cur.orientation?.[3] === nextOrientation?.[3] &&
+				cur.scale === nextScale
+			) {
+				continue;
+			}
+			this.records.set(object.id, {
+				...cur,
+				origin: nextOrigin,
+				orientation: nextOrientation,
+				scale: nextScale,
+			});
+			changed.push(object.id);
+		}
+		for (const objectId of changed) {
+			this.notifyObject(objectId);
+		}
+	}
+
+	removeObjectIds(objectIds: readonly string[]): void {
+		if (objectIds.length === 0) {
+			return;
+		}
+		const next = objectStateReducer(this.toSnapshot(), { type: "removeObjects", objectIds });
+		this.replaceFromSnapshot(next);
+	}
+
+	addAttraction(attraction: AttractionProps): boolean {
+		const snap = this.toSnapshot();
+		const next = objectStateReducer(snap, { type: "addAttraction", attraction });
+		if (next.attractions.length === snap.attractions.length) {
+			return false;
+		}
+		this.replaceFromSnapshot(next);
+		return true;
+	}
+
+	applyRelocate(payload: RelocatePayload): void {
+		const root = this.records.get(payload.objectId);
+		if (!root) {
+			return;
+		}
+		const writePose = (id: string, origin: Vec3, orientation: Quat, scale: Vec3) => {
+			const cur = this.records.get(id);
+			if (!cur) {
+				return;
+			}
+			this.records.set(id, {
+				...cur,
+				origin,
+				orientation,
+				scale: normalizeRecordScale(scale),
+			});
+		};
+		writePose(
+			payload.objectId,
+			payload.after.origin,
+			payload.after.orientation,
+			payload.after.scale,
+		);
+		const notifyIds = [payload.objectId];
+		if (payload.mode === "translate") {
+			const delta = vec3Sub(payload.after.origin, payload.before.origin);
+			for (const id of collectAttractedDescendantIds(payload.objectId, this.tree.attractingByObjectId)) {
+				const cur = this.records.get(id);
+				if (!cur) {
+					continue;
+				}
+				writePose(
+					id,
+					vec3Add(cur.origin, delta),
+					cur.orientation ?? ([0, 0, 0, 1] as Quat),
+					recordScaleVec(cur.scale),
+				);
+				notifyIds.push(id);
+			}
+		}
+		for (const objectId of notifyIds) {
+			this.notifyObject(objectId);
+		}
+	}
+
+	toSnapshot(): ObjectStateSnapshot {
+		return {
+			records: this.records,
+			attractions: this.attractions,
+			tree: this.tree,
+			version: this.structureEpoch,
+		};
+	}
 }
 
 /** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
@@ -1582,8 +1790,7 @@ export function applyConnectToSceneFixture(fixture: FixtureV1, payload: Attracti
 }
 
 export interface SceneObjectStateContextValue {
-	readonly snapshot: ObjectStateSnapshot;
-	readonly dispatch: (action: ObjectStateAction) => void;
+	readonly store: SceneObjectStore;
 	readonly handleRelocate: (payload: RelocatePayload) => void;
 	readonly handleConnect: (payload: AttractionPayload) => void;
 }
@@ -1601,9 +1808,13 @@ export function SceneObjectStateProvider(props: {
 	) => void;
 	readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
-	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
-		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
-	);
+	const storeRef = useRef<SceneObjectStore | null>(null);
+	if (!storeRef.current) {
+		const store = new SceneObjectStore();
+		store.initFromFixture(props.fixture);
+		storeRef.current = store;
+	}
+	const store = storeRef.current;
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
 	const syncedPoseFingerprintRef = useRef<string | null>(null);
 	const syncedFixtureRevisionRef = useRef<number | undefined>(undefined);
@@ -1611,6 +1822,10 @@ export function SceneObjectStateProvider(props: {
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
 	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
+		const sceneStore = storeRef.current;
+		if (!sceneStore) {
+			return;
+		}
 		if (skipExternalPoseSyncRef.current) {
 			skipExternalPoseSyncRef.current = false;
 			syncedPoseFingerprintRef.current = poseFingerprint;
@@ -1620,28 +1835,28 @@ export function SceneObjectStateProvider(props: {
 			syncedFixtureRevisionRef.current = props.fixtureRevision;
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
 			syncedPoseFingerprintRef.current = poseFingerprint;
-			const prevIds = new Set(snapshot.records.keys());
+			const prevIds = new Set(sceneStore.getSortedObjectIds());
 			const nextIds = new Set(props.fixture.objects.map((object) => object.id));
 			const removed = [...prevIds].filter((id) => !nextIds.has(id));
 			const added = [...nextIds].filter((id) => !prevIds.has(id));
 			if (removed.length > 0 && added.length === 0) {
-				dispatch({ type: "removeObjects", objectIds: removed });
+				sceneStore.removeObjectIds(removed);
 			} else {
-				dispatch({ type: "init", fixture: props.fixture });
+				sceneStore.initFromFixture(props.fixture);
 			}
 			return;
 		}
 		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
 			syncedFixtureFingerprintRef.current = fixtureFingerprint;
 			syncedPoseFingerprintRef.current = poseFingerprint;
-			const prevIds = new Set(snapshot.records.keys());
+			const prevIds = new Set(sceneStore.getSortedObjectIds());
 			const nextIds = new Set(props.fixture.objects.map((object) => object.id));
 			const removed = [...prevIds].filter((id) => !nextIds.has(id));
 			const added = [...nextIds].filter((id) => !prevIds.has(id));
 			if (removed.length > 0 && added.length === 0) {
-				dispatch({ type: "removeObjects", objectIds: removed });
+				sceneStore.removeObjectIds(removed);
 			} else {
-				dispatch({ type: "init", fixture: props.fixture });
+				sceneStore.initFromFixture(props.fixture);
 			}
 			return;
 		}
@@ -1649,35 +1864,38 @@ export function SceneObjectStateProvider(props: {
 			return;
 		}
 		syncedPoseFingerprintRef.current = poseFingerprint;
-		dispatch({ type: "syncPoses", fixture: props.fixture });
-	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint, snapshot.records]);
+		sceneStore.syncPosesFromFixture(props.fixture);
+	}, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
-			const attractingByObjectId = snapshot.tree.attractingByObjectId;
+			const sceneStore = storeRef.current!;
+			const attractingByObjectId = sceneStore.getTree().attractingByObjectId;
 			skipExternalPoseSyncRef.current = true;
-			dispatch({ type: "relocate", payload });
-			props.onRelocate?.(payload, attractingByObjectId);
+			sceneStore.applyRelocate(payload);
+			queueMicrotask(() => {
+				props.onRelocate?.(payload, attractingByObjectId);
+			});
 		},
-		[props.onRelocate, snapshot.tree.attractingByObjectId],
+		[props.onRelocate],
 	);
 	const handleConnect = useCallback(
 		(payload: AttractionPayload) => {
+			const sceneStore = storeRef.current!;
 			const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
-			dispatch({
-				type: "addAttraction",
-				attraction: {
-					id: attractionId,
-					attracting: payload.attracting as AttractionProps["attracting"],
-					attracted: payload.attracted as AttractionProps["attracted"],
-				},
+			const added = sceneStore.addAttraction({
+				id: attractionId,
+				attracting: payload.attracting as AttractionProps["attracting"],
+				attracted: payload.attracted as AttractionProps["attracted"],
 			});
-			props.onConnect?.(payload);
+			if (added) {
+				props.onConnect?.(payload);
+			}
 		},
 		[props.onConnect],
 	);
 	const value = useMemo<SceneObjectStateContextValue>(
-		() => ({ snapshot, dispatch, handleRelocate, handleConnect }),
-		[snapshot, handleRelocate, handleConnect],
+		() => ({ store, handleRelocate, handleConnect }),
+		[store, handleRelocate, handleConnect],
 	);
 	return <SceneObjectStateContext.Provider value={value}>{props.children}</SceneObjectStateContext.Provider>;
 }
@@ -1692,9 +1910,12 @@ function useSceneObjectState(): SceneObjectStateContextValue {
 
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
 	const state = useContext(SceneObjectStateContext);
-	return useMemo(
-		() => (state ? blockedVortexFullIdsFromAttractions(state.snapshot.attractions) : fallback),
-		[state, fallback, state?.snapshot.attractions, state?.snapshot.version],
+	return useSyncExternalStore(
+		(onStoreChange) => (state ? state.store.subscribeStructure(onStoreChange) : () => {}),
+		() =>
+			state ? blockedVortexFullIdsFromAttractions(state.store.getAttractions()) : fallback,
+		() =>
+			state ? blockedVortexFullIdsFromAttractions(state.store.getAttractions()) : fallback,
 	);
 }
 
@@ -1709,15 +1930,20 @@ export function useSceneObjectConnect(): (payload: AttractionPayload) => void {
 }
 
 function useObjectRecord(objectId: string): ObjectRecord | undefined {
-	const { snapshot } = useSceneObjectState();
-	return useMemo(() => snapshot.records.get(objectId), [snapshot.records, snapshot.version, objectId]);
+	const { store } = useSceneObjectState();
+	return useSyncExternalStore(
+		(onStoreChange) => store.subscribeObject(objectId, onStoreChange),
+		() => store.getRecord(objectId),
+		() => store.getRecord(objectId),
+	);
 }
 
 function useAttractingChildIds(objectId: string): readonly string[] {
-	const { snapshot } = useSceneObjectState();
-	return useMemo(
-		() => snapshot.tree.attractingByObjectId.get(objectId) ?? [],
-		[snapshot.tree.attractingByObjectId, snapshot.version, objectId],
+	const { store } = useSceneObjectState();
+	return useSyncExternalStore(
+		(onStoreChange) => store.subscribeStructure(onStoreChange),
+		() => store.getAttractingChildIds(objectId),
+		() => store.getAttractingChildIds(objectId),
 	);
 }
 
@@ -1811,8 +2037,12 @@ export interface SceneObjectsProps {
 
 /** @emoji ­ƒºè Renders all scene objects from central state (id-keyed; survives ownership changes). */
 export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps) {
-	const { snapshot } = useSceneObjectState();
-	const ids = useMemo(() => [...snapshot.records.keys()].sort(), [snapshot.records, snapshot.version]);
+	const { store } = useSceneObjectState();
+	const ids = useSyncExternalStore(
+		(onStoreChange) => store.subscribeStructure(onStoreChange),
+		() => store.getSortedObjectIds(),
+		() => store.getSortedObjectIds(),
+	);
 	return (
 		<>
 			{ids.map((id) => (
@@ -1831,10 +2061,15 @@ export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps)
 
 /** @emoji ­ƒî▓ Logical attraction tree roots (wormholes) for structure-only composition. */
 export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots() {
-	const { snapshot } = useSceneObjectState();
+	const { store } = useSceneObjectState();
+	const wormholeIds = useSyncExternalStore(
+		(onStoreChange) => store.subscribeStructure(onStoreChange),
+		() => store.getTree().wormholeIds,
+		() => store.getTree().wormholeIds,
+	);
 	return (
 		<>
-			{snapshot.tree.wormholeIds.map((id) => (
+			{wormholeIds.map((id) => (
 				<ObjectTreeNode key={id} objectId={id} />
 			))}
 		</>
@@ -1843,8 +2078,13 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 
 /** @emoji ­ƒº▓ Renders all attraction endpoint lines in one frame loop (avoids N├ùuseFrame churn). */
 export const SceneAttractions = memo(function SceneAttractions() {
-	const { snapshot } = useSceneObjectState();
-	return <SceneAttractionLineBatch attractions={snapshot.attractions} />;
+	const { store } = useSceneObjectState();
+	const attractions = useSyncExternalStore(
+		(onStoreChange) => store.subscribeStructure(onStoreChange),
+		() => store.getAttractions(),
+		() => store.getAttractions(),
+	);
+	return <SceneAttractionLineBatch attractions={attractions} />;
 });
 //#endregion ­ƒò©´©ÅAttractionGraph
 
@@ -5446,7 +5686,7 @@ function ScenePlayKeyboardBridge(): null {
 
 /** @emoji 🌲 Builds inspector tree sections (sections + items) for the scene play details panel. */
 function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus: CommandBus): TreeDataSection[] {
-	const { snap, setSelection } = shell;
+	const { snap } = shell;
 	const fixture = snap.fixture;
 	if (!fixture) {
 		return [
@@ -5472,7 +5712,9 @@ function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus:
 					description: (
 						<div className="flex flex-col gap-2 pt-1">
 							{!hasSelection ? (
-								<p className="text-muted-foreground text-xs">Click an object to select. Alt+click a vortex. Pick an attraction below.</p>
+								<p className="text-muted-foreground text-xs">
+									Select objects, vortices, or attractions in the canvas or workbench hierarchy.
+								</p>
 							) : null}
 							<Button
 								className="h-7 gap-1 self-start px-2"
@@ -5534,45 +5776,6 @@ function buildScenePlayInspectorSections(shell: ScenePlayShellContextValue, bus:
 					description: <ScenePlayInspectorAttractions attractionIds={selection.attractionIds} fixture={fixture} />,
 				},
 			],
-		});
-	}
-	if (fixture.attractions.length > 0) {
-		sections.push({
-			id: "scene-play-inspector.scene-attractions",
-			label: "Attractions in scene",
-			defaultOpen: !hasSelection,
-			items: fixture.attractions.map((attraction) => ({
-				id: `scene-play-inspector.scene-attraction.${attraction.id}`,
-				label: attraction.id,
-				description: `${attraction.attracting} → ${attraction.attracted}`,
-				onClick: () => setSelection({ objectIds: [], vortexIds: [], attractionIds: [attraction.id] }),
-			})),
-		});
-	} else {
-		sections.push({
-			id: "scene-play-inspector.scene-attractions",
-			label: "Attractions in scene",
-			defaultOpen: !hasSelection,
-			content: <p className="text-muted-foreground px-2 py-1 text-xs">No attractions in this scene.</p>,
-		});
-	}
-	if (fixture.objects.length > 0) {
-		sections.push({
-			id: "scene-play-inspector.scene-objects",
-			label: "Objects in scene",
-			defaultOpen: true,
-			items: fixture.objects.map((object) => ({
-				id: `scene-play-inspector.scene-object.${object.id}`,
-				label: scenePlayFixtureRowLabel(object.label, object.id),
-				onClick: () => setSelection({ objectIds: [object.id], vortexIds: [], attractionIds: [] }),
-			})),
-		});
-	} else {
-		sections.push({
-			id: "scene-play-inspector.scene-objects",
-			label: "Objects in scene",
-			defaultOpen: true,
-			content: <p className="text-muted-foreground px-2 py-1 text-xs">No objects in this scene.</p>,
 		});
 	}
 	return sections;

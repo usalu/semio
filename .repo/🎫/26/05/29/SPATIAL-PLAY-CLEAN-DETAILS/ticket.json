@@ -1,0 +1,13 @@
+{
+  "title": "Spatial Play Clean Details",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Remove leftovers from old play; details panels must be selection-focused only (not listing all attractions/objects).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1500"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5434b49b539f43dba4237bff8a9712a5"
+  ]
+}

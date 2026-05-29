@@ -26,7 +26,7 @@ import {
 	type TreeDataSection,
 	type UiScene3DHostSurfaceNode,
 } from "@elements/playground/react";
-import { ListTree } from "lucide-react";
+import { ListTree, Shapes } from "lucide-react";
 import {
 	SPATIAL_PLAY_APP_ID,
 	SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID,
@@ -94,98 +94,6 @@ import {
 	type SpatialInteractionSelectionByState,
 	type SpatialRendererSelectionByModel,
 } from "../index";
-
-//#region 🔖ConstructQueryPanel
-function defaultConstructQueryForModelDefinition(modelDefinitionId: string): string {
-	if (isShapeModelDefinition(modelDefinitionId)) {
-		return "MATCH (o:Object {typology: 'spatial.shape.primitive.box'}) RETURN o.id LIMIT 8";
-	}
-	const scope = resolveModelDefinitionScope(modelDefinitionId);
-	const typology = scope.typologies[0];
-	if (typology) return `MATCH (o:Object {typology: '${typology.id}'}) RETURN o.id LIMIT 8`;
-	return "MATCH (o:Object) RETURN o.id LIMIT 8";
-}
-
-/** @emoji 🔍 Play-only `construct` runner scoped to the active model definition. */
-function ConstructQueryPanel({
-	runtime,
-	activeModelDefinitionId,
-}: {
-	readonly runtime: InteractionRuntime;
-	readonly activeModelDefinitionId: string;
-}) {
-	const defaultQuery = useMemo(
-		() => defaultConstructQueryForModelDefinition(activeModelDefinitionId),
-		[activeModelDefinitionId],
-	);
-	const [text, setText] = useState(defaultQuery);
-	const [out, setOut] = useState("");
-	const [busy, setBusy] = useState(false);
-	useEffect(() => {
-		setText(defaultQuery);
-		setOut("");
-	}, [defaultQuery]);
-	const run = useCallback(async () => {
-		const q = text.trim();
-		if (!q) return;
-		setBusy(true);
-		try {
-			const r = await runtime.query(q);
-			setOut(JSON.stringify({ rows: r.rows, ...(r.data !== undefined ? { data: r.data } : {}), ...(r.diff ? { diff: r.diff } : {}) }, null, 2));
-		} catch (e) {
-			setOut(String(e));
-		} finally {
-			setBusy(false);
-		}
-	}, [runtime, text]);
-	return (
-		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, marginTop: 8 }}>
-			<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Construct query</span>
-			<textarea
-				value={text}
-				onChange={(e) => setText(e.target.value)}
-				rows={4}
-				spellCheck={false}
-				style={{
-					padding: 8,
-					borderRadius: 6,
-					background: "#12121c",
-					color: "#e8e8f0",
-					border: "1px solid #2a2a3c",
-					fontFamily: "ui-monospace, monospace",
-					fontSize: 11,
-				}}
-			/>
-			<button
-				type="button"
-				disabled={busy}
-				onClick={() => void run()}
-				style={{ padding: "6px 10px", borderRadius: 6, alignSelf: "flex-start", cursor: busy ? "wait" : "pointer" }}
-			>
-				{busy ? "Running…" : "Run"}
-			</button>
-			{out ? (
-				<pre
-					style={{
-						margin: 0,
-						maxHeight: 200,
-						overflow: "auto",
-						padding: 8,
-						borderRadius: 6,
-						background: "#0e0e16",
-						color: "#a8d8a8",
-						fontSize: 11,
-						whiteSpace: "pre-wrap",
-						wordBreak: "break-word",
-					}}
-				>
-					{out}
-				</pre>
-			) : null}
-		</div>
-	);
-}
-//#endregion
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
@@ -619,7 +527,6 @@ interface PlaySessionProps {
 	readonly pickGeometry: Model;
 	readonly onDocumentModelChange: (model: Model) => void;
 	readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
-	readonly onRuntimeReady?: (runtime: InteractionRuntime | null) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -645,7 +552,6 @@ function PlaySession({
 	pickGeometry,
 	onDocumentModelChange,
 	onSnapshot,
-	onRuntimeReady,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
@@ -662,10 +568,6 @@ function PlaySession({
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
 	useEffect(() => {
-		onRuntimeReady?.(rt);
-		return () => onRuntimeReady?.(null);
-	}, [rt, onRuntimeReady]);
-	useEffect(() => {
 		return rt.subscribe(() => {
 			const snap = rt.getSnapshot();
 			onSnapshot(snap);
@@ -676,19 +578,10 @@ function PlaySession({
 			}
 		});
 	}, [rt, documentModel, onSnapshot, onDocumentModelChange, onModelDefinitionRevision]);
-	const asideWithQuery = useMemo(
-		() => (
-			<>
-				{asideExtra}
-				<ConstructQueryPanel runtime={rt} activeModelDefinitionId={activeModelDefinitionId} />
-			</>
-		),
-		[asideExtra, rt, activeModelDefinitionId],
-	);
 	return (
 		<InteractionRepl
 			fillHost
-			showAside={Boolean(asideExtra)}
+			showAside={false}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={onInteractionId}
@@ -698,7 +591,7 @@ function PlaySession({
 			geometry={documentModel.model}
 			pickGeometry={pickGeometry}
 			onDocumentModelChange={onDocumentModelChange}
-			asideExtra={asideWithQuery}
+			asideExtra={asideExtra}
 			sessionRestartNonce={sessionRestartNonce}
 			activeModelDefinitionId={activeModelDefinitionId}
 			onActiveModelDefinitionIdChange={onActiveModelDefinitionId}
@@ -755,8 +648,6 @@ interface SpatialPlayModelSpaceValue {
 	readonly handleLoadRaw: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
 	readonly liveModel: Model;
 	readonly brepjsKernel: BrepjsKernel;
-	readonly shapeInteractionRuntime: InteractionRuntime | null;
-	readonly setShapeInteractionRuntime: (runtime: InteractionRuntime | null) => void;
 }
 
 const SpatialPlayModelSpaceContext = createContext<SpatialPlayModelSpaceValue | null>(null);
@@ -803,7 +694,6 @@ function SpatialPlayModelSpaceProvider({
 	const [interactionSelectionByState, setInteractionSelectionByState] = useState<SpatialInteractionSelectionByState>({});
 	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
 	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
-	const [shapeInteractionRuntime, setShapeInteractionRuntime] = useState<InteractionRuntime | null>(null);
 	const [fileStatus, setFileStatus] = useState<string>("");
 	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
@@ -1218,8 +1108,6 @@ function SpatialPlayModelSpaceProvider({
 			handleLoadRaw,
 			liveModel,
 			brepjsKernel,
-			shapeInteractionRuntime,
-			setShapeInteractionRuntime,
 		}),
 		[
 			activeModelDefinitionId,
@@ -1254,7 +1142,6 @@ function SpatialPlayModelSpaceProvider({
 			spec,
 			viewObjectCount,
 			brepjsKernel,
-			shapeInteractionRuntime,
 		],
 	);
 
@@ -1267,19 +1154,17 @@ function SpatialPlayLoadInput(): ReactNode {
 	return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
 }
 
-/** @emoji 🧰 Workbench details: selection panels and shape assets (save/transform live in playground toolbar). */
+/** @emoji 🎯 Details panel: attribute and property editors for the current selection only. */
 function SpatialPlayDetailsAside(): ReactNode {
-	const {
-		activeModelDefinitionId,
-		liveModel,
-		selectionInScope,
-		handleModelAttributesChange,
-		brepjsKernel,
-		shapeAssetId,
-		handleShapeAssetChange,
-		fileStatus,
-		shapeInteractionRuntime,
-	} = useSpatialPlayModelSpace();
+	const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } =
+		useSpatialPlayModelSpace();
+	if (selectionInScope.length === 0) {
+		return (
+			<div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
+				Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.
+			</div>
+		);
+	}
 	return (
 		<>
 			<SelectionAttributesPanel
@@ -1296,9 +1181,15 @@ function SpatialPlayDetailsAside(): ReactNode {
 				selection={selectionInScope}
 				selectionCount={selectionInScope.length}
 			/>
-			{shapeInteractionRuntime ? (
-				<ConstructQueryPanel runtime={shapeInteractionRuntime} activeModelDefinitionId={activeModelDefinitionId} />
-			) : null}
+		</>
+	);
+}
+
+/** @emoji 📦 Workbench catalog: shape fixtures and file I/O status (toolbar handles save/load). */
+function SpatialPlayCatalogAside(): ReactNode {
+	const { activeModelDefinitionId, shapeAssetId, handleShapeAssetChange, fileStatus } = useSpatialPlayModelSpace();
+	return (
+		<>
 			{isShapeModelDefinition(activeModelDefinitionId) ? (
 				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
 					<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Shape asset</span>
@@ -1317,8 +1208,7 @@ function SpatialPlayDetailsAside(): ReactNode {
 				</label>
 			) : (
 				<span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-					Shape assets apply to <code style={{ color: "#e8e8f0" }}>spatial.shape</code>. Focus the Shape pane to edit source geometry;
-					derived models update via transforms.
+					Shape assets apply to <code style={{ color: "#e8e8f0" }}>spatial.shape</code>. Focus the Shape pane to load source geometry.
 				</span>
 			)}
 			{fileStatus ? (
@@ -1353,7 +1243,6 @@ function SpatialPlayShapePane(): ReactNode {
 		pickGeometry,
 		handleModelAttributesChange,
 		handleSnapshotChange,
-		setShapeInteractionRuntime,
 	} = useSpatialPlayModelSpace();
 
 	if (!spec) {
@@ -1393,7 +1282,6 @@ function SpatialPlayShapePane(): ReactNode {
 				pickGeometry={pickGeometry}
 				onDocumentModelChange={handleModelAttributesChange}
 				onSnapshot={handleSnapshotChange}
-				onRuntimeReady={setShapeInteractionRuntime}
 			/>
 		</div>
 	);
@@ -1544,19 +1432,39 @@ function SpatialPlaySurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceN
 	);
 }
 
+class SpatialPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
+	resolveTab(): SidePanelTabConfig {
+		return {
+			id: "spatial-play-catalog",
+			icon: Shapes,
+			order: 1,
+			tree: new StaticTreePanelDefinition({
+				sections: [
+					{
+						id: "spatial-play-catalog.section",
+						label: "Catalog",
+						defaultOpen: true,
+						items: [{ id: "spatial-play-catalog.body", label: "Shape fixtures", description: <SpatialPlayCatalogAside /> }],
+					},
+				],
+			}),
+		};
+	}
+}
+
 class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
 	resolveTab(): SidePanelTabConfig {
 		return {
 			id: "spatial-play-details",
 			icon: ListTree,
-			order: 1,
+			order: 0,
 			tree: new StaticTreePanelDefinition({
 				sections: [
 					{
 						id: "spatial-play-details.section",
-						label: "Spatial play",
+						label: "Selection",
 						defaultOpen: true,
-						items: [{ id: "spatial-play-details.body", label: "Controls", description: <SpatialPlayDetailsAside /> }],
+						items: [{ id: "spatial-play-details.body", label: "Properties", description: <SpatialPlayDetailsAside /> }],
 					},
 				],
 			}),
@@ -1588,8 +1496,9 @@ function SpatialPlayRoot(): ReactNode {
 		? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
 		: "";
 	const workbenchTabs = useMemo(
-		() =>
-			chromeSnapshot
+		() => [
+			new SpatialPlayCatalogPanelDefinition().resolveTab(),
+			...(chromeSnapshot
 				? [
 						new SpatialPlayHierarchyPanelDefinition(() => {
 							const snap = chromeSnapshotRef.current;
@@ -1602,7 +1511,8 @@ function SpatialPlayRoot(): ReactNode {
 							);
 						}).resolveTab(),
 					]
-				: [],
+				: []),
+		],
 		[chromeSnapshot, chromeKey],
 	);
 	const detailsTabs = useMemo(
