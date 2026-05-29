@@ -43,32 +43,37 @@ function createElementsAssetsMiddleware(assetsRoot: string): Connect.NextHandleF
 	};
 }
 
-/** @emoji 🌐 Vite: serve and copy `elements/assets` at `/assets/*` for palette fonts and cursors. */
-export function elementsAssetsVitePlugin(assetsRoot: string): Plugin {
-	let outDir = "dist";
+/** @emoji 🌐 Vite: serve and copy `ui/assets` at `/assets/*` for palette fonts and cursors. */
+export function elementsAssetsVitePlugin(assetsRoot: string): Plugin[] {
 	let viteRoot = process.cwd();
 	const serveAssets = createElementsAssetsMiddleware(assetsRoot);
-	return {
-		name: "elements-assets",
-		enforce: "pre",
-		configResolved(config) {
-			outDir = config.build.outDir;
-			viteRoot = config.root;
+	return [
+		{
+			name: "elements-assets-serve",
+			enforce: "pre",
+			configureServer(server) {
+				server.middlewares.use(serveAssets);
+			},
+			configurePreviewServer(server) {
+				server.middlewares.use(serveAssets);
+			},
 		},
-		configureServer(server) {
-			server.middlewares.use(serveAssets);
+		{
+			name: "elements-assets-build",
+			apply: "build",
+			enforce: "pre",
+			configResolved(config) {
+				viteRoot = config.root;
+			},
+			closeBundle() {
+				if (!existsSync(assetsRoot)) {
+					return;
+				}
+				const dest = resolve(viteRoot, "dist", "assets");
+				mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+				cpSync(assetsRoot, dest, { recursive: true });
+			},
 		},
-		configurePreviewServer(server) {
-			server.middlewares.use(serveAssets);
-		},
-		closeBundle() {
-			if (!existsSync(assetsRoot)) {
-				return;
-			}
-			const dest = resolve(viteRoot, outDir, "assets");
-			mkdirSync(resolve(viteRoot, outDir), { recursive: true });
-			cpSync(assetsRoot, dest, { recursive: true });
-		},
-	};
+	];
 }
 //#endregion 🔖ViteElementsAssets

@@ -29,8 +29,11 @@ import {
 	registerTabIcon,
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
+	type SidePanelTabConfig,
+	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 } from "@framework/playground-renderer-react";
+import { PureSidePanelTabDefinition, StaticTreePanelDefinition } from "../tree-panels.tsx";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement } from "react";
 import {

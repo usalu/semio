@@ -15,7 +15,7 @@ const elementsAssetsRoot = path.resolve(repoRoot, "ui/assets");
 
 export default defineConfig({
 	root: __dirname,
-	plugins: [elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react()],
+	plugins: [...elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react()],
 	build: {
 		target: "esnext",
 	},

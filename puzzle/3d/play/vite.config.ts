@@ -15,7 +15,7 @@ const threePackageRoot = path.resolve(__dirname, "../node_modules/three");
 export default defineConfig({
 	root: __dirname,
 	plugins: [
-		elementsAssetsVitePlugin(elementsAssetsRoot),
+		...elementsAssetsVitePlugin(elementsAssetsRoot),
 		tailwindcss(),
 		react(),
 		{

@@ -23,14 +23,16 @@ export default defineConfig({
 	publicDir: false,
 	assetsInclude: ["**/*.wasm"],
 	worker: { format: "es" },
-	plugins: [elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react()],
+	plugins: [...elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react()],
+	build: {
+		target: "esnext",
+		outDir: "dist",
+		emptyOutDir: true,
+	},
 	server: {
 		fs: {
 			allow: [repoRoot],
 		},
-	},
-	build: {
-		target: "esnext",
 	},
 	resolve: {
 		alias: [

@@ -1,7 +1,7 @@
 {
   "name": "@cad/js-workspace",
   "private": true,
-  "workspaces": ["core", "kernel-brepjs", "machine-stately", "query", "renderer-r3f"],
+  "workspaces": ["core", "kernel-brepjs", "machine-stately", "query", "renderer"],
   "dependencies": {
     "xstate": "^5"
   }
