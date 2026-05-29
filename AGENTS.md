@@ -16,7 +16,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
-
 - You are working on a greenfield repo.
   - The codebase is under design and development and not used in production yet.
     - You MUST not care about backwards compatibility.
@@ -28,7 +27,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST get everything working.
     - There are many inconsistencies that you MUST refactor.
       - You MUST use clean mechanisms that might require large refactorings.
-
 - You MUST use repo mcp for repo-specific infrastructure.
   - You MUST work inside a ticket.
   - You MUST NOT use search tool because it is broken.
@@ -49,19 +47,17 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - A title MUST be titleized (e.g. "Some Title on Something") and MUST NOT be a slug or MUST NOT be all caps.
   - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
-
 - You MUST NOT mix technologies (`./elements`, `./semio`, `./coda`, `./reuse`) if NOT explicitly asked.
-
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.
   - You MUST NOT say that a feature is working when you didn't confirm runtime behaviour with console logs.
   - You MUST add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
-
 - You MUST only ask when in planning mode. Otherwise you MUST be opinionated and take the most appropriate choice directly.
 - You MUST NOT stop halfway and ask if you should continue.
 - You MUST be thorough.
-
 - You MUST only write consice code.
   - You MUST NOT comment inside definitions.
   - You SHOULD add links to related resources in native docstring format.
     - You MUST start all docstrings with a unique and fitting emoji.
+- You MUST NOT directly depend on external libaries.
+  - You MUST use all external libraries behind an interface.
