@@ -1,8 +1,8 @@
 // #region 🧲Header
-// 💻 elements/lib/react/scene/play/main.ts — Vite entry: mounts scene play via {@link renderPlayground}.
+/** @emoji 🛝 Scene play Vite entry via {@link bootScenePlay}. */
 // #endregion 🧲Header
 
-import { renderPlayground } from "@framework/playground-renderer-react";
+import { bootScenePlay } from "@framework/playground-renderer-react/puzzle/scene";
 import { ScenePlayground } from "./index.ts";
 
-renderPlayground(new ScenePlayground());
+bootScenePlay(new ScenePlayground());

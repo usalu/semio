@@ -21,7 +21,8 @@ import {
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground-renderer-react/shell";
+import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground-renderer-react/boot";
 import {
 	buildTopologyDualSurfaceBindings,
 	topologyMirrorConnectHandlers,
@@ -46,7 +47,7 @@ import {
 	buildTopologyPlayRuntime,
 	buildTopologySceneDeclarativeBody,
 	type TopologyPlaySnapshot,
-} from "../../../../../puzzle/5d/play/index.ts";
+} from "@puzzle/5d-play";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
@@ -257,9 +258,19 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
 	);
 }
 
-/** @emoji 🚀 Mounts topology play chrome for a {@link Playground} (called from {@link renderPlayground}). */
+/** @emoji 🚀 Mounts topology play chrome for a {@link Playground}. */
 export function mountTopologyPlayChrome(playground: Playground, rootId = "root"): void {
 	mountPlaygroundApp(<TopologyPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const topologyPlayChromeBoot: PlaygroundChromeBoot = {
+	registerHosts: registerTopologyPlaySurfaceHosts,
+	mount: mountTopologyPlayChrome,
+};
+
+/** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/main.ts`). */
+export function bootTopologyPlay(playground: Playground, rootId = "root"): void {
+	bootPlayground(playground, topologyPlayChromeBoot, rootId);
 }
 
 //#endregion 🔖Mount

@@ -35,7 +35,8 @@ import {
 	type SidePanelTabConfig,
 	type TreeDataSection,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground-renderer-react/shell";
+import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground-renderer-react/boot";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement } from "react";
 import {
@@ -65,7 +66,7 @@ import {
 	buildBoardPlaySelectionDeclarativeBody,
 	buildBoardPlayRuntime,
 	type BoardPlayPaneId,
-} from "../../../../../puzzle/2d/play/index.ts";
+} from "@puzzle/2d-play";
 import {
 	mergeBoardKindCatalogBundleByRowId,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
@@ -108,7 +109,7 @@ const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 );
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "../../../../../puzzle/2d/play/index.ts";
+export type { BoardPlayPaneId } from "@puzzle/2d-play";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -2604,9 +2605,19 @@ function BoardPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): Rea
   );
 }
 
-/** @emoji 🚀 Mounts board play chrome for a {@link Playground} (called from {@link renderPlayground}). */
+/** @emoji 🚀 Mounts board play chrome for a {@link Playground}. */
 export function mountBoardPlayChrome(playground: Playground, rootId = "root"): void {
   mountPlaygroundApp(<BoardPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const boardPlayChromeBoot: PlaygroundChromeBoot = {
+	registerHosts: registerBoardPlaySurfaceHosts,
+	mount: mountBoardPlayChrome,
+};
+
+/** @emoji 🛝 Board play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
+export function bootBoardPlay(playground: Playground, rootId = "root"): void {
+	bootPlayground(playground, boardPlayChromeBoot, rootId);
 }
 
 // #endregion 🔖Entrypoint

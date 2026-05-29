@@ -6,12 +6,20 @@
 	"type": "module",
 	"private": true,
 	"exports": {
-		".": "./index.tsx"
+		".": "./index.tsx",
+		"./shell": "./shell.tsx",
+		"./boot": "./boot-playground.ts",
+		"./puzzle/board": "./puzzle/board-play-host.tsx",
+		"./puzzle/scene": "./puzzle/scene-play-host.tsx",
+		"./puzzle/topology": "./puzzle/topology-play-host.tsx"
 	},
 	"dependencies": {
 		"@framework/playground": "workspace:*",
+		"@puzzle/2d-play": "workspace:*",
 		"@puzzle/2d-react": "workspace:*",
+		"@puzzle/3d-play": "workspace:*",
 		"@puzzle/3d-react": "workspace:*",
+		"@puzzle/5d-play": "workspace:*",
 		"@puzzle/5d-react": "workspace:*",
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",

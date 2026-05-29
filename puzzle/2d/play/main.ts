@@ -1,8 +1,8 @@
 // #region 🧲Header
-// 💻 puzzle/2d/play/main.ts — Vite entry: mounts board play via {@link renderPlayground}.
+/** @emoji 🛝 Board play Vite entry via {@link bootBoardPlay}. */
 // #endregion 🧲Header
 
-import { renderPlayground } from "@framework/playground-renderer-react";
+import { bootBoardPlay } from "@framework/playground-renderer-react/puzzle/board";
 import { BoardPlayground } from "./index.ts";
 
-renderPlayground(new BoardPlayground());
+bootBoardPlay(new BoardPlayground());

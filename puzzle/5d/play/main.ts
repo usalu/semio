@@ -1,8 +1,8 @@
 // #region 🧲Header
-// 💻 puzzle/5d/play/main.ts — Vite entry: mounts topology play via {@link renderPlayground}.
+/** @emoji 🛝 Topology play Vite entry via {@link bootTopologyPlay}. */
 // #endregion 🧲Header
 
-import { renderPlayground } from "@framework/playground-renderer-react";
+import { bootTopologyPlay } from "@framework/playground-renderer-react/puzzle/topology";
 import { TopologyPlayground } from "./index.ts";
 
-renderPlayground(new TopologyPlayground());
+bootTopologyPlay(new TopologyPlayground());
