@@ -1919,6 +1919,82 @@ export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): Typ
   return null;
 }
 
+/** @emoji 🌳 Kernel topology node nested under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
+export interface ModelTopologyHierarchyNode {
+  readonly kind: TypologyPrimitiveKind;
+  readonly id: string;
+  readonly children: readonly ModelTopologyHierarchyNode[];
+}
+
+function sortedTopologyChildIds(ids: readonly string[]): string[] {
+  return [...ids].sort((a, b) => a.localeCompare(b));
+}
+
+function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelTopologyHierarchyNode | null {
+  const children: ModelTopologyHierarchyNode[] = [];
+  switch (kind) {
+    case "solid": {
+      const solid = model.solids[id];
+      if (!solid) return null;
+      for (const shellId of sortedTopologyChildIds(solid.shellIds)) {
+        const child = buildModelTopologyHierarchyNode(model, "shell", shellId);
+        if (child) children.push(child);
+      }
+      break;
+    }
+    case "shell": {
+      const shell = model.shells[id];
+      if (!shell) return null;
+      for (const faceId of sortedTopologyChildIds(shell.faceIds)) {
+        const child = buildModelTopologyHierarchyNode(model, "face", faceId);
+        if (child) children.push(child);
+      }
+      break;
+    }
+    case "face": {
+      const face = model.faces[id];
+      if (!face) return null;
+      for (const wireId of sortedTopologyChildIds(face.wireIds)) {
+        const child = buildModelTopologyHierarchyNode(model, "wire", wireId);
+        if (child) children.push(child);
+      }
+      break;
+    }
+    case "wire": {
+      const wire = model.wires[id];
+      if (!wire) return null;
+      for (const edgeId of sortedTopologyChildIds(wire.edgeIds)) {
+        const child = buildModelTopologyHierarchyNode(model, "edge", edgeId);
+        if (child) children.push(child);
+      }
+      break;
+    }
+    case "edge": {
+      const edge = model.edges[id];
+      if (!edge) return null;
+      for (const vertexId of sortedTopologyChildIds(edge.vertexIds)) {
+        const child = buildModelTopologyHierarchyNode(model, "vertex", vertexId);
+        if (child) children.push(child);
+      }
+      break;
+    }
+    case "vertex":
+      if (!model.vertices[id]) return null;
+      break;
+    case "anchor":
+      if (!model.anchors[id]) return null;
+      break;
+  }
+  return { kind, id, children };
+}
+
+/** @emoji 🌳 Builds nested kernel topology under one object primitive ref in `model`. */
+export function buildModelTopologyHierarchy(model: Model, primitiveRef: string): ModelTopologyHierarchyNode | null {
+  const kind = resolvePrimitiveRefKind(model, primitiveRef);
+  if (!kind) return null;
+  return buildModelTopologyHierarchyNode(model, kind, primitiveRef);
+}
+
 /** @emoji ✅ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
 export function typologyAllowsPrimitiveKind(typology: TypologySpec, primitiveKind: TypologyPrimitiveKind): boolean {
   return typology.primitiveKinds.includes(primitiveKind);
@@ -2662,6 +2738,11 @@ export function listConstructableTypologiesForModelDefinition(modelDefinitionId:
   return listTypologiesForModelDefinition(modelDefinitionId).filter(typologyHasNativeConstructKit);
 }
 
+/** @emoji 🧭 Typology id for an interaction commit (`construct` kit or typology `interactions` list). */
+export function typologyIdForInteractionCommit(interactionId: string): string | null {
+  return typologyConstructKitByInteraction().get(interactionId)?.typology ?? typologyForInteraction(interactionId)?.id ?? null;
+}
+
 /** @emoji 📦 Binds a typology object row to the primary solid added by a create/construct diff. */
 export function ensureTypologyObjectFromCreateDiff(model: Model, typology: string, diff: ModelDiff): ObjectRef | null {
   const typologySpec = loadTypology(typology);
@@ -2669,7 +2750,8 @@ export function ensureTypologyObjectFromCreateDiff(model: Model, typology: strin
   const solidId = diff.solids?.added?.[0]?.id;
   if (!solidId) return null;
   const primitiveKind = typologySpec.primitiveKinds[0] ?? "solid";
-  const objectId = typology as ObjectRef;
+  const typologyObjectId = typology as ObjectRef;
+  const objectId = model.objects[typologyObjectId] ? (String(solidId) as ObjectRef) : typologyObjectId;
   model.objects[objectId] = {
     id: objectId,
     typology: typology as TypologyRef,
@@ -5159,6 +5241,8 @@ export class InteractionRuntime {
       data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
     }
     const inverse = applyModelDiff(model, diff);
+    const typologyId = typologyIdForInteractionCommit(this.spec.id);
+    if (typologyId && !isEmptyModelDiff(diff)) ensureTypologyObjectFromCreateDiff(model, typologyId, diff);
     const archiveContext = this.cloneCtx(this.sm.getContext());
     if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.previewKernel(), this.opts.activeModelDefinitionId ?? null);
     const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
@@ -5505,7 +5589,8 @@ if (import.meta.vitest) {
       expect(energy.interactions.every((row) => row.id.startsWith("energy.energy.construct"))).toBe(true);
       expect(energy.interactions.some((row) => row.id === "primitive.box")).toBe(false);
       expect(energy.typologies.some((row) => row.id === "energy.energy.hull")).toBe(true);
-      expect(energy.selectionEntityKinds).toEqual(["object"]);
+      expect(energy.selectionEntityKinds).toContain("object");
+      expect(energy.selectionEntityKinds).toContain("solid");
       expect(shape.selectionEntityKinds).toContain("vertex");
       expect(shape.selectionEntityKinds).toContain("face");
       const structure = resolveModelDefinitionScope("aec.building.structure");
@@ -5520,6 +5605,26 @@ if (import.meta.vitest) {
       expect(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
+    it("buildModelTopologyHierarchy nests shell through vertex under solid", () => {
+      const model = new Model();
+      const solid = solidRef("box-solid");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+      const tree = buildModelTopologyHierarchy(model, String(solid));
+      expect(tree?.kind).toBe("solid");
+      expect(tree?.children).toHaveLength(1);
+      const shell = tree!.children[0]!;
+      expect(shell.kind).toBe("shell");
+      expect(shell.children.length).toBeGreaterThan(0);
+      const face = shell.children[0]!;
+      expect(face.kind).toBe("face");
+      expect(face.children.some((row) => row.kind === "wire")).toBe(true);
+      const wire = face.children.find((row) => row.kind === "wire")!;
+      expect(wire.children.some((row) => row.kind === "edge")).toBe(true);
+      const edge = wire.children.find((row) => row.kind === "edge")!;
+      expect(edge.children.every((row) => row.kind === "vertex")).toBe(true);
+      expect(edge.children.length).toBe(2);
+    });
+
     it("listModelObjectsForModelDefinition filters objects by typology ownership", () => {
       const model = new Model();
       const cell = solidRef("c0");
@@ -6060,6 +6165,37 @@ if (import.meta.vitest) {
       );
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
+    });
+    it("primitive.box commit binds typology object rows for hierarchy", async () => {
+      const typology = "spatial.shape.primitive.box";
+      const spec = loadSpatialInteraction("primitive.box")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
+      await rt.send({ kind: "set.height", value: 4, modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      const res = rt.getSnapshot().lastResponse!;
+      expect(res.ok).toBe(true);
+      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(1);
+      expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
+      expect(model.objects[typology as ObjectRef]?.primitives.solid).toBeTruthy();
+      const rt2 = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+      });
+      await rt2.send({ kind: "pointer.down", point: [5, 0, 0], modifiers: {} });
+      await rt2.send({ kind: "pointer.down", point: [7, 2, 0], modifiers: {} });
+      await rt2.send({ kind: "set.height", value: 2, modifiers: {} });
+      await rt2.send({ kind: "confirm", modifiers: {} });
+      expect(rt2.getSnapshot().lastResponse?.ok).toBe(true);
+      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(2);
     });
     it("typologyConstructCommitActionForMode resolves exactly one mode construct action", () => {
       const ids = typologyConstructAssetIds("energy.energy.hull", "Hull");

@@ -17,13 +17,18 @@ import {
 } from "@elements/playground";
 import type { TreeDataItem, TreeDataSection } from "@elements/ui";
 import {
+	SHAPE_MODEL_DEFINITION_ID,
+	buildModelTopologyHierarchy,
+	createInteractionRuntime,
 	listModelDefinitionManifests,
 	listModelObjectsForModelDefinition,
+	loadSpatialInteraction,
+	Model,
 	objectPrimitiveEntries,
+	parseModelJson,
 	resolvePrimitiveRefKind,
 	typologyObjectPascalFromLabel,
-	parseModelJson,
-	type Model,
+	type ModelTopologyHierarchyNode,
 	type SelectionTarget,
 } from "@spatial/js-core";
 
@@ -51,16 +56,77 @@ function spatialPlaySelectionKey(target: SelectionTarget): string {
 	return `${target.kind}:${target.id}`;
 }
 
-/** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision + object counts). */
+/** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision, objects, topology counts). */
 export function spatialPlayModelsDigest(modelsByDefinitionId: Record<string, Model>): string {
 	return Object.keys(modelsByDefinitionId)
 		.sort((a, b) => a.localeCompare(b))
 		.map((modelDefinitionId) => {
 			const model = modelsByDefinitionId[modelDefinitionId];
 			if (!model) return `${modelDefinitionId}:missing`;
-			return `${modelDefinitionId}:${model.revision}:${Object.keys(model.objects).length}`;
+			return [
+				modelDefinitionId,
+				model.revision,
+				Object.keys(model.objects).length,
+				Object.keys(model.solids).length,
+				Object.keys(model.faces).length,
+				Object.keys(model.vertices).length,
+			].join(":");
 		})
 		.join("|");
+}
+
+type SpatialPlayHierarchyPickContext = {
+	readonly modelDefinitionId: string;
+	readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
+	readonly onSelect: (modelDefinitionId: string, target: SelectionTarget) => void;
+};
+
+function spatialPlayTopologyTreeItem(
+	node: ModelTopologyHierarchyNode,
+	path: string,
+	ctx: SpatialPlayHierarchyPickContext,
+): TreeDataItem {
+	const childItems = node.children.map((child) =>
+		spatialPlayTopologyTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx),
+	);
+	return {
+		id: `spatial-play-hierarchy.topology.${path}`,
+		label: `${node.kind} ${node.id}`,
+		isSelected: ctx.isSelected(node.kind, node.id),
+		defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
+		onClick: () => ctx.onSelect(ctx.modelDefinitionId, { kind: node.kind, id: node.id, editable: true }),
+		...(childItems.length > 0 ? { items: childItems } : {}),
+	};
+}
+
+function spatialPlayPrimitiveSlotTreeItems(
+	model: Model,
+	modelDefinitionId: string,
+	objectId: string,
+	slot: string,
+	primitiveRef: string,
+	ctx: SpatialPlayHierarchyPickContext,
+): TreeDataItem {
+	const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
+	const primitiveId = String(primitiveRef);
+	const topology = buildModelTopologyHierarchy(model, primitiveId);
+	const topologyItems = (topology?.children ?? []).map((child) =>
+		spatialPlayTopologyTreeItem(
+			child,
+			`${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`,
+			ctx,
+		),
+	);
+	return {
+		id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
+		label: `${slot}: ${kind} ${primitiveId}`,
+		isSelected: ctx.isSelected(kind, primitiveId),
+		defaultOpen: true,
+		onClick: () => ctx.onSelect(ctx.modelDefinitionId, { kind, id: primitiveId, editable: true }),
+		items: topologyItems.length
+			? topologyItems
+			: [{ id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.topology.empty`, label: "(empty)" }],
+	};
 }
 
 /** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for spatial play workbench. */
@@ -79,19 +145,13 @@ export function buildSpatialPlayHierarchySections(
 		if (!model) {
 			continue;
 		}
+		const pickCtx: SpatialPlayHierarchyPickContext = { modelDefinitionId, isSelected, onSelect };
 		const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
 			const objectId = String(object.id);
 			const typologyTail = object.typology.split(".").pop() ?? object.typology;
-			const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => {
-				const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
-				const primitiveId = String(primitiveRef);
-				return {
-					id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
-					label: `${slot}: ${kind} ${primitiveId}`,
-					isSelected: isSelected(kind, primitiveId),
-					onClick: () => onSelect(modelDefinitionId, { kind, id: primitiveId, editable: true }),
-				};
-			});
+			const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) =>
+				spatialPlayPrimitiveSlotTreeItems(model, modelDefinitionId, objectId, slot, primitiveRef, pickCtx),
+			);
 			return {
 				id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
 				label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
@@ -237,31 +297,48 @@ if (import.meta.vitest) {
 			expect(after).not.toBe(before);
 		});
 
-		it("buildSpatialPlayHierarchySections nests model definitions, objects, and primitives", () => {
-			const model = parseModelJson({
-				schema: "spatial.model/v1",
-				revision: 0,
-				objects: [{ id: "box1", typology: "spatial.shape.primitive.box", primitives: { solid: "solid-1" } }],
-				geometry: {
-					anchors: [],
-					vertices: [],
-					edges: [],
-					wires: [],
-					faces: [],
-					shells: [],
-					solids: [{ id: "solid-1", shellIds: [] }],
-				},
+		it("buildSpatialPlayHierarchySections lists objects after box commit object binding", async () => {
+			const { BrepjsKernel } = await import("@spatial/js-kernel-brepjs");
+			const spec = loadSpatialInteraction("primitive.box")!;
+			const model = new Model();
+			const kernel = new BrepjsKernel() as never;
+			const rt = createInteractionRuntime(spec, {
+				kernel,
+				document: { model, nodes: [] },
+				activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
 			});
-			expect(model).not.toBeNull();
-			const sections = buildSpatialPlayHierarchySections(
-				{ "spatial.shape": model! },
-				"spatial.shape",
-				[],
-				() => {},
-			);
-			expect(sections[0]?.items?.[0]?.label).toBe("ModelSpace");
-			const objectNode = sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
-			expect(objectNode?.items?.[0]?.label).toContain("solid:");
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
+			await rt.send({ kind: "set.height", value: 4, modifiers: {} });
+			await rt.send({ kind: "confirm", modifiers: {} });
+			const sections = buildSpatialPlayHierarchySections({ [SHAPE_MODEL_DEFINITION_ID]: model }, SHAPE_MODEL_DEFINITION_ID, [], () => {});
+			const modelBranch = sections[0]?.items?.[0]?.items?.[0];
+			expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
+		});
+
+		it("buildSpatialPlayHierarchySections nests topology under primitive slots", async () => {
+			const { preciseSpatialKernelMath: M } = await import("@spatial/js-kernel-brepjs");
+			const { applyModelDiff, solidRef } = await import("@spatial/js-core");
+			const model = new Model();
+			const solid = solidRef("solid-1");
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			model.objects["box1"] = {
+				id: "box1",
+				typology: "spatial.shape.primitive.box",
+				primitives: { solid: String(solid) },
+			};
+			const sections = buildSpatialPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+			const primitiveNode = sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
+			expect(primitiveNode?.label).toContain("solid:");
+			const shellNode = primitiveNode?.items?.[0];
+			expect(shellNode?.label).toContain("shell");
+			const faceNode = shellNode?.items?.[0];
+			expect(faceNode?.label).toContain("face");
+			const wireNode = faceNode?.items?.[0];
+			expect(wireNode?.label).toContain("wire");
+			const edgeNode = wireNode?.items?.[0];
+			expect(edgeNode?.label).toContain("edge");
+			expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
 		});
 	});
 }

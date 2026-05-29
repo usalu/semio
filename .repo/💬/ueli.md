@@ -2601,6 +2601,14 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+It should have 4 windows
+on the left top: shape
+on the left bottom: building
+on the right top: energy
+on the right bottom: structure classic
+
+---
+
 selection is adhoc and buggy.
 In general the renderer has one selection per model.
 Further every interaction state can have its own selection.
