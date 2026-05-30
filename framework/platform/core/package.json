@@ -2,7 +2,7 @@
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"name": "@framework/platform",
 	"version": "0.1.0",
-	"description": "elements · framework-free workbench shell (apps, modes, toolbars, controllers)",
+	"description": "framework · workbench shell (apps, modes, toolbars, controllers)",
 	"type": "module",
 	"private": true,
 	"exports": {

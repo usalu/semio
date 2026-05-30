@@ -8,14 +8,14 @@ class WasmScript extends BundleScript {
     runWasmPackWebBuild({
       rsDir: this.root,
       skipEnvVar: "SEMIO_SKIP_WASM_BUILD",
-      logPrefix: "architect",
-      wasmBaseName: "architect",
+      logPrefix: "semio/query",
+      wasmBaseName: "semio_query",
       pkg: {
         name: "@semio/query/pkg",
-        files: ["architect_bg.wasm", "architect.js", "architect.d.ts", "architect_bg.wasm.d.ts"],
-        main: "architect.js",
-        module: "architect.js",
-        types: "architect.d.ts",
+        files: ["semio_query_bg.wasm", "semio_query.js", "semio_query.d.ts", "semio_query_bg.wasm.d.ts"],
+        main: "semio_query.js",
+        module: "semio_query.js",
+        types: "semio_query.d.ts",
       },
     });
   }

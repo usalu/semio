@@ -62,7 +62,6 @@ function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
 	if (loadUiStack || loadPuzzleStack) {
 		alias["@ui/react"] = toVitePath(uiReactDir);
-		alias["@ui/react/elements"] = toVitePath(resolve(uiReactDir, "index.tsx"));
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
@@ -80,7 +79,6 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio/assets"] = toVitePath(semioAssetsDir);
 		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
-		alias["@ui/react/elements"] = toVitePath(resolve(uiReactDir, "index.tsx"));
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 	}
 	return alias;
@@ -188,7 +186,6 @@ const config: StorybookConfig = {
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
 			"@ui/react",
-			"@ui/react/elements",
 			"@framework/playground",
 			"@framework/playground/renderer/react",
 			"@puzzle/2d/react",

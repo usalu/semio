@@ -42,7 +42,7 @@ import initBoardWasm, {
 	boardRedrawLayoutFixtureJson,
 	BoardSession,
 	initSync,
-} from "../rs/pkg/puzzle_board.js";
+} from "../rs/pkg/puzzle_2d.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");

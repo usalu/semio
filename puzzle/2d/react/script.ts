@@ -27,7 +27,7 @@ const wasmScript = join(import.meta.dir, "../rs/script.ts");
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    const wasmJs = join(this.root, "../rs/pkg/puzzle_board.js");
+    const wasmJs = join(this.root, "../rs/pkg/puzzle_2d.js");
     const wasmEnv = {
       ...devToolingEnv(),
       PUZZLE_2D_RS_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0",

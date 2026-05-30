@@ -17,7 +17,6 @@
     "puzzle/5d/react",
     "puzzle/5d/play",
     "cad/js",
-    "elements/client/lib/*",
     "coda/client/ui/*",
     "coda/client/lib/*/*",
     "repo/client/*",

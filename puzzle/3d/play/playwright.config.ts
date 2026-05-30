@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const playDir = dirname(fileURLToPath(import.meta.url));
 const sceneRoot = dirname(playDir);
-const port = process.env.PUZZLE_3D_PLAY_PORT ?? "6028";
+const port = process.env.PUZZLE_3D_PLAY_PORT ?? "6013";
 
 export default defineConfig({
 	testDir: join(playDir, "e2e"),

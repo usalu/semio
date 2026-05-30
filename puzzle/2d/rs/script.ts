@@ -8,13 +8,13 @@ class WasmScript extends BundleScript {
       rsDir: this.root,
       skipEnvVar: "PUZZLE_2D_RS_SKIP_WASM_BUILD",
       logPrefix: "puzzle/2d/rs",
-      wasmBaseName: "puzzle_board",
+      wasmBaseName: "puzzle_2d",
       pkg: {
         name: "@puzzle/2d/rs",
-        files: ["puzzle_board_bg.wasm", "puzzle_board.js", "puzzle_board.d.ts", "puzzle_board_bg.wasm.d.ts"],
-        main: "puzzle_board.js",
-        module: "puzzle_board.js",
-        types: "puzzle_board.d.ts",
+        files: ["puzzle_2d_bg.wasm", "puzzle_2d.js", "puzzle_2d.d.ts", "puzzle_2d_bg.wasm.d.ts"],
+        main: "puzzle_2d.js",
+        module: "puzzle_2d.js",
+        types: "puzzle_2d.d.ts",
       },
     });
   }

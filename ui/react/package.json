@@ -3,12 +3,11 @@
   "projectType": "library",
   "name": "@ui/react",
   "version": "0.1.0",
-  "description": "elements · ui",
+  "description": "ui · react",
   "type": "module",
   "exports": {
     ".": "./index.tsx",
     "./components.json": "./components.json",
-    "./elements": "./index.tsx",
     "./globals.css": "./globals.css",
     "./theme.css": "./theme.css",
     "./tailwind.config": "./tailwind.config.ts",

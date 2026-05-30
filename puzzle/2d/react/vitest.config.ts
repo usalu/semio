@@ -12,7 +12,7 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
-			{ find: "@puzzle/2d/rs", replacement: resolve(root, "../rs/pkg/puzzle_board.js") },
+			{ find: "@puzzle/2d/rs", replacement: resolve(root, "../rs/pkg/puzzle_2d.js") },
 		],
 	},
 	test: {

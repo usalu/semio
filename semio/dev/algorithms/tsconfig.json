@@ -52,9 +52,6 @@
       ],
       "@ui/react": [
         "../../../ui/react/index.tsx"
-      ],
-      "@ui/react/elements": [
-        "../../../ui/react/index.tsx"
       ]
     }
   },

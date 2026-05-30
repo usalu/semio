@@ -39,10 +39,8 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	await page.goto("/");
 	const sceneRoot = page.locator("[data-scene-root]");
 	await expect(sceneRoot).toBeVisible({ timeout: 120_000 });
-	await expect(sceneRoot.locator("canvas")).toBeVisible({ timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
-	await page.waitForTimeout(500);
 	await expect(sceneRoot).toHaveAttribute("data-scene-domain", "architecture", { timeout: 120_000 });
+	await expect(sceneRoot.locator("canvas")).toBeVisible({ timeout: 120_000 });
 	await expectSceneLodReady(page);
 	await expect(page.locator('[data-measure-id="puzzle-3d-main-lod"]')).toBeVisible({ timeout: 120_000 });
 	expectCleanSceneConsole(messages);

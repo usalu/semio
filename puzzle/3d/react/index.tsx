@@ -4307,6 +4307,15 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
   return { chunked, rest };
 }
 
+/** @emoji 🎞️ Kicks one R3F frame when `frameloop="demand"` so LOD and meshes initialize without user input. */
+function DemandFrameloopKick(): null {
+  const invalidate = useThree((state) => state.invalidate);
+  reactHostPort.useEffect(() => {
+    invalidate();
+  }, [invalidate]);
+  return null;
+}
+
 function Inner(props: CanvasProps) {
   const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
@@ -4496,6 +4505,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
       data-scene-lod={shellLod}
     >
       <Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
+        <DemandFrameloopKick />
         <Inner {...rest} domain={domain} onLodChange={handleLod}>
           {children}
         </Inner>

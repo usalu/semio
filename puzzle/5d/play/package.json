@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@puzzle/5d/play",
   "version": "0.1.0",
-  "description": "puzzle · 5d topology play harness (renderer-neutral runtime + Vite entry)",
+  "description": "puzzle · 5d play harness (renderer-neutral runtime + Vite entry)",
   "type": "module",
   "private": true,
   "exports": {

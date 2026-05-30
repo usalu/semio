@@ -1,5 +1,5 @@
 [package]
-name = "puzzle_board"
+name = "puzzle_2d"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

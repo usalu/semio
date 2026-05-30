@@ -31,7 +31,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "puzzle_board"], this.repoRoot, playPollingEnv());
+    runCargo(["test", "-p", "puzzle_2d"], this.repoRoot, playPollingEnv());
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runVitest(this.root, segments);
     runPlaywright(this.root, "playwright.config.ts", segments);
