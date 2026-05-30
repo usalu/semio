@@ -1,11 +1,12 @@
 {
   "title": "Puzzle 3d Selectable Hover Inspector",
   "emoji": "🎯",
-  "status": "closed",
+  "status": "open",
   "description": "Make puzzle 3D objects, vortices, and attractions selectable and hoverable in the canvas; show full details in the inspector with editable fields.",
   "summary": "Extended SelectionSnapshot with attractionIds and unified commitPuzzle3dSelection for canvas picks. Objects click-select; vortices select on tap and drag past threshold to connect; attraction lines render in play, support hover/selected styling and click-select. Inspector shows editable vortex label/kind/position/direction/radius and attraction kind/endpoints. Fixed noteSelection to sync attractionIds from canvas.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
-    "⚪198c5e7c6fe14e0e8f725fddece81e15"
+    "⚪198c5e7c6fe14e0e8f725fddece81e15",
+    "⚪2854c369adb84a6cb014ada9691d605b"
   ]
 }

@@ -6335,6 +6335,72 @@ export const Edge = BOARD_HOST_EDGE;
 
 /** 🧵 Host intrinsic for transient wires from a handle to another handle or a free world end. */
 export const Wire = BOARD_HOST_WIRE;
+
+/** @emoji 🗼 Optional per-id context menus when building {@link boardFixtureSceneMarkers}. */
+export interface BoardFixtureSceneMarkersOptions {
+  edgeContextMenuForId?: (edgeId: string) => ContextMenuItem[] | undefined;
+  nodeContextMenuForId?: (nodeId: string) => ContextMenuItem[] | undefined;
+}
+
+/** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link BoardCanvas} `children` from {@link BoardFixtureV1} (Fragment of host markers only). */
+export function boardFixtureSceneMarkers(fixture: BoardFixtureV1, options?: BoardFixtureSceneMarkersOptions): ReactElement {
+  const nodeMenu = options?.nodeContextMenuForId;
+  const edgeMenu = options?.edgeContextMenuForId;
+  return (
+    <>
+      {fixture.nodes.map((node) =>
+        node.shape === "rectangle" ? (
+          <Node
+            contextMenu={nodeMenu?.(node.id)}
+            draggable
+            height={node.height}
+            id={node.id}
+            key={node.id}
+            {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
+            shape="rectangle"
+            text={boardFixtureNodeCaption(node)}
+            textAlignment={node.textAlignment}
+            textAutofit={node.textAutofit === true}
+            textFontFamily={node.textFontFamily}
+            textFontSize={node.textFontSize}
+            width={node.width}
+            x={node.x}
+            y={node.y}
+            {...(node.iconKind ? { iconKind: node.iconKind } : {})}
+          >
+            {node.handles.map((handle) => (
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+            ))}
+          </Node>
+        ) : (
+          <Node
+            contextMenu={nodeMenu?.(node.id)}
+            draggable
+            id={node.id}
+            key={node.id}
+            {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
+            radius={node.radius}
+            text={boardFixtureNodeCaption(node)}
+            textAlignment={node.textAlignment}
+            textAutofit={node.textAutofit === true}
+            textFontFamily={node.textFontFamily}
+            textFontSize={node.textFontSize}
+            x={node.x}
+            y={node.y}
+            {...(node.iconKind ? { iconKind: node.iconKind } : {})}
+          >
+            {node.handles.map((handle) => (
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+            ))}
+          </Node>
+        ),
+      )}
+      {fixture.edges.map((edge) => (
+        <Edge contextMenu={edgeMenu?.(edge.id)} id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
+      ))}
+    </>
+  );
+}
 //#endregion 🔖Markers
 
 //#region 🔖Descriptor Build
@@ -7424,6 +7490,16 @@ if (boardReactVitest) {
   }
 
   describe("board react helpers", () => {
+    it("boardFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const fixture = parseBoardFixtureV1(nakaginFixtureJson);
+      expect(fixture?.nodes.length).toBeGreaterThan(100);
+      const descriptor = buildBoardSceneDescriptor(boardFixtureSceneMarkers(fixture!));
+      expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
+      expect(descriptor.edges.length).toBe(fixture!.edges.length);
+      expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);
+    });
+
     it("createBoardHostMount registers React 19 error reporters on the host root", () => {
       const canvas = document.createElement("canvas");
       const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });

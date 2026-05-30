@@ -425,12 +425,16 @@ types {
   edges {
     node {
       id name description
-      connectors { edges { node { id name } } }
+      connectors { edges { node { id name port { id label code } } } }
+      ports { edges { node { id label code } } }
       representations { edges { node { id name file { id } } } }
     }
   }
 }
-files { edges { node { id name path url uri } } }`;
+qualities { edges { node { id key value } } }
+folders { edges { node { id path description } } }
+authors { edges { node { id name } } }
+files { edges { node { id url description } } }`;
 
 function sketchpadFormatKitTimestamp(value: unknown): string {
 	if (value == null || value === "") return "";
@@ -455,7 +459,9 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 			.map((node) => {
 				const pieceEdges = (node["pieces"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const pieces = pieceEdges.map((pe) => pe.node).filter((n): n is Record<string, unknown> => n != null) as Design["pieces"];
-				return { ...node, pieces } as Design;
+				const connectionEdges = (node["connections"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const connections = connectionEdges.map((ce) => ce.node).filter((n): n is Record<string, unknown> => n != null);
+				return { ...node, pieces, connections } as Design;
 			});
 	};
 	const parseTypes = (): Type[] => {
@@ -479,6 +485,9 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 		createdAt: data["createdAt"] != null ? String(data["createdAt"]) : undefined,
 		updatedAt: data["updatedAt"] != null ? String(data["updatedAt"]) : undefined,
 		files: nodes("files") as Kit["files"],
+		folders: nodes("folders") as Kit["folders"],
+		authors: nodes("authors") as Kit["authors"],
+		qualities: nodes("qualities") as Kit["qualities"],
 		designs: parseDesigns(),
 		types: parseTypes(),
 	} as Kit;
@@ -767,70 +776,221 @@ function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixtureV1 {
 	};
 }
 
-const SKETCHPAD_KIT_DIAGRAM_NODE_FRAME = { width: 120, height: 48 } as const;
+type SketchpadKitDiagramNodeKind = "type" | "design" | "quality" | "port" | "file" | "folder" | "author";
+
+function sketchpadKitDiagramNodeFrame(kind: SketchpadKitDiagramNodeKind): {
+	readonly width: number;
+	readonly height: number;
+	readonly shape: "circle" | "rectangle";
+} {
+	switch (kind) {
+		case "design":
+			return { width: 48, height: 48, shape: "circle" };
+		case "type":
+			return { width: 120, height: 48, shape: "rectangle" };
+		case "file":
+			return { width: 100, height: 48, shape: "rectangle" };
+		default:
+			return { width: 140, height: 36, shape: "rectangle" };
+	}
+}
+
+function sketchpadKitDiagramPortLabel(port: Record<string, unknown>): string {
+	const label = port["label"];
+	if (typeof label === "string" && label.length > 0) return label;
+	const code = port["code"];
+	if (typeof code === "string" && code.length > 0) return code;
+	return String(port["id"] ?? "");
+}
+
+/** @emoji 🔌 Collects unique ports declared on kit kinds (type-owned ports and connector port refs). */
+export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: string; readonly name: string }[] {
+	const byId = new Map<string, { id: string; name: string }>();
+	const remember = (port: unknown) => {
+		if (port == null || typeof port !== "object") return;
+		const row = port as Record<string, unknown>;
+		const id = sketchpadReadEntityId(row);
+		if (!id || byId.has(id)) return;
+		byId.set(id, { id, name: sketchpadKitDiagramPortLabel(row) });
+	};
+	for (const type of kit.types ?? []) {
+		for (const port of (type as { ports?: readonly unknown[] }).ports ?? []) remember(port);
+		for (const connector of type.connectors ?? []) {
+			remember((connector as { port?: unknown }).port);
+		}
+	}
+	return [...byId.values()];
+}
+
+function sketchpadKitDiagramFileLabel(file: Record<string, unknown>): string {
+	const description = file["description"];
+	if (typeof description === "string" && description.length > 0) return description;
+	const url = file["url"];
+	if (typeof url === "string" && url.length > 0) {
+		const slash = url.lastIndexOf("/");
+		return slash >= 0 ? url.slice(slash + 1) : url;
+	}
+	const path = file["path"];
+	if (typeof path === "string" && path.length > 0) {
+		const slash = path.lastIndexOf("/");
+		return slash >= 0 ? path.slice(slash + 1) : path;
+	}
+	return String(file["id"] ?? "");
+}
+
+function sketchpadKitDiagramPushEdge(
+	edges: SketchpadBoardFixtureV1["edges"],
+	edgeIds: Set<string>,
+	id: string,
+	source: string,
+	target: string,
+): void {
+	if (edgeIds.has(id)) return;
+	edgeIds.add(id);
+	edges.push({ id, source, target });
+}
+
+function sketchpadKitDiagramBoardNode(
+	kind: SketchpadKitDiagramNodeKind,
+	entityId: string,
+	label: string,
+	root: boolean,
+): { node: SketchpadBoardFixtureV1["nodes"][number]; center: { x: number; y: number } } {
+	const nodeId = `${kind}:${entityId}`;
+	const frame = sketchpadKitDiagramNodeFrame(kind);
+	const center = sketchpadFlatPartCenterFromTopLeft({ x: 0, y: 0 }, frame);
+	const base = {
+		id: nodeId,
+		x: center.x,
+		y: center.y,
+		text: label,
+		nodeKind: `semio.kit.${kind}`,
+		root,
+		handles: [] as readonly Record<string, unknown>[],
+	};
+	if (frame.shape === "circle") {
+		return {
+			node: { ...base, shape: "circle", radius: frame.width / 2 },
+			center,
+		};
+	}
+	return {
+		node: { ...base, shape: "rectangle", width: frame.width, height: frame.height },
+		center,
+	};
+}
 
 function sketchpadTopologyPayload(flat: SketchpadBoardFixtureV1, volume: SketchpadVolumeFixtureV1): PlatformTopologyPayload {
 	return { flat: flat as unknown as Record<string, unknown>, volume: volume as unknown as Record<string, unknown> };
 }
 
-/** @emoji 🗺️ Builds a flat kit topology board from kit types, designs, and piece references. */
+/** @emoji 🗺️ Builds a flat kit topology board from kit entities (types, designs, ports, files, …). */
 export function sketchpadKitBoardFixtureFromKit(kit: Kit): SketchpadBoardFixtureV1 {
 	const nodes: SketchpadBoardFixtureV1["nodes"] = [];
 	const edges: SketchpadBoardFixtureV1["edges"] = [];
+	const edgeIds = new Set<string>();
 	const centers: { x: number; y: number }[] = [];
-	let column = 0;
-	for (const type of kit.types ?? []) {
-		const id = `type:${type.id}`;
-		const center = sketchpadFlatPartCenterFromTopLeft({ x: column * 140, y: 0 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
-		centers.push(center);
-		nodes.push({
-			id,
-			shape: "rectangle",
-			width: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.width,
-			height: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.height,
-			x: center.x,
-			y: center.y,
-			text: type.name ?? type.id,
-			nodeKind: "semio.kit.type",
-			root: true,
-			handles: [],
-		});
-		column += 1;
-	}
-	let row = 1;
-	for (const design of kit.designs ?? []) {
-		const id = `design:${design.id}`;
-		const center = sketchpadFlatPartCenterFromTopLeft({ x: column * 140, y: row * 100 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
-		centers.push(center);
-		nodes.push({
-			id,
-			shape: "rectangle",
-			width: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.width,
-			height: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.height,
-			x: center.x,
-			y: center.y,
-			text: design.name ?? design.id,
-			nodeKind: "semio.kit.design",
-			root: true,
-			handles: [],
-		});
-		column += 1;
-		if (column > 7) {
-			column = 0;
-			row += 1;
+	const kindGroups: readonly SketchpadKitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
+	for (const kind of kindGroups) {
+		let items: readonly { readonly id: string; readonly name: string; readonly parentId?: string }[] = [];
+		switch (kind) {
+			case "type":
+				items = (kit.types ?? []).map((t) => ({
+					id: t.id,
+					name: t.name ?? t.id,
+					parentId: sketchpadReadEntityId((t as { parent?: unknown }).parent) ?? undefined,
+				}));
+				break;
+			case "design":
+				items = (kit.designs ?? []).map((d) => ({
+					id: d.id,
+					name: d.name ?? d.id,
+					parentId: sketchpadReadEntityId((d as { parent?: unknown }).parent) ?? undefined,
+				}));
+				break;
+			case "quality":
+				items = (kit.qualities ?? []).map((q) => {
+					const row = q as { id: string; key?: string; value?: string };
+					const key = row.key ?? row.id;
+					const label = row.value != null && row.value !== "" ? `${key} · ${row.value}` : key;
+					return { id: row.id, name: label };
+				});
+				break;
+			case "port":
+				items = sketchpadCollectKitPorts(kit);
+				break;
+			case "file":
+				items = (kit.files ?? []).map((f) => {
+					const row = f as Record<string, unknown>;
+					return {
+						id: String(row["id"] ?? ""),
+						name: sketchpadKitDiagramFileLabel(row),
+						parentId: sketchpadReadEntityId(row["folder"]) ?? undefined,
+					};
+				});
+				break;
+			case "folder":
+				items = (kit.folders ?? []).map((f) => {
+					const row = f as Record<string, unknown>;
+					const path = typeof row["path"] === "string" ? row["path"] : "";
+					const slash = path.lastIndexOf("/");
+					const name = slash >= 0 ? path.slice(slash + 1) : path || String(row["id"] ?? "");
+					return {
+						id: String(row["id"] ?? ""),
+						name,
+						parentId: sketchpadReadEntityId(row["parent"]) ?? undefined,
+					};
+				});
+				break;
+			case "author":
+				items = (kit.authors ?? []).map((a) => ({
+					id: String((a as { id: string }).id),
+					name: String((a as { name?: string }).name ?? (a as { id: string }).id),
+				}));
+				break;
+		}
+		for (const item of items) {
+			if (!item.id) continue;
+			const { node, center } = sketchpadKitDiagramBoardNode(kind, item.id, item.name, !item.parentId);
+			nodes.push(node);
+			centers.push(center);
+			if (item.parentId) {
+				const parentKind = kind === "file" ? "folder" : kind;
+				sketchpadKitDiagramPushEdge(
+					edges,
+					edgeIds,
+					`${kind}-${item.parentId}-${item.id}`,
+					`${parentKind}:${item.parentId}`,
+					`${kind}:${item.id}`,
+				);
+			}
 		}
 	}
-	const edgeIds = new Set<string>();
 	for (const design of kit.designs ?? []) {
 		for (const piece of design.pieces ?? []) {
 			const typeId = sketchpadReadEntityId((piece as { type?: unknown; blueprint?: unknown }).type ?? (piece as { blueprint?: unknown }).blueprint);
 			if (typeId) {
-				const edgeId = `ref-type:${typeId}-design:${design.id}`;
-				if (!edgeIds.has(edgeId)) {
-					edgeIds.add(edgeId);
-					edges.push({ id: edgeId, source: `type:${typeId}`, target: `design:${design.id}` });
-				}
+				sketchpadKitDiagramPushEdge(
+					edges,
+					edgeIds,
+					`ref-type:${typeId}-design:${design.id}`,
+					`type:${typeId}`,
+					`design:${design.id}`,
+				);
 			}
+		}
+	}
+	for (const type of kit.types ?? []) {
+		for (const connector of type.connectors ?? []) {
+			const portId = sketchpadReadEntityId((connector as { port?: unknown }).port);
+			if (!portId) continue;
+			sketchpadKitDiagramPushEdge(
+				edges,
+				edgeIds,
+				`ref-port:${portId}-type:${type.id}`,
+				`port:${portId}`,
+				`type:${type.id}`,
+			);
 		}
 	}
 	return {
@@ -910,6 +1070,9 @@ export function sketchpadPathFromBoardNodeId(kitId: string, boardNodeId: string)
 	const id = boardNodeId.slice(sep + 1);
 	if (kind === "type") return `/kits/${kitId}/types/${id}`;
 	if (kind === "design") return `/kits/${kitId}/designs/${id}`;
+	if (kind === "quality" || kind === "port" || kind === "file" || kind === "folder" || kind === "author") {
+		return `/kits/${kitId}?${kind}=${encodeURIComponent(id)}`;
+	}
 	return null;
 }
 
@@ -1217,11 +1380,16 @@ export class SketchpadKitTable extends SketchpadRoutedComponent<TableModel> {
 		const kit = store.getSnapshot().kit;
 		const types = kit.types ?? [];
 		const designs = kit.designs ?? [];
+		const qualities = kit.qualities ?? [];
+		const ports = sketchpadCollectKitPorts(kit);
+		const files = kit.files ?? [];
+		const folders = kit.folders ?? [];
+		const authors = kit.authors ?? [];
 		return {
 			columns: [
 				{ id: "name", label: "Name" },
 				{ id: "kind", label: "Kind" },
-				{ id: "pieces", label: "Pieces" },
+				{ id: "pieces", label: "Count" },
 			],
 			rows: [
 				...types
@@ -1246,8 +1414,49 @@ export class SketchpadKitTable extends SketchpadRoutedComponent<TableModel> {
 						},
 						navigateUri: `/kits/${kitId}/designs/${d.id}`,
 					})),
+				...qualities.map((q) => {
+					const row = q as { id: string; key?: string; value?: string };
+					const key = row.key ?? row.id;
+					const label = row.value != null && row.value !== "" ? `${key} · ${row.value}` : key;
+					return {
+						id: `quality:${row.id}`,
+						cells: { name: label, kind: "quality", pieces: "—" },
+						navigateUri: `/kits/${kitId}?quality=${encodeURIComponent(row.id)}`,
+					};
+				}),
+				...ports.map((p) => ({
+					id: `port:${p.id}`,
+					cells: { name: p.name, kind: "port", pieces: "—" },
+					navigateUri: `/kits/${kitId}?port=${encodeURIComponent(p.id)}`,
+				})),
+				...files.map((f) => {
+					const row = f as Record<string, unknown>;
+					const id = String(row["id"] ?? "");
+					return {
+						id: `file:${id}`,
+						cells: { name: sketchpadKitDiagramFileLabel(row), kind: "file", pieces: "—" },
+						navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
+					};
+				}),
+				...folders.map((f) => {
+					const row = f as Record<string, unknown>;
+					const id = String(row["id"] ?? "");
+					const path = typeof row["path"] === "string" ? row["path"] : id;
+					const slash = path.lastIndexOf("/");
+					const name = slash >= 0 ? path.slice(slash + 1) : path;
+					return {
+						id: `folder:${id}`,
+						cells: { name, kind: "folder", pieces: "—" },
+						navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
+					};
+				}),
+				...authors.map((a) => ({
+					id: `author:${(a as { id: string }).id}`,
+					cells: { name: String((a as { name?: string }).name ?? (a as { id: string }).id), kind: "author", pieces: "—" },
+					navigateUri: `/kits/${kitId}?author=${encodeURIComponent((a as { id: string }).id)}`,
+				})),
 			],
-			emptyMessage: "No types or designs in this kit",
+			emptyMessage: "No kit entities in this kit",
 		};
 	}
 }
@@ -1274,11 +1483,19 @@ export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle5dModel>
 			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM, emptyMessage: "Kit loading…" };
 		}
 		const kit = store.getSnapshot().kit;
-		const hasContent = (kit.types?.length ?? 0) + (kit.designs?.length ?? 0) > 0;
+		const hasContent =
+			(kit.types?.length ?? 0) +
+				(kit.designs?.length ?? 0) +
+				(kit.qualities?.length ?? 0) +
+				sketchpadCollectKitPorts(kit).length +
+				(kit.files?.length ?? 0) +
+				(kit.folders?.length ?? 0) +
+				(kit.authors?.length ?? 0) >
+			0;
 		return {
 			presentation: "flat",
 			instanceId: sketchpadKitDiagramInstanceId(kitId),
-			emptyMessage: hasContent ? undefined : "No types or designs to diagram",
+			emptyMessage: hasContent ? undefined : "No kit entities to diagram",
 		};
 	}
 }
@@ -2217,6 +2434,50 @@ if (import.meta.vitest) {
 			expect(fixture.nodes.some((n) => n.id === "type:t1")).toBe(true);
 			expect(fixture.nodes.some((n) => n.id === "design:d1")).toBe(true);
 			expect(fixture.edges.length).toBeGreaterThan(0);
+		});
+
+		it("materializes ports qualities files folders authors", () => {
+			const kit = {
+				id: "k",
+				types: [
+					{
+						id: "t1",
+						name: "Window",
+						connectors: [{ id: "c1", port: { id: "p1", label: "Frame" } }],
+						ports: [{ id: "p2", label: "Glass" }],
+					},
+				],
+				qualities: [{ id: "q1", key: "Thermal", value: "1.2" }],
+				files: [{ id: "f1", url: "files/mesh.glb" }],
+				folders: [{ id: "fo1", path: "assets/models" }],
+				authors: [{ id: "a1", name: "Ada" }],
+			} as Kit;
+			const fixture = sketchpadKitBoardFixtureFromKit(kit);
+			expect(fixture.nodes.some((n) => n.id === "port:p1")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "port:p2")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "quality:q1")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "file:f1")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "folder:fo1")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "author:a1")).toBe(true);
+			expect(fixture.edges.some((e) => e.id === "ref-port:p1-type:t1")).toBe(true);
+		});
+	});
+
+	describe("sketchpadCollectKitPorts", () => {
+		it("deduplicates ports from connectors and type ports", () => {
+			const kit = {
+				id: "k",
+				types: [
+					{
+						id: "t1",
+						connectors: [{ port: { id: "p1", label: "A" } }],
+						ports: [{ id: "p1", label: "A" }, { id: "p2", code: "B" }],
+					},
+				],
+			} as Kit;
+			const ports = sketchpadCollectKitPorts(kit);
+			expect(ports).toHaveLength(2);
+			expect(ports.map((p) => p.id).sort()).toEqual(["p1", "p2"]);
 		});
 	});
 

@@ -588,6 +588,12 @@ export class Puzzle3dPlayShellController extends Controller {
     }
   }
 
+  /** @emoji 🎯 Refreshes the viewport store and bumps shell generation so the declarative inspector and hierarchy panels reflect selection changes. */
+  private notifySelection(): void {
+    this.notifySnapshot();
+    this.emit();
+  }
+
   /** @emoji 🐚 Rebuilds mode chrome and bumps shell generation (toolbar, window measures). */
   private syncShell(): void {
     this.rebuildSnapshotCache();
@@ -618,7 +624,9 @@ export class Puzzle3dPlayShellController extends Controller {
       this.fixtureRevision += 1;
     }
     const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
-    if (structureChanged || poseChanged) {
+    if (structureChanged) {
+      this.notifySelection();
+    } else if (poseChanged) {
       this.notifySnapshot();
     }
   }
@@ -773,7 +781,7 @@ export class Puzzle3dPlayShellController extends Controller {
             return;
           }
           this.selection = resolved;
-          this.notifySnapshot();
+          this.notifySelection();
         }
         return;
       }
@@ -784,7 +792,7 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         this.selection = resolved;
-        this.notifySnapshot();
+        this.notifySelection();
         return;
       }
       case "noteSelection": {
@@ -798,7 +806,7 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         this.selection = resolved;
-        this.notifySnapshot();
+        this.notifySelection();
         return;
       }
       case "deleteSelection": {
@@ -973,7 +981,7 @@ export class Puzzle3dPlayShellController extends Controller {
       return next;
     });
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
-    this.notifySnapshot();
+    this.notifySelection();
   }
 
   getSnapshot(): Puzzle3dPlaySnapshot {

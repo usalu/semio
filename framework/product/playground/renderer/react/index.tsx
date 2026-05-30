@@ -1308,11 +1308,8 @@ import {
   classifyElementsBoardIconSelectorMode,
   parseBoardFixtureV1,
   BoardCanvas,
-  useBoardEvent,
-  Node,
-  Handle,
-  Edge,
-  Wire,
+  boardFixtureSceneMarkers,
+  type BoardStructureDeletePayload,
   encodeBoardFixtureForDragV1,
   BOARD_FIXTURE_DRAG_V1_MIME,
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
@@ -1817,98 +1814,6 @@ function BoardPlaySettingsPanel(): ReactElement {
 // #endregion 🔖SettingsPanel
 
 // #region 🔖Scene
-/** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function boardFixtureMarkers(fixture: BoardFixtureV1): ReactElement {
-  const demoNodeId = fixture.nodes[0]?.id;
-  const demoEdgeId = fixture.edges[0]?.id;
-  return (
-    <>
-      {fixture.nodes.map((node) =>
-        node.shape === "rectangle" ? (
-          <Node
-            contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
-            draggable
-            height={node.height}
-            id={node.id}
-            key={node.id}
-            {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
-            shape="rectangle"
-            text={boardFixtureNodeCaption(node)}
-            textAlignment={node.textAlignment}
-            textAutofit={node.textAutofit === true}
-            textFontFamily={node.textFontFamily}
-            textFontSize={node.textFontSize}
-            width={node.width}
-            x={node.x}
-            y={node.y}
-            {...(node.iconKind ? { iconKind: node.iconKind } : {})}
-          >
-            {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
-            ))}
-          </Node>
-        ) : (
-          <Node
-            contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
-            draggable
-            id={node.id}
-            key={node.id}
-            {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
-            radius={node.radius}
-            text={boardFixtureNodeCaption(node)}
-            textAlignment={node.textAlignment}
-            textAutofit={node.textAutofit === true}
-            textFontFamily={node.textFontFamily}
-            textFontSize={node.textFontSize}
-            x={node.x}
-            y={node.y}
-            {...(node.iconKind ? { iconKind: node.iconKind } : {})}
-          >
-            {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
-            ))}
-          </Node>
-        ),
-      )}
-      {fixture.edges.map((edge) => (
-        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
-      ))}
-    </>
-  );
-}
-
-/** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. Mount via {@link BoardCanvasProps.companions} (DOM tree + board context, not host subtree). */
-function BoardStructuralDeleteReporter(): null {
-  const { applyStructuralDelete } = useBoardPlayShell();
-  const onEdgeDelete = reactHostPort.useCallback(
-    (event: { id: string }) => {
-      applyStructuralDelete("edge", event.id);
-    },
-    [applyStructuralDelete],
-  );
-  const onNodeDelete = reactHostPort.useCallback(
-    (event: { id: string }) => {
-      applyStructuralDelete("node", event.id);
-    },
-    [applyStructuralDelete],
-  );
-  useBoardEvent("edgeDelete", onEdgeDelete);
-  useBoardEvent("nodeDelete", onNodeDelete);
-  return null;
-}
-
-/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. Mount via {@link BoardCanvasProps.companions}. */
-function BoardPlayRedrawProgressReset(): null {
-  const { boardRedrawPlaying, resetBoardRedrawProgressiveEpoch } = useBoardPlayShell();
-  const handler = reactHostPort.useCallback(() => {
-    if (!boardRedrawPlaying) {
-      return;
-    }
-    resetBoardRedrawProgressiveEpoch();
-  }, [boardRedrawPlaying, resetBoardRedrawProgressiveEpoch]);
-  useBoardEvent("nodeMove", handler);
-  return null;
-}
 // #endregion 🔖Scene
 
 // #region 🔖Panes
@@ -1946,8 +1851,10 @@ function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolea
 function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
   const {
     activePaneId,
+    applyStructuralDelete,
     boardGridSnapEnabled,
     boardLodModeByPane,
+    boardRedrawPlaying,
     boardSelectionMethod,
     boardSelectionMode,
     boardSelectionTargets,
@@ -1956,6 +1863,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
     camerasByPane,
     hoveredId,
     preselection,
+    resetBoardRedrawProgressiveEpoch,
     selectionIds,
     setHoverForPane,
     setPreselection,
@@ -1975,16 +1883,38 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
     },
     [paneId, setHoverForPane],
   );
+  const demoNodeId = fixture.nodes[0]?.id;
+  const demoEdgeId = fixture.edges[0]?.id;
+  const sceneMarkers = reactHostPort.useMemo(
+    () =>
+      boardFixtureSceneMarkers(fixture, {
+        nodeContextMenuForId: (id) => (id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined),
+        edgeContextMenuForId: (id) => (id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined),
+      }),
+    [demoEdgeId, demoNodeId, fixture],
+  );
+  const onCanvasDelete = reactHostPort.useCallback(
+    (payload: BoardStructureDeletePayload) => {
+      if (payload.kind === "wire") {
+        return;
+      }
+      applyStructuralDelete(payload.kind, payload.id);
+    },
+    [applyStructuralDelete],
+  );
+  const onCanvasDrag = reactHostPort.useCallback(
+    (_payload: { id: string }) => {
+      if (!boardRedrawPlaying) {
+        return;
+      }
+      resetBoardRedrawProgressiveEpoch();
+    },
+    [boardRedrawPlaying, resetBoardRedrawProgressiveEpoch],
+  );
   return (
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
         {...lodProps}
-        companions={
-          <>
-            <BoardStructuralDeleteReporter />
-            <BoardPlayRedrawProgressReset />
-          </>
-        }
         onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"
@@ -1995,6 +1925,8 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
+        onDelete={onCanvasDelete}
+        onDrag={onCanvasDrag}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onHover={onHover}
         onPreselect={onPreselect}
@@ -2005,7 +1937,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         selectionMode={boardSelectionMode}
         selectionTargets={boardSelectionTargets}
       >
-        {boardFixtureMarkers(fixture)}
+        {sceneMarkers}
       </BoardCanvas>
     </BoardPaneChrome>
   );

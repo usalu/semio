@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Fixed sketchpad dev runtime: import getPlatformControllerById in platform renderer BuiltinPuzzle5dKindRenderer; cap gql collect_la_paths recursion (stack overflow on session subscribe after installProjection); serve ui/assets fonts via uiAssetsVitePlugin (fixes OTS/sfnt HTML-as-font). WASM rebuilt. 15 sketchpad vitest tests pass.",
+  "summary": "Analyzed index.tsx.old (53k-line React monolith); continued platform+@semio/js sketchpad in index.ts: browser file/folder/remote kit factories, richer GraphQL kit read (design pieces/connections via parent/child, blueprint, version timestamps), home table name/version/kind/updated, kit table with connector counts, importKitFromFile command, workbench/details metadata. 16 vitest tests pass. Dev: bun nx dev @semio/sketchpad.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -14,6 +14,7 @@
     "⚪c8a67e3c6f71445091437aa82e936a7d",
     "⚪5fd75dcf6f0b4f0482e56c085288e938",
     "⚪c488b595150c4898a8ffec5c878986b0",
-    "⚪2dc44c792d69459f8b7c8cdeee334497"
+    "⚪2dc44c792d69459f8b7c8cdeee334497",
+    "⚪67dcb7fb3a494b1196311e7089596471"
   ]
 }
