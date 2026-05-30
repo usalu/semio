@@ -2193,20 +2193,27 @@ function probeCssComputed(property: "color" | "backgroundColor", value: string):
 }
 
 function cssColorForThree(css: string): string {
-  if (!css || typeof document === "undefined") {
+  if (!css) {
     return css;
   }
   if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
     return css;
   }
+  if (typeof document === "undefined") {
+    return "#808080";
+  }
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    return css;
+    return "#808080";
   }
   ctx.fillStyle = "#000000";
   ctx.fillStyle = css;
-  return ctx.fillStyle;
+  const converted = ctx.fillStyle;
+  if (/^(oklab|oklch|lab|lch|color)\(/iu.test(converted)) {
+    return "#808080";
+  }
+  return converted;
 }
 
 function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
@@ -2254,7 +2261,7 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({
-    color: new Color(color),
+    color: new Color(cssColorForThree(color)),
     metalness: 0,
     roughness: 1,
   });
@@ -2266,7 +2273,7 @@ function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshSt
 }
 
 function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
-  const mat = new LineBasicMaterial({ color: new Color(color) });
+  const mat = new LineBasicMaterial({ color: new Color(cssColorForThree(color)) });
   mat.transparent = state.opacity < 1;
   mat.opacity = state.opacity;
   return mat;
@@ -2307,7 +2314,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
     }
     if (object instanceof Points) {
       object.material = new PointsMaterial({
-        color: new Color(colors.lineColor),
+        color: new Color(cssColorForThree(colors.lineColor)),
         size: 1,
         transparent: colors.opacity < 1,
         opacity: colors.opacity,
@@ -4764,6 +4771,7 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
       const scene = debugThree.scene;
       const rect = gl.domElement.getBoundingClientRect();
       const ndc = new Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
+      (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
       const ray = new Raycaster();
       ray.setFromCamera(ndc, camera);
       const hits = ray.intersectObjects(scene.children, true);
@@ -4784,8 +4792,56 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
         return info;
       });
     };
+    (window as unknown as { __puzzle3dDebugScene?: (x: number, y: number) => unknown }).__puzzle3dDebugScene = (x: number, y: number) => {
+      const scene = debugThree.scene;
+      const gl = debugThree.gl;
+      const camera = debugThree.camera;
+      const meshes: { userData?: Record<string, unknown>; type?: string; visible?: boolean; geometry?: { boundingSphere?: { radius?: number } | null }; layers?: { mask?: number }; raycast?: unknown }[] = [];
+      scene.traverse((o: never) => {
+        const obj = o as { type?: string; userData?: Record<string, unknown> };
+        if (obj.type === "Mesh" && obj.userData?.puzzle3dVortexFullId) meshes.push(o as never);
+      });
+      const sample = meshes[0] as unknown as { getWorldPosition?: (v: Vector3) => Vector3; matrixWorldNeedsUpdate?: boolean; visible?: boolean; geometry?: { boundingSphere?: { radius?: number } | null }; layers?: { mask?: number } };
+      const wp = sample?.getWorldPosition ? sample.getWorldPosition(new Vector3()) : null;
+      const camMaskHolder = camera as unknown as { layers?: { mask?: number } };
+      let vortexRayHits = 0;
+      if (typeof x === "number") {
+        const rect = gl.domElement.getBoundingClientRect();
+        const ndc = new Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
+        (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
+        const ray = new Raycaster();
+        (ray.layers as unknown as { enableAll: () => void }).enableAll();
+        ray.setFromCamera(ndc, camera);
+        vortexRayHits = ray.intersectObjects(meshes as never[], true).length;
+      }
+      const rect2 = gl.domElement.getBoundingClientRect();
+      (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
+      const screens: unknown[] = [];
+      for (const m of meshes) {
+        const mm = m as unknown as { getWorldPosition: (v: Vector3) => Vector3 };
+        const p = mm.getWorldPosition(new Vector3());
+        const proj = p.clone().project(camera as never);
+        if (proj.z > 1) continue;
+        const sx = rect2.left + ((proj.x + 1) / 2) * rect2.width;
+        const sy = rect2.top + ((1 - proj.y) / 2) * rect2.height;
+        if (sx < rect2.left || sx > rect2.left + rect2.width || sy < rect2.top || sy > rect2.top + rect2.height) continue;
+        screens.push({ fullId: (m as unknown as { userData: Record<string, unknown> }).userData.puzzle3dVortexFullId, sx: Math.round(sx), sy: Math.round(sy) });
+        if (screens.length >= 6) break;
+      }
+      return {
+        vortexMeshCount: meshes.length,
+        sampleWorldPos: wp ? [Number(wp.x.toFixed(1)), Number(wp.y.toFixed(1)), Number(wp.z.toFixed(1))] : null,
+        sampleVisible: sample?.visible,
+        sampleBoundingRadius: sample?.geometry?.boundingSphere?.radius ?? "null",
+        sampleLayerMask: sample?.layers?.mask,
+        cameraLayerMask: camMaskHolder.layers?.mask,
+        vortexRayHits,
+        screens,
+      };
+    };
     return () => {
       delete (window as unknown as { __puzzle3dDebugPick?: unknown }).__puzzle3dDebugPick;
+      delete (window as unknown as { __puzzle3dDebugScene?: unknown }).__puzzle3dDebugScene;
     };
   }, [debugThree]);
   reactHostPort.useEffect(() => {

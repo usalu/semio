@@ -379,8 +379,8 @@ function renderPlaygroundSelect(node: UiSelectNode, commandBus: CommandBus): Rea
         <SelectValue placeholder={node.placeholder ?? "Select"} />
       </SelectTrigger>
       <SelectContent>
-        {node.items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
+        {node.items.map((item, index) => (
+          <SelectItem key={`${node.id}:${index}:${item.value}`} value={item.value}>
             {item.label}
           </SelectItem>
         ))}
@@ -2772,6 +2772,30 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     });
     pruneSelections([id, ...handleIds]);
   }, []);
+
+  const structuralDeleteQueueRef = reactHostPort.useRef<Array<{ kind: "edge" | "node"; id: string }>>([]);
+  const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
+  const queueStructuralDelete = reactHostPort.useCallback(
+    (kind: "edge" | "node", id: string) => {
+      structuralDeleteQueueRef.current.push({ kind, id });
+      if (structuralDeleteFlushScheduledRef.current) {
+        return;
+      }
+      structuralDeleteFlushScheduledRef.current = true;
+      queueMicrotask(() => {
+        structuralDeleteFlushScheduledRef.current = false;
+        const batch = structuralDeleteQueueRef.current;
+        structuralDeleteQueueRef.current = [];
+        if (batch.length > 4) {
+          return;
+        }
+        for (const item of batch) {
+          applyStructuralDelete(item.kind, item.id);
+        }
+      });
+    },
+    [applyStructuralDelete],
+  );
 
   const setFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
     setFixtureState(next);

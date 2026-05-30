@@ -16176,73 +16176,45 @@ mod tests {
     }
 
     #[test]
-    fn install_projection_graphql_hydrates_ports_and_copatible_with() {
+    fn hydrate_type_from_snapshot_wires_ports_and_copatible_with() {
         block_on(async {
-            let schema = crate::gql::build_schema().await;
-            let projection = crate::external_adapters::serde_json::json!({
-                "id": "kit-ports",
-                "name": "Ports Kit",
-                "types": {
-                    "items": [{
-                        "id": "t1",
-                        "name": "T1",
-                        "ports": {
-                            "items": [
-                                { "id": "p1", "label": "A", "compatiblePorts": { "items": [{ "id": "p2" }] } },
-                                { "id": "p2", "label": "B", "compatiblePorts": { "items": [{ "id": "p1" }] } }
-                            ]
-                        },
-                        "connectors": {
-                            "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
-                        }
-                    }]
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.mutable_kit.read().await.clone();
+            let t_json = crate::external_adapters::serde_json::json!({
+                "id": "t1",
+                "name": "T1",
+                "ports": {
+                    "items": [
+                        { "id": "p1", "label": "A", "compatiblePorts": { "items": [{ "id": "p2" }] } },
+                        { "id": "p2", "label": "B", "compatiblePorts": { "items": [{ "id": "p1" }] } }
+                    ]
                 },
-                "designs": { "items": [] }
-            });
-            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
-            const INSTALL_M: &str = r#"
-                mutation($json: String!) {
-                    session {
-                        store(id: "test-store") {
-                            installProjection(json: $json) {
-                                ok
-                                errors { message }
-                            }
-                        }
-                    }
-                }"#;
-            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
-            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
-            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
-            let q = r#"query {
-                session {
-                    store(id: "test-store") {
-                        wip {
-                            theKit {
-                                kit {
-                                    types {
-                                        edges {
-                                            node {
-                                                connectors { edges { node { id port { id copatibleWith { edges { node { id } } } } } } }
-                                                ports { edges { node { id copatibleWith { edges { node { id } } } } } }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                "connectors": {
+                    "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
                 }
-            }"#;
-            let read = schema.execute(Request::new(q)).await;
-            assert!(read.errors.is_empty(), "read ports: {:?}", read.errors);
-            let read_json = read.data.into_json().unwrap();
-            let type_node = &read_json["session"]["store"]["wip"]["theKit"]["kit"]["types"]["edges"][0]["node"];
-            let connector_port = &type_node["connectors"]["edges"][0]["node"]["port"];
-            assert_eq!(connector_port["id"], "p1");
-            let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");
+            });
+            let ty = crate::kit::r#type::Type::new_with_external_id(
+                std::sync::Arc::downgrade(&kit),
+                "t1".into(),
+                "T1".to_string(),
+            )
+            .await;
+            crate::kit_backbone::hydrate_type_from_snapshot_value(&ty, &t_json)
+                .await
+                .expect("hydrate type");
+            let ports = ty.ports.read().await;
+            assert_eq!(ports.len(), 2);
+            let p1 = ports.iter().find(|p| p.id.as_str() == "p1").expect("p1");
+            let compat = p1.compatible_with.read().await;
             assert_eq!(compat.len(), 1);
-            assert_eq!(compat[0]["node"]["id"], "p2");
+            assert_eq!(compat[0].id.as_str(), "p2");
+            let connectors = ty.connectors.read().await;
+            assert_eq!(connectors.len(), 1);
+            let connector_port = connectors[0].port.read().await.clone().expect("connector port");
+            assert_eq!(connector_port.id.as_str(), "p1");
+            let connector_compat = connector_port.compatible_with.read().await;
+            assert_eq!(connector_compat.len(), 1);
+            assert_eq!(connector_compat[0].id.as_str(), "p2");
         });
     }
 

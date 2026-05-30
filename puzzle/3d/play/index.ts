@@ -91,6 +91,20 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
   if (!kc || typeof kc !== "object") return undefined;
   return kc as KindCatalogBundle;
 }
+
+/** @emoji 📋 Kind catalog rows as unique select options (last row wins per `id`; sorted by label). */
+export function puzzle3dPlayKindCatalogSelectItems<T extends { readonly id: string; readonly label?: string; readonly name?: string }>(
+  entries: readonly T[] | undefined,
+): readonly { readonly value: string; readonly label: string }[] {
+  if (!entries?.length) {
+    return [];
+  }
+  const byId = new Map<string, { value: string; label: string }>();
+  for (const entry of entries) {
+    byId.set(entry.id, { value: entry.id, label: entry.label?.trim() || entry.name?.trim() || entry.id });
+  }
+  return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
 //#endregion 🧾Meta
 
 //#region 🖥️Surface
@@ -1171,7 +1185,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
           id: "puzzle-3d-play-inspector.object.kind.select",
           value: kindUniform ? (kinds[0] ?? "") : "",
           placeholder: kindUniform ? "kind" : "Mixed",
-          items: objectKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+          items: puzzle3dPlayKindCatalogSelectItems(objectKinds),
           onChange: puzzle3dPlayCmd("patchPuzzle3dObjects", { objectIds: selection.objectIds, field: "objectKind" }),
         },
       },
@@ -1226,7 +1240,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
           type: "select",
           id: `puzzle-3d-play-inspector.vortex.kind.select.${vortexFullId}`,
           value: vortex.vortexKind ?? "",
-          items: vortexKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+          items: puzzle3dPlayKindCatalogSelectItems(vortexKinds),
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "vortexKind" }),
         },
       },
@@ -1290,7 +1304,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
             type: "select",
             id: `puzzle-3d-play-inspector.attraction.kind.select.${attractionId}`,
             value: attraction.attractionKind ?? "",
-            items: attractionKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+            items: puzzle3dPlayKindCatalogSelectItems(attractionKinds),
             onChange: puzzle3dPlayCmd("patchPuzzle3dAttraction", { attractionId, field: "attractionKind" }),
           },
         },
@@ -1644,6 +1658,17 @@ if (import.meta.vitest) {
       const ids = tree.sections[0]?.items?.map((item) => item.id) ?? [];
       expect(ids).toHaveLength(2);
       expect(new Set(ids).size).toBe(2);
+    });
+
+    it("puzzle3dPlayKindCatalogSelectItems dedupes duplicate catalog ids for inspector selects", () => {
+      const items = puzzle3dPlayKindCatalogSelectItems([
+        { id: "Single Storey", label: "Single Storey" },
+        { id: "Single Storey", label: "Single Storey (duplicate)" },
+        { id: "/", label: "/" },
+        { id: "/", label: "/" },
+      ]);
+      expect(items.map((item) => item.value)).toEqual(["/", "Single Storey"]);
+      expect(items.find((item) => item.value === "Single Storey")?.label).toBe("Single Storey (duplicate)");
     });
 
     it("declarative window body is a lone puzzle3d viewport surface", () => {

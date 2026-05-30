@@ -6069,6 +6069,16 @@ function detachHandleFromNode(nodeHost: Puzzle2dHostTreeNode, handleHost: Puzzle
   nodeHost.handleChildren.delete(handleHost);
 }
 
+/** @emoji 🔇 Host reconciler teardown must not emit play {@link Puzzle2dEventMap.nodeDelete} (descriptor resync already uses {@link Puzzle2dRenderer.runWithoutSceneDeleteEvents}). */
+function removeSceneObjectWithoutDeleteEvent(renderer: Puzzle2dRenderer, object: Puzzle2dSceneObject): void {
+  if (!object.parent) {
+    return;
+  }
+  renderer.runWithoutSceneDeleteEvents(() => {
+    renderer.scene.remove(object);
+  });
+}
+
 const puzzle2dEmptyHostContext = Object.freeze({});
 //#endregion 🔖MountHelpers
 
@@ -6153,7 +6163,7 @@ const puzzle2dSceneHost = Reconciler({
       detachHandleFromNode(parent, child);
     }
     if (child.impl?.parent) {
-      renderer.scene.remove(child.impl);
+      removeSceneObjectWithoutDeleteEvent(renderer, child.impl);
     }
     if (child.kind === "handle" || child.kind === "edge" || child.kind === "wire") {
       child.impl = null;
@@ -6164,22 +6174,24 @@ const puzzle2dSceneHost = Reconciler({
   removeChildFromContainer(container, child) {
     if (child.kind === "node") {
       const nh = child as Puzzle2dHostTreeNode;
-      for (const h of [...nh.handleChildren]) {
-        detachHandleFromNode(nh, h);
-        if (h.impl?.parent) {
-          container.scene.remove(h.impl);
+      container.runWithoutSceneDeleteEvents(() => {
+        for (const h of [...nh.handleChildren]) {
+          detachHandleFromNode(nh, h);
+          if (h.impl?.parent) {
+            container.scene.remove(h.impl);
+          }
+          h.impl = null;
         }
-        h.impl = null;
-      }
-      nh.handleChildren.clear();
-      if (nh.impl.parent) {
-        container.scene.remove(nh.impl);
-      }
+        nh.handleChildren.clear();
+        if (nh.impl.parent) {
+          container.scene.remove(nh.impl);
+        }
+      });
       container.invalidate();
       return;
     }
     if (child.impl?.parent) {
-      container.scene.remove(child.impl);
+      removeSceneObjectWithoutDeleteEvent(container, child.impl);
     }
     if (child.kind === "handle" || child.kind === "edge" || child.kind === "wire") {
       child.impl = null;
