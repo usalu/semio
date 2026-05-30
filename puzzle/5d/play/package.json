@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./play.ts"
+    ".": "./index.ts"
   },
   "scripts": {
     "dev": "bun nx run @puzzle/5d/play:dev",

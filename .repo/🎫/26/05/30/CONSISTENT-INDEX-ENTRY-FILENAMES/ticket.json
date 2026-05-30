@@ -1,8 +1,9 @@
 {
   "title": "Consistent Index Entry Filenames",
   "emoji": "📛",
-  "status": "open",
+  "status": "closed",
   "description": "Rename entry files (main.tsx, main.ts) to index.tsx/index.ts across play packages and CAD renderer; update HTML, vite, vitest, package exports, and references.",
+  "summary": "Standardized Vite/Electron entry filenames to index.* and moved playground runtime to play.ts where index was already the package export. CAD play main.tsx→index.tsx; puzzle plays main.ts→index.ts with former index.ts→play.ts; semio/coda desktop main.ts→index.ts; mit-bestand presentation main.tsx→index.tsx. Updated HTML, forge, vite aliases, vitest includes, and @puzzle/*/play package exports. Added @framework/platform/core vitest aliases where play.ts imports pulled core.",
   "goal": "🎯refactoring",
   "sessions": [
     "⚪272cdc72fab64d09acedcd67a167de73"

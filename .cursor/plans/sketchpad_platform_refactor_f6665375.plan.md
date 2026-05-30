@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: tests-verify
     content: Update embedded Playwright tests in index.ts for the new shell; run framework vitest + sketchpad Playwright; verify each app renders via Platform at runtime with [DEBUG] logs; confirm sketchpad definition is render-agnostic.
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

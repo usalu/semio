@@ -4726,7 +4726,7 @@ if (import.meta.vitest) {
   });
   describe("cameraStateNearEqual", () => {
     it("detects position and zoom deltas", async () => {
-      const { cameraStateNearEqual, updatePuzzle3dCameraInFixture } = await import("../play/play.ts");
+      const { cameraStateNearEqual, updatePuzzle3dCameraInFixture } = await import("../play/index.ts");
       const base = {
         position: [1, 2, 3] as const,
         target: [0, 0, 0] as const,

@@ -476,7 +476,6 @@ import {
 import {
 	PlatformView,
 	getLevelBgClass,
-	mountPlatform,
 	type SidePanelTabConfig,
 } from "@framework/platform/renderer/react";
 
