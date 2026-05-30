@@ -15800,8 +15800,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 	BreachSystemDevcontainerVscodeExtensionsOutside: {
 		Kind:        BreachSystemDevcontainerVscodeExtensionsOutside,
 		Priority:    BreachPriorityHigh,
-		Reason:      "VSCode recommended extensions must be inside devcontainer.json customizations, not in .vscode/extensions.json",
-		Solution:    "Move .vscode/extensions.json to customizations.vscode.extensions inside .devcontainer/devcontainer.json",
+		Reason:      "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
+		Solution:    "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
 		Autofixable: true,
 	},
 	BreachFolderIllegalEmpty: {
@@ -19982,6 +19982,120 @@ func repoPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
+// 📦readDevcontainerVscodeExtensions returns extension ids from devcontainer customizations.vscode.extensions.
+func readDevcontainerVscodeExtensions(rootDir string) []string {
+	devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
+	dcData, err := os.ReadFile(devcontainerPath)
+	if err != nil {
+		return nil
+	}
+	var devcontainer map[string]interface{}
+	if err := json.Unmarshal(dcData, &devcontainer); err != nil {
+		return nil
+	}
+	customizations, _ := devcontainer["customizations"].(map[string]interface{})
+	if customizations == nil {
+		return nil
+	}
+	vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
+	if vscodeCustom == nil {
+		return nil
+	}
+	rawExtensions, _ := vscodeCustom["extensions"].([]interface{})
+	return extensionIDsFromJSONList(rawExtensions)
+}
+
+// 📦readWorkspaceExtensionRecommendations returns recommendation ids from .vscode/extensions.json when present.
+func readWorkspaceExtensionRecommendations(rootDir string) ([]string, bool) {
+	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
+	extData, err := os.ReadFile(extensionsPath)
+	if err != nil {
+		return nil, false
+	}
+	var extFile map[string]interface{}
+	if err := json.Unmarshal(extData, &extFile); err != nil {
+		return nil, false
+	}
+	rawRecommendations, _ := extFile["recommendations"].([]interface{})
+	return extensionIDsFromJSONList(rawRecommendations), true
+}
+
+// 📦extensionIDsFromJSONList normalizes a JSON string list of extension ids.
+func extensionIDsFromJSONList(values []interface{}) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(values))
+	for _, value := range values {
+		id, ok := value.(string)
+		if !ok || id == "" {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// 📦missingWorkspaceExtensionRecommendations lists devcontainer extensions absent from workspace recommendations.
+func missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
+	if len(devcontainerExtensions) == 0 {
+		return nil
+	}
+	recommended := map[string]struct{}{}
+	for _, id := range workspaceRecommendations {
+		recommended[id] = struct{}{}
+	}
+	var missing []string
+	for _, id := range devcontainerExtensions {
+		if _, ok := recommended[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	return missing
+}
+
+// 📦mergeWorkspaceExtensionRecommendations builds a deduplicated recommendation list (devcontainer first, then extras).
+func mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
+	merged := make([]string, 0, len(devcontainerExtensions)+len(workspaceRecommendations))
+	seen := map[string]struct{}{}
+	appendUnique := func(ids []string) {
+		for _, id := range ids {
+			if id == "" {
+				continue
+			}
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			merged = append(merged, id)
+		}
+	}
+	appendUnique(devcontainerExtensions)
+	appendUnique(workspaceRecommendations)
+	return merged
+}
+
+// 📦writeWorkspaceExtensionRecommendations writes .vscode/extensions.json for host editor recommendations.
+func writeWorkspaceExtensionRecommendations(rootDir string, recommendations []string) error {
+	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
+	if err := os.MkdirAll(filepath.Dir(extensionsPath), 0755); err != nil {
+		return err
+	}
+	rawRecommendations := make([]interface{}, len(recommendations))
+	for i, id := range recommendations {
+		rawRecommendations[i] = id
+	}
+	payload := map[string]interface{}{
+		"recommendations":         rawRecommendations,
+		"unwantedRecommendations": []interface{}{},
+	}
+	out, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(extensionsPath, append(out, '\n'), 0644)
+}
+
 // Ôù╗´©ÅsystemPolicy holds the data fields for a systemPolicy record.
 func systemPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
@@ -19992,12 +20106,16 @@ func systemPolicy(ctx *PolicyContext) []Breach {
 			BreachSystemDevcontainerVscodeSettingsOutside,
 			".vscode/settings.json", 1, 0, ""))
 	}
-	extensionsPath := filepath.Join(ctx.RootDir, ".vscode", "extensions.json")
-	if _, err := os.Stat(extensionsPath); err == nil {
-		breachs = append(breachs, ctx.CreateBreach(
-			"VSCode extensions.json must be inside .devcontainer/devcontainer.json customizations.vscode.extensions",
-			BreachSystemDevcontainerVscodeExtensionsOutside,
-			".vscode/extensions.json", 1, 0, ""))
+	devcontainerExtensions := readDevcontainerVscodeExtensions(ctx.RootDir)
+	if len(devcontainerExtensions) > 0 {
+		workspaceRecommendations, hasWorkspaceRecommendations := readWorkspaceExtensionRecommendations(ctx.RootDir)
+		missing := missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
+		if !hasWorkspaceRecommendations || len(missing) > 0 {
+			breachs = append(breachs, ctx.CreateBreach(
+				".vscode/extensions.json must recommend every extension from devcontainer customizations.vscode.extensions for host editors (Cursor reads this file)",
+				BreachSystemDevcontainerVscodeExtensionsOutside,
+				".vscode/extensions.json", 1, 0, ""))
+		}
 	}
 	return ctx.FilterIgnored(breachs)
 }
@@ -28938,52 +29056,14 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 				}
 			}
 		case BreachSystemDevcontainerVscodeExtensionsOutside:
-			extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
-			extData, err := os.ReadFile(extensionsPath)
-			if err != nil {
+			devcontainerExtensions := readDevcontainerVscodeExtensions(rootDir)
+			workspaceRecommendations, _ := readWorkspaceExtensionRecommendations(rootDir)
+			merged := mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
+			if len(merged) == 0 {
 				continue
 			}
-			var extFile map[string]interface{}
-			if err := json.Unmarshal(extData, &extFile); err != nil {
+			if err := writeWorkspaceExtensionRecommendations(rootDir, merged); err != nil {
 				continue
-			}
-			recommendations, _ := extFile["recommendations"].([]interface{})
-			if recommendations == nil {
-				recommendations = []interface{}{}
-			}
-			devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
-			var devcontainer map[string]interface{}
-			if dcData, err := os.ReadFile(devcontainerPath); err == nil {
-				_ = json.Unmarshal(dcData, &devcontainer)
-			}
-			if devcontainer == nil {
-				devcontainer = map[string]interface{}{}
-			}
-			customizations, _ := devcontainer["customizations"].(map[string]interface{})
-			if customizations == nil {
-				customizations = map[string]interface{}{}
-			}
-			vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
-			if vscodeCustom == nil {
-				vscodeCustom = map[string]interface{}{}
-			}
-			vscodeCustom["extensions"] = recommendations
-			customizations["vscode"] = vscodeCustom
-			devcontainer["customizations"] = customizations
-			dcOut, err := json.MarshalIndent(devcontainer, "", "  ")
-			if err != nil {
-				continue
-			}
-			if err := os.MkdirAll(filepath.Join(rootDir, ".devcontainer"), 0755); err != nil {
-				continue
-			}
-			if err := os.WriteFile(devcontainerPath, append(dcOut, '\n'), 0644); err != nil {
-				continue
-			}
-			_ = os.Remove(extensionsPath)
-			vscodeDir := filepath.Join(rootDir, ".vscode")
-			if entries, err := os.ReadDir(vscodeDir); err == nil && len(entries) == 0 {
-				_ = os.Remove(vscodeDir)
 			}
 			fixed++
 		}

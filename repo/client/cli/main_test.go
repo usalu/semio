@@ -5750,13 +5750,15 @@ func TestSystemPolicy(t *testing.T) {
 			t.Error("expected settings-outside-devcontainer breach")
 		}
 	})
-	t.Run("detects extensions.json outside devcontainer", func(t *testing.T) {
+	t.Run("detects extensions.json missing devcontainer recommendations", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
+		WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
 		ctx := NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})
 		breachs := systemPolicy(ctx)
 		found := false
@@ -5767,6 +5769,23 @@ func TestSystemPolicy(t *testing.T) {
 		}
 		if !found {
 			t.Error("expected extensions-outside-devcontainer breach")
+		}
+	})
+	t.Run("no extensions breach when workspace recommendations include devcontainer extensions", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
+		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python","golang.go","ms-vscode-remote.remote-containers"]}`)
+		WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
+		ctx := NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})
+		breachs := systemPolicy(ctx)
+		for _, v := range breachs {
+			if v.Kind == BreachSystemDevcontainerVscodeExtensionsOutside {
+				t.Error("expected no extensions breach when workspace recommendations include devcontainer extensions")
+			}
 		}
 	})
 	t.Run("no breachs when .vscode files absent", func(t *testing.T) {
@@ -5825,13 +5844,15 @@ func TestSystemPolicy(t *testing.T) {
 			t.Errorf("expected editor.fontSize=14, got %v", settings["editor.fontSize"])
 		}
 	})
-	t.Run("autofix moves extensions.json into devcontainer.json", func(t *testing.T) {
+	t.Run("autofix syncs extensions.json from devcontainer.json", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python", "golang.go"]}`)
+		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
+		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
+		WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
 		breachs := []Breach{
 			{Kind: BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
 		}
@@ -5842,29 +5863,27 @@ func TestSystemPolicy(t *testing.T) {
 		if fixed != 1 {
 			t.Fatalf("expected 1 fix, got %d", fixed)
 		}
-		if _, err := os.Stat(filepath.Join(tmpDir, ".vscode", "extensions.json")); !os.IsNotExist(err) {
-			t.Error("expected .vscode/extensions.json to be removed")
+		extPath := filepath.Join(tmpDir, ".vscode", "extensions.json")
+		if _, err := os.Stat(extPath); err != nil {
+			t.Fatalf("expected .vscode/extensions.json to remain: %v", err)
 		}
-		dcPath := filepath.Join(tmpDir, ".devcontainer", "devcontainer.json")
-		dcData, err := os.ReadFile(dcPath)
+		extData, err := os.ReadFile(extPath)
 		if err != nil {
-			t.Fatalf("expected devcontainer.json to exist: %v", err)
+			t.Fatalf("read extensions.json: %v", err)
 		}
-		var dc map[string]interface{}
-		if err := json.Unmarshal(dcData, &dc); err != nil {
+		var extFile map[string]interface{}
+		if err := json.Unmarshal(extData, &extFile); err != nil {
 			t.Fatalf("invalid json: %v", err)
 		}
-		customizations, _ := dc["customizations"].(map[string]interface{})
-		vscode, _ := customizations["vscode"].(map[string]interface{})
-		extensions, _ := vscode["extensions"].([]interface{})
-		if len(extensions) != 2 {
-			t.Fatalf("expected 2 extensions, got %d", len(extensions))
+		recommendations, _ := extFile["recommendations"].([]interface{})
+		if len(recommendations) != 2 {
+			t.Fatalf("expected 2 recommendations, got %d", len(recommendations))
 		}
-		if extensions[0] != "ms-python.python" {
-			t.Errorf("expected first extension ms-python.python, got %v", extensions[0])
+		if recommendations[0] != "ms-python.python" {
+			t.Errorf("expected first recommendation ms-python.python, got %v", recommendations[0])
 		}
-		if extensions[1] != "golang.go" {
-			t.Errorf("expected second extension golang.go, got %v", extensions[1])
+		if recommendations[1] != "golang.go" {
+			t.Errorf("expected second recommendation golang.go, got %v", recommendations[1])
 		}
 	})
 	t.Run("autofix merges into existing devcontainer.json", func(t *testing.T) {
@@ -5908,8 +5927,10 @@ func TestSystemPolicy(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
+		WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
 		breachs := []Breach{
 			{Kind: BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
 			{Kind: BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
@@ -5929,8 +5950,12 @@ func TestSystemPolicy(t *testing.T) {
 		if vscode["settings"] == nil {
 			t.Error("expected settings in devcontainer.json")
 		}
-		if vscode["extensions"] == nil {
-			t.Error("expected extensions in devcontainer.json")
+		extData, _ := os.ReadFile(filepath.Join(tmpDir, ".vscode", "extensions.json"))
+		var extFile map[string]interface{}
+		json.Unmarshal(extData, &extFile)
+		recommendations, _ := extFile["recommendations"].([]interface{})
+		if len(recommendations) != 2 {
+			t.Fatalf("expected synced extensions.json recommendations, got %v", recommendations)
 		}
 	})
 	t.Run("policy registered with correct id", func(t *testing.T) {

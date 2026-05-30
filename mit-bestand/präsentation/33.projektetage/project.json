@@ -4,6 +4,7 @@
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "mit-bestand/präsentation/33.projektetage",
         "command": "bun ./script.ts dev",
@@ -20,6 +21,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "mit-bestand/präsentation/33.projektetage",
         "command": "bun ./script.ts build",
