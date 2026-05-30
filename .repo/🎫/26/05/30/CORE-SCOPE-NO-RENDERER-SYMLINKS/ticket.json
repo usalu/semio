@@ -1,0 +1,7 @@
+{
+  "id": "26/05/30/CORE-SCOPE-NO-RENDERER-SYMLINKS",
+  "title": "Core Scope No Renderer Symlinks",
+  "status": "open",
+  "goal": null,
+  "description": "Bun nests @framework/platform/renderer/react under @framework/platform/core, creating ugly core/renderer symlinks. Rename core packages to full folder scopes (@framework/platform/core, @framework/playground/core)."
+}

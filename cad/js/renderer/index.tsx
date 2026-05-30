@@ -4142,6 +4142,8 @@ export function InteractionRepl({
     onEngagementChange?.(engagementSpec);
   }, [engagementSpec, onEngagementChange]);
 
+  reactHostPort.useEffect(() => () => onEngagementChange?.(null), [onEngagementChange]);
+
   reactHostPort.useEffect(() => {
     const state = snapshot.state;
     const lengthEntry = interactionLengthEntryForState(spec, state);

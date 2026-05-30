@@ -387,6 +387,30 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
     ...(transformTools.length > 0 ? { transform: transformTools } : {}),
   };
 }
+
+/** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
+export function spatialPlayEngagementMirror(engagement: EngagementSpec | null): WindowEngagement | undefined {
+  if (!engagement) return undefined;
+  const options = engagement.options?.map((option) => ({
+    id: option.id,
+    label: option.label,
+    pressed: option.pressed,
+    disabled: option.disabled,
+    command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: option.id } },
+  }));
+  const input = engagement.input
+    ? {
+        id: engagement.input.id,
+        value: engagement.input.value,
+        placeholder: engagement.input.placeholder,
+        disabled: engagement.input.disabled,
+        onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementInput" },
+        onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit" },
+      }
+    : undefined;
+  const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
+  return { options, input, status };
+}
 //#endregion 🔖Toolbar
 
 //#region 🔖Controller
@@ -1102,6 +1126,7 @@ interface SpatialPlayModelSpaceValue {
   readonly pickGeometry: Model;
   readonly handleModelAttributesChange: (model: Model) => void;
   readonly handleSnapshotChange: (snapshot: InteractionSnapshot) => void;
+  readonly handleEngagementChange: (engagement: EngagementSpec | null) => void;
   readonly flushedModelsByDefinitionId: Record<string, Model>;
   readonly playModelSpace: ModelSpace;
   readonly viewObjectCount: number;
@@ -1494,6 +1519,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       pickGeometry,
       handleModelAttributesChange,
       handleSnapshotChange,
+      handleEngagementChange,
       flushedModelsByDefinitionId,
       playModelSpace,
       viewObjectCount,
@@ -1528,6 +1554,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       handleSaveSelected,
       handleShapeAssetChange,
       handleSnapshotChange,
+      handleEngagementChange,
       history,
       interactionBootId,
       interactionId,
@@ -1620,6 +1647,7 @@ function SpatialPlayShapePane(): ReactNode {
     pickGeometry,
     handleModelAttributesChange,
     handleSnapshotChange,
+    handleEngagementChange,
   } = useSpatialPlayModelSpace();
 
   if (!spec) {
@@ -1659,6 +1687,7 @@ function SpatialPlayShapePane(): ReactNode {
         pickGeometry={pickGeometry}
         onDocumentModelChange={handleModelAttributesChange}
         onSnapshot={handleSnapshotChange}
+        onEngagementChange={handleEngagementChange}
       />
     </div>
   );
@@ -1874,6 +1903,46 @@ if (import.meta.vitest) {
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
       const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
       expect(energyWindow?.measures[0]).toMatchObject({ kind: "select", value: "precise" });
+    });
+  });
+
+  describe("spatialPlayEngagementMirror", () => {
+    it("returns undefined for a null engagement", () => {
+      expect(spatialPlayEngagementMirror(null)).toBeUndefined();
+    });
+
+    it("mirrors a ui engagement spec into neutral commands routed to the controller", () => {
+      const mirror = spatialPlayEngagementMirror({
+        options: [{ id: "confirm", label: "Confirm", onPress: () => {} }],
+        input: { id: "in", value: "box", placeholder: "Type an interaction", onSubmit: () => {} },
+        status: [{ id: "state", content: "State: idle" }],
+      });
+      expect(mirror?.options?.[0]).toMatchObject({ id: "confirm", label: "Confirm", command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: "confirm" } } });
+      expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit" } });
+      expect(mirror?.status?.[0]).toEqual({ id: "state", text: "State: idle" });
+    });
+  });
+
+  describe("SpatialPlayShellController engagement", () => {
+    it("attaches the shape engagement only to the shape window and routes engagement commands to the host bridge", () => {
+      const runtime = new ProductRuntime();
+      const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
+      const calls: { command: string; args?: unknown }[] = [];
+      controller.setHostBridge({
+        getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        runHostCommand: (command, args) => calls.push({ command, args }),
+      });
+      controller.setShapeEngagement({ options: [{ id: "confirm", label: "Confirm", command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: "confirm" } } }] });
+      const shapeWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_SHAPE_WINDOW_ID);
+      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
+      expect(shapeWindow?.engagement?.options?.[0]?.id).toBe("confirm");
+      expect(energyWindow?.engagement).toBeUndefined();
+      controller.run("engagementOption", { optionId: "confirm" });
+      controller.run("engagementSubmit", { value: "box" });
+      expect(calls).toEqual([
+        { command: "engagementOption", args: { optionId: "confirm" } },
+        { command: "engagementSubmit", args: { value: "box" } },
+      ]);
     });
   });
 

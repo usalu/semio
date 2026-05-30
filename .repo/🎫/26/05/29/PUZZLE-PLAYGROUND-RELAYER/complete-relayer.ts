@@ -45,7 +45,7 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@ui/react";
-import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
+import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -53,7 +53,7 @@ import {
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	createContext,
@@ -131,7 +131,7 @@ import {
 	registerWindowBody,
 	useApp,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
 	PlaySceneCanvas,

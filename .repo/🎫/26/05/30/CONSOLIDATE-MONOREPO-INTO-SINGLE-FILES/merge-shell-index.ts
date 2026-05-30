@@ -5,7 +5,7 @@ const root = "c:/git/semio/framework/playground/renderer/react";
 const boot = `
 
 //#region 🔖Boot
-import type { Playground } from "@framework/playground";
+import type { Playground } from "@framework/playground/core";
 
 /** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
 export interface PlaygroundChromeBoot {

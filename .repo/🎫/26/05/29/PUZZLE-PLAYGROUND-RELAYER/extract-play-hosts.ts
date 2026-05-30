@@ -37,12 +37,12 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@ui/react";
-import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
+import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import React, {
 	createContext,
