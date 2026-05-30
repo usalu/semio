@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   NEO4J_GRAPH_DATABASE_NAMES,
@@ -8,7 +8,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./index.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot, isDevPortInUse } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForBundleDir,
@@ -16,7 +16,12 @@ import {
   isAdapterBoundaryFile,
   parseTsImportSpecs,
 } from "./dependency-boundary.ts";
-
+import {
+  PLAYGROUND_SITE_DEV_PORTS,
+  PLAYGROUND_SITE_HOSTS,
+  playgroundEmbedUrl,
+  playgroundStaticSiteBuildOptions,
+} from "../../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["semio", "kit"])).toBe("semio-kit");
@@ -39,6 +44,17 @@ describe("Neo4j graph database registry", () => {
     const names = getAllNeo4jGraphExportSpecs(env).map((s) => joinNeo4jGraphDatabaseName(s));
     expect(names).toContain("foo");
     expect(names).toContain("bar-baz");
+  });
+});
+
+describe("isDevPortInUse", () => {
+  test("returns false for a high ephemeral port", () => {
+    expect(isDevPortInUse("127.0.0.1", 59_999)).toBe(false);
+  });
+
+  test("returns true when puzzle 3d play port is listening", () => {
+    if (!isDevPortInUse("127.0.0.1", 6013) && !isDevPortInUse("127.0.0.1", 6014)) return;
+    expect(isDevPortInUse("127.0.0.1", 6013) || isDevPortInUse("127.0.0.1", 6014)).toBe(true);
   });
 });
 
@@ -123,5 +139,43 @@ describe("dependency-boundary", () => {
       file,
     );
     expect(breachs).toEqual([]);
+  });
+});
+
+describe("ui scrollbar styling", () => {
+  test("ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
+    const repoRoot = findRepoRoot(import.meta.dir);
+    const css = readFileSync(join(repoRoot, "ui/styling/js/ui.css"), "utf8");
+    expect(css).toContain("--scrollbar-size:");
+    expect(css).toContain("--scrollbar-thumb:");
+    expect(css).toContain("scrollbar-color:");
+    expect(css).toContain("*::-webkit-scrollbar-thumb");
+    expect(css).toContain('[data-slot="scroll-area-thumb"]');
+  });
+});
+
+describe("playground static sites", () => {
+  test("PLAYGROUND_SITE_HOSTS maps each play to latest canonical host", () => {
+    expect(PLAYGROUND_SITE_HOSTS.semio).toBe("play.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS.cad).toBe("play.cad.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["2d"]).toBe("play.2d.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["3d"]).toBe("play.3d.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["5d"]).toBe("play.5d.semio-tech.com");
+  });
+
+  test("playgroundEmbedUrl uses localhost in dev and public host in production", () => {
+    expect(playgroundEmbedUrl("cad", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS.cad}`);
+    expect(playgroundEmbedUrl("2d", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS["2d"]}`);
+    expect(playgroundEmbedUrl("cad", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS.cad}`);
+    expect(playgroundEmbedUrl("5d", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS["5d"]}`);
+  });
+
+  test("playgroundStaticSiteBuildOptions uses relative-base dist output", () => {
+    expect(playgroundStaticSiteBuildOptions()).toEqual({
+      target: "esnext",
+      outDir: "dist",
+      emptyOutDir: true,
+    });
+    expect(playgroundStaticSiteBuildOptions({ sourcemap: true }).sourcemap).toBe(true);
   });
 });

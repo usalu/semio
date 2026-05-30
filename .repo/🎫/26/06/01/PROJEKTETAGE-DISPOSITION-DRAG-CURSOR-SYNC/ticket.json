@@ -1,0 +1,11 @@
+{
+  "title": "Projektetage Disposition Drag Cursor Sync",
+  "emoji": "🖱",
+  "status": "closed",
+  "description": "Fix projektetage disposition drag: dragging a tiny bit shoots the disposition very far instead of staying synchronized with the cursor.",
+  "summary": "Fixed hypersensitive canvas disposition drag on projektetage positioned slides.\n\nRoot cause: canvasDispositionDragContentStyle positioned content with absolute left/top plus width/height 100%, so the box extended past the wrapper (e.g. left 37.5% + width 100% = 137.5% wide) and small pointer deltas looked like huge jumps.\n\nFix: pure move drags apply translate3d(% of wrapper) on content while the wrapper keeps the declared frame; resize still uses absolute sizing when width/height change. Pointer deltas for canvas/resize use stable gesture placement bounds. Clamped sectionVisualScale for flow drags.\n\n55 renderer tests pass.",
+  "goal": "🎯framework🎯presentation",
+  "sessions": [
+    "⚪a940a93c42d34fccaee8c949e3ca7f14"
+  ]
+}

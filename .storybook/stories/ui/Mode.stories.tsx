@@ -70,6 +70,8 @@ export const QuadLayout: Story = {
     expect(canvas.getByText("Context")).toBeTruthy();
     await userEvent.click(canvas.getByText("Context"));
     expect(canvasElement.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+    expect(canvasElement.querySelector('[data-slot="mode-dock-tab"][data-window-id="context"][data-active="true"]')).toBeTruthy();
+    expect(canvasElement.querySelector('[data-slot="mode-dock-tab"][data-window-id="overview"][data-active="true"]')).toBeNull();
   },
 };
 

@@ -6,9 +6,9 @@ import { join } from "node:path";
 const root = "c:/git/semio";
 
 const replacements: [string, string][] = [
-	["@framework/playground-renderer-react", "@framework/playground/renderer/react"],
-	["@framework/playground-react", "@framework/playground/renderer/react"],
-	["@framework/platform-react", "@framework/platform/renderer/react"],
+	["@framework/playground/core-renderer-react", "@framework/playground/renderer/react"],
+	["@framework/playground/core-react", "@framework/playground/renderer/react"],
+	["@framework/platform/core-react", "@framework/platform/renderer/react"],
 	["@puzzle/2d-wasm", "@puzzle/2d/rs"],
 	["@puzzle/board-wasm", "@puzzle/2d/rs"],
 	["@puzzle/2d-play", "@puzzle/2d/play"],
@@ -33,9 +33,9 @@ const replacements: [string, string][] = [
 	["@spatial/js-query", "@cad/js/query"],
 	["@spatial/js-workspace", "@cad/js"],
 	["@elements/framework-react", "@framework/platform/renderer/react"],
-	["@elements/framework", "@framework/platform"],
+	["@elements/framework", "@framework/platform/core"],
 	["@elements/playground-react", "@framework/playground/renderer/react"],
-	["@elements/playground", "@framework/playground"],
+	["@elements/playground", "@framework/playground/core"],
 	["@elements/board-wasm", "@puzzle/2d/rs"],
 	["@elements/board", "@puzzle/2d/react"],
 	["@elements/scene", "@puzzle/3d/react"],

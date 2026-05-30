@@ -1,0 +1,11 @@
+{
+  "title": "Vfs Data Type Icons Not Avatars",
+  "emoji": "📁",
+  "status": "closed",
+  "description": "VirtualFileSystem node glyphs should render lucide file-node-kind icons instead of TableAvatar initials for schema icon ids.",
+  "summary": "VirtualFileSystem node glyphs now resolve schema icon ids (layout-grid, component, puzzle, …) to Lucide icons instead of TableAvatar initials. Remote URLs and emoji row icons still render as image or glyph; file node kind ids map to matching type icons.",
+  "goal": "🎯ui🎯react",
+  "sessions": [
+    "⚪d272e5dae8504969b10d235d183b3200"
+  ]
+}

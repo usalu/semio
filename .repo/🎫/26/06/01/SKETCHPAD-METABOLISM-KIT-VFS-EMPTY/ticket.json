@@ -1,0 +1,12 @@
+{
+  "title": "Sketchpad Metabolism Kit Vfs Empty",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When double-clicking metabolism kit in sketchpad home VFS, the kit VFS shows no items. Fix root cause and add test coverage.",
+  "summary": "Kit VFS was empty because fetchSemioFileSystemChildren queried FileSystemNode.fileSystemChildren, which is not exposed on Kit in the GraphQL schema. Rewrote VFS loading to use working kit relay fields (typologies, families, folders, files at root; typology/types/designs nested). Added TYPOLOGY parent ref and regression test with nakagin filtered fixture (18/18 @semio/js tests pass).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪26758a795fad42a18da64432ddfb9b6b",
+    "⚪d8f53c6dc3684aa098baf414f90a8e6d"
+  ]
+}

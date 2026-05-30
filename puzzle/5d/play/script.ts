@@ -1,15 +1,6 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/5d/play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
-import {
-  BundleScript,
-  ScriptRouter,
-  playPollingEnv,
-  runBun,
-  runBundleScriptMain,
-  runPlaywright,
-  runViteBunxDev,
-  runVitest,
-} from "../../../repo/lib/js/src/index.ts";
+/** 🧭 `@puzzle/5d/play` task router: `bun ./script.ts <dev|build|test|regenerate-fixture> [args…]`. */
+import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runPlaywright, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
@@ -30,9 +21,17 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("dev", DevScript)
-  .register("build", BuildScript)
-  .register("test", TestScript);
+class Regenerate5dFixtureScript extends BundleScript {
+  run(): void {
+    process.env.REGENERATE_NAKAGIN_5D = "1";
+    try {
+      runVitest(this.root, ["-t", "regenerates nakagin 5d fixture"]);
+    } finally {
+      delete process.env.REGENERATE_NAKAGIN_5D;
+    }
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript).register("regenerate-fixture", Regenerate5dFixtureScript);
 
 await runBundleScriptMain(router, import.meta.url);

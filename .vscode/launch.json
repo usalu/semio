@@ -332,6 +332,50 @@
       }
     },
     {
+      "name": "🛠️dev🧱framework🧪core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.1
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🧪platform",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/platform/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.2
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🧪playground",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/playground/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.3
+      }
+    },
+    {
+      "name": "🛠️dev🌈ui🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @ui/react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.4
+      }
+    },
+    {
       "name": "🛠️dev👤semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
@@ -371,6 +415,17 @@
         "action": "openExternally",
         "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🧪fixtures🔄metabolism-light",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/fixtures:regenerate-metabolism-light",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69.9
       }
     },
     {
@@ -676,6 +731,25 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev📽️projektetage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @mit-bestand/praesentation/projektetage:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PRAESENTATION_PROJEKTETAGE_PORT": "6050"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 190
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6050)",
+        "uriFormat": "%s"
+      }
+    },
     // #endregion
     // #region 📦 Build
     {
@@ -797,6 +871,17 @@
       "presentation": {
         "group": "4_build",
         "order": 110
+      }
+    },
+    {
+      "name": "📦build📽️projektetage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @mit-bestand/praesentation/projektetage:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 120
       }
     },
     // #endregion

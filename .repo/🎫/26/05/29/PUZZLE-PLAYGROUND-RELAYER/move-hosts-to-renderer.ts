@@ -55,7 +55,7 @@ for (const { from, to, playImport, reactImport, fixturePrefix } of moves) {
 	);
 	c = c.replace(
 		/^\/\/ #region 🧲Header[\s\S]*?\/\/ #endregion 🧲Header\n\n/,
-		`// #region 🧲Header\n/** @emoji 🛝 Puzzle play React chrome in \`@framework/playground-renderer-react\` (not in play packages). */\n// #endregion 🧲Header\n\n`,
+		`// #region 🧲Header\n/** @emoji 🛝 Puzzle play React chrome in \`@framework/playground/core-renderer-react\` (not in play packages). */\n// #endregion 🧲Header\n\n`,
 	);
 	writeFileSync(join(root, to), c);
 	unlinkSync(src);

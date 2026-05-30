@@ -44,6 +44,7 @@ export const InWindow: Story = {
     <div className="relative h-[320px] w-[480px]">
       <Window
         id="engagement-window"
+        active
         engagement={{
           options: [{ id: "tool-a", label: "Tool A", onPress: () => {} }],
           input: { placeholder: "Type a command" },

@@ -1,38 +1,21 @@
 // #region 🔌Adapters
 import {
-  Button,
-  Input,
-  Label,
-  LevelProvider,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  applyElementsSurfaceChrome,
-  getLevelBgClass,
   reactHostPort,
   sceneHostPort,
-  type ElementsSurfaceDevice,
-  type ElementsSurfaceTheme,
+  engagementCommandTokenEquals,
+  ENGAGEMENT_USER,
+  normalizeEngagementCommandText,
+  type EngagementSpec,
   type ThreeEvent,
+  type TreeDragAndDropController,
 } from "@ui/react";
-import { Trash2 } from "lucide-react";
-import React, {
-  Children,
-  isValidElement,
-  type CSSProperties,
-  type ChangeEvent,
-  type MutableRefObject,
-  type ReactNode,
-} from "react";
+import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
 const Canvas = sceneHostPort.fiber.canvas;
 const createPortal = sceneHostPort.fiber.createPortal;
 const useFrame = sceneHostPort.fiber.useFrame;
-const useStore = sceneHostPort.fiber.useStore;
 const useThree = sceneHostPort.fiber.useThree;
 const Clone = sceneHostPort.drei.Clone;
 const Line = sceneHostPort.drei.Line;
@@ -75,7 +58,7 @@ type WebGLRenderer = import("three").WebGLRenderer;
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-class SceneEventBindingController {
+class EventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
   listen(target: SceneListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
@@ -96,13 +79,22 @@ export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
 
 export type RelocateMode = "translate" | "rotate" | "scale";
-export type SelectionMode = "single" | "additive" | "subtractive" | "toggle";
+export type SelectionMode = "default" | "additive" | "subtractive" | "invertive";
+export type SelectionMethod = "rectangle" | "lasso";
+export interface MarqueeSelectableKinds {
+  readonly object: boolean;
+  readonly vortex: boolean;
+  readonly attraction: boolean;
+}
+/** @emoji 🔗 Bond commit kind: `connect` direct pick, `indirect` ring finish (cross-surface via @puzzle/5d TopologyConnectSession), `proximity` relocate-release snap only. */
 export type ConnectKind = "indirect" | "connect" | "proximity";
 export const MESH_STYLE_KINDS = ["original", "neutral", "hovered", "selected", "highlighted", "disabled"] as const;
 /** @emoji ­ƒÄ¿ Homogeneous GLB presentation kind for pooled scene meshes ({@link MeshBody}). */
 export type MeshStyleKind = (typeof MESH_STYLE_KINDS)[number];
 /** @emoji ­ƒÄ¿ Default object mesh style when none is passed ({@link MeshBody}). */
 export const DEFAULT_MESH_STYLE: MeshStyleKind = "neutral";
+/** @emoji 🎯 Max selected scene rows before skipping drei/pooled edge outlines (keeps bulk select responsive). */
+export const PUZZLE3D_MESH_OUTLINE_MAX_SELECTION = 48;
 export type DomainKind = "urban" | "architecture" | "detailing" | "engineering";
 export type ScaleKind = "1to50000" | "1to25000" | "1to10000" | "1to5000" | "1to2500" | "1to1000" | "1to500" | "1to333" | "1to200" | "1to100" | "1to50" | "1to33" | "1to25" | "1to10" | "1to5" | "1to1" | "2to1" | "5to1" | "10to1" | "20to1" | "50to1";
 
@@ -140,9 +132,9 @@ export interface CameraState {
 }
 
 /** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */
-export type SceneLod = number;
+export type Lod = number;
 
-/** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.handleMeshByLod}. */
+/** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.vortexMeshByLod}. */
 export interface LodMeshEntry {
   readonly lod: number;
   readonly url: string;
@@ -154,45 +146,67 @@ export const DEFAULT_LOD_RANGE = { min: 0.01, max: 100_000 } as const;
 /** @emoji 📐 Default scene LOD when neither auto nor depth-variable applies. */
 export const DEFAULT_MANUAL_LOD = 100;
 
-/** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
-export const SCENE_LOD_SLIDER_MIN = 0;
+/** @emoji 📐 Default CAD anchor for the horizontal grid / palette drop plane (datum Z). */
+export const DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD: Vec3 = [0, 0, 0];
 
 /** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
-export const SCENE_LOD_SLIDER_MAX = 1000;
+export const PUZZLE_3D_LOD_SLIDER_MIN = 0;
+
+/** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
+export const PUZZLE_3D_LOD_SLIDER_MAX = 1000;
 
 /** @emoji 📐 Epsilon for scene LOD change notifications. */
-export const SCENE_LOD_EPSILON = 0.01;
+export const PUZZLE_3D_LOD_EPSILON = 0.01;
 
 /** @emoji 📐 Attraction snap is disabled at or above this coarse scene LOD (≈ 1:1000). */
-export const SCENE_ATTRACTION_SNAP_MAX_LOD = 1000;
+export const PUZZLE_3D_ATTRACTION_SNAP_MAX_LOD = 1000;
 
-/** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
+/** @emoji 📐 Large LOD grid quantum in world units (puzzle 2d `PUZZLE_2D_LOD_GRID_MAJOR_QUANTUM`). */
 export const LOD_GRID_MAJOR_QUANTUM = 10;
 
-/** @emoji 📐 Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
+/** @emoji 📐 Medium LOD grid quantum (puzzle 2d `GRID_WORLD_MEDIUM`). */
+export const LOD_GRID_MEDIUM_QUANTUM = 2.5;
+
+/** @emoji 📐 Small LOD grid quantum (puzzle 2d `GRID_WORLD_SMALL`). */
+export const LOD_GRID_SMALL_QUANTUM = 0.5;
+
+/** @emoji 📐 Micro LOD grid quantum (puzzle 2d `GRID_WORLD_MICRO`). */
+export const LOD_GRID_MICRO_QUANTUM = 0.1;
+
+/** @emoji 📐 Coarsest scene LOD that still draws any grid band (puzzle 2d minimap). */
+export const PUZZLE_3D_LOD_GRID_MAX_LOD = 1000;
+
+/** @emoji 📐 Scene LOD at or below which the medium grid band appears (puzzle 2d normal). */
+export const PUZZLE_3D_LOD_GRID_MEDIUM_MAX_LOD = 50;
+
+/** @emoji 📐 Scene LOD at or below which the small grid band appears (puzzle 2d detail). */
+export const PUZZLE_3D_LOD_GRID_SMALL_MAX_LOD = 10;
+
+/** @emoji 📐 Scene LOD at or below which the micro grid band appears (puzzle 2d micro). */
+export const PUZZLE_3D_LOD_GRID_MICRO_MAX_LOD = 2;
+
+/** @emoji 📐 Default grid factor (puzzle 2d `DEFAULT_PUZZLE_2D_GRID_FACTOR`). */
 export const DEFAULT_LOD_GRID_FACTOR = 10;
+
+/** @emoji 📐 One progressive LOD grid layer (world step + stroke opacity). */
+export interface LodGridLayer {
+  readonly stepWorld: number;
+  readonly opacity: number;
+}
 
 export interface VortexProps {
   id: string;
   vortexKind?: string;
-  /** @emoji 🏷️ Human-readable handle label for play UI and hierarchy. */
+  /** @emoji 🏷️ Human-readable vortex label for play UI and hierarchy. */
   label?: string;
   position: Vec3;
   direction?: Vec3;
   radius?: number;
   visible?: boolean;
-  handleMeshUrl?: string;
-  /** @emoji 🎨 Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
-  handleMeshByLod?: readonly LodMeshEntry[];
+  vortexMeshUrl?: string;
+  /** @emoji 🎨 Optional per-LOD GLB URLs for the vortex mesh; falls back to {@link vortexMeshUrl}. */
+  vortexMeshByLod?: readonly LodMeshEntry[];
   children?: ReactNode;
-}
-
-export interface MagnetProps {
-  id: string;
-  magnetKind?: string;
-  position: Vec3;
-  orientation?: Quat;
-  size: Vec3;
 }
 
 export interface ObjectProps {
@@ -232,41 +246,163 @@ export interface AttractionProps {
 
 export const PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
-export interface EdgeKindCatalogEntry {
+export interface AttractionKind {
   id: string;
   label?: string;
   name?: string;
 }
 
-export interface HandleKindCatalogEntry {
+export interface VortexKind {
   id: string;
   label?: string;
   name?: string;
   color?: string;
-  defaultWireKind?: string;
+  defaultCableKind?: string;
   scale?: number;
 }
 
-export interface NodeKindCatalogEntry {
+/** @emoji 🌀 Explicit local vortex template on an {@link ObjectKind} for brush placement. */
+export interface ObjectKindVortexTemplate {
+  readonly vortexKind: string;
+  readonly position: Vec3;
+  readonly direction?: Vec3;
+  readonly radius?: number;
+}
+
+/** @emoji 🔌 Kit type connector row (CAD point + port handle kind) for catalog extraction. */
+export interface KitConnectorCadRow {
+  readonly point?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly port?: { readonly handleKind?: string };
+}
+
+/** @emoji 🏷️ Maps a kit port `handleKind` id to a puzzle 3d vortex-catalog id (short name when available). */
+export function puzzle3dVortexKindLabelFromHandleKind(
+  handleKind: string,
+  vortexKinds: readonly VortexKind[] | undefined,
+  handleKindRows?: readonly { readonly id: string; readonly name: string }[],
+): string {
+  const hk = handleKind.trim();
+  if (hk === "") {
+    return hk;
+  }
+  if (vortexKinds?.some((v) => v.id === hk)) {
+    return hk;
+  }
+  const name = handleKindRows?.find((h) => h.id === hk)?.name?.trim();
+  if (name && vortexKinds?.some((v) => v.id === name)) {
+    return name;
+  }
+  return name ?? hk;
+}
+
+function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): Vec3 {
+  return [row.x, row.y, row.z];
+}
+
+/** @emoji 🧲 Builds {@link ObjectKind.vortices} from kit connectors; keeps every distinct CAD position (same `vortexKind` allowed). */
+export function puzzle3dObjectKindVorticesFromKitConnectors(
+  connectors: readonly KitConnectorCadRow[],
+  labelHandleKind: (handleKind: string) => string,
+  defaultRadius = 0.36,
+): ObjectKindVortexTemplate[] {
+  const seenPositions = new Set<string>();
+  const out: ObjectKindVortexTemplate[] = [];
+  for (const connector of connectors) {
+    const handleKind = connector.port?.handleKind?.trim() ?? "";
+    const point = connector.point;
+    if (handleKind === "" || !point) {
+      continue;
+    }
+    const position = cadVec3FromKitPoint(point);
+    const posKey = position.map((n) => n.toFixed(6)).join(",");
+    if (seenPositions.has(posKey)) {
+      continue;
+    }
+    seenPositions.add(posKey);
+    const portName = labelHandleKind(handleKind);
+    const vortexKind = puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(portName, point);
+    out.push({
+      vortexKind,
+      position,
+      ...(connector.direction ? { direction: cadVec3FromKitPoint(connector.direction) } : {}),
+      radius: defaultRadius,
+    });
+  }
+  return out;
+}
+
+const DOOR_CAPSULE_EAST_VORTEX_KIND = "door capsule east";
+const DOOR_CAPSULE_WEST_VORTEX_KIND = "door capsule west";
+
+/** @emoji 🚪 Resolves east vs west door vortex kind from kit port name and connector CAD (single door per kind). */
+export function puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(
+  portName: string,
+  point: { readonly x: number; readonly y: number; readonly z: number },
+): string {
+  if (!portName.includes("door capsule")) {
+    return portName;
+  }
+  return point.x < 0 ? DOOR_CAPSULE_WEST_VORTEX_KIND : DOOR_CAPSULE_EAST_VORTEX_KIND;
+}
+
+function relabelDoorCapsuleVortexTemplate(vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
+  if (!vortex.vortexKind?.includes("door capsule")) {
+    return vortex;
+  }
+  const [x, y, z] = vortex.position;
+  const nextKind = puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(vortex.vortexKind, { x, y, z });
+  return nextKind === vortex.vortexKind ? vortex : { ...vortex, vortexKind: nextKind };
+}
+
+/** @emoji 🚪 Relabels palette door vortex kinds from connector CAD (one east or west per kind, never both). */
+export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.objects?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const objects = bundle.objects.map((kind) => {
+    if (!kind.vortices?.length) {
+      return kind;
+    }
+    const vortices = kind.vortices.map(relabelDoorCapsuleVortexTemplate);
+    if (vortices.every((v, i) => v === kind.vortices![i])) {
+      return kind;
+    }
+    touched = true;
+    return { ...kind, vortices };
+  });
+  return touched ? { ...bundle, objects } : bundle;
+}
+
+export interface ObjectKind {
   id: string;
   label?: string;
   name?: string;
   color?: string;
   shape?: string;
+  /** @emoji 🖌️ Explicit GLB URL when this kind is instantiated by the brush tool. */
+  meshUrl?: string;
+  /** @emoji 🎨 Optional per-LOD GLB URLs for brush instantiation. */
+  meshByLod?: readonly LodMeshEntry[];
+  /** @emoji 📐 Default scale for brush instantiation. */
+  scale?: number | Vec3;
+  /** @emoji 🌀 Local vortex templates (positions/directions in object-local CAD). */
+  vortices?: readonly ObjectKindVortexTemplate[];
 }
 
-export interface WireKindCatalogEntry {
+export interface CableKind {
   id: string;
   label?: string;
   name?: string;
-  defaultEdgeKind?: string;
+  defaultAttractionKind?: string;
 }
 
 export interface KindCatalogBundle {
-  edges?: readonly EdgeKindCatalogEntry[];
-  handles?: readonly HandleKindCatalogEntry[];
-  nodes?: readonly NodeKindCatalogEntry[];
-  wires?: readonly WireKindCatalogEntry[];
+  attractions?: readonly AttractionKind[];
+  cables?: readonly CableKind[];
+  objects?: readonly ObjectKind[];
+  vortices?: readonly VortexKind[];
 }
 
 export interface KindCompatEntry {
@@ -274,17 +410,18 @@ export interface KindCompatEntry {
   target: string;
   bidirectional?: boolean;
   important?: boolean;
-  specificity?: "general" | "object" | "attraction" | "handle" | "wire" | "node" | "edge";
+  specificity?: "general" | "object" | "vortex" | "cable" | "attraction";
 }
 
 export interface SelectionSnapshot {
   readonly objectIds: readonly string[];
   readonly vortexIds: readonly string[];
+  readonly attractionIds: readonly string[];
 }
 
-/** @emoji 🎯 Compares selection snapshots (object + vortex ids only). */
+/** @emoji 🎯 Compares selection snapshots (objects, vortices, attractions). */
 export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapshot): boolean {
-  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length) {
+  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length || a.attractionIds.length !== b.attractionIds.length) {
     return false;
   }
   for (let i = 0; i < a.objectIds.length; i += 1) {
@@ -297,29 +434,288 @@ export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapsh
       return false;
     }
   }
+  for (let i = 0; i < a.attractionIds.length; i += 1) {
+    if (a.attractionIds[i] !== b.attractionIds[i]) {
+      return false;
+    }
+  }
   return true;
 }
 
-const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [] };
+const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [], attractionIds: [] };
+
+/** @emoji 🖱️ Pointer movement before a vortex press becomes an attraction drag (px). */
+export const PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX = 6;
+
+export type SelectionPick = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+
+/** @emoji 🎯 Single-kind selection slice for one pick target. */
+export function puzzle3dSelectionFromPick(pick: SelectionPick): SelectionSnapshot {
+  switch (pick.kind) {
+    case "object":
+      return { objectIds: [pick.id], vortexIds: [], attractionIds: [] };
+    case "vortex":
+      return { objectIds: [], vortexIds: [pick.fullId], attractionIds: [] };
+    case "attraction":
+      return { objectIds: [], vortexIds: [], attractionIds: [pick.id] };
+  }
+}
+
+function mergeIdList(mode: SelectionMode, current: readonly string[], incoming: readonly string[]): readonly string[] {
+  if (!incoming.length) {
+    return current;
+  }
+  if (mode === "default") {
+    return [...incoming];
+  }
+  if (mode === "additive") {
+    const out = [...current];
+    for (const id of incoming) {
+      if (!out.includes(id)) {
+        out.push(id);
+      }
+    }
+    return out;
+  }
+  if (mode === "subtractive") {
+    const remove = new Set(incoming);
+    return current.filter((id) => !remove.has(id));
+  }
+  const invert = new Set(current);
+  for (const id of incoming) {
+    if (invert.has(id)) {
+      invert.delete(id);
+    } else {
+      invert.add(id);
+    }
+  }
+  return [...invert];
+}
+
+/** @emoji 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */
+export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): SelectionMode {
+  const shift = modifiers.shiftKey === true;
+  const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
+  if (shift && ctrl) {
+    return "invertive";
+  }
+  if (shift) {
+    return "additive";
+  }
+  if (ctrl) {
+    return "subtractive";
+  }
+  return "default";
+}
+
+/** @emoji 🎯 Applies selection mode when committing a canvas pick. */
+export function mergeSelection(mode: SelectionMode, current: SelectionSnapshot, pick: SelectionPick): SelectionSnapshot {
+  const piece = puzzle3dSelectionFromPick(pick);
+  return mergeSelectionSnapshot(mode, current, piece);
+}
+
+/** @emoji 🎯 Applies selection mode when committing a marquee or multi-pick snapshot. */
+export function mergeSelectionSnapshot(mode: SelectionMode, current: SelectionSnapshot, incoming: SelectionSnapshot): SelectionSnapshot {
+  if (mode === "default") {
+    return {
+      objectIds: [...incoming.objectIds],
+      vortexIds: [...incoming.vortexIds],
+      attractionIds: [...incoming.attractionIds],
+    };
+  }
+  return {
+    objectIds: mergeIdList(mode, current.objectIds, incoming.objectIds),
+    vortexIds: mergeIdList(mode, current.vortexIds, incoming.vortexIds),
+    attractionIds: mergeIdList(mode, current.attractionIds, incoming.attractionIds),
+  };
+}
+
+interface SelectionDerivation {
+  readonly snapshot: SelectionSnapshot;
+  readonly objectIdSet: ReadonlySet<string>;
+  readonly vortexIdSet: ReadonlySet<string>;
+  readonly vortexOwnerObjectIdSet: ReadonlySet<string>;
+  readonly attractionIdSet: ReadonlySet<string>;
+  readonly primaryObjectId: string | null;
+  readonly revision: number;
+  readonly meshOutlineEnabled: boolean;
+}
+
+function deriveSelectionSnapshot(snapshot: SelectionSnapshot): SelectionDerivation {
+  const objectIdSet = new Set(snapshot.objectIds);
+  const vortexIdSet = new Set(snapshot.vortexIds);
+  const vortexOwnerObjectIdSet = new Set<string>();
+  for (const fullId of snapshot.vortexIds) {
+    vortexOwnerObjectIdSet.add(parseVortexFullId(fullId).objectId);
+  }
+  const attractionIdSet = new Set(snapshot.attractionIds);
+  const selectionRowCount = objectIdSet.size + vortexIdSet.size + attractionIdSet.size;
+  return {
+    snapshot,
+    objectIdSet,
+    vortexIdSet,
+    vortexOwnerObjectIdSet,
+    attractionIdSet,
+    primaryObjectId: snapshot.objectIds[0] ?? (snapshot.vortexIds[0] ? parseVortexFullId(snapshot.vortexIds[0]).objectId : null),
+    revision: 0,
+    meshOutlineEnabled: selectionRowCount <= PUZZLE3D_MESH_OUTLINE_MAX_SELECTION,
+  };
+}
+
+function selectionIdSetsEqual(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+  if (left.size !== right.size) {
+    return false;
+  }
+  for (const id of left) {
+    if (!right.has(id)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function selectionSetSymmetricDifference(left: ReadonlySet<string>, right: ReadonlySet<string>): Set<string> {
+  const changed = new Set<string>();
+  for (const id of left) {
+    if (!right.has(id)) {
+      changed.add(id);
+    }
+  }
+  for (const id of right) {
+    if (!left.has(id)) {
+      changed.add(id);
+    }
+  }
+  return changed;
+}
+
+function addPerIdListener(map: Map<string, Set<() => void>>, id: string, listener: () => void): () => void {
+  let listeners = map.get(id);
+  if (!listeners) {
+    listeners = new Set();
+    map.set(id, listeners);
+  }
+  listeners.add(listener);
+  return () => {
+    listeners!.delete(listener);
+    if (listeners!.size === 0) {
+      map.delete(id);
+    }
+  };
+}
+
+function notifyPerIdListeners(map: Map<string, Set<() => void>>, ids: Iterable<string>): void {
+  for (const id of ids) {
+    const listeners = map.get(id);
+    if (!listeners) {
+      continue;
+    }
+    for (const listener of listeners) {
+      listener();
+    }
+  }
+}
 
 /** @emoji 🔔 External selection store for synchronous pick feedback under controlled hosts. */
 export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT) {
-  let snapshot = initial;
-  const listeners = new Set<() => void>();
+  let derived = deriveSelectionSnapshot(initial);
+  derived = { ...derived, revision: 1 };
+  const globalListeners = new Set<() => void>();
+  const objectListeners = new Map<string, Set<() => void>>();
+  const vortexListeners = new Map<string, Set<() => void>>();
+  const attractionListeners = new Map<string, Set<() => void>>();
+  const attractionBulkListeners = new Set<() => void>();
+  const primaryListeners = new Set<() => void>();
+  const meshOutlinePolicyListeners = new Set<() => void>();
+  let controlledHostSnapshot: SelectionSnapshot | undefined;
+
   return {
     subscribe(listener: () => void): () => void {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      globalListeners.add(listener);
+      return () => globalListeners.delete(listener);
     },
     getSnapshot(): SelectionSnapshot {
-      return snapshot;
+      return derived.snapshot;
+    },
+    getPrimaryObjectId(): string | null {
+      return derived.primaryObjectId;
+    },
+    getAttractionIdSet(): ReadonlySet<string> {
+      return derived.attractionIdSet;
+    },
+    getRevision(): number {
+      return derived.revision;
+    },
+    getMeshOutlineEnabled(): boolean {
+      return derived.meshOutlineEnabled;
+    },
+    subscribeMeshOutlinePolicy(listener: () => void): () => void {
+      meshOutlinePolicyListeners.add(listener);
+      return () => meshOutlinePolicyListeners.delete(listener);
+    },
+    isObjectSelected(objectId: string): boolean {
+      return derived.objectIdSet.has(objectId);
+    },
+    isVortexSelected(fullId: string): boolean {
+      return derived.vortexIdSet.has(fullId);
+    },
+    isAttractionSelected(attractionId: string): boolean {
+      return derived.attractionIdSet.has(attractionId);
+    },
+    subscribeObject(objectId: string, listener: () => void): () => void {
+      return addPerIdListener(objectListeners, objectId, listener);
+    },
+    subscribeVortex(fullId: string, listener: () => void): () => void {
+      return addPerIdListener(vortexListeners, fullId, listener);
+    },
+    subscribeAttraction(attractionId: string, listener: () => void): () => void {
+      return addPerIdListener(attractionListeners, attractionId, listener);
+    },
+    subscribeAttractions(listener: () => void): () => void {
+      attractionBulkListeners.add(listener);
+      return () => attractionBulkListeners.delete(listener);
+    },
+    subscribePrimary(listener: () => void): () => void {
+      primaryListeners.add(listener);
+      return () => primaryListeners.delete(listener);
+    },
+    setControlledHostSnapshot(snapshot: SelectionSnapshot | undefined): void {
+      controlledHostSnapshot = snapshot;
+    },
+    getControlledHostSnapshot(): SelectionSnapshot | undefined {
+      return controlledHostSnapshot;
     },
     setSnapshot(next: SelectionSnapshot, equal: (left: SelectionSnapshot, right: SelectionSnapshot) => boolean = selectionSnapshotsEqual): void {
-      if (equal(snapshot, next)) {
+      if (equal(derived.snapshot, next)) {
         return;
       }
-      snapshot = next;
-      for (const listener of listeners) {
+      const prev = derived;
+      const nextDerived = deriveSelectionSnapshot(next);
+      derived = selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)
+        ? { ...nextDerived, attractionIdSet: prev.attractionIdSet }
+        : nextDerived;
+      derived = { ...derived, revision: prev.revision + 1 };
+      if (prev.meshOutlineEnabled !== derived.meshOutlineEnabled) {
+        for (const listener of meshOutlinePolicyListeners) {
+          listener();
+        }
+      }
+      if (derived.meshOutlineEnabled) {
+        notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
+        notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
+      }
+      if (!selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)) {
+        notifyPerIdListeners(attractionListeners, selectionSetSymmetricDifference(prev.attractionIdSet, derived.attractionIdSet));
+        for (const listener of attractionBulkListeners) {
+          listener();
+        }
+      }
+      if (prev.primaryObjectId !== derived.primaryObjectId) {
+        for (const listener of primaryListeners) {
+          listener();
+        }
+      }
+      for (const listener of globalListeners) {
         listener();
       }
     },
@@ -333,22 +729,75 @@ export function primarySelectionObjectId(selection: SelectionSnapshot): string |
   return selection.objectIds[0] ?? (selection.vortexIds[0] ? parseVortexFullId(selection.vortexIds[0]).objectId : null);
 }
 
-const SceneSelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
+const SelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
+
+function useSelectionSnapshotStore(): SelectionSnapshotStore {
+  const store = reactHostPort.useContext(SelectionStoreContext);
+  if (!store) {
+    throw new Error("Puzzle 3D selection store missing");
+  }
+  return store;
+}
 
 /** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
-export function useLiveSceneSelection(): SelectionSnapshot {
-  const store = reactHostPort.useContext(SceneSelectionStoreContext);
-  if (!store) {
-    throw new Error("Scene selection store missing");
-  }
+export function useLiveSelection(): SelectionSnapshot {
+  const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
 
+/** @emoji 🎯 O(1) object mesh-selection membership (direct object picks only; vortex picks use {@link useVortexSelected}). */
+export function useObjectSelected(objectId: string): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => {
+      if (!store.getMeshOutlineEnabled()) {
+        return () => {};
+      }
+      return store.subscribeObject(objectId, onStoreChange);
+    },
+    () => store.isObjectSelected(objectId),
+    () => store.isObjectSelected(objectId),
+  );
+}
+
+/** @emoji 🎯 O(1) vortex highlight membership. */
+export function useVortexSelected(fullId: string): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => {
+      if (!store.getMeshOutlineEnabled()) {
+        return () => {};
+      }
+      return store.subscribeVortex(fullId, onStoreChange);
+    },
+    () => store.isVortexSelected(fullId),
+    () => store.isVortexSelected(fullId),
+  );
+}
+
+/** @emoji 🎯 Stable attraction-id set for batch line coloring (notifies only when attraction selection changes). */
+export function useSelectedAttractionIdSet(): ReadonlySet<string> {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribeAttractions, store.getAttractionIdSet, store.getAttractionIdSet);
+}
+
+/** @emoji 🎯 Primary relocate object id with per-primary subscription. */
+export function usePrimarySelectionObjectId(): string | null {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribePrimary, store.getPrimaryObjectId, store.getPrimaryObjectId);
+}
+
+/** @emoji 🎯 False when selection count exceeds {@link PUZZLE3D_MESH_OUTLINE_MAX_SELECTION} (fill-only highlight). */
+export function useSelectionMeshOutlinesEnabled(): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribeMeshOutlinePolicy, store.getMeshOutlineEnabled, store.getMeshOutlineEnabled);
+}
+
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
-export type SceneHoverTarget = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+export type HoverTarget = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
 
 /** @emoji 🖱️ Compares two hover targets for equality. */
-export function sceneHoverTargetsEqual(a: SceneHoverTarget | null, b: SceneHoverTarget | null): boolean {
+export function puzzle3dHoverTargetsEqual(a: HoverTarget | null, b: HoverTarget | null): boolean {
   if (a === b) {
     return true;
   }
@@ -383,6 +832,31 @@ export interface AttractionPayload {
   readonly attractionId?: string;
 }
 
+/** @emoji 🖌️ Brush commit payload: new object pose plus attraction endpoints. */
+export interface BrushPlacePayload {
+  readonly targetVortexFullId: string;
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+  readonly origin: Vec3;
+  readonly orientation: Quat;
+  readonly scale?: number | Vec3;
+  readonly attractionId?: string;
+  /** @emoji 🧪 Optional fixed object id (tests); otherwise a random id is generated. */
+  readonly objectId?: string;
+}
+
+/** @emoji 🖌️ Live brush preview pose and catalog candidate index. */
+export interface BrushPreviewState {
+  readonly targetVortexFullId: string;
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+  readonly meshUrl: string;
+  readonly meshByLod?: readonly LodMeshEntry[];
+  readonly scale?: number | Vec3;
+  readonly origin: Vec3;
+  readonly orientation: Quat;
+}
+
 export interface AttractionCompatibleObjectsPayload {
   readonly attracting: string;
   readonly objectIds: readonly string[];
@@ -398,6 +872,15 @@ export interface AttractionIndirectPickAwait {
   readonly attractingFullId: string;
   readonly attractedObjectId: string;
   readonly candidates: readonly string[];
+}
+
+/** @emoji 🔗 Host-driven attraction preview mirrored across spatial surfaces ({@link CanvasProps.attractionSession}). */
+export interface AttractionSessionSnapshot {
+  readonly attracting: string;
+  readonly end: Vec3;
+  readonly compatibleObjectIds: readonly string[];
+  readonly ringObjectId: string | null;
+  readonly ringVortexFullIds: readonly string[];
 }
 
 export interface CanvasProps {
@@ -423,17 +906,17 @@ export interface CanvasProps {
   lodDistanceReference?: number;
   /** @emoji 📐 Clamp range for manual LOD slider UI. */
   availableLodRange?: { readonly min: number; readonly max: number };
-  /** @emoji ­ƒôÉ Multiplier for LOD grid steps (board `grid_factor`). */
+  /** @emoji ­ƒôÉ Multiplier for LOD grid steps (puzzle 2d `grid_factor`). */
   gridFactor?: number;
   /** @emoji ­ƒôÉ When true, draw a world `GridHelper` stepped by the current LOD band grid. */
   showLodGrid?: boolean;
-  /** @emoji ­ƒº▓ When true, translate relocate snaps to the finest visible LOD grid step (board `grid_snap_enabled`). */
+  /** @emoji ­ƒº▓ When true, translate relocate snaps to the finest visible LOD grid step (puzzle 2d `grid_snap_enabled`). */
   gridSnapEnabled?: boolean;
   onCamera?: (s: CameraState) => void;
   /** @emoji 📶 Emits whenever the resolved scene-level LOD changes. */
   onLodChange?: (lod: number) => void;
   onSelect?: (snap: SelectionSnapshot) => void;
-  /** @emoji 🎯 When set, canvas selection is controlled by the host (e.g. scene play inspector). */
+  /** @emoji 🎯 When set, canvas selection is controlled by the host (e.g. puzzle 3D play inspector). */
   selection?: SelectionSnapshot;
   onRelocate?: (p: RelocatePayload) => void;
   onConnect?: (p: AttractionPayload) => void;
@@ -441,17 +924,181 @@ export interface CanvasProps {
   onProximityConnect?: (p: AttractionPayload) => void;
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+  /** @emoji 🖌️ When true, hover free vortices to preview and flush compatible objects on leave. */
+  brushActive?: boolean;
+  /** @emoji 🖌️ Commits a brush placement (new object + attraction). */
+  onBrushPlace?: (payload: BrushPlacePayload) => void;
+  /** @emoji 📏 Minimum AABB penetration depth (CAD units) before brush placement counts as collision; defaults to {@link DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE}. */
+  brushPlacementCollisionTolerance?: number;
+  /** @emoji 📥 When true, accepts in-app fixture drags using {@link FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+  fixtureDragDrop?: boolean;
+  /** @emoji 📥 Palette / shelf fixture dropped on the canvas at the grid-plane intersection. */
+  onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
+  /** @emoji 🎨 Loaded scene fixture used to resolve catalog kinds that omit `meshUrl` (e.g. Base). */
+  sceneFixture?: FixtureV1;
+  /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
+  attractionSession?: AttractionSessionSnapshot | null;
+  /** @emoji 🖱️ Marquee tool shape (rectangle default, lasso optional). */
+  selectionMethod?: SelectionMethod;
+  /** @emoji 🖱️ Which entity kinds marquee selection may include. */
+  marqueeSelectableKinds?: MarqueeSelectableKinds;
   children?: ReactNode;
 }
 
-export const FIXTURE_DRAG_V1_MIME = "application/x-elements-scene-fixture+json;v=1";
+export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture-v1";
+
+/** @emoji 🖱️ True while a workbench object-kind palette drag is in flight (some hosts hide custom MIME in `types`). */
+export const puzzle3dFixturePaletteDragRef = { active: false };
+
+/** @emoji 🖱️ Pointer-driven palette drag when native HTML5 tree drag does not start (Electron / scroll panels). */
+export const puzzle3dFixturePalettePointerDragRef = { active: false, encoded: null as string | null };
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded fixture payload. */
+export function beginPuzzle3dFixturePalettePointerDrag(encoded: string): void {
+  puzzle3dFixturePalettePointerDragRef.active = true;
+  puzzle3dFixturePalettePointerDragRef.encoded = encoded;
+  puzzle3dFixturePaletteDragRef.active = true;
+  window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded } }));
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelPuzzle3dFixturePalettePointerDrag(): void {
+  if (!puzzle3dFixturePalettePointerDragRef.active && !puzzle3dFixturePaletteDragRef.active) {
+    return;
+  }
+  puzzle3dFixturePalettePointerDragRef.active = false;
+  puzzle3dFixturePalettePointerDragRef.encoded = null;
+  puzzle3dFixturePaletteDragRef.active = false;
+  window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+}
+
+/** @emoji 🎯 True when client coordinates are over the puzzle 3D fixture drop host. */
+export function isClientPointOverPuzzle3dFixtureDropHost(clientX: number, clientY: number, host: HTMLElement | null | undefined): boolean {
+  if (!host) {
+    return false;
+  }
+  const rect = host.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+/** @emoji 📥 Commits a palette fixture drop at client coordinates (pointer or HTML5 drop). */
+export function commitPuzzle3dFixtureDropAtClient(
+  clientX: number,
+  clientY: number,
+  fixture: FixtureV1,
+  host: HTMLElement | null | undefined,
+  onFixtureDrop: ((detail: Puzzle3dFixtureDropDetail) => void) | undefined,
+): boolean {
+  const toCad = puzzle3dFixtureDropPointerToCadRef.current;
+  if (!toCad || !onFixtureDrop) {
+    return false;
+  }
+  const dropHost = host ?? null;
+  const rect = dropHost?.getBoundingClientRect();
+  if (!rect) {
+    return false;
+  }
+  const worldCad = toCad(clientX, clientY);
+  if (!worldCad) {
+    return false;
+  }
+  onFixtureDrop({
+    fixture,
+    screen: { x: clientX - rect.left, y: clientY - rect.top },
+    worldCad,
+  });
+  return true;
+}
+
+/** @emoji 🖱️ Ends pointer palette drag and drops on the viewport when the pointer is over the host. */
+export function endPuzzle3dFixturePalettePointerDrag(
+  clientX: number,
+  clientY: number,
+  host: HTMLElement | null | undefined,
+  onFixtureDrop: ((detail: Puzzle3dFixtureDropDetail) => void) | undefined,
+): void {
+  if (!puzzle3dFixturePalettePointerDragRef.active) {
+    return;
+  }
+  const encoded = puzzle3dFixturePalettePointerDragRef.encoded;
+  cancelPuzzle3dFixturePalettePointerDrag();
+  if (!encoded) {
+    return;
+  }
+  const fixture = decodePuzzle3dFixtureFromDragV1(encoded);
+  if (!fixture) {
+    return;
+  }
+  if (!isClientPointOverPuzzle3dFixtureDropHost(clientX, clientY, host)) {
+    return;
+  }
+  commitPuzzle3dFixtureDropAtClient(clientX, clientY, fixture, host, onFixtureDrop);
+}
+
+/** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 3D fixture palette drag. */
+export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolean {
+  return types.includes(FIXTURE_DRAG_V1_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
+}
+
+/** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
+export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): boolean {
+  if (puzzle3dFixturePalettePointerDragRef.active || puzzle3dFixturePaletteDragRef.active) {
+    return true;
+  }
+  return puzzle3dFixtureDragMimeInTypes(types);
+}
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 3D fixture palette `dragData`. */
+export function puzzle3dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[FIXTURE_DRAG_V1_MIME];
+    return payload?.trim() ? payload : undefined;
+  };
+  return {
+    getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: beginPuzzle3dFixturePalettePointerDrag,
+      cancel: cancelPuzzle3dFixturePalettePointerDrag,
+    },
+    onDragStart: ({ sourceItem }) => {
+      if (puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      puzzle3dFixturePaletteDragRef.active = true;
+      const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
+      if (payload) {
+        window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
+      }
+    },
+    onDragEnd: () => {
+      if (puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      puzzle3dFixturePaletteDragRef.active = false;
+      window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+    },
+  };
+}
+
+/** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
+export const FIXTURE_DRAG_PLAIN_MIME = "text/plain";
+
+/** @emoji 🧩 `FixtureV1.meta.puzzle3dFixtureDragKind` — workbench palette drops place one object at the pointer. */
+export const FIXTURE_DRAG_KIND_PALETTE_OBJECT = "palette-object";
+
+/** @emoji 📍 Puzzle 3D canvas fixture drop: scene plus pointer in CSS space and CAD world on the grid plane. */
+export interface Puzzle3dFixtureDropDetail {
+  readonly fixture: FixtureV1;
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly worldCad: Vec3;
+}
 
 export interface FixtureObjectV1 extends ObjectProps {
   vortices: VortexProps[];
-  magnets?: MagnetProps[];
 }
 
-/** @emoji 🧭 Scene fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
+/** @emoji 🧭 Puzzle 3D fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
 export interface FixtureV1 {
   schema: "puzzle.3d.fixture/v1";
   camera: CameraState;
@@ -459,6 +1106,24 @@ export interface FixtureV1 {
   meta?: Record<string, unknown>;
   attractions: AttractionProps[];
   objects: FixtureObjectV1[];
+}
+
+/** @emoji 📷 True when two camera states match within epsilon (avoids redundant fixture writes). */
+export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1e-3): boolean {
+  for (let i = 0; i < 3; i += 1) {
+    if (Math.abs(a.position[i]! - b.position[i]!) > epsilon) return false;
+    if (Math.abs(a.target[i]! - b.target[i]!) > epsilon) return false;
+  }
+  return Math.abs(a.zoom - b.zoom) <= epsilon;
+}
+
+/** @emoji 📷 Writes camera fields on the fixture; returns the same reference when unchanged. */
+export function updatePuzzle3dCameraInFixture(fixture: FixtureV1, camera: Partial<CameraState>): FixtureV1 {
+  const nextCamera: CameraState = { ...fixture.camera, ...camera };
+  if (cameraStateNearEqual(fixture.camera, nextCamera)) {
+    return fixture;
+  }
+  return { ...fixture, camera: nextCamera };
 }
 //#endregion ­ƒöûKinds
 
@@ -497,14 +1162,14 @@ export function pickClosestMeshUrl(entries: readonly LodMeshEntry[] | undefined,
   return match?.url ?? fallback;
 }
 
-/** @emoji 📶 Formats scene LOD for `data-scene-lod` and play readouts. */
-export function formatSceneLod(lod: number): string {
+/** @emoji 📶 Formats puzzle 3D LOD for `data-puzzle3d-lod` and play readouts. */
+export function formatLod(lod: number): string {
   return Number.isFinite(lod) ? lod.toFixed(2) : "—";
 }
 
 /** @emoji 📶 Maps a linear slider position to log-spaced scene LOD. */
 export function lodFromSliderValue(slider: number, range: { readonly min: number; readonly max: number } = DEFAULT_LOD_RANGE): number {
-  const t = Math.max(0, Math.min(1, (slider - SCENE_LOD_SLIDER_MIN) / (SCENE_LOD_SLIDER_MAX - SCENE_LOD_SLIDER_MIN)));
+  const t = Math.max(0, Math.min(1, (slider - PUZZLE_3D_LOD_SLIDER_MIN) / (PUZZLE_3D_LOD_SLIDER_MAX - PUZZLE_3D_LOD_SLIDER_MIN)));
   const logMin = Math.log(range.min);
   const logMax = Math.log(range.max);
   return Math.exp(logMin + t * (logMax - logMin));
@@ -516,11 +1181,11 @@ export function sliderValueFromLod(lod: number, range: { readonly min: number; r
   const logMin = Math.log(range.min);
   const logMax = Math.log(range.max);
   const t = (Math.log(clamped) - logMin) / (logMax - logMin);
-  return Math.round(SCENE_LOD_SLIDER_MIN + t * (SCENE_LOD_SLIDER_MAX - SCENE_LOD_SLIDER_MIN));
+  return Math.round(PUZZLE_3D_LOD_SLIDER_MIN + t * (PUZZLE_3D_LOD_SLIDER_MAX - PUZZLE_3D_LOD_SLIDER_MIN));
 }
 
 /** @emoji 📶 Maps play / window LOD controls to {@link CanvasProps}. */
-export function sceneLodCanvasProps(state: { readonly automaticLod: boolean; readonly depthVariableLod: boolean; readonly manualLod: number }): Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod"> {
+export function puzzle3dLodCanvasProps(state: { readonly automaticLod: boolean; readonly depthVariableLod: boolean; readonly manualLod: number }): Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod"> {
   return {
     automaticLod: state.automaticLod,
     depthVariableLod: state.depthVariableLod,
@@ -528,20 +1193,39 @@ export function sceneLodCanvasProps(state: { readonly automaticLod: boolean; rea
   };
 }
 
-/** @emoji 📐 Visible LOD grid / relocate snap step in world units. */
-export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
-  if (!Number.isFinite(lod) || lod <= 0) return null;
-  const raw = lod * 0.05 * gridFactor;
-  return raw > 50 * gridFactor ? null : raw;
+/** @emoji 📐 Fixed LOD grid band steps in world units (`10` / `2.5` / `0.5` / `0.1` × {@link gridFactor}). */
+export function lodGridBandStepsWorld(gridFactor: number): readonly [number, number, number, number] {
+  const f = gridFactor;
+  return [LOD_GRID_MAJOR_QUANTUM * f, LOD_GRID_MEDIUM_QUANTUM * f, LOD_GRID_SMALL_QUANTUM * f, LOD_GRID_MICRO_QUANTUM * f];
 }
 
-/** @emoji 🌐 True when primary handle visuals are drawn at the given scene LOD. */
-export function lodHandlePrimaryVisible(lod: number): boolean {
+const LOD_GRID_LAYER_OPACITY = [1, 0.72, 0.48, 0.32] as const;
+
+/** @emoji 📐 Progressive LOD grid layers to draw (puzzle 2d `stroke_world_step_grid` bands). */
+export function lodProgressiveGridLayers(lod: number, gridFactor: number): readonly LodGridLayer[] {
+  if (!Number.isFinite(lod) || lod <= 0 || lod > PUZZLE_3D_LOD_GRID_MAX_LOD) return [];
+  const [large, medium, small, micro] = lodGridBandStepsWorld(gridFactor);
+  const layers: LodGridLayer[] = [{ stepWorld: large, opacity: LOD_GRID_LAYER_OPACITY[0] }];
+  if (lod <= PUZZLE_3D_LOD_GRID_MEDIUM_MAX_LOD) layers.push({ stepWorld: medium, opacity: LOD_GRID_LAYER_OPACITY[1] });
+  if (lod <= PUZZLE_3D_LOD_GRID_SMALL_MAX_LOD) layers.push({ stepWorld: small, opacity: LOD_GRID_LAYER_OPACITY[2] });
+  if (lod <= PUZZLE_3D_LOD_GRID_MICRO_MAX_LOD) layers.push({ stepWorld: micro, opacity: LOD_GRID_LAYER_OPACITY[3] });
+  return layers;
+}
+
+/** @emoji 📐 Finest visible LOD grid / relocate snap step in world units. */
+export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
+  const layers = lodProgressiveGridLayers(lod, gridFactor);
+  if (!layers.length) return null;
+  return layers[layers.length - 1]!.stepWorld;
+}
+
+/** @emoji 🌐 True when primary vortex visuals are drawn at the given scene LOD. */
+export function lodVortexPrimaryVisible(lod: number): boolean {
   return lod <= 200;
 }
 
-/** @emoji 🌐 True when invisible handle pick proxies are used instead of GLB handles. */
-export function lodHandlePickProxy(lod: number): boolean {
+/** @emoji 🌐 True when invisible vortex pick proxies are used instead of GLB vortex meshes. */
+export function lodVortexPickProxy(lod: number): boolean {
   return lod > 200 && lod <= 1000;
 }
 
@@ -559,12 +1243,12 @@ const LodContext = reactHostPort.createContext<LodContextValue | null>(null);
 /** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
 export function useLod(): LodContextValue {
   const v = reactHostPort.useContext(LodContext);
-  if (!v) throw new Error("Scene LOD missing");
+  if (!v) throw new Error("Puzzle 3D LOD missing");
   return v;
 }
 
 interface LodRuntimeCells {
-  sceneLod: number;
+  puzzle3dLod: number;
   depthVariable: boolean;
   distanceReference: number;
   camera: Camera | null;
@@ -577,7 +1261,7 @@ function resolveMeshUrlForLod(meshByLod: readonly LodMeshEntry[] | undefined, fa
 }
 
 /** @emoji 🎨 Resolves per-object mesh URL; useFrame only when depth-variable or per-LOD meshes exist, and setState only when URL changes. */
-function useResolvedSceneMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: readonly LodMeshEntry[]; readonly fallbackMeshUrl: string }): string {
+function useResolvedMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: readonly LodMeshEntry[]; readonly fallbackMeshUrl: string }): string {
   const lodCtx = useLod();
   const trackLod = lodCtx.depthVariable || (opts.meshByLod?.length ?? 0) > 0;
   const meshByLodRef = reactHostPort.useRef(opts.meshByLod);
@@ -600,39 +1284,65 @@ function useResolvedSceneMeshUrl(opts: { readonly origin: Vec3; readonly meshByL
 }
 
 interface VortexLodVisual {
-  readonly drawHandleBody: boolean;
+  readonly drawVortexBody: boolean;
   readonly pickProxy: boolean;
   readonly meshUrl: string | undefined;
 }
 
-function vortexLodVisual(lod: number, linger: boolean, handleMeshByLod: readonly LodMeshEntry[] | undefined, handleMeshUrl: string | undefined): VortexLodVisual {
-  const drawHandleBody = lodHandlePrimaryVisible(lod) || linger;
-  const pickProxy = lodHandlePickProxy(lod) && !drawHandleBody;
-  const meshUrl = drawHandleBody ? pickClosestMeshUrl(handleMeshByLod, lod, handleMeshUrl) : undefined;
-  return { drawHandleBody, pickProxy, meshUrl };
+function vortexLodVisual(lod: number, linger: boolean, vortexMeshByLod: readonly LodMeshEntry[] | undefined, vortexMeshUrl: string | undefined): VortexLodVisual {
+  const drawVortexBody = lodVortexPrimaryVisible(lod) || linger;
+  const pickProxy = lodVortexPickProxy(lod) && !drawVortexBody;
+  const meshUrl = drawVortexBody ? pickClosestMeshUrl(vortexMeshByLod, lod, vortexMeshUrl) : undefined;
+  return { drawVortexBody, pickProxy, meshUrl };
 }
 
 function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
-  return a.drawHandleBody === b.drawHandleBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
+  return a.drawVortexBody === b.drawVortexBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
+}
+
+function applyLodGridLayerStyle(grid: GridHelper, opacity: number): void {
+  const materials = Array.isArray(grid.material) ? grid.material : [grid.material];
+  for (const raw of materials) {
+    const mat = raw as LineBasicMaterial;
+    mat.transparent = true;
+    mat.opacity = opacity;
+    mat.depthTest = true;
+    mat.depthWrite = false;
+  }
+  grid.renderOrder = -5;
+  grid.frustumCulled = false;
 }
 
 function LodGridHelper() {
   const lod = useLod();
-  const grid = reactHostPort.useMemo(() => {
-    const step = lod.gridStepWorld;
-    if (step == null || !Number.isFinite(step) || step <= 0) return null;
+  const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+  const anchor = controls?.target;
+  const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
+  const grids = reactHostPort.useMemo(() => {
     const size = 12_000;
-    const divs = Math.min(512, Math.max(2, Math.round(size / step)));
-    return new GridHelper(size, divs, 0x8899aa, 0x445566);
-  }, [lod.gridStepWorld]);
+    return layers.map(({ stepWorld, opacity }) => {
+      const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
+      const grid = new GridHelper(size, divs, 0xb8c4d0, 0x6a7a8a);
+      applyLodGridLayerStyle(grid, opacity);
+      return grid;
+    });
+  }, [layers]);
   reactHostPort.useEffect(
     () => () => {
-      grid?.dispose();
+      for (const grid of grids) grid.dispose();
     },
-    [grid],
+    [grids],
   );
-  if (!grid) return null;
-  return <primitive object={grid} position={[0, 0, 0]} />;
+  if (!grids.length) return null;
+  const placementCad = puzzle3dGridPlacementAnchorCad(anchor ?? null);
+  const [px, py, pz] = cadVec3ToThree(placementCad);
+  return (
+    <>
+      {grids.map((grid, i) => (
+        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[px, py, pz]} />
+      ))}
+    </>
+  );
 }
 
 function LodFrameRunner(props: {
@@ -644,7 +1354,7 @@ function LodFrameRunner(props: {
   readonly automaticLod: boolean;
   readonly depthVariableLod: boolean;
   readonly manualLod: number;
-  readonly onSceneLod: (patch: { readonly sceneLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => void;
+  readonly onLod: (patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => void;
   readonly onLodChange?: (lod: number) => void;
 }) {
   const cam = useThree((s) => s.camera);
@@ -656,22 +1366,22 @@ function LodFrameRunner(props: {
     const tgt = controls?.target ?? tmpT.set(0, 0, 0);
     const dist = cam.position.distanceTo(tgt);
     const autoLod = lodFromCameraDistance(dist, props.distanceReference);
-    const sceneLod = props.automaticLod ? autoLod : props.depthVariableLod ? autoLod : props.manualLod;
-    props.lodRef.current = sceneLod;
+    const puzzle3dLod = props.automaticLod ? autoLod : props.depthVariableLod ? autoLod : props.manualLod;
+    props.lodRef.current = puzzle3dLod;
     const runtime = props.lodRuntimeRef.current;
-    runtime.sceneLod = sceneLod;
+    runtime.puzzle3dLod = puzzle3dLod;
     runtime.depthVariable = props.depthVariableLod;
     runtime.distanceReference = props.distanceReference;
     runtime.camera = cam;
-    const gridStep = lodGridStepWorld(sceneLod, props.gridFactor);
-    const sig = `${sceneLod}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+    const gridStep = lodGridStepWorld(puzzle3dLod, props.gridFactor);
+    const sig = `${puzzle3dLod}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
     if (ctxSig.current !== sig) {
       ctxSig.current = sig;
-      props.onSceneLod({ sceneLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
+      props.onLod({ puzzle3dLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
     }
-    if (prevLod.current === null || Math.abs(prevLod.current - sceneLod) > SCENE_LOD_EPSILON) {
-      prevLod.current = sceneLod;
-      props.onLodChange?.(sceneLod);
+    if (prevLod.current === null || Math.abs(prevLod.current - puzzle3dLod) > PUZZLE_3D_LOD_EPSILON) {
+      prevLod.current = puzzle3dLod;
+      props.onLodChange?.(puzzle3dLod);
     }
   });
   return null;
@@ -691,7 +1401,7 @@ function LodBridge(props: {
 }) {
   const tmpWorld = reactHostPort.useMemo(() => new Vector3(), []);
   const lodRuntimeRef = reactHostPort.useRef<LodRuntimeCells>({
-    sceneLod: DEFAULT_MANUAL_LOD,
+    puzzle3dLod: DEFAULT_MANUAL_LOD,
     depthVariable: false,
     distanceReference: props.distanceReference,
     camera: null,
@@ -699,28 +1409,28 @@ function LodBridge(props: {
   });
   const lodForWorldPosition = reactHostPort.useCallback((position: Vec3) => {
     const r = lodRuntimeRef.current;
-    if (!r.depthVariable || !r.camera) return r.sceneLod;
+    if (!r.depthVariable || !r.camera) return r.puzzle3dLod;
     r.tmpWorld.set(position[0], position[1], position[2]);
     return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);
   }, []);
-  const [sceneLod, setSceneLod] = reactHostPort.useState(DEFAULT_MANUAL_LOD);
+  const [puzzle3dLod, setLod] = reactHostPort.useState(DEFAULT_MANUAL_LOD);
   const [depthVariable, setDepthVariable] = reactHostPort.useState(false);
   const [gridStepWorld, setGridStepWorld] = reactHostPort.useState<number | null>(() => lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor));
-  const onSceneLod = reactHostPort.useCallback((patch: { readonly sceneLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
-    setSceneLod((prev) => (Math.abs(prev - patch.sceneLod) > SCENE_LOD_EPSILON ? patch.sceneLod : prev));
+  const onLod = reactHostPort.useCallback((patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
+    setLod((prev) => (Math.abs(prev - patch.puzzle3dLod) > PUZZLE_3D_LOD_EPSILON ? patch.puzzle3dLod : prev));
     setDepthVariable((prev) => (prev === patch.depthVariable ? prev : patch.depthVariable));
     setGridStepWorld((prev) => (prev === patch.gridStepWorld ? prev : patch.gridStepWorld));
   }, []);
   const lodCtx = reactHostPort.useMemo<LodContextValue>(
     () => ({
-      lod: sceneLod,
+      lod: puzzle3dLod,
       depthVariable,
       lodForWorldPosition,
       gridStepWorld,
       gridFactor: props.gridFactor,
       gridSnapEnabled: props.gridSnapEnabled,
     }),
-    [sceneLod, depthVariable, lodForWorldPosition, gridStepWorld, props.gridFactor, props.gridSnapEnabled],
+    [puzzle3dLod, depthVariable, lodForWorldPosition, gridStepWorld, props.gridFactor, props.gridSnapEnabled],
   );
   return (
     <LodContext.Provider value={lodCtx}>
@@ -733,7 +1443,7 @@ function LodBridge(props: {
         automaticLod={props.automaticLod}
         depthVariableLod={props.depthVariableLod}
         manualLod={props.manualLod}
-        onSceneLod={onSceneLod}
+        onLod={onLod}
         onLodChange={props.onLodChange}
       />
       {props.showLodGrid ? <LodGridHelper /> : null}
@@ -785,7 +1495,7 @@ function parseDomainKind(value: unknown): DomainKind {
   }
 }
 
-function parseHandleMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
+function parseVortexMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
   return parseLodMeshEntries(v);
 }
 
@@ -829,7 +1539,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
         if (!v || typeof v !== "object") continue;
         const vx = v as Record<string, unknown>;
         if (typeof vx.id !== "string" || !isVec3(vx.position)) continue;
-        const handleMeshByLod = parseHandleMeshByLod(vx.handleMeshByLod);
+        const vortexMeshByLod = parseVortexMeshByLod(vx.vortexMeshByLod);
         vortices.push({
           id: vx.id,
           ...(typeof vx.vortexKind === "string" ? { vortexKind: vx.vortexKind } : {}),
@@ -837,8 +1547,8 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
           position: vx.position,
           ...(isVec3(vx.direction) ? { direction: vx.direction } : {}),
           ...(typeof vx.radius === "number" ? { radius: vx.radius } : {}),
-          ...(typeof vx.handleMeshUrl === "string" ? { handleMeshUrl: vx.handleMeshUrl } : {}),
-          ...(handleMeshByLod ? { handleMeshByLod } : {}),
+          ...(typeof vx.vortexMeshUrl === "string" ? { vortexMeshUrl: vx.vortexMeshUrl } : {}),
+          ...(vortexMeshByLod ? { vortexMeshByLod } : {}),
         });
       }
     }
@@ -866,10 +1576,200 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
   };
 }
 
-export function encodeSceneFixtureForDragV1(fixture: FixtureV1): string {
+export function encodeFixtureForDragV1(fixture: FixtureV1): string {
   return JSON.stringify(fixture);
 }
-//#endregion ­ƒº¥Fixture
+
+/** @emoji 📤 Writes puzzle 3D fixture drag payload (custom MIME + `text/plain` fallback). */
+export function setPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: FixtureV1): void {
+  const encoded = encodeFixtureForDragV1(fixture);
+  dataTransfer.setData(FIXTURE_DRAG_V1_MIME, encoded);
+  dataTransfer.setData(FIXTURE_DRAG_PLAIN_MIME, encoded);
+}
+
+/** @emoji 📥 Reads puzzle 3D fixture drag payload from a drop `DataTransfer`. */
+export function readPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer): FixtureV1 | null {
+  const custom = dataTransfer.getData(FIXTURE_DRAG_V1_MIME);
+  if (custom.trim() !== "") {
+    const parsed = decodePuzzle3dFixtureFromDragV1(custom);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  const plain = dataTransfer.getData(FIXTURE_DRAG_PLAIN_MIME);
+  if (plain.trim() === "") {
+    return null;
+  }
+  return decodePuzzle3dFixtureFromDragV1(plain);
+}
+
+/** @emoji 📥 Parses drag payload from {@link FIXTURE_DRAG_V1_MIME}. */
+export function decodePuzzle3dFixtureFromDragV1(text: string): FixtureV1 | null {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+  return parseFixtureV1(raw);
+}
+
+/** @emoji 🧩 Minimal fixture encoding one object kind for workbench palette drags. */
+export function buildPaletteObjectDragFixture(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): FixtureV1 {
+  return {
+    schema: "puzzle.3d.fixture/v1",
+    camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
+    domain,
+    meta: { puzzle3dFixtureDragKind: FIXTURE_DRAG_KIND_PALETTE_OBJECT },
+    attractions: [],
+    objects: [{ id: "palette-seed-object", objectKind: objectKindId, meshUrl: "puzzle3d://palette-seed", origin: [0, 0, 0], vortices: [] }],
+  };
+}
+
+/** @emoji 📤 `dataTransfer` map for dragging one object kind from the workbench kinds tree. */
+export function puzzle3dPlayObjectKindDragData(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): Record<string, string> {
+  const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture(objectKindId, domain));
+  return { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded };
+}
+
+/** @emoji 🧩 True when the drag payload is a palette object kind seed. */
+export function isPaletteObjectDragFixture(fixture: FixtureV1): boolean {
+  if (fixture.meta?.puzzle3dFixtureDragKind === FIXTURE_DRAG_KIND_PALETTE_OBJECT) {
+    return true;
+  }
+  return fixture.objects.length === 1 && fixture.attractions.length === 0 && fixture.objects[0]!.id.startsWith("palette-seed-");
+}
+
+/** @emoji 🧲 Snaps a CAD point to the finest visible LOD grid step when `step` is positive. */
+export function snapCadVec3ToGridStep(position: Vec3, step: number | null | undefined): Vec3 {
+  if (step == null || !Number.isFinite(step) || step <= 0) {
+    return position;
+  }
+  const snapAxis = (value: number) => Math.round(value / step) * step;
+  return [snapAxis(position[0]), snapAxis(position[1]), snapAxis(position[2])];
+}
+
+const puzzle3dGridPlaneUp = new Vector3(0, 1, 0);
+const puzzle3dGridPlaneScratch = new Plane();
+const puzzle3dGridPlaneHitScratch = new Vector3();
+const puzzle3dGridPlanePointScratch = new Vector3();
+
+/** @emoji 📐 CAD anchor for {@link LodGridHelper} and palette drops: orbit pan XY, datum Z=0 (not camera look-at height). */
+export function puzzle3dGridPlacementAnchorCad(controlsTargetThree?: Vector3 | null): Vec3 {
+  if (!controlsTargetThree) {
+    return DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
+  }
+  const orbitCad = threeVec3ToCad(controlsTargetThree);
+  return [orbitCad[0], orbitCad[1], 0];
+}
+
+/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal plane at {@link LodGridHelper}. */
+export function puzzle3dClientToGridPlaneCad(args: {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly camera: Camera;
+  readonly canvas: HTMLElement;
+  readonly gridSnapEnabled?: boolean;
+  readonly gridStepWorld?: number | null;
+  /** @emoji 📐 Coplanar anchor in CAD (defaults to datum); use {@link puzzle3dGridPlacementAnchorCad} for orbit-aware XY. */
+  readonly gridPlaneAnchorCad?: Vec3;
+}): Vec3 {
+  const rect = args.canvas.getBoundingClientRect();
+  const ndc = new Vector2(((args.clientX - rect.left) / rect.width) * 2 - 1, -((args.clientY - rect.top) / rect.height) * 2 + 1);
+  const raycaster = new Raycaster();
+  raycaster.setFromCamera(ndc, args.camera);
+  const anchorCad = args.gridPlaneAnchorCad ?? DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
+  const anchorThree = cadVec3ToThree(anchorCad);
+  puzzle3dGridPlanePointScratch.set(anchorThree[0], anchorThree[1], anchorThree[2]);
+  puzzle3dGridPlaneScratch.setFromNormalAndCoplanarPoint(puzzle3dGridPlaneUp, puzzle3dGridPlanePointScratch);
+  if (!raycaster.ray.intersectPlane(puzzle3dGridPlaneScratch, puzzle3dGridPlaneHitScratch)) {
+    raycaster.ray.at(80, puzzle3dGridPlaneHitScratch);
+  }
+  const cad = threeVec3ToCad(puzzle3dGridPlaneHitScratch);
+  return snapCadVec3ToGridStep(cad, args.gridSnapEnabled ? args.gridStepWorld : null);
+}
+
+/** @emoji 🧲 Live bridge from {@link Canvas3D} DOM drops to the active R3F camera and LOD grid snap. */
+export const puzzle3dFixtureDropPointerToCadRef: {
+  current: ((clientX: number, clientY: number) => Vec3 | null) | null;
+} = { current: null };
+
+function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: string): ObjectKind | undefined {
+  return catalogs?.objects?.find((entry) => entry.id === kindId);
+}
+
+/** @emoji 🎨 Resolves a GLB URL for an object kind from the catalog, then from matching scene objects. */
+export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): string | undefined {
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  const catalogMesh = kind?.meshUrl?.trim();
+  if (catalogMesh) {
+    return catalogMesh;
+  }
+  const lodMesh = pickClosestMeshUrl(kind?.meshByLod, DEFAULT_MANUAL_LOD, undefined);
+  if (lodMesh) {
+    return lodMesh;
+  }
+  if (sceneFixture) {
+    for (const object of sceneFixture.objects) {
+      if (object.objectKind === kindId) {
+        const sceneMesh = object.meshUrl?.trim();
+        if (sceneMesh) {
+          return sceneMesh;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3, meshUrl: string): FixtureObjectV1 {
+  const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
+    id: `${objectId}:v${index}`,
+    vortexKind: entry.vortexKind,
+    label: entry.vortexKind,
+    position: entry.position,
+    ...(entry.direction ? { direction: entry.direction } : {}),
+    ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
+  }));
+  return {
+    id: objectId,
+    objectKind: kind.id,
+    meshUrl,
+    ...(kind.meshByLod ? { meshByLod: kind.meshByLod } : {}),
+    label: kind.label ?? kind.name ?? kind.id,
+    origin,
+    orientation: [0, 0, 0, 1],
+    ...(kind.scale !== undefined ? { scale: kind.scale } : {}),
+    vortices,
+  };
+}
+
+/** @emoji 🧩 When the drag payload is a palette object kind, returns one object at the drop CAD point. */
+export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 | null {
+  if (!isPaletteObjectDragFixture(detail.fixture)) {
+    return null;
+  }
+  const kindId = detail.fixture.objects[0]?.objectKind?.trim();
+  if (!kindId) {
+    return null;
+  }
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  if (!kind) {
+    return null;
+  }
+  const meshUrl = resolveObjectKindMeshUrl(kindId, kindCatalogs, sceneFixture);
+  if (!meshUrl) {
+    return null;
+  }
+  const objectId = `puzzle3d.drop.${crypto.randomUUID()}`;
+  return buildFixtureObjectFromObjectKind(kind, objectId, detail.worldCad, meshUrl);
+}
+
+/** @emoji 📥 Appends a palette-dropped object kind at a CAD origin. */
+export function applyPaletteObjectDropToFixture(fixture: FixtureV1, object: FixtureObjectV1): FixtureV1 {
+  return { ...fixture, objects: [...fixture.objects, object] };
+}
+//#endregion ­ƒº¾Fixture
 
 //#region ­ƒò©´©ÅAttractionGraph
 /** @emoji ­ƒöù Parsed `objectId:vortexId` attraction endpoint. */
@@ -882,7 +1782,7 @@ export function parseVortexFullId(full: string): { readonly objectId: string; re
 }
 
 /** @emoji 🔗 Canonical `objectId:vortexId` for fixture vortex rows. */
-export function sceneVortexFullId(objectId: string, vortexId: string): string {
+export function puzzle3dVortexFullId(objectId: string, vortexId: string): string {
   return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
 }
 
@@ -898,16 +1798,16 @@ export function isWormholeObject(objectId: string, props: { readonly wormhole?: 
   return inferredWormholeIds.has(objectId);
 }
 
-/** @emoji ­ƒº▓ One object-level attraction edge derived from an attraction (`attracting` attracts `attracted`). */
-export interface AttractionEdge {
+/** @emoji 🧲 One object-level attraction derived from a vortex-to-vortex attraction (`attracting` attracts `attracted`). */
+export interface ObjectAttraction {
   readonly attractingObjectId: string;
   readonly attractedObjectId: string;
   readonly attractionId: string;
 }
 
-/** @emoji ­ƒº▓ Maps scene attractions to object-level attraction edges. */
-export function attractionEdgesFromAttractions(attractions: readonly AttractionProps[]): AttractionEdge[] {
-  const out: AttractionEdge[] = [];
+/** @emoji 🧲 Maps scene attractions to object-level attractions. */
+export function objectAttractionsFromAttractions(attractions: readonly AttractionProps[]): ObjectAttraction[] {
+  const out: ObjectAttraction[] = [];
   for (const attraction of attractions) {
     const attractingObjectId = parseVortexFullId(attraction.attracting).objectId;
     const attractedObjectId = parseVortexFullId(attraction.attracted).objectId;
@@ -919,7 +1819,7 @@ export function attractionEdgesFromAttractions(attractions: readonly AttractionP
   return out;
 }
 
-export interface SceneAttractionTree {
+export interface AttractionTree {
   readonly parentByObjectId: ReadonlyMap<string, string | null>;
   readonly attractingByObjectId: ReadonlyMap<string, readonly string[]>;
   readonly wormholeDistanceByObjectId: ReadonlyMap<string, number>;
@@ -934,18 +1834,18 @@ function vec3Sub(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]] as Vec3;
 }
 
-function undirectedComponents(objectIds: readonly string[], edges: readonly AttractionEdge[]): string[][] {
+function undirectedComponents(objectIds: readonly string[], objectAttractions: readonly ObjectAttraction[]): string[][] {
   const idSet = new Set(objectIds);
   const adj = new Map<string, Set<string>>();
   for (const id of objectIds) {
     adj.set(id, new Set());
   }
-  for (const e of edges) {
-    if (!idSet.has(e.attractingObjectId) || !idSet.has(e.attractedObjectId)) {
+  for (const link of objectAttractions) {
+    if (!idSet.has(link.attractingObjectId) || !idSet.has(link.attractedObjectId)) {
       continue;
     }
-    adj.get(e.attractingObjectId)!.add(e.attractedObjectId);
-    adj.get(e.attractedObjectId)!.add(e.attractingObjectId);
+    adj.get(link.attractingObjectId)!.add(link.attractedObjectId);
+    adj.get(link.attractedObjectId)!.add(link.attractingObjectId);
   }
   const seen = new Set<string>();
   const components: string[][] = [];
@@ -972,16 +1872,16 @@ function undirectedComponents(objectIds: readonly string[], edges: readonly Attr
   return components;
 }
 
-/** @emoji ­ƒöä True when `attractingObjectId ÔåÆ attractedObjectId` closes a directed cycle in attraction edges. */
-export function wouldAttractionEdgeIntroduceCycle(edges: readonly AttractionEdge[], attractingObjectId: string, attractedObjectId: string): boolean {
+/** @emoji 🔄 True when `attractingObjectId → attractedObjectId` closes a directed cycle in object attractions. */
+export function wouldObjectAttractionIntroduceCycle(objectAttractions: readonly ObjectAttraction[], attractingObjectId: string, attractedObjectId: string): boolean {
   if (!attractingObjectId || !attractedObjectId || attractingObjectId === attractedObjectId) {
     return true;
   }
   const outgoing = new Map<string, string[]>();
-  for (const edge of edges) {
-    const next = outgoing.get(edge.attractingObjectId) ?? [];
-    next.push(edge.attractedObjectId);
-    outgoing.set(edge.attractingObjectId, next);
+  for (const link of objectAttractions) {
+    const next = outgoing.get(link.attractingObjectId) ?? [];
+    next.push(link.attractedObjectId);
+    outgoing.set(link.attractingObjectId, next);
   }
   const stack = [attractedObjectId];
   const seen = new Set<string>();
@@ -1017,7 +1917,7 @@ function parentOwnershipCycleMemberIds(parentByObjectId: ReadonlyMap<string, str
   return null;
 }
 
-/** @emoji Ô£é´©Å Clears one parent link per ownership cycle so {@link SceneAttractionTree} stays a forest. */
+/** @emoji Ô£é´©Å Clears one parent link per ownership cycle so {@link AttractionTree} stays a forest. */
 function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>): void {
   for (;;) {
     let cycle: readonly string[] | null = null;
@@ -1035,34 +1935,34 @@ function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>
   }
 }
 
-/** @emoji ­ƒò©´©Å Resolves a forest from attraction edges: wormhole roots, closest-to-wormhole parent when multiply attracted. */
-export function resolveSceneAttractionTree(args: { readonly objectIds: readonly string[]; readonly edges: readonly AttractionEdge[]; readonly explicitWormholeIds?: ReadonlySet<string> }): SceneAttractionTree {
+/** @emoji 🕸️ Resolves a forest from object attractions: wormhole roots, closest-to-wormhole parent when multiply attracted. */
+export function resolveAttractionTree(args: { readonly objectIds: readonly string[]; readonly objectAttractions: readonly ObjectAttraction[]; readonly explicitWormholeIds?: ReadonlySet<string> }): AttractionTree {
   const explicit = args.explicitWormholeIds ?? new Set<string>();
-  const incoming = new Map<string, AttractionEdge[]>();
+  const incoming = new Map<string, ObjectAttraction[]>();
   const outgoing = new Map<string, string[]>();
   for (const id of args.objectIds) {
     incoming.set(id, []);
     outgoing.set(id, []);
   }
-  for (const edge of args.edges) {
-    if (!incoming.has(edge.attractedObjectId) || !outgoing.has(edge.attractingObjectId)) {
+  for (const link of args.objectAttractions) {
+    if (!incoming.has(link.attractedObjectId) || !outgoing.has(link.attractingObjectId)) {
       continue;
     }
-    incoming.get(edge.attractedObjectId)!.push(edge);
-    outgoing.get(edge.attractingObjectId)!.push(edge.attractedObjectId);
+    incoming.get(link.attractedObjectId)!.push(link);
+    outgoing.get(link.attractingObjectId)!.push(link.attractedObjectId);
   }
 
   const wormholeIds: string[] = [];
   const wormholeDistanceByObjectId = new Map<string, number>();
   const parentByObjectId = new Map<string, string | null>();
 
-  for (const comp of undirectedComponents(args.objectIds, args.edges)) {
+  for (const comp of undirectedComponents(args.objectIds, args.objectAttractions)) {
     const compSet = new Set(comp);
-    const compIncoming = new Map<string, AttractionEdge[]>();
+    const compIncoming = new Map<string, ObjectAttraction[]>();
     for (const id of comp) {
       compIncoming.set(
         id,
-        (incoming.get(id) ?? []).filter((e) => compSet.has(e.attractingObjectId) && compSet.has(e.attractedObjectId)),
+        (incoming.get(id) ?? []).filter((link) => compSet.has(link.attractingObjectId) && compSet.has(link.attractedObjectId)),
       );
     }
     let roots = comp.filter((id) => explicit.has(id));
@@ -1104,13 +2004,13 @@ export function resolveSceneAttractionTree(args: { readonly objectIds: readonly 
         parentByObjectId.set(id, null);
         continue;
       }
-      let best: AttractionEdge | null = null;
+      let best: ObjectAttraction | null = null;
       let bestDist = Number.POSITIVE_INFINITY;
-      for (const edge of inc) {
-        const d = dist.get(edge.attractingObjectId) ?? Number.POSITIVE_INFINITY;
-        if (d < bestDist || (d === bestDist && (!best || edge.attractingObjectId.localeCompare(best.attractingObjectId) < 0))) {
+      for (const link of inc) {
+        const d = dist.get(link.attractingObjectId) ?? Number.POSITIVE_INFINITY;
+        if (d < bestDist || (d === bestDist && (!best || link.attractingObjectId.localeCompare(best.attractingObjectId) < 0))) {
           bestDist = d;
-          best = edge;
+          best = link;
         }
       }
       parentByObjectId.set(id, best?.attractingObjectId ?? null);
@@ -1187,7 +2087,7 @@ export interface ObjectRecord {
 interface ObjectStateSnapshot {
   readonly records: ReadonlyMap<string, ObjectRecord>;
   readonly attractions: readonly AttractionProps[];
-  readonly tree: SceneAttractionTree;
+  readonly tree: AttractionTree;
   readonly version: number;
 }
 
@@ -1225,16 +2125,16 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
       return r ? isWormholeObject(id, r, new Set()) : false;
     }),
   );
-  const edges = attractionEdgesFromAttractions(attractions);
+  const objectAttractions = objectAttractionsFromAttractions(attractions);
   const inferred = new Set<string>();
-  for (const comp of undirectedComponents(objectIds, edges)) {
-    const compEdges = edges.filter((e) => comp.includes(e.attractingObjectId) && comp.includes(e.attractedObjectId));
+  for (const comp of undirectedComponents(objectIds, objectAttractions)) {
+    const compLinks = objectAttractions.filter((link) => comp.includes(link.attractingObjectId) && comp.includes(link.attractedObjectId));
     const inc = new Map<string, number>();
     for (const id of comp) {
       inc.set(id, 0);
     }
-    for (const e of compEdges) {
-      inc.set(e.attractedObjectId, (inc.get(e.attractedObjectId) ?? 0) + 1);
+    for (const link of compLinks) {
+      inc.set(link.attractedObjectId, (inc.get(link.attractedObjectId) ?? 0) + 1);
     }
     for (const id of comp) {
       if ((inc.get(id) ?? 0) === 0 && !explicitWormholes.has(id)) {
@@ -1242,9 +2142,9 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
       }
     }
   }
-  const tree = resolveSceneAttractionTree({
+  const tree = resolveAttractionTree({
     objectIds,
-    edges,
+    objectAttractions,
     explicitWormholeIds: new Set([...explicitWormholes, ...inferred]),
   });
   return { records, attractions, tree, version };
@@ -1267,6 +2167,48 @@ export function fixturePoseFingerprint(fixture: FixtureV1): string {
       return `${object.id}|${o}|${q}|${s}`;
     })
     .join("\0");
+}
+
+/** @emoji 🎨 Fingerprint of object mesh/kind/labels and vortex fields for inspector edits without structure revision bumps. */
+export function fixtureAppearanceFingerprint(fixture: FixtureV1): string {
+  const objects = fixture.objects
+    .map((object) => {
+      const vortices = object.vortices
+        .map((vortex) => {
+          const position = vortex.position.join(",");
+          const direction = vortex.direction?.join(",") ?? "";
+          const radius = vortex.radius === undefined ? "" : String(vortex.radius);
+          return `${vortex.id}|${vortex.vortexKind ?? ""}|${vortex.label ?? ""}|${position}|${direction}|${radius}`;
+        })
+        .join(";");
+      const meshByLod = object.meshByLod?.map((entry) => `${entry.lod}:${entry.url}`).join(",") ?? "";
+      return `${object.id}|${object.objectKind ?? ""}|${object.meshUrl}|${object.label ?? ""}|${object.wormhole === true ? "1" : "0"}|${meshByLod}|${vortices}`;
+    })
+    .join("\0");
+  const attractions = fixture.attractions
+    .map((attraction) => `${attraction.id}|${attraction.attractionKind ?? ""}|${attraction.attracting}|${attraction.attracted}`)
+    .join("\0");
+  return `${objects}\0${attractions}`;
+}
+
+/** @emoji 🧩 Applies an object-kind switch on a fixture object (mesh URL from catalog or scene). */
+export function applyObjectKindToFixtureObject(object: FixtureObjectV1, kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 {
+  const meshUrl = resolveObjectKindMeshUrl(kindId, kindCatalogs, sceneFixture);
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  const next: FixtureObjectV1 = {
+    ...object,
+    objectKind: kindId,
+    ...(meshUrl ? { meshUrl } : {}),
+  };
+  if (kind?.meshByLod) {
+    next.meshByLod = kind.meshByLod;
+    return next;
+  }
+  if (next.meshByLod === undefined) {
+    return next;
+  }
+  const { meshByLod: _removed, ...withoutLod } = next;
+  return withoutLod;
 }
 
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
@@ -1292,10 +2234,10 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
       return { records, attractions: state.attractions, tree: state.tree, version: state.version + 1 };
     }
     case "addAttraction": {
-      const edges = attractionEdgesFromAttractions(state.attractions);
+      const objectAttractions = objectAttractionsFromAttractions(state.attractions);
       const attractingObjectId = parseVortexFullId(action.attraction.attracting).objectId;
       const attractedObjectId = parseVortexFullId(action.attraction.attracted).objectId;
-      if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
+      if (wouldObjectAttractionIntroduceCycle(objectAttractions, attractingObjectId, attractedObjectId)) {
         return state;
       }
       const attractions = [...state.attractions, action.attraction];
@@ -1387,7 +2329,7 @@ export function relocateAffectedObjectIds(payload: RelocatePayload, attractingBy
 }
 
 /** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
-export function applyRelocateToSceneFixture(fixture: FixtureV1, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): FixtureV1 {
+export function applyRelocateToFixture(fixture: FixtureV1, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): FixtureV1 {
   const tree = attractingByObjectId ?? buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0).tree.attractingByObjectId;
   const ids = relocateAffectedObjectIds(payload, tree);
   if (!ids.length) {
@@ -1448,8 +2390,8 @@ export function applyRelocateToSceneFixture(fixture: FixtureV1, payload: Relocat
 
 const ATTRACTING_CHILDREN_EMPTY: readonly string[] = [];
 
-/** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
-function scheduleSceneRelocateCommit(run: () => void): void {
+/** @emoji ⏱️ Defers work off the pointer/input hot path (idle callback when available). */
+function scheduleDeferredCallback(run: () => void): void {
   if (typeof requestIdleCallback === "function") {
     requestIdleCallback(run, { timeout: 120 });
     return;
@@ -1457,13 +2399,18 @@ function scheduleSceneRelocateCommit(run: () => void): void {
   queueMicrotask(run);
 }
 
-type SceneObjectStoreListener = () => void;
+/** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
+function scheduleRelocateCommit(run: () => void): void {
+  scheduleDeferredCallback(run);
+}
 
-/** @emoji 🗄️ Scene object records with per-id subscriptions so gumball commit does not re-render every mesh. */
-export class SceneObjectStore {
+type ObjectStoreListener = () => void;
+
+/** @emoji 🗄️ Puzzle 3D object records with per-id subscriptions so gumball commit does not re-render every mesh. */
+export class ObjectStore {
   private records = new Map<string, ObjectRecord>();
   private attractions: readonly AttractionProps[] = [];
-  private tree: SceneAttractionTree = {
+  private tree: AttractionTree = {
     parentByObjectId: new Map(),
     attractingByObjectId: new Map(),
     wormholeDistanceByObjectId: new Map(),
@@ -1472,22 +2419,22 @@ export class SceneObjectStore {
   private structureEpoch = 0;
   private sortedObjectIdsCache: readonly string[] = [];
   private blockedVortexFullIdsCache: ReadonlySet<string> = new Set();
-  private readonly objectListeners = new Map<string, Set<SceneObjectStoreListener>>();
-  private readonly structureListeners = new Set<SceneObjectStoreListener>();
+  private readonly objectListeners = new Map<string, Set<ObjectStoreListener>>();
+  private readonly structureListeners = new Set<ObjectStoreListener>();
 
   private refreshStructureCaches(): void {
     this.sortedObjectIdsCache = [...this.records.keys()].sort();
     this.blockedVortexFullIdsCache = blockedVortexFullIdsFromAttractions(this.attractions);
   }
 
-  subscribeStructure(listener: SceneObjectStoreListener): () => void {
+  subscribeStructure(listener: ObjectStoreListener): () => void {
     this.structureListeners.add(listener);
     return () => {
       this.structureListeners.delete(listener);
     };
   }
 
-  subscribeObject(objectId: string, listener: SceneObjectStoreListener): () => void {
+  subscribeObject(objectId: string, listener: ObjectStoreListener): () => void {
     let listeners = this.objectListeners.get(objectId);
     if (!listeners) {
       listeners = new Set();
@@ -1522,7 +2469,7 @@ export class SceneObjectStore {
     return this.attractions;
   }
 
-  getTree(): SceneAttractionTree {
+  getTree(): AttractionTree {
     return this.tree;
   }
 
@@ -1595,6 +2542,37 @@ export class SceneObjectStore {
     }
   }
 
+  syncAppearanceFromFixture(fixture: FixtureV1): void {
+    const changed: string[] = [];
+    for (const object of fixture.objects) {
+      const cur = this.records.get(object.id);
+      if (!cur) {
+        continue;
+      }
+      const nextRecord = fixtureToRecords([object]).get(object.id);
+      if (!nextRecord) {
+        continue;
+      }
+      if (
+        cur.objectKind === nextRecord.objectKind &&
+        cur.meshUrl === nextRecord.meshUrl &&
+        cur.label === nextRecord.label &&
+        cur.wormhole === nextRecord.wormhole &&
+        JSON.stringify(cur.vortices) === JSON.stringify(nextRecord.vortices)
+      ) {
+        continue;
+      }
+      this.records.set(object.id, { ...cur, ...nextRecord });
+      changed.push(object.id);
+    }
+    for (const objectId of changed) {
+      this.notifyObject(objectId);
+    }
+    if (changed.length > 0) {
+      this.bumpStructure();
+    }
+  }
+
   removeObjectIds(objectIds: readonly string[]): void {
     if (objectIds.length === 0) {
       return;
@@ -1662,7 +2640,7 @@ export class SceneObjectStore {
 }
 
 /** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
-export function applyConnectToSceneFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
+export function applyConnectToFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
   const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
   const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
   const next = objectStateReducer(snap, {
@@ -1679,96 +2657,105 @@ export function applyConnectToSceneFixture(fixture: FixtureV1, payload: Attracti
   return { ...fixture, attractions: [...next.attractions] };
 }
 
-export interface SceneObjectStateContextValue {
-  readonly store: SceneObjectStore;
+export interface ObjectStateContextValue {
+  readonly store: ObjectStore;
   readonly handleRelocate: (payload: RelocatePayload) => void;
   readonly handleConnect: (payload: AttractionPayload) => void;
 }
 
-export const SceneObjectStateContext = reactHostPort.createContext<SceneObjectStateContextValue | null>(null);
+export const ObjectStateContext = reactHostPort.createContext<ObjectStateContextValue | null>(null);
 
 /** @emoji ­ƒùä´©Å Central scene object records, attractions, and resolved attraction ownership. */
-export function SceneObjectStateProvider(props: {
+export function ObjectStateProvider(props: {
   readonly fixture: FixtureV1;
   readonly fixtureRevision?: number;
   readonly children: ReactNode;
   readonly onRelocate?: (payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => void;
   readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
-  const storeRef = reactHostPort.useRef<SceneObjectStore | null>(null);
+  const storeRef = reactHostPort.useRef<ObjectStore | null>(null);
   if (!storeRef.current) {
-    const store = new SceneObjectStore();
+    const store = new ObjectStore();
     store.initFromFixture(props.fixture);
     storeRef.current = store;
   }
   const store = storeRef.current;
   const syncedFixtureFingerprintRef = reactHostPort.useRef<string | null>(null);
   const syncedPoseFingerprintRef = reactHostPort.useRef<string | null>(null);
+  const syncedAppearanceFingerprintRef = reactHostPort.useRef<string | null>(null);
   const syncedFixtureRevisionRef = reactHostPort.useRef<number | undefined>(undefined);
   const skipExternalPoseSyncRef = reactHostPort.useRef(false);
   const fixtureFingerprint = reactHostPort.useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
   const poseFingerprint = reactHostPort.useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
+  const appearanceFingerprint = reactHostPort.useMemo(() => fixtureAppearanceFingerprint(props.fixture), [props.fixture]);
   reactHostPort.useEffect(() => {
-    const sceneStore = storeRef.current;
-    if (!sceneStore) {
+    const puzzle3dStore = storeRef.current;
+    if (!puzzle3dStore) {
       return;
     }
     if (skipExternalPoseSyncRef.current) {
       skipExternalPoseSyncRef.current = false;
       syncedPoseFingerprintRef.current = poseFingerprint;
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
       return;
     }
     if (props.fixtureRevision !== undefined && syncedFixtureRevisionRef.current !== props.fixtureRevision) {
       syncedFixtureRevisionRef.current = props.fixtureRevision;
       syncedFixtureFingerprintRef.current = fixtureFingerprint;
       syncedPoseFingerprintRef.current = poseFingerprint;
-      const prevIds = new Set(sceneStore.getSortedObjectIds());
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
+      const prevIds = new Set(puzzle3dStore.getSortedObjectIds());
       const nextIds = new Set(props.fixture.objects.map((object) => object.id));
       const removed = [...prevIds].filter((id) => !nextIds.has(id));
       const added = [...nextIds].filter((id) => !prevIds.has(id));
       if (removed.length > 0 && added.length === 0) {
-        sceneStore.removeObjectIds(removed);
+        puzzle3dStore.removeObjectIds(removed);
       } else {
-        sceneStore.initFromFixture(props.fixture);
+        puzzle3dStore.initFromFixture(props.fixture);
       }
       return;
     }
     if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
       syncedFixtureFingerprintRef.current = fixtureFingerprint;
       syncedPoseFingerprintRef.current = poseFingerprint;
-      const prevIds = new Set(sceneStore.getSortedObjectIds());
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
+      const prevIds = new Set(puzzle3dStore.getSortedObjectIds());
       const nextIds = new Set(props.fixture.objects.map((object) => object.id));
       const removed = [...prevIds].filter((id) => !nextIds.has(id));
       const added = [...nextIds].filter((id) => !prevIds.has(id));
       if (removed.length > 0 && added.length === 0) {
-        sceneStore.removeObjectIds(removed);
+        puzzle3dStore.removeObjectIds(removed);
       } else {
-        sceneStore.initFromFixture(props.fixture);
+        puzzle3dStore.initFromFixture(props.fixture);
       }
       return;
     }
-    if (syncedPoseFingerprintRef.current === poseFingerprint) {
+    if (syncedPoseFingerprintRef.current !== poseFingerprint) {
+      syncedPoseFingerprintRef.current = poseFingerprint;
+      puzzle3dStore.syncPosesFromFixture(props.fixture);
+    }
+    if (syncedAppearanceFingerprintRef.current === appearanceFingerprint) {
       return;
     }
-    syncedPoseFingerprintRef.current = poseFingerprint;
-    sceneStore.syncPosesFromFixture(props.fixture);
-  }, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
+    syncedAppearanceFingerprintRef.current = appearanceFingerprint;
+    puzzle3dStore.syncAppearanceFromFixture(props.fixture);
+  }, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint, appearanceFingerprint]);
   const handleRelocate = reactHostPort.useCallback(
     (payload: RelocatePayload) => {
-      const sceneStore = storeRef.current!;
+      const puzzle3dStore = storeRef.current!;
       skipExternalPoseSyncRef.current = true;
-      sceneStore.applyRelocate(payload, false);
-      scheduleSceneRelocateCommit(() => {
-        props.onRelocate?.(payload, sceneStore.getTree().attractingByObjectId);
+      puzzle3dStore.applyRelocate(payload, false);
+      scheduleRelocateCommit(() => {
+        props.onRelocate?.(payload, puzzle3dStore.getTree().attractingByObjectId);
       });
     },
     [props.onRelocate],
   );
   const handleConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
-      const sceneStore = storeRef.current!;
+      const puzzle3dStore = storeRef.current!;
       const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
-      const added = sceneStore.addAttraction({
+      const added = puzzle3dStore.addAttraction({
         id: attractionId,
         attracting: payload.attracting as AttractionProps["attracting"],
         attracted: payload.attracted as AttractionProps["attracted"],
@@ -1779,20 +2766,20 @@ export function SceneObjectStateProvider(props: {
     },
     [props.onConnect],
   );
-  const value = reactHostPort.useMemo<SceneObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
-  return <SceneObjectStateContext.Provider value={value}>{props.children}</SceneObjectStateContext.Provider>;
+  const value = reactHostPort.useMemo<ObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
+  return <ObjectStateContext.Provider value={value}>{props.children}</ObjectStateContext.Provider>;
 }
 
-function useSceneObjectState(): SceneObjectStateContextValue {
-  const v = reactHostPort.useContext(SceneObjectStateContext);
+function useObjectState(): ObjectStateContextValue {
+  const v = reactHostPort.useContext(ObjectStateContext);
   if (!v) {
-    throw new Error("SceneObjectStateProvider missing");
+    throw new Error("ObjectStateProvider missing");
   }
   return v;
 }
 
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
-  const state = reactHostPort.useContext(SceneObjectStateContext);
+  const state = reactHostPort.useContext(ObjectStateContext);
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => (state ? state.store.subscribeStructure(onStoreChange) : () => {}),
     () => (state ? state.store.getBlockedVortexFullIds() : fallback),
@@ -1801,17 +2788,17 @@ function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet
 }
 
 /** @emoji ­ƒ¬Ø Relocate handler that updates central object state and cascades to attracted descendants. */
-export function useSceneObjectRelocate(): (payload: RelocatePayload) => void {
-  return useSceneObjectState().handleRelocate;
+export function useObjectRelocate(): (payload: RelocatePayload) => void {
+  return useObjectState().handleRelocate;
 }
 
 /** @emoji ­ƒ¬Ø Connect handler that appends an attraction and recomputes attraction ownership. */
-export function useSceneObjectConnect(): (payload: AttractionPayload) => void {
-  return useSceneObjectState().handleConnect;
+export function useObjectConnect(): (payload: AttractionPayload) => void {
+  return useObjectState().handleConnect;
 }
 
 function useObjectRecord(objectId: string): ObjectRecord | undefined {
-  const { store } = useSceneObjectState();
+  const { store } = useObjectState();
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeObject(objectId, onStoreChange),
     () => store.getRecord(objectId),
@@ -1820,7 +2807,7 @@ function useObjectRecord(objectId: string): ObjectRecord | undefined {
 }
 
 function useAttractingChildIds(objectId: string): readonly string[] {
-  const { store } = useSceneObjectState();
+  const { store } = useObjectState();
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractingChildIds(objectId),
@@ -1830,9 +2817,6 @@ function useAttractingChildIds(objectId: string): readonly string[] {
 
 const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
   readonly objectId: string;
-  readonly selected?: boolean;
-  readonly relocateActive?: boolean;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
   readonly relocate?: RelocateMode | false;
 }) {
   const record = useObjectRecord(props.objectId);
@@ -1851,19 +2835,16 @@ const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
       label={record.label}
       wormhole={record.wormhole}
       attracting={attracting}
-      selected={props.selected}
-      relocateActive={props.relocateActive}
       relocate={props.relocate}
     >
-      {record.vortices.map((vortex) => {
-        const fullId = sceneVortexFullId(record.id, vortex.id);
-        return <Vortex key={vortex.id} objectId={record.id} objectKind={record.objectKind} objectOrigin={record.origin} objectOrientation={record.orientation} selected={props.selectedVortexFullIds?.has(fullId)} {...vortex} />;
-      })}
+      {record.vortices.map((vortex) => (
+        <Vortex key={vortex.id} objectId={record.id} objectKind={record.objectKind} objectOrigin={record.origin} objectOrientation={record.orientation} {...vortex} />
+      ))}
     </ObjectItem>
   );
 });
 
-/** @emoji ­ƒî▓ Declares attraction tree structure; meshes mount flat via {@link SceneObjects} so ids stay stable on reparent. */
+/** @emoji ­ƒî▓ Declares attraction tree structure; meshes mount flat via {@link Objects} so ids stay stable on reparent. */
 export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: { readonly objectId: string; readonly visitedIds?: readonly string[] }) {
   const attracting = useAttractingChildIds(props.objectId);
   const visited = props.visitedIds ?? [];
@@ -1880,32 +2861,21 @@ export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: 
   );
 });
 
-/** @emoji 🎯 True when an object is part of the current selection (directly or via a selected vortex). */
-export function objectMatchesSceneSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
+/** @emoji 🎯 True when an object id is directly in the selection snapshot (not parent-of-vortex). */
+export function objectMatchesSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
   if (!selection) {
     return false;
   }
-  if (selection.objectIds.includes(objectId)) {
-    return true;
-  }
-  for (const vortexFullId of selection.vortexIds) {
-    if (parseVortexFullId(vortexFullId).objectId === objectId) {
-      return true;
-    }
-  }
-  return false;
+  return selection.objectIds.includes(objectId);
 }
 
-export interface SceneObjectsProps {
-  readonly selection?: SelectionSnapshot;
-  readonly selectedObjectId?: string | null;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
+export interface ObjectsProps {
   readonly relocate?: RelocateMode | false;
 }
 
 /** @emoji ­ƒºè Renders all scene objects from central state (id-keyed; survives ownership changes). */
-export const SceneObjects = reactHostPort.memo(function SceneObjects(props: SceneObjectsProps) {
-  const { store } = useSceneObjectState();
+export const Objects = reactHostPort.memo(function Objects(props: ObjectsProps) {
+  const { store } = useObjectState();
   const ids = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getSortedObjectIds(),
@@ -1914,22 +2884,15 @@ export const SceneObjects = reactHostPort.memo(function SceneObjects(props: Scen
   return (
     <>
       {ids.map((id) => (
-        <ObjectItemById
-          key={id}
-          objectId={id}
-          selected={objectMatchesSceneSelection(id, props.selection) || props.selectedObjectId === id}
-          relocateActive={props.selectedObjectId === id}
-          selectedVortexFullIds={props.selectedVortexFullIds}
-          relocate={props.relocate}
-        />
+        <ObjectItemById key={id} objectId={id} relocate={props.relocate} />
       ))}
     </>
   );
 });
 
 /** @emoji ­ƒî▓ Logical attraction tree roots (wormholes) for structure-only composition. */
-export const SceneAttractionTreeRoots = reactHostPort.memo(function SceneAttractionTreeRoots() {
-  const { store } = useSceneObjectState();
+export const AttractionTreeRoots = reactHostPort.memo(function AttractionTreeRoots() {
+  const { store } = useObjectState();
   const wormholeIds = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getTree().wormholeIds,
@@ -1945,14 +2908,14 @@ export const SceneAttractionTreeRoots = reactHostPort.memo(function SceneAttract
 });
 
 /** @emoji ­ƒº▓ Renders all attraction endpoint lines in one frame loop (avoids N├ùuseFrame churn). */
-export const SceneAttractions = reactHostPort.memo(function SceneAttractions() {
-  const { store } = useSceneObjectState();
+export const Attractions = reactHostPort.memo(function Attractions() {
+  const { store } = useObjectState();
   const attractions = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractions(),
     () => store.getAttractions(),
   );
-  return <SceneAttractionLineBatch attractions={attractions} />;
+  return <CableBatch attractions={attractions} />;
 });
 //#endregion ­ƒò©´©ÅAttractionGraph
 
@@ -1962,7 +2925,7 @@ export function kindsCompatible(aKind: string | undefined, bKind: string | undef
   return table.some((e) => (e.source === aKind && e.target === bKind) || (e.bidirectional === true && e.source === bKind && e.target === aKind));
 }
 
-const DEFAULT_WIRE_KIND_ID = "board.wire.link";
+const DEFAULT_CABLE_KIND_ID = "cable.link";
 
 /** @emoji ­ƒº▓ Attraction endpoint vortex full ids that are already attracting/attracted and cannot start or receive another attraction. */
 export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<AttractionProps, "attracting" | "attracted">[]): ReadonlySet<string> {
@@ -1974,35 +2937,35 @@ export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<A
   return s;
 }
 
-/** @emoji ­ƒº¡ Semantic kinds at one end of an attraction drag (object + vortex handle). */
-export interface AttractionHandleContext {
+/** @emoji 🧭 Semantic kinds at one end of an attraction drag (object + vortex). */
+export interface AttractionVortexContext {
   readonly objectId: string;
   readonly objectKind: string | undefined;
   readonly vortexKind: string | undefined;
 }
 
-function catalogHandleById(catalogs: KindCatalogBundle | undefined, handleKind: string | undefined): HandleKindCatalogEntry | undefined {
-  if (!handleKind || !catalogs?.handles?.length) return undefined;
-  return catalogs.handles.find((h) => h.id === handleKind);
+function catalogVortexById(catalogs: KindCatalogBundle | undefined, vortexKind: string | undefined): VortexKind | undefined {
+  if (!vortexKind || !catalogs?.vortices?.length) return undefined;
+  return catalogs.vortices.find((v) => v.id === vortexKind);
 }
 
-function catalogWireById(catalogs: KindCatalogBundle | undefined, wireKind: string | undefined): WireKindCatalogEntry | undefined {
-  if (!wireKind || !catalogs?.wires?.length) return undefined;
-  return catalogs.wires.find((w) => w.id === wireKind);
+function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: string | undefined): CableKind | undefined {
+  if (!cableKind || !catalogs?.cables?.length) return undefined;
+  return catalogs.cables.find((w) => w.id === cableKind);
 }
 
-/** @emoji ­ƒöî Resolves default wire kind for a vortex kind via handle catalog, else `board.wire.link`. */
-export function resolveWireKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
-  const h = catalogHandleById(catalogs, vortexKind);
-  const w = h?.defaultWireKind?.trim();
-  return w && w.length > 0 ? w : DEFAULT_WIRE_KIND_ID;
+/** @emoji 🔌 Resolves default cable kind for a vortex kind via vortex catalog, else `cable.link`. */
+export function resolveCableKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
+  const v = catalogVortexById(catalogs, vortexKind);
+  const cableKind = v?.defaultCableKind?.trim();
+  return cableKind && cableKind.length > 0 ? cableKind : DEFAULT_CABLE_KIND_ID;
 }
 
-/** @emoji ­ƒ¬ó Resolves default edge kind for a wire kind via wire catalog, else empty string. */
-export function resolveEdgeKindForWire(wireKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
-  const w = catalogWireById(catalogs, wireKind);
-  const e = w?.defaultEdgeKind?.trim();
-  return e && e.length > 0 ? e : "";
+/** @emoji 🧲 Resolves default attraction kind for a cable kind via cable catalog, else empty string. */
+export function resolveAttractionKindForCable(cableKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
+  const cable = catalogCableById(catalogs, cableKind);
+  const attractionKind = cable?.defaultAttractionKind?.trim();
+  return attractionKind && attractionKind.length > 0 ? attractionKind : "";
 }
 
 function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean {
@@ -2011,36 +2974,34 @@ function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean
   return false;
 }
 
-function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: AttractionHandleContext, attracted: AttractionHandleContext, catalogs: KindCatalogBundle | undefined): boolean {
-  const wSrc = resolveWireKindForVortex(attracting.vortexKind, catalogs);
-  const wTgt = resolveWireKindForVortex(attracted.vortexKind, catalogs);
-  const eSrc = resolveEdgeKindForWire(wSrc, catalogs);
-  const eTgt = resolveEdgeKindForWire(wTgt, catalogs);
+function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: AttractionVortexContext, attracted: AttractionVortexContext, catalogs: KindCatalogBundle | undefined): boolean {
+  const cableSrc = resolveCableKindForVortex(attracting.vortexKind, catalogs);
+  const cableTgt = resolveCableKindForVortex(attracted.vortexKind, catalogs);
+  const attractionSrc = resolveAttractionKindForCable(cableSrc, catalogs);
+  const attractionTgt = resolveAttractionKindForCable(cableTgt, catalogs);
   const sn = attracting.objectKind ?? "";
   const tn = attracted.objectKind ?? "";
-  const sh = attracting.vortexKind ?? "";
-  const th = attracted.vortexKind ?? "";
-  const spec = rule.specificity ?? "handle";
+  const sv = attracting.vortexKind ?? "";
+  const tv = attracted.vortexKind ?? "";
+  const spec = rule.specificity ?? "vortex";
   switch (spec) {
     case "general":
-      return compatPairMatches(rule, sh, th);
+      return compatPairMatches(rule, sv, tv);
     case "object":
-    case "node":
       return compatPairMatches(rule, sn, tn);
-    case "edge":
     case "attraction":
-      return compatPairMatches(rule, eSrc, eTgt);
-    case "handle":
-      return compatPairMatches(rule, sh, th);
-    case "wire":
-      return compatPairMatches(rule, wSrc, th);
+      return compatPairMatches(rule, attractionSrc, attractionTgt);
+    case "vortex":
+      return compatPairMatches(rule, sv, tv);
+    case "cable":
+      return compatPairMatches(rule, cableSrc, cableTgt);
     default:
-      return compatPairMatches(rule, sh, th);
+      return compatPairMatches(rule, sv, tv);
   }
 }
 
-/** @emoji ­ƒñØ WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
-export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleContext, attracted: AttractionHandleContext, rules: readonly KindCompatEntry[] | undefined, catalogs: KindCatalogBundle | undefined): boolean {
+/** @emoji 🤝 WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
+export function vorticesAttractionCompatibleForDrag(attracting: AttractionVortexContext, attracted: AttractionVortexContext, rules: readonly KindCompatEntry[] | undefined, catalogs: KindCatalogBundle | undefined): boolean {
   if (!rules?.length) return true;
   let matched = rules.filter((r) => attractionGestureRuleApplies(r, attracting, attracted, catalogs));
   if (matched.length === 0) return false;
@@ -2051,14 +3012,12 @@ export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleC
         case "general":
           return 0;
         case "object":
-        case "node":
           return 1;
-        case "edge":
         case "attraction":
           return 2;
-        case "wire":
+        case "cable":
           return 3;
-        case "handle":
+        case "vortex":
           return 4;
         default:
           return 4;
@@ -2070,6 +3029,463 @@ export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleC
   return matched.length > 0;
 }
 //#endregion ­ƒº®Compat
+
+//#region 🖌️Brush
+/** @emoji 🖌️ One brush catalog candidate (object kind + source vortex index). */
+export interface BrushCompatibleCandidate {
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+}
+
+function normalizeVec3Cad(v: Vec3): Vec3 {
+  const len = Math.hypot(v[0], v[1], v[2]);
+  if (len < 1e-9) {
+    return [0, 0, -1];
+  }
+  return [v[0] / len, v[1] / len, v[2] / len] as Vec3;
+}
+
+function vec3ScaleCad(v: Vec3, scale: number | Vec3 | undefined): Vec3 {
+  if (scale === undefined) {
+    return v;
+  }
+  if (typeof scale === "number") {
+    return [v[0] * scale, v[1] * scale, v[2] * scale] as Vec3;
+  }
+  return [v[0] * scale[0], v[1] * scale[1], v[2] * scale[2]] as Vec3;
+}
+
+function negateVec3Cad(v: Vec3): Vec3 {
+  return [-v[0], -v[1], -v[2]] as Vec3;
+}
+
+/** @emoji 🧭 World CAD position and direction of an object-local vortex (matches {@link cadObjectLocalToThreeGroupLocal} / scene graph). */
+export function vortexWorldCadFromObject(record: Pick<ObjectRecord, "origin" | "orientation" | "vortices">, vortexIndex: number): { readonly position: Vec3; readonly direction: Vec3 } | null {
+  const vortex = record.vortices[vortexIndex];
+  if (!vortex) {
+    return null;
+  }
+  const orientation = record.orientation ?? ([0, 0, 0, 1] as Quat);
+  const position = vec3Add(record.origin, quatRotateVec(orientation, vortex.position));
+  const direction = vortex.direction ? normalizeVec3Cad(quatRotateVec(orientation, vortex.direction)) : ([0, 0, -1] as Vec3);
+  return { position, direction };
+}
+
+/** @emoji 🧱 Shared prefix for a vertical stack pair (`… bottom` / `… top`). */
+function brushStackVortexBase(vortexKind: string | undefined): string | null {
+  if (!vortexKind) {
+    return null;
+  }
+  if (vortexKind.endsWith(" bottom")) {
+    return vortexKind.slice(0, -" bottom".length);
+  }
+  if (vortexKind.endsWith(" top")) {
+    return vortexKind.slice(0, -" top".length);
+  }
+  return null;
+}
+
+/** @emoji 🔗 True when source is a stack bottom vortex matching the target top vortex. */
+export function brushStackBottomTopPair(sourceVortexKind: string | undefined, targetVortexKind: string | undefined): boolean {
+  if (!sourceVortexKind?.endsWith(" bottom") || !targetVortexKind?.endsWith(" top")) {
+    return false;
+  }
+  const sourceBase = brushStackVortexBase(sourceVortexKind);
+  const targetBase = brushStackVortexBase(targetVortexKind);
+  return sourceBase !== null && sourceBase === targetBase;
+}
+
+/** @emoji 🖌️ Rank for brush candidates: same kind and stack pairs beat door attachments. */
+export function brushCandidateRank(candidate: BrushCompatibleCandidate, template: ObjectKindVortexTemplate, target: AttractionVortexContext): number {
+  let score = 0;
+  const targetKind = target.vortexKind ?? "";
+  const sourceKind = template.vortexKind ?? "";
+  if (candidate.objectKindId === target.objectKind) {
+    score += 10_000;
+  }
+  if (brushStackBottomTopPair(sourceKind, targetKind)) {
+    score += 5_000;
+    if (targetKind.startsWith("tambour ") && candidate.objectKindId === "Tambour") {
+      score += 4_000;
+    }
+  }
+  if (targetKind.endsWith(" top") && !brushStackBottomTopPair(sourceKind, targetKind)) {
+    score -= 2_000;
+  }
+  return score;
+}
+
+/** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (same kind only; stacks use opposed directions). */
+export function brushPlacementUsesHostOrientation(target: AttractionVortexContext, sourceVortexKind: string, candidateObjectKindId: string): boolean {
+  const targetVk = target.vortexKind ?? "";
+  if (brushStackBottomTopPair(sourceVortexKind, targetVk)) {
+    return false;
+  }
+  return candidateObjectKindId === target.objectKind;
+}
+
+function brushCandidateKey(candidate: BrushCompatibleCandidate): string {
+  return `${candidate.objectKindId}\u0001${candidate.sourceVortexIndex}`;
+}
+
+/** @emoji 🖌️ Lists catalog object kinds whose vortices can attract the target vortex (deduped, ranked). */
+export function brushCompatibleCandidates(
+  target: AttractionVortexContext,
+  kindCatalogs: KindCatalogBundle | undefined,
+  kindCompatibility: readonly KindCompatEntry[] | undefined,
+): readonly BrushCompatibleCandidate[] {
+  const objects = kindCatalogs?.objects;
+  if (!objects?.length) {
+    return [];
+  }
+  const kindsById = new Map<string, ObjectKind>();
+  for (const kind of objects) {
+    if (kind.id) {
+      kindsById.set(kind.id, kind);
+    }
+  }
+  const targetVk = target.vortexKind ?? "";
+  const stackTopTarget = targetVk.endsWith(" top");
+  const scored: { readonly candidate: BrushCompatibleCandidate; readonly rank: number }[] = [];
+  const seen = new Set<string>();
+  for (const kind of kindsById.values()) {
+    if (!kind.meshUrl || !kind.vortices?.length) {
+      continue;
+    }
+    for (let sourceVortexIndex = 0; sourceVortexIndex < kind.vortices.length; sourceVortexIndex += 1) {
+      const template = kind.vortices[sourceVortexIndex]!;
+      const sourceVk = template.vortexKind ?? "";
+      if (stackTopTarget && !brushStackBottomTopPair(sourceVk, targetVk)) {
+        continue;
+      }
+      const attracting: AttractionVortexContext = {
+        objectId: "__brush__",
+        objectKind: kind.id,
+        vortexKind: sourceVk,
+      };
+      if (!vorticesAttractionCompatibleForDrag(attracting, target, kindCompatibility, kindCatalogs)) {
+        continue;
+      }
+      const candidate = { objectKindId: kind.id, sourceVortexIndex };
+      const key = brushCandidateKey(candidate);
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      scored.push({ candidate, rank: brushCandidateRank(candidate, template, target) });
+    }
+  }
+  scored.sort((left, right) => right.rank - left.rank || left.candidate.objectKindId.localeCompare(right.candidate.objectKindId) || left.candidate.sourceVortexIndex - right.candidate.sourceVortexIndex);
+  return scored.map((row) => row.candidate);
+}
+
+/** @emoji 🖌️ Object pose so a source vortex coincides with the target point and directions oppose. */
+export function computeBrushPlacementPose(args: {
+  readonly sourceLocalPosition: Vec3;
+  readonly sourceLocalDirection: Vec3;
+  readonly scale?: number | Vec3;
+  readonly targetWorldPositionCad: Vec3;
+  readonly targetWorldDirectionCad: Vec3;
+  readonly referenceOrientationCad?: Quat;
+  readonly useHostOrientation?: boolean;
+}): { readonly origin: Vec3; readonly orientation: Quat } {
+  const scaledLocal = vec3ScaleCad(args.sourceLocalPosition, args.scale);
+  if (args.useHostOrientation && args.referenceOrientationCad) {
+    const orientation = args.referenceOrientationCad;
+    const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
+    return { origin, orientation };
+  }
+  const localDir = normalizeVec3Cad(args.sourceLocalDirection);
+  const targetDir = normalizeVec3Cad(args.targetWorldDirectionCad);
+  const desiredWorldDir = negateVec3Cad(targetDir);
+  const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
+  const orientation: Quat = [qThree.x, qThree.y, qThree.z, qThree.w];
+  const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
+  return { origin, orientation };
+}
+
+/** @emoji 📦 True when two axis-aligned boxes overlap (with epsilon). */
+export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
+  return a.min.x <= b.max.x + epsilon && a.max.x + epsilon >= b.min.x && a.min.y <= b.max.y + epsilon && a.max.y + epsilon >= b.min.y && a.min.z <= b.max.z + epsilon && a.max.z + epsilon >= b.min.z;
+}
+
+/** @emoji 📏 Default brush placement penetration (CAD world units); face contact and shallow AABB bleed below this stays collision-free. */
+export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 1;
+
+/** @emoji 🎚️ Window-measure slider range for brush placement collision tolerance. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN = 0;
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX = 100;
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP = 1;
+/** @emoji 📏 CAD penetration depth at {@link BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX}. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = 2;
+
+/** @emoji 🎚️ Maps play window slider position to brush collision tolerance (CAD units). */
+export function brushPlacementCollisionToleranceFromSlider(slider: number): number {
+  const span = BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
+  if (span <= 0) {
+    return DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+  }
+  const t = Math.max(0, Math.min(1, (slider - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN) / span));
+  return t * BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX;
+}
+
+/** @emoji 🎚️ Maps brush collision tolerance to play window slider position. */
+export function brushPlacementCollisionToleranceToSlider(tolerance: number): number {
+  if (BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX <= 0) {
+    return BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
+  }
+  const t = Math.max(0, Math.min(1, tolerance / BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX));
+  return Math.round(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN + t * (BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN));
+}
+
+/** @emoji 📦 True when AABB overlap depth along every axis exceeds {@link minPenetration} (touching faces do not count). */
+export function boxesPenetrationExceeds(a: Box3, b: Box3, minPenetration: number): boolean {
+  if (minPenetration <= 0) {
+    return boxesIntersect(a, b, 0);
+  }
+  const ox = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x);
+  const oy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y);
+  const oz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z);
+  if (ox <= 0 || oy <= 0 || oz <= 0) {
+    return false;
+  }
+  return Math.min(ox, oy, oz) > minPenetration;
+}
+
+function brushPreviewFromCandidate(args: {
+  readonly targetVortexFullId: string;
+  readonly candidate: BrushCompatibleCandidate;
+  readonly target: AttractionVortexContext;
+  readonly targetWorldPositionCad: Vec3;
+  readonly targetWorldDirectionCad: Vec3;
+  readonly referenceOrientationCad?: Quat;
+  readonly kindCatalogs: KindCatalogBundle | undefined;
+}): BrushPreviewState | null {
+  const kind = catalogObjectKindById(args.kindCatalogs, args.candidate.objectKindId);
+  const template = kind?.vortices?.[args.candidate.sourceVortexIndex];
+  if (!kind?.meshUrl || !template) {
+    return null;
+  }
+  const sourceVk = template.vortexKind ?? "";
+  const useHostOrientation = brushPlacementUsesHostOrientation(args.target, sourceVk, args.candidate.objectKindId);
+  const pose = computeBrushPlacementPose({
+    sourceLocalPosition: template.position,
+    sourceLocalDirection: template.direction ?? ([0, 0, -1] as Vec3),
+    scale: kind.scale,
+    targetWorldPositionCad: args.targetWorldPositionCad,
+    targetWorldDirectionCad: args.targetWorldDirectionCad,
+    ...(args.referenceOrientationCad ? { referenceOrientationCad: args.referenceOrientationCad } : {}),
+    useHostOrientation,
+  });
+  return {
+    targetVortexFullId: args.targetVortexFullId,
+    objectKindId: kind.id,
+    sourceVortexIndex: args.candidate.sourceVortexIndex,
+    meshUrl: kind.meshUrl,
+    ...(kind.meshByLod ? { meshByLod: kind.meshByLod } : {}),
+    ...(kind.scale !== undefined ? { scale: kind.scale } : {}),
+    origin: pose.origin,
+    orientation: pose.orientation,
+  };
+}
+
+/** @emoji 🎲 Injectable RNG for {@link shuffleBrushCompatibleCandidates} (tests). */
+export type BrushShuffleRng = () => number;
+
+/** @emoji 🔀 Random permutation of brush candidates (Fisher–Yates). */
+export function shuffleBrushCompatibleCandidates(candidates: readonly BrushCompatibleCandidate[], rng: BrushShuffleRng = Math.random): readonly BrushCompatibleCandidate[] {
+  const out = [...candidates];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    const left = out[i]!;
+    out[i] = out[j]!;
+    out[j] = left;
+  }
+  return out;
+}
+
+/** @emoji 📦 Scene groups used for brush placement overlap tests. */
+export interface BrushSceneCollisionSource {
+  collectObjectGroups(): readonly Group[];
+}
+
+/** @emoji 💥 True when a brush preview penetrates another object AABB beyond {@link collisionTolerance} (host may be excluded). */
+export function brushPreviewCollides(
+  scene: BrushSceneCollisionSource,
+  previewGroup: Group,
+  excludeObjectId?: string,
+  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+): boolean {
+  updateWorldMatrixChain(previewGroup);
+  const previewBox = new Box3().setFromObject(previewGroup, true);
+  if (!Number.isFinite(previewBox.min.x) || previewBox.isEmpty()) {
+    return false;
+  }
+  for (const group of scene.collectObjectGroups()) {
+    const objectId = group.userData?.puzzle3dObjectId;
+    if (typeof objectId === "string" && objectId.length > 0 && objectId === excludeObjectId) {
+      continue;
+    }
+    updateWorldMatrixChain(group);
+    const other = new Box3().setFromObject(group, true);
+    if (!Number.isFinite(other.min.x) || other.isEmpty()) {
+      continue;
+    }
+    if (boxesPenetrationExceeds(previewBox, other, collisionTolerance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** @emoji 🧭 Same inner mesh frame as {@link MeshBody} / scene objects (GLB Y-up → CAD Z-up). */
+export function brushPreviewMeshFrameGroup(meshRoot: Object3D): Group {
+  const frame = new Group();
+  frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+  frame.add(meshRoot.clone(true));
+  return frame;
+}
+
+/** @emoji 🧪 Disposable posed group for brush collision probes (matches {@link BrushPreviewGhost} graph). */
+export function brushProbeGroupFromPreview(preview: Pick<BrushPreviewState, "origin" | "orientation" | "scale">, meshRoot: Object3D): Group {
+  const group = new Group();
+  group.add(brushPreviewMeshFrameGroup(meshRoot));
+  applyObjectPose(group, preview.origin, preview.orientation, preview.scale);
+  return group;
+}
+
+/** @emoji 💥 `true`/`false` when mesh is known; `null` when catalog GLB is not pooled yet. */
+export function brushCandidateCollidesAtPose(
+  scene: BrushSceneCollisionSource,
+  preview: BrushPreviewState,
+  meshRoot: Object3D | null | undefined,
+  excludeObjectId?: string,
+  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+): boolean | null {
+  if (!meshRoot) {
+    return null;
+  }
+  const probe = brushProbeGroupFromPreview(preview, meshRoot);
+  return brushPreviewCollides(scene, probe, excludeObjectId, collisionTolerance);
+}
+
+/** @emoji ✅ Collision-filtered brush candidates after mesh-backed AABB probes. */
+export interface BrushCollisionFreeResult {
+  readonly free: readonly BrushCompatibleCandidate[];
+  readonly unknownPending: boolean;
+}
+
+/** @emoji 🔍 Filters shuffled compatible candidates to collision-free placements. */
+export function brushCollisionFreeCandidates(args: {
+  readonly scene: BrushSceneCollisionSource;
+  readonly targetVortexFullId: string;
+  readonly candidates: readonly BrushCompatibleCandidate[];
+  readonly target: AttractionVortexContext;
+  readonly targetWorldPositionCad: Vec3;
+  readonly targetWorldDirectionCad: Vec3;
+  readonly referenceOrientationCad?: Quat;
+  readonly kindCatalogs: KindCatalogBundle | undefined;
+  readonly excludeObjectId?: string;
+  readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
+  readonly collisionTolerance?: number;
+}): BrushCollisionFreeResult {
+  const collisionTolerance = args.collisionTolerance ?? DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+  const free: BrushCompatibleCandidate[] = [];
+  let unknownPending = false;
+  for (const candidate of args.candidates) {
+    const preview = brushPreviewFromCandidate({
+      targetVortexFullId: args.targetVortexFullId,
+      candidate,
+      target: args.target,
+      targetWorldPositionCad: args.targetWorldPositionCad,
+      targetWorldDirectionCad: args.targetWorldDirectionCad,
+      referenceOrientationCad: args.referenceOrientationCad,
+      kindCatalogs: args.kindCatalogs,
+    });
+    if (!preview) {
+      continue;
+    }
+    const meshRoot = args.meshRootForUrl?.(preview.meshUrl);
+    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, args.excludeObjectId, collisionTolerance);
+    if (collides === null) {
+      unknownPending = true;
+      continue;
+    }
+    if (!collides) {
+      free.push(candidate);
+    }
+  }
+  return { free, unknownPending };
+}
+
+/** @emoji 📦 Unique catalog mesh URLs for brush-compatible kinds (preload before AABB probe). */
+export function brushMeshUrlsForCompatibleCandidates(
+  candidates: readonly BrushCompatibleCandidate[],
+  kindCatalogs: KindCatalogBundle | undefined,
+): readonly string[] {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+  for (const candidate of candidates) {
+    const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
+    const meshUrl = kind?.meshUrl;
+    if (!meshUrl || seen.has(meshUrl)) {
+      continue;
+    }
+    seen.add(meshUrl);
+    urls.push(meshUrl);
+  }
+  return urls;
+}
+
+/** @emoji 🖌️ True when preview matches a brush catalog candidate. */
+export function brushPreviewMatchesCandidate(preview: BrushPreviewState, candidate: BrushCompatibleCandidate): boolean {
+  return preview.objectKindId === candidate.objectKindId && preview.sourceVortexIndex === candidate.sourceVortexIndex;
+}
+
+/** @emoji 🖌️ Appends a brush-placed object and its attraction to a fixture. */
+export function applyBrushPlacementToFixture(fixture: FixtureV1, payload: BrushPlacePayload, kindCatalogs: KindCatalogBundle | undefined): FixtureV1 {
+  const kind = catalogObjectKindById(kindCatalogs, payload.objectKindId);
+  const template = kind?.vortices?.[payload.sourceVortexIndex];
+  if (!kind?.meshUrl || !template) {
+    return fixture;
+  }
+  const objectId = payload.objectId ?? `puzzle3d.brush.${crypto.randomUUID()}`;
+  const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
+    id: `${objectId}:v${index}`,
+    vortexKind: entry.vortexKind,
+    label: entry.vortexKind,
+    position: entry.position,
+    ...(entry.direction ? { direction: entry.direction } : {}),
+    ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
+  }));
+  const sourceVortex = vortices[payload.sourceVortexIndex];
+  if (!sourceVortex) {
+    return fixture;
+  }
+  const attracting = puzzle3dVortexFullId(objectId, sourceVortex.id);
+  const attractionId = payload.attractionId ?? `attraction-${attracting}-${payload.targetVortexFullId}`;
+  const nextObject: FixtureObjectV1 = {
+    id: objectId,
+    objectKind: kind.id,
+    meshUrl: kind.meshUrl,
+    ...(kind.meshByLod ? { meshByLod: kind.meshByLod } : {}),
+    label: kind.label ?? kind.name ?? kind.id,
+    origin: payload.origin,
+    orientation: payload.orientation,
+    ...(payload.scale !== undefined ? { scale: payload.scale } : kind.scale !== undefined ? { scale: kind.scale } : {}),
+    vortices,
+  };
+  const connected = applyConnectToFixture(fixture, {
+    attracting,
+    attracted: payload.targetVortexFullId,
+    attractionId,
+  });
+  if (connected.attractions.length === fixture.attractions.length) {
+    return fixture;
+  }
+  return { ...connected, objects: [...connected.objects, nextObject] };
+}
+//#endregion 🖌️Brush
 
 //#region ­ƒÄ¿MeshPaint
 const CSS_SELECTED_MESH = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
@@ -2148,12 +3564,36 @@ function probeCssComputed(property: "color" | "backgroundColor", value: string):
   return out;
 }
 
+function cssColorForThree(css: string): string {
+  if (!css) {
+    return css;
+  }
+  if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
+    return css;
+  }
+  if (typeof document === "undefined") {
+    return "#808080";
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return "#808080";
+  }
+  ctx.fillStyle = "#000000";
+  ctx.fillStyle = css;
+  const converted = ctx.fillStyle;
+  if (/^(oklab|oklch|lab|lch|color)\(/iu.test(converted)) {
+    return "#808080";
+  }
+  return converted;
+}
+
 function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
   const raw = probeCssComputed(property, expr);
   if (!raw || raw === "rgba(0, 0, 0, 0)") {
     return fallback;
   }
-  return raw;
+  return cssColorForThree(raw);
 }
 
 /** @emoji ­ƒÄ¿ Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
@@ -2193,7 +3633,7 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({
-    color: new Color(color),
+    color: new Color(cssColorForThree(color)),
     metalness: 0,
     roughness: 1,
   });
@@ -2205,7 +3645,7 @@ function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshSt
 }
 
 function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
-  const mat = new LineBasicMaterial({ color: new Color(color) });
+  const mat = new LineBasicMaterial({ color: new Color(cssColorForThree(color)) });
   mat.transparent = state.opacity < 1;
   mat.opacity = state.opacity;
   return mat;
@@ -2218,7 +3658,7 @@ function createMeshOutline(geometry: BufferGeometry, color: string, state: MeshS
   return outline;
 }
 
-function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
+function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutlines = true): void {
   const colors = meshStyleColors(style);
   if (!colors) {
     return;
@@ -2232,7 +3672,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
         object.material = meshMaterial;
       }
       const geometry = object.geometry;
-      if (geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
+      if (edgeOutlines && geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
         object.add(createMeshOutline(geometry, colors.lineColor, colors));
       }
       return;
@@ -2246,7 +3686,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
     }
     if (object instanceof Points) {
       object.material = new PointsMaterial({
-        color: new Color(colors.lineColor),
+        color: new Color(cssColorForThree(colors.lineColor)),
         size: 1,
         transparent: colors.opacity < 1,
         opacity: colors.opacity,
@@ -2286,8 +3726,8 @@ const gltfRefCounts = new Map<string, number>();
 const styledMeshRefCounts = new Map<string, number>();
 const styledMeshTemplates = new Map<string, Object3D>();
 
-function styledPoolKey(url: string, style: MeshStyleKind): string {
-  return `${url}\0${style}`;
+function styledPoolKey(url: string, style: MeshStyleKind, edgeOutlines: boolean): string {
+  return edgeOutlines ? `${url}\0${style}` : `${url}\0${style}\0fill`;
 }
 
 export function gltfPoolAcquire(url: string): void {
@@ -2303,13 +3743,13 @@ export function gltfPoolRelease(url: string): void {
   }
 }
 
-export function styledMeshPoolAcquire(url: string, style: MeshStyleKind): void {
-  const key = styledPoolKey(url, style);
+export function styledMeshPoolAcquire(url: string, style: MeshStyleKind, edgeOutlines = true): void {
+  const key = styledPoolKey(url, style, edgeOutlines);
   styledMeshRefCounts.set(key, (styledMeshRefCounts.get(key) ?? 0) + 1);
 }
 
-export function styledMeshPoolRelease(url: string, style: MeshStyleKind): void {
-  const key = styledPoolKey(url, style);
+export function styledMeshPoolRelease(url: string, style: MeshStyleKind, edgeOutlines = true): void {
+  const key = styledPoolKey(url, style, edgeOutlines);
   const n = (styledMeshRefCounts.get(key) ?? 1) - 1;
   if (n <= 0) {
     styledMeshRefCounts.delete(key);
@@ -2332,15 +3772,15 @@ export function gltfPoolClear(url: string): void {
 }
 
 /** @emoji ­ƒÅè Returns a cached styled GLTF template for {@link MeshBody} (refcount via acquire/release). */
-export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Object3D): Object3D {
+export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Object3D, edgeOutlines = true): Object3D {
   if (style === "original") {
     return source;
   }
-  const key = styledPoolKey(url, style);
+  const key = styledPoolKey(url, style, edgeOutlines);
   let template = styledMeshTemplates.get(key);
   if (!template) {
     template = source.clone(true);
-    applyMeshStyleToObject3D(template, style);
+    applyMeshStyleToObject3D(template, style, edgeOutlines);
     styledMeshTemplates.set(key, template);
   }
   return template;
@@ -2357,24 +3797,24 @@ function usePooledGltf(url: string) {
   return gltf;
 }
 
-function usePooledStyledMesh(url: string, style: MeshStyleKind) {
+function usePooledStyledMesh(url: string, style: MeshStyleKind, edgeOutlines = true) {
   const gltf = usePooledGltf(url);
   reactHostPort.useEffect(() => {
     if (style === "original") {
       return undefined;
     }
-    styledMeshPoolAcquire(url, style);
+    styledMeshPoolAcquire(url, style, edgeOutlines);
     return () => {
-      styledMeshPoolRelease(url, style);
+      styledMeshPoolRelease(url, style, edgeOutlines);
     };
-  }, [url, style]);
+  }, [url, style, edgeOutlines]);
   const renderRoot = reactHostPort.useMemo(() => {
     if (!gltf.scene) {
       return null;
     }
-    const template = styledMeshTemplate(url, style, gltf.scene);
+    const template = styledMeshTemplate(url, style, gltf.scene, edgeOutlines);
     return template.clone(true);
-  }, [gltf.scene, url, style]);
+  }, [edgeOutlines, gltf.scene, url, style]);
   return renderRoot;
 }
 //#endregion ­ƒÅèPool
@@ -2398,6 +3838,7 @@ export interface RegistryValue {
   unregisterVortexBinding(fullId: string): void;
   registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
   collectObjectGroups(): readonly Group[];
+  listVortexBindings(): readonly VortexBindingMeta[];
   getObjectGroup(id: string): Group | null;
   getObjectKind(id: string): string | undefined;
   kindCatalogs: KindCatalogBundle | undefined;
@@ -2405,11 +3846,9 @@ export interface RegistryValue {
   blockedVortexFullIds: ReadonlySet<string>;
   proximityRadius: number;
   proximityRelocateEnabled: boolean;
-  selectedObjectIds: readonly string[];
   setSelectedObjectIds(ids: readonly string[]): void;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
-  activeRelocateObjectId: string | null;
   setActiveRelocateObjectId: (id: string | null) => void;
   attractionDragActive: boolean;
   attractionDragAttractingFullId: string | null;
@@ -2432,12 +3871,12 @@ export interface RegistryValue {
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
   onRelocate?: (p: RelocatePayload) => void;
-  readonly hoverTarget: SceneHoverTarget | null;
-  setSceneHover: (target: SceneHoverTarget) => void;
-  clearSceneHover: (target: SceneHoverTarget) => void;
-  clearSceneHoverAll: () => void;
-  isSceneHovered: (target: SceneHoverTarget) => boolean;
-  clearSceneSelection: () => void;
+  readonly hoverTarget: HoverTarget | null;
+  setHover: (target: HoverTarget) => void;
+  clearHover: (target: HoverTarget) => void;
+  clearHoverAll: () => void;
+  isHovered: (target: HoverTarget) => boolean;
+  clearSelection: () => void;
 }
 
 /** @emoji ­ƒÄ» Attraction-drag UI state isolated so orbit idle frames do not re-render every object. */
@@ -2452,18 +3891,30 @@ export interface RegistryDragState {
 /** @emoji 🎯 Selection + relocate actions with stable identity (object meshes do not re-subscribe). */
 export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
+  commitSelection(pick: SelectionPick): void;
+  captureMarqueeCandidates(): void;
+  previewMarqueeSelection(args: MarqueeGestureArgs): void;
+  cancelMarqueePreview(): void;
+  commitMarqueeSelection(args: MarqueeGestureArgs): void;
   setSelectedObjectIds(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])): void;
   setActiveRelocateObjectId(id: string | null): void;
-  clearSceneSelection(): void;
+  clearSelection(): void;
+}
+
+/** @emoji 🖱️ Feeds live attraction rows into marquee hit testing ({@link RegistryProvider}). */
+export interface RegistryMarqueeValue {
+  readonly selectionMethod: SelectionMethod;
+  readonly marqueeSelectableKinds: MarqueeSelectableKinds;
+  setMarqueeAttractions(attractions: readonly AttractionProps[]): void;
 }
 
 /** @emoji 🖱️ Exclusive hover state isolated from selection updates. */
 export interface RegistryHoverValue {
-  readonly hoverTarget: SceneHoverTarget | null;
-  setSceneHover(target: SceneHoverTarget): void;
-  clearSceneHover(target: SceneHoverTarget): void;
-  clearSceneHoverAll(): void;
-  isSceneHovered(target: SceneHoverTarget): boolean;
+  readonly hoverTarget: HoverTarget | null;
+  setHover(target: HoverTarget): void;
+  clearHover(target: HoverTarget): void;
+  clearHoverAll(): void;
+  isHovered(target: HoverTarget): boolean;
 }
 
 type RegistryCoreValue = Omit<RegistryValue, keyof RegistryDragState | keyof RegistryInteractionValue | keyof RegistryHoverValue>;
@@ -2472,28 +3923,35 @@ const RegistryCoreContext = reactHostPort.createContext<RegistryCoreValue | null
 const RegistryDragContext = reactHostPort.createContext<RegistryDragState | null>(null);
 const RegistryInteractionContext = reactHostPort.createContext<RegistryInteractionValue | null>(null);
 const RegistryHoverContext = reactHostPort.createContext<RegistryHoverValue | null>(null);
+const RegistryMarqueeContext = reactHostPort.createContext<RegistryMarqueeValue | null>(null);
 
 function useRegistryCore(): RegistryCoreValue {
   const v = reactHostPort.useContext(RegistryCoreContext);
-  if (!v) throw new Error("Scene registry missing");
+  if (!v) throw new Error("Puzzle 3D registry missing");
   return v;
 }
 
 function useRegistryDrag(): RegistryDragState {
   const v = reactHostPort.useContext(RegistryDragContext);
-  if (!v) throw new Error("Scene registry drag missing");
+  if (!v) throw new Error("Puzzle 3D registry drag missing");
   return v;
 }
 
 function useRegistryInteraction(): RegistryInteractionValue {
   const v = reactHostPort.useContext(RegistryInteractionContext);
-  if (!v) throw new Error("Scene registry interaction missing");
+  if (!v) throw new Error("Puzzle 3D registry interaction missing");
   return v;
 }
 
 function useRegistryHover(): RegistryHoverValue {
   const v = reactHostPort.useContext(RegistryHoverContext);
-  if (!v) throw new Error("Scene registry hover missing");
+  if (!v) throw new Error("Puzzle 3D registry hover missing");
+  return v;
+}
+
+function useRegistryMarquee(): RegistryMarqueeValue {
+  const v = reactHostPort.useContext(RegistryMarqueeContext);
+  if (!v) throw new Error("Puzzle 3D registry marquee missing");
   return v;
 }
 
@@ -2507,23 +3965,23 @@ function useRegistry(): RegistryValue {
 }
 
 /** @emoji 🖱️ Clears exclusive hover when the pointer leaves the canvas. */
-function SceneHoverMissBridge(): null {
-  const { clearSceneHoverAll } = useRegistryHover();
+function HoverMissBridge(): null {
+  const { clearHoverAll } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
   reactHostPort.useEffect(() => {
     const onLeave = () => {
-      clearSceneHoverAll();
+      clearHoverAll();
       invalidate();
     };
     gl.domElement.addEventListener("pointerleave", onLeave);
     return () => gl.domElement.removeEventListener("pointerleave", onLeave);
-  }, [clearSceneHoverAll, gl, invalidate]);
+  }, [clearHoverAll, gl, invalidate]);
   return null;
 }
 
 /** @emoji 🖱️ Redraws the canvas when exclusive hover changes. */
-function SceneHoverInvalidateBridge(): null {
+function HoverInvalidateBridge(): null {
   const { hoverTarget } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
@@ -2532,23 +3990,94 @@ function SceneHoverInvalidateBridge(): null {
   return null;
 }
 
-/** @emoji 🎯 Redraws the canvas when host-controlled selection changes. */
-function SceneSelectionInvalidateBridge(): null {
-  const selection = useLiveSceneSelection();
+/** @emoji 🎯 Redraws the canvas once per selection revision (not per id string join). */
+function SelectionInvalidateBridge(): null {
+  const store = useSelectionSnapshotStore();
+  const revision = reactHostPort.useSyncExternalStore(store.subscribe, store.getRevision, store.getRevision);
   const invalidate = useThree((state) => state.invalidate);
-  const selectionKey = reactHostPort.useMemo(() => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}`, [selection.objectIds, selection.vortexIds]);
   reactHostPort.useEffect(() => {
     invalidate();
-  }, [selectionKey, invalidate]);
+  }, [revision, invalidate]);
+  return null;
+}
+
+const BULK_SELECTION_TINT_RESTORE_KEY = "puzzle3dBulkSelectionTintRestore";
+const bulkSelectionEmissiveColor = new Color();
+
+interface BulkSelectionTintRestore {
+  readonly emissive: Color;
+  readonly emissiveIntensity: number;
+}
+
+/** @emoji 🎨 Imperative bulk-select tint (avoids N React re-renders and pooled mesh reclones). */
+function applyBulkSelectionTintToGroup(group: Group, active: boolean): void {
+  const selectedColors = meshStyleColors("selected");
+  if (!selectedColors) {
+    return;
+  }
+  bulkSelectionEmissiveColor.set(cssColorForThree(selectedColors.emissiveColor));
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!(material instanceof MeshStandardMaterial)) {
+        continue;
+      }
+      if (active) {
+        if (!material.userData[BULK_SELECTION_TINT_RESTORE_KEY]) {
+          material.userData[BULK_SELECTION_TINT_RESTORE_KEY] = {
+            emissive: material.emissive.clone(),
+            emissiveIntensity: material.emissiveIntensity,
+          } satisfies BulkSelectionTintRestore;
+        }
+        material.emissive.copy(bulkSelectionEmissiveColor);
+        material.emissiveIntensity = selectedColors.emissiveIntensity;
+        continue;
+      }
+      const restore = material.userData[BULK_SELECTION_TINT_RESTORE_KEY] as BulkSelectionTintRestore | undefined;
+      if (!restore) {
+        continue;
+      }
+      material.emissive.copy(restore.emissive);
+      material.emissiveIntensity = restore.emissiveIntensity;
+      delete material.userData[BULK_SELECTION_TINT_RESTORE_KEY];
+    }
+  });
+}
+
+/** @emoji 🎨 One-pass bulk selection appearance when per-object React updates are skipped. */
+function BulkSelectionVisualBridge(): null {
+  const store = useSelectionSnapshotStore();
+  const revision = reactHostPort.useSyncExternalStore(store.subscribe, store.getRevision, store.getRevision);
+  const { collectObjectGroups } = useRegistryCore();
+  const invalidate = useThree((state) => state.invalidate);
+  reactHostPort.useLayoutEffect(() => {
+    const bulkVisual = !store.getMeshOutlineEnabled();
+    const groups = collectObjectGroups();
+    if (!bulkVisual) {
+      for (const group of groups) {
+        applyBulkSelectionTintToGroup(group, false);
+      }
+      return;
+    }
+    for (const group of groups) {
+      const objectId = group.userData.puzzle3dObjectId;
+      const active = typeof objectId === "string" && store.isObjectSelected(objectId);
+      applyBulkSelectionTintToGroup(group, active);
+    }
+    invalidate();
+  }, [collectObjectGroups, invalidate, revision, store]);
   return null;
 }
 
 /** @emoji 🎯 True when a raycast hit belongs to a selectable scene object or vortex mesh. */
-function raycastHitTargetsScenePick(hitObject: Object3D): boolean {
+function raycastHitTargetsPick(hitObject: Object3D): boolean {
   let node: Object3D | null = hitObject;
   while (node) {
     const data = node.userData as Record<string, unknown> | undefined;
-    if (typeof data?.sceneObjectId === "string" || typeof data?.sceneVortexFullId === "string") {
+    if (typeof data?.puzzle3dObjectId === "string" || typeof data?.puzzle3dVortexFullId === "string" || data?.puzzle3dAttractionPick === true) {
       return true;
     }
     node = node.parent;
@@ -2557,34 +4086,77 @@ function raycastHitTargetsScenePick(hitObject: Object3D): boolean {
 }
 
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
-function SceneSelectionMissBridge(): null {
-  const { clearSceneSelection } = useRegistryInteraction();
-  const store = useStore();
-  const attractionBusy = useRegistryDrag().attractionDragActive || useRegistryDrag().attractionIndirectPickAwait !== null;
-  const clearSceneSelectionRef = reactHostPort.useRef(clearSceneSelection);
-  clearSceneSelectionRef.current = clearSceneSelection;
+function SelectionMissBridge(): null {
+  const { clearSelection } = useRegistryInteraction();
+  const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
+  const setState = useThree((state) => state.set);
+  const getState = useThree((state) => state.get);
+  const attractionBusy = attractionDragActive || attractionIndirectPickAwait !== null;
+  const clearSelectionRef = reactHostPort.useRef(clearSelection);
+  clearSelectionRef.current = clearSelection;
   const attractionBusyRef = reactHostPort.useRef(attractionBusy);
   attractionBusyRef.current = attractionBusy;
   reactHostPort.useEffect(() => {
-    const previous = store.getState().onPointerMissed;
+    const previous = getState().onPointerMissed;
     const onMiss = (event: MouseEvent) => {
-      if (event.button !== 0 || attractionBusyRef.current) {
+      if (event.button !== 0 || attractionBusyRef.current || puzzle3dRelocateDragActiveRef.current) {
         previous?.(event);
         return;
       }
-      const hits = store.getState().internal.initialHits;
-      if (hits.some((hit) => raycastHitTargetsScenePick(hit.object))) {
+      const hits = getState().internal.initialHits;
+      if (hits.some((hit) => raycastHitTargetsPick(hit.object))) {
         previous?.(event);
         return;
       }
-      clearSceneSelectionRef.current();
+      clearSelectionRef.current();
       previous?.(event);
     };
-    store.setState({ onPointerMissed: onMiss });
-    return () => store.setState({ onPointerMissed: previous });
-  }, [store]);
+    setState({ onPointerMissed: onMiss });
+    return () => setState({ onPointerMissed: previous });
+  }, [getState, setState]);
   return null;
 }
+
+//#region 🔖VortexScreenPick
+/** @emoji 🌀 Screen-space pixel radius around a vortex center that counts as a hover/click on that vortex. */
+const VORTEX_SCREEN_PICK_RADIUS_PX = 18;
+
+/** @emoji 🌀 World depth a vortex may sit behind the clicked surface and still be pickable (covers vortices embedded in their own object), beyond which it is treated as occluded by foreground geometry. */
+const VORTEX_PICK_DEPTH_TOLERANCE = 6;
+
+/** @emoji 🌀 Screen-projected vortex candidate for {@link pickNearestScreenVortex}. */
+interface ScreenVortexCandidate {
+  readonly fullId: string;
+  readonly objectId: string;
+  readonly sx: number;
+  readonly sy: number;
+  readonly dist: number;
+}
+
+/**
+ * 🌀 Picks the vortex closest to the cursor in screen space within {@link VORTEX_SCREEN_PICK_RADIUS_PX},
+ * skipping ones occluded by foreground geometry beyond {@link VORTEX_PICK_DEPTH_TOLERANCE} of the clicked surface.
+ */
+export function pickNearestScreenVortex(args: {
+  readonly cursorX: number;
+  readonly cursorY: number;
+  readonly surfaceDist: number;
+  readonly candidates: readonly ScreenVortexCandidate[];
+  readonly radiusPx?: number;
+  readonly depthTolerance?: number;
+}): ScreenVortexCandidate | null {
+  const radiusPx = args.radiusPx ?? VORTEX_SCREEN_PICK_RADIUS_PX;
+  const depthTolerance = args.depthTolerance ?? VORTEX_PICK_DEPTH_TOLERANCE;
+  const within = args.candidates
+    .map((c) => ({ c, dpx: Math.hypot(c.sx - args.cursorX, c.sy - args.cursorY) }))
+    .filter((e) => e.dpx <= radiusPx)
+    .sort((a, b) => a.dpx - b.dpx);
+  for (const { c } of within) {
+    if (c.dist <= args.surfaceDist + depthTolerance) return c;
+  }
+  return null;
+}
+//#endregion
 //#endregion ­ƒÄ»Registry
 
 //#region ­ƒº▒Chunking
@@ -2696,6 +4268,19 @@ export function cadObjectLocalToThreeGroupLocal(local: Vec3, originCad: Vec3, or
   return [out.x, out.y, out.z];
 }
 
+/** @emoji ➡️ Maps object-local CAD direction to a unit vector in the vortex parent Three.js group. */
+export function cadObjectLocalDirectionToThreeGroupLocal(localDir: Vec3, originCad: Vec3, orientationCad: Quat | undefined): Vec3 {
+  const tip = cadObjectLocalToThreeGroupLocal(localDir, originCad, orientationCad);
+  const base = cadObjectLocalToThreeGroupLocal([0, 0, 0], originCad, orientationCad);
+  const d = new Vector3(tip[0] - base[0], tip[1] - base[1], tip[2] - base[2]);
+  const len = d.length();
+  if (len < 1e-9) {
+    return [0, 0, 1];
+  }
+  d.divideScalar(len);
+  return [d.x, d.y, d.z];
+}
+
 /** @emoji 🧭 +90° X: glTF Y-up mesh → CAD object-local Z-up inside the pose group (metabolism kit meshes). */
 export const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
 //#endregion 🧭Coordinates
@@ -2762,11 +4347,95 @@ export function updateWorldMatrixChain(leaf: Object3D): void {
   }
 }
 
-export type SceneAutoFitBehavior = "initial" | "changes";
+export type AutoFitBehavior = "initial" | "changes";
 
-export function sceneAutoFitShouldRun(behavior: SceneAutoFitBehavior, key: string, lastKey: string, hasApplied: boolean): boolean {
+export function puzzle3dAutoFitShouldRun(behavior: AutoFitBehavior, key: string, lastKey: string, hasApplied: boolean): boolean {
   if (!key || key === lastKey) return false;
   return behavior === "changes" || !hasApplied;
+}
+
+/** @emoji 📐 Scene accessors for {@link boundsFromPuzzle3dSelection}. */
+export interface Puzzle3dSelectionFrameSource {
+  readonly getObjectGroup: (id: string) => Group | null;
+  readonly getVortexWorld: (fullId: string) => Vector3 | null;
+  readonly listVortexBindings: () => readonly VortexBindingMeta[];
+}
+
+/** @emoji 🔍 Axis-aligned bounds of the current puzzle 3D selection (objects, vortices, attractions). */
+export function boundsFromPuzzle3dSelection(
+  selection: SelectionSnapshot,
+  source: Puzzle3dSelectionFrameSource,
+  attractions: readonly Pick<AttractionProps, "id" | "attracting" | "attracted">[],
+): { readonly center: Vec3; readonly radius: number } | null {
+  const box = new Box3();
+  const pointBox = new Box3();
+  const pointCenter = new Vector3();
+  const pointSize = new Vector3();
+  const centerScratch = new Vector3();
+  const sizeScratch = new Vector3();
+  let has = false;
+  const unionWorldPoint = (world: Vector3, radius: number) => {
+    const r = Math.max(radius, 0.5);
+    pointSize.set(r * 2, r * 2, r * 2);
+    pointCenter.copy(world);
+    pointBox.setFromCenterAndSize(pointCenter, pointSize);
+    if (!has) {
+      box.copy(pointBox);
+      has = true;
+      return;
+    }
+    box.union(pointBox);
+  };
+  for (const objectId of selection.objectIds) {
+    const group = source.getObjectGroup(objectId);
+    if (!group) {
+      continue;
+    }
+    updateWorldMatrixChain(group);
+    const part = new Box3().setFromObject(group, true);
+    if (!Number.isFinite(part.min.x) || part.isEmpty()) {
+      continue;
+    }
+    part.getSize(sizeScratch);
+    if (sizeScratch.lengthSq() < 1e-12) {
+      continue;
+    }
+    if (!has) {
+      box.copy(part);
+      has = true;
+    } else {
+      box.union(part);
+    }
+  }
+  const vortexRadiusByFullId = new Map(source.listVortexBindings().map((meta) => [meta.fullId, meta.radiusWorld]));
+  for (const fullId of selection.vortexIds) {
+    const world = source.getVortexWorld(fullId);
+    if (!world || !vector3IsFinite(world)) {
+      continue;
+    }
+    unionWorldPoint(world, vortexRadiusByFullId.get(fullId) ?? 1);
+  }
+  const attractionById = new Map(attractions.map((row) => [row.id, row]));
+  for (const attractionId of selection.attractionIds) {
+    const attraction = attractionById.get(attractionId);
+    if (!attraction) {
+      continue;
+    }
+    const a = source.getVortexWorld(attraction.attracting);
+    const b = source.getVortexWorld(attraction.attracted);
+    if (a && vector3IsFinite(a)) {
+      unionWorldPoint(a, 0.75);
+    }
+    if (b && vector3IsFinite(b)) {
+      unionWorldPoint(b, 0.75);
+    }
+  }
+  if (!has) {
+    return null;
+  }
+  box.getCenter(centerScratch);
+  box.getSize(sizeScratch);
+  return { center: threeVec3ToCad(centerScratch), radius: Math.max(sizeScratch.length() / 2, 0.5) };
 }
 
 /** @emoji 📐 Axis-aligned bounds of registered scene object groups (camera auto-fit). */
@@ -2797,19 +4466,43 @@ export function boundsFromObjectGroups(groups: readonly Group[]): { readonly cen
   return { center: threeVec3ToCad(centerScratch), radius: Math.max(radius, 0.5) };
 }
 
-/** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
-export function applySceneAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
+/** @emoji ⏱️ Duration of engagement selection zoom camera ease (ms). */
+export const PUZZLE_3D_SELECTION_ZOOM_DURATION_MS = 450;
+
+/** @emoji ⏱️ Ease-in-out cubic for selection zoom and other puzzle 3D camera transitions. */
+export function puzzle3dEaseInOutCubic01(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
+}
+
+/** @emoji 🛰️ Orbit position + target in Three world space for framing a bounds sphere. */
+export function puzzle3dFitCameraRigFromBounds(
+  bounds: { readonly center: Vec3; readonly radius: number },
+  padding = 1.25,
+): { readonly position: Vector3; readonly target: Vector3 } {
   const centerThree = cadVec3ToThree(bounds.center);
   const dist = Math.max(bounds.radius * padding, 2);
-  camera.position.set(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85);
+  return {
+    position: new Vector3(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85),
+    target: new Vector3(centerThree[0], centerThree[1], centerThree[2]),
+  };
+}
+
+/** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
+export function applyAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
+  const rig = puzzle3dFitCameraRigFromBounds(bounds, padding);
+  camera.position.copy(rig.position);
   if (controls?.target) {
-    controls.target.set(centerThree[0], centerThree[1], centerThree[2]);
+    controls.target.copy(rig.target);
     controls.update?.();
   } else {
-    camera.lookAt(centerThree[0], centerThree[1], centerThree[2]);
+    camera.lookAt(rig.target);
   }
   camera.updateProjectionMatrix();
 }
+
+/** @emoji 🔍 True while engagement selection zoom is easing the orbit camera. */
+export const puzzle3dSelectionZoomAnimatingRef = { current: false };
 
 function vector3IsFinite(v: Vector3): boolean {
   return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
@@ -2820,7 +4513,7 @@ function vector3IsFinite(v: Vector3): boolean {
 function readVortexFullIdFromObject(o: Object3D | null): string | null {
   let cur: Object3D | null = o;
   while (cur) {
-    const id = cur.userData?.sceneVortexFullId;
+    const id = cur.userData?.puzzle3dVortexFullId;
     if (typeof id === "string" && id.length > 0) return id;
     cur = cur.parent;
   }
@@ -2830,7 +4523,7 @@ function readVortexFullIdFromObject(o: Object3D | null): string | null {
 function readObjectItemIdFromObject(o: Object3D | null): string | null {
   let cur: Object3D | null = o;
   while (cur) {
-    const id = cur.userData?.sceneObjectId;
+    const id = cur.userData?.puzzle3dObjectId;
     if (typeof id === "string" && id.length > 0) return id;
     cur = cur.parent;
   }
@@ -2889,7 +4582,7 @@ function nearestAttractionSnapFullId(args: {
   getVortexWorld: (id: string) => Vector3 | null;
   metaRadius: (id: string) => number;
 }): string | null {
-  if (args.lod >= SCENE_ATTRACTION_SNAP_MAX_LOD) return null;
+  if (args.lod >= PUZZLE_3D_ATTRACTION_SNAP_MAX_LOD) return null;
   const pScr = worldToCanvasPx(args.pointerWorld, args.camera, args.gl);
   let best: { d: number; id: string } | null = null;
   for (const tid of args.compat) {
@@ -2909,14 +4602,14 @@ function nearestAttractionSnapFullId(args: {
 
 //#region ­ƒºèMesh
 /** @emoji 🖱️ R3F pointer handlers for scene mesh pick targets. */
-export interface SceneMeshPointerHandlers {
+export interface MeshPointerHandlers {
   readonly onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
   readonly onClick?: (event: ThreeEvent<MouseEvent>) => void;
   readonly onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
   readonly onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
 }
 
-export interface MeshProps extends SceneMeshPointerHandlers {
+export interface MeshProps extends MeshPointerHandlers {
   readonly meshUrl: string;
   readonly style?: MeshStyleKind;
   readonly showOutline?: boolean;
@@ -2932,7 +4625,7 @@ function GlbMeshFrame(props: { readonly children: ReactNode }) {
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
 export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
   const style = props.style ?? DEFAULT_MESH_STYLE;
-  const renderRoot = usePooledStyledMesh(props.meshUrl, style);
+  const renderRoot = usePooledStyledMesh(props.meshUrl, style, props.showOutline === true);
   if (!renderRoot) {
     return null;
   }
@@ -2959,7 +4652,7 @@ export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
   );
 });
 
-const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: SceneMeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
+const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: MeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
   const colors = meshStyleColors(props.style);
   const meshColor = colors?.meshColor ?? "#cbd5e1";
   const opacity = colors?.opacity ?? 1;
@@ -2993,6 +4686,8 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
       mode={props.mode}
       translationSnap={props.translationSnap}
       onMouseDown={() => {
+        puzzle3dRelocateDragActiveRef.current = true;
+        cancelPuzzle3dMarqueeGesture();
         const g = props.object;
         props.beforeRef.current = {
           origin: g.position.clone(),
@@ -3000,7 +4695,17 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
           scale: g.scale.clone(),
         };
       }}
+      onDraggingChanged={(event) => {
+        if (!event) {
+          return;
+        }
+        puzzle3dRelocateDragActiveRef.current = event.value;
+        if (event.value) {
+          cancelPuzzle3dMarqueeGesture();
+        }
+      }}
       onMouseUp={() => {
+        puzzle3dRelocateDragActiveRef.current = false;
         const before = props.beforeRef.current;
         if (!before) return;
         const g = props.object;
@@ -3023,7 +4728,7 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
         if (!proximityRelocateEnabled) {
           return;
         }
-        scheduleSceneRelocateCommit(() => {
+        scheduleRelocateCommit(() => {
           const cand = findNearestProximityRelocate(g.position, props.objectId);
           if (cand) onProximityConnect?.(cand);
         });
@@ -3035,17 +4740,20 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
 
 export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
   const group = reactHostPort.useRef<Group>(null);
-  const liveSelection = useLiveSceneSelection();
+  const store = useSelectionSnapshotStore();
+  const bulkVisual = !store.getMeshOutlineEnabled();
+  const registrySelected = useObjectSelected(props.id);
+  const primaryObjectId = usePrimarySelectionObjectId();
   const { registerObject, relocateMode } = useRegistryCore();
-  const { selectionMode, setSelectedObjectIds, setActiveRelocateObjectId } = useRegistryInteraction();
-  const { setSceneHover, clearSceneHover, isSceneHovered } = useRegistryHover();
+  const { selectionMode, commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
+  const { setHover, clearHover, isHovered } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
   const beforeRef = reactHostPort.useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
-  const objectPointerHovered = isSceneHovered({ kind: "object", id: props.id });
-  const registrySelected = objectMatchesSceneSelection(props.id, liveSelection);
-  const selected = props.selected === true || registrySelected;
-  const relocateActive = props.relocateActive === true || primarySelectionObjectId(liveSelection) === props.id;
+  const objectPointerHovered = isHovered({ kind: "object", id: props.id });
+  const membershipSelected = props.selected === true || registrySelected || (bulkVisual && store.isObjectSelected(props.id));
+  const selectedForAppearance = bulkVisual ? false : membershipSelected;
+  const relocateActive = props.relocateActive === true || primaryObjectId === props.id;
 
   reactHostPort.useEffect(() => {
     registerObject(props.id, props.objectKind, group.current);
@@ -3056,7 +4764,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 
   reactHostPort.useEffect(() => {
     if (group.current) setTcTarget(group.current);
-  }, [selected, relocateActive, props.id]);
+  }, [membershipSelected, relocateActive, props.id]);
 
   const linkHighlighted = reactHostPort.useMemo(() => {
     if (props.highlighted === true) {
@@ -3076,33 +4784,21 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
       resolveMeshStyle({
         style: props.style,
         disabled: props.disabled,
-        selected,
+        selected: selectedForAppearance,
         highlighted: linkHighlighted,
         hovered: props.hovered === true || objectPointerHovered,
       }),
-    [props.style, props.disabled, selected, props.hovered, linkHighlighted, objectPointerHovered],
+    [props.style, props.disabled, selectedForAppearance, props.hovered, linkHighlighted, objectPointerHovered],
   );
-  const showSelectionOutline = selected && !props.disabled;
-  const invalidate = useThree((state) => state.invalidate);
-  reactHostPort.useEffect(() => {
-    if (selected || showSelectionOutline) {
-      invalidate();
-    }
-  }, [selected, showSelectionOutline, meshStyle, invalidate]);
+  const showSelectionOutline = selectedForAppearance && !props.disabled;
 
   const selectObject = reactHostPort.useCallback(() => {
-    if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
+    if (attractionDragActive || attractionIndirectPickAwait || props.disabled || puzzle3dRelocateDragActiveRef.current) {
       return;
     }
-    if (selectionMode === "single") {
-      setSelectedObjectIds([props.id]);
-    } else if (selectionMode === "additive") {
-      setSelectedObjectIds((prev) => (prev.includes(props.id) ? prev : [...prev, props.id]));
-    } else {
-      setSelectedObjectIds([props.id]);
-    }
+    commitSelection({ kind: "object", id: props.id });
     setActiveRelocateObjectId(props.id);
-  }, [attractionDragActive, attractionIndirectPickAwait, props.disabled, props.id, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds]);
+  }, [attractionDragActive, attractionIndirectPickAwait, commitSelection, props.disabled, props.id, setActiveRelocateObjectId]);
 
   const meshPointerHandlers = reactHostPort.useMemo(
     () => ({
@@ -3113,7 +4809,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
         e.stopPropagation();
       },
       onClick: (e: ThreeEvent<MouseEvent>) => {
-        if (e.nativeEvent.button !== 0) {
+        if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current) {
           return;
         }
         e.stopPropagation();
@@ -3122,15 +4818,15 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
       onPointerOver: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         if (!props.disabled && !attractionDragActive && !attractionIndirectPickAwait) {
-          setSceneHover({ kind: "object", id: props.id });
+          setHover({ kind: "object", id: props.id });
         }
       },
       onPointerOut: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        clearSceneHover({ kind: "object", id: props.id });
+        clearHover({ kind: "object", id: props.id });
       },
     }),
-    [clearSceneHover, props.disabled, props.id, selectObject, setSceneHover],
+    [clearHover, props.disabled, props.id, selectObject, setHover],
   );
 
   const poseKey = reactHostPort.useMemo(() => objectPoseKey(props.id, props.origin, props.orientation, props.scale), [props.id, props.origin, props.orientation, props.scale]);
@@ -3142,14 +4838,14 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
     applyObjectPose(g, props.origin, props.orientation, props.scale);
   }, [poseKey, props.origin, props.orientation, props.scale]);
   const lodCtx = useLod();
-  const resolvedMeshUrl = useResolvedSceneMeshUrl({
+  const resolvedMeshUrl = useResolvedMeshUrl({
     origin: props.origin,
     meshByLod: props.meshByLod,
     fallbackMeshUrl: props.meshUrl,
   });
   const mode = props.relocate ?? relocateMode;
   const transSnap = mode === "translate" && lodCtx.gridSnapEnabled && lodCtx.gridStepWorld != null && lodCtx.gridStepWorld > 0 ? lodCtx.gridStepWorld : undefined;
-  const showTc = selected && relocateActive && props.relocate !== false && tcTarget;
+  const showTc = membershipSelected && relocateActive && props.relocate !== false && tcTarget;
 
   return (
     <>
@@ -3157,10 +4853,10 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
         ref={group}
         visible={props.visible !== false}
         userData={{
-          sceneObjectId: props.id,
-          sceneMeshStyle: meshStyle,
-          ...(props.attracting?.length ? { sceneAttracting: props.attracting } : {}),
-          ...(props.wormhole ? { sceneWormhole: true } : {}),
+          puzzle3dObjectId: props.id,
+          puzzle3dMeshStyle: meshStyle,
+          ...(props.attracting?.length ? { puzzle3dAttracting: props.attracting } : {}),
+          ...(props.wormhole ? { puzzle3dWormhole: true } : {}),
           ...props.userData,
         }}
       >
@@ -3169,7 +4865,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
         ) : (
           <MeshBody meshUrl={resolvedMeshUrl} showOutline={showSelectionOutline} style={meshStyle} {...meshPointerHandlers} />
         )}
-        <group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
+        <group userData={{ puzzle3dObjectAttachments: props.id }}>{props.children}</group>
       </group>
       {showTc && tcTarget && <ObjectTransformControls object={tcTarget} objectId={props.id} mode={mode} translationSnap={transSnap} beforeRef={beforeRef} />}
     </>
@@ -3180,10 +4876,25 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 //#region ­ƒîÇVortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
-function VortexHandleGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
+//#region 🔖VortexPickPriority
+/** @emoji 🎯 World-space depth bias (units) so a vortex pick wins over the object surface it sits on, without hijacking clicks on distant geometry. */
+const VORTEX_PICK_DEPTH_BIAS = 1.5;
+
+/** @emoji 🎯 Mesh raycast biasing vortex hits closer so occluding object meshes do not swallow vortex hover/selection ({@link VORTEX_PICK_DEPTH_BIAS}). */
+function vortexPickRaycast(this: import("three").Mesh, raycaster: Raycaster, intersects: import("three").Intersection[]): void {
+  const local: import("three").Intersection[] = [];
+  Mesh.prototype.raycast.call(this, raycaster, local);
+  for (const hit of local) {
+    hit.distance = Math.max(hit.distance - VORTEX_PICK_DEPTH_BIAS, hit.distance * 0.01);
+    intersects.push(hit);
+  }
+}
+//#endregion
+
+function VortexMeshGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
   const scale = (props.radius / 0.35) * 0.9;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
-  return <MeshBody meshUrl={meshProps.meshUrl} style={meshProps.style} scale={scale} userData={{ sceneVortexFullId: meshProps.fullId }} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
+  return <MeshBody meshUrl={meshProps.meshUrl} style={meshProps.style} scale={scale} userData={{ puzzle3dVortexFullId: meshProps.fullId }} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
 }
 
 function vortexHighlightMeshStyle(highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing"): MeshStyleKind {
@@ -3200,18 +4911,50 @@ function vortexHighlightMeshStyle(highlight: "none" | "compatible" | "ring" | "a
   }
 }
 
+function VortexDirectionArrow(props: {
+  directionCad: Vec3;
+  objectOrigin: Vec3;
+  objectOrientation?: Quat;
+  radius: number;
+  selected?: boolean;
+}) {
+  const dirThree = reactHostPort.useMemo(
+    () => cadObjectLocalDirectionToThreeGroupLocal(props.directionCad, props.objectOrigin, props.objectOrientation),
+    [props.directionCad, props.objectOrigin, props.objectOrientation],
+  );
+  const points = reactHostPort.useMemo(() => {
+    const len = Math.max(props.radius * 2, 0.5);
+    const tip: Vec3 = [dirThree[0] * len, dirThree[1] * len, dirThree[2] * len];
+    return [[0, 0, 0] as Vec3, tip];
+  }, [dirThree, props.radius]);
+  const color = reactHostPort.useMemo(
+    () => lineCssColor(props.selected ? CSS_HOVERED_LINE : CSS_ATTRACTION_ENDPOINT_LINE, props.selected ? "#38bdf8" : "#94a3b8"),
+    [props.selected],
+  );
+  return (
+    <group renderOrder={2}>
+      <Line points={points} color={color} lineWidth={props.selected ? 3 : 2} transparent opacity={props.selected ? 0.95 : 0.72} depthTest={false} />
+      <mesh position={points[1]}>
+        <sphereGeometry args={[props.radius * 0.18, 8, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={props.selected ? 0.95 : 0.72} depthTest={false} />
+      </mesh>
+    </group>
+  );
+}
+
 function VortexFallbackMesh(props: {
   fullId: string;
   radius: number;
   highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing";
+  hovered?: boolean;
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: (e: ThreeEvent<PointerEvent>) => void;
 }) {
-  const style = vortexHighlightMeshStyle(props.highlight);
+  const style = props.highlight === "none" && props.hovered ? "hovered" : vortexHighlightMeshStyle(props.highlight);
   const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
   return (
-    <mesh userData={{ sceneVortexFullId: meshProps.fullId }} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
+    <mesh userData={{ puzzle3dVortexFullId: meshProps.fullId }} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
       <sphereGeometry args={[meshProps.radius, 12, 12]} />
       <meshStandardMaterial color={colors.meshColor} emissive={colors.emissiveColor} emissiveIntensity={colors.emissiveIntensity} transparent={colors.opacity < 1} opacity={colors.opacity} {...vortexFallbackMatProps} />
     </mesh>
@@ -3229,8 +4972,11 @@ export const Vortex = reactHostPort.memo(function Vortex(
 ) {
   const root = reactHostPort.useRef<Group | null>(null);
   const reg = useRegistry();
+  const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
   const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
+  const vortexSelected = useVortexSelected(fullId);
   const r = props.radius ?? 0.35;
+  const vortexPointerGestureRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number; dragStarted: boolean } | null>(null);
 
   reactHostPort.useEffect(() => {
     const getter = () => {
@@ -3269,13 +5015,13 @@ export const Vortex = reactHostPort.memo(function Vortex(
 
   const lodCtx = useLod();
   const worldPosRef = reactHostPort.useRef(new Vector3());
-  const handleMeshByLodRef = reactHostPort.useRef(props.handleMeshByLod);
-  handleMeshByLodRef.current = props.handleMeshByLod;
-  const handleMeshUrlRef = reactHostPort.useRef(props.handleMeshUrl);
-  handleMeshUrlRef.current = props.handleMeshUrl;
-  const trackVortexLod = lodCtx.depthVariable || (props.handleMeshByLod?.length ?? 0) > 0;
-  const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl));
-  const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = props.selected
+  const vortexMeshByLodRef = reactHostPort.useRef(props.vortexMeshByLod);
+  vortexMeshByLodRef.current = props.vortexMeshByLod;
+  const vortexMeshUrlRef = reactHostPort.useRef(props.vortexMeshUrl);
+  vortexMeshUrlRef.current = props.vortexMeshUrl;
+  const trackVortexLod = lodCtx.depthVariable || (props.vortexMeshByLod?.length ?? 0) > 0;
+  const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.vortexMeshByLod, props.vortexMeshUrl));
+  const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = vortexSelected || props.selected === true
     ? "attracting"
     : reg.attractionDragAttractingFullId === fullId
       ? "attracting"
@@ -3287,26 +5033,26 @@ export const Vortex = reactHostPort.memo(function Vortex(
             ? "compatible"
             : "none";
 
+  const selectVortex = reactHostPort.useCallback(() => {
+    if (reg.attractionDragActive || reg.attractionIndirectPickAwait || reg.blockedVortexFullIds.has(fullId)) {
+      return;
+    }
+    commitSelection({ kind: "vortex", fullId });
+    setActiveRelocateObjectId(props.objectId);
+  }, [commitSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
+
   const onVortexClick = reactHostPort.useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      const pe = e.nativeEvent;
-      if (pe.button !== 0) {
+      if (e.nativeEvent.button !== 0) {
         return;
       }
       e.stopPropagation();
-      if (reg.blockedVortexFullIds.has(fullId)) {
-        return;
-      }
-      if (pe.altKey || pe.metaKey) {
-        reg.onSelect?.({ objectIds: [], vortexIds: [fullId] });
-        reg.setActiveRelocateObjectId(props.objectId);
-      }
     },
-    [fullId, props.objectId, reg],
+    [],
   );
 
   const onPointerDown = reactHostPort.useCallback(
-    (e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
+    (e: ThreeEvent<PointerEvent>) => {
       const pe = e.nativeEvent;
       if (pe.button !== 0) {
         return;
@@ -3316,9 +5062,10 @@ export const Vortex = reactHostPort.memo(function Vortex(
         return;
       }
       if (pe.altKey || pe.metaKey) {
+        selectVortex();
         return;
       }
-      reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
+      vortexPointerGestureRef.current = { pointerId: pe.pointerId, x: pe.clientX, y: pe.clientY, dragStarted: false };
       const el = pe.currentTarget instanceof Element ? pe.currentTarget : null;
       if (el && typeof (el as HTMLElement).setPointerCapture === "function") {
         try {
@@ -3328,7 +5075,40 @@ export const Vortex = reactHostPort.memo(function Vortex(
         }
       }
     },
+    [fullId, reg, selectVortex],
+  );
+
+  const onPointerMove = reactHostPort.useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      const gesture = vortexPointerGestureRef.current;
+      if (!gesture || gesture.dragStarted || e.nativeEvent.pointerId !== gesture.pointerId) {
+        return;
+      }
+      e.stopPropagation();
+      const dx = e.nativeEvent.clientX - gesture.x;
+      const dy = e.nativeEvent.clientY - gesture.y;
+      if (dx * dx + dy * dy < PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX * PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX) {
+        return;
+      }
+      vortexPointerGestureRef.current = { ...gesture, dragStarted: true };
+      reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
+    },
     [fullId, props.objectId, props.objectKind, props.vortexKind, reg],
+  );
+
+  const onPointerUp = reactHostPort.useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      const gesture = vortexPointerGestureRef.current;
+      if (!gesture || e.nativeEvent.pointerId !== gesture.pointerId) {
+        return;
+      }
+      e.stopPropagation();
+      vortexPointerGestureRef.current = null;
+      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current) {
+        selectVortex();
+      }
+    },
+    [selectVortex],
   );
 
   const inIndirectRing = reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
@@ -3345,71 +5125,60 @@ export const Vortex = reactHostPort.memo(function Vortex(
           return lodCtx.lodForWorldPosition(worldPosRef.current.toArray() as Vec3);
         })()
       : lodCtx.lod;
-    const next = vortexLodVisual(lod, lingerRef.current, handleMeshByLodRef.current, handleMeshUrlRef.current);
+    const next = vortexLodVisual(lod, lingerRef.current, vortexMeshByLodRef.current, vortexMeshUrlRef.current);
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
-  const drawHandleBody = trackVortexLod ? lodVisual.drawHandleBody || linger : lodHandlePrimaryVisible(lodCtx.lod) || linger;
-  const pickProxy = (drawHandleBody ? false : trackVortexLod ? lodVisual.pickProxy : lodHandlePickProxy(lodCtx.lod)) && !linger;
-  const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.handleMeshByLod, lodCtx.lod, props.handleMeshUrl);
+  const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
+  const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
 
-  const vortexPointerHovered = reg.isSceneHovered({ kind: "vortex", fullId });
-  const handleMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
+  const vortexPointerHovered = reg.isHovered({ kind: "vortex", fullId });
+  const vortexMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
 
   const vortexPointerHoverHandlers = reactHostPort.useMemo(
     () => ({
       onPointerOver: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         if (!reg.attractionDragActive && !reg.attractionIndirectPickAwait) {
-          reg.setSceneHover({ kind: "vortex", fullId });
+          reg.setHover({ kind: "vortex", fullId });
         }
       },
       onPointerOut: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        reg.clearSceneHover({ kind: "vortex", fullId });
+        reg.clearHover({ kind: "vortex", fullId });
       },
     }),
     [fullId, reg],
   );
 
   const vis = props.visible !== false;
+  const showDirection = vis && isVec3(props.direction);
   return (
-    <group ref={bindRoot} position={positionThree} userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }} data-scene-vortex={fullId} visible={vis} onClick={onVortexClick} onPointerDown={onPointerDown}>
-      {drawHandleBody && meshUrl ? (
-        <VortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} {...vortexPointerHoverHandlers} />
-      ) : drawHandleBody && props.children ? (
-        <group userData={{ sceneVortexFullId: fullId }} {...vortexPointerHoverHandlers}>
+    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onVortexClick}>
+      {showDirection ? (
+        <VortexDirectionArrow directionCad={props.direction!} objectOrigin={props.objectOrigin} objectOrientation={props.objectOrientation} radius={r} selected={vortexSelected || highlight !== "none"} />
+      ) : null}
+      {drawVortexBody && meshUrl ? (
+        <VortexMeshGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={vortexMeshStyle} {...vortexPointerHoverHandlers} />
+      ) : drawVortexBody && props.children ? (
+        <group userData={{ puzzle3dVortexFullId: fullId }} {...vortexPointerHoverHandlers}>
           {props.children}
         </group>
-      ) : drawHandleBody ? (
-        <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} {...vortexPointerHoverHandlers} />
+      ) : drawVortexBody ? (
+        <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} hovered={vortexPointerHovered} {...vortexPointerHoverHandlers} />
       ) : null}
-      {pickProxy ? (
-        <mesh userData={{ sceneVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>
-          <sphereGeometry args={[r, 12, 12]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-      ) : null}
+      <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
+        <sphereGeometry args={[r * 1.15, 12, 12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+      </mesh>
     </group>
   );
 });
 //#endregion ­ƒîÇVortex
 
-//#region ­ƒº▓Magnet
-export const Magnet = reactHostPort.memo(function Magnet(props: MagnetProps & { objectOrigin: Vec3; objectOrientation?: Quat }) {
-  const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
-  return (
-    <mesh position={positionThree} userData={{ sceneMagnetId: props.id }}>
-      <boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
-      <meshStandardMaterial color="#a78bfa" wireframe />
-    </mesh>
-  );
-});
-//#endregion ­ƒº▓Magnet
-
-//#region ­ƒº▓SceneAttraction
-function sceneAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): number {
+//#region ­ƒº▓Attraction
+function puzzle3dAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): number {
   if (e.index != null) {
     return Math.floor(e.index / 2);
   }
@@ -3419,8 +5188,10 @@ function sceneAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): numb
   return 0;
 }
 
-const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLineBatch(props: { readonly attractions: readonly AttractionProps[] }) {
+const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attractions: readonly AttractionProps[] }) {
   const reg = useRegistry();
+  const { commitSelection } = useRegistryInteraction();
+  const selectedAttractionIds = useSelectedAttractionIdSet();
   const mat = reactHostPort.useMemo(() => {
     const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
     return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, vertexColors: true });
@@ -3428,6 +5199,7 @@ const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLine
   const geo = reactHostPort.useMemo(() => new BufferGeometry(), []);
   const normalColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
   const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#7b827d")), []);
+  const selectedColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_SELECTED_LINE, "#38bdf8")), []);
   reactHostPort.useLayoutEffect(() => {
     const vertexCount = Math.max(props.attractions.length * 2, 2);
     geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
@@ -3441,7 +5213,7 @@ const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLine
     for (const attraction of props.attractions) {
       const a = reg.getVortexWorld(attraction.attracting);
       const b = reg.getVortexWorld(attraction.attracted);
-      const c = attraction.id === hoveredId ? hoveredColor : normalColor;
+      const c = selectedAttractionIds.has(attraction.id) ? selectedColor : attraction.id === hoveredId ? hoveredColor : normalColor;
       if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
         pos.setXYZ(write, a.x, a.y, a.z);
         pos.setXYZ(write + 1, b.x, b.y, b.z);
@@ -3462,10 +5234,10 @@ const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLine
       if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
         return;
       }
-      const idx = sceneAttractionIndexFromPointerEvent(e);
+      const idx = puzzle3dAttractionIndexFromPointerEvent(e);
       const attraction = props.attractions[idx];
       if (attraction) {
-        reg.setSceneHover({ kind: "attraction", id: attraction.id });
+        reg.setHover({ kind: "attraction", id: attraction.id });
       }
     },
     [props.attractions, reg],
@@ -3473,13 +5245,30 @@ const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLine
   const onPointerOut = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
-      const idx = sceneAttractionIndexFromPointerEvent(e);
+      const idx = puzzle3dAttractionIndexFromPointerEvent(e);
       const attraction = props.attractions[idx];
       if (attraction) {
-        reg.clearSceneHover({ kind: "attraction", id: attraction.id });
+        reg.clearHover({ kind: "attraction", id: attraction.id });
       }
     },
     [props.attractions, reg],
+  );
+  const onClick = reactHostPort.useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current || puzzle3dRelocateDragActiveRef.current) {
+        return;
+      }
+      e.stopPropagation();
+      if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
+        return;
+      }
+      const idx = puzzle3dAttractionIndexFromPointerEvent(e);
+      const attraction = props.attractions[idx];
+      if (attraction) {
+        commitSelection({ kind: "attraction", id: attraction.id });
+      }
+    },
+    [commitSelection, props.attractions, reg],
   );
   reactHostPort.useEffect(
     () => () => {
@@ -3491,24 +5280,16 @@ const SceneAttractionLineBatch = reactHostPort.memo(function SceneAttractionLine
   if (!props.attractions.length) {
     return null;
   }
-  return <lineSegments geometry={geo} material={mat} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
+  return <lineSegments geometry={geo} material={mat} userData={{ puzzle3dAttractionPick: true }} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onClick={onClick} />;
 });
 
-export const SceneAttraction = reactHostPort.memo(function SceneAttraction(props: AttractionProps) {
-  return <SceneAttractionLineBatch attractions={[props]} />;
-});
-//#endregion ­ƒº▓SceneAttraction
-
-//#region ­ƒº▓Attraction
-export const Attraction = reactHostPort.memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
-  const pts = reactHostPort.useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
-  const color = reactHostPort.useMemo(() => lineCssColor(CSS_ATTRACTION_LINE, "#f472b6"), []);
-  return <Line points={pts} color={color} lineWidth={2} />;
+export const Attraction = reactHostPort.memo(function Attraction(props: AttractionProps) {
+  return <CableBatch attractions={[props]} />;
 });
 //#endregion ­ƒº▓Attraction
 
 //#region Ô£ïRelocate
-export function useSceneRelocate(objectId: string) {
+export function useRelocate(objectId: string) {
   const reg = useRegistry();
   return {
     mode: reg.relocateMode,
@@ -3520,14 +5301,838 @@ export function useSceneRelocate(objectId: string) {
 
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
-//#region ­ƒÄ¼Scene
+export const PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX = 4;
+
+/** @emoji 🖱️ True while a right-button camera drag is active (suppress context menu on drag). */
+export const puzzle3dRightDragActiveRef = { current: false };
+
+/** @emoji 🖱️ True after a marquee gesture consumed the click (mesh picks skip onClick). */
+export const puzzle3dMarqueeSuppressClickRef = { current: false };
+
+/** @emoji ✋ True while transform controls (relocate tool) are dragging — blocks marquee and picks. */
+export const puzzle3dRelocateDragActiveRef = { current: false };
+
+let puzzle3dMarqueeGestureCancel: (() => void) | null = null;
+
+/** @emoji 🖱️ Aborts an in-progress marquee gesture (e.g. when relocate drag starts). */
+export function cancelPuzzle3dMarqueeGesture(): void {
+  puzzle3dMarqueeGestureCancel?.();
+}
+
+export interface ScreenRect {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
+export interface ScreenPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** @emoji 🖱️ Builds a normalized screen rect from two client-space points. */
+export function screenRectFromClientPoints(x0: number, y0: number, x1: number, y1: number): ScreenRect {
+  return {
+    left: Math.min(x0, x1),
+    right: Math.max(x0, x1),
+    top: Math.min(y0, y1),
+    bottom: Math.max(y0, y1),
+  };
+}
+
+/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+export function marqueeIsCrossing(startX: number, endX: number): boolean {
+  return endX < startX;
+}
+
+/** @emoji 🖱️ True when a client point lies inside a screen rect. */
+export function pointInScreenRect(point: ScreenPoint, rect: ScreenRect): boolean {
+  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+}
+
+/** @emoji 🖱️ True when every corner of `inner` lies inside `outer` (window selection). */
+export function screenRectContainsRect(outer: ScreenRect, inner: ScreenRect): boolean {
+  return inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom;
+}
+
+/** @emoji 🖱️ True when two screen rects overlap (crossing selection). */
+export function screenRectIntersectsRect(a: ScreenRect, b: ScreenRect): boolean {
+  return a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top;
+}
+
+/** @emoji 🖱️ Ray-cast point-in-polygon test for lasso paths. */
+export function pointInPolygon(point: ScreenPoint, polygon: readonly ScreenPoint[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[i]!;
+    const b = polygon[j]!;
+    const intersects = a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y || 1e-9) + a.x;
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function segmentIntersectsSegment(a0: ScreenPoint, a1: ScreenPoint, b0: ScreenPoint, b1: ScreenPoint): boolean {
+  const orient = (p: ScreenPoint, q: ScreenPoint, r: ScreenPoint) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const onSegment = (p: ScreenPoint, q: ScreenPoint, r: ScreenPoint) =>
+    Math.min(p.x, r.x) <= q.x && q.x <= Math.max(p.x, r.x) && Math.min(p.y, r.y) <= q.y && q.y <= Math.max(p.y, r.y);
+  const o1 = orient(a0, a1, b0);
+  const o2 = orient(a0, a1, b1);
+  const o3 = orient(b0, b1, a0);
+  const o4 = orient(b0, b1, a1);
+  if (o1 === 0 && onSegment(a0, b0, a1)) return true;
+  if (o2 === 0 && onSegment(a0, b1, a1)) return true;
+  if (o3 === 0 && onSegment(b0, a0, b1)) return true;
+  if (o4 === 0 && onSegment(b0, a1, b1)) return true;
+  return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0);
+}
+
+/** @emoji 🖱️ True when a segment intersects a screen-rect edge. */
+export function segmentIntersectsScreenRect(a: ScreenPoint, b: ScreenPoint, rect: ScreenRect): boolean {
+  const corners: ScreenPoint[] = [
+    { x: rect.left, y: rect.top },
+    { x: rect.right, y: rect.top },
+    { x: rect.right, y: rect.bottom },
+    { x: rect.left, y: rect.bottom },
+  ];
+  for (let i = 0; i < corners.length; i += 1) {
+    const c0 = corners[i]!;
+    const c1 = corners[(i + 1) % corners.length]!;
+    if (segmentIntersectsSegment(a, b, c0, c1)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function screenRectCorners(rect: ScreenRect): ScreenPoint[] {
+  return [
+    { x: rect.left, y: rect.top },
+    { x: rect.right, y: rect.top },
+    { x: rect.right, y: rect.bottom },
+    { x: rect.left, y: rect.bottom },
+  ];
+}
+
+/** @emoji 🖱️ True when a closed polygon fully contains a screen rect (window lasso). */
+export function polygonContainsScreenRect(polygon: readonly ScreenPoint[], rect: ScreenRect): boolean {
+  return screenRectCorners(rect).every((corner) => pointInPolygon(corner, polygon));
+}
+
+/** @emoji 🖱️ True when a segment intersects a polygon edge or lies inside it. */
+export function segmentIntersectsPolygon(a: ScreenPoint, b: ScreenPoint, polygon: readonly ScreenPoint[]): boolean {
+  if (pointInPolygon(a, polygon) || pointInPolygon(b, polygon)) {
+    return true;
+  }
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    if (segmentIntersectsSegment(a, b, polygon[i]!, polygon[j]!)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export interface MarqueeCandidate {
+  readonly kind: "object" | "vortex" | "attraction";
+  readonly id: string;
+  readonly hull: readonly ScreenPoint[];
+  readonly screenBounds: ScreenRect | null;
+}
+
+/** @emoji 🖱️ Projected marquee silhouette: convex hull plus axis-aligned reject bounds. */
+export interface ObjectMarqueeFootprint {
+  readonly hull: readonly ScreenPoint[];
+  readonly screenBounds: ScreenRect;
+}
+
+/** @emoji 🖱️ Per-mesh local AABB corners for fast marquee projection without geometry traversal. */
+export interface ObjectMarqueeMeshCache {
+  readonly mesh: Mesh;
+  readonly localCorners: readonly Vector3[];
+}
+
+/** @emoji 🖱️ Cached mesh footprints for one puzzle object group. */
+export interface ObjectMarqueeFootprintCacheEntry {
+  readonly meshes: readonly ObjectMarqueeMeshCache[];
+}
+
+const objectMarqueeFootprintCache = new Map<string, ObjectMarqueeFootprintCacheEntry>();
+
+const _marqueeProjectScratch = new Vector3();
+const _marqueeMeshBox = new Box3();
+const _marqueeBoxCorners: readonly Vector3[] = [
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+];
+
+function marqueeCross(o: ScreenPoint, a: ScreenPoint, b: ScreenPoint): number {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+/** @emoji 🖱️ Convex hull of screen points (monotone chain) for marquee silhouette edges. */
+export function convexHullScreenPoints(points: readonly ScreenPoint[]): ScreenPoint[] {
+  if (points.length <= 1) {
+    return [...points];
+  }
+  const sorted = [...points].sort((a, b) => (a.x === b.x ? a.y - b.y : a.x - b.x));
+  const lower: ScreenPoint[] = [];
+  for (const p of sorted) {
+    while (lower.length >= 2 && marqueeCross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0) {
+      lower.pop();
+    }
+    lower.push(p);
+  }
+  const upper: ScreenPoint[] = [];
+  for (let i = sorted.length - 1; i >= 0; i -= 1) {
+    const p = sorted[i]!;
+    while (upper.length >= 2 && marqueeCross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0) {
+      upper.pop();
+    }
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+export interface MarqueeSelectionInput {
+  readonly method: SelectionMethod;
+  readonly crossing: boolean;
+  readonly rect: ScreenRect | null;
+  readonly polygon: readonly ScreenPoint[];
+  readonly kinds: MarqueeSelectableKinds;
+  readonly candidates: readonly MarqueeCandidate[];
+}
+
+/** @emoji 🖱️ Axis-aligned client bounds from projected points (ignores behind-camera samples). */
+export function screenBoundsFromClientPoints(points: readonly ScreenPoint[]): ScreenRect | null {
+  if (points.length === 0) {
+    return null;
+  }
+  let left = Infinity;
+  let right = -Infinity;
+  let top = Infinity;
+  let bottom = -Infinity;
+  for (const point of points) {
+    left = Math.min(left, point.x);
+    right = Math.max(right, point.x);
+    top = Math.min(top, point.y);
+    bottom = Math.max(bottom, point.y);
+  }
+  return { left, right, top, bottom };
+}
+
+/** @emoji 🖱️ True when two closed screen polygons overlap (lasso crossing vs object hull). */
+export function screenPolygonsIntersect(a: readonly ScreenPoint[], b: readonly ScreenPoint[]): boolean {
+  if (a.length === 0 || b.length === 0) {
+    return false;
+  }
+  for (const point of a) {
+    if (pointInPolygon(point, b)) {
+      return true;
+    }
+  }
+  for (const point of b) {
+    if (pointInPolygon(point, a)) {
+      return true;
+    }
+  }
+  for (let i = 0; i < a.length; i += 1) {
+    const a0 = a[i]!;
+    const a1 = a[(i + 1) % a.length]!;
+    for (let j = 0; j < b.length; j += 1) {
+      const b0 = b[j]!;
+      const b1 = b[(j + 1) % b.length]!;
+      if (segmentIntersectsSegment(a0, a1, b0, b1)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** @emoji 🖱️ True when a screen rect overlaps a lasso polygon (crossing selection). */
+export function screenRectIntersectsPolygon(bounds: ScreenRect, polygon: readonly ScreenPoint[]): boolean {
+  for (const point of polygon) {
+    if (pointInScreenRect(point, bounds)) {
+      return true;
+    }
+  }
+  const corners = screenRectCorners(bounds);
+  if (corners.some((corner) => pointInPolygon(corner, polygon))) {
+    return true;
+  }
+  for (let i = 0; i < corners.length; i += 1) {
+    const a = corners[i]!;
+    const b = corners[(i + 1) % corners.length]!;
+    if (segmentIntersectsPolygon(a, b, polygon)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function marqueeCandidateSelected(input: MarqueeSelectionInput, candidate: MarqueeCandidate): boolean {
+  const hull = candidate.hull;
+  const bounds = candidate.screenBounds;
+  if (hull.length === 0 || !bounds) {
+    return false;
+  }
+  if (input.crossing) {
+    if (input.method === "rectangle" && input.rect) {
+      if (!screenRectIntersectsRect(input.rect, bounds)) {
+        return false;
+      }
+      return screenRectIntersectsPolygon(input.rect, hull);
+    }
+    if (input.polygon.length < 3) {
+      return false;
+    }
+    return screenPolygonsIntersect(hull, input.polygon);
+  }
+  if (input.method === "rectangle" && input.rect) {
+    return hull.every((point) => pointInScreenRect(point, input.rect!));
+  }
+  if (input.polygon.length < 3) {
+    return false;
+  }
+  return hull.every((point) => pointInPolygon(point, input.polygon));
+}
+
+/** @emoji 🖱️ Resolves marquee hits into a {@link SelectionSnapshot} from projected screen candidates. */
+export function marqueeSelectionFromCandidates(input: MarqueeSelectionInput): SelectionSnapshot {
+  const objectIds: string[] = [];
+  const vortexIds: string[] = [];
+  const attractionIds: string[] = [];
+  for (const candidate of input.candidates) {
+    if (!marqueeCandidateSelected(input, candidate)) {
+      continue;
+    }
+    if (candidate.kind === "object" && input.kinds.object) {
+      objectIds.push(candidate.id);
+    } else if (candidate.kind === "vortex" && input.kinds.vortex) {
+      vortexIds.push(candidate.id);
+    } else if (candidate.kind === "attraction" && input.kinds.attraction) {
+      attractionIds.push(candidate.id);
+    }
+  }
+  return { objectIds, vortexIds, attractionIds };
+}
+
+/** @emoji 🖱️ Pointer gesture args shared by marquee preview and commit. */
+export interface MarqueeGestureArgs {
+  readonly startX: number;
+  readonly startY: number;
+  readonly endX: number;
+  readonly endY: number;
+  readonly path: readonly ScreenPoint[];
+  readonly modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean };
+}
+
+/** @emoji 🖱️ Merges cached marquee candidates with a base selection using modifier-driven mode. */
+export function resolveMarqueeSelectionGesture(
+  args: MarqueeGestureArgs,
+  options: {
+    readonly method: SelectionMethod;
+    readonly kinds: MarqueeSelectableKinds;
+    readonly candidates: readonly MarqueeCandidate[];
+    readonly base: SelectionSnapshot;
+  },
+): SelectionSnapshot {
+  const crossing = marqueeIsCrossing(args.startX, args.endX);
+  const screenRect = screenRectFromClientPoints(args.startX, args.startY, args.endX, args.endY);
+  const polygon =
+    options.method === "lasso" && args.path.length >= 3
+      ? args.path
+      : [
+          { x: screenRect.left, y: screenRect.top },
+          { x: screenRect.right, y: screenRect.top },
+          { x: screenRect.right, y: screenRect.bottom },
+          { x: screenRect.left, y: screenRect.bottom },
+        ];
+  const incoming = marqueeSelectionFromCandidates({
+    method: options.method,
+    crossing,
+    rect: options.method === "rectangle" ? screenRect : null,
+    polygon,
+    kinds: options.kinds,
+    candidates: options.candidates,
+  });
+  return mergeSelectionSnapshot(marqueeModeFromModifiers(args.modifiers), options.base, incoming);
+}
+
+/** @emoji 🖱️ Client-space rect for marquee projection ({@link HTMLCanvasElement.getBoundingClientRect}). */
+export function puzzle3dMarqueeClientRect(gl: WebGLRenderer): DOMRect {
+  return gl.domElement.getBoundingClientRect();
+}
+
+/** @emoji 🖱️ Projects a world point to client space; reports when the point is outside the view volume. */
+export function projectWorldToClientMarquee(point: Vector3, camera: Camera, rect: DOMRect): { readonly point: ScreenPoint | null; readonly behindCamera: boolean } {
+  const projected = _marqueeProjectScratch.copy(point).project(camera);
+  if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || !Number.isFinite(projected.z)) {
+    return { point: null, behindCamera: true };
+  }
+  if (projected.z < -1 || projected.z > 1) {
+    return { point: null, behindCamera: true };
+  }
+  return {
+    point: {
+      x: rect.left + ((projected.x + 1) / 2) * rect.width,
+      y: rect.top + ((1 - projected.y) / 2) * rect.height,
+    },
+    behindCamera: false,
+  };
+}
+
+/** @emoji 🖱️ Projects a world point to client coordinates for marquee tests. */
+export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRect): ScreenPoint | null {
+  return projectWorldToClientMarquee(point, camera, rect).point;
+}
+
+function writeMarqueeBoxCorners(box: Box3): readonly Vector3[] {
+  const { min, max } = box;
+  _marqueeBoxCorners[0]!.set(min.x, min.y, min.z);
+  _marqueeBoxCorners[1]!.set(max.x, min.y, min.z);
+  _marqueeBoxCorners[2]!.set(min.x, max.y, min.z);
+  _marqueeBoxCorners[3]!.set(max.x, max.y, min.z);
+  _marqueeBoxCorners[4]!.set(min.x, min.y, max.z);
+  _marqueeBoxCorners[5]!.set(max.x, min.y, max.z);
+  _marqueeBoxCorners[6]!.set(min.x, max.y, max.z);
+  _marqueeBoxCorners[7]!.set(max.x, max.y, max.z);
+  return _marqueeBoxCorners;
+}
+
+function cloneMarqueeBoxCorners(box: Box3): Vector3[] {
+  return writeMarqueeBoxCorners(box).map((corner) => corner.clone());
+}
+
+function objectMarqueeMeshCount(group: Group): number {
+  let count = 0;
+  group.traverse((node) => {
+    if (node instanceof Mesh) {
+      count += 1;
+    }
+  });
+  return count;
+}
+
+function footprintFromProjectedPoints(projected: readonly ScreenPoint[]): ObjectMarqueeFootprint | null {
+  if (projected.length === 0) {
+    return null;
+  }
+  const screenBounds = screenBoundsFromClientPoints(projected);
+  if (!screenBounds) {
+    return null;
+  }
+  return { hull: convexHullScreenPoints(projected), screenBounds };
+}
+
+/** @emoji 🖱️ Drops cached mesh corners for one object or the whole scene. */
+export function invalidateObjectMarqueeFootprintCache(objectId?: string): void {
+  if (objectId === undefined) {
+    objectMarqueeFootprintCache.clear();
+    return;
+  }
+  objectMarqueeFootprintCache.delete(objectId);
+}
+
+/** @emoji 🖱️ Reads cached mesh corners for marquee projection tests. */
+export function getObjectMarqueeFootprintCache(objectId: string): ObjectMarqueeFootprintCacheEntry | undefined {
+  return objectMarqueeFootprintCache.get(objectId);
+}
+
+/** @emoji 🖱️ Traverses a group once and stores per-mesh local AABB corners for marquee projection. */
+export function buildObjectMarqueeFootprintCache(group: Group, objectId: string): ObjectMarqueeFootprintCacheEntry {
+  const meshes: ObjectMarqueeMeshCache[] = [];
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry) {
+      return;
+    }
+    if (!geometry.boundingBox) {
+      geometry.computeBoundingBox();
+    }
+    meshes.push({ mesh: node, localCorners: cloneMarqueeBoxCorners(geometry.boundingBox!) });
+  });
+  const entry: ObjectMarqueeFootprintCacheEntry = { meshes };
+  objectMarqueeFootprintCache.set(objectId, entry);
+  return entry;
+}
+
+/** @emoji 🖱️ Precomputes mesh geometry bounding boxes and optional footprint cache for marquee. */
+export function warmObjectGroupMarqueeBounds(group: Group, objectId?: string): void {
+  if (objectId) {
+    buildObjectMarqueeFootprintCache(group, objectId);
+    return;
+  }
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry || geometry.boundingBox !== null) {
+      return;
+    }
+    geometry.computeBoundingBox();
+  });
+}
+
+function projectMarqueePointsFromMeshes(
+  meshes: readonly ObjectMarqueeMeshCache[],
+  camera: Camera,
+  rect: DOMRect,
+): ScreenPoint[] {
+  const projected: ScreenPoint[] = [];
+  for (const entry of meshes) {
+    entry.mesh.updateWorldMatrix(true, false);
+    for (const local of entry.localCorners) {
+      _marqueeProjectScratch.copy(local).applyMatrix4(entry.mesh.matrixWorld);
+      const sample = projectWorldToClientMarquee(_marqueeProjectScratch, camera, rect);
+      if (sample.point) {
+        projected.push(sample.point);
+      }
+    }
+  }
+  return projected;
+}
+
+/** @emoji 🖱️ Projects cached mesh corners to a client-space marquee footprint. */
+export function projectObjectMarqueeFootprintFromCache(
+  cache: ObjectMarqueeFootprintCacheEntry,
+  camera: Camera,
+  rect: DOMRect,
+): ObjectMarqueeFootprint | null {
+  return footprintFromProjectedPoints(projectMarqueePointsFromMeshes(cache.meshes, camera, rect));
+}
+
+/** @emoji 🖱️ Projects an object group's visible mesh bounds to a client-space marquee footprint. */
+export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ObjectMarqueeFootprint | null {
+  const projected: ScreenPoint[] = [];
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry) {
+      return;
+    }
+    if (!geometry.boundingBox) {
+      geometry.computeBoundingBox();
+    }
+    _marqueeMeshBox.copy(geometry.boundingBox!).applyMatrix4(node.matrixWorld);
+    for (const corner of writeMarqueeBoxCorners(_marqueeMeshBox)) {
+      const sample = projectWorldToClientMarquee(corner, camera, rect);
+      if (sample.point) {
+        projected.push(sample.point);
+      }
+    }
+  });
+  return footprintFromProjectedPoints(projected);
+}
+
+function resolveObjectMarqueeFootprintCache(group: Group, objectId: string): ObjectMarqueeFootprintCacheEntry {
+  let cache = objectMarqueeFootprintCache.get(objectId);
+  const meshCount = objectMarqueeMeshCount(group);
+  if (!cache || cache.meshes.length !== meshCount) {
+    cache = buildObjectMarqueeFootprintCache(group, objectId);
+  }
+  return cache;
+}
+
+function marqueeFootprintToCandidate(
+  kind: MarqueeCandidate["kind"],
+  id: string,
+  footprint: ObjectMarqueeFootprint | null,
+): MarqueeCandidate | null {
+  if (!footprint) {
+    return null;
+  }
+  return { kind, id, hull: footprint.hull, screenBounds: footprint.screenBounds };
+}
+
+function marqueeFootprintFromClientPoints(points: readonly ScreenPoint[]): ObjectMarqueeFootprint | null {
+  return footprintFromProjectedPoints(points);
+}
+
+export interface MarqueeOverlaySnapshot {
+  readonly active: boolean;
+  readonly method: SelectionMethod;
+  readonly start: ScreenPoint | null;
+  readonly current: ScreenPoint | null;
+  readonly path: readonly ScreenPoint[];
+  readonly clientOrigin: ScreenPoint;
+}
+
+const MARQUEE_OVERLAY_IDLE: MarqueeOverlaySnapshot = { active: false, method: "rectangle", start: null, current: null, path: [], clientOrigin: { x: 0, y: 0 } };
+
+/** @emoji 🖱️ External store for marquee overlay geometry (DOM subscribes without scene re-renders). */
+export function createMarqueeOverlayStore(initial: MarqueeOverlaySnapshot = MARQUEE_OVERLAY_IDLE) {
+  let snapshot = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot(): MarqueeOverlaySnapshot {
+      return snapshot;
+    },
+    setSnapshot(next: MarqueeOverlaySnapshot): void {
+      snapshot = next;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
+export type MarqueeOverlayStore = ReturnType<typeof createMarqueeOverlayStore>;
+
+export const puzzle3dMarqueeOverlayStore = createMarqueeOverlayStore();
+
+/** @emoji 🖌️ Brush preview + engagement-source snapshot for window engagement. */
+export interface BrushUiSnapshot {
+  readonly preview: BrushPreviewState | null;
+  readonly candidates: readonly BrushCompatibleCandidate[];
+  readonly targetActive: boolean;
+}
+
+const BRUSH_UI_IDLE: BrushUiSnapshot = { preview: null, candidates: [], targetActive: false };
+
+/** @emoji 🖌️ Live brush gestures exposed to {@link buildPuzzle3dPlayEngagement}. */
+export interface Puzzle3dBrushEngagementSource {
+  readonly candidates: readonly BrushCompatibleCandidate[];
+  readonly targetActive: boolean;
+  readonly placementProbePending: boolean;
+  readonly cycleCandidate: () => void;
+  readonly pickCandidate: (index: number) => void;
+}
+
+export const puzzle3dBrushEngagementSourceRef: { current: Puzzle3dBrushEngagementSource } = {
+  current: { candidates: [], targetActive: false, placementProbePending: false, cycleCandidate: () => {}, pickCandidate: () => {} },
+};
+
+let puzzle3dBrushEngagementEpoch = 0;
+const puzzle3dBrushEngagementListeners = new Set<() => void>();
+
+/** @emoji 🔔 Subscribes to brush engagement source changes (candidates, target hover). */
+export function subscribePuzzle3dBrushEngagementSource(listener: () => void): () => void {
+  puzzle3dBrushEngagementListeners.add(listener);
+  return () => puzzle3dBrushEngagementListeners.delete(listener);
+}
+
+/** @emoji 🔔 Notifies engagement publisher after brush source fields change. */
+export function notifyPuzzle3dBrushEngagementSource(): void {
+  puzzle3dBrushEngagementEpoch += 1;
+  for (const listener of puzzle3dBrushEngagementListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🔑 Epoch for {@link subscribePuzzle3dBrushEngagementSource}. */
+export function getPuzzle3dBrushEngagementEpoch(): number {
+  return puzzle3dBrushEngagementEpoch;
+}
+
+/** @emoji 🖌️ Engagement option id for cycling the active brush placement candidate. */
+export const PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID = "puzzle3d.brush.next";
+
+/** @emoji 🔍 Engagement option id for framing the orbit camera on the current selection. */
+export const PUZZLE_3D_ENGAGEMENT_ZOOM_ID = "puzzle3d.zoom";
+
+let puzzle3dZoomToSelectionEpoch = 0;
+let puzzle3dZoomToSelectionTarget: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT;
+const puzzle3dZoomToSelectionListeners = new Set<() => void>();
+
+/** @emoji 🔔 Subscribes to zoom-to-selection requests from engagement UI. */
+export function subscribePuzzle3dZoomToSelection(listener: () => void): () => void {
+  puzzle3dZoomToSelectionListeners.add(listener);
+  return () => puzzle3dZoomToSelectionListeners.delete(listener);
+}
+
+/** @emoji 🔍 Queues a one-shot camera frame on the current selection (no-op when empty). */
+export function requestPuzzle3dZoomToSelection(selection: SelectionSnapshot): void {
+  if (selection.objectIds.length === 0 && selection.vortexIds.length === 0 && selection.attractionIds.length === 0) {
+    return;
+  }
+  puzzle3dZoomToSelectionTarget = {
+    objectIds: [...selection.objectIds],
+    vortexIds: [...selection.vortexIds],
+    attractionIds: [...selection.attractionIds],
+  };
+  puzzle3dZoomToSelectionEpoch += 1;
+  for (const listener of puzzle3dZoomToSelectionListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🔑 Epoch for {@link subscribePuzzle3dZoomToSelection}. */
+export function getPuzzle3dZoomToSelectionEpoch(): number {
+  return puzzle3dZoomToSelectionEpoch;
+}
+
+/** @emoji 🎯 Selection snapshot for the latest {@link requestPuzzle3dZoomToSelection}. */
+export function getPuzzle3dZoomToSelectionTarget(): SelectionSnapshot {
+  return puzzle3dZoomToSelectionTarget;
+}
+
+/** @emoji ⌨️ True when Tab should cycle brush candidates instead of moving browser focus. */
+export function routePuzzle3dBrushTabKeydown(
+  brushActive: boolean,
+  targetActive: boolean,
+  candidateCount: number,
+  event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "ctrlKey" | "metaKey" | "altKey">,
+): boolean {
+  if (!brushActive || !targetActive || candidateCount <= 1) {
+    return false;
+  }
+  if (event.key !== "Tab" || event.defaultPrevented) {
+    return false;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return false;
+  }
+  return true;
+}
+
+/** @emoji 💬 Inputs for {@link buildPuzzle3dPlayEngagement} (CAD play interaction panel shape). */
+export interface Puzzle3dPlayEngagementInputs {
+  readonly activeTool: "select" | "brush";
+  readonly cmdLine: string;
+  readonly selectionCount: number;
+  readonly onCmdLineChange: (value: string) => void;
+  readonly onCmdLineSubmit: (value: string) => void;
+  readonly onRepeatLast?: () => void;
+  readonly onAbort?: () => void;
+  readonly onSelectTool: () => void;
+  readonly onBrushTool: () => void;
+  readonly onCycleBrushCandidate: () => void;
+  readonly onPickBrushCandidate: (index: number) => void;
+  readonly onZoomToSelection: () => void;
+  readonly brushCandidates: readonly BrushCompatibleCandidate[];
+  readonly brushTargetActive: boolean;
+  readonly brushPlacementProbePending?: boolean;
+}
+
+/** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
+export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
+  const status: { id: string; content: string }[] = [];
+  if (inputs.activeTool === "brush") {
+    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; Tab cycles collision-free placements" });
+    if (inputs.brushTargetActive && inputs.brushCandidates.length === 0) {
+      if (inputs.brushPlacementProbePending) {
+        status.push({ id: "puzzle3d.brush.probe", content: "Checking collision-free placements…" });
+      } else {
+        status.push({ id: "puzzle3d.brush.none", content: "No collision-free placement at this connector" });
+      }
+    }
+  }
+  if (inputs.selectionCount > 0) {
+    status.push({
+      id: "puzzle3d.selection",
+      content: inputs.selectionCount === 1 ? "1 selected" : `${inputs.selectionCount} selected`,
+    });
+  }
+
+  const toolPossibles = [
+    { id: "puzzle3d.tool.brush", label: "Brush", onSelect: inputs.onBrushTool },
+    { id: "puzzle3d.tool.select", label: "Select", onSelect: inputs.onSelectTool },
+  ];
+
+  const brushPossibles = inputs.brushCandidates.map((candidate, index) => ({
+    id: `puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`,
+    label: normalizeEngagementCommandText(candidate.objectKindId),
+    detail: `v${candidate.sourceVortexIndex}`,
+    onSelect: () => inputs.onPickBrushCandidate(index),
+  }));
+
+  const zoomOptions =
+    inputs.selectionCount > 0 ? [{ id: PUZZLE_3D_ENGAGEMENT_ZOOM_ID, label: "Zoom", onPress: inputs.onZoomToSelection }] : [];
+  const brushOptions =
+    inputs.activeTool === "brush" && inputs.brushTargetActive
+      ? [
+          { id: "puzzle3d.tool.select", label: "Select", onPress: inputs.onSelectTool },
+          { id: PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID, label: "Next", onPress: inputs.onCycleBrushCandidate },
+        ]
+      : [];
+  const options = zoomOptions.length || brushOptions.length ? [...zoomOptions, ...brushOptions] : undefined;
+
+  const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
+
+  return {
+    input: {
+      id: "engagement-input",
+      value: inputs.cmdLine,
+      placeholder: inputs.activeTool === "brush" ? "Kind name or list" : "Brush",
+      onChange: inputs.onCmdLineChange,
+      onSubmit: inputs.onCmdLineSubmit,
+      onRepeatLast: inputs.onRepeatLast,
+      onAbort: inputs.onAbort,
+    },
+    ...(options?.length ? { options } : {}),
+    ...(status.length ? { status } : {}),
+    possibleEngagements,
+  };
+}
+
+/** @emoji 🖌️ External store for brush UI (menu overlay + preview pose). */
+export function createBrushUiStore(initial: BrushUiSnapshot = BRUSH_UI_IDLE) {
+  let snapshot = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot(): BrushUiSnapshot {
+      return snapshot;
+    },
+    setSnapshot(next: BrushUiSnapshot): void {
+      snapshot = next;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
+export type BrushUiStore = ReturnType<typeof createBrushUiStore>;
+
+export const puzzle3dBrushUiStore = createBrushUiStore();
+
+/** @emoji 🖌️ True while the brush tool is the active play tool. */
+export const puzzle3dBrushToolActiveRef = { current: false };
+
+/** @emoji 🖌️ True while the cursor is over a free vortex in brush mode (suppresses orbit right-drag). */
+export const puzzle3dBrushVortexHoverRef = { current: false };
+
+//#region 🎬Viewport
+type OrbitControlsBinding = {
+  readonly mouseButtons: { LEFT: number | null; MIDDLE: number; RIGHT: number };
+  readonly enabled: boolean;
+  readonly update?: () => void;
+};
+
 function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; readonly zoom: number; readonly onCamera?: (state: CameraState) => void }) {
   const reg = useRegistry();
-  const { camera } = useThree();
-  const controls = useThree((s) => s.controls as { target: Vector3 } | null);
+  const { camera, gl } = useThree();
+  const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
-  const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
+  const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current);
   const invalidate = useThree((s) => s.invalidate);
+  const rightPointerRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number } | null>(null);
   const reportCamera = reactHostPort.useCallback(() => {
     if (!props.onCamera) {
       return;
@@ -3542,6 +6147,70 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
+  reactHostPort.useLayoutEffect(() => {
+    if (!controls) {
+      return;
+    }
+    controls.mouseButtons.LEFT = null;
+    controls.mouseButtons.MIDDLE = MOUSE.DOLLY;
+    controls.mouseButtons.RIGHT = MOUSE.ROTATE;
+    controls.update?.();
+  }, [controls]);
+  reactHostPort.useEffect(() => {
+    const dom = gl.domElement;
+    const assignRightMouse = (event: PointerEvent) => {
+      if (!controls || event.button !== 2) {
+        return;
+      }
+      if (event.shiftKey) {
+        controls.mouseButtons.RIGHT = MOUSE.PAN;
+      } else if (event.altKey) {
+        controls.mouseButtons.RIGHT = MOUSE.DOLLY;
+      } else {
+        controls.mouseButtons.RIGHT = MOUSE.ROTATE;
+      }
+      controls.update?.();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 2) {
+        return;
+      }
+      if (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current) {
+        return;
+      }
+      puzzle3dRightDragActiveRef.current = false;
+      rightPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      assignRightMouse(event);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      const start = rightPointerRef.current;
+      if (!start || start.pointerId !== event.pointerId) {
+        return;
+      }
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) >= PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX) {
+        puzzle3dRightDragActiveRef.current = true;
+      }
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      const start = rightPointerRef.current;
+      if (!start || start.pointerId !== event.pointerId) {
+        return;
+      }
+      rightPointerRef.current = null;
+      if (controls) {
+        controls.mouseButtons.RIGHT = MOUSE.ROTATE;
+        controls.update?.();
+      }
+      window.setTimeout(() => {
+        puzzle3dRightDragActiveRef.current = false;
+      }, 0);
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(dom, "pointerdown", onPointerDown as EventListener, true);
+    bindings.listen(window, "pointermove", onPointerMove as EventListener);
+    bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+    return () => bindings.dispose();
+  }, [controls, gl]);
   if (!props.camera) {
     return null;
   }
@@ -3559,13 +6228,113 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
         invalidate();
         reportCamera();
       }}
-      mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }}
+      mouseButtons={{ LEFT: null as unknown as number, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE }}
     />
   );
 }
 
+type SelectionZoomAnim = {
+  readonly epoch: number;
+  readonly fromPos: Vector3;
+  readonly fromTgt: Vector3;
+  readonly toPos: Vector3;
+  readonly toTgt: Vector3;
+  readonly startMs: number;
+};
+
+/** @emoji 🔍 Smoothly eases orbit camera when engagement Zoom frames the selection. */
+function SelectionZoom(props: {
+  readonly attractions: readonly Pick<AttractionProps, "id" | "attracting" | "attracted">[];
+  readonly zoom: number;
+  readonly onCamera?: (state: CameraState) => void;
+}): null {
+  const reg = useRegistry();
+  const { camera, controls, invalidate } = useThree();
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const posScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const zoomEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dZoomToSelection, getPuzzle3dZoomToSelectionEpoch, getPuzzle3dZoomToSelectionEpoch);
+  const fulfilledEpochRef = reactHostPort.useRef(0);
+  const boundsRetryRef = reactHostPort.useRef(0);
+  const animRef = reactHostPort.useRef<SelectionZoomAnim | null>(null);
+  useFrame(() => {
+    if (!(camera instanceof ThreePerspectiveCamera)) {
+      return;
+    }
+    const orbit = controls as { readonly target: Vector3; readonly update?: () => void; enabled?: boolean } | null;
+    const anim = animRef.current;
+    if (anim) {
+      if (anim.epoch !== zoomEpoch) {
+        animRef.current = null;
+        puzzle3dSelectionZoomAnimatingRef.current = false;
+        if (orbit) {
+          orbit.enabled = true;
+        }
+      } else {
+        const linear = Math.min(1, (performance.now() - anim.startMs) / PUZZLE_3D_SELECTION_ZOOM_DURATION_MS);
+        const w = puzzle3dEaseInOutCubic01(linear);
+        posScratch.copy(anim.fromPos).lerp(anim.toPos, w);
+        targetScratch.copy(anim.fromTgt).lerp(anim.toTgt, w);
+        camera.position.copy(posScratch);
+        if (orbit?.target) {
+          orbit.target.copy(targetScratch);
+          orbit.update?.();
+        } else {
+          camera.lookAt(targetScratch);
+        }
+        camera.updateProjectionMatrix();
+        invalidate();
+        if (linear < 1) {
+          return;
+        }
+        animRef.current = null;
+        puzzle3dSelectionZoomAnimatingRef.current = false;
+        if (orbit) {
+          orbit.enabled = true;
+        }
+        props.onCamera?.({
+          position: threeVec3ToCad(camera.position),
+          target: threeVec3ToCad(targetScratch),
+          zoom: props.zoom,
+        });
+        return;
+      }
+    }
+    if (zoomEpoch <= fulfilledEpochRef.current) {
+      return;
+    }
+    const selection = getPuzzle3dZoomToSelectionTarget();
+    const bounds = boundsFromPuzzle3dSelection(selection, reg, props.attractions);
+    if (!bounds) {
+      boundsRetryRef.current += 1;
+      if (boundsRetryRef.current > 90) {
+        fulfilledEpochRef.current = zoomEpoch;
+        boundsRetryRef.current = 0;
+      }
+      return;
+    }
+    boundsRetryRef.current = 0;
+    fulfilledEpochRef.current = zoomEpoch;
+    const rig = puzzle3dFitCameraRigFromBounds(bounds, 1.35);
+    const fromTgt = orbit?.target ? orbit.target.clone() : targetScratch.set(...cadVec3ToThree(bounds.center));
+    animRef.current = {
+      epoch: zoomEpoch,
+      fromPos: camera.position.clone(),
+      fromTgt,
+      toPos: rig.position,
+      toTgt: rig.target,
+      startMs: performance.now(),
+    };
+    puzzle3dSelectionZoomAnimatingRef.current = true;
+    if (orbit) {
+      orbit.enabled = false;
+    }
+    invalidate();
+  });
+  return null;
+}
+
 /** @emoji 🛰️ Frames orbit camera to loaded object bounds once meshes are measurable (initial load fit). */
-function SceneAutoFit(props: { readonly behavior?: SceneAutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
+function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
   const reg = useRegistry();
   const { camera, controls, invalidate } = useThree();
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -3584,14 +6353,14 @@ function SceneAutoFit(props: { readonly behavior?: SceneAutoFitBehavior; readonl
       .map((group) => group.uuid)
       .sort()
       .join("|");
-    if (!sceneAutoFitShouldRun(behavior, key, lastKey.current, hasApplied.current)) return;
+    if (!puzzle3dAutoFitShouldRun(behavior, key, lastKey.current, hasApplied.current)) return;
     const bounds = boundsFromObjectGroups(groups);
     if (!bounds) return;
     lastKey.current = key;
     hasApplied.current = true;
     if (!(camera instanceof ThreePerspectiveCamera)) return;
     const orbit = controls as { target: Vector3; update?: () => void } | null;
-    applySceneAutoFitCamera(camera, bounds, padding, orbit);
+    applyAutoFitCamera(camera, bounds, padding, orbit);
     invalidate();
     const tgt = orbit?.target ?? targetScratch.set(...cadVec3ToThree(bounds.center));
     props.onCamera?.({
@@ -3604,7 +6373,7 @@ function SceneAutoFit(props: { readonly behavior?: SceneAutoFitBehavior; readonl
 }
 
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
-function SceneCameraSeed(props: { readonly camera: ThreePerspectiveCamera | null; readonly position: Vec3; readonly target: Vec3 }) {
+function CameraSeed(props: { readonly camera: ThreePerspectiveCamera | null; readonly position: Vec3; readonly target: Vec3 }) {
   const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
   const seededPositionFor = reactHostPort.useRef("");
   const seededTargetFor = reactHostPort.useRef("");
@@ -3628,6 +6397,560 @@ function SceneCameraSeed(props: { readonly camera: ThreePerspectiveCamera | null
       controls.update();
     }
   }, [controls, positionKey, props.camera, props.position, props.target, targetKey]);
+  return null;
+}
+
+function findVortexIndexOnRecord(record: ObjectRecord, fullId: string): number {
+  const { vortexId } = parseVortexFullId(fullId);
+  for (let i = 0; i < record.vortices.length; i += 1) {
+    const v = record.vortices[i]!;
+    if (v.id === vortexId || puzzle3dVortexFullId(record.id, v.id) === fullId) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function brushMeshRootFromPool(meshUrl: string): Object3D | null {
+  return styledMeshTemplates.get(styledPoolKey(meshUrl, "highlighted", false)) ?? null;
+}
+
+function brushPlacePayloadFromPreview(preview: BrushPreviewState): BrushPlacePayload {
+  return {
+    targetVortexFullId: preview.targetVortexFullId,
+    objectKindId: preview.objectKindId,
+    sourceVortexIndex: preview.sourceVortexIndex,
+    origin: preview.origin,
+    orientation: preview.orientation,
+    ...(preview.scale !== undefined ? { scale: preview.scale } : {}),
+  };
+}
+
+function BrushCatalogMeshPreloadEntry(props: { readonly url: string; readonly onReady: () => void }) {
+  const gltf = usePooledGltf(props.url);
+  reactHostPort.useLayoutEffect(() => {
+    if (!gltf.scene) {
+      return undefined;
+    }
+    styledMeshPoolAcquire(props.url, "highlighted", false);
+    styledMeshTemplate(props.url, "highlighted", gltf.scene, false);
+    props.onReady();
+    return () => {
+      styledMeshPoolRelease(props.url, "highlighted", false);
+    };
+  }, [gltf.scene, props.onReady, props.url]);
+  return null;
+}
+
+function BrushCatalogMeshPreload(props: { readonly urls: readonly string[]; readonly onReady: () => void }) {
+  if (!props.urls.length) {
+    return null;
+  }
+  return (
+    <>
+      {props.urls.map((url) => (
+        <BrushCatalogMeshPreloadEntry key={url} url={url} onReady={props.onReady} />
+      ))}
+    </>
+  );
+}
+
+const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
+  readonly preview: BrushPreviewState;
+  readonly excludeObjectId?: string;
+  readonly collisionTolerance: number;
+  readonly onCollisionChange: (collides: boolean) => void;
+}) {
+  const reg = useRegistryCore();
+  const groupRef = reactHostPort.useRef<Group>(null);
+  const invalidate = useThree((state) => state.invalidate);
+  const lastCollidesRef = reactHostPort.useRef<boolean | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    const group = groupRef.current;
+    if (!group) {
+      return;
+    }
+    applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
+    updateWorldMatrixChain(group);
+    const collides = brushPreviewCollides(reg, group, props.excludeObjectId, props.collisionTolerance);
+    if (lastCollidesRef.current !== collides) {
+      lastCollidesRef.current = collides;
+      props.onCollisionChange(collides);
+    }
+    invalidate();
+  }, [props.collisionTolerance, props.excludeObjectId, props.preview, props.onCollisionChange, reg, invalidate]);
+  return (
+    <group ref={groupRef} raycast={() => null}>
+      <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" />
+    </group>
+  );
+});
+
+function BrushSession(props: {
+  readonly brushActive: boolean;
+  readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
+  readonly kindCatalogs: KindCatalogBundle | undefined;
+  readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
+  readonly collisionTolerance: number;
+}) {
+  const reg = useRegistryCore();
+  const { store } = useObjectState();
+  const invalidate = useThree((state) => state.invalidate);
+  const targetRef = reactHostPort.useRef<string | null>(null);
+  const targetCtxRef = reactHostPort.useRef<AttractionVortexContext | null>(null);
+  const targetObjectIdRef = reactHostPort.useRef<string | null>(null);
+  const targetOrientationRef = reactHostPort.useRef<Quat | undefined>(undefined);
+  const probeOrderRef = reactHostPort.useRef<readonly BrushCompatibleCandidate[]>([]);
+  const placementCandidatesRef = reactHostPort.useRef<readonly BrushCompatibleCandidate[]>([]);
+  const previewCollidesRef = reactHostPort.useRef(false);
+  const indexRef = reactHostPort.useRef(0);
+  const targetWorldRef = reactHostPort.useRef<{ readonly position: Vec3; readonly direction: Vec3 } | null>(null);
+  const preloadReconcileTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placementProbePendingRef = reactHostPort.useRef(false);
+  const [catalogPreloadUrls, setCatalogPreloadUrls] = reactHostPort.useState<readonly string[]>([]);
+  const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
+
+  const clearBrush = reactHostPort.useCallback(() => {
+    if (preloadReconcileTimerRef.current !== null) {
+      clearTimeout(preloadReconcileTimerRef.current);
+      preloadReconcileTimerRef.current = null;
+    }
+    targetRef.current = null;
+    targetCtxRef.current = null;
+    targetObjectIdRef.current = null;
+    targetOrientationRef.current = undefined;
+    probeOrderRef.current = [];
+    placementCandidatesRef.current = [];
+    previewCollidesRef.current = false;
+    indexRef.current = 0;
+    targetWorldRef.current = null;
+    setCatalogPreloadUrls([]);
+    placementProbePendingRef.current = false;
+    puzzle3dBrushVortexHoverRef.current = false;
+    puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+    puzzle3dBrushEngagementSourceRef.current = {
+      candidates: [],
+      targetActive: false,
+      placementProbePending: false,
+      cycleCandidate: () => {},
+      pickCandidate: () => {},
+    };
+    notifyPuzzle3dBrushEngagementSource();
+  }, []);
+
+  const probePlacementCandidates = reactHostPort.useCallback((): BrushCollisionFreeResult => {
+    const targetFullId = targetRef.current;
+    const targetCtx = targetCtxRef.current;
+    const world = targetWorldRef.current;
+    if (!targetFullId || !targetCtx || !world || probeOrderRef.current.length === 0) {
+      return { free: [], unknownPending: false };
+    }
+    return brushCollisionFreeCandidates({
+      scene: reg,
+      targetVortexFullId: targetFullId,
+      candidates: probeOrderRef.current,
+      target: targetCtx,
+      targetWorldPositionCad: world.position,
+      targetWorldDirectionCad: world.direction,
+      referenceOrientationCad: targetOrientationRef.current,
+      kindCatalogs: props.kindCatalogs,
+      excludeObjectId: targetObjectIdRef.current ?? undefined,
+      meshRootForUrl: brushMeshRootFromPool,
+      collisionTolerance: props.collisionTolerance,
+    });
+  }, [props.collisionTolerance, props.kindCatalogs, reg]);
+
+  const applyCandidateIndex = reactHostPort.useCallback(
+    (targetFullId: string, index: number) => {
+      const world = targetWorldRef.current;
+      const candidate = placementCandidatesRef.current[index];
+      if (!world || !candidate) {
+        const snap = puzzle3dBrushUiStore.getSnapshot();
+        puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: snap.candidates, targetActive: snap.targetActive });
+        notifyPuzzle3dBrushEngagementSource();
+        return;
+      }
+      const targetCtx = targetCtxRef.current;
+      if (!targetCtx) {
+        return;
+      }
+      const preview = brushPreviewFromCandidate({
+        targetVortexFullId: targetFullId,
+        candidate,
+        target: targetCtx,
+        targetWorldPositionCad: world.position,
+        targetWorldDirectionCad: world.direction,
+        referenceOrientationCad: targetOrientationRef.current,
+        kindCatalogs: props.kindCatalogs,
+      });
+      previewCollidesRef.current = false;
+      const snap = puzzle3dBrushUiStore.getSnapshot();
+      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: snap.targetActive });
+      notifyPuzzle3dBrushEngagementSource();
+      invalidate();
+    },
+    [invalidate, props.kindCatalogs],
+  );
+
+  const advanceCandidate = reactHostPort.useCallback(() => {
+    const list = placementCandidatesRef.current;
+    if (!list.length || !targetRef.current) {
+      return;
+    }
+    indexRef.current = (indexRef.current + 1) % list.length;
+    applyCandidateIndex(targetRef.current, indexRef.current);
+  }, [applyCandidateIndex]);
+
+  const retreatCandidate = reactHostPort.useCallback(() => {
+    const list = placementCandidatesRef.current;
+    if (!list.length || !targetRef.current) {
+      return;
+    }
+    indexRef.current = (indexRef.current - 1 + list.length) % list.length;
+    applyCandidateIndex(targetRef.current, indexRef.current);
+  }, [applyCandidateIndex]);
+
+  const publishBrushEngagement = reactHostPort.useCallback(() => {
+    const candidates = [...placementCandidatesRef.current];
+    const targetActive = targetRef.current !== null;
+    puzzle3dBrushEngagementSourceRef.current = {
+      candidates,
+      targetActive,
+      placementProbePending: placementProbePendingRef.current,
+      cycleCandidate: advanceCandidate,
+      pickCandidate: (index: number) => {
+        if (!targetRef.current || index < 0 || index >= placementCandidatesRef.current.length) {
+          return;
+        }
+        indexRef.current = index;
+        applyCandidateIndex(targetRef.current, index);
+      },
+    };
+    const snap = puzzle3dBrushUiStore.getSnapshot();
+    puzzle3dBrushUiStore.setSnapshot({ preview: snap.preview, candidates, targetActive });
+    notifyPuzzle3dBrushEngagementSource();
+  }, [advanceCandidate, applyCandidateIndex]);
+
+  const applyBootstrapPreview = reactHostPort.useCallback(
+    (targetFullId: string) => {
+      const world = targetWorldRef.current;
+      const targetCtx = targetCtxRef.current;
+      const probeOrder = probeOrderRef.current;
+      if (!world || !targetCtx || probeOrder.length === 0) {
+        return;
+      }
+      const index = Math.min(indexRef.current, probeOrder.length - 1);
+      const candidate = probeOrder[index]!;
+      const preview = brushPreviewFromCandidate({
+        targetVortexFullId: targetFullId,
+        candidate,
+        target: targetCtx,
+        targetWorldPositionCad: world.position,
+        targetWorldDirectionCad: world.direction,
+        referenceOrientationCad: targetOrientationRef.current,
+        kindCatalogs: props.kindCatalogs,
+      });
+      if (!preview) {
+        return;
+      }
+      previewCollidesRef.current = false;
+      const snap = puzzle3dBrushUiStore.getSnapshot();
+      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: true });
+      notifyPuzzle3dBrushEngagementSource();
+      invalidate();
+    },
+    [invalidate, props.kindCatalogs],
+  );
+
+  const applyPlacementProbeResult = reactHostPort.useCallback(
+    (result: BrushCollisionFreeResult) => {
+      placementCandidatesRef.current = result.free;
+      const targetFullId = targetRef.current;
+      if (!targetFullId) {
+        return;
+      }
+      const preview = puzzle3dBrushUiStore.getSnapshot().preview;
+      if (result.free.length === 0) {
+        if (result.unknownPending && probeOrderRef.current.length > 0) {
+          placementProbePendingRef.current = true;
+          placementCandidatesRef.current = [];
+          const bootstrapCandidate = probeOrderRef.current[Math.min(indexRef.current, probeOrderRef.current.length - 1)]!;
+          const needsBootstrap =
+            preview === null ||
+            !brushPreviewMatchesCandidate(
+              preview,
+              bootstrapCandidate,
+            );
+          if (needsBootstrap) {
+            applyBootstrapPreview(targetFullId);
+          }
+          publishBrushEngagement();
+          invalidate();
+          return;
+        }
+        placementProbePendingRef.current = false;
+        previewCollidesRef.current = true;
+        puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: [], targetActive: true });
+        publishBrushEngagement();
+        invalidate();
+        return;
+      }
+      placementProbePendingRef.current = false;
+      const previewStillValid = preview !== null && result.free.some((candidate) => brushPreviewMatchesCandidate(preview, candidate));
+      if (!previewStillValid) {
+        indexRef.current = 0;
+        applyCandidateIndex(targetFullId, 0);
+      }
+      publishBrushEngagement();
+      invalidate();
+    },
+    [applyBootstrapPreview, applyCandidateIndex, invalidate, publishBrushEngagement],
+  );
+
+  const reconcilePlacementCandidates = reactHostPort.useCallback(() => {
+    if (!targetRef.current || probeOrderRef.current.length === 0) {
+      return;
+    }
+    applyPlacementProbeResult(probePlacementCandidates());
+  }, [applyPlacementProbeResult, probePlacementCandidates]);
+
+  const scheduleReconcileAfterCatalogPreload = reactHostPort.useCallback(() => {
+    if (preloadReconcileTimerRef.current !== null) {
+      clearTimeout(preloadReconcileTimerRef.current);
+    }
+    preloadReconcileTimerRef.current = setTimeout(() => {
+      preloadReconcileTimerRef.current = null;
+      reconcilePlacementCandidates();
+    }, 0);
+  }, [reconcilePlacementCandidates]);
+
+  const commitCurrentPreview = reactHostPort.useCallback(() => {
+    const preview = puzzle3dBrushUiStore.getSnapshot().preview;
+    if (!preview || !props.onBrushPlace || previewCollidesRef.current || placementCandidatesRef.current.length === 0) {
+      return;
+    }
+    if (!placementCandidatesRef.current.some((candidate) => brushPreviewMatchesCandidate(preview, candidate))) {
+      return;
+    }
+    props.onBrushPlace(brushPlacePayloadFromPreview(preview));
+  }, [props.onBrushPlace]);
+
+  const enterTarget = reactHostPort.useCallback(
+    (fullId: string, meta: VortexBindingMeta) => {
+      const record = store.getRecord(meta.objectId);
+      if (!record) {
+        return;
+      }
+      const vortexIndex = findVortexIndexOnRecord(record, fullId);
+      if (vortexIndex < 0) {
+        return;
+      }
+      const world = vortexWorldCadFromObject(record, vortexIndex);
+      if (!world) {
+        return;
+      }
+      targetRef.current = fullId;
+      targetWorldRef.current = world;
+      const targetCtx: AttractionVortexContext = {
+        objectId: meta.objectId,
+        objectKind: meta.objectKind,
+        vortexKind: meta.vortexKind,
+      };
+      targetCtxRef.current = targetCtx;
+      targetObjectIdRef.current = meta.objectId;
+      targetOrientationRef.current = record.orientation;
+      previewCollidesRef.current = false;
+      const compatible = brushCompatibleCandidates(targetCtx, props.kindCatalogs, props.kindCompatibility);
+      probeOrderRef.current = shuffleBrushCompatibleCandidates(compatible);
+      placementCandidatesRef.current = [];
+      indexRef.current = 0;
+      setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs));
+      applyPlacementProbeResult(probePlacementCandidates());
+    },
+    [applyPlacementProbeResult, props.kindCatalogs, props.kindCompatibility, probePlacementCandidates, store],
+  );
+
+  const leaveTarget = reactHostPort.useCallback(() => {
+    if (!targetRef.current) {
+      return;
+    }
+    commitCurrentPreview();
+    clearBrush();
+  }, [clearBrush, commitCurrentPreview]);
+
+  const onPreviewCollisionChange = reactHostPort.useCallback(
+    (collides: boolean) => {
+      if (!props.brushActive) {
+        return;
+      }
+      previewCollidesRef.current = collides;
+      reconcilePlacementCandidates();
+    },
+    [props.brushActive, reconcilePlacementCandidates],
+  );
+
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive) {
+      clearBrush();
+    }
+  }, [clearBrush, props.brushActive]);
+
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive || !targetRef.current) {
+      return;
+    }
+    reconcilePlacementCandidates();
+  }, [props.brushActive, props.collisionTolerance, reconcilePlacementCandidates]);
+
+  return (
+    <>
+      <BrushPointerBridge
+        brushActive={props.brushActive}
+        blockedVortexFullIds={reg.blockedVortexFullIds}
+        targetRef={targetRef}
+        candidatesRef={placementCandidatesRef}
+        enterTarget={enterTarget}
+        leaveTarget={leaveTarget}
+        commitCurrentPreview={commitCurrentPreview}
+        clearBrush={clearBrush}
+        advanceCandidate={advanceCandidate}
+        retreatCandidate={retreatCandidate}
+        invalidate={invalidate}
+      />
+      <BrushCatalogMeshPreload urls={catalogPreloadUrls} onReady={scheduleReconcileAfterCatalogPreload} />
+      {ui.preview ? (
+        <BrushPreviewGhost
+          preview={ui.preview}
+          excludeObjectId={targetObjectIdRef.current ?? undefined}
+          collisionTolerance={props.collisionTolerance}
+          onCollisionChange={onPreviewCollisionChange}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function BrushPointerBridge(props: {
+  readonly brushActive: boolean;
+  readonly blockedVortexFullIds: ReadonlySet<string>;
+  readonly targetRef: MutableRefObject<string | null>;
+  readonly candidatesRef: MutableRefObject<readonly BrushCompatibleCandidate[]>;
+  readonly enterTarget: (fullId: string, meta: VortexBindingMeta) => void;
+  readonly leaveTarget: () => void;
+  readonly commitCurrentPreview: () => void;
+  readonly clearBrush: () => void;
+  readonly advanceCandidate: () => void;
+  readonly retreatCandidate: () => void;
+  readonly invalidate: () => void;
+}) {
+  const reg = useRegistryCore();
+  const { camera, gl } = useThree();
+  const raycasterRef = reactHostPort.useRef(new Raycaster());
+  const ndcRef = reactHostPort.useRef(new Vector2());
+
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        !routePuzzle3dBrushTabKeydown(
+          props.brushActive,
+          props.targetRef.current !== null,
+          props.candidatesRef.current.length,
+          event,
+        )
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) {
+        props.retreatCandidate();
+      } else {
+        props.advanceCandidate();
+      }
+      props.invalidate();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "keydown", onKeyDown, true);
+    return () => bindings.dispose();
+  }, [props]);
+
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive) {
+      return;
+    }
+    const collectPickRoots = (): Object3D[] => {
+      const out: Object3D[] = [];
+      for (const group of reg.collectObjectGroups()) {
+        if (group) {
+          out.push(group);
+        }
+      }
+      return out;
+    };
+    const onMove = (event: PointerEvent) => {
+      const canvas = gl.domElement;
+      const rect = canvas.getBoundingClientRect();
+      ndcRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      ndcRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycasterRef.current.setFromCamera(ndcRef.current, camera);
+      const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
+      const surfaceDist = hits[0]?.distance ?? 80;
+      const screenCandidates: ScreenVortexCandidate[] = [];
+      for (const meta of reg.listVortexBindings()) {
+        if (props.blockedVortexFullIds.has(meta.fullId)) {
+          continue;
+        }
+        const world = reg.getVortexWorld(meta.fullId);
+        if (!world) {
+          continue;
+        }
+        const projected = world.clone().project(camera);
+        if (projected.z > 1) {
+          continue;
+        }
+        const sx = rect.left + (projected.x * 0.5 + 0.5) * rect.width;
+        const sy = rect.top + (-projected.y * 0.5 + 0.5) * rect.height;
+        screenCandidates.push({
+          fullId: meta.fullId,
+          objectId: meta.objectId,
+          sx,
+          sy,
+          dist: camera.position.distanceTo(world),
+        });
+      }
+      const picked = pickNearestScreenVortex({
+        cursorX: event.clientX,
+        cursorY: event.clientY,
+        surfaceDist,
+        candidates: screenCandidates,
+      });
+      puzzle3dBrushVortexHoverRef.current = picked !== null;
+      if (!picked) {
+        if (props.targetRef.current) {
+          props.leaveTarget();
+        }
+        return;
+      }
+      const meta = reg.listVortexBindings().find((entry) => entry.fullId === picked.fullId);
+      if (!meta) {
+        return;
+      }
+      if (picked.fullId !== props.targetRef.current) {
+        if (props.targetRef.current) {
+          props.commitCurrentPreview();
+          props.clearBrush();
+        }
+        props.enterTarget(picked.fullId, meta);
+      }
+      props.invalidate();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "pointermove", onMove);
+    return () => bindings.dispose();
+  }, [camera, gl, props, reg]);
   return null;
 }
 
@@ -3661,13 +6984,215 @@ function AttractionWindowBridge() {
       if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
       invalidate();
     };
-    const bindings = new SceneEventBindingController();
+    const bindings = new EventBindingController();
     bindings.listen(window, "pointermove", onMove);
     bindings.listen(window, "pointerup", onUp, { capture: true });
     bindings.listen(window, "pointerdown", onDown, true);
     return () => bindings.dispose();
   }, [reg, attractionBusy, invalidate]);
   return null;
+}
+
+function MarqueeBridge() {
+  const reg = useRegistry();
+  const { captureMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
+  const marquee = useRegistryMarquee();
+  const gl = useThree((state) => state.gl);
+  const invalidate = useThree((state) => state.invalidate);
+  const gestureRef = reactHostPort.useRef<{
+    readonly pointerId: number;
+    readonly startX: number;
+    readonly startY: number;
+    active: boolean;
+    path: ScreenPoint[];
+    lastX: number;
+    lastY: number;
+  } | null>(null);
+  const marqueePrefetchFrameRef = reactHostPort.useRef<number | null>(null);
+  const marqueeCandidatesPrefetchedRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    const canvas = gl.domElement;
+    if (!canvas) {
+      return;
+    }
+    const resetOverlay = () => {
+      puzzle3dMarqueeOverlayStore.setSnapshot(MARQUEE_OVERLAY_IDLE);
+    };
+    const cancelPrefetch = () => {
+      if (marqueePrefetchFrameRef.current !== null) {
+        cancelAnimationFrame(marqueePrefetchFrameRef.current);
+        marqueePrefetchFrameRef.current = null;
+      }
+      marqueeCandidatesPrefetchedRef.current = false;
+    };
+    const cancelGesture = () => {
+      cancelPrefetch();
+      gestureRef.current = null;
+      cancelMarqueePreview();
+      resetOverlay();
+    };
+    puzzle3dMarqueeGestureCancel = cancelGesture;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || puzzle3dBrushToolActiveRef.current) {
+        return;
+      }
+      cancelPrefetch();
+      gestureRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        active: false,
+        path: [{ x: event.clientX, y: event.clientY }],
+        lastX: event.clientX,
+        lastY: event.clientY,
+      };
+      const pointerId = event.pointerId;
+      marqueePrefetchFrameRef.current = requestAnimationFrame(() => {
+        marqueePrefetchFrameRef.current = null;
+        const gesture = gestureRef.current;
+        if (!gesture || gesture.pointerId !== pointerId) {
+          return;
+        }
+        captureMarqueeCandidates();
+        marqueeCandidatesPrefetchedRef.current = true;
+      });
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (puzzle3dRelocateDragActiveRef.current) {
+        cancelGesture();
+        return;
+      }
+      const gesture = gestureRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) {
+        return;
+      }
+      const dist = Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY);
+      if (!gesture.active && dist < PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX) {
+        return;
+      }
+      const path =
+        marquee.selectionMethod === "lasso"
+          ? [...gesture.path, { x: event.clientX, y: event.clientY }]
+          : [{ x: gesture.startX, y: gesture.startY }, { x: event.clientX, y: event.clientY }];
+      const activating = !gesture.active;
+      const lastX = event.clientX;
+      const lastY = event.clientY;
+      gestureRef.current = { ...gesture, active: true, path, lastX, lastY };
+      const gestureArgs: MarqueeGestureArgs = {
+        startX: gesture.startX,
+        startY: gesture.startY,
+        endX: lastX,
+        endY: lastY,
+        path,
+        modifiers: { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey },
+      };
+      const clientRect = gl.domElement.getBoundingClientRect();
+      const overlaySnapshot = {
+        active: true as const,
+        method: marquee.selectionMethod,
+        start: { x: gesture.startX, y: gesture.startY },
+        current: { x: lastX, y: lastY },
+        path,
+        clientOrigin: { x: clientRect.left, y: clientRect.top },
+      };
+      puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
+      if (activating) {
+        captureMarqueeCandidates({ reuseCandidates: marqueeCandidatesPrefetchedRef.current });
+        marqueeCandidatesPrefetchedRef.current = false;
+      }
+      previewMarqueeSelection(gestureArgs);
+      invalidate();
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (puzzle3dRelocateDragActiveRef.current) {
+        cancelGesture();
+        return;
+      }
+      const gesture = gestureRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) {
+        return;
+      }
+      gestureRef.current = null;
+      if (!gesture.active) {
+        resetOverlay();
+        return;
+      }
+      commitMarqueeSelection({
+        startX: gesture.startX,
+        startY: gesture.startY,
+        endX: event.clientX,
+        endY: event.clientY,
+        path: gesture.path,
+        modifiers: { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey },
+      });
+      resetOverlay();
+      invalidate();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(canvas, "pointerdown", onPointerDown as EventListener);
+    bindings.listen(window, "pointermove", onPointerMove as EventListener);
+    bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+    bindings.listen(window, "pointercancel", onPointerUp as EventListener, true);
+    return () => {
+      puzzle3dMarqueeGestureCancel = null;
+      bindings.dispose();
+      resetOverlay();
+    };
+  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, previewMarqueeSelection, reg]);
+  return null;
+}
+
+/** @emoji 🖱️ Mirrors {@link ObjectStateProvider} attractions into marquee hit testing. */
+export function MarqueeAttractionSource(): null {
+  const { store } = useObjectState();
+  const { setMarqueeAttractions } = useRegistryMarquee();
+  const attractions = reactHostPort.useSyncExternalStore(
+    (onStoreChange) => store.subscribeStructure(onStoreChange),
+    () => store.getAttractions(),
+    () => store.getAttractions(),
+  );
+  reactHostPort.useEffect(() => {
+    setMarqueeAttractions(attractions);
+    return () => setMarqueeAttractions([]);
+  }, [attractions, setMarqueeAttractions]);
+  return null;
+}
+
+function Puzzle3dMarqueeOverlay() {
+  const overlay = reactHostPort.useSyncExternalStore(puzzle3dMarqueeOverlayStore.subscribe, puzzle3dMarqueeOverlayStore.getSnapshot, puzzle3dMarqueeOverlayStore.getSnapshot);
+  if (!overlay.active || !overlay.start || !overlay.current) {
+    return null;
+  }
+  const toLocal = (point: ScreenPoint) => ({ x: point.x - overlay.clientOrigin.x, y: point.y - overlay.clientOrigin.y });
+  if (overlay.method === "lasso" && overlay.path.length >= 2) {
+    const points = overlay.path.map((point) => `${toLocal(point).x},${toLocal(point).y}`).join(" ");
+    return (
+      <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+        <polyline points={points} fill="color-mix(in oklab, var(--color-primary) 12%, transparent)" stroke="var(--color-primary)" strokeWidth={1.5} />
+      </svg>
+    );
+  }
+  const start = toLocal(overlay.start);
+  const current = toLocal(overlay.current);
+  const left = Math.min(start.x, current.x);
+  const top = Math.min(start.y, current.y);
+  const width = Math.abs(current.x - start.x);
+  const height = Math.abs(current.y - start.y);
+  const crossing = marqueeIsCrossing(overlay.start.x, overlay.current.x);
+  return (
+    <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+      <rect
+        x={left}
+        y={top}
+        width={width}
+        height={height}
+        fill={crossing ? "color-mix(in oklab, var(--color-primary) 10%, transparent)" : "color-mix(in oklab, var(--color-primary) 16%, transparent)"}
+        stroke="var(--color-primary)"
+        strokeWidth={1.5}
+        strokeDasharray={crossing ? "4 3" : undefined}
+      />
+    </svg>
+  );
 }
 
 function AttractionRubberBand() {
@@ -3680,8 +7205,8 @@ function AttractionRubberBand() {
   const mat = reactHostPort.useMemo(() => new LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.92, depthTest: false }), []);
   useFrame(() => {
     const pos = geo.attributes.position as Float32BufferAttribute;
-    const attractionLine = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
-    if (!attractionLine) {
+    const cable = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
+    if (!cable) {
       pos.setXYZ(0, 0, 0, 0);
       pos.setXYZ(1, 0, 0, 0);
       pos.needsUpdate = true;
@@ -3709,6 +7234,44 @@ function AttractionRubberBand() {
   return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
+const InnerSceneChildrenContext = reactHostPort.createContext<ReactNode>(null);
+
+/** @emoji 🧩 Renders {@link Canvas3D} scene children inside a stable registry shell (host re-renders must not remount the 3D tree). */
+function InnerSceneChildren(props: { readonly chunkSize: number; readonly maxDistance: number }): React.ReactElement {
+  const children = reactHostPort.useContext(InnerSceneChildrenContext);
+  const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
+  return (
+    <>
+      <Chunks chunkSize={props.chunkSize} maxDistance={props.maxDistance}>
+        {chunked}
+      </Chunks>
+      <group data-puzzle3d-unchunked>{rest}</group>
+    </>
+  );
+}
+
+/** @emoji 🎯 Syncs host-controlled selection into the scene store without re-rendering scene children. */
+function ControlledSelectionSync(props: { readonly selection?: SelectionSnapshot }): null {
+  const store = useSelectionSnapshotStore();
+  reactHostPort.useLayoutEffect(() => {
+    store.setControlledHostSnapshot(props.selection);
+    if (props.selection !== undefined) {
+      store.setSnapshot(props.selection);
+    }
+  }, [props.selection, store]);
+  return null;
+}
+
+interface RegistryHostCallbacks {
+  readonly onSelect?: (snap: SelectionSnapshot) => void;
+  readonly onConnect?: (p: AttractionPayload) => void;
+  readonly onProximityConnect?: (p: AttractionPayload) => void;
+  readonly onIndirectConnect?: (p: AttractionPayload) => void;
+  readonly onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
+  readonly onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+  readonly onRelocate?: (p: RelocatePayload) => void;
+}
+
 function RegistryProvider({
   children,
   lodRef,
@@ -3719,14 +7282,11 @@ function RegistryProvider({
   proximityRelocateEnabled = true,
   selectionMode,
   relocateMode,
-  selection: controlledSelection,
-  onSelect,
-  onConnect,
-  onProximityConnect,
-  onIndirectConnect,
-  onAttractionCompatibleObjects,
-  onAttractionTargetRing,
-  onRelocate,
+  hostCallbacksRef,
+  attractionSession,
+  selectionMethod = "rectangle",
+  marqueeSelectableKinds = { object: true, vortex: true, attraction: true },
+  selectionStore,
 }: {
   children: ReactNode;
   lodRef: MutableRefObject<number>;
@@ -3737,53 +7297,193 @@ function RegistryProvider({
   proximityRelocateEnabled?: boolean;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
-  selection?: SelectionSnapshot;
-  onSelect?: (snap: SelectionSnapshot) => void;
-  onConnect?: (p: AttractionPayload) => void;
-  onProximityConnect?: (p: AttractionPayload) => void;
-  onIndirectConnect?: (p: AttractionPayload) => void;
-  onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
-  onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
-  onRelocate?: (p: RelocatePayload) => void;
+  hostCallbacksRef: MutableRefObject<RegistryHostCallbacks>;
+  attractionSession?: AttractionSessionSnapshot | null;
+  selectionMethod?: SelectionMethod;
+  marqueeSelectableKinds?: MarqueeSelectableKinds;
+  selectionStore: SelectionSnapshotStore;
 }) {
-  const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
-  if (!selectionStoreRef.current) {
-    selectionStoreRef.current = createSelectionSnapshotStore(controlledSelection ?? EMPTY_SELECTION_SNAPSHOT);
-  }
-  const selectionStore = selectionStoreRef.current;
-  const controlledSelectionRef = reactHostPort.useRef(controlledSelection);
-  controlledSelectionRef.current = controlledSelection;
-  const onSelectRef = reactHostPort.useRef(onSelect);
-  onSelectRef.current = onSelect;
   const selectionModeRef = reactHostPort.useRef(selectionMode);
   selectionModeRef.current = selectionMode;
-  reactHostPort.useEffect(() => {
-    if (controlledSelection !== undefined) {
-      selectionStore.setSnapshot(controlledSelection);
-    }
-  }, [controlledSelection, selectionStore]);
-  const setSelectedObjectIds = reactHostPort.useCallback(
-    (ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
-      const controlled = controlledSelectionRef.current;
-      const current = selectionStore.getSnapshot();
-      const resolved = typeof ids === "function" ? ids(current.objectIds) : ids;
-      const snap: SelectionSnapshot = {
-        objectIds: resolved,
-        vortexIds: controlled && selectionModeRef.current !== "single" ? controlled.vortexIds : [],
-      };
+  const selectionMethodRef = reactHostPort.useRef(selectionMethod);
+  selectionMethodRef.current = selectionMethod;
+  const marqueeKindsRef = reactHostPort.useRef(marqueeSelectableKinds);
+  marqueeKindsRef.current = marqueeSelectableKinds;
+  const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
+  const marqueeCandidatesRef = reactHostPort.useRef<MarqueeCandidate[]>([]);
+  const marqueeBaseSelectionRef = reactHostPort.useRef<SelectionSnapshot | null>(null);
+  const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
+  const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
+  const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
+  const notifyAttractionCompatibleObjects = reactHostPort.useCallback(
+    (payload: AttractionCompatibleObjectsPayload) => hostCallbacksRef.current.onAttractionCompatibleObjects?.(payload),
+    [hostCallbacksRef],
+  );
+  const notifyAttractionTargetRing = reactHostPort.useCallback(
+    (payload: AttractionTargetRingPayload) => hostCallbacksRef.current.onAttractionTargetRing?.(payload),
+    [hostCallbacksRef],
+  );
+  const notifyRelocate = reactHostPort.useCallback((payload: RelocatePayload) => hostCallbacksRef.current.onRelocate?.(payload), [hostCallbacksRef]);
+  const publishSelection = reactHostPort.useCallback(
+    (snap: SelectionSnapshot) => {
       selectionStore.setSnapshot(snap);
       const primary = primarySelectionObjectId(snap);
       activeRelocateObjectIdRef.current = primary;
+      const controlled = selectionStore.getControlledHostSnapshot();
       if (controlled !== undefined) {
         if (!selectionSnapshotsEqual(controlled, snap)) {
-          onSelectRef.current?.(snap);
+          hostCallbacksRef.current.onSelect?.(snap);
         }
         return;
       }
-      onSelectRef.current?.({ objectIds: resolved, vortexIds: [] });
+      hostCallbacksRef.current.onSelect?.(snap);
+    },
+    [hostCallbacksRef, selectionStore],
+  );
+
+  const commitSelection = reactHostPort.useCallback(
+    (pick: SelectionPick) => {
+      const current = selectionStore.getSnapshot();
+      const snap = mergeSelection(selectionModeRef.current, current, pick);
+      publishSelection(snap);
+    },
+    [publishSelection, selectionStore],
+  );
+
+  const buildMarqueeCandidates = reactHostPort.useCallback((): MarqueeCandidate[] => {
+    const env = attractionThreeRef.current;
+    if (!env) {
+      return [];
+    }
+    env.camera.updateMatrixWorld(true);
+    const domRect = puzzle3dMarqueeClientRect(env.gl);
+    const candidates: MarqueeCandidate[] = [];
+    for (const [id, group] of objectGroupMap.current) {
+      if (!group) {
+        continue;
+      }
+      const cache = resolveObjectMarqueeFootprintCache(group, id);
+      const candidate = marqueeFootprintToCandidate("object", id, projectObjectMarqueeFootprintFromCache(cache, env.camera, domRect));
+      if (candidate) {
+        candidates.push(candidate);
+      }
+    }
+    for (const [fullId, getter] of vortexGettersRef.current) {
+      const world = getter();
+      if (!world) {
+        continue;
+      }
+      const point = projectWorldToClient(world, env.camera, domRect);
+      const candidate = marqueeFootprintToCandidate("vortex", fullId, point ? marqueeFootprintFromClientPoints([point]) : null);
+      if (candidate) {
+        candidates.push(candidate);
+      }
+    }
+    for (const attraction of marqueeAttractionsRef.current) {
+      const a = vortexGettersRef.current.get(attraction.attracting)?.() ?? null;
+      const b = vortexGettersRef.current.get(attraction.attracted)?.() ?? null;
+      const points: ScreenPoint[] = [];
+      if (a) {
+        const projected = projectWorldToClient(a, env.camera, domRect);
+        if (projected) {
+          points.push(projected);
+        }
+      }
+      if (b) {
+        const projected = projectWorldToClient(b, env.camera, domRect);
+        if (projected) {
+          points.push(projected);
+        }
+      }
+      const candidate = marqueeFootprintToCandidate("attraction", attraction.id, marqueeFootprintFromClientPoints(points));
+      if (candidate) {
+        candidates.push(candidate);
+      }
+    }
+    return candidates;
+  }, []);
+
+  const clearMarqueeGestureCache = reactHostPort.useCallback(() => {
+    marqueeCandidatesRef.current = [];
+    marqueeBaseSelectionRef.current = null;
+  }, []);
+
+  const captureMarqueeCandidates = reactHostPort.useCallback(
+    (options?: { readonly reuseCandidates?: boolean }) => {
+      marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
+      if (!options?.reuseCandidates || marqueeCandidatesRef.current.length === 0) {
+        marqueeCandidatesRef.current = buildMarqueeCandidates();
+      }
+    },
+    [buildMarqueeCandidates, selectionStore],
+  );
+
+  const previewMarqueeSelection = reactHostPort.useCallback(
+    (args: MarqueeGestureArgs) => {
+      const base = marqueeBaseSelectionRef.current;
+      if (!base) {
+        return;
+      }
+      const snap = resolveMarqueeSelectionGesture(args, {
+        method: selectionMethodRef.current,
+        kinds: marqueeKindsRef.current,
+        candidates: marqueeCandidatesRef.current,
+        base,
+      });
+      selectionStore.setSnapshot(snap);
     },
     [selectionStore],
   );
+
+  const cancelMarqueePreview = reactHostPort.useCallback(() => {
+    const base = marqueeBaseSelectionRef.current;
+    if (base) {
+      selectionStore.setSnapshot(base);
+    }
+    clearMarqueeGestureCache();
+  }, [clearMarqueeGestureCache, selectionStore]);
+
+  const commitMarqueeSelection = reactHostPort.useCallback(
+    (args: MarqueeGestureArgs) => {
+      const base = marqueeBaseSelectionRef.current ?? selectionStore.getSnapshot();
+      const candidates = marqueeCandidatesRef.current.length > 0 ? marqueeCandidatesRef.current : buildMarqueeCandidates();
+      const snap = resolveMarqueeSelectionGesture(args, {
+        method: selectionMethodRef.current,
+        kinds: marqueeKindsRef.current,
+        candidates,
+        base,
+      });
+      clearMarqueeGestureCache();
+      publishSelection(snap);
+      puzzle3dMarqueeSuppressClickRef.current = true;
+      window.setTimeout(() => {
+        puzzle3dMarqueeSuppressClickRef.current = false;
+      }, 0);
+    },
+    [buildMarqueeCandidates, clearMarqueeGestureCache, publishSelection, selectionStore],
+  );
+
+  const setSelectedObjectIds = reactHostPort.useCallback(
+    (ids: readonly string[] | ((prev: readonly string[]) => readonly string[])) => {
+      const current = selectionStore.getSnapshot();
+      const resolvedObjectIds = typeof ids === "function" ? ids(current.objectIds) : ids;
+      const mode = selectionModeRef.current;
+      const snap: SelectionSnapshot =
+        mode === "default"
+          ? { objectIds: resolvedObjectIds, vortexIds: [], attractionIds: [] }
+          : {
+              objectIds: mergeIdList(mode, current.objectIds, resolvedObjectIds),
+              vortexIds: current.vortexIds,
+              attractionIds: current.attractionIds,
+            };
+      publishSelection(snap);
+    },
+    [publishSelection, selectionStore],
+  );
+
+  const setMarqueeAttractions = reactHostPort.useCallback((attractions: readonly AttractionProps[]) => {
+    marqueeAttractionsRef.current = attractions;
+  }, []);
   const activeRelocateObjectIdRef = reactHostPort.useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
   const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
     if (activeRelocateObjectIdRef.current === id) {
@@ -3791,51 +7491,42 @@ function RegistryProvider({
     }
     activeRelocateObjectIdRef.current = id;
   }, []);
-  reactHostPort.useEffect(() => {
-    if (controlledSelection === undefined) {
-      return;
-    }
-    activeRelocateObjectIdRef.current = primarySelectionObjectId(controlledSelection);
-  }, [controlledSelection]);
-  const liveSelection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
-  const selectedObjectIds = liveSelection.objectIds;
-  const activeRelocateObjectId = primarySelectionObjectId(liveSelection);
   const [attractionDragActive, setAttractionDragActive] = reactHostPort.useState(false);
   const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = reactHostPort.useState<string | null>(null);
   const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = reactHostPort.useState<ReadonlySet<string>>(new Set());
   const [attractionHoverRingFullId, setAttractionHoverRingFullId] = reactHostPort.useState<string | null>(null);
   const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = reactHostPort.useState<AttractionIndirectPickAwait | null>(null);
-  const [hoverTarget, setHoverTarget] = reactHostPort.useState<SceneHoverTarget | null>(null);
+  const [hoverTarget, setHoverTarget] = reactHostPort.useState<HoverTarget | null>(null);
 
-  const setSceneHover = reactHostPort.useCallback((target: SceneHoverTarget) => {
-    setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? prev : target));
+  const setHover = reactHostPort.useCallback((target: HoverTarget) => {
+    setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? prev : target));
   }, []);
 
-  const clearSceneHover = reactHostPort.useCallback((target: SceneHoverTarget) => {
-    setHoverTarget((prev) => (sceneHoverTargetsEqual(prev, target) ? null : prev));
+  const clearHover = reactHostPort.useCallback((target: HoverTarget) => {
+    setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? null : prev));
   }, []);
 
-  const clearSceneHoverAll = reactHostPort.useCallback(() => {
+  const clearHoverAll = reactHostPort.useCallback(() => {
     setHoverTarget((prev) => (prev === null ? prev : null));
   }, []);
 
-  const isSceneHovered = reactHostPort.useCallback((target: SceneHoverTarget) => sceneHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
+  const isHovered = reactHostPort.useCallback((target: HoverTarget) => puzzle3dHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
 
-  const clearSceneSelection = reactHostPort.useCallback(() => {
-    clearSceneHoverAll();
+  const clearSelection = reactHostPort.useCallback(() => {
+    clearHoverAll();
     setActiveRelocateObjectId(null);
     const empty = EMPTY_SELECTION_SNAPSHOT;
     selectionStore.setSnapshot(empty);
-    const controlled = controlledSelectionRef.current;
+    const controlled = selectionStore.getControlledHostSnapshot();
     if (controlled !== undefined) {
-      if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0) {
+      if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0 && controlled.attractionIds.length === 0) {
         return;
       }
-      onSelectRef.current?.(empty);
+      hostCallbacksRef.current.onSelect?.(empty);
       return;
     }
-    onSelectRef.current?.(empty);
-  }, [clearSceneHoverAll, selectionStore, setActiveRelocateObjectId]);
+    hostCallbacksRef.current.onSelect?.(empty);
+  }, [clearHoverAll, hostCallbacksRef, selectionStore, setActiveRelocateObjectId]);
 
   const vortexGettersRef = reactHostPort.useRef(new Map<string, VortexGetter>());
   const vortexMetaRef = reactHostPort.useRef(new Map<string, VortexBindingMeta>());
@@ -3851,7 +7542,7 @@ function RegistryProvider({
   const attractionSessionRef = reactHostPort.useRef<{
     attractingFullId: string;
     attractingObjectId: string;
-    attractingCtx: AttractionHandleContext;
+    attractingCtx: AttractionVortexContext;
     compat: Set<string>;
     snapAttractedFullId: string | null;
   } | null>(null);
@@ -3886,10 +7577,34 @@ function RegistryProvider({
     vortexPickRef.current.delete(fullId);
   }, []);
 
-  const registerObject = reactHostPort.useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
-    objectGroupMap.current.set(id, group);
-    objectKindsRef.current.set(id, objectKind);
+  const warmAllMarqueeFootprintCaches = reactHostPort.useCallback(() => {
+    for (const [id, group] of objectGroupMap.current) {
+      if (group) {
+        buildObjectMarqueeFootprintCache(group, id);
+      }
+    }
   }, []);
+
+  const registerObject = reactHostPort.useCallback(
+    (id: string, objectKind: string | undefined, group: Group | null) => {
+      objectGroupMap.current.set(id, group);
+      objectKindsRef.current.set(id, objectKind);
+      if (group) {
+        scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group, id));
+        if (attractionThreeRef.current) {
+          requestAnimationFrame(() => {
+            const current = objectGroupMap.current.get(id);
+            if (current) {
+              buildObjectMarqueeFootprintCache(current, id);
+            }
+          });
+        }
+        return;
+      }
+      invalidateObjectMarqueeFootprintCache(id);
+    },
+    [],
+  );
 
   const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
     const out: Group[] = [];
@@ -3898,6 +7613,8 @@ function RegistryProvider({
     }
     return out;
   }, []);
+
+  const listVortexBindings = reactHostPort.useCallback((): readonly VortexBindingMeta[] => [...vortexMetaRef.current.values()], []);
 
   const getObjectGroup = reactHostPort.useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
 
@@ -3912,26 +7629,70 @@ function RegistryProvider({
     setAttractionHoverRingFullId(null);
     setAttractionIndirectPickAwait(null);
     setHoverTarget(null);
-    onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
-  }, [onAttractionTargetRing]);
+    notifyAttractionTargetRing({ attracting: "", objectId: null, vortexFullIds: [] });
+  }, [notifyAttractionTargetRing]);
+
+  reactHostPort.useEffect(() => {
+    if (attractionSessionRef.current) {
+      return;
+    }
+    const ext = attractionSession;
+    if (!ext?.attracting) {
+      if (attractionDragAttractingFullId) {
+        setAttractionDragActive(false);
+        setAttractionDragAttractingFullId(null);
+        setAttractionCompatibleAttractedFullIds(new Set());
+        setAttractionHoverRingFullId(null);
+        setAttractionIndirectPickAwait(null);
+        attractionEndWorldRef.current = null;
+      }
+      return;
+    }
+    setAttractionDragActive(true);
+    setAttractionDragAttractingFullId(ext.attracting);
+    const compatVortexIds = new Set<string>();
+    for (const oid of ext.compatibleObjectIds) {
+      for (const [fullId, meta] of vortexMetaRef.current) {
+        if (meta.objectId === oid) {
+          compatVortexIds.add(fullId);
+        }
+      }
+    }
+    setAttractionCompatibleAttractedFullIds(compatVortexIds);
+    attractionEndWorldRef.current = new Vector3(...cadVec3ToThree(ext.end));
+    if (ext.ringObjectId && ext.ringVortexFullIds.length > 1) {
+      setAttractionIndirectPickAwait({
+        attractingFullId: ext.attracting,
+        attractedObjectId: ext.ringObjectId,
+        candidates: ext.ringVortexFullIds,
+      });
+    } else {
+      setAttractionIndirectPickAwait(null);
+    }
+    notifyAttractionTargetRing({
+      attracting: ext.attracting,
+      objectId: ext.ringObjectId,
+      vortexFullIds: ext.ringVortexFullIds,
+    });
+  }, [attractionSession, attractionDragAttractingFullId, notifyAttractionTargetRing]);
 
   const beginAttractionDragFromVortex = reactHostPort.useCallback(
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
       if (indirectPickRef.current) return;
       if (blockedVortexFullIds.has(fullId)) return;
-      const attractingCtx: AttractionHandleContext = { objectId, objectKind, vortexKind };
+      const attractingCtx: AttractionVortexContext = { objectId, objectKind, vortexKind };
       const compat = new Set<string>();
       const objectIds = new Set<string>();
       for (const [tid, meta] of vortexMetaRef.current) {
         if (tid === fullId) continue;
         if (meta.objectId === objectId) continue;
         if (blockedVortexFullIds.has(tid)) continue;
-        const attractedCtx: AttractionHandleContext = {
+        const attractedCtx: AttractionVortexContext = {
           objectId: meta.objectId,
           objectKind: meta.objectKind,
           vortexKind: meta.vortexKind,
         };
-        if (!handlesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
+        if (!vorticesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
         compat.add(tid);
         objectIds.add(meta.objectId);
       }
@@ -3950,9 +7711,9 @@ function RegistryProvider({
       setAttractionHoverRingFullId(null);
       setActiveRelocateObjectId(null);
       setHoverTarget(null);
-      onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
+      notifyAttractionCompatibleObjects({ attracting: fullId, objectIds: [...objectIds] });
     },
-    [blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
+    [blockedVortexFullIds, kindCatalogs, kindCompatibility, notifyAttractionCompatibleObjects],
   );
 
   const collectPickRoots = reactHostPort.useCallback((): Object3D[] => {
@@ -3983,13 +7744,13 @@ function RegistryProvider({
       setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
       if (ring) {
         const meta = vortexMetaRef.current.get(ring);
-        onAttractionTargetRing?.({
+        notifyAttractionTargetRing({
           attracting: session.attractingFullId,
           objectId: meta?.objectId ?? null,
           vortexFullIds: ring ? [ring] : [],
         });
       } else {
-        onAttractionTargetRing?.({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
+        notifyAttractionTargetRing({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
       }
       const hitWorld = hitScratchRef.current;
       if (hits.length > 0) {
@@ -4015,7 +7776,7 @@ function RegistryProvider({
         });
       } else session.snapAttractedFullId = null;
     },
-    [blockedVortexFullIds, collectPickRoots, lodRef, onAttractionTargetRing],
+    [blockedVortexFullIds, collectPickRoots, lodRef, notifyAttractionTargetRing],
   );
 
   const commitAttractionPointer = reactHostPort.useCallback(
@@ -4047,8 +7808,8 @@ function RegistryProvider({
       const snapId = session.snapAttractedFullId;
       if (snapId && attractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
         const p = { attracting: session.attractingFullId, attracted: snapId };
-        onConnect?.(p);
-        onProximityConnect?.(p);
+        notifyConnect(p);
+        notifyProximityConnect(p);
         cancelAttractionDrag();
         return;
       }
@@ -4057,7 +7818,7 @@ function RegistryProvider({
       for (const h of hits) {
         const vf = readVortexFullIdFromObject(h.object);
         if (vf && vf !== attractingFull && session.compat.has(vf) && !blockedVortexFullIds.has(vf) && vortexMetaRef.current.get(vf)?.objectId !== session.attractingObjectId) {
-          onConnect?.({ attracting: attractingFull, attracted: vf });
+          notifyConnect({ attracting: attractingFull, attracted: vf });
           cancelAttractionDrag();
           return;
         }
@@ -4072,8 +7833,8 @@ function RegistryProvider({
           }
           if (candidates.length === 1) {
             const p = { attracting: attractingFull, attracted: candidates[0]! };
-            onConnect?.(p);
-            onIndirectConnect?.(p);
+            notifyConnect(p);
+            notifyIndirectConnect(p);
             cancelAttractionDrag();
             return;
           }
@@ -4087,7 +7848,7 @@ function RegistryProvider({
               attractedObjectId: oid,
               candidates,
             });
-            onAttractionTargetRing?.({
+            notifyAttractionTargetRing({
               attracting: attractingFull,
               objectId: oid,
               vortexFullIds: candidates,
@@ -4098,7 +7859,7 @@ function RegistryProvider({
       }
       cancelAttractionDrag();
     },
-    [blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect, onAttractionTargetRing, onProximityConnect],
+    [blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, notifyAttractionTargetRing, notifyConnect, notifyIndirectConnect, notifyProximityConnect],
   );
 
   const updateIndirectPickPointer = reactHostPort.useCallback(
@@ -4147,8 +7908,8 @@ function RegistryProvider({
         const vf = readVortexFullIdFromObject(h.object);
         if (vf && awaitPick.candidates.includes(vf)) {
           const p = { attracting: awaitPick.attractingFullId, attracted: vf };
-          onConnect?.(p);
-          onIndirectConnect?.(p);
+          notifyConnect(p);
+          notifyIndirectConnect(p);
           cancelAttractionDrag();
           ev?.stopImmediatePropagation();
           return;
@@ -4156,12 +7917,19 @@ function RegistryProvider({
       }
       cancelAttractionDrag();
     },
-    [cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
+    [cancelAttractionDrag, collectPickRoots, notifyConnect, notifyIndirectConnect],
   );
 
-  const attachAttractionThreeEnv = reactHostPort.useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
-    attractionThreeRef.current = env;
-  }, []);
+  const attachAttractionThreeEnv = reactHostPort.useCallback(
+    (env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
+      attractionThreeRef.current = env;
+      if (env) {
+        requestAnimationFrame(() => warmAllMarqueeFootprintCaches());
+        scheduleDeferredCallback(warmAllMarqueeFootprintCaches);
+      }
+    },
+    [warmAllMarqueeFootprintCaches],
+  );
 
   const findNearestProximityRelocate = reactHostPort.useCallback(
     (world: Vector3, movingObjectId: string): AttractionPayload | null => {
@@ -4192,6 +7960,7 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
+      listVortexBindings,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4200,19 +7969,17 @@ function RegistryProvider({
       proximityRadius,
       proximityRelocateEnabled,
       relocateMode,
-      selectedObjectIds,
       selectionMode,
-      activeRelocateObjectId,
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
-      onSelect,
-      onConnect,
-      onProximityConnect,
-      onIndirectConnect,
-      onAttractionCompatibleObjects,
-      onAttractionTargetRing,
-      onRelocate,
+      onSelect: (snap) => hostCallbacksRef.current.onSelect?.(snap),
+      onConnect: notifyConnect,
+      onProximityConnect: notifyProximityConnect,
+      onIndirectConnect: notifyIndirectConnect,
+      onAttractionCompatibleObjects: notifyAttractionCompatibleObjects,
+      onAttractionTargetRing: notifyAttractionTargetRing,
+      onRelocate: notifyRelocate,
       attachAttractionThreeEnv,
       updateAttractionPointer,
       commitAttractionPointer,
@@ -4228,6 +7995,7 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
+      listVortexBindings,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4236,19 +8004,17 @@ function RegistryProvider({
       proximityRadius,
       proximityRelocateEnabled,
       relocateMode,
-      selectedObjectIds,
       selectionMode,
-      activeRelocateObjectId,
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
-      onSelect,
-      onConnect,
-      onProximityConnect,
-      onIndirectConnect,
-      onAttractionCompatibleObjects,
-      onAttractionTargetRing,
-      onRelocate,
+      hostCallbacksRef,
+      notifyAttractionCompatibleObjects,
+      notifyAttractionTargetRing,
+      notifyConnect,
+      notifyIndirectConnect,
+      notifyProximityConnect,
+      notifyRelocate,
       attachAttractionThreeEnv,
       updateAttractionPointer,
       commitAttractionPointer,
@@ -4259,21 +8025,44 @@ function RegistryProvider({
   const interactionValue = reactHostPort.useMemo<RegistryInteractionValue>(
     () => ({
       selectionMode,
+      commitSelection,
+      captureMarqueeCandidates,
+      previewMarqueeSelection,
+      cancelMarqueePreview,
+      commitMarqueeSelection,
       setSelectedObjectIds,
       setActiveRelocateObjectId,
-      clearSceneSelection,
+      clearSelection,
     }),
-    [clearSceneSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
+    [
+      cancelMarqueePreview,
+      captureMarqueeCandidates,
+      clearSelection,
+      commitMarqueeSelection,
+      commitSelection,
+      previewMarqueeSelection,
+      selectionMode,
+      setActiveRelocateObjectId,
+      setSelectedObjectIds,
+    ],
+  );
+  const marqueeValue = reactHostPort.useMemo<RegistryMarqueeValue>(
+    () => ({
+      selectionMethod,
+      marqueeSelectableKinds,
+      setMarqueeAttractions,
+    }),
+    [marqueeSelectableKinds, selectionMethod, setMarqueeAttractions],
   );
   const hoverValue = reactHostPort.useMemo<RegistryHoverValue>(
     () => ({
       hoverTarget,
-      setSceneHover,
-      clearSceneHover,
-      clearSceneHoverAll,
-      isSceneHovered,
+      setHover,
+      clearHover,
+      clearHoverAll,
+      isHovered,
     }),
-    [hoverTarget, setSceneHover, clearSceneHover, clearSceneHoverAll, isSceneHovered],
+    [hoverTarget, setHover, clearHover, clearHoverAll, isHovered],
   );
   const dragValue = reactHostPort.useMemo<RegistryDragState>(
     () => ({
@@ -4287,21 +8076,24 @@ function RegistryProvider({
   );
 
   return (
-    <SceneSelectionStoreContext.Provider value={selectionStore}>
+    <SelectionStoreContext.Provider value={selectionStore}>
       <RegistryCoreContext.Provider value={coreValue}>
         <RegistryInteractionContext.Provider value={interactionValue}>
-          <RegistryHoverContext.Provider value={hoverValue}>
-            <RegistryDragContext.Provider value={dragValue}>
-              {children}
-              <SceneHoverMissBridge />
-              <SceneHoverInvalidateBridge />
-              <SceneSelectionInvalidateBridge />
-              <SceneSelectionMissBridge />
-            </RegistryDragContext.Provider>
-          </RegistryHoverContext.Provider>
+          <RegistryMarqueeContext.Provider value={marqueeValue}>
+            <RegistryHoverContext.Provider value={hoverValue}>
+              <RegistryDragContext.Provider value={dragValue}>
+                {children}
+                <HoverMissBridge />
+                <HoverInvalidateBridge />
+                <SelectionInvalidateBridge />
+                <BulkSelectionVisualBridge />
+                <SelectionMissBridge />
+              </RegistryDragContext.Provider>
+            </RegistryHoverContext.Provider>
+          </RegistryMarqueeContext.Provider>
         </RegistryInteractionContext.Provider>
       </RegistryCoreContext.Provider>
-    </SceneSelectionStoreContext.Provider>
+    </SelectionStoreContext.Provider>
   );
 }
 
@@ -4351,15 +8143,264 @@ function DemandFrameloopKick(): null {
   return null;
 }
 
-function Inner(props: CanvasProps) {
-  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
+/** @emoji 👻 Live grid-plane preview while a workbench object-kind drag hovers the viewport. */
+function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: FixtureV1 }): React.ReactElement | null {
+  const { camera, gl } = useThree();
+  const controls = useThree((state) => state.controls as { target?: Vector3 } | null);
+  const lod = useLod();
+  const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(() => puzzle3dFixturePalettePointerDragRef.encoded);
+  const [origin, setOrigin] = reactHostPort.useState<Vec3 | null>(null);
+  const groupRef = reactHostPort.useRef<Group | null>(null);
+
+  reactHostPort.useEffect(() => {
+    const onSession = (event: Event): void => {
+      const detail = (event as CustomEvent<{ readonly encoded: string } | null>).detail;
+      setEncodedDrag(detail?.encoded ?? null);
+      if (!detail?.encoded) {
+        setOrigin(null);
+      }
+    };
+    window.addEventListener("puzzle3d-fixture-drag-session", onSession);
+    return () => window.removeEventListener("puzzle3d-fixture-drag-session", onSession);
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!encodedDrag) {
+      return;
+    }
+    const onMove = (event: PointerEvent): void => {
+      const cad = puzzle3dClientToGridPlaneCad({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        camera,
+        canvas: gl.domElement,
+        gridSnapEnabled: lod.gridSnapEnabled,
+        gridStepWorld: lod.gridStepWorld,
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
+      });
+      setOrigin(cad);
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [camera, controls, encodedDrag, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+
+  const preview = reactHostPort.useMemo(() => {
+    if (!encodedDrag || !origin) {
+      return null;
+    }
+    const fixture = decodePuzzle3dFixtureFromDragV1(encodedDrag);
+    const kindId = fixture?.objects[0]?.objectKind;
+    if (!kindId) {
+      return null;
+    }
+    const kind = catalogObjectKindById(props.kindCatalogs, kindId);
+    const meshUrl = resolveObjectKindMeshUrl(kindId, props.kindCatalogs, props.sceneFixture);
+    if (!meshUrl) {
+      return null;
+    }
+    return { meshUrl, scale: kind?.scale, origin, orientation: [0, 0, 0, 1] as Quat };
+  }, [encodedDrag, origin, props.kindCatalogs, props.sceneFixture]);
+
+  reactHostPort.useEffect(() => {
+    const group = groupRef.current;
+    if (!group || !preview) {
+      return;
+    }
+    applyObjectPose(group, preview.origin, preview.orientation, preview.scale);
+    updateWorldMatrixChain(group);
+  }, [preview]);
+
+  if (!preview) {
+    return null;
+  }
+  return (
+    <group ref={groupRef} raycast={() => null} renderOrder={10}>
+      <MeshBody meshUrl={preview.meshUrl} style="highlighted" scale={preview.scale} />
+    </group>
+  );
+}
+
+/** @emoji 📍 Registers grid-plane hit testing and canvas/window fixture drop targets for {@link Canvas3D}. */
+function FixtureDropPointerBridge(props: {
+  readonly enabled: boolean;
+  readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
+  readonly rootRef: React.RefObject<HTMLDivElement | null>;
+  readonly setFixtureDragActive: (active: boolean) => void;
+  readonly fixtureDragDepthRef: React.MutableRefObject<number>;
+}): null {
+  const { camera, gl } = useThree();
+  const controls = useThree((state) => state.controls as { target?: Vector3 } | null);
+  const lod = useLod();
+  const onFixtureDropRef = reactHostPort.useRef(props.onFixtureDrop);
+  onFixtureDropRef.current = props.onFixtureDrop;
+
+  reactHostPort.useEffect(() => {
+    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) =>
+      puzzle3dClientToGridPlaneCad({
+        clientX,
+        clientY,
+        camera,
+        canvas: gl.domElement,
+        gridSnapEnabled: lod.gridSnapEnabled,
+        gridStepWorld: lod.gridStepWorld,
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
+      });
+    return () => {
+      puzzle3dFixtureDropPointerToCadRef.current = null;
+    };
+  }, [camera, controls, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+
+  reactHostPort.useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const canvas = gl.domElement;
+    const root = props.rootRef.current;
+    const bindings = new EventBindingController();
+
+    const resetDragDepth = (): void => {
+      props.fixtureDragDepthRef.current = 0;
+      props.setFixtureDragActive(false);
+    };
+
+    const onDragEnter = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      props.fixtureDragDepthRef.current += 1;
+      props.setFixtureDragActive(true);
+    };
+
+    const onDragLeave = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      const target = event.currentTarget as HTMLElement;
+      const related = event.relatedTarget as Node | null;
+      if (related && target.contains(related)) {
+        return;
+      }
+      props.fixtureDragDepthRef.current = Math.max(0, props.fixtureDragDepthRef.current - 1);
+      if (props.fixtureDragDepthRef.current === 0) {
+        props.setFixtureDragActive(false);
+      }
+    };
+
+    const onDragOver = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer!.dropEffect = "copy";
+    };
+
+    const onDrop = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      resetDragDepth();
+      const fixture = readPuzzle3dFixtureDragDataTransfer(event.dataTransfer!);
+      if (!fixture) {
+        return;
+      }
+      const host = root ?? canvas.parentElement;
+      commitPuzzle3dFixtureDropAtClient(event.clientX, event.clientY, fixture, host, onFixtureDropRef.current);
+    };
+
+    const dropHost = (): HTMLElement | null => root ?? canvas.parentElement ?? canvas;
+
+    const onWindowPointerMove = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      props.setFixtureDragActive(isClientPointOverPuzzle3dFixtureDropHost(event.clientX, event.clientY, dropHost()));
+    };
+
+    const onWindowPointerUp = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      resetDragDepth();
+      endPuzzle3dFixturePalettePointerDrag(event.clientX, event.clientY, dropHost(), onFixtureDropRef.current);
+    };
+
+    const onWindowPointerCancel = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      resetDragDepth();
+      cancelPuzzle3dFixturePalettePointerDrag();
+    };
+
+    const attach = (element: HTMLElement | null | undefined): void => {
+      if (!element) {
+        return;
+      }
+      bindings.listen(element, "dragenter", onDragEnter);
+      bindings.listen(element, "dragleave", onDragLeave);
+      bindings.listen(element, "dragover", onDragOver);
+      bindings.listen(element, "drop", onDrop);
+    };
+
+    attach(canvas);
+    attach(root);
+    bindings.listen(window, "dragover", onDragOver);
+    bindings.listen(window, "drop", onDrop);
+    bindings.listen(window, "pointermove", onWindowPointerMove);
+    bindings.listen(window, "pointerup", onWindowPointerUp);
+    bindings.listen(window, "pointercancel", onWindowPointerCancel);
+    return () => bindings.dispose();
+  }, [gl, props.enabled, props.fixtureDragDepthRef, props.rootRef, props.setFixtureDragActive]);
+
+  return null;
+}
+
+function Inner(props: CanvasProps & {
+  readonly puzzle3dRootRef: React.RefObject<HTMLDivElement | null>;
+  readonly fixtureDragActive: boolean;
+  readonly setFixtureDragActive: (active: boolean) => void;
+  readonly fixtureDragDepthRef: React.MutableRefObject<number>;
+}) {
+  const {
+    camera: camProp,
+    chunkSize = 256,
+    proximityRadius = 12,
+    proximityRelocateEnabled = true,
+    children,
+    brushActive = false,
+    onBrushPlace,
+    brushPlacementCollisionTolerance = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+    kindCatalogs,
+    kindCompatibility,
+    fixtureDragDrop,
+    onFixtureDrop,
+    sceneFixture,
+    puzzle3dRootRef,
+    fixtureDragActive,
+    setFixtureDragActive,
+    fixtureDragDepthRef,
+    attractionSession,
+  } = props;
+  reactHostPort.useEffect(() => {
+    puzzle3dBrushToolActiveRef.current = brushActive;
+    if (!brushActive) {
+      puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+      puzzle3dBrushVortexHoverRef.current = false;
+    }
+    return () => {
+      puzzle3dBrushToolActiveRef.current = false;
+    };
+  }, [brushActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
-  const [sceneCamera, setSceneCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
+  const [puzzle3dCamera, setCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
   const gridSnapEnabled = props.gridSnapEnabled ?? false;
-  const showLodGrid = props.showLodGrid === true;
+  const showLodGrid = props.showLodGrid !== false;
   const automaticLod = props.automaticLod ?? true;
   const depthVariableLod = props.depthVariableLod ?? false;
   const manualLod = typeof props.lod === "number" && Number.isFinite(props.lod) && props.lod > 0 ? props.lod : DEFAULT_MANUAL_LOD;
@@ -4369,29 +8410,53 @@ function Inner(props: CanvasProps) {
   const zoom = camProp?.zoom ?? 1;
   const autoFitCamera = props.autoFitCamera !== false;
   const autoFitBehavior = props.autoFitBehavior ?? "initial";
-  const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
   const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
   const blocked = useLiveBlockedVortexFullIds(blockedFallback);
-  return (
-    <RegistryProvider
-      lodRef={lodRef}
-      kindCatalogs={props.kindCatalogs}
-      kindCompatibility={props.kindCompatibility}
-      blockedVortexFullIds={blocked}
-      proximityRadius={proximityRadius}
-      proximityRelocateEnabled={proximityRelocateEnabled}
-      selectionMode={props.selectionMode ?? "single"}
-      relocateMode={props.relocateMode ?? "translate"}
-      selection={props.selection}
-      onSelect={props.onSelect}
-      onConnect={props.onConnect}
-      onProximityConnect={props.onProximityConnect}
-      onIndirectConnect={props.onIndirectConnect}
-      onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
-      onAttractionTargetRing={props.onAttractionTargetRing}
-      onRelocate={props.onRelocate}
-    >
-      <LodBridge
+  const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
+  if (!selectionStoreRef.current) {
+    selectionStoreRef.current = createSelectionSnapshotStore(EMPTY_SELECTION_SNAPSHOT);
+  }
+  const selectionStore = selectionStoreRef.current;
+  const registryHostCallbacksRef = reactHostPort.useRef<RegistryHostCallbacks>({});
+  registryHostCallbacksRef.current = {
+    onSelect: props.onSelect,
+    onConnect: props.onConnect,
+    onProximityConnect: props.onProximityConnect,
+    onIndirectConnect: props.onIndirectConnect,
+    onAttractionCompatibleObjects: props.onAttractionCompatibleObjects,
+    onAttractionTargetRing: props.onAttractionTargetRing,
+    onRelocate: props.onRelocate,
+  };
+  const canvasHostRef = reactHostPort.useRef({
+    onCamera: props.onCamera,
+    onLodChange: props.onLodChange,
+    onBrushPlace: onBrushPlace,
+    onFixtureDrop: onFixtureDrop,
+  });
+  canvasHostRef.current = {
+    onCamera: props.onCamera,
+    onLodChange: props.onLodChange,
+    onBrushPlace,
+    onFixtureDrop,
+  };
+  const registryScene = reactHostPort.useMemo(
+    () => (
+      <RegistryProvider
+        lodRef={lodRef}
+        kindCatalogs={props.kindCatalogs}
+        kindCompatibility={props.kindCompatibility}
+        blockedVortexFullIds={blocked}
+        proximityRadius={proximityRadius}
+        proximityRelocateEnabled={proximityRelocateEnabled}
+        selectionMode={props.selectionMode ?? "default"}
+        relocateMode={props.relocateMode ?? "translate"}
+        selectionMethod={props.selectionMethod ?? "rectangle"}
+        marqueeSelectableKinds={props.marqueeSelectableKinds ?? { object: true, vortex: true, attraction: true }}
+        hostCallbacksRef={registryHostCallbacksRef}
+        attractionSession={attractionSession}
+        selectionStore={selectionStore}
+      >
+        <LodBridge
         lodRef={lodRef}
         distanceReference={distanceReference}
         gridFactor={gridFactor}
@@ -4400,27 +8465,84 @@ function Inner(props: CanvasProps) {
         automaticLod={automaticLod}
         depthVariableLod={depthVariableLod}
         manualLod={manualLod}
-        onLodChange={props.onLodChange}
+        onLodChange={(lod) => canvasHostRef.current.onLodChange?.(lod)}
       >
-        <PerspectiveCamera ref={setSceneCamera} makeDefault near={0.2} far={500_000} fov={50} />
-        <SceneCameraSeed camera={sceneCamera} position={pos} target={tgt} />
-        <OrbitGated camera={sceneCamera} onCamera={props.onCamera} zoom={zoom} />
-        {autoFitCamera ? <SceneAutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        <PerspectiveCamera ref={setCamera} makeDefault near={0.2} far={500_000} fov={50} />
+        <CameraSeed camera={puzzle3dCamera} position={pos} target={tgt} />
+        <OrbitGated camera={puzzle3dCamera} onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)} zoom={zoom} />
+        {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        <SelectionZoom attractions={sceneFixture?.attractions ?? []} zoom={zoom} onCamera={props.onCamera} />
         <AttractionThreeBinder />
         <AttractionWindowBridge />
+        <MarqueeBridge />
+        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? (
+          <FixtureDropPointerBridge
+            enabled
+            onFixtureDrop={(detail) => canvasHostRef.current.onFixtureDrop?.(detail)}
+            rootRef={puzzle3dRootRef}
+            setFixtureDragActive={setFixtureDragActive}
+            fixtureDragDepthRef={fixtureDragDepthRef}
+          />
+        ) : null}
+        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
+        {brushActive ? (
+          <BrushSession
+            brushActive={brushActive}
+            onBrushPlace={(payload) => canvasHostRef.current.onBrushPlace?.(payload)}
+            kindCatalogs={kindCatalogs}
+            kindCompatibility={kindCompatibility}
+            collisionTolerance={brushPlacementCollisionTolerance}
+          />
+        ) : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
         <directionalLight position={[120, 180, 80]} intensity={0.85} />
-        <Chunks chunkSize={chunkSize} maxDistance={maxDist}>
-          {chunked}
-        </Chunks>
-        <group data-scene-unchunked>{rest}</group>
+        <InnerSceneChildren chunkSize={chunkSize} maxDistance={maxDist} />
       </LodBridge>
     </RegistryProvider>
+    ),
+    [
+      attractionSession,
+      automaticLod,
+      blocked,
+      brushActive,
+      brushPlacementCollisionTolerance,
+      chunkSize,
+      depthVariableLod,
+      distanceReference,
+      fixtureDragDrop,
+      gridFactor,
+      gridSnapEnabled,
+      kindCatalogs,
+      kindCompatibility,
+      manualLod,
+      maxDist,
+      pos,
+      props.relocateMode,
+      props.selectionMethod,
+      props.selectionMode,
+      props.marqueeSelectableKinds,
+      proximityRelocateEnabled,
+      proximityRadius,
+      registryHostCallbacksRef,
+      sceneFixture,
+      selectionStore,
+      showLodGrid,
+      tgt,
+      zoom,
+    ],
+  );
+  return (
+    <SelectionStoreContext.Provider value={selectionStore}>
+      <InnerSceneChildrenContext.Provider value={children}>
+        <ControlledSelectionSync selection={props.selection} />
+        {registryScene}
+      </InnerSceneChildrenContext.Provider>
+    </SelectionStoreContext.Provider>
   );
 }
 
-export interface PlaySceneCanvasProps {
+export interface PlayCanvasProps {
   readonly fixture: FixtureV1;
   readonly proximityRelocateEnabled?: boolean;
   readonly kindCatalogs?: KindCatalogBundle;
@@ -4433,7 +8555,8 @@ export interface PlaySceneCanvasProps {
   readonly selectedId?: string | null;
   readonly selectedLabel?: string | null;
   readonly selectionMode?: SelectionMode;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
+  readonly selectionMethod?: SelectionMethod;
+  readonly marqueeSelectableKinds?: MarqueeSelectableKinds;
   readonly proximityRadius?: number;
   readonly chunkSize?: number;
   readonly gridFactor?: number;
@@ -4447,12 +8570,30 @@ export interface PlaySceneCanvasProps {
   readonly onCamera?: (s: CameraState) => void;
   readonly onAttractionCompatibleObjects?: () => void;
   readonly onAttractionTargetRing?: () => void;
+  readonly brushActive?: boolean;
+  readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
+  readonly brushPlacementCollisionTolerance?: number;
+  readonly fixtureDragDrop?: boolean;
+  readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
 }
 
-/** @emoji 🎬 Scene play canvas: {@link Canvas3D} wired to {@link SceneObjectStateProvider} and {@link SceneObjects}. */
-export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement {
-  const handleRelocate = useSceneObjectRelocate();
-  const handleConnect = useSceneObjectConnect();
+/** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
+export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
+  const setSelectedIdRef = reactHostPort.useRef(props.setSelectedId);
+  setSelectedIdRef.current = props.setSelectedId;
+  const sceneChildren = reactHostPort.useMemo(
+    () => (
+      <>
+        <Objects relocate={props.relocateMode} />
+        <AttractionTreeRoots />
+        <MarqueeAttractionSource />
+        <PlayTestBridge setSelectedId={(id) => setSelectedIdRef.current(id)} />
+      </>
+    ),
+    [props.relocateMode],
+  );
+  const handleRelocate = useObjectRelocate();
+  const handleConnect = useObjectConnect();
   const onIndirectConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
@@ -4492,6 +8633,8 @@ export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement
       proximityRelocateEnabled={props.proximityRelocateEnabled}
       relocateMode={props.relocateMode}
       selectionMode={props.selectionMode}
+      selectionMethod={props.selectionMethod}
+      marqueeSelectableKinds={props.marqueeSelectableKinds}
       selection={props.selection}
       gridFactor={props.gridFactor}
       showLodGrid={props.showLodGrid}
@@ -4505,26 +8648,29 @@ export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement
       onProximityConnect={onProximityConnect}
       onAttractionCompatibleObjects={onAttractionCompatibleObjects}
       onAttractionTargetRing={onAttractionTargetRing}
+      brushActive={props.brushActive}
+      onBrushPlace={props.onBrushPlace}
+      brushPlacementCollisionTolerance={props.brushPlacementCollisionTolerance}
+      fixtureDragDrop={props.fixtureDragDrop}
+      onFixtureDrop={props.onFixtureDrop}
+      sceneFixture={props.fixture}
       {...props.lodProps}
     >
-      <SceneObjects
-        selection={props.selection}
-        selectedObjectId={props.selectedId}
-        selectedVortexFullIds={props.selectedVortexFullIds}
-        relocate={props.relocateMode}
-      />
-      <SceneAttractionTreeRoots />
-      <Puzzle3dPlayTestBridge setSelectedId={props.setSelectedId} />
+      {sceneChildren}
     </Canvas3D>
   );
 }
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
-  const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
-  const [shellLod, setShellLod] = reactHostPort.useState(() => formatSceneLod(DEFAULT_MANUAL_LOD));
+  const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, fixtureDragDrop, onFixtureDrop, ...rest } = props;
+  const rootRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const [shellLod, setShellLod] = reactHostPort.useState(() => formatLod(DEFAULT_MANUAL_LOD));
+  const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
+  const fixtureDragDepthRef = reactHostPort.useRef(0);
+  const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
   const handleLod = reactHostPort.useCallback(
     (l: number) => {
-      const label = formatSceneLod(l);
+      const label = formatLod(l);
       setShellLod(label);
       onLodChange?.(l);
     },
@@ -4532,62 +8678,79 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
   );
   return (
     <div
-      className={className}
+      ref={rootRef}
+      className={`${className ?? ""}${fixtureDragActive ? " ring-primary ring-2 ring-inset" : ""}`.trim()}
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
-      onContextMenu={(event) => event.preventDefault()}
-      data-scene-domain={domain}
-      data-scene-root
-      data-scene-lod={shellLod}
+      data-puzzle3d-fixture-drag-active={fixtureDragActive ? "true" : undefined}
+      onContextMenu={(event) => {
+        if (puzzle3dRightDragActiveRef.current) {
+          event.preventDefault();
+        }
+      }}
+      data-puzzle3d-domain={domain}
+      data-puzzle3d-root
+      data-puzzle3d-lod={shellLod}
     >
       <Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
         <DemandFrameloopKick />
-        <Inner {...rest} domain={domain} onLodChange={handleLod}>
+        <Inner
+          {...rest}
+          domain={domain}
+          onLodChange={handleLod}
+          fixtureDragDrop={resolvedFixtureDragDrop}
+          onFixtureDrop={onFixtureDrop}
+          puzzle3dRootRef={rootRef}
+          fixtureDragActive={fixtureDragActive}
+          setFixtureDragActive={setFixtureDragActive}
+          fixtureDragDepthRef={fixtureDragDepthRef}
+        >
           {children}
         </Inner>
       </Canvas>
+      <Puzzle3dMarqueeOverlay />
     </div>
   );
 }
 
-/** @emoji ­ƒº¬ Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
-export function Puzzle3dPlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
-  const { setActiveRelocateObjectId, clearSceneSelection } = useRegistryInteraction();
+/** @emoji ­ƒº¬ Registers `window.__puzzle3dPlay*` hooks for Playwright (play harness only). */
+export function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
+  const { setActiveRelocateObjectId, clearSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
   reactHostPort.useEffect(() => {
     const w = window as unknown as {
-      __scenePlaySelect?: (id: string) => void;
-      __scenePlayActivate?: (id: string) => void;
-      __scenePlayClearSelection?: () => void;
-      __scenePlayPointerMiss?: () => void;
+      __puzzle3dPlaySelect?: (id: string) => void;
+      __puzzle3dPlayActivate?: (id: string) => void;
+      __puzzle3dPlayClearSelection?: () => void;
+      __puzzle3dPlayPointerMiss?: () => void;
     };
-    w.__scenePlaySelect = (id: string) => {
+    w.__puzzle3dPlaySelect = (id: string) => {
       setSelectedId(id);
     };
-    w.__scenePlayActivate = (id: string) => {
+    w.__puzzle3dPlayActivate = (id: string) => {
       setSelectedId(id);
       setActiveRelocateObjectId(id);
     };
-    w.__scenePlayClearSelection = () => {
+    w.__puzzle3dPlayClearSelection = () => {
       setSelectedId(null);
       setActiveRelocateObjectId(null);
     };
-    w.__scenePlayPointerMiss = () => {
-      clearSceneSelection();
+    w.__puzzle3dPlayPointerMiss = () => {
+      clearSelection();
     };
     return () => {
-      delete w.__scenePlaySelect;
-      delete w.__scenePlayActivate;
-      delete w.__scenePlayClearSelection;
-      delete w.__scenePlayPointerMiss;
+      delete w.__puzzle3dPlaySelect;
+      delete w.__puzzle3dPlayActivate;
+      delete w.__puzzle3dPlayClearSelection;
+      delete w.__puzzle3dPlayPointerMiss;
     };
-  }, [setSelectedId, setActiveRelocateObjectId, clearSceneSelection]);
+  }, [setSelectedId, setActiveRelocateObjectId, clearSelection]);
   return null;
 }
 
-//#endregion ­ƒÄ¼Scene
+//#endregion 🎬Viewport
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
   describe("lodFromCameraDistance", () => {
     it("maps orbit distance to scale ratio", () => {
       expect(lodFromCameraDistance(100, 100)).toBe(1);
@@ -4603,36 +8766,89 @@ if (import.meta.vitest) {
       expect(pickClosestLod(available, 5000)).toBe(1000);
     });
   });
+  describe("lodGridBandStepsWorld", () => {
+    it("scales puzzle 2d quanta by grid factor", () => {
+      expect(lodGridBandStepsWorld(10)).toEqual([100, 25, 5, 1]);
+      expect(lodGridBandStepsWorld(5)).toEqual([50, 12.5, 2.5, 0.5]);
+    });
+  });
+  describe("lodProgressiveGridLayers", () => {
+    it("adds finer bands as lod decreases", () => {
+      expect(lodProgressiveGridLayers(5000, 10)).toEqual([]);
+      expect(lodProgressiveGridLayers(500, 10).map((l) => l.stepWorld)).toEqual([100]);
+      expect(lodProgressiveGridLayers(100, 10).map((l) => l.stepWorld)).toEqual([100]);
+      expect(lodProgressiveGridLayers(50, 10).map((l) => l.stepWorld)).toEqual([100, 25]);
+      expect(lodProgressiveGridLayers(10, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5]);
+      expect(lodProgressiveGridLayers(2, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5, 1]);
+    });
+  });
   describe("lodGridStepWorld", () => {
-    it("returns null for very coarse lod and ~5 at lod 100", () => {
+    it("returns null when no grid and finest visible band otherwise", () => {
       expect(lodGridStepWorld(5000, 10)).toBe(null);
-      expect(lodGridStepWorld(100, 10)).toBe(50);
+      expect(lodGridStepWorld(100, 10)).toBe(100);
+      expect(lodGridStepWorld(50, 10)).toBe(25);
+      expect(lodGridStepWorld(10, 10)).toBe(5);
+      expect(lodGridStepWorld(2, 10)).toBe(1);
     });
   });
-  describe("lodHandlePrimaryVisible", () => {
-    it("draws handles at detail bands", () => {
-      expect(lodHandlePrimaryVisible(100)).toBe(true);
-      expect(lodHandlePrimaryVisible(201)).toBe(false);
+  describe("lodVortexPrimaryVisible", () => {
+    it("draws vortices at detail bands", () => {
+      expect(lodVortexPrimaryVisible(100)).toBe(true);
+      expect(lodVortexPrimaryVisible(201)).toBe(false);
     });
   });
-  describe("lodHandlePickProxy", () => {
+  describe("pickNearestScreenVortex", () => {
+    const c = (fullId: string, sx: number, sy: number, dist: number): ScreenVortexCandidate => ({ fullId, objectId: fullId.split(":")[0]!, sx, sy, dist });
+    it("returns null when no candidate sits within the screen radius", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("a:link", 200, 200, 41)] });
+      expect(picked).toBe(null);
+    });
+    it("prefers the candidate closest to the cursor in screen space", () => {
+      const picked = pickNearestScreenVortex({
+        cursorX: 100,
+        cursorY: 100,
+        surfaceDist: 40,
+        candidates: [c("far:link", 110, 110, 41), c("near:link", 102, 100, 41)],
+      });
+      expect(picked?.fullId).toBe("near:link");
+    });
+    it("selects a vortex embedded just behind the clicked surface (within depth tolerance)", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("embedded:link", 100, 100, 42)], depthTolerance: 6 });
+      expect(picked?.fullId).toBe("embedded:link");
+    });
+    it("skips a vortex occluded by foreground geometry beyond the depth tolerance", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("behind:link", 100, 100, 60)], depthTolerance: 6 });
+      expect(picked).toBe(null);
+    });
+    it("falls through to the next nearest candidate when the closest is occluded", () => {
+      const picked = pickNearestScreenVortex({
+        cursorX: 100,
+        cursorY: 100,
+        surfaceDist: 40,
+        candidates: [c("occluded:link", 101, 100, 80), c("visible:link", 105, 100, 41)],
+        depthTolerance: 6,
+      });
+      expect(picked?.fullId).toBe("visible:link");
+    });
+  });
+  describe("lodVortexPickProxy", () => {
     it("uses pick proxies in mid bands only", () => {
-      expect(lodHandlePickProxy(500)).toBe(true);
-      expect(lodHandlePickProxy(100)).toBe(false);
-      expect(lodHandlePickProxy(2000)).toBe(false);
+      expect(lodVortexPickProxy(500)).toBe(true);
+      expect(lodVortexPickProxy(100)).toBe(false);
+      expect(lodVortexPickProxy(2000)).toBe(false);
     });
   });
-  describe("sceneLodCanvasProps", () => {
+  describe("puzzle3dLodCanvasProps", () => {
     it("maps auto, depth, and manual modes", () => {
-      expect(sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: 50 })).toEqual({
+      expect(puzzle3dLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: 50 })).toEqual({
         automaticLod: true,
         depthVariableLod: false,
       });
-      expect(sceneLodCanvasProps({ automaticLod: false, depthVariableLod: true, manualLod: 50 })).toEqual({
+      expect(puzzle3dLodCanvasProps({ automaticLod: false, depthVariableLod: true, manualLod: 50 })).toEqual({
         automaticLod: false,
         depthVariableLod: true,
       });
-      expect(sceneLodCanvasProps({ automaticLod: false, depthVariableLod: false, manualLod: 42 })).toEqual({
+      expect(puzzle3dLodCanvasProps({ automaticLod: false, depthVariableLod: false, manualLod: 42 })).toEqual({
         automaticLod: false,
         depthVariableLod: false,
         lod: 42,
@@ -4667,19 +8883,18 @@ if (import.meta.vitest) {
       expect(bounds!.radius).toBeGreaterThan(5);
     });
   });
-  describe("sceneAutoFitShouldRun", () => {
+  describe("puzzle3dAutoFitShouldRun", () => {
     it("runs once for initial behavior", () => {
-      expect(sceneAutoFitShouldRun("initial", "a", "", false)).toBe(true);
-      expect(sceneAutoFitShouldRun("initial", "a", "a", true)).toBe(false);
-      expect(sceneAutoFitShouldRun("initial", "b", "a", true)).toBe(false);
+      expect(puzzle3dAutoFitShouldRun("initial", "a", "", false)).toBe(true);
+      expect(puzzle3dAutoFitShouldRun("initial", "a", "a", true)).toBe(false);
+      expect(puzzle3dAutoFitShouldRun("initial", "b", "a", true)).toBe(false);
     });
     it("refits when the object-group key changes in changes behavior", () => {
-      expect(sceneAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
+      expect(puzzle3dAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
     });
   });
   describe("cameraStateNearEqual", () => {
-    it("detects position and zoom deltas", async () => {
-      const { cameraStateNearEqual, updateSceneCameraInFixture } = await import("../play/index.ts");
+    it("detects position and zoom deltas", () => {
       const base = {
         position: [1, 2, 3] as const,
         target: [0, 0, 0] as const,
@@ -4694,17 +8909,30 @@ if (import.meta.vitest) {
         objects: [],
         attractions: [],
       };
-      const moved = updateSceneCameraInFixture(fixture, { position: [2, 2, 3] });
+      const moved = updatePuzzle3dCameraInFixture(fixture, { position: [2, 2, 3] });
       expect(moved).not.toBe(fixture);
-      const same = updateSceneCameraInFixture(fixture, { position: [1.0001, 2, 3] });
+      const same = updatePuzzle3dCameraInFixture(fixture, { position: [1.0001, 2, 3] });
       expect(same).toBe(fixture);
     });
   });
-  describe("applySceneAutoFitCamera", () => {
+  describe("applyAutoFitCamera", () => {
     it("offsets camera from bounds center", () => {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 10_000);
-      applySceneAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
+      applyAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
       expect(camera.position.length()).toBeGreaterThan(10);
+    });
+  });
+  describe("puzzle3dEaseInOutCubic01", () => {
+    it("is 0 at start and 1 at end", () => {
+      expect(puzzle3dEaseInOutCubic01(0)).toBe(0);
+      expect(puzzle3dEaseInOutCubic01(1)).toBe(1);
+      expect(puzzle3dEaseInOutCubic01(0.5)).toBe(0.5);
+    });
+  });
+  describe("puzzle3dFitCameraRigFromBounds", () => {
+    it("places camera offset from bounds center", () => {
+      const rig = puzzle3dFitCameraRigFromBounds({ center: [0, 0, 10], radius: 5 }, 1.25);
+      expect(rig.position.distanceTo(rig.target)).toBeGreaterThan(5);
     });
   });
   describe("cadVec3ToThree", () => {
@@ -4742,12 +8970,18 @@ if (import.meta.vitest) {
       expect(world.y).toBeCloseTo(expected[1], 5);
       expect(world.z).toBeCloseTo(expected[2], 5);
     });
+    it("maps CAD object-local direction into parent group space", () => {
+      const dir = cadObjectLocalDirectionToThreeGroupLocal([-1, 0, 0], [0, 0, 0], [0, 0, 0, 1]);
+      const len = Math.hypot(dir[0], dir[1], dir[2]);
+      expect(len).toBeCloseTo(1, 5);
+      expect(dir[0]).toBeLessThan(0);
+    });
   });
-  describe("objectMatchesSceneSelection", () => {
-    it("matches object id and parent of selected vortex", () => {
-      expect(objectMatchesSceneSelection("a", { objectIds: ["a"], vortexIds: [] })).toBe(true);
-      expect(objectMatchesSceneSelection("b", { objectIds: [], vortexIds: ["b:link"] })).toBe(true);
-      expect(objectMatchesSceneSelection("c", { objectIds: ["a"], vortexIds: ["b:link"] })).toBe(false);
+  describe("objectMatchesSelection", () => {
+    it("matches only directly selected object ids", () => {
+      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe(true);
+      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
+      expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
     });
   });
   describe("createSelectionSnapshotStore", () => {
@@ -4757,14 +8991,143 @@ if (import.meta.vitest) {
       const unsubscribe = store.subscribe(() => {
         count += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(count).toBe(1);
       expect(store.getSnapshot().objectIds).toEqual(["a"]);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(count).toBe(1);
       unsubscribe();
     });
+    it("notifies per-object listeners only when that object membership changes", () => {
+      const store = createSelectionSnapshotStore();
+      let aCount = 0;
+      let bCount = 0;
+      const unsubA = store.subscribeObject("a", () => {
+        aCount += 1;
+      });
+      const unsubB = store.subscribeObject("b", () => {
+        bCount += 1;
+      });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(0);
+      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: [], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(1);
+      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: ["c:v1"], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(1);
+      store.setSnapshot({ objectIds: [], vortexIds: ["c:v1"], attractionIds: [] });
+      expect(aCount).toBe(2);
+      expect(bCount).toBe(2);
+      unsubA();
+      unsubB();
+    });
+    it("keeps parent object unselected when only a child vortex is selected", () => {
+      const store = createSelectionSnapshotStore();
+      store.setSnapshot({ objectIds: [], vortexIds: ["parent:v1"], attractionIds: [] });
+      expect(store.isObjectSelected("parent")).toBe(false);
+      expect(store.isVortexSelected("parent:v1")).toBe(true);
+      expect(store.getPrimaryObjectId()).toBe("parent");
+    });
+    it("notifies attraction bulk listeners only when attraction membership changes", () => {
+      const store = createSelectionSnapshotStore();
+      let bulkCount = 0;
+      const unsub = store.subscribeAttractions(() => {
+        bulkCount += 1;
+      });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(bulkCount).toBe(0);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: ["t1"] });
+      expect(bulkCount).toBe(1);
+      expect(store.getAttractionIdSet().has("t1")).toBe(true);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: ["t1"] });
+      expect(bulkCount).toBe(1);
+      unsub();
+    });
+    it("disables mesh outlines when selection exceeds budget", () => {
+      const store = createSelectionSnapshotStore();
+      const ids = Array.from({ length: PUZZLE3D_MESH_OUTLINE_MAX_SELECTION + 1 }, (_, index) => `o${index}`);
+      store.setSnapshot({ objectIds: ids, vortexIds: [], attractionIds: [] });
+      expect(store.getMeshOutlineEnabled()).toBe(false);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(store.getMeshOutlineEnabled()).toBe(true);
+    });
+    it("increments revision on each selection change", () => {
+      const store = createSelectionSnapshotStore();
+      expect(store.getRevision()).toBe(1);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(store.getRevision()).toBe(2);
+    });
   });
+  describe("puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint", () => {
+    it("infers west from negative local X for brush on door tambour west", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "s",
+            meshUrl: "/meshes/capsule_s.glb",
+            vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          },
+          {
+            id: "L",
+            meshUrl: "/meshes/capsule_L.glb",
+            vortices: [{ vortexKind: "door capsule east", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          },
+        ],
+        vortices: [{ id: "door capsule east" }, { id: "door capsule west" }, { id: "door tambour west" }],
+      };
+      const enriched = enrichKindCatalogBundleDoorCapsules(catalogs)!;
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour west" };
+      const compat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour west" },
+      ];
+      const list = brushCompatibleCandidates(target, enriched, compat);
+      expect(list.some((entry) => entry.objectKindId === "s")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
+      const s = enriched.objects.find((k) => k.id === "s");
+      expect(s?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule west"]);
+      expect(s?.vortices).toHaveLength(1);
+    });
+    it("infers east or west from CAD X even when kit port id names the other side", () => {
+      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule east", { x: -1, y: 0, z: 0 })).toBe("door capsule west");
+      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule west", { x: 1, y: 0, z: 0 })).toBe("door capsule east");
+    });
+  });
+
+  describe("puzzle3dObjectKindVorticesFromKitConnectors", () => {
+    it("keeps two connectors with the same vortexKind at different CAD positions", () => {
+      const vortexKinds: VortexKind[] = [{ id: "core rectangular bottom", name: "core rectangular bottom", color: "#000" }];
+      const handleRows = [{ id: "semio.kit.handle.core-rect-bottom", name: "core rectangular bottom" }];
+      const label = (hk: string) => puzzle3dVortexKindLabelFromHandleKind(hk, vortexKinds, handleRows);
+      const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
+        [
+          { point: { x: -7.5, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+          { point: { x: -18.6, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+        ],
+        label,
+      );
+      expect(vortices).toHaveLength(2);
+      expect(vortices[0]?.vortexKind).toBe("core rectangular bottom");
+      expect(vortices[0]?.position).toEqual([-7.5, -7.7, 7.5]);
+      expect(vortices[1]?.position).toEqual([-18.6, -7.7, 7.5]);
+    });
+    it("infers a single west door vortex from negative-X kit connector", () => {
+      const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
+        [
+          {
+            point: { x: -1.3, y: -1.25, z: 0 },
+            direction: { x: -1, y: 0, z: 0 },
+            port: { handleKind: "door capsule east" },
+          },
+        ],
+        (hk) => hk,
+      );
+      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule west"]);
+      expect(vortices).toHaveLength(1);
+    });
+  });
+
   describe("parseFixtureV1", () => {
     it("accepts minimal fixture", () => {
       const f = parseFixtureV1({
@@ -4810,8 +9173,8 @@ if (import.meta.vitest) {
               {
                 id: "a:v1",
                 position: [0, 0, 0],
-                handleMeshUrl: "/fallback.glb",
-                handleMeshByLod: [
+                vortexMeshUrl: "/fallback.glb",
+                vortexMeshByLod: [
                   { lod: 100, url: "/d.glb" },
                   { lod: 50, url: "/u.glb" },
                 ],
@@ -4823,8 +9186,8 @@ if (import.meta.vitest) {
       const o = f?.objects[0];
       expect(o?.meshByLod?.[0]?.url).toBe("/fine.glb");
       const v = o?.vortices[0];
-      expect(v?.handleMeshByLod?.[0]?.url).toBe("/d.glb");
-      expect(v?.handleMeshUrl).toBe("/fallback.glb");
+      expect(v?.vortexMeshByLod?.[0]?.url).toBe("/d.glb");
+      expect(v?.vortexMeshUrl).toBe("/fallback.glb");
     });
   });
   describe("chunkKey", () => {
@@ -4873,11 +9236,11 @@ if (import.meta.vitest) {
       ).toBe("original");
     });
     it("compares scene hover targets by kind and id", () => {
-      expect(sceneHoverTargetsEqual(null, null)).toBe(true);
-      expect(sceneHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "a" })).toBe(true);
-      expect(sceneHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "b" })).toBe(false);
-      expect(sceneHoverTargetsEqual({ kind: "vortex", fullId: "o:v" }, { kind: "object", id: "o" })).toBe(false);
-      expect(sceneHoverTargetsEqual({ kind: "attraction", id: "e1" }, { kind: "attraction", id: "e1" })).toBe(true);
+      expect(puzzle3dHoverTargetsEqual(null, null)).toBe(true);
+      expect(puzzle3dHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "a" })).toBe(true);
+      expect(puzzle3dHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "b" })).toBe(false);
+      expect(puzzle3dHoverTargetsEqual({ kind: "vortex", fullId: "o:v" }, { kind: "object", id: "o" })).toBe(false);
+      expect(puzzle3dHoverTargetsEqual({ kind: "attraction", id: "e1" }, { kind: "attraction", id: "e1" })).toBe(true);
     });
 
     it("orders disabled, selected, highlighted, hovered, then default", () => {
@@ -4905,6 +9268,14 @@ if (import.meta.vitest) {
       expect(hovered?.lineColor).not.toMatch(/primary/i);
       expect(highlighted?.lineColor).not.toMatch(/primary/i);
     });
+    it("returns srgb-compatible colors for Three.js", () => {
+      for (const kind of ["neutral", "hovered", "selected", "highlighted", "disabled"] as const) {
+        const colors = meshStyleColors(kind);
+        expect(colors?.meshColor).not.toMatch(/^oklab\(/iu);
+        expect(colors?.lineColor).not.toMatch(/^oklab\(/iu);
+        expect(colors?.emissiveColor).not.toMatch(/^oklab\(/iu);
+      }
+    });
   });
   describe("styledMeshPoolAcquire", () => {
     it("tracks styled pool keys separately from base url", () => {
@@ -4929,36 +9300,36 @@ if (import.meta.vitest) {
       expect(s.has("b:h2")).toBe(true);
     });
   });
-  describe("handlesAttractionCompatibleForDrag", () => {
+  describe("vorticesAttractionCompatibleForDrag", () => {
     it("allows all when rules empty", () => {
-      const ok = handlesAttractionCompatibleForDrag({ objectId: "a", objectKind: "n1", vortexKind: "h1" }, { objectId: "b", objectKind: "n2", vortexKind: "h2" }, [], undefined);
+      const ok = vorticesAttractionCompatibleForDrag({ objectId: "a", objectKind: "n1", vortexKind: "h1" }, { objectId: "b", objectKind: "n2", vortexKind: "h2" }, [], undefined);
       expect(ok).toBe(true);
     });
-    it("matches handle specificity", () => {
-      const ok = handlesAttractionCompatibleForDrag({ objectId: "a", objectKind: "x", vortexKind: "h1" }, { objectId: "b", objectKind: "y", vortexKind: "h2" }, [{ source: "h1", target: "h2", specificity: "handle" }], undefined);
+    it("matches vortex specificity", () => {
+      const ok = vorticesAttractionCompatibleForDrag({ objectId: "a", objectKind: "x", vortexKind: "h1" }, { objectId: "b", objectKind: "y", vortexKind: "h2" }, [{ source: "h1", target: "h2", specificity: "vortex" }], undefined);
       expect(ok).toBe(true);
     });
   });
-  describe("resolveWireKindForVortex", () => {
-    it("falls back to default wire id", () => {
-      expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
+  describe("resolveCableKindForVortex", () => {
+    it("falls back to default cable id", () => {
+      expect(resolveCableKindForVortex("any", undefined)).toBe("cable.link");
     });
   });
-  describe("wouldAttractionEdgeIntroduceCycle", () => {
-    it("detects a closing edge on an existing chain", () => {
-      const edges = [
+  describe("wouldObjectAttractionIntroduceCycle", () => {
+    it("detects a closing link on an existing chain", () => {
+      const objectAttractions = [
         { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
         { attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
       ];
-      expect(wouldAttractionEdgeIntroduceCycle(edges, "c", "a")).toBe(true);
-      expect(wouldAttractionEdgeIntroduceCycle(edges, "a", "d")).toBe(false);
+      expect(wouldObjectAttractionIntroduceCycle(objectAttractions, "c", "a")).toBe(true);
+      expect(wouldObjectAttractionIntroduceCycle(objectAttractions, "a", "d")).toBe(false);
     });
   });
-  describe("resolveSceneAttractionTree", () => {
+  describe("resolveAttractionTree", () => {
     it("breaks ownership cycles in cyclic attraction components", () => {
-      const tree = resolveSceneAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["a", "b", "c"],
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
           { attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
           { attractingObjectId: "c", attractedObjectId: "a", attractionId: "t3" },
@@ -4969,10 +9340,10 @@ if (import.meta.vitest) {
       }
     });
     it("picks parent closer to wormhole when multiply attracted", () => {
-      const tree = resolveSceneAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b", "c"],
         explicitWormholeIds: new Set(["w"]),
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
           { attractingObjectId: "w", attractedObjectId: "c", attractionId: "t3" },
@@ -4983,10 +9354,10 @@ if (import.meta.vitest) {
       expect(tree.attractingByObjectId.get("a")).toEqual(["b"]);
     });
     it("lists attracted children per owner", () => {
-      const tree = resolveSceneAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b"],
         explicitWormholeIds: new Set(["w"]),
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
         ],
@@ -4994,14 +9365,14 @@ if (import.meta.vitest) {
       expect(collectAttractedDescendantIds("w", tree.attractingByObjectId)).toEqual(["a", "b"]);
     });
   });
-  describe("attractionEdgesFromAttractions", () => {
+  describe("objectAttractionsFromAttractions", () => {
     it("maps vortex endpoints to object ids", () => {
-      const edges = attractionEdgesFromAttractions([{ id: "x", attracting: "objA:v1", attracted: "objB:link" }]);
-      expect(edges[0]?.attractingObjectId).toBe("objA");
-      expect(edges[0]?.attractedObjectId).toBe("objB");
+      const links = objectAttractionsFromAttractions([{ id: "x", attracting: "objA:v1", attracted: "objB:link" }]);
+      expect(links[0]?.attractingObjectId).toBe("objA");
+      expect(links[0]?.attractedObjectId).toBe("objB");
     });
   });
-  describe("applyRelocateToSceneFixture", () => {
+  describe("applyRelocateToFixture", () => {
     it("translates attracted descendants when adjacency is passed", () => {
       const fixture: FixtureV1 = {
         objects: [
@@ -5010,11 +9381,11 @@ if (import.meta.vitest) {
         ],
         attractions: [{ id: "t1", attracting: "a:h1", attracted: "b:h2" }],
       };
-      const tree = resolveSceneAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["a", "b"],
-        edges: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
+        objectAttractions: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
       });
-      const next = applyRelocateToSceneFixture(
+      const next = applyRelocateToFixture(
         fixture,
         {
           objectId: "a",
@@ -5026,6 +9397,993 @@ if (import.meta.vitest) {
       );
       expect(next.objects[0]?.origin).toEqual([2, 0, 0]);
       expect(next.objects[1]?.origin).toEqual([3, 0, 0]);
+    });
+  });
+  describe("marqueeModeFromModifiers", () => {
+    it("maps shift and ctrl to additive, subtractive, and invertive", () => {
+      expect(marqueeModeFromModifiers({})).toBe("default");
+      expect(marqueeModeFromModifiers({ ctrlKey: true })).toBe("subtractive");
+      expect(marqueeModeFromModifiers({ shiftKey: true })).toBe("additive");
+      expect(marqueeModeFromModifiers({ shiftKey: true, ctrlKey: true })).toBe("invertive");
+    });
+  });
+  describe("marqueeIsCrossing", () => {
+    it("is crossing when the drag ends left of the start", () => {
+      expect(marqueeIsCrossing(100, 80)).toBe(true);
+      expect(marqueeIsCrossing(80, 100)).toBe(false);
+    });
+  });
+  describe("screenBoundsFromClientPoints", () => {
+    it("returns null for an empty list", () => {
+      expect(screenBoundsFromClientPoints([])).toBeNull();
+    });
+    it("builds an axis-aligned rect from points", () => {
+      expect(screenBoundsFromClientPoints([{ x: 10, y: 20 }, { x: 30, y: 5 }])).toEqual({ left: 10, right: 30, top: 5, bottom: 20 });
+    });
+  });
+  describe("screenRectIntersectsPolygon", () => {
+    it("detects overlap when only edges cross", () => {
+      const bounds = { left: -10, right: 110, top: 50, bottom: 60 };
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      expect(screenRectIntersectsPolygon(bounds, polygon)).toBe(true);
+    });
+  });
+  describe("projectObjectGroupToScreenPoints", () => {
+    it("returns a convex hull and screen bounds from warmed mesh geometry boxes", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(2, 2, 2));
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(footprint).not.toBeNull();
+      expect(footprint!.hull.length).toBeGreaterThanOrEqual(4);
+      expect(footprint!.screenBounds.right).toBeGreaterThan(footprint!.screenBounds.left);
+      expect(footprint!.screenBounds.bottom).toBeGreaterThan(footprint!.screenBounds.top);
+    });
+    it("returns a tighter hull than the inflated union screen rect for a rotated mesh", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 8, 16);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(4, 1, 1));
+      mesh.rotation.set(0, 0, Math.PI / 4);
+      mesh.updateMatrixWorld(true);
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(footprint).not.toBeNull();
+      const hullBounds = screenBoundsFromClientPoints(footprint!.hull)!;
+      const unionBounds = footprint!.screenBounds;
+      expect(hullBounds.right - hullBounds.left).toBeLessThanOrEqual(unionBounds.right - unionBounds.left + 1e-6);
+      expect(hullBounds.bottom - hullBounds.top).toBeLessThanOrEqual(unionBounds.bottom - unionBounds.top + 1e-6);
+    });
+  });
+  describe("warmObjectGroupMarqueeBounds", () => {
+    it("computes geometry boundingBox for group meshes", () => {
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      expect(mesh.geometry.boundingBox).toBeNull();
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      expect(mesh.geometry.boundingBox).not.toBeNull();
+    });
+    it("skips meshes that already have a boundingBox", () => {
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      mesh.geometry.computeBoundingBox();
+      const box = mesh.geometry.boundingBox;
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      expect(mesh.geometry.boundingBox).toBe(box);
+    });
+    it("buildObjectMarqueeFootprintCache stores mesh corners for projection", () => {
+      invalidateObjectMarqueeFootprintCache();
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      root.add(mesh);
+      const cache = buildObjectMarqueeFootprintCache(root, "obj-a");
+      expect(cache.meshes).toHaveLength(1);
+      expect(cache.meshes[0]?.localCorners).toHaveLength(8);
+      expect(getObjectMarqueeFootprintCache("obj-a")).toBe(cache);
+    });
+    it("projectObjectMarqueeFootprintFromCache does not call computeBoundingBox", () => {
+      invalidateObjectMarqueeFootprintCache();
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      root.add(mesh);
+      const cache = buildObjectMarqueeFootprintCache(root, "obj-b");
+      const geometry = mesh.geometry;
+      const computeSpy = vi.spyOn(geometry, "computeBoundingBox");
+      const footprint = projectObjectMarqueeFootprintFromCache(cache, camera, rect);
+      expect(footprint).not.toBeNull();
+      expect(computeSpy).not.toHaveBeenCalled();
+      computeSpy.mockRestore();
+    });
+  });
+  describe("marqueeSelectionFromCandidates", () => {
+    const rect = screenRectFromClientPoints(0, 0, 100, 100);
+    const testMarqueeCandidate = (kind: MarqueeCandidate["kind"], id: string, screenBounds: ScreenRect): MarqueeCandidate => ({
+      kind,
+      id,
+      screenBounds,
+      hull: [
+        { x: screenBounds.left, y: screenBounds.top },
+        { x: screenBounds.right, y: screenBounds.top },
+        { x: screenBounds.right, y: screenBounds.bottom },
+        { x: screenBounds.left, y: screenBounds.bottom },
+      ],
+    });
+    it("window mode requires full enclosure", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          testMarqueeCandidate("object", "inside", { left: 10, right: 20, top: 10, bottom: 20 }),
+          testMarqueeCandidate("object", "partial", { left: 90, right: 120, top: 90, bottom: 120 }),
+        ],
+      });
+      expect(snap.objectIds).toEqual(["inside"]);
+    });
+    it("crossing mode selects partial overlap", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: true,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [testMarqueeCandidate("object", "partial", { left: 90, right: 120, top: 90, bottom: 120 })],
+      });
+      expect(snap.objectIds).toEqual(["partial"]);
+    });
+    it("respects kind toggles", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: false, vortex: true, attraction: false },
+        candidates: [
+          testMarqueeCandidate("object", "obj", { left: 10, right: 10, top: 10, bottom: 10 }),
+          { kind: "vortex", id: "a:v1", hull: [{ x: 12, y: 12 }], screenBounds: { left: 12, right: 12, top: 12, bottom: 12 } },
+        ],
+      });
+      expect(snap.objectIds).toEqual([]);
+      expect(snap.vortexIds).toEqual(["a:v1"]);
+    });
+    it("skips candidates without screen bounds", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [{ kind: "object", id: "hidden", hull: [], screenBounds: null }],
+      });
+      expect(snap.objectIds).toEqual([]);
+    });
+    it("window mode selects when the hull is fully enclosed even if screen bounds extend past the marquee", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "tight-hull",
+            hull: [
+              { x: 40, y: 40 },
+              { x: 60, y: 40 },
+              { x: 60, y: 60 },
+              { x: 40, y: 60 },
+            ],
+            screenBounds: { left: 10, right: 90, top: 10, bottom: 90 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["tight-hull"]);
+    });
+    it("crossing mode rejects overlap that only exists on inflated screen bounds", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: true,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "outside-hull",
+            hull: [{ x: 200, y: 200 }],
+            screenBounds: { left: -10, right: 110, top: 50, bottom: 60 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual([]);
+    });
+    it("crossing mode selects when a hull edge crosses the marquee", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: true,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "edge-hit",
+            hull: [
+              { x: -20, y: 50 },
+              { x: 120, y: 50 },
+            ],
+            screenBounds: { left: -20, right: 120, top: 50, bottom: 50 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["edge-hit"]);
+    });
+    it("lasso window mode requires every hull point inside the polygon", () => {
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      const snap = marqueeSelectionFromCandidates({
+        method: "lasso",
+        crossing: false,
+        rect: null,
+        polygon,
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "inside",
+            hull: [
+              { x: 40, y: 40 },
+              { x: 60, y: 40 },
+              { x: 60, y: 60 },
+              { x: 40, y: 60 },
+            ],
+            screenBounds: { left: 40, right: 60, top: 40, bottom: 60 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["inside"]);
+    });
+    it("lasso crossing mode uses hull polygon intersection", () => {
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      const snap = marqueeSelectionFromCandidates({
+        method: "lasso",
+        crossing: true,
+        rect: null,
+        polygon,
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "edge-hit",
+            hull: [
+              { x: -20, y: 50 },
+              { x: 120, y: 50 },
+            ],
+            screenBounds: { left: -20, right: 120, top: 50, bottom: 50 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["edge-hit"]);
+    });
+  });
+  describe("convexHullScreenPoints", () => {
+    it("returns the input for fewer than two unique points", () => {
+      expect(convexHullScreenPoints([{ x: 1, y: 2 }])).toEqual([{ x: 1, y: 2 }]);
+    });
+    it("orders hull vertices for a square", () => {
+      const hull = convexHullScreenPoints([
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+        { x: 5, y: 5 },
+      ]);
+      expect(hull.length).toBe(4);
+    });
+  });
+  describe("mergeSelectionSnapshot", () => {
+    it("replaces on default and inverts membership on invertive", () => {
+      const current = { objectIds: ["a"], vortexIds: [], attractionIds: [] };
+      const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [] };
+      expect(mergeSelectionSnapshot("default", current, incoming).objectIds).toEqual(["b"]);
+      expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
+    });
+  });
+  describe("screenPolygonsIntersect", () => {
+    it("detects edge crossings between two polygons", () => {
+      const hull = [
+        { x: -20, y: 50 },
+        { x: 120, y: 50 },
+      ];
+      const lasso = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      expect(screenPolygonsIntersect(hull, lasso)).toBe(true);
+    });
+  });
+  describe("resolveMarqueeSelectionGesture", () => {
+    const rect = screenRectFromClientPoints(0, 0, 100, 100);
+    const candidates = [
+      {
+        kind: "object" as const,
+        id: "inside",
+        hull: [
+          { x: 10, y: 10 },
+          { x: 20, y: 10 },
+          { x: 20, y: 20 },
+          { x: 10, y: 20 },
+        ],
+        screenBounds: { left: 10, right: 20, top: 10, bottom: 20 },
+      },
+      {
+        kind: "object" as const,
+        id: "outside",
+        hull: [{ x: 200, y: 200 }],
+        screenBounds: { left: 200, right: 200, top: 200, bottom: 200 },
+      },
+    ];
+    const gesture = {
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 100,
+      path: [
+        { x: 0, y: 0 },
+        { x: 100, y: 100 },
+      ],
+      modifiers: { shiftKey: false, ctrlKey: false, metaKey: false },
+    };
+    it("replaces selection on default mode from a fixed base", () => {
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const snap = resolveMarqueeSelectionGesture(gesture, {
+        method: "rectangle",
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+        base,
+      });
+      expect(snap.objectIds).toEqual(["inside"]);
+    });
+    it("additive mode merges against the captured base not the live preview", () => {
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const snap = resolveMarqueeSelectionGesture(
+        { ...gesture, modifiers: { shiftKey: true, ctrlKey: false, metaKey: false } },
+        {
+          method: "rectangle",
+          kinds: { object: true, vortex: true, attraction: true },
+          candidates,
+          base,
+        },
+      );
+      expect(snap.objectIds.sort()).toEqual(["inside", "keep"]);
+    });
+    it("matches window-mode hit testing from marqueeSelectionFromCandidates", () => {
+      const fromCandidates = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+      });
+      const fromGesture = resolveMarqueeSelectionGesture(gesture, {
+        method: "rectangle",
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+        base: { objectIds: [], vortexIds: [], attractionIds: [] },
+      });
+      expect(fromGesture.objectIds).toEqual(fromCandidates.objectIds);
+    });
+  });
+  describe("palette object fixture drag", () => {
+    it("mergePaletteObjectFromDrop places object kind at CAD world point", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "J",
+            label: "J",
+            meshUrl: "test.glb",
+            vortices: [{ vortexKind: "h1", position: [0, 0, 0] }],
+          },
+        ],
+      };
+      const dragFixture = buildPaletteObjectDragFixture("J");
+      const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 10, y: 20 }, worldCad: [12, 34, 56] }, catalogs);
+      expect(placed?.objectKind).toBe("J");
+      expect(placed?.origin).toEqual([12, 34, 56]);
+      expect(placed?.meshUrl).toBe("test.glb");
+    });
+    it("resolveObjectKindMeshUrl falls back to scene object mesh when catalog omits meshUrl", () => {
+      const catalogs: KindCatalogBundle = { objects: [{ id: "Base", label: "Base" }] };
+      const scene: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [{ id: "tower-base", objectKind: "Base", meshUrl: "/meshes/base.glb", origin: [0, 0, 0], vortices: [] }],
+      };
+      expect(resolveObjectKindMeshUrl("Base", catalogs, scene)).toBe("/meshes/base.glb");
+      const dragFixture = buildPaletteObjectDragFixture("Base");
+      const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
+      expect(placed?.meshUrl).toBe("/meshes/base.glb");
+      expect(placed?.origin).toEqual([1, 2, 3]);
+    });
+    it("applyObjectKindToFixtureObject swaps meshUrl from the catalog", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          { id: "kind-a", meshUrl: "/meshes/a.glb" },
+          { id: "kind-b", meshUrl: "/meshes/b.glb" },
+        ],
+      };
+      const object: FixtureObjectV1 = { id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] };
+      const next = applyObjectKindToFixtureObject(object, "kind-b", catalogs);
+      expect(next.objectKind).toBe("kind-b");
+      expect(next.meshUrl).toBe("/meshes/b.glb");
+      expect(fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [object] })).not.toBe(
+        fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [next] }),
+      );
+    });
+    it("ObjectStore syncAppearanceFromFixture updates meshUrl on object-kind change", () => {
+      const store = new ObjectStore();
+      const initial: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] }],
+      };
+      store.initFromFixture(initial);
+      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/a.glb");
+      store.syncAppearanceFromFixture({
+        ...initial,
+        objects: [{ id: "obj", objectKind: "kind-b", meshUrl: "/meshes/b.glb", origin: [0, 0, 0], vortices: [] }],
+      });
+      expect(store.getRecord("obj")?.objectKind).toBe("kind-b");
+      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/b.glb");
+    });
+    it("puzzle3dGridPlacementAnchorCad uses orbit XY and datum Z", () => {
+      const targetThree = new Vector3(...cadVec3ToThree([12, -8, 40]));
+      const anchor = puzzle3dGridPlacementAnchorCad(targetThree);
+      expect(anchor[0]).toBeCloseTo(12, 5);
+      expect(anchor[1]).toBeCloseTo(-8, 5);
+      expect(anchor[2]).toBe(0);
+    });
+    it("puzzle3dClientToGridPlaneCad hits datum plane not camera look-at Z", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 100_000);
+      const lookAtCad: Vec3 = [0, 0, 40];
+      const lookAtThree = new Vector3(...cadVec3ToThree(lookAtCad));
+      camera.position.set(lookAtThree.x + 240, lookAtThree.y + 180, lookAtThree.z + 120);
+      camera.lookAt(lookAtThree);
+      camera.updateMatrixWorld();
+      const canvas = document.createElement("canvas");
+      canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      const atDatum = puzzle3dClientToGridPlaneCad({
+        clientX: 400,
+        clientY: 300,
+        camera,
+        canvas,
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(lookAtThree),
+      });
+      const atLookAtHeight = puzzle3dClientToGridPlaneCad({
+        clientX: 400,
+        clientY: 300,
+        camera,
+        canvas,
+        gridPlaneAnchorCad: lookAtCad,
+      });
+      expect(atLookAtHeight[2] - atDatum[2]).toBeGreaterThan(30);
+      expect(Math.abs(atDatum[2])).toBeLessThan(2);
+    });
+    it("beginPuzzle3dFixturePalettePointerDrag commits drop on pointer up over host", () => {
+      const host = document.createElement("div");
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      puzzle3dFixtureDropPointerToCadRef.current = () => [5, 6, 7];
+      const dragFixture = buildPaletteObjectDragFixture("J");
+      const encoded = encodeFixtureForDragV1(dragFixture);
+      let dropped: Puzzle3dFixtureDropDetail | null = null;
+      beginPuzzle3dFixturePalettePointerDrag(encoded);
+      expect(puzzle3dFixturePalettePointerDragRef.active).toBe(true);
+      endPuzzle3dFixturePalettePointerDrag(10, 10, host, (detail) => {
+        dropped = detail;
+      });
+      expect(puzzle3dFixturePalettePointerDragRef.active).toBe(false);
+      expect(dropped?.worldCad).toEqual([5, 6, 7]);
+    });
+    it("puzzle3dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
+      const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture("J"));
+      const dragData = new Map([["row-j", { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded }]]);
+      const controller = puzzle3dFixturePaletteTreeDragController(dragData);
+      const item = { id: "row-j", label: "J" };
+      const section = { id: "objects", label: "Objects" };
+      let session: string | null = "pending";
+      const onSession = (event: Event): void => {
+        const detail = (event as CustomEvent<{ readonly encoded: string } | null>).detail;
+        session = detail?.encoded ?? null;
+      };
+      window.addEventListener("puzzle3d-fixture-drag-session", onSession);
+      try {
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(false);
+        controller.onDragStart?.({ items: [item], sourceItem: item, section });
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(true);
+        expect(session).toBe(encoded);
+        controller.onDragEnd?.({ items: [item], sourceItem: item, section });
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(false);
+        expect(session).toBeNull();
+      } finally {
+        window.removeEventListener("puzzle3d-fixture-drag-session", onSession);
+        puzzle3dFixturePaletteDragRef.active = false;
+      }
+    });
+    it("snapCadVec3ToGridStep rounds to grid step", () => {
+      expect(snapCadVec3ToGridStep([12.3, 0.1, 56.8], 5)).toEqual([10, 0, 55]);
+    });
+  });
+  describe("brush", () => {
+    const brushCatalogs = enrichKindCatalogBundleDoorCapsules({
+      objects: [
+        {
+          id: "J",
+          meshUrl: "/meshes/capsule_J.glb",
+          vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+        },
+        {
+          id: "L",
+          meshUrl: "/meshes/capsule_L.glb",
+          vortices: [{ vortexKind: "door capsule east", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+        },
+        {
+          id: "Tambour",
+          meshUrl: "/meshes/tambour.glb",
+          vortices: [
+            { vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
+            { vortexKind: "door tambour west", position: [-0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
+          ],
+        },
+      ],
+      vortices: [
+        { id: "door capsule east", defaultCableKind: "cable.link" },
+        { id: "door capsule west", defaultCableKind: "cable.link" },
+        { id: "door tambour east", defaultCableKind: "cable.link" },
+        { id: "door tambour west", defaultCableKind: "cable.link" },
+      ],
+      cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
+    })!;
+    const brushCompat: readonly KindCompatEntry[] = [
+      { bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour east" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour west" },
+    ];
+    it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
+      expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
+      expect(brushPlacementCollisionToleranceFromSlider(50)).toBeCloseTo(1, 5);
+      expect(brushPlacementCollisionToleranceFromSlider(100)).toBeCloseTo(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, 5);
+      expect(brushPlacementCollisionToleranceToSlider(1)).toBe(50);
+    });
+    it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
+      const targetPos: Vec3 = [10, 20, 30];
+      const targetDir: Vec3 = [0, 1, 0];
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [-1.3, -1.25, 0],
+        sourceLocalDirection: [-1, 0, 0],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [-1.3, -1.25, 0], direction: [-1, 0, 0] }] },
+        0,
+      );
+      expect(world).not.toBeNull();
+      expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
+      expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
+      expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      expect(world!.direction[0]).toBeCloseTo(0, 4);
+      expect(world!.direction[1]).toBeCloseTo(-1, 4);
+      expect(world!.direction[2]).toBeCloseTo(0, 4);
+    });
+    it("buildPuzzle3dPlayEngagement always includes command input and tool possibles", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "select",
+        cmdLine: "",
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.input?.id).toBe("engagement-input");
+      expect(spec.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", "puzzle3d.tool.select"]);
+      expect(spec.options).toBeUndefined();
+    });
+    it("buildPuzzle3dPlayEngagement lists brush candidates when brush tool is active", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        selectionCount: 1,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [{ objectKindId: "J", sourceVortexIndex: 0 }],
+        brushTargetActive: true,
+      });
+      expect(spec.possibleEngagements?.[0]?.id).toBe("puzzle3d.brush.J.0");
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom", "puzzle3d.tool.select", "puzzle3d.brush.next"]);
+    });
+    it("engagementCommandTokenEquals matches Brush after engagement input normalization", () => {
+      expect(engagementCommandTokenEquals(normalizeEngagementCommandText("brush"), "Brush")).toBe(true);
+      expect(engagementCommandTokenEquals(normalizeEngagementCommandText("select"), "Select")).toBe(true);
+    });
+    it("brushCompatibleCandidates filters by kind compatibility", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "J")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
+    });
+    it("brushCompatibleCandidates pairs door tambour west with door capsule west only", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour west" };
+      const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
+    });
+    it("brushCompatibleCandidates prefers Tambour stack bottom on tambour top vortices", () => {
+      const stackCatalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Tambour",
+            meshUrl: "/meshes/tambour.glb",
+            vortices: [
+              { vortexKind: "tambour rectangular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 },
+              { vortexKind: "tambour circular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 },
+            ],
+          },
+          {
+            id: "Last Storey Tambour",
+            meshUrl: "/meshes/tambour_last-storey.glb",
+            vortices: [{ vortexKind: "tambour circular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 }],
+          },
+        ],
+      };
+      const stackCompat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "tambour circular bottom", target: "tambour circular top" },
+        { bidirectional: true, specificity: "vortex", source: "tambour rectangular bottom", target: "tambour rectangular top" },
+      ];
+      const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
+      const list = brushCompatibleCandidates(target, stackCatalogs, stackCompat);
+      expect(list[0]?.objectKindId).toBe("Tambour");
+      expect(list[0]?.sourceVortexIndex).toBe(1);
+      const lastStoreyIndex = list.findIndex((entry) => entry.objectKindId === "Last Storey Tambour");
+      if (lastStoreyIndex >= 0) {
+        expect(lastStoreyIndex).toBeGreaterThan(0);
+      }
+    });
+    it("brushPlacementUsesHostOrientation is false for stack bottom on top pairs", () => {
+      const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
+      expect(brushPlacementUsesHostOrientation(target, "tambour circular bottom", "Tambour")).toBe(false);
+      expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
+      expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule west" }, "door capsule west", "J")).toBe(true);
+    });
+    it("vortexWorldCadFromObject matches scene graph world position", () => {
+      const origin: Vec3 = [10, 0, 0];
+      const orientation: Quat = [0, 0, 0.7071067811865475, -0.7071067811865475];
+      const local: Vec3 = [1, 2, 3];
+      const parent = new Group();
+      const vortex = new Group();
+      const groupLocal = cadObjectLocalToThreeGroupLocal(local, origin, orientation);
+      vortex.position.set(groupLocal[0], groupLocal[1], groupLocal[2]);
+      parent.add(vortex);
+      applyObjectPose(parent, origin, orientation, 1);
+      updateWorldMatrixChain(vortex);
+      const worldThree = new Vector3();
+      vortex.getWorldPosition(worldThree);
+      const cad = vortexWorldCadFromObject({ origin, orientation, vortices: [{ id: "v0", position: local }] }, 0);
+      expect(cad).not.toBeNull();
+      const expectedThree = cadVec3ToThree(cad!.position);
+      expect(worldThree.x).toBeCloseTo(expectedThree[0], 5);
+      expect(worldThree.y).toBeCloseTo(expectedThree[1], 5);
+      expect(worldThree.z).toBeCloseTo(expectedThree[2], 5);
+    });
+    it("computeBrushPlacementPose stacks tambour bottom on rotated storey top with opposed directions", () => {
+      const hostOrientation: Quat = [0, 0, 0.7071067811865475, -0.7071067811865475];
+      const targetPos: Vec3 = [1, 2, 30];
+      const targetDir = normalizeVec3Cad(quatRotateVec(hostOrientation, [0, 0, 1]));
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [0, 0, 0.9166667],
+        sourceLocalDirection: [0, 0, -1],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+        useHostOrientation: false,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [0, 0, 0.9166667], direction: [0, 0, -1] }] },
+        0,
+      );
+      expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
+      expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
+      expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      const worldDir = world!.direction;
+      expect(worldDir[0] * targetDir[0] + worldDir[1] * targetDir[1] + worldDir[2] * targetDir[2]).toBeLessThan(0);
+    });
+    it("routePuzzle3dBrushTabKeydown when brush hovers a connector with multiple candidates", () => {
+      expect(routePuzzle3dBrushTabKeydown(true, true, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(true);
+      expect(routePuzzle3dBrushTabKeydown(true, true, 1, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+      expect(routePuzzle3dBrushTabKeydown(true, false, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+      expect(routePuzzle3dBrushTabKeydown(false, true, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+    });
+    it("boxesIntersect detects overlapping axis-aligned boxes", () => {
+      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
+      const b = new Box3(new Vector3(1, 1, 1), new Vector3(3, 3, 3));
+      const c = new Box3(new Vector3(4, 4, 4), new Vector3(5, 5, 5));
+      expect(boxesIntersect(a, b)).toBe(true);
+      expect(boxesIntersect(a, c)).toBe(false);
+    });
+    it("boxesPenetrationExceeds ignores face contact and shallow overlap below tolerance", () => {
+      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
+      const touching = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
+      const shallow = new Box3(new Vector3(1.98, 0, 0), new Vector3(3.98, 2, 2));
+      const deep = new Box3(new Vector3(0.5, 0.5, 0.5), new Vector3(3.5, 3.5, 3.5));
+      const tol = 0.25;
+      expect(boxesPenetrationExceeds(a, touching, tol)).toBe(false);
+      expect(boxesPenetrationExceeds(a, shallow, tol)).toBe(false);
+      expect(boxesPenetrationExceeds(a, deep, tol)).toBe(true);
+    });
+    it("shuffleBrushCompatibleCandidates permutes with injectable rng", () => {
+      const input: readonly BrushCompatibleCandidate[] = [
+        { objectKindId: "A", sourceVortexIndex: 0 },
+        { objectKindId: "B", sourceVortexIndex: 0 },
+        { objectKindId: "C", sourceVortexIndex: 0 },
+      ];
+      const shuffled = shuffleBrushCompatibleCandidates(input, () => 0);
+      expect(shuffled).toHaveLength(3);
+      expect(new Set(shuffled.map((row) => row.objectKindId)).size).toBe(3);
+      expect(shuffled[0]?.objectKindId).toBe("B");
+    });
+    it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
+      const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));
+      const frame = brushPreviewMeshFrameGroup(meshRoot);
+      expect(frame.rotation.x).toBeCloseTo(GLB_MESH_FRAME_ROTATION_X, 5);
+      expect(frame.children.length).toBe(1);
+    });
+    it("brushPreviewCollides ignores penetration against excluded host when stacking", () => {
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(brushPreviewMeshFrameGroup(new Mesh(new BoxGeometry(4, 4, 10))));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const preview = brushProbeGroupFromPreview({ origin: [0, 0, 10], orientation: [0, 0, 0, 1], scale: 1 }, new Mesh(new BoxGeometry(4, 4, 2)));
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      expect(brushPreviewCollides(scene, preview, "host")).toBe(false);
+      expect(brushPreviewCollides(scene, preview)).toBe(false);
+    });
+    it("brushPreviewCollides detects penetration beyond default tolerance", () => {
+      const obstacle = new Group();
+      obstacle.userData.puzzle3dObjectId = "obstacle";
+      obstacle.add(new Mesh(new BoxGeometry(4, 4, 4)));
+      applyObjectPose(obstacle, [0, 0, 0], [0, 0, 0, 1], 1);
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [obstacle] };
+      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
+      const overlapping = brushProbeGroupFromPreview({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
+      expect(brushPreviewCollides(scene, overlapping)).toBe(true);
+      const touching = brushProbeGroupFromPreview({ origin: [4, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
+      expect(brushPreviewCollides(scene, touching)).toBe(false);
+      const clear = brushProbeGroupFromPreview({ origin: [12, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
+      expect(brushPreviewCollides(scene, clear)).toBe(false);
+    });
+    it("brushCollisionFreeCandidates excludes placements that overlap scene meshes", () => {
+      const obstacle = new Group();
+      obstacle.userData.puzzle3dObjectId = "obstacle";
+      obstacle.add(new Mesh(new BoxGeometry(30, 30, 30)));
+      applyObjectPose(obstacle, [0, 0, 0], [0, 0, 0, 1], 1);
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(new Mesh(new BoxGeometry(1, 1, 1)));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host, obstacle] };
+      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const blocked = brushCollisionFreeCandidates({
+        scene,
+        targetVortexFullId: "host:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+        kindCatalogs: brushCatalogs,
+        excludeObjectId: "host",
+        meshRootForUrl: () => meshRoot,
+      });
+      expect(blocked.unknownPending).toBe(false);
+      expect(blocked.free).toHaveLength(0);
+    });
+    it("brushCollisionFreeCandidates sets unknownPending when catalog meshes are not pooled yet", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const pending = brushCollisionFreeCandidates({
+        scene: { collectObjectGroups: () => [] },
+        targetVortexFullId: "host:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+        kindCatalogs: brushCatalogs,
+        excludeObjectId: "host",
+        meshRootForUrl: () => undefined,
+      });
+      expect(pending.unknownPending).toBe(true);
+      expect(pending.free).toHaveLength(0);
+    });
+    it("brushMeshUrlsForCompatibleCandidates returns unique catalog mesh URLs", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const urls = brushMeshUrlsForCompatibleCandidates(compatible, brushCatalogs);
+      expect(urls.length).toBeGreaterThan(0);
+      expect(new Set(urls).size).toBe(urls.length);
+    });
+    it("brushCollisionFreeCandidates returns all compatible kinds when scene is clear", () => {
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(new Mesh(new BoxGeometry(1, 1, 1)));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
+      const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const clear = brushCollisionFreeCandidates({
+        scene: clearScene,
+        targetVortexFullId: "host:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+        kindCatalogs: brushCatalogs,
+        excludeObjectId: "host",
+        meshRootForUrl: () => meshRoot,
+      });
+      expect(clear.free.length).toBe(compatible.length);
+    });
+    it("buildPuzzle3dPlayEngagement exposes Zoom option when selection is non-empty", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "select",
+        cmdLine: "",
+        selectionCount: 2,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom"]);
+    });
+    it("requestPuzzle3dZoomToSelection bumps epoch only for non-empty selection", () => {
+      const before = getPuzzle3dZoomToSelectionEpoch();
+      requestPuzzle3dZoomToSelection({ objectIds: [], vortexIds: [], attractionIds: [] });
+      expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before);
+      requestPuzzle3dZoomToSelection({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
+      expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["a"]);
+    });
+    it("boundsFromPuzzle3dSelection unions object meshes and vortex points", () => {
+      const root = new Group();
+      root.userData.puzzle3dObjectId = "obj-a";
+      const mesh = new Mesh(new BoxGeometry(10, 10, 10));
+      root.add(mesh);
+      applyObjectPose(root, [0, 0, 0], [0, 0, 0, 1], 1);
+      const vortexWorld = new Vector3(20, 0, 0);
+      const bounds = boundsFromPuzzle3dSelection(
+        { objectIds: ["obj-a"], vortexIds: ["obj-b:link"], attractionIds: [] },
+        {
+          getObjectGroup: (id) => (id === "obj-a" ? root : null),
+          getVortexWorld: (fullId) => (fullId === "obj-b:link" ? vortexWorld : null),
+          listVortexBindings: () => [{ fullId: "obj-b:link", objectId: "obj-b", objectKind: undefined, vortexKind: undefined, radiusWorld: 2 }],
+        },
+        [],
+      );
+      expect(bounds).not.toBeNull();
+      expect(bounds!.radius).toBeGreaterThan(8);
+    });
+    it("buildPuzzle3dPlayEngagement falls back to tool possibles when no collision-free brush candidates", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: true,
+      });
+      expect(spec.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", "puzzle3d.tool.select"]);
+      expect(spec.status?.some((row) => row.id === "puzzle3d.brush.none")).toBe(true);
+    });
+    it("applyBrushPlacementToFixture appends object and attraction", () => {
+      const fixture: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [
+          {
+            id: "host",
+            objectKind: "Tambour",
+            meshUrl: "/meshes/tambour.glb",
+            origin: [0, 0, 0],
+            vortices: [{ id: "host:v0", vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] }],
+          },
+        ],
+      };
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [-1.3, -1.25, 0],
+        sourceLocalDirection: [-1, 0, 0],
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+      });
+      const next = applyBrushPlacementToFixture(
+        fixture,
+        {
+          targetVortexFullId: "host:v0",
+          objectKindId: "J",
+          sourceVortexIndex: 0,
+          origin: pose.origin,
+          orientation: pose.orientation,
+          objectId: "brush-test-1",
+        },
+        brushCatalogs,
+      );
+      expect(next.objects.length).toBe(2);
+      expect(next.attractions.length).toBe(1);
+      expect(next.attractions[0]?.attracted).toBe("host:v0");
+      expect(next.attractions[0]?.attracting.startsWith("brush-test-1:")).toBe(true);
     });
   });
 }

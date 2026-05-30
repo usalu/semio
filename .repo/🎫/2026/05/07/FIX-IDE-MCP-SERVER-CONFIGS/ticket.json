@@ -1,7 +1,7 @@
 {
   "title": "Scene Lod Grid Handle Visibility",
-  "status": "open",
-  "summary": "Aligned scene link-up with board WASM: (1) proximityConnect uses drag snap target + tighter screen commit tolerance (handle px + radius in px via perspective), emits onConnect then onProximityConnect like edgeCreate+proximityConnect; removed world-radius drop fallback for link pointer-up. (2) indirectConnect on sole free compatible handle emits onConnect+onIndirectConnect; multi-handle drops enter LinkTargetNode-style state with ring highlights, rubber line, second pointer-down ray pick on ring handle or cancel on miss; window capture pointerdown. (3) Vortex meta radiusWorld for snap halos; ThreePerspectiveCamera import alias to avoid drei name clash.",
+  "status": "closed",
+  "summary": "Fixed hypersensitive canvas disposition drag on projektetage positioned slides.\n\nRoot cause: canvasDispositionDragContentStyle positioned content with absolute left/top plus width/height 100%, so the box extended past the wrapper (e.g. left 37.5% + width 100% = 137.5% wide) and small pointer deltas looked like huge jumps.\n\nFix: pure move drags apply translate3d(% of wrapper) on content while the wrapper keeps the declared frame; resize still uses absolute sizing when width/height change. Pointer deltas for canvas/resize use stable gesture placement bounds. Clamped sectionVisualScale for flow drags.\n\n55 renderer tests pass.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",

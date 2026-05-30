@@ -1,0 +1,11 @@
+{
+  "title": "Fix Missing useRef In Board Play",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "3d puzzle play crashes with ReferenceError: useRef is not defined in BoardPlayInner. Replace bare useRef with reactHostPort.useRef.",
+  "summary": "Fixed ReferenceError in BoardPlayInner: ten bare useRef calls now use reactHostPort.useRef, matching the rest of the playground renderer.",
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪1f9f960bce1e4fa1bc59852efc5a6009"
+  ]
+}

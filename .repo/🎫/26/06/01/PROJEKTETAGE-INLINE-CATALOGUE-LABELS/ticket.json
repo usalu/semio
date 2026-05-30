@@ -1,0 +1,14 @@
+{
+  "title": "Projektetage Inline Catalogue Labels",
+  "emoji": "🏷",
+  "status": "closed",
+  "description": "Bauteilbeschriftungen: three text dispositions on one line (Rippenplatte Unterzug Stütze). Many-to-one tile morph per column; tiles settle and morph position before embodiment switch.",
+  "summary": "Fixed Projektetage catalogue morph chain 7→8→9. Scoped settle CSS to sections with data-settle-before-morph-to so Bauteilkatalog tiles stay visible during pending auto-animate (restores 7→8 FLIP). Column morph anchors use dormantAnchor class without inline opacity:0 (restores dormant show/hide for 8→9). Added integration tests for catalogue→focus tile pairing, reveal autoanimate events across catalogue→focus→labels, and matcher pairs for focus→labels. All 62 renderer + 8 deck tests pass.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪9767b61ed4b447c9942a8107d707be52",
+    "⚪13918f7ca3a24a9a8c8258142bd9afaa",
+    "⚪a975acd1c4f34d4083c32eef29797bfd",
+    "⚪783827331b984e38a0b2cb83c18398e2"
+  ]
+}

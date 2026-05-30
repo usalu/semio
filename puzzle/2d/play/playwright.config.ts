@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/playwright.config.ts — E2E against the Vite board play harness (WebGPU raster).
+// 💻 puzzle/2d/play/playwright.config.ts — E2E against the Vite puzzle 2D play harness (WebGPU raster).
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -10,7 +10,7 @@ import { defineConfig, devices } from "@playwright/test";
 // #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const boardRoot = path.resolve(__dirname, "..");
+const puzzle2dRoot = path.resolve(__dirname, "..");
 const playPort = process.env.PUZZLE_2D_PLAY_PORT ?? "6027";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playPort}`;
 /** Use real Chrome/Edge for WebGPU: `PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …` (bundled Chromium may lack an adapter on some Windows setups). */
@@ -49,7 +49,7 @@ export default defineConfig({
 	// Playwright web server: Vite only; `script.ts test` already builds wasm—rebuilding wasm here rewrote `rs/pkg` and triggered Vite HMR mid-test.
 	webServer: {
 		command: `bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${playPort}`,
-		cwd: boardRoot,
+		cwd: puzzle2dRoot,
 		env: { ...process.env, PUZZLE_2D_PLAY_PORT: playPort },
 		url: `${baseURL}/`,
 		/** Avoid picking up an unrelated process already bound to the play port (stale local dev servers). */

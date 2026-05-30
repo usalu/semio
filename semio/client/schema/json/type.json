@@ -41,6 +41,20 @@
             "title": "FamilyId",
             "type": "object"
         },
+        "TypologyId": {
+            "description": "Reference to a kit typology by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "TypologyId",
+            "type": "object"
+        },
         "PortId": {
             "description": "Port reference by id.",
             "properties": {
@@ -327,6 +341,9 @@
             "format": "date-time",
             "title": "Updated",
             "type": "string"
+        },
+        "typology": {
+            "$ref": "#/$defs/TypologyId"
         },
         "families": {
             "items": {

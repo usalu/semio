@@ -11,7 +11,10 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@framework/playground", replacement: resolve(root, "../../../framework/playground/core/core.ts") },
+			{ find: "@framework/playground/core", replacement: resolve(root, "../../../framework/product/playground/core/index.ts") },
+			{ find: "@framework/platform/core", replacement: resolve(root, "../../../framework/product/platform/core/index.ts") },
+			{ find: "@puzzle/2d/play", replacement: resolve(root, "../../2d/play/index.ts") },
+			{ find: "@puzzle/3d/play", replacement: resolve(root, "../../3d/play/index.ts") },
 			{ find: "@puzzle/2d/react", replacement: resolve(root, "../../2d/react/index.tsx") },
 			{
 				find: "@puzzle/3d/react",

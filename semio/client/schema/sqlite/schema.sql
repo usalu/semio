@@ -56,6 +56,19 @@ CREATE TABLE IF NOT EXISTS file (
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS typology (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	icon TEXT,
+	folder_id TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS type (
 	id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
@@ -69,9 +82,9 @@ CREATE TABLE IF NOT EXISTS type (
 	location_id TEXT,
 	created_at TEXT,
 	updated_at TEXT,
-	kit_id TEXT NOT NULL,
+	typology_id TEXT NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+	FOREIGN KEY (typology_id) REFERENCES typology (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS family (
@@ -168,9 +181,9 @@ CREATE TABLE IF NOT EXISTS design (
 	unit TEXT,
 	created_at TEXT,
 	updated_at TEXT,
-	kit_id TEXT NOT NULL,
+	typology_id TEXT NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+	FOREIGN KEY (typology_id) REFERENCES typology (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS design_family (
@@ -584,7 +597,8 @@ CREATE TABLE IF NOT EXISTS kit_sessions_bundle (
 
 CREATE INDEX IF NOT EXISTS idx_folder_kit ON folder (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_file_kit ON file (kit_id, ordinal);
-CREATE INDEX IF NOT EXISTS idx_type_kit ON type (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_typology_kit ON typology (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_type_typology ON type (typology_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_kit ON port (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_parent_family ON port (parent_family_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_compat_port ON port_compatible_port (compatible_port_id);
@@ -597,7 +611,7 @@ CREATE INDEX IF NOT EXISTS idx_type_family_type ON type_family (type_id, ordinal
 CREATE INDEX IF NOT EXISTS idx_design_family_design ON design_family (design_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_connector_type ON connector (type_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_representation_type ON representation (type_id, ordinal);
-CREATE INDEX IF NOT EXISTS idx_design_kit ON design (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_design_typology ON design (typology_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_layer_design ON layer (design_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_piece_design ON piece (design_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_group_design ON "group" (design_id, ordinal);

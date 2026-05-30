@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@cad/js/renderer",
   "version": "0.1.0",
-  "description": "🧭 R3F adapter for CAD factory snapshots + interaction.",
+  "description": "🧭 CAD renderer (R3F) for factory snapshots + interaction.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -11,7 +11,10 @@
     "test": "bun nx run @cad/js/renderer:test"
   },
   "dependencies": {
-    "@framework/playground": "workspace:*",
+    "@framework/core": "workspace:*",
+    "@framework/platform/core": "workspace:*",
+    "@framework/platform/renderer/react": "workspace:*",
+    "@framework/playground/core": "workspace:*",
     "@framework/playground/renderer/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",

@@ -4,6 +4,16 @@
 	"version": "1.0.0",
 	"label": "ModelDefinition",
 	"description": "Core model definition assets shipped with the spatial runtime.",
+	"default": true,
+	"kernelTypologies": {
+		"anchor": "spatial.shape.kernel.anchor",
+		"vertex": "spatial.shape.kernel.vertex",
+		"edge": "spatial.shape.kernel.edge",
+		"wire": "spatial.shape.kernel.wire",
+		"face": "spatial.shape.kernel.face",
+		"shell": "spatial.shape.kernel.shell",
+		"solid": "spatial.shape.kernel.solid"
+	},
 	"kinds": [
 		"action",
 		"attribute",

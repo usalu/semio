@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 // #endregion 🔌Adapters
 
 const playDir = dirname(fileURLToPath(import.meta.url));
-const topologyRoot = dirname(playDir);
+const puzzle5dRoot = dirname(playDir);
 const port = process.env.PUZZLE_5D_PLAY_PORT ?? "6035";
 
 export default defineConfig({
@@ -17,7 +17,7 @@ export default defineConfig({
 	},
 	webServer: {
 		command: `bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${port}`,
-		cwd: topologyRoot,
+		cwd: puzzle5dRoot,
 		url: `http://127.0.0.1:${port}`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,

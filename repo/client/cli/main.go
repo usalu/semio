@@ -1125,8 +1125,7 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 			buildOpts := TreeBuildOptions{
 				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
-					filter.OnlyKinds[TreeNodeDefinition] ||
-					filter.Query != "",
+					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
@@ -1182,8 +1181,7 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			buildOpts := TreeBuildOptions{
 				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
-					filter.OnlyKinds[TreeNodeDefinition] ||
-					filter.Query != "",
+					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
@@ -6946,55 +6944,17 @@ func hashSemioMetaState(repoRoot string) string {
 	if !FileExists(metaRoot) {
 		return ""
 	}
-
-	var entries []string
-	_ = filepath.WalkDir(metaRoot, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
+	var parts []string
+	for _, top := range []string{"🎯", "👮", "📝", "📊", "✍️"} {
+		p := filepath.Join(metaRoot, top)
+		if st, err := os.Stat(p); err == nil {
+			parts = append(parts, "d:"+top+":"+strconv.FormatInt(st.ModTime().UnixNano(), 10))
 		}
-		rel, relErr := filepath.Rel(metaRoot, path)
-		if relErr != nil {
-			return nil
-		}
-		rel = filepath.ToSlash(rel)
-		if rel == "." {
-			return nil
-		}
-		// Skip directories that are either caches or ephemeral hook artifacts.
-		// These change frequently and must not invalidate the tree cache.
-		switch {
-		case rel == "cache" || strings.HasPrefix(rel, "cache/"):
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		case rel == "⚡" || strings.HasPrefix(rel, "⚡/"):
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if d.IsDir() {
-			entries = append(entries, "d:"+rel)
-			return nil
-		}
-		// For ticket files, hooks constantly update agent tracking metadata
-		// (via trackHookInOpenTicket) without changing tree-relevant structure.
-		// Only track ticket directory existence (not file contents/modtimes)
-		// so the cache invalidates on ticket open/close but not on every hook.
-		if strings.Contains(rel, "🎫") && !d.IsDir() {
-			return nil
-		}
-		info, statErr := d.Info()
-		if statErr != nil {
-			return nil
-		}
-		entries = append(entries, fmt.Sprintf("f:%s:%d:%d", rel, info.Size(), info.ModTime().UnixNano()))
-		return nil
-	})
-
-	sort.Strings(entries)
-	return hashString(strings.Join(entries, "|"))
+	}
+	tickets, _ := filepath.Glob(filepath.Join(metaRoot, "🎫", "*", "*", "*", "*"))
+	sort.Strings(tickets)
+	parts = append(parts, "tickets:"+strings.Join(tickets, ","))
+	return hashString(strings.Join(parts, "|"))
 }
 
 func treeNodeScopePath(node *TreeNode) string {
@@ -15800,8 +15760,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 	BreachSystemDevcontainerVscodeExtensionsOutside: {
 		Kind:        BreachSystemDevcontainerVscodeExtensionsOutside,
 		Priority:    BreachPriorityHigh,
-		Reason:      "VSCode recommended extensions must be inside devcontainer.json customizations, not in .vscode/extensions.json",
-		Solution:    "Move .vscode/extensions.json to customizations.vscode.extensions inside .devcontainer/devcontainer.json",
+		Reason:      "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
+		Solution:    "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
 		Autofixable: true,
 	},
 	BreachFolderIllegalEmpty: {
@@ -16375,6 +16335,113 @@ func GetRepoMetaDir() string {
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
+
+// #region ⚙️RepoConfig
+
+// 📋LoggingConfig holds hook logging switches and detail for `.repo/config.toml` `[logging]`.
+type LoggingConfig struct {
+	Session    bool
+	Operations bool
+	Plan       bool
+	Detail     string
+}
+
+// ⚙️RepoConfig holds repo-wide settings loaded from `.repo/config.toml`.
+type RepoConfig struct {
+	Logging LoggingConfig
+}
+
+// 🔷DefaultRepoConfig returns defaults when config is missing (`session` off).
+func DefaultRepoConfig() RepoConfig {
+	return RepoConfig{
+		Logging: LoggingConfig{
+			Session:    false,
+			Operations: true,
+			Plan:       true,
+			Detail:     "standard",
+		},
+	}
+}
+
+func parseRepoConfigBool(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "true", "yes", "1", "on":
+		return true
+	default:
+		return false
+	}
+}
+
+func unquoteRepoConfigValue(value string) string {
+	value = strings.TrimSpace(value)
+	if len(value) >= 2 {
+		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+			return value[1 : len(value)-1]
+		}
+	}
+	return value
+}
+
+// 📥LoadRepoConfig reads `.repo/config.toml` under repoRoot; missing file yields defaults.
+func LoadRepoConfig(repoRoot string) RepoConfig {
+	cfg := DefaultRepoConfig()
+	if strings.TrimSpace(repoRoot) == "" {
+		return cfg
+	}
+	path := filepath.Join(repoRoot, ".repo", "config.toml")
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return cfg
+	}
+	section := ""
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if trim == "" || strings.HasPrefix(trim, "#") {
+			continue
+		}
+		if strings.HasPrefix(trim, "[") && strings.HasSuffix(trim, "]") {
+			section = strings.ToLower(strings.Trim(trim, "[]"))
+			continue
+		}
+		if !strings.Contains(trim, "=") {
+			continue
+		}
+		parts := strings.SplitN(trim, "=", 2)
+		key := strings.ToLower(strings.TrimSpace(parts[0]))
+		val := unquoteRepoConfigValue(parts[1])
+		switch section {
+		case "logging":
+			switch key {
+			case "session":
+				cfg.Logging.Session = parseRepoConfigBool(val)
+			case "operations":
+				cfg.Logging.Operations = parseRepoConfigBool(val)
+			case "plan":
+				cfg.Logging.Plan = parseRepoConfigBool(val)
+			case "detail":
+				if val != "" {
+					cfg.Logging.Detail = val
+				}
+			}
+		}
+	}
+	return cfg
+}
+
+func (lg LoggingConfig) includeResponse() bool {
+	switch strings.ToLower(strings.TrimSpace(lg.Detail)) {
+	case "minimal":
+		return false
+	default:
+		return true
+	}
+}
+
+func (lg LoggingConfig) includeNative() bool {
+	return strings.ToLower(strings.TrimSpace(lg.Detail)) == "full"
+}
+
+// #endregion ⚙️RepoConfig
 
 func findRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
@@ -18925,13 +18992,29 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// ­ƒº¬isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
+// 🧪isTestOrBenchmarkFile reports whether a path conventionally contains tests or benchmarks.
 func isTestOrBenchmarkFile(file string) bool {
 	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
 		return true
 	}
-	lowerPath := strings.ToLower(file)
-	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
+	normalized := strings.ToLower(filepath.ToSlash(file))
+	if strings.Contains(normalized, "/tests/") || strings.Contains(normalized, ".tests/") ||
+		strings.Contains(normalized, "/test/") || strings.Contains(normalized, ".test/") ||
+		strings.Contains(normalized, "/benchmark/") || strings.Contains(normalized, ".benchmark/") {
+		return true
+	}
+	name := filepath.Base(normalized)
+	return strings.HasSuffix(name, "_test.go") ||
+		strings.HasSuffix(name, ".test.ts") ||
+		strings.HasSuffix(name, ".test.tsx") ||
+		strings.HasSuffix(name, ".test.js") ||
+		strings.HasSuffix(name, ".test.jsx") ||
+		strings.HasSuffix(name, ".spec.ts") ||
+		strings.HasSuffix(name, ".spec.tsx") ||
+		strings.HasSuffix(name, ".spec.js") ||
+		strings.HasSuffix(name, ".spec.jsx") ||
+		strings.HasPrefix(name, "test_") ||
+		strings.Contains(name, "benchmark")
 }
 
 // ­ƒôñisExportedDefinition holds the data fields for a isExportedDefinition record.
@@ -19497,38 +19580,6 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// ­ƒôïCommentTemplateState holds the data fields for a comment template state record.
-type CommentTemplateState struct {
-	ExprDepth int
-}
-
-// ­ƒÆ¼CommentScanState holds the data fields for a comment scan state record.
-type CommentScanState struct {
-	InBlockComment          bool
-	BlockCommentStartLine   int
-	BlockCommentStartIndex  int
-	BlockCommentStartColumn int
-	BlockCommentIsJsDoc     bool
-	BlockCommentHasTodo     bool
-	InSingleQuote           bool
-	InDoubleQuote           bool
-	Templates               []CommentTemplateState
-	Escaped                 bool
-	InTodoBlock             bool
-	InRawBacktick           bool
-	InTripleDouble          bool
-	InTripleSingle          bool
-	InVerbatimString        bool
-}
-
-// ­ƒôíInTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
-func (state *CommentScanState) InTemplateRaw() bool {
-	if len(state.Templates) == 0 {
-		return false
-	}
-	return state.Templates[len(state.Templates)-1].ExprDepth == 0
-}
-
 // ­ƒƒ½commentPolicy holds the data fields for a commentPolicy record.
 func commentPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
@@ -19982,6 +20033,120 @@ func repoPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
+// 📦readDevcontainerVscodeExtensions returns extension ids from devcontainer customizations.vscode.extensions.
+func readDevcontainerVscodeExtensions(rootDir string) []string {
+	devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
+	dcData, err := os.ReadFile(devcontainerPath)
+	if err != nil {
+		return nil
+	}
+	var devcontainer map[string]interface{}
+	if err := json.Unmarshal(dcData, &devcontainer); err != nil {
+		return nil
+	}
+	customizations, _ := devcontainer["customizations"].(map[string]interface{})
+	if customizations == nil {
+		return nil
+	}
+	vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
+	if vscodeCustom == nil {
+		return nil
+	}
+	rawExtensions, _ := vscodeCustom["extensions"].([]interface{})
+	return extensionIDsFromJSONList(rawExtensions)
+}
+
+// 📦readWorkspaceExtensionRecommendations returns recommendation ids from .vscode/extensions.json when present.
+func readWorkspaceExtensionRecommendations(rootDir string) ([]string, bool) {
+	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
+	extData, err := os.ReadFile(extensionsPath)
+	if err != nil {
+		return nil, false
+	}
+	var extFile map[string]interface{}
+	if err := json.Unmarshal(extData, &extFile); err != nil {
+		return nil, false
+	}
+	rawRecommendations, _ := extFile["recommendations"].([]interface{})
+	return extensionIDsFromJSONList(rawRecommendations), true
+}
+
+// 📦extensionIDsFromJSONList normalizes a JSON string list of extension ids.
+func extensionIDsFromJSONList(values []interface{}) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(values))
+	for _, value := range values {
+		id, ok := value.(string)
+		if !ok || id == "" {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// 📦missingWorkspaceExtensionRecommendations lists devcontainer extensions absent from workspace recommendations.
+func missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
+	if len(devcontainerExtensions) == 0 {
+		return nil
+	}
+	recommended := map[string]struct{}{}
+	for _, id := range workspaceRecommendations {
+		recommended[id] = struct{}{}
+	}
+	var missing []string
+	for _, id := range devcontainerExtensions {
+		if _, ok := recommended[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	return missing
+}
+
+// 📦mergeWorkspaceExtensionRecommendations builds a deduplicated recommendation list (devcontainer first, then extras).
+func mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
+	merged := make([]string, 0, len(devcontainerExtensions)+len(workspaceRecommendations))
+	seen := map[string]struct{}{}
+	appendUnique := func(ids []string) {
+		for _, id := range ids {
+			if id == "" {
+				continue
+			}
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			merged = append(merged, id)
+		}
+	}
+	appendUnique(devcontainerExtensions)
+	appendUnique(workspaceRecommendations)
+	return merged
+}
+
+// 📦writeWorkspaceExtensionRecommendations writes .vscode/extensions.json for host editor recommendations.
+func writeWorkspaceExtensionRecommendations(rootDir string, recommendations []string) error {
+	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
+	if err := os.MkdirAll(filepath.Dir(extensionsPath), 0755); err != nil {
+		return err
+	}
+	rawRecommendations := make([]interface{}, len(recommendations))
+	for i, id := range recommendations {
+		rawRecommendations[i] = id
+	}
+	payload := map[string]interface{}{
+		"recommendations":         rawRecommendations,
+		"unwantedRecommendations": []interface{}{},
+	}
+	out, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(extensionsPath, append(out, '\n'), 0644)
+}
+
 // Ôù╗´©ÅsystemPolicy holds the data fields for a systemPolicy record.
 func systemPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
@@ -19992,12 +20157,16 @@ func systemPolicy(ctx *PolicyContext) []Breach {
 			BreachSystemDevcontainerVscodeSettingsOutside,
 			".vscode/settings.json", 1, 0, ""))
 	}
-	extensionsPath := filepath.Join(ctx.RootDir, ".vscode", "extensions.json")
-	if _, err := os.Stat(extensionsPath); err == nil {
-		breachs = append(breachs, ctx.CreateBreach(
-			"VSCode extensions.json must be inside .devcontainer/devcontainer.json customizations.vscode.extensions",
-			BreachSystemDevcontainerVscodeExtensionsOutside,
-			".vscode/extensions.json", 1, 0, ""))
+	devcontainerExtensions := readDevcontainerVscodeExtensions(ctx.RootDir)
+	if len(devcontainerExtensions) > 0 {
+		workspaceRecommendations, hasWorkspaceRecommendations := readWorkspaceExtensionRecommendations(ctx.RootDir)
+		missing := missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
+		if !hasWorkspaceRecommendations || len(missing) > 0 {
+			breachs = append(breachs, ctx.CreateBreach(
+				".vscode/extensions.json must recommend every extension from devcontainer customizations.vscode.extensions for host editors (Cursor reads this file)",
+				BreachSystemDevcontainerVscodeExtensionsOutside,
+				".vscode/extensions.json", 1, 0, ""))
+		}
 	}
 	return ctx.FilterIgnored(breachs)
 }
@@ -20206,7 +20375,7 @@ func dependencyBoundaryPolicy(ctx *PolicyContext) []Breach {
 		if dependencyBoundarySkipFile(file) {
 			continue
 		}
-		manifestDir, thirdParty := loadThirdPartyDepsForFile(file)
+		_, thirdParty := loadThirdPartyDepsForFile(file)
 		if len(thirdParty) == 0 {
 			continue
 		}
@@ -20297,10 +20466,15 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string]struct{}) {
 	deps = make(map[string]struct{})
 	dir := NormalizePath(filepath.Dir(file))
+	if dir == "." {
+		dir = ""
+	}
+	seen := make(map[string]struct{})
 	for {
-		if dir == "." {
-			dir = ""
+		if _, ok := seen[dir]; ok {
+			break
 		}
+		seen[dir] = struct{}{}
 		root := filepath.Join(rootDir, dir)
 		if FileExists(filepath.Join(root, "package.json")) {
 			dependencyBoundaryMergePackageJSON(filepath.Join(root, "package.json"), deps)
@@ -20323,7 +20497,13 @@ func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string
 			dependencyBoundaryMergeCsproj(csprojs[0], deps)
 			return dir, deps
 		}
-		parent := filepath.Dir(dir)
+		if dir == "" {
+			break
+		}
+		parent := NormalizePath(filepath.Dir(dir))
+		if parent == "." {
+			parent = ""
+		}
 		if parent == dir {
 			break
 		}
@@ -20501,7 +20681,7 @@ func parseThirdPartyImportSpecs(importLine, file string) []string {
 	return specs
 }
 
-func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) {
+func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) bool {
 	if spec == "" || strings.HasPrefix(spec, ".") || strings.HasPrefix(spec, "/") {
 		return false
 	}
@@ -28938,52 +29118,14 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 				}
 			}
 		case BreachSystemDevcontainerVscodeExtensionsOutside:
-			extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
-			extData, err := os.ReadFile(extensionsPath)
-			if err != nil {
+			devcontainerExtensions := readDevcontainerVscodeExtensions(rootDir)
+			workspaceRecommendations, _ := readWorkspaceExtensionRecommendations(rootDir)
+			merged := mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
+			if len(merged) == 0 {
 				continue
 			}
-			var extFile map[string]interface{}
-			if err := json.Unmarshal(extData, &extFile); err != nil {
+			if err := writeWorkspaceExtensionRecommendations(rootDir, merged); err != nil {
 				continue
-			}
-			recommendations, _ := extFile["recommendations"].([]interface{})
-			if recommendations == nil {
-				recommendations = []interface{}{}
-			}
-			devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
-			var devcontainer map[string]interface{}
-			if dcData, err := os.ReadFile(devcontainerPath); err == nil {
-				_ = json.Unmarshal(dcData, &devcontainer)
-			}
-			if devcontainer == nil {
-				devcontainer = map[string]interface{}{}
-			}
-			customizations, _ := devcontainer["customizations"].(map[string]interface{})
-			if customizations == nil {
-				customizations = map[string]interface{}{}
-			}
-			vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
-			if vscodeCustom == nil {
-				vscodeCustom = map[string]interface{}{}
-			}
-			vscodeCustom["extensions"] = recommendations
-			customizations["vscode"] = vscodeCustom
-			devcontainer["customizations"] = customizations
-			dcOut, err := json.MarshalIndent(devcontainer, "", "  ")
-			if err != nil {
-				continue
-			}
-			if err := os.MkdirAll(filepath.Join(rootDir, ".devcontainer"), 0755); err != nil {
-				continue
-			}
-			if err := os.WriteFile(devcontainerPath, append(dcOut, '\n'), 0644); err != nil {
-				continue
-			}
-			_ = os.Remove(extensionsPath)
-			vscodeDir := filepath.Join(rootDir, ".vscode")
-			if entries, err := os.ReadDir(vscodeDir); err == nil && len(entries) == 0 {
-				_ = os.Remove(vscodeDir)
 			}
 			fixed++
 		}
@@ -34708,8 +34850,7 @@ func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	args := getArgs(request)
 	query, _, _ := getStringArg(args, "query")
 	filter := TreeFilter{Query: query}
-	buildOpts := TreeBuildOptions{IncludeSections: query != ""}
-	tree := BuildMonorepoTreeCached(ctx, buildOpts)
+	tree := BuildMonorepoTreeCached(ctx)
 	tree = searchMonorepoTreeWithCache(ctx, tree, query)
 	tree = FilterMonorepoTree(tree, &filter)
 	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
@@ -35458,8 +35599,17 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/assets/repo/") {
 		return true
 	}
-	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") {
+	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") ||
+		strings.Contains(normalized, "/node_modules/") {
 		return true
+	}
+	if normalized == ".git" || strings.HasPrefix(normalized, ".git/") || strings.Contains(normalized, "/.git/") {
+		return true
+	}
+	for _, segment := range []string{"/dist/", "/build/", "/target/", "/__pycache__/", "/.next/", "/coverage/"} {
+		if strings.Contains(normalized, segment) {
+			return true
+		}
 	}
 	base := filepath.Base(normalized)
 	if strings.HasSuffix(base, ".Designer.cs") {
@@ -37240,22 +37390,6 @@ func collectTestDefinitionsFromContent(content string, normalized string) []Defi
 	return fallbackTestDefinitionsFromContent(content, normalized)
 }
 
-// 🧪isTestOrBenchmarkFile reports whether a normalized path conventionally contains tests.
-func isTestOrBenchmarkFile(normalized string) bool {
-	name := strings.ToLower(filepath.Base(filepath.ToSlash(normalized)))
-	return strings.HasSuffix(name, "_test.go") ||
-		strings.HasSuffix(name, ".test.ts") ||
-		strings.HasSuffix(name, ".test.tsx") ||
-		strings.HasSuffix(name, ".test.js") ||
-		strings.HasSuffix(name, ".test.jsx") ||
-		strings.HasSuffix(name, ".spec.ts") ||
-		strings.HasSuffix(name, ".spec.tsx") ||
-		strings.HasSuffix(name, ".spec.js") ||
-		strings.HasSuffix(name, ".spec.jsx") ||
-		strings.HasPrefix(name, "test_") ||
-		strings.Contains(name, "benchmark")
-}
-
 func fallbackTestDefinitionsFromContent(content string, normalized string) []Definition {
 	patterns := []*regexp.Regexp{
 		regexp.MustCompile(`(?m)^[\t ]*func[\t ]+(Test[A-Za-z0-9_]+)\s*\(`),
@@ -38261,13 +38395,70 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 // #region 🔷Configure
 // Configure command intentionally leaves repo config files untouched.
 
+// 🪝repoManagedGitHooks lists git hook filenames this repo may install and must never leave enabled.
+var repoManagedGitHooks = []string{
+	"pre-commit",
+	"post-commit",
+	"prepare-commit-msg",
+	"commit-msg",
+	"pre-push",
+	"pre-rebase",
+	"post-merge",
+	"post-checkout",
+	"post-rewrite",
+}
+
+// 🧹removeGitHooks deletes repo-managed git hooks so commits, rebases, and squashes stay unblocked.
+func removeGitHooks(repoRoot string) ([]string, error) {
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		repoRoot = findRepoRoot(cwd)
+	}
+	if repoRoot == "" {
+		return nil, nil
+	}
+	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	var removed []string
+	for _, hookName := range repoManagedGitHooks {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if err := os.Remove(hookPath); err != nil {
+			if !os.IsNotExist(err) {
+				return removed, fmt.Errorf("remove git hook %s: %w", hookName, err)
+			}
+			continue
+		}
+		removed = append(removed, hookName)
+	}
+	return removed, nil
+}
+
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "No-op: repo config files are edited manually",
+		Short: "Remove blocking git hooks; repo config files are edited manually",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				repoRoot = findRepoRoot(cwd)
+			}
+			removed, err := removeGitHooks(repoRoot)
+			if err != nil {
+				return err
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
+			if len(removed) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove")
+				return nil
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s\n", strings.Join(removed, ", "))
 			return nil
 		},
 	}
@@ -43609,6 +43800,10 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	}
 	repoRoot = findRepoRoot(repoRoot)
 	SetRootDir(repoRoot)
+	cfg := LoadRepoConfig(repoRoot)
+	if !cfg.Logging.Session {
+		return
+	}
 	now := time.Now().UTC()
 	sessionID := extractSessionIDFromInput(ctx.Input)
 	if sessionID == "" && ctx.Client == "kiro-cli" {
@@ -43626,11 +43821,13 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return
 	}
-	writeSessionHookLog(ctx, result, logDir, sessionID)
-	logRepoOperationHook(ctx, result, logDir, now, sessionID)
+	writeSessionHookLog(ctx, result, logDir, sessionID, cfg.Logging)
+	if cfg.Logging.Operations {
+		logRepoOperationHook(ctx, result, logDir, now, sessionID, cfg.Logging)
+	}
 }
 
-func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string) {
+func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string, lg LoggingConfig) {
 	metaPath := filepath.Join(logDir, "session.json")
 	var meta SessionMeta
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -43675,24 +43872,26 @@ func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sess
 	}
 	eventJSON, _ := json.Marshal(eventMap)
 	entry := EventEntry{Event: eventJSON}
-	if len(ctx.Input) > 0 {
+	if lg.includeNative() && len(ctx.Input) > 0 {
 		entry.Native = &struct {
 			Event json.RawMessage `json:"event"`
 		}{Event: ctx.Input}
 	}
-	entry.Response = &struct {
-		Blocked *bool  `json:"blocked,omitempty"`
-		Message string `json:"message,omitempty"`
-		Reason  string `json:"reason,omitempty"`
-	}{}
-	if !result.IsAllowed() {
-		blocked := true
-		entry.Response.Blocked = &blocked
-		entry.Response.Message = result.GetMessage()
-		entry.Response.Reason = result.GetMessage()
+	if lg.includeResponse() {
+		entry.Response = &struct {
+			Blocked *bool  `json:"blocked,omitempty"`
+			Message string `json:"message,omitempty"`
+			Reason  string `json:"reason,omitempty"`
+		}{}
+		if !result.IsAllowed() {
+			blocked := true
+			entry.Response.Blocked = &blocked
+			entry.Response.Message = result.GetMessage()
+			entry.Response.Reason = result.GetMessage()
+		}
 	}
 	meta.Events = append(meta.Events, entry)
-	if ctx.Event == HookAgentToolPlanUpdatingEnded {
+	if lg.Plan && ctx.Event == HookAgentToolPlanUpdatingEnded {
 		steps := extractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)
 		if len(steps) > 0 {
 			var existing []TicketAgentPlanStep
@@ -44148,7 +44347,10 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 }
 
 // ⬛logRepoOperationHook logs repo operation hook.
-func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string) {
+func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string, lg LoggingConfig) {
+	if !lg.Operations {
+		return
+	}
 	logDir := strings.TrimSpace(operation)
 	sessionID := strings.TrimSpace(msg)
 	if logDir == "" || sessionID == "" {

@@ -8,9 +8,9 @@
     "command.finish"
   ],
   "interactions": [
-    "surface.extrude-crv"
+    "surface.extrudeCrv"
   ],
   "primitiveKinds": [
-    "face"
+    "solid"
   ]
 }

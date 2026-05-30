@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle2d Play Panel Toggle Latency",
+  "emoji": "⚡",
+  "status": "closed",
+  "description": "Panel toggle in puzzle 2d play still takes ~2s. Finish perf fixes: SidePanel memo, resolveTab cache, ProductShell panel prop memo.",
+  "summary": "Panel toggle in puzzle 2d play was still ~2s because SidePanel visibility changes re-rendered full Nakagin hierarchy/inspector trees, PlaygroundView recomputed the whole shell on every toggle, and ProductShell canvasNode useMemo was incomplete.\n\n- ui/react: SidePanelTreePane memo so Tree skips reconcile when only visible toggles.\n- playground renderer: usePlaygroundViewShellData (data generation only) + chrome-only subscribe in PlaygroundView; assignPanelVisibility for toggles; PureSidePanelTabDefinition caches resolveTab via buildTab.\n- platform renderer: finished canvasNode useMemo; ShellModeCanvas memo; assignPanelVisibility in PlatformView toggles.\n- framework/core: assignPanelVisibility test (no notify).\n\nTests: @framework/core 22, @ui/react 87, playground renderer 15 — all pass.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪40dec526592d4a93b5ad3b95359f0abf"
+  ]
+}

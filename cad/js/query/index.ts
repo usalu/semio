@@ -16,7 +16,7 @@ import {
 	solidRef,
 	isSelectionConstructActionId,
 	actionAvailableInModelDefinition,
-	SHAPE_MODEL_DEFINITION_ID,
+	defaultModelDefinitionId,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
@@ -533,7 +533,7 @@ export interface ReturnClauseAst {
 export type ConstructClauseAst = MatchClauseAst | WithClauseAst | CallClauseAst | UnwindClauseAst;
 
 function assertConstructAst(ast: ConstructAst, activeModelDefinitionId?: string | null): void {
-	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+	const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
 	const typologyKinds = buildTypologyToEntityKindMapForModelDefinition(mdId);
 	for (const cl of ast.clauses) {
 		if (cl.kind !== "match") continue;
@@ -905,7 +905,7 @@ export function parseConstruct(text: string, activeModelDefinitionId?: string | 
 
 // #region Index
 function typologyToEntityKindForConstruct(activeModelDefinitionId?: string | null): Readonly<Record<string, ModelEntityKind>> {
-	const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+	const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
 	return buildTypologyToEntityKindMapForModelDefinition(mdId);
 }
 
@@ -1222,7 +1222,7 @@ function rowVarsToEnv(
 function runTransformationCall(actionId: string, ctx: ConstructQueryContext): ActionResult {
 	const spec = loadTransformation(actionId);
 	if (!spec) throw new Error(`unknown transformation ${actionId}`);
-	const model = applyTransformation(spec, ctx.model);
+	const model = applyTransformation(spec, ctx.model, ctx.preview);
 	const objects = Object.keys(model.objects)
 		.sort()
 		.map((key) => model.objects[key]!);
@@ -1329,7 +1329,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			rows = next;
 		} else if (st.kind === "call") {
 			const transformation = loadTransformation(st.actionId);
-			const modelDefinitionId = ctx.activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+			const modelDefinitionId = ctx.activeModelDefinitionId ?? defaultModelDefinitionId();
 			if (!transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
 			if (!transformation && !actionAvailableInModelDefinition(st.actionId, modelDefinitionId)) {
 				throw new Error(`action ${st.actionId} is not available in model definition ${modelDefinitionId}`);

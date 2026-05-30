@@ -1,0 +1,11 @@
+{
+  "title": "Projektetage Description Morph",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix projektetage intro: long description does not morph into short description on goal slide. Root cause: duplicate data-id on flow interactive wrapper vs h2.",
+  "summary": "Fixed projektetage intro long→short description not morphing on the goal slide.\n\nRoot cause: flow intro dispositions put reveal.js `data-id` on both the full-width `.presentation-interactive-disposition` wrapper and the inner `h2`. The auto-animate matcher paired the DIV wrappers (wrong geometry) instead of the text nodes; single-line descriptions (`data-id=\"description\"`) were affected while multi-line titles used distinct line ids.\n\nFix: set `revealMorphId` only when a disposition has a declared canvas frame (`declaredRect !== undefined`). Flow morph anchors stay on leaf text nodes.\n\nTests: intro morph DOM asserts no wrapper `data-id` for description; unit test for flow vs canvas `revealMorphId`. Intro vitest subset passes.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪c9ef2d38807944f8bc129126c1f12100"
+  ]
+}

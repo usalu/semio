@@ -1,7 +1,7 @@
 // #region 🧲Header
-// 💻 .storybook/stories/elements/board/Board.stories.tsx
-// Specs: Host the elements board canvas for Storybook + Playwright raster/LOD/selection checks.
-// Summary: Raster modes, full Nakagin board fixture (180 nodes / 179 kit connections), and Playwright harness stories.
+// 💻 .storybook/stories/puzzle/2d/Puzzle2d.stories.tsx
+// Specs: Host the elements puzzle 2d canvas for Storybook + Playwright raster/LOD/selection checks.
+// Summary: Raster modes, full Nakagin puzzle 2d fixture (180 nodes / 179 kit connections), and Playwright harness stories.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -9,35 +9,35 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type Dispatch, type ReactElement, type SetStateAction } from "react";
 
 import {
-	BoardCanvas,
+	Puzzle2dCanvas,
 	Edge,
 	Handle,
 	Node,
-	useBoardEvent,
+	usePuzzle2dEvent,
 } from "../../../../puzzle/2d/index.tsx";
 import {
-	BOARD_BUILTIN_PORT_HANDLE_KIND,
-	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-	boardFixtureMetaKindCatalogBundle,
-	boardFixtureMetaKindCompatibility,
-	mergeBoardKindCatalogBundleByRowId,
+	BUILTIN_PORT_HANDLE_KIND,
+	DEFAULT_KIND_CATALOG_BUNDLE,
+	fixtureMetaKindCatalogBundle,
+	puzzle2dFixtureMetaKindCompatibility,
+	mergeKindCatalogBundleByRowId,
 } from "../../../../puzzle/2d/index";
-import nakaginCapsuleTowerBoardFixture from "../../../../puzzle/2d/play/fixtures/nakagin-capsule-tower.board.json";
+import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
 
 const meta = {
 	title: "puzzle/2d",
-	component: BoardCanvas,
+	component: Puzzle2dCanvas,
 	parameters: {
 		layout: "fullscreen",
 	},
 	tags: ["autodocs"],
-} satisfies Meta<typeof BoardCanvas>;
+} satisfies Meta<typeof Puzzle2dCanvas>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-interface BoardFixtureHandleJson {
+interface Puzzle2dFixtureHandleJson {
 	angle: number;
 	color?: string;
 	handleKind?: string;
@@ -45,9 +45,9 @@ interface BoardFixtureHandleJson {
 	radius?: number;
 }
 
-interface BoardFixtureNodeJson {
+interface Puzzle2dFixtureNodeJson {
 	cad?: { x: number; y: number; z: number } | null;
-	handles: BoardFixtureHandleJson[];
+	handles: Puzzle2dFixtureHandleJson[];
 	height?: number;
 	iconKind?: string;
 	id: string;
@@ -61,30 +61,30 @@ interface BoardFixtureNodeJson {
 	y: number;
 }
 
-interface BoardFixtureEdgeJson {
+interface Puzzle2dFixtureEdgeJson {
 	id: string;
 	source: string;
 	target: string;
 }
 
-interface BoardFixtureV1 {
+interface Puzzle2dFixtureV1 {
 	camera: { x: number; y: number; zoom: number };
-	edges: BoardFixtureEdgeJson[];
+	edges: Puzzle2dFixtureEdgeJson[];
 	meta?: Record<string, unknown>;
-	nodes: BoardFixtureNodeJson[];
+	nodes: Puzzle2dFixtureNodeJson[];
 	schema: string;
 }
 
-const nakaginCapsuleTowerBoard = nakaginCapsuleTowerBoardFixture as BoardFixtureV1;
+const nakaginCapsuleTowerPuzzle2d = nakaginCapsuleTowerPuzzle2dFixture as Puzzle2dFixtureV1;
 
-const nakaginStoryKindCatalogs = mergeBoardKindCatalogBundleByRowId(
-	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
-	boardFixtureMetaKindCatalogBundle(nakaginCapsuleTowerBoardFixture) ?? {},
+const nakaginStoryKindCatalogs = mergeKindCatalogBundleByRowId(
+	{ ...DEFAULT_KIND_CATALOG_BUNDLE },
+	fixtureMetaKindCatalogBundle(nakaginCapsuleTowerPuzzle2dFixture) ?? {},
 );
 
-const nakaginStoryKindCompatibility = boardFixtureMetaKindCompatibility(nakaginCapsuleTowerBoardFixture) ?? [];
+const nakaginStoryKindCompatibility = puzzle2dFixtureMetaKindCompatibility(nakaginCapsuleTowerPuzzle2dFixture) ?? [];
 
-type DefaultBoardGraphNode = {
+type DefaultPuzzle2dGraphNode = {
 	handles: { angle: number; handleKind: string; id: string }[];
 	id: string;
 	radius: number;
@@ -92,26 +92,26 @@ type DefaultBoardGraphNode = {
 	y: number;
 };
 
-type DefaultBoardGraphEdge = { id: string; source: string; target: string };
+type DefaultPuzzle2dGraphEdge = { id: string; source: string; target: string };
 
-type DefaultBoardGraph = { edges: DefaultBoardGraphEdge[]; nodes: DefaultBoardGraphNode[] };
+type DefaultPuzzle2dGraph = { edges: DefaultPuzzle2dGraphEdge[]; nodes: DefaultPuzzle2dGraphNode[] };
 
-const defaultBoardGraph: DefaultBoardGraph = {
+const defaultPuzzle2dGraph: DefaultPuzzle2dGraph = {
 	edges: [{ id: "link-1", source: "alpha.out", target: "beta.in" }],
 	nodes: [
-		{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
-		{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
+		{ handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
+		{ handles: [{ angle: Math.PI, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
 	],
 };
 
-function BoardDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction<DefaultBoardGraph>> }): null {
-	useBoardEvent(
+function Puzzle2dDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction<DefaultPuzzle2dGraph>> }): null {
+	usePuzzle2dEvent(
 		"edgeDelete",
 		useCallback(({ id }: { id: string }) => {
 			setGraph((graph) => ({ ...graph, edges: graph.edges.filter((edge) => edge.id !== id) }));
 		}, [setGraph]),
 	);
-	useBoardEvent(
+	usePuzzle2dEvent(
 		"nodeDelete",
 		useCallback(({ id }: { id: string }) => {
 			setGraph((graph) => {
@@ -127,11 +127,11 @@ function BoardDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction
 	return null;
 }
 
-function StatefulInteractiveBoardScene(): ReactElement {
-	const [graph, setGraph] = useState(() => defaultBoardGraph);
+function StatefulInteractivePuzzle2dScene(): ReactElement {
+	const [graph, setGraph] = useState(() => defaultPuzzle2dGraph);
 	return (
 		<>
-			<BoardDeleteReconciler setGraph={setGraph} />
+			<Puzzle2dDeleteReconciler setGraph={setGraph} />
 			{graph.nodes.map((node) => (
 				<Node id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
 					{node.handles.map((handle) => (
@@ -146,10 +146,10 @@ function StatefulInteractiveBoardScene(): ReactElement {
 	);
 }
 
-/** 🗼 Full Nakagin Capsule Tower board from `nakagin-capsule-tower.board.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
-const nakaginCapsuleTowerBoardScene: ReactElement = (
+/** 🗼 Full Nakagin Capsule Tower puzzle 2d from `nakagin-capsule-tower.2d.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
+const nakaginCapsuleTowerPuzzle2dScene: ReactElement = (
 	<>
-		{nakaginCapsuleTowerBoard.nodes.map((node) =>
+		{nakaginCapsuleTowerPuzzle2d.nodes.map((node) =>
 			node.shape === "rectangle" && node.width != null && node.height != null ? (
 				<Node
 					draggable={false}
@@ -167,7 +167,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 						<Handle
 							angle={handle.angle}
 							color={handle.color}
-							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND}
 							id={handle.id}
 							key={handle.id}
 							radius={handle.radius}
@@ -189,7 +189,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 						<Handle
 							angle={handle.angle}
 							color={handle.color}
-							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND}
 							id={handle.id}
 							key={handle.id}
 							radius={handle.radius}
@@ -198,7 +198,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 				</Node>
 			),
 		)}
-		{nakaginCapsuleTowerBoard.edges.map((edge) => (
+		{nakaginCapsuleTowerPuzzle2d.edges.map((edge) => (
 			<Edge id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
 		))}
 	</>
@@ -206,13 +206,13 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 
 export const Default: Story = {
 	render: (args) => (
-		<BoardCanvas {...args}>
-			<StatefulInteractiveBoardScene />
-		</BoardCanvas>
+		<Puzzle2dCanvas {...args}>
+			<StatefulInteractivePuzzle2dScene />
+		</Puzzle2dCanvas>
 	),
 	args: {
 		camera: { x: 0, y: 0, zoom: 1 },
-		kindCatalogs: { ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+		kindCatalogs: { ...DEFAULT_KIND_CATALOG_BUNDLE },
 		height: 520,
 		width: 720,
 		worldRasterTiling: "none",
@@ -221,9 +221,9 @@ export const Default: Story = {
 
 export const WorldTileClip: Story = {
 	render: (args) => (
-		<BoardCanvas {...args}>
-			<StatefulInteractiveBoardScene />
-		</BoardCanvas>
+		<Puzzle2dCanvas {...args}>
+			<StatefulInteractivePuzzle2dScene />
+		</Puzzle2dCanvas>
 	),
 	args: {
 		...Default.args,
@@ -233,13 +233,13 @@ export const WorldTileClip: Story = {
 
 export const NakaginCapsuleTowerFlatSelection: Story = {
 	render: (args) => (
-		<BoardCanvas {...args}>
-			{nakaginCapsuleTowerBoardScene}
-		</BoardCanvas>
+		<Puzzle2dCanvas {...args}>
+			{nakaginCapsuleTowerPuzzle2dScene}
+		</Puzzle2dCanvas>
 	),
 	args: {
 		...Default.args,
-		camera: { ...nakaginCapsuleTowerBoard.camera },
+		camera: { ...nakaginCapsuleTowerPuzzle2d.camera },
 		kindCatalogs: nakaginStoryKindCatalogs,
 		kindCompatibility: nakaginStoryKindCompatibility,
 	},

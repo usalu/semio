@@ -5,7 +5,7 @@
 // #endregion Header
 
 // #region 🔌Adapters
-import { Card, CardGrid, i18next, initReactI18next, reactHostPort } from "@ui/react";
+import { Card, CardGrid, reactHostPort, setUiLocale } from "@ui/react";
 import "@ui/react/globals.css";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
@@ -13,12 +13,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
-i18next.use(initReactI18next).init({
-  lng: "en",
-  fallbackLng: "en",
-  interpolation: { escapeValue: false },
-  resources: { en: { translation: {} } },
-});
+void setUiLocale("en");
 
 const PANELS = ["dashboard", "config", "runs", "report", "translations", "actions", "events"] as const;
 

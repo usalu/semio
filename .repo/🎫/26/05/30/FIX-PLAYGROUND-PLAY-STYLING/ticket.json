@@ -1,0 +1,11 @@
+{
+  "title": "Fix Playground Play Styling",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Playground puzzle 3d play (and siblings) look horribly unstyled: broken globals.css imports, missing main.ts CSS entry, redundant side-panel section labels showing tab ids, need design-system tokens and panel chrome like CAD play.",
+  "summary": "Play sites were nearly unstyled: globals.css imported missing puzzle/core paths and main.ts never loaded CSS (~16KB bundle). Fixed all puzzle play globals to @ui/react/globals.css with full @source scan, added import ./globals.css to 2d/3d/5d main entries (~118KB tokens). Side panels no longer show slug section headers (content-only tabs use label:\"\", TreeSection skips useLabel when label is empty). Inspector/settings get human labels via SideTabSpec.label. UiRenderer form/tree chrome uses design-system spacing; PlaygroundPanelBody fills panel height.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4bdc8a1c448b43d999150c7212873c9e"
+  ]
+}

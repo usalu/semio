@@ -1,0 +1,20 @@
+{
+  "title": "Puzzle2d Brush Tool",
+  "emoji": "🖌️",
+  "status": "closed",
+  "description": "Implement paint-style Brush tool for puzzle2d: offset slot hitboxes, compatible node preview, auto-flush on leave, Tab cycle candidates, flush-distance window measure.",
+  "summary": "Fixed runtime crash in Puzzle2dPlayPaneCanvas: onBrushPlace referenced guardFixtureAuthoringFromStructuralDeletes which only exists inside Puzzle2dPlayInner. Moved brush commit logic into shell context as commitBrushPlacement (200ms quiet window, structural-delete guards, peer sync). Pane canvas now calls commitBrushPlacement from usePuzzle2dPlayShell.\n\nTests: framework/product/playground/renderer/react 16/16.",
+  "goal": "🎯puzzle",
+  "plan": {
+    "client": "cursor",
+    "id": "a806828f",
+    "local": "puzzle2d_brush_tool_a806828f.plan.md"
+  },
+  "sessions": [
+    "⚪bc0785fc8c7a4d08878cd726f260caab",
+    "⚪128debf5f8f04565a1c3b382c9fda1f4",
+    "⚪71a872b0e4524469aa8735bb9c46df67",
+    "⚪4fdb8eb4540541e49500102eafb93c1e",
+    "⚪e5bc2055a1e04401b67470dafe419603"
+  ]
+}

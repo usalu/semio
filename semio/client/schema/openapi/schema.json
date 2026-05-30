@@ -1320,6 +1320,21 @@
                 "title": "FamilyId",
                 "description": "Reference to a kit family by id."
             },
+            "TypologyId": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "type": "object",
+                "title": "TypologyId",
+                "description": "Reference to a kit typology by id."
+            },
             "PortInput": {
                 "properties": {
                     "id": {
@@ -1624,6 +1639,122 @@
                 "title": "Family",
                 "description": "Kit-level connector family."
             },
+            "TypologyInput": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeInput"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignInput"
+                        },
+                        "type": "array",
+                        "title": "Designs"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "title": "TypologyInput",
+                "description": "Input fields for a kit typology."
+            },
+            "Typology": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/Type"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/Design"
+                        },
+                        "type": "array",
+                        "title": "Designs"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "title": "Typology",
+                "description": "Kit-level typology grouping types and designs."
+            },
             "ConnectorInput": {
                 "properties": {
                     "id_": {
@@ -1798,6 +1929,9 @@
                             }
                         ]
                     },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
+                    },
                     "families": {
                         "items": {
                             "$ref": "#/components/schemas/FamilyId"
@@ -1869,6 +2003,9 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {
@@ -1958,6 +2095,9 @@
                         "maxLength": 64,
                         "title": "Unit",
                         "default": ""
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {
@@ -2088,6 +2228,9 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updated"
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {
@@ -2395,19 +2538,28 @@
                         "title": "Description",
                         "default": ""
                     },
+                    "typologies": {
+                        "items": {
+                            "$ref": "#/components/schemas/Typology"
+                        },
+                        "type": "array",
+                        "title": "Typologies"
+                    },
                     "types": {
                         "items": {
                             "$ref": "#/components/schemas/TypeContext-"
                         },
                         "type": "array",
-                        "title": "Types"
+                        "title": "Types",
+                        "description": "Computed flattening of all typology-owned types."
                     },
                     "designs": {
                         "items": {
                             "$ref": "#/components/schemas/DesignContext-"
                         },
                         "type": "array",
-                        "title": "Designs"
+                        "title": "Designs",
+                        "description": "Computed flattening of all typology-owned designs."
                     },
                     "attributes": {
                         "items": {
@@ -2480,26 +2632,19 @@
                         "type": "array",
                         "title": "Families"
                     },
+                    "typologies": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypologyInput"
+                        },
+                        "type": "array",
+                        "title": "Typologies"
+                    },
                     "ports": {
                         "items": {
                             "$ref": "#/components/schemas/PortInput"
                         },
                         "type": "array",
                         "title": "Ports"
-                    },
-                    "types": {
-                        "items": {
-                            "$ref": "#/components/schemas/TypeInput"
-                        },
-                        "type": "array",
-                        "title": "Types"
-                    },
-                    "designs": {
-                        "items": {
-                            "$ref": "#/components/schemas/DesignInput"
-                        },
-                        "type": "array",
-                        "title": "Designs"
                     },
                     "folders": {
                         "items": {
@@ -2601,6 +2746,13 @@
                         "type": "array",
                         "title": "Families"
                     },
+                    "typologies": {
+                        "items": {
+                            "$ref": "#/components/schemas/Typology"
+                        },
+                        "type": "array",
+                        "title": "Typologies"
+                    },
                     "ports": {
                         "items": {
                             "$ref": "#/components/schemas/Port"
@@ -2613,14 +2765,16 @@
                             "$ref": "#/components/schemas/Type"
                         },
                         "type": "array",
-                        "title": "Types"
+                        "title": "Types",
+                        "description": "Computed flattening of all typology-owned types."
                     },
                     "designs": {
                         "items": {
                             "$ref": "#/components/schemas/Design"
                         },
                         "type": "array",
-                        "title": "Designs"
+                        "title": "Designs",
+                        "description": "Computed flattening of all typology-owned designs."
                     },
                     "folders": {
                         "items": {
@@ -3670,6 +3824,9 @@
                             }
                         ]
                     },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
+                    },
                     "families": {
                         "items": {
                             "$ref": "#/components/schemas/FamilyId"
@@ -3744,6 +3901,9 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {
@@ -3836,6 +3996,9 @@
                         "maxLength": 64,
                         "title": "Unit",
                         "default": ""
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {
@@ -3965,6 +4128,9 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updated"
+                    },
+                    "typology": {
+                        "$ref": "#/components/schemas/TypologyId"
                     },
                     "families": {
                         "items": {

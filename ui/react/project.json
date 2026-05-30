@@ -36,6 +36,14 @@
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/react",
+        "command": "bun ./script.ts typecheck",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -26,7 +26,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-import { architects } from "../../../fixtures/nakagin";
+import { architects } from "../../fixtures/nakagin";
 
 interface Person {
   id: string;

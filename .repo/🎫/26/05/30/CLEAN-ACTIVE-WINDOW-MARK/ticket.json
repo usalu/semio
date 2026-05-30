@@ -1,0 +1,17 @@
+{
+  "title": "Clean Active Window Mark",
+  "emoji": "✨",
+  "status": "closed",
+  "description": "Active window mark should be the same fine line as inactive chrome (1px border-element weight) but with primary (active-base) color instead of a thick ring-2 inset.",
+  "summary": "Replaced broken CSS subgrid with a flex active column: inactive tabs sit beside (not inside) the U-frame; body lives only under active tab+gap+controls so the primary stroke is continuous on the left/bottom of the active tab without drawing over sibling tabs or a full-width rectangle.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪e0a23a83609c4c48a0babe613be6892b",
+    "⚪ad964539138c4566b29a3bd4118106ba",
+    "⚪4a7351c3e8b4476d973d99aab80ab788",
+    "⚪f4ecef1d0a7c45fe88779ba6550f69da",
+    "⚪80016f99786148de9a9b6042f597688e",
+    "⚪03fb26faa0854111acb55f291e2bce26",
+    "⚪ff4362019456469db23a62cbbae6c494"
+  ]
+}

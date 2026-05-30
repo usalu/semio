@@ -18,6 +18,12 @@ import {
 	cylinder,
 	extrude,
 	face,
+	filledFace,
+	healSolid,
+	loft,
+	thicken,
+	translate,
+	wire,
 	getBounds,
 	getCurveType,
 	getEdges,
@@ -39,7 +45,10 @@ import {
 	meshEdges,
 	normalAt,
 	offsetFace,
+	fuseAll,
+	sewShells,
 	shape,
+	solidFromShell,
 	sphere,
 	threePointArc,
 	toGroupedBufferGeometryData,
@@ -51,7 +60,7 @@ import {
 	exportSTEP,
 	importSTEP,
 } from "brepjs";
-import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepjs";
+import type { Dimension, Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid, Wire } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
 	applyModelDiff,
@@ -85,7 +94,8 @@ import {
 	stepSpatialFileHeader,
 	StepEntityWriter,
 	derivePropertyValue,
-	SHAPE_MODEL_DEFINITION_ID,
+	defaultModelDefinitionId,
+	solidRef,
 	type ObjectRef,
 	type TypologyRef,
 } from "@cad/js/core";
@@ -218,7 +228,7 @@ export function arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number {
 	return sweep;
 }
 
-/** @emoji 🔵 Tessellates a circular arc through `start` and `end` about `center` (Topologic-style CCW sweep). */
+/** @emoji 🔵 Tessellates a circular arc through `start` and `end` about `center` (positive CCW sweep). */
 export function arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 32): readonly Vec3[] {
 	const frame = arcPlaneFrame(center, start, end);
 	if (!frame) return [start, end];
@@ -278,7 +288,7 @@ export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Ve
 	);
 }
 
-/** @emoji ⭕ Tessellates a full circle (`Geom_Circle`) on plane `normal` through `center`. */
+/** @emoji ⭕ Tessellates a full circle on plane `normal` through `center`. */
 export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 64): readonly Vec3[] {
 	const frame = arcFrameFromRadiusPoint(center, vec3Add(center, vec3Scale(vec3Normalize(normal), radius)));
 	if (!frame) return [center];
@@ -296,7 +306,7 @@ export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, s
 	return pts;
 }
 
-/** @emoji 🥚 Tessellates an ellipse (`Geom_Ellipse`) in the plane of `normal` / `majorAxis`. */
+/** @emoji 🥚 Tessellates an ellipse in the plane of `normal` / `majorAxis`. */
 export function ellipseSamplePoints(
 	center: Vec3,
 	normal: Vec3,
@@ -321,7 +331,7 @@ export function ellipseSamplePoints(
 	return pts;
 }
 
-/** @emoji 📈 Centripetal Catmull–Rom samples through `poles` (display / length estimate for `Geom_BSplineCurve`). */
+/** @emoji 📈 Centripetal Catmull–Rom samples through `poles` (display / length estimate for nurbs curves). */
 export function nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 12): readonly Vec3[] {
 	if (poles.length < 2) return poles;
 	if (poles.length === 2) return poles;
@@ -413,22 +423,25 @@ export function edgeSamplePoints(
 			Math.max(segments, 64),
 		);
 	}
-	if (curve.kind === "nurbs") return nurbsDisplaySamplePoints(curve.poles, Math.max(4, Math.ceil(segments / 4)));
+	if (curve.kind === "nurbs") {
+		const span = curve.through ? Math.max(12, curve.poles.length * 8) : Math.max(4, Math.ceil(segments / 4));
+		return nurbsDisplaySamplePoints(curve.poles, span);
+	}
 	return ends.length >= 2 ? ends : ends;
 }
 
-/** @emoji ⭕ `Geom_Circle` params from center and one on-circle point. */
+/** @emoji ⭕ Circle params from center and one on-circle point. */
 export function circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null {
 	const frame = arcFrameFromRadiusPoint(center, radiusPoint);
 	if (!frame) return null;
 	return { center, normal: frame.normal, radius: frame.radius };
 }
 
-/** @emoji 📈 Builds `EdgeCurve` nurbs from control points (Topologic `EdgeUtility::ByNurbsCurve` subset). */
-export function nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null {
+/** @emoji 📈 Builds `EdgeCurve` nurbs from poles (`through` = interpolation points, else B-spline control points). */
+export function nurbsCurveFromPoles(poles: readonly Vec3[], through = false): EdgeCurve | null {
 	if (poles.length < 2) return null;
 	const degree = Math.min(3, poles.length - 1);
-	return { kind: "nurbs", poles, degree };
+	return { kind: "nurbs", poles, degree, through };
 }
 
 function clamp01(value: number): number {
@@ -1157,8 +1170,216 @@ export function transformPointsForPreviewKind(
 			origin[2] + (point[2] - origin[2]) * scale,
 		];
 	}
+	if (previewKind === "extrusion") {
+		const origin = readVec3(params.origin) ?? prevPoint ?? from;
+		if (!origin || !cursor) return identity;
+		const dir = vec3Normalize(readVec3(params.direction) ?? ([0, 0, 1] as Vec3));
+		const dist = vec3Dot(vec3Sub(cursor, origin), dir);
+		const delta: Vec3 = [dir[0] * dist, dir[1] * dist, dir[2] * dist];
+		return (point) => vec3Add(point, delta);
+	}
 	return identity;
 }
+
+// #region 🧱PrimitivePreviewGeometry
+function kernelFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
+	const g = geom(model);
+	const pts: Vec3[] = [];
+	for (const wid of face.wireIds) {
+		for (const eid of g.wires[wid]?.edgeIds ?? []) {
+			for (const vid of g.edges[eid]?.vertexIds ?? []) {
+				const p = g.vertices[vid]?.position;
+				if (p) pts.push(p);
+			}
+		}
+	}
+	return [...new Map(pts.map((p) => [p.join(","), p])).values()];
+}
+
+/** @emoji 📍 Face vertex centroid for preview primitive ops. */
+export function faceCentroid(model: Model, face: FaceRecord): Vec3 | null {
+	const pts = kernelFacePoints(model, face);
+	if (!pts.length) return null;
+	let x = 0;
+	let y = 0;
+	let z = 0;
+	for (const p of pts) {
+		x += p[0];
+		y += p[1];
+		z += p[2];
+	}
+	const n = pts.length;
+	return [x / n, y / n, z / n];
+}
+
+function kernelFaceNormalFromId(faceId: string): Vec3 | null {
+	if (faceId.includes("face-top")) return [0, 0, 1];
+	if (faceId.includes("face-bottom")) return [0, 0, -1];
+	if (faceId.includes("face-x0")) return [-1, 0, 0];
+	if (faceId.includes("face-x1")) return [1, 0, 0];
+	if (faceId.includes("face-y0")) return [0, -1, 0];
+	if (faceId.includes("face-y1")) return [0, 1, 0];
+	return null;
+}
+
+/** @emoji 📐 Unit face normal from surface or boundary winding. */
+export function faceNormal(model: Model, face: FaceRecord): Vec3 | null {
+	if (face.surface?.kind === "plane") {
+		const n = face.surface.normal;
+		const len = Math.hypot(n[0], n[1], n[2]);
+		return len > 1e-9 ? ([n[0] / len, n[1] / len, n[2] / len] as Vec3) : null;
+	}
+	const pts = kernelFacePoints(model, face);
+	if (pts.length >= 3) {
+		let nx = 0;
+		let ny = 0;
+		let nz = 0;
+		for (let i = 0; i < pts.length; i++) {
+			const p0 = pts[i]!;
+			const p1 = pts[(i + 1) % pts.length]!;
+			nx += (p0[1] - p1[1]) * (p0[2] + p1[2]);
+			ny += (p0[2] - p1[2]) * (p0[0] + p1[0]);
+			nz += (p0[0] - p1[0]) * (p0[1] + p1[1]);
+		}
+		const len = Math.hypot(nx, ny, nz);
+		if (len > 1e-9) return [nx / len, ny / len, nz / len];
+	}
+	return kernelFaceNormalFromId(String(face.id));
+}
+
+/** @emoji 🧱 Face ids referenced by one solid shell graph. */
+export function solidFaceIds(model: Model, solidId: string): readonly FaceRef[] {
+	const g = geom(model);
+	const solid = g.solids[solidId];
+	if (!solid) return [];
+	const out: FaceRef[] = [];
+	const seen = new Set<string>();
+	for (const shellId of solid.shellIds) {
+		for (const faceId of g.shells[shellId]?.faceIds ?? []) {
+			const key = String(faceId);
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push(faceId);
+		}
+	}
+	return out;
+}
+
+function kernelFacesAreContactPair(
+	a: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
+	b: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
+	contactPairs: readonly (readonly [string, string])[],
+	maxSeparation: number,
+): boolean {
+	if (a.solid === b.solid) return false;
+	const aId = String(a.face);
+	const bId = String(b.face);
+	let suffixMatch = false;
+	for (const [suffixA, suffixB] of contactPairs) {
+		if (aId.endsWith(suffixA) && bId.endsWith(suffixB)) {
+			suffixMatch = true;
+			break;
+		}
+	}
+	if (!suffixMatch) return false;
+	const sep = Math.hypot(a.centroid[0] - b.centroid[0], a.centroid[1] - b.centroid[1], a.centroid[2] - b.centroid[2]);
+	return sep <= maxSeparation;
+}
+
+/** @emoji 🧱 Fuses stacked solids and returns external face ids plus hull solid ref. */
+export function fuseSolidsToExternalFaces(
+	model: Model,
+	solidRefs: readonly SolidRef[],
+	options?: { readonly hullSolidId?: string; readonly contactPairs?: readonly (readonly [string, string])[]; readonly maxSeparation?: number },
+): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] } {
+	const contactPairs = options?.contactPairs ?? [
+		["face-top", "face-bottom"],
+		["face-bottom", "face-top"],
+	];
+	const maxSeparation = options?.maxSeparation ?? 0.05;
+	const hullSolidId = (options?.hullSolidId ?? "from_geometry-hull") as SolidRef;
+	const allFaces = solidRefs.flatMap((solidId) => solidFaceIds(model, solidId));
+	const internal = new Set<string>();
+	for (let i = 0; i < solidRefs.length; i++) {
+		for (let j = i + 1; j < solidRefs.length; j++) {
+			const solidA = solidRefs[i]!;
+			const solidB = solidRefs[j]!;
+			for (const faceA of solidFaceIds(model, solidA)) {
+				const centroidA = faceCentroid(model, geom(model).faces[faceA]!);
+				if (!centroidA) continue;
+				for (const faceB of solidFaceIds(model, solidB)) {
+					const centroidB = faceCentroid(model, geom(model).faces[faceB]!);
+					if (!centroidB) continue;
+					if (!kernelFacesAreContactPair({ face: faceA, solid: solidA, centroid: centroidA }, { face: faceB, solid: solidB, centroid: centroidB }, contactPairs, maxSeparation))
+						continue;
+					internal.add(String(faceA));
+					internal.add(String(faceB));
+				}
+			}
+		}
+	}
+	const externalFaces = allFaces.filter((faceId) => !internal.has(String(faceId)));
+	const hullSolid: SolidRef = solidRefs.length === 1 ? solidRefs[0]! : hullSolidId;
+	return { hullSolid, externalFaces };
+}
+
+/** @emoji 📐 Groups coplanar faces for merged object rows. */
+export function facePlaneGroupKey(normal: Vec3, centroid: Vec3): string {
+	const ax = Math.abs(normal[0]);
+	const ay = Math.abs(normal[1]);
+	const az = Math.abs(normal[2]);
+	if (az >= ax && az >= ay) {
+		const sign = normal[2] >= 0 ? "+" : "-";
+		return `z:${Math.round(centroid[2] * 1000)}:${sign}`;
+	}
+	if (ax >= ay) {
+		const sign = normal[0] >= 0 ? "+" : "-";
+		return `x:${Math.round(centroid[0] * 1000)}:${sign}`;
+	}
+	const sign = normal[1] >= 0 ? "+" : "-";
+	return `y:${Math.round(centroid[1] * 1000)}:${sign}`;
+}
+
+/** @emoji 📏 Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
+export function projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3): { readonly projected: Vec3; readonly t: number } {
+	const ax = axis[0];
+	const ay = axis[1];
+	const az = axis[2];
+	const len = Math.hypot(ax, ay, az) || 1;
+	const ux = ax / len;
+	const uy = ay / len;
+	const uz = az / len;
+	const t = (raw[0] - base[0]) * ux + (raw[1] - base[1]) * uy + (raw[2] - base[2]) * uz;
+	return {
+		projected: [base[0] + ux * t, base[1] + uy * t, base[2] + uz * t],
+		t,
+	};
+}
+
+/** @emoji 📏 Point at `height` along `axis` from `base` using signed axis parameter. */
+export function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3 {
+	const ax = axis[0];
+	const ay = axis[1];
+	const az = axis[2];
+	const len = Math.hypot(ax, ay, az) || 1;
+	const ux = ax / len;
+	const uy = ay / len;
+	const uz = az / len;
+	const sign = signedT < 0 ? -1 : 1;
+	return [base[0] + ux * height * sign, base[1] + uy * height * sign, base[2] + uz * height * sign];
+}
+
+/** @emoji 📏 Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
+export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3 {
+	const dx = target[0] - anchor[0];
+	const dy = target[1] - anchor[1];
+	const dz = target[2] - anchor[2];
+	const d = Math.hypot(dx, dy, dz);
+	if (d < 1e-9) return [target[0], target[1], target[2]];
+	const s = length / d;
+	return [anchor[0] + dx * s, anchor[1] + dy * s, anchor[2] + dz * s];
+}
+// #endregion 🧱PrimitivePreviewGeometry
 
 /** @emoji 🔌 Precise `SpatialPreviewKernel` (delegates to module functions). */
 export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
@@ -1196,6 +1417,15 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	computeBoxPreviewLayout = computeBoxPreviewLayout;
 	transformPointsForPreviewKind = transformPointsForPreviewKind;
 	constrainMovePoint = constrainMovePoint;
+	facePoints = kernelFacePoints;
+	faceCentroid = faceCentroid;
+	faceNormal = faceNormal;
+	solidFaceIds = solidFaceIds;
+	fuseSolidsToExternalFaces = fuseSolidsToExternalFaces;
+	facePlaneGroupKey = facePlaneGroupKey;
+	projectPointOnScalarAxis = projectPointOnScalarAxis;
+	scalarTopOnAxis = scalarTopOnAxis;
+	clampPointAlongDirection = clampPointAlongDirection;
 	abs = Math.abs;
 	min2 = (a: number, b: number) => (a < b ? a : b);
 	max2 = (a: number, b: number) => (a > b ? a : b);
@@ -1548,7 +1778,7 @@ function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 // #endregion ♻️BrepjsScratch
 
 // #region 🔌BrepModelBridge
-/** @emoji 🔗 Builds a brepjs `Edge` from a model edge record (OCCT kernel). */
+	/** @emoji 🔗 Builds a brepjs `Edge` from a model edge record. */
 function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	const ids = edge.vertexIds;
 	if (ids.length < 1) return null;
@@ -1566,7 +1796,8 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 		return threePointArc(p0, mid, p1);
 	}
 	if (c.kind === "nurbs" && c.poles.length >= 2) {
-		const r = bsplineApprox([...c.poles]);
+		const fitPoints = c.through ? [...nurbsDisplaySamplePoints(c.poles, 16)] : [...c.poles];
+		const r = bsplineApprox(fitPoints);
 		if (isOk(r)) return r.value;
 	}
 	if (c.kind === "ellipse") {
@@ -1577,7 +1808,25 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	return line(p0, p1);
 }
 
-/** @emoji 🔗 Closed planar brepjs face from a model wire (OCCT `wireLoop` + `face`). */
+/** @emoji 🔗 brepjs wire from a model wire (closed `wireLoop` or open `wire`). */
+function geomWireToBrepWire(model: Model, wireId: WireRef): Wire<Dimension> | null {
+	const w = geom(model).wires[wireId];
+	if (!w?.edgeIds.length) return null;
+	const edges: Edge[] = [];
+	for (const eid of w.edgeIds) {
+		const rec = geom(model).edges[eid];
+		if (!rec) return null;
+		const be = geomEdgeToBrepEdge(model, rec);
+		if (!be) return null;
+		edges.push(be);
+	}
+	const loop = wireLoop(edges);
+	if (isOk(loop)) return loop.value;
+	const open = wire(edges);
+	return isOk(open) ? open.value : null;
+}
+
+	/** @emoji 🔗 Closed planar brepjs face from a model wire (`wireLoop` + `face`). */
 function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
 	const w = geom(model).wires[wireId];
 	if (!w?.edgeIds.length) return null;
@@ -1595,17 +1844,154 @@ function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | n
 	return isOk(f) ? f.value : null;
 }
 
-/** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs. */
+/** @emoji 🔗 Oriented face from a model wire; uses `filledFace` when planar `face` fails (deformed boxes). */
+function geomWireToOrientedFaceLoose(model: Model, wireId: WireRef): OrientedFace | null {
+	const planar = geomWireToOrientedFace(model, wireId);
+	if (planar) return planar;
+	const w = geom(model).wires[wireId];
+	if (!w?.edgeIds.length) return null;
+	const edges: Edge[] = [];
+	for (const eid of w.edgeIds) {
+		const rec = geom(model).edges[eid];
+		if (!rec) return null;
+		const be = geomEdgeToBrepEdge(model, rec);
+		if (!be) return null;
+		edges.push(be);
+	}
+	const cw = wireLoop(edges);
+	if (!isOk(cw)) return null;
+	const filled = filledFace(cw.value as Parameters<typeof filledFace>[0]);
+	return isOk(filled) ? filled.value : null;
+}
+
+/** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs (planar face or open-curve loft). */
 function extrudeModelWire(
 	model: Model,
 	wireId: string,
 	direction: Vec3,
 	distance: number,
 ): ValidSolid | null {
-	const planar = geomWireToOrientedFace(model, wireId as WireRef);
-	if (!planar) return null;
-	const solid = extrude(planar as Parameters<typeof extrude>[0], extrudeDirection(direction, distance));
-	return isOk(solid) ? (solid.value as ValidSolid) : null;
+	const wid = wireId as WireRef;
+	const vec = extrudeDirection(direction, distance);
+	const planar = geomWireToOrientedFace(model, wid) ?? geomWireToOrientedFaceLoose(model, wid);
+	if (planar) {
+		const solid = extrude(planar as Parameters<typeof extrude>[0], vec);
+		return isOk(solid) ? (solid.value as ValidSolid) : null;
+	}
+	const profile = geomWireToBrepWire(model, wid);
+	if (!profile) return null;
+	const moved = translate(profile, vec);
+	const lofted = loft([profile, moved], { ruled: true });
+	if (!isOk(lofted)) return null;
+	const shape = lofted.value as Shape3D;
+	if (isSolid(shape)) {
+		if (isValidSolid(shape)) return shape as ValidSolid;
+		const healed = healSolid(shape);
+		if (isOk(healed) && isValidSolid(healed.value)) return healed.value as ValidSolid;
+		return shape as ValidSolid;
+	}
+	const thickened = thicken(shape as Parameters<typeof thicken>[0], 1e-3);
+	if (isOk(thickened) && isSolid(thickened.value)) return thickened.value as ValidSolid;
+	return null;
+}
+
+type SelectionPick = { readonly kind: string; readonly id: string };
+
+function selectionPicksFromParams(params: Record<string, unknown>): SelectionPick[] {
+	const raw = params.curves ?? params.targets ?? [];
+	if (!Array.isArray(raw)) return [];
+	const out: SelectionPick[] = [];
+	for (const row of raw) {
+		if (!row || typeof row !== "object") continue;
+		const kind = (row as { kind?: unknown }).kind;
+		const id = (row as { id?: unknown }).id;
+		if (typeof kind === "string" && typeof id === "string") out.push({ kind, id });
+	}
+	return out;
+}
+
+/** @emoji 🧵 Resolves wire ids from curve selection targets (`wire` or parent wire of `edge`). */
+function wireIdsFromSelectionPicks(model: Model, picks: readonly SelectionPick[]): WireRef[] {
+	const g = geom(model);
+	const out: WireRef[] = [];
+	const seen = new Set<string>();
+	for (const pick of picks) {
+		if (pick.kind === "wire") {
+			if (g.wires[pick.id] && !seen.has(pick.id)) {
+				seen.add(pick.id);
+				out.push(pick.id as WireRef);
+			}
+			continue;
+		}
+		if (pick.kind !== "edge") continue;
+		for (const wire of Object.values(g.wires)) {
+			if (!wire.edgeIds.includes(pick.id as EdgeRef) || seen.has(wire.id)) continue;
+			seen.add(wire.id);
+			out.push(wire.id);
+		}
+	}
+	return out;
+}
+
+function mergeSolidAdds(diffs: readonly ModelDiff[]): ModelDiff {
+	const added = diffs.flatMap((d) => d.solids?.added ?? []);
+	return added.length ? { solids: { added } } : {};
+}
+
+function extrusionDistanceFromParams(params: Record<string, unknown>): number {
+	if (typeof params.distance === "number" && Number.isFinite(params.distance)) return Math.abs(params.distance);
+	const origin = readVec3(params.origin) ?? readVec3(params.prevPoint) ?? ([0, 0, 0] as Vec3);
+	let end = readVec3(params.cursor) ?? origin;
+	const points = params.points;
+	if (points && typeof points === "object" && !Array.isArray(points)) {
+		end = readVec3((points as { distancePoint?: unknown }).distancePoint) ?? end;
+	}
+	const dir = vec3Normalize(readVec3(params.direction) ?? ([0, 0, 1] as Vec3));
+	return Math.abs(vec3Dot(vec3Sub(end, origin), dir));
+}
+
+/** @emoji ✅ True when `cell` references at least one face through its shell graph. */
+function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
+	return modelFaceIdsForSolid(model, cell).length > 0;
+}
+
+/** @emoji 🧊 Builds one brep face from the model face's outer wire (live vertex positions). */
+function brepFaceFromModelFaceRecord(model: Model, faceRec: FaceRecord): Face | null {
+	const wireId = faceRec.wireIds[0];
+	if (!wireId) return null;
+	const oriented = geomWireToOrientedFaceLoose(model, wireId);
+	return oriented;
+}
+
+/** @emoji 🧊 Builds a brepjs `ValidSolid` by sewing closed shell faces from model topology. */
+function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | null {
+	const faceIds = modelFaceIdsForSolid(model, cell);
+	if (faceIds.length === 0) return null;
+	const brepFaces: Face[] = [];
+	for (const fid of faceIds) {
+		const faceRec = geom(model).faces[fid];
+		if (!faceRec) return null;
+		const brepFace = brepFaceFromModelFaceRecord(model, faceRec);
+		if (!brepFace) return null;
+		brepFaces.push(brepFace);
+	}
+	const sewn = sewShells(brepFaces);
+	if (isOk(sewn)) {
+		const fromShell = solidFromShell(sewn.value);
+		if (isOk(fromShell)) {
+			const healed = healSolid(fromShell.value);
+			return isOk(healed) ? healed.value : fromShell.value;
+		}
+	}
+	return null;
+}
+
+/** @emoji 🧊 Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
+function deriveValidSolidFromRecordOrPrimitive(model: Model, cell: SolidRecord, primitiveFrom: (p: SolidPrimitive) => ValidSolid): ValidSolid | null {
+	if (String(cell.id).startsWith("from_geometry-")) return null;
+	if (solidRecordHasShellTopology(model, cell)) return solidFromModelTopology(model, cell);
+	if (cell.solid) return primitiveFrom(cell.solid);
+	return null;
 }
 // #endregion 🔌BrepModelBridge
 
@@ -1625,17 +2011,22 @@ class BrepjsWasmEngine {
 	private initPromise: Promise<void> | null = null;
 	private seq = 0;
 	private readonly solids = new Map<SolidRef, ValidSolid>();
-	private solidsTopoKey: string | null = null;
+	private solidsModelKey: string | null = null;
 
 	/** @emoji 🧪 Clears solids cache (vitest shared kernel). */
 	resetDerivedPipeline(): void {
 		this.solids.clear();
-		this.solidsTopoKey = null;
+		this.meshCache.clear();
+		this.solidsModelKey = null;
 	}
 
 	private modelDerivedKey(model: Model): string {
 		const solids = (Object.keys(geom(model).solids) as SolidRef[]).sort().join(",");
-		return `${model.revision}:${solids}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
+		const vertexDigest = Object.values(geom(model).vertices)
+			.map((v) => `${v.id}:${v.position.map((n) => n.toFixed(4)).join(",")}`)
+			.sort()
+			.join("|");
+		return `${model.revision}:${solids}:${vertexDigest}`;
 	}
 
 	async ensureInit(): Promise<void> {
@@ -1647,16 +2038,6 @@ class BrepjsWasmEngine {
 			);
 		}
 		await this.initPromise;
-	}
-
-	private solidFromAabb(min: Vec3, max: Vec3): ValidSolid {
-		const w = Math.max(max[0] - min[0], 1e-6);
-		const d = Math.max(max[1] - min[1], 1e-6);
-		const h = Math.max(max[2] - min[2], 1e-6);
-		const cx = (min[0] + max[0]) / 2;
-		const cy = (min[1] + max[1]) / 2;
-		const cz = (min[2] + max[2]) / 2;
-		return box(w, d, h, { at: [cx, cy, cz], centered: true });
 	}
 
 	private solidFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): ValidSolid {
@@ -1690,8 +2071,8 @@ class BrepjsWasmEngine {
 
 	private readonly meshCache = new Map<string, MeshTransfer>();
 
-	private meshCacheKey(solid: SolidRef, tolerance: number): string {
-		return `${String(solid)}:${tolerance}`;
+	private meshCacheKey(solid: SolidRef, tolerance: number, model?: Model): string {
+		return model ? `${String(solid)}:${tolerance}:r${model.revision}` : `${String(solid)}:${tolerance}`;
 	}
 
 	disposeSolid(solid: SolidRef): void {
@@ -1704,9 +2085,10 @@ class BrepjsWasmEngine {
 
 	async tessellate(solid: SolidRef, tolerance: number, model?: Model): Promise<MeshTransfer> {
 		await this.ensureInit();
+		if (model) await this.syncSolidsFromModel(model);
 		const s = this.solids.get(solid);
 		if (!s) return emptyMeshTransfer();
-		const key = this.meshCacheKey(solid, tolerance);
+		const key = this.meshCacheKey(solid, tolerance, model);
 		const cached = this.meshCache.get(key);
 		if (cached) return cloneMeshTransfer(cached);
 		const solidRecord = model ? geom(model).solids[solid] : undefined;
@@ -1719,34 +2101,66 @@ class BrepjsWasmEngine {
 		return transfer;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a solid: analytic `SolidPrimitive`, then cache, then model-graph hull. */
+	/** @emoji 🧊 Brep for one shape source solid (topology or primitive; no fused-hull metadata). */
+	private brepForShapeSourceSolid(model: Model, solidId: SolidRef): ValidSolid | null {
+		const rec = geom(model).solids[solidId];
+		if (!rec) return null;
+		const cached = this.solids.get(rec.id);
+		if (cached) return cached;
+		return deriveValidSolidFromRecordOrPrimitive(model, rec, (p) => this.solidFromSolidPrimitive(p));
+	}
+
+	/** @emoji 🧊 Boolean-union brep for energy hull rows tagged with `fuseSourceSolidIds` metadata. */
+	private fusedHullBrepFromMetadata(model: Model, hullId: SolidRef): ValidSolid | null {
+		const meta = model.metadata.get(String(hullId));
+		const raw = meta?.fuseSourceSolidIds;
+		if (!Array.isArray(raw) || raw.length === 0) return null;
+		const shapes: ValidSolid[] = [];
+		for (const sid of raw) {
+			const brep = this.brepForShapeSourceSolid(model, sid as SolidRef);
+			if (brep) shapes.push(brep);
+		}
+		if (shapes.length === 0) return null;
+		if (shapes.length === 1) return shapes[0]!;
+		const fused = fuseAll(shapes);
+		return isOk(fused) ? fused.value : null;
+	}
+
+	/** @emoji 🧊 Authoritative brep for a solid: fused hull metadata, shell topology, else analytic primitive. */
 	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
-		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const cached = this.solids.get(solid.id);
 		if (cached) return cached;
-		const points = derivedSolidPoints(model, solid);
-		if (points.length > 0) {
-			const aabb = aabbFromPoints(points, 0);
-			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
+		const fusedHull = this.fusedHullBrepFromMetadata(model, solid.id);
+		if (fusedHull) {
+			this.solids.set(solid.id, fusedHull);
+			return fusedHull;
 		}
-		const aabb = modelObjectAabb(model, solid);
-		if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
-		return null;
+		return deriveValidSolidFromRecordOrPrimitive(model, solid, (p) => this.solidFromSolidPrimitive(p));
 	}
 
 	async syncSolidsFromModel(model: Model): Promise<void> {
 		await this.ensureInit();
 		const modelKey = this.modelDerivedKey(model);
-		if (this.solidsTopoKey === modelKey && this.solids.size > 0) return;
-		this.solids.clear();
+		if (this.solidsModelKey === modelKey && this.solids.size > 0) return;
+		const kernelBreps = new Map<SolidRef, ValidSolid>();
 		for (const cell of Object.values(geom(model).solids)) {
-			const solid = this.solidForSolidRecord(model, cell);
-			if (solid) this.solids.set(cell.id, solid);
+			if (cell.shellIds.length > 0) continue;
+			const cached = this.solids.get(cell.id);
+			if (cached) kernelBreps.set(cell.id, cached);
 		}
-		this.solidsTopoKey = modelKey;
+		this.solids.clear();
+		this.meshCache.clear();
+		for (const cell of Object.values(geom(model).solids)) {
+			const brep = this.solidForSolidRecord(model, cell);
+			if (brep) this.solids.set(cell.id, brep);
+		}
+		for (const [id, brep] of kernelBreps) {
+			if (!this.solids.has(id)) this.solids.set(id, brep);
+		}
+		this.solidsModelKey = modelKey;
 	}
 
-	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `SolidPrimitive` (sphere/cylinder/cone/box). */
+	/** @emoji 🧊 Builds brepjs `ValidSolid` from `SolidPrimitive` (sphere/cylinder/cone/box). */
 	solidFromSolidPrimitive(solid: SolidPrimitive): ValidSolid {
 		if (solid.kind === "sphere") {
 			return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
@@ -1850,9 +2264,11 @@ class BrepjsWasmEngine {
 		if (commandId === "curve.controlPointCurve" || commandId === "curve.interpolateCurve") {
 			const poles = poleList(params.points);
 			if (poles.length < 2) return { diff: {} };
-			const brepResult = bsplineApprox(poles);
+			const through = commandId === "curve.interpolateCurve";
+			const fitPoints = through ? [...nurbsDisplaySamplePoints(poles, 16)] : poles;
+			const brepResult = bsplineApprox(fitPoints);
 			if (!isOk(brepResult)) return { diff: {} };
-			const curve = nurbsCurveFromPoles(poles);
+			const curve = nurbsCurveFromPoles(poles, through);
 			if (!curve) return { diff: {} };
 			const vStart = createVertex(curveStartPoint(brepResult.value));
 			const vEnd = createVertex(curveEndPoint(brepResult.value));
@@ -1931,6 +2347,21 @@ class BrepjsWasmEngine {
 			if (faceId && model) return this.offsetFacesDiff({ faceIds: [faceId], distance: 0.01, model });
 			return { diff: {} };
 		}
+		if (commandId === "surface.extrudeCrv") {
+			const model = params.model instanceof Model ? params.model : null;
+			if (!model) return { diff: {} };
+			const distance = extrusionDistanceFromParams(params);
+			if (!(distance > 1e-9)) return { diff: {} };
+			const direction = asVec3(params.direction, [0, 0, 1]);
+			const wireIds = wireIdsFromSelectionPicks(model, selectionPicksFromParams(params));
+			if (!wireIds.length) return { diff: {} };
+			const diffs: ModelDiff[] = [];
+			for (const wireId of wireIds) {
+				const row = await this.extrudeWireDiff({ wireId, distance, direction, model });
+				if (!isEmptyModelDiff(row.diff)) diffs.push(row.diff);
+			}
+			return { diff: mergeSolidAdds(diffs) };
+		}
 
 		return { diff: {} };
 	}
@@ -1948,9 +2379,7 @@ class BrepjsWasmEngine {
 		model: Model;
 	}): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
 		const solid = await this.extrudeWire(input);
-		const preview = await this.tessellate(solid, 1e-3, input.model);
-		const diff = meshFaceModelDiff(preview, `brepjs-${solid}`);
-		return { diff, solid };
+		return { diff: { solids: { added: [{ id: solid, shellIds: [] }] } }, solid };
 	}
 
 	async offsetFacesDiff(input: {
@@ -1972,8 +2401,7 @@ class BrepjsWasmEngine {
 		if (!isSolid(offsetSolid) || !isValidSolid(offsetSolid)) return { diff: {} };
 		const ref = kernelGeometry.solidRef(`brepjs-offset-${++this.seq}`);
 		this.solids.set(ref, offsetSolid);
-		const preview = await this.tessellate(ref, 1e-3, input.model);
-		return { diff: meshFaceModelDiff(preview, `brepjs-offset-${fid}`) };
+		return { diff: { solids: { added: [{ id: ref, shellIds: [] }] } } };
 	}
 
 	async vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number> {
@@ -2060,9 +2488,8 @@ class BrepjsWasmEngine {
 		model: Model;
 	}): Promise<SolidRef> {
 		await this.ensureInit();
-		const solid =
-			extrudeModelWire(input.model, input.wireId, input.direction, input.distance) ??
-			box(1, 1, Math.abs(input.distance) || 1e-6, { at: [0, 0, 0], centered: true });
+		const solid = extrudeModelWire(input.model, input.wireId, input.direction, input.distance);
+		if (!solid) throw new Error(`Cannot extrude wire ${input.wireId}`);
 		const ref = kernelGeometry.solidRef(`brepjs-solid-${++this.seq}`);
 		this.solids.set(ref, solid);
 		return ref;
@@ -2204,20 +2631,40 @@ type BrepjsWorkerResponse =
 	| { readonly type: "rpc-result"; readonly id: string; readonly result: unknown }
 	| { readonly type: "rpc-error"; readonly id: string; readonly error: string };
 
+/** @emoji 📨 Walks RPC payloads so nested `Model` / `ModelSpace` survive worker `postMessage`. */
+function serializeWorkerValue(value: unknown): unknown {
+	if (value instanceof Model) return { __modelJson: value.toJSON() };
+	if (value instanceof ModelSpace) return { __modelSpaceJson: value.toJSON() };
+	if (Array.isArray(value)) return value.map(serializeWorkerValue);
+	if (!value || typeof value !== "object") return value;
+	const row = value as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
+	for (const [key, entry] of Object.entries(row)) out[key] = serializeWorkerValue(entry);
+	return out;
+}
+
 function serializeWorkerArg(arg: unknown): unknown {
-	if (arg instanceof Model) return { __modelJson: arg.toJSON() };
-	if (arg instanceof ModelSpace) return { __modelSpaceJson: arg.toJSON() };
-	return arg;
+	return serializeWorkerValue(arg);
+}
+
+/** @emoji 📨 Restores `Model` / `ModelSpace` instances from worker RPC payloads. */
+function deserializeWorkerValue(value: unknown): unknown {
+	if (value && typeof value === "object" && "__modelJson" in value) {
+		return Model.fromJSON((value as { readonly __modelJson: ModelJson }).__modelJson);
+	}
+	if (value && typeof value === "object" && "__modelSpaceJson" in value) {
+		return ModelSpace.fromJSON((value as { readonly __modelSpaceJson: Parameters<typeof ModelSpace.fromJSON>[0] }).__modelSpaceJson);
+	}
+	if (Array.isArray(value)) return value.map(deserializeWorkerValue);
+	if (!value || typeof value !== "object") return value;
+	const row = value as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
+	for (const [key, entry] of Object.entries(row)) out[key] = deserializeWorkerValue(entry);
+	return out;
 }
 
 function deserializeWorkerArg(arg: unknown): unknown {
-	if (arg && typeof arg === "object" && "__modelJson" in arg) {
-		return Model.fromJSON((arg as { readonly __modelJson: ModelJson }).__modelJson);
-	}
-	if (arg && typeof arg === "object" && "__modelSpaceJson" in arg) {
-		return ModelSpace.fromJSON((arg as { readonly __modelSpaceJson: Parameters<typeof ModelSpace.fromJSON>[0] }).__modelSpaceJson);
-	}
-	return arg;
+	return deserializeWorkerValue(arg);
 }
 // #endregion 📨WorkerProtocol
 
@@ -2540,6 +2987,116 @@ if (import.meta.vitest) {
 			expect(meshTransfer.faceGroups.length).toBeGreaterThan(0);
 		});
 
+		it("syncSolidsFromModel rebuilds box volume after planar vertex move (not stale primitive)", async () => {
+			const g = new Model();
+			const solid = kernelGeometry.solidRef("moved-box");
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume(solid)).toBeCloseTo(1, 3);
+			for (const [id, vert] of Object.entries(g.vertices)) {
+				if (!id.includes("moved-box") || vert.position[2] < 0.5) continue;
+				g.vertices[id as VertexRef] = { id: vert.id, position: [vert.position[0], vert.position[1], vert.position[2] + 1] };
+			}
+			g.bump();
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume(solid)).toBeCloseTo(2, 2);
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+		});
+
+		it("extrudeWireDiff registers kernel brep for tessellation without meshFaceModelDiff shell", async () => {
+			const g = new Model();
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const e0 = "e0" as EdgeRef;
+			const w0 = "w0" as WireRef;
+			applyModelDiff(g, {
+				vertices: {
+					added: [
+						{ id: v0, position: [0, 0, 0] },
+						{ id: v1, position: [1, 0, 0] },
+					],
+				},
+				edges: { added: [{ id: e0, vertexIds: [v0, v1] }] },
+				wires: { added: [{ id: w0, edgeIds: [e0] }] },
+			});
+			const { diff, solid } = await kernel.extrudeWireDiff({ wireId: w0, distance: 2, direction: [0, 0, 1], model: g });
+			applyModelDiff(g, diff);
+			g.bump();
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+			expect(Object.keys(g.faces).some((id) => id.startsWith("cm-"))).toBe(false);
+		});
+
+		it("extrudeWireDiff lofts open nurbs interpolate wires to solids", async () => {
+			const g = new Model();
+			const res = await kernel.executeCommandDiff("curve.interpolateCurve", {
+				model: g,
+				points: [
+					[0, 0, 0],
+					[2, 1, 0],
+					[4, 0, 0],
+				],
+			});
+			applyModelDiff(g, res.diff);
+			const wireId = res.diff.wires?.added?.[0]?.id;
+			expect(wireId).toBeTruthy();
+			const { diff, solid } = await kernel.extrudeWireDiff({
+				wireId: String(wireId),
+				distance: 1.2,
+				direction: [0, 0, 1],
+				model: g,
+			});
+			expect(diff.solids?.added?.length).toBe(1);
+			applyModelDiff(g, diff);
+			g.bump();
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+		});
+
+		it("executeCommandDiff surface.extrudeCrv extrudes selected wires along direction", async () => {
+			const g = new Model();
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const e0 = "e0" as EdgeRef;
+			const w0 = "w0" as WireRef;
+			applyModelDiff(g, {
+				vertices: {
+					added: [
+						{ id: v0, position: [0, 0, 0] },
+						{ id: v1, position: [1, 0, 0] },
+					],
+				},
+				edges: { added: [{ id: e0, vertexIds: [v0, v1] }] },
+				wires: { added: [{ id: w0, edgeIds: [e0] }] },
+			});
+			const res = await kernel.executeCommandDiff("surface.extrudeCrv", {
+				model: g,
+				curves: [{ kind: "wire", id: w0 }],
+				direction: [0, 0, 1],
+				distance: 1.5,
+				origin: [0, 0, 0],
+				cursor: [0, 0, 1.5],
+			});
+			expect(res.diff.solids?.added?.length).toBe(1);
+		});
+
+		it("syncSolidsFromModel follows sheared box shell (not axis-aligned primitive proxy)", async () => {
+			const g = new Model();
+			const solid = kernelGeometry.solidRef("sheared-box");
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			const corner = g.vertices["box-sheared-box-v111" as VertexRef];
+			expect(corner).toBeDefined();
+			g.vertices["box-sheared-box-v111" as VertexRef] = { id: corner!.id, position: [1.4, 1.2, 1] };
+			g.bump();
+			await kernel.syncSolidsFromModel(g);
+			const vol = await kernel.volume(solid);
+			expect(vol).toBeGreaterThan(1.05);
+			expect(vol).toBeLessThan(1.35);
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+		});
+
 		it("tessellate maps brep faces to model FaceRef entityIds when model is provided", async () => {
 			const g = new Model();
 			const solid = kernelGeometry.solidRef("box-pick");
@@ -2593,6 +3150,32 @@ if (import.meta.vitest) {
 			expect(r.solid).toBeDefined();
 			expect(Object.keys(r.diff.faces?.added ?? {}).length).toBeGreaterThan(0);
 			expect(await kernel.volume(r.solid)).toBeGreaterThan(0);
+		});
+
+		it("topology preview geometry resolves face centroid and fuse external faces", () => {
+			const model = new Model();
+			const west = solidRef("west");
+			const east = solidRef("east");
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, west));
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 1], height: 1 }, east));
+			const westTop = Object.keys(model.faces).find((id) => id.includes("face-top") && id.includes("west"))!;
+			const face = model.faces[westTop as FaceRef]!;
+			const centroid = faceCentroid(model, face);
+			expect(centroid).not.toBeNull();
+			expect(centroid![2]).toBeCloseTo(1, 3);
+			const fused = fuseSolidsToExternalFaces(model, [west, east], {
+				hullSolidId: "hull",
+				contactPairs: [
+					["face-top", "face-bottom"],
+					["face-bottom", "face-top"],
+				],
+				maxSeparation: 0.05,
+			});
+			const westTopFace = Object.keys(model.faces).find((id) => id.includes("west") && id.includes("face-top"))!;
+			const eastBottomFace = Object.keys(model.faces).find((id) => id.includes("east") && id.includes("face-bottom"))!;
+			expect(fused.externalFaces.map(String)).not.toContain(westTopFace);
+			expect(fused.externalFaces.map(String)).not.toContain(eastBottomFace);
+			expect(fused.externalFaces.some((id) => String(id).includes("west") && String(id).includes("face-bottom"))).toBe(true);
 		});
 
 		it("modelObjectAabb follows moved shell vertices when SolidPrimitive is stale", () => {
@@ -2658,6 +3241,16 @@ if (import.meta.vitest) {
 				height: 1,
 			});
 			expect(await kernel.solidVolume(cell)).toBeCloseTo(await kernel.volume(cell), 6);
+		});
+
+		it("syncSolidsFromModel fuses from_geometry hull metadata into one solid volume", async () => {
+			const g = new Model();
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("west")));
+			applyModelDiff(g, boxModelDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 1 }, solidRef("east")));
+			g.metadata.setField("from_geometry-hull", "fuseSourceSolidIds", ["west", "east"]);
+			g.solids["from_geometry-hull" as SolidRef] = { id: "from_geometry-hull" as SolidRef, shellIds: [] };
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume("from_geometry-hull" as SolidRef)).toBeCloseTo(2, 3);
 		});
 
 		it("adjacentSolids lists other solids sharing any face", async () => {
@@ -2742,7 +3335,7 @@ if (import.meta.vitest) {
 			expect(res.diff.edges?.added?.[0]?.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
 		});
 
-		it("executeCommandDiff curve.circle creates closed circle edge with Geom_Circle metadata", async () => {
+		it("executeCommandDiff curve.circle creates closed circle edge with circle metadata", async () => {
 			const res = await kernel.executeCommandDiff("curve.circle", {
 				center: [1, 2, 0],
 				radiusPoint: [4, 2, 0],
@@ -2776,7 +3369,38 @@ if (import.meta.vitest) {
 			});
 			const edges = res.diff.edges?.added ?? [];
 			expect(edges[0]!.curve?.kind).toBe("nurbs");
-			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
+			if (edges[0]!.curve?.kind === "nurbs") {
+				expect(edges[0]!.curve.poles).toHaveLength(3);
+				expect(edges[0]!.curve.through).toBe(false);
+			}
+		});
+
+		it("worker arg serialization roundtrips nested model in command params", () => {
+			const g = new Model();
+			const bag = serializeWorkerValue({ model: g, points: [[0, 0, 0], [2, 1, 0]] }) as Record<string, unknown>;
+			expect(bag.model).toEqual(expect.objectContaining({ __modelJson: expect.objectContaining({ schema: "spatial.model/v1" }) }));
+			const restored = deserializeWorkerValue(bag) as { model: Model; points: readonly Vec3[] };
+			expect(restored.model).toBeInstanceOf(Model);
+			expect(restored.points).toHaveLength(2);
+		});
+
+		it("executeCommandDiff curve.interpolateCurve marks through-points nurbs", async () => {
+			const g = new Model();
+			const res = await kernel.executeCommandDiff("curve.interpolateCurve", {
+				model: g,
+				points: [
+					[0, 0, 0],
+					[2, 1, 0],
+					[4, 0, 0],
+				],
+			});
+			const edges = res.diff.edges?.added ?? [];
+			expect(edges[0]!.curve?.kind).toBe("nurbs");
+			if (edges[0]!.curve?.kind === "nurbs") {
+				expect(edges[0]!.curve.through).toBe(true);
+				expect(edges[0]!.curve.poles).toHaveLength(3);
+			}
+			expect((res.diff.wires?.added ?? []).length).toBe(1);
 		});
 
 		it("executeCommandDiff typology constructFrom2PointsAndHeight builds a solid", async () => {
@@ -2840,7 +3464,7 @@ if (import.meta.vitest) {
 			const space = await kernel.importStepToModelSpace(stepText);
 			const restored = space.models.props!;
 			const obj = restored.objects["obj-vol"]!;
-			const defns = listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, restored, obj);
+			const defns = listApplicablePropertyDefinitionsForModelDefinition(defaultModelDefinitionId(), restored, obj);
 			const volumeDefn = defns.find((d) => d.id === "spatial.shape.volume");
 			expect(volumeDefn).toBeDefined();
 			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });

@@ -397,7 +397,7 @@ Something in the repo is spuriously stashing.
 It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
 This MUST NOT happen.
 
-## 🧩elements
+## 🖱️ui
 
 ###
 
@@ -419,6 +419,22 @@ Finish implementing @elements/lib/playground and setup @elements/lib/react/spati
 Add a checkbox element which is an action that can be checked and unchecked.
 
 ### ⚛️react
+
+---
+
+Generalize virtual file system.
+Add FileNodeKind (which has id, name, icon, description, descriptors, etc)
+Add DescriptorKind
+Descriptors are what can be turned into columns (e.g. CreatedByDescriptor of avatar descriptor kind, etc)
+There are TimeDescriptorKind, AvatarDescriptorKind, etc
+Every FileNode has file node kind id, etc.
+
+---
+
+The canvas doesnt feel like a canvas because it is not really visually different.
+The canvas is a different level.
+All windows should be slightly offsetted inwards, so they feel like windows.
+All windows must show between the tab and the fullscreen button the canvas.
 
 ---
 
@@ -458,9 +474,28 @@ Refactor everything
 
 ---
 
-### 🏁board
+## 🧩puzzle
 
-elements/board:
+### 🏁2d
+
+---
+
+introduce a new tool: Brush
+
+What brush does is it flushs new nodes with parent edges.
+For this purpose, there is a flush distance (by default two times the diamter of the shape, add it to window option) paramter.
+Then as soon as the cursor is close enough to a slot it peviews a new node and parent edge if the new node is compatible.
+The slot hitbox is a circle (default node size) that is offsetted by the flush distance in normal direction of the paramter t of a free handle.
+A compatible node is a node with at least one compatible handle with the source handle.
+The edge is created between the source handle and the closest compatible target handle from the compatible node.
+
+
+
+If the mouse cursor leaves the vortex then the suggested object is added to the puzzle 3d.
+The vortices have a direction. Make sure that the suggested object has the vortex exactly on the same point and the suggested object is rotated so that the direction of the of source vortex is the same as the opposite of the target vortex.
+While the mouse is still inside the vortex if tab is pressed then another compatible object is selected.
+If right click is pressed inside the vortex show the list of all compatible objects.
+
 
 ---
 
@@ -724,7 +759,35 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
-### 🏙️scene
+### 🏙️3d
+
+---
+
+The new mesh of the suggested object must not collide with other meshes. Make sure to start by picking a rondom compatible object and then check if it is collision free. If not try another one and check if it is collision free, etc. If none can be found, brush doesnt place anything.
+
+---
+
+introduce a new tool: Brush
+
+What brush does is it flushs new objects.
+As soon as the cursor is close enough to a vortex which is not part of an attraction, it suggest a new compatible, non-colliding object and previews it.
+If the mouse cursor leaves the vortex then the suggested object is added to the puzzle 3d.
+The vortices have a direction. Make sure that the suggested object has the vortex exactly on the same point and the suggested object is rotated so that the direction of the of source vortex is the same as the opposite of the target vortex.
+While the mouse is still inside the vortex if tab is pressed then another compatible object is selected.
+If right click is pressed inside the vortex show the list of all compatible objects.
+
+---
+
+Introduce selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
+Make sure that the selection has a special behaviour:
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise it is not selected.
+Make sure to add three toggle window options for selection: objects, vortices, attractuibs
+holding down left button should trigger selection.
+The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
 
 ---
 
@@ -796,7 +859,15 @@ Then use the prop for all the features.
 
 ---
 
-### topology
+### 🪄5d
+
+---
+
+5d is a single react component that can be switched between 2d and 3d (dont add toggles etc because the components that use this will set all props, control the state, etc).
+Make sure to conceptually align the two data models into a single one (e.g. kinds etc)
+Make sure to use neutral terminology that neither uses 2d nor 3d terminology but neutral.
+The 5d allows editing either in 2d or 3d and 2d updates 3d and vice versa.
+The component must be usable several times (e.g. one 2d and one 3d window and then features should be usable in both e.g. indirect connect when started in 2d also previews in 3d and can be terminated there)
 
 ---
 
@@ -829,6 +900,16 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+---
+
+Extend everything with is, has, references is projection.
+By default it just includes the direct ones.
+Add a transitive one with Transitive suffix.
+Be thorough and clean. There were already small attempts.
+is* e.g. piece isTransitive type or design, 
+references* e.g. side referencesPiece and referencesConnector, side referencesTypesTransitive over pieces, connection referencesPiecesTransitive and referencesConnectorsTransitive, etc
+has* e.g. design hasPieces, kit hasPiecesTransitive
 
 ---
 
@@ -1271,6 +1352,16 @@ All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
 #### schema
+
+---
+
+Currently types and designs have families.
+Introduce a new entity: Typology
+This changes the ownership.
+A typology now owns types and designs and kit only has typologies.
+Every design or type hence has typology as owner and not longer kit.
+e.g. metabolism has typologies: base, capsule, tambour, capital, bridge, tower
+Refactor everything. Dont leave any legacy.
 
 ---
 
@@ -2622,7 +2713,17 @@ The passthrough components MUST show all available information. A lot of params 
 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
 
-## 🗿spatial
+## 📐cad
+
+---
+
+When I move vertices or edges the resulting solid looks totally wrong. Just some boxy blocky wrong shaped. Additionally multiple shapes overlap as if the original shape is left and a new wrong one is drawn over it.
+Make sure it is computed correctly in the kernel.
+
+---
+
+the transformation from shape to energy is not correct.
+All solids must be fused, then exploded into the surfaces and then every surface is classified e.g. the upper horizontal surfaces turn roof, the lowest turns to base plate, the other ones to slabs, the vertical surfaces turn to external walls, etc
 
 ---
 
@@ -2805,6 +2906,39 @@ Make sure that the original plan is achieved @.repo/✍️/spatial.md
 Especially make sure that the brep kernel and the state machine are properly abstracted.
 The two specific implemtations must be used:
 @spatial/js/kernel-brepjs/index.ts @spatial/js/machine-stately/index.ts
+
+---
+
+## 🥅framework
+
+### 🚉platform
+
+---
+
+All platforms provide navigation mechanisms.
+The breadcrumb should dynamically suggest all the alternatives.
+The breadcrumb navigation is different to the url and the virtual file system.
+e.g. in sketchpad show
+Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design} >
+The > after Home show all alternatives: Documentation
+etc
+
+---
+
+### 🎛️playground
+
+### 📽️presentation
+
+---
+
+
+
+---
+
+We are building a new framework to create presentations such as temp/eg-ice-25.
+It as again pure decarlative typescript, render-independant.
+Make sure to implement the first render in react that uses reveal.js.
+As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new mit-bestand/präsentation/33.projektetage  presentation. make sure to migrate it to have no react or reveal dependency and use the new framework.
 
 ---
 
@@ -9270,6 +9404,23 @@ Communicate via structured JSON messages over stdio
 Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
+
+## ♻️mit-bestand
+
+### 🟨33.projekttage
+
+mit-bestand/präsentation/33.projektage:
+
+---
+
+We want to create a new presentation with reveal.js in the same style as our repo.
+We once used temp/eg-ice-25 but since then the repo has evolved.
+We want latest infrastructure, latest styling etc.
+It should be perfectly integrated in the repo.
+We want to use ui components, embed iframes such as our playgrounds, etc
+Make sure that in dev setup the dev url is used and when building the public link is used
+
+---
 
 ## 📜history
 

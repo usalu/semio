@@ -995,19 +995,50 @@ export function runPlaywright(bundleRoot: string, config: string, segments: stri
   runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, playPollingEnv());
 }
 
+/** @emoji 🔌 True when host:port already accepts TCP (existing dev server). */
+export function isDevPortInUse(host: string, port: number): boolean {
+  const probe = `
+import { createConnection } from "node:net";
+const socket = createConnection({ host: ${JSON.stringify(host)}, port: ${port} });
+socket.setTimeout(300);
+socket.once("connect", () => process.exit(0));
+socket.once("timeout", () => process.exit(1));
+socket.once("error", () => process.exit(1));
+`;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 500 });
+  return result.status === 0;
+}
+
 /** ▶️Vite dev via `bunx` with root-level `vite.config.ts`. */
 export function runViteBunxDev(
   bundleRoot: string,
   segments: string[],
-  opts: { portEnv?: string; defaultPort?: string; clearViteCache?: boolean } = {},
+  opts: {
+    portEnv?: string;
+    defaultPort?: string;
+    clearViteCache?: boolean;
+    strictPort?: boolean;
+  } = {},
 ): void {
-  if (opts.clearViteCache) {
-    const viteCache = join(bundleRoot, "node_modules", ".vite");
-    if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
-  }
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
-  spawnBunx(["vite", "--config", "vite.config.ts", "--host", host, "--port", port, ...segments], bundleRoot, playPollingEnv());
+  const portInUse = isDevPortInUse(host, Number(port));
+  if (opts.clearViteCache) {
+    if (portInUse) {
+      console.error(
+        `[dev] Port ${port} is already in use; skipping Vite cache clear to avoid 504 Outdated Optimize Dep. Stop the existing dev server and restart.`,
+      );
+    } else {
+      const viteCache = join(bundleRoot, "node_modules", ".vite");
+      if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
+    }
+  }
+  const wantStrictPort = opts.strictPort ?? true;
+  const viteArgs = ["vite", "--config", "vite.config.ts", "--host", host, "--port", port];
+  if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
+    viteArgs.push("--strictPort");
+  }
+  spawnBunx([...viteArgs, ...segments], bundleRoot, playPollingEnv());
 }
 
 /** ▶️Vite dev via `bunx` without a fixed config path (extra args only). */

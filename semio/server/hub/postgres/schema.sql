@@ -166,12 +166,25 @@ CREATE TABLE IF NOT EXISTS core.concept (
 	icon TEXT,
 	PRIMARY KEY (snapshot_id, concept_id)
 );
+
+CREATE TABLE IF NOT EXISTS core.typology (
+	snapshot_id TEXT NOT NULL REFERENCES core.kit_snapshot (snapshot_id) ON DELETE CASCADE,
+	typology_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL DEFAULT 0,
+	name TEXT NOT NULL,
+	description TEXT,
+	icon TEXT,
+	folder_id TEXT,
+	PRIMARY KEY (snapshot_id, typology_id),
+	FOREIGN KEY (snapshot_id, folder_id) REFERENCES core.folder (snapshot_id, folder_id) ON DELETE SET NULL
+);
 -- #endregion 🧬Definitions
 
 -- #region 🧩KindsAndDesigns
 CREATE TABLE IF NOT EXISTS core.type_entity (
-	snapshot_id TEXT NOT NULL REFERENCES core.kit_snapshot (snapshot_id) ON DELETE CASCADE,
+	snapshot_id TEXT NOT NULL,
 	type_id TEXT NOT NULL,
+	typology_id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL DEFAULT 0,
 	name TEXT NOT NULL,
 	parent_type_id TEXT,
@@ -187,6 +200,7 @@ CREATE TABLE IF NOT EXISTS core.type_entity (
 	created_at TIMESTAMPTZ,
 	updated_at TIMESTAMPTZ,
 	PRIMARY KEY (snapshot_id, type_id),
+	FOREIGN KEY (snapshot_id, typology_id) REFERENCES core.typology (snapshot_id, typology_id) ON DELETE CASCADE,
 	FOREIGN KEY (snapshot_id, parent_type_id) REFERENCES core.type_entity (snapshot_id, type_id) ON DELETE SET NULL
 );
 
@@ -280,8 +294,9 @@ CREATE TABLE IF NOT EXISTS core.representation_tag (
 );
 
 CREATE TABLE IF NOT EXISTS core.design (
-	snapshot_id TEXT NOT NULL REFERENCES core.kit_snapshot (snapshot_id) ON DELETE CASCADE,
+	snapshot_id TEXT NOT NULL,
 	design_id TEXT NOT NULL,
+	typology_id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL DEFAULT 0,
 	name TEXT NOT NULL,
 	parent_design_id TEXT,
@@ -301,6 +316,7 @@ CREATE TABLE IF NOT EXISTS core.design (
 	created_at TIMESTAMPTZ,
 	updated_at TIMESTAMPTZ,
 	PRIMARY KEY (snapshot_id, design_id),
+	FOREIGN KEY (snapshot_id, typology_id) REFERENCES core.typology (snapshot_id, typology_id) ON DELETE CASCADE,
 	FOREIGN KEY (snapshot_id, parent_design_id) REFERENCES core.design (snapshot_id, design_id) ON DELETE SET NULL
 );
 
@@ -643,6 +659,9 @@ CREATE TABLE IF NOT EXISTS runtime.kit_transaction_change (
 -- #region 📚Indexes
 CREATE INDEX IF NOT EXISTS idx_kit_snapshot_kit_kind ON core.kit_snapshot (kit_id, snapshot_kind, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_family_snapshot_ordinal ON core.family (snapshot_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_typology_snapshot_ordinal ON core.typology (snapshot_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_type_snapshot_typology ON core.type_entity (snapshot_id, typology_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_design_snapshot_typology ON core.design (snapshot_id, typology_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_snapshot_family ON core.port (snapshot_id, family_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_folder_snapshot_parent ON core.folder (snapshot_id, parent_folder_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_file_snapshot_folder ON core.file (snapshot_id, folder_id, ordinal);

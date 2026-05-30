@@ -8,6 +8,9 @@
   "exports": {
     ".": "./index.ts"
   },
+  "dependencies": {
+    "@semio/js": "workspace:*"
+  },
   "peerDependencies": {
     "react": "^19.0.0"
   },

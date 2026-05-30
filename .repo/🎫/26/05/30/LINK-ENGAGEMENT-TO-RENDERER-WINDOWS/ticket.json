@@ -1,0 +1,23 @@
+{
+  "title": "Link Engagement to Renderer Windows",
+  "emoji": "💬",
+  "status": "closed",
+  "description": "Wire the ui Engagement floating panel (options/input/status) to the playground Window engagement slot and feed it from the cad play interaction mechanism so each renderer window surfaces the active interaction's transitions, command input, and status end-to-end.",
+  "summary": "Completed the broken playground engagement link and wired cad play's interaction mechanism into the Window engagement slot. (1) Added a React-neutral WindowEngagement descriptor (options/input/status with CommandDescriptors) plus a mutable engagement field on WindowKindRuntime in the playground core. (2) Added windowEngagementToGolden and threaded engagement through windowKindsToGolden so the React renderer resolves a window's engagement into a ui EngagementSpec whose callbacks dispatch on the CommandBus (ShellModeCanvas already passed windowKind.engagement to Window). (3) InteractionRepl now builds a compact window EngagementSpec from its own single-source interaction state via buildInteractionReplEngagement (active session lists transitions, idle exposes a command input, status shows state/selection/last response) and publishes it via onEngagementChange (showEngagement gates it; shape pane enabled). (4) cad play SpatialPlayShellController gained a shape engagement slot fed via the host bridge: spatialPlayEngagementMirror mirrors the live ui spec into a neutral WindowEngagement whose engagementOption/engagementInput/engagementSubmit commands route back through runHostCommand to the stored InteractionRepl callbacks (no duplication of trySubmit/transition logic). Verified end-to-end on the cad play dev site: idle shows 'Type an interaction', typing 'box' + Enter starts the box interaction (State: first_corner) and the engagement switches to its transitions, and clicking Cancel reverts to idle. Also fixed a pre-existing cad renderer vitest alias gap so @framework/playground/renderer/react/shell subpaths resolve. All affected vitest suites pass (playground core 5, playground renderer 7, cad renderer index 25 + play 17) and the cad play Vite build succeeds.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [],
+  "files": {
+    "created": [
+      ".repo/🎫/26/05/30/LINK-ENGAGEMENT-TO-RENDERER-WINDOWS/ticket.json",
+      ".repo/🎫/26/05/30/LINK-ENGAGEMENT-TO-RENDERER-WINDOWS/dev.log"
+    ],
+    "updated": [
+      "framework/playground/core/core.ts",
+      "framework/playground/renderer/react/index.tsx",
+      "cad/js/renderer/index.tsx",
+      "cad/js/renderer/play/main.tsx",
+      "cad/js/renderer/vitest.config.ts"
+    ],
+    "removed": []
+  }
+}

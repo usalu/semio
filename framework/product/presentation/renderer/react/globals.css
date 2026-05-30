@@ -1,0 +1,798 @@
+:root {
+	--r-background-color: var(--base);
+	--r-main-font: var(--font-sans);
+	--r-main-font-size: 42px;
+	--r-block-margin: 20px;
+	--r-heading-margin: 0 0 20px 0;
+	--r-heading-line-height: 1.2;
+	--r-heading-font-weight: 400;
+	--r-heading1-size: 2.5em;
+	--r-heading2-size: 1.6em;
+	--r-heading3-size: 1.3em;
+	--r-heading4-size: 1em;
+	--r-presentation-morph-title-size: 1.35em;
+	--r-presentation-morph-secondary-size: 1.15em;
+	--r-main-color: var(--foreground);
+	--r-heading-font: var(--font-sans);
+	--r-heading-color: var(--foreground);
+	--r-heading-text-transform: none;
+	--r-heading-letter-spacing: normal;
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-secondary);
+	--r-selection-background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+	--r-controls-color: var(--color-primary);
+}
+
+.reveal {
+	font-family: var(--font-sans);
+	font-size: var(--r-main-font-size);
+}
+
+/* #region 🔖RevealTypography */
+/** Applies reveal heading scale (normally provided by a reveal theme) so layout matches eg-ice-25
+ *  and the @ui/react Tailwind preflight reset (which collapses headings to `inherit`) is overridden. */
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	margin: var(--r-heading-margin);
+	color: var(--r-heading-color);
+	font-family: var(--r-heading-font);
+	font-weight: var(--r-heading-font-weight);
+	line-height: var(--r-heading-line-height);
+	letter-spacing: var(--r-heading-letter-spacing);
+	text-transform: var(--r-heading-text-transform);
+	word-wrap: break-word;
+}
+
+.reveal h1 {
+	font-size: var(--r-heading1-size);
+}
+
+.reveal h2 {
+	font-size: var(--r-heading2-size);
+}
+
+.reveal h3 {
+	font-size: var(--r-heading3-size);
+}
+
+.reveal h4 {
+	font-size: var(--r-heading4-size);
+}
+
+.reveal h5,
+.reveal h6 {
+	font-size: 1em;
+}
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+
+.reveal .presentation-morph-text--title {
+	font-size: var(--r-presentation-morph-title-size);
+}
+
+.reveal .presentation-morph-text--secondary {
+	font-size: var(--r-presentation-morph-secondary-size);
+}
+/* #endregion 🔖RevealTypography */
+
+.reveal a {
+	color: var(--color-primary);
+}
+
+.reveal .slides {
+	text-align: center;
+}
+
+.reveal .slides > section > section.presentation-arrangement--interactive {
+	text-align: initial;
+	overflow: visible;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: initial;
+}
+
+/* #region 🔖Interaction */
+.reveal .presentation-interaction-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas,
+.reveal .presentation-interactive-disposition {
+	position: relative;
+	z-index: 1;
+	overflow: visible;
+}
+
+.reveal .presentation-interactive-disposition {
+	touch-action: none;
+	user-select: none;
+	cursor: default;
+}
+
+.reveal .presentation-interactive-disposition--selected {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text:hover:not(.presentation-interactive-disposition--selected)
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	li {
+	color: var(--color-primary);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	li {
+	color: var(--active-foreground);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure:hover:not(.presentation-interactive-disposition--selected)
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
+.reveal
+	.presentation-interactive-disposition--kind-video:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure),
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: none;
+}
+
+.reveal .presentation-interactive-disposition--kind-video .presentation-morph-anchor,
+.reveal .presentation-interactive-disposition--kind-pdf .presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--fullscreen,
+.reveal
+	.slides
+	> section.presentation-arrangement--interactive
+	> .presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--pinned) {
+	display: flex;
+	position: absolute;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	background: color-mix(in oklab, var(--base) 94%, transparent);
+}
+
+.reveal .presentation-interactive-disposition--fullscreen {
+	z-index: 50;
+}
+
+.reveal .presentation-interactive-disposition--fullscreen .presentation-interactive-disposition__content {
+	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition--fullscreen .presentation-interactive-disposition__chrome {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-figure-crop-fill {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.reveal .presentation-interactive-disposition--pinned,
+.reveal .presentation-interactive-disposition--offset {
+	cursor: move;
+}
+
+.reveal .presentation-interactive-disposition--offset {
+	transform-origin: center center;
+	will-change: transform;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned {
+	overflow: visible;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--measuring
+	.presentation-interactive-disposition__content
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned)
+	> .presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition__content {
+	position: relative;
+}
+
+.reveal .presentation-interactive-disposition__chrome {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interactive-disposition--gesturing .presentation-interactive-disposition__chrome {
+	pointer-events: none;
+	visibility: visible;
+	opacity: 1;
+}
+
+.reveal .presentation-interaction-handle {
+	position: absolute;
+	z-index: 4;
+	width: 10px;
+	height: 10px;
+	margin: -5px 0 0 -5px;
+	border-radius: 2px;
+	background: var(--color-primary);
+	border: 1px solid var(--base);
+	pointer-events: auto;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interaction-handle--nw {
+	left: 0;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--n {
+	left: 50%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--ne {
+	left: 100%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--e {
+	left: 100%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-handle--se {
+	left: 100%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--s {
+	left: 50%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--sw {
+	left: 0;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--w {
+	left: 0;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-fullscreen {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 60;
+	pointer-events: auto;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 1px solid var(--border-window-color);
+	border-radius: 4px;
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	pointer-events: auto;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal .presentation-interaction-fullscreen:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-element-color);
+}
+
+.reveal .presentation-interaction-marquee {
+	position: absolute;
+	box-sizing: border-box;
+	pointer-events: none;
+	border-width: 2px;
+	border-style: solid;
+}
+
+.reveal .presentation-interaction-marquee--crossing {
+	border-color: color-mix(in srgb, var(--color-primary) 85%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.reveal .presentation-interaction-marquee--window {
+	border-color: color-mix(in srgb, var(--color-secondary) 85%, transparent);
+	background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+}
+/* #endregion 🔖Interaction */
+
+.reveal .presentation-arrangement-canvas {
+	position: relative;
+	width: var(--presentation-slide-width, 960px);
+	height: var(--presentation-slide-height, 700px);
+	max-width: 100%;
+	max-height: 100%;
+	flex: 0 0 auto;
+	margin: 0 auto;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition,
+.reveal .presentation-arrangement-canvas > .presentation-interactive-row-band {
+	pointer-events: auto;
+}
+
+.reveal .presentation-interactive-row-band {
+	position: absolute;
+	z-index: 0;
+	box-sizing: border-box;
+	cursor: default;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition[data-row-band] {
+	z-index: 1;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition[data-id]:not(
+		.presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned
+	):not(.presentation-interactive-disposition--gesturing) {
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--gesturing {
+	z-index: 20;
+}
+
+.reveal .presentation-disposition-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-morph-anchor {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-media-figure,
+.reveal .presentation-media-video {
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.reveal .presentation-figure-crop-fill {
+	width: 100%;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-figure-crop-fill,
+.reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill {
+	background-size: var(--presentation-figure-bg-size-morph);
+	background-position: var(--presentation-figure-bg-position-morph);
+}
+
+.reveal .presentation-figure-crop-frame,
+.reveal .presentation-morph-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	box-sizing: border-box;
+	z-index: 1;
+}
+
+.reveal .presentation-morph-slot h2 {
+	margin: 0;
+	width: 100%;
+	text-align: center;
+}
+
+.reveal .presentation-morph-slot-placeholder {
+	opacity: 0;
+}
+
+@keyframes presentation-morph-source-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes presentation-morph-into-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.reveal .presentation-morph-source {
+	opacity: 0;
+	visibility: visible;
+	pointer-events: none;
+}
+
+.reveal .presentation-morph-into {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: auto;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
+	visibility: visible !important;
+	pointer-events: none;
+	animation: presentation-morph-source-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+}
+
+.reveal
+	.slides
+	section[title="catalogue-focus"].presentation-arrangement--settled
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-into {
+	visibility: visible !important;
+	pointer-events: auto;
+	animation: presentation-morph-into-fade-in var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+}
+
+.reveal
+	.slides
+	section[data-settle-before-morph-to]:not([data-auto-animate="pending"]):not([data-auto-animate="running"]):not(
+		.presentation-arrangement--settled
+	)
+	.presentation-morph-slot--dormant {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
+.reveal
+	.slides
+	section[data-settle-before-morph-to].presentation-arrangement--settled
+	.presentation-morph-slot--dormant,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="pending"]
+	.presentation-morph-slot--dormant,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="running"]
+	.presentation-morph-slot--dormant {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+.reveal .presentation-disposition-frame--overlay {
+	z-index: 1;
+	background-color: var(--base);
+}
+
+.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf {
+	display: block;
+	background: #fff;
+	line-height: 0;
+	max-height: 100%;
+	max-width: 100%;
+}
+
+.reveal .presentation-media-pdf canvas {
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+}
+
+.reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
+	white-space: nowrap;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] {
+	--r-heading-margin: 0 0 0.12em 0;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] h4[data-id] {
+	margin: 0;
+	line-height: 1.1;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-rows {
+	row-gap: 0.15em;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-authors + .presentation-intro-affiliations {
+	margin-top: 0.35em;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-line {
+	column-gap: 0.35em;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-affiliations .presentation-affiliation-row {
+	width: fit-content;
+	max-width: 100%;
+}
+
+.reveal .progress span {
+	background: var(--color-primary);
+}
+
+/* #region 🔖RevealChrome */
+.reveal-viewport {
+	background-color: var(--base);
+	color: var(--foreground);
+}
+
+.reveal .controls,
+.reveal.has-dark-background .controls,
+.reveal.has-light-background .controls {
+	color: var(--color-primary);
+}
+
+.reveal .progress {
+	background-color: color-mix(in srgb, var(--foreground) 18%, transparent);
+	color: var(--color-primary);
+}
+
+.reveal .slide-number,
+.reveal .slide-number a {
+	font-family: var(--font-sans);
+	font-size: var(--text-sm);
+	line-height: 1.2;
+	color: var(--foreground);
+	background-color: color-mix(in srgb, var(--panel) 88%, transparent);
+	padding: var(--spacing-single) var(--spacing-double);
+}
+
+.reveal .jump-to-slide-input {
+	font-family: var(--font-sans);
+	color: var(--foreground);
+}
+
+.reveal.has-dark-background .jump-to-slide-input,
+.reveal.has-light-background .jump-to-slide-input {
+	color: var(--foreground);
+}
+/* #endregion 🔖RevealChrome */

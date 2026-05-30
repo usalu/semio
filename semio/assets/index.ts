@@ -9,9 +9,9 @@
 // #endregion 🧲Header
 
 //#region 🗃️Exports
-// Re-exports and data constants MUST come from the Metabolism kit assets.
+// Builtin Metabolism kit and UI icons only — test JSON lives in `@semio/fixtures`.
 
-import MetabolismKitData from "../fixtures/stores/metabolism/wip/initialKit/kit.semio.json";
+import MetabolismKitData from "../fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json";
 
 export {
   Plus as AddIcon, AlertCircle as AlertCircleIcon,
@@ -115,59 +115,35 @@ function __metabolismKitInner(): Record<string, unknown> {
   const inner = root.wip?.initialKit;
   return (inner && typeof inner === "object" ? inner : (MetabolismKitData as unknown as Record<string, unknown>)) ?? {};
 }
+
+/** @emoji 🏛️ Flattens kinds from root `types` or nested `typologies[].types`. */
+function __kitTypesFromInner(inner: Record<string, unknown>): readonly unknown[] {
+  const rootTypes = __itemsOf(inner["types"]);
+  if (rootTypes.length > 0) return rootTypes;
+  return __itemsOf(inner["typologies"]).flatMap((topo) => __itemsOf((topo as { types?: unknown }).types));
+}
+
+/** @emoji 🏛️ Flattens designs from root `designs` or nested `typologies[].designs`. */
+function __kitDesignsFromInner(inner: Record<string, unknown>): readonly unknown[] {
+  const rootDesigns = __itemsOf(inner["designs"]);
+  if (rootDesigns.length > 0) return rootDesigns;
+  return __itemsOf(inner["typologies"]).flatMap((topo) => __itemsOf((topo as { designs?: unknown }).designs));
+}
 //#endregion 🔖KitBootstrapHelpers
-export { default as DragDesign } from "../fixtures/drag/design.semio.json";
-export { default as DragDiffDesignFree } from "../fixtures/drag/diff.design.free.semio.json";
-export { default as DragDiffDesign } from "../fixtures/drag/diff.design.semio.json";
-export { default as DragOffset } from "../fixtures/drag/offset.semio.json";
-export { default as DragPieces } from "../fixtures/drag/pieces.semio.json";
-export { default as MoveVector } from "../fixtures/move/vector.semio.json";
-export { default as MoveDiffDesign } from "../fixtures/move/diff.design.semio.json";
-export { default as MoveStoryDesign } from "../fixtures/move/story.design.semio.json";
-export { default as InvalidKit } from "../fixtures/invalid.kit.semio.json";
-export { default as MetabolismKitDiffInverted } from "../fixtures/metabolism.kit.diff.inverted.semio.json";
-export { default as MetabolismKitDiff } from "../fixtures/metabolism.kit.diff.semio.json";
-export { default as MetabolismKitDiffed } from "../fixtures/metabolism.kit.diffed.semio.json";
-export { default as MetabolismMetaKit } from "../fixtures/metabolism.meta.kit.semio.json";
-export { default as MetabolismShallowKit } from "../fixtures/metabolism.shallow.kit.semio.json";
-export { default as RepresentationSelectionCases } from "../fixtures/representation.selection.semio.json";
-export { default as NakaginCapsuleTowerCopySelection } from "../fixtures/nakagin-capsule-tower.copy.design.selection.semio.json";
-export { default as NakaginCapsuleTowerCopyDesign } from "../fixtures/nakagin-capsule-tower.copy.design.semio.json";
-export { default as NakaginCapsuleTowerDeletedDesignDiff } from "../fixtures/nakagin-capsule-tower.deleted.design.diff.semio.json";
-export { default as NakaginCapsuleTowerDeletedSelection } from "../fixtures/nakagin-capsule-tower.deleted.selection.semio.json";
-export { default as MetabolismKitFilteredNakaginCapsuleTower, default as NakaginCapsuleTowerFilteredKit } from "../fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
-export { default as NakaginCapsuleTowerMetaDesign } from "../fixtures/nakagin-capsule-tower.meta.design.semio.json";
-export { default as NakaginCapsuleTowerPasteDesignDiff } from "../fixtures/nakagin-capsule-tower.paste.design.diff.semio.json";
-export { default as NakaginCapsuleTowerPasteDesign } from "../fixtures/nakagin-capsule-tower.paste.design.semio.json";
-export { default as NakaginCapsuleTowerPasteWithCoordinateDesignDiff } from "../fixtures/nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json";
-export { default as NakaginCapsuleTowerShallowDesign } from "../fixtures/nakagin-capsule-tower.shallow.design.semio.json";
-export { default as NakaginCapsuleTowerWithDiffDesign } from "../fixtures/nakagin-capsule-tower.with-diff.design.semio.json";
-export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "../fixtures/nakgin-capsule-tower.diff.design.semio.json";
-export { default as TambourMetaType } from "../fixtures/tambour.meta.type.semio.json";
-export { default as TambourShallowType } from "../fixtures/tambour.shallow.type.semio.json";
-export { default as InvalidKitValidation } from "../fixtures/validation.semio.json";
-export { default as ValidateKitDiffCases } from "../fixtures/validate-kit-diff.cases.semio.json";
-export { default as FlattenMerkleCases } from "../fixtures/flatten-merkle.cases.semio.json";
-export { default as HashCases } from "../fixtures/hash.cases.semio.json";
-export { default as QualitySumCases } from "../fixtures/quality-sum.cases.semio.json";
-export { default as DesignWithDiffCases } from "../fixtures/design-with-diff.cases.semio.json";
-export { default as FilterKitCases } from "../fixtures/filter-kit.cases.semio.json";
-export { default as FindReplaceableTypesCases } from "../fixtures/find-replaceable-types.cases.semio.json";
-export { default as FlattenCases } from "../fixtures/flatten.cases.semio.json";
-export { default as SyntheticFindReplaceableKit } from "../fixtures/synthetic-find-replaceable.kit.semio.json";
-export { default as ExportDesignRepresentationCases } from "../fixtures/export-design-representation.cases.semio.json";
-export { default as DeleteCases } from "../fixtures/delete.cases.semio.json";
-export { default as CopyPasteCases } from "../fixtures/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
 
 /**
  * Metabolism kit types array
  **/
-export const MetabolismKitTypes = __itemsOf(__metabolismKitInner()["types"]);
+export const MetabolismKitTypes = __kitTypesFromInner(__metabolismKitInner());
 /**
  * Metabolism kit designs array
  **/
-export const MetabolismKitDesigns = __itemsOf(__metabolismKitInner()["designs"]);
+export const MetabolismKitDesigns = __kitDesignsFromInner(__metabolismKitInner());
+/**
+ * Metabolism kit typologies array
+ **/
+export const MetabolismKitTypologies = __itemsOf(__metabolismKitInner()["typologies"]);
 /**
  * Metabolism kit families array
  **/
@@ -231,6 +207,10 @@ const typeLookup = buildLookup(MetabolismKitTypes);
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
+ * Typology lookup maps by id and name
+ **/
+const typologyLookup = buildLookup(MetabolismKitTypologies);
+/**
  * Family lookup maps by id and name
  **/
 const familyLookup = buildLookup(MetabolismKitFamilies);
@@ -251,6 +231,14 @@ export const MetabolismKitDesignsById = designLookup.byId;
  * Metabolism kit designs indexed by name
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
+/**
+ * Metabolism kit typologies indexed by id
+ **/
+export const MetabolismKitTypologiesById = typologyLookup.byId;
+/**
+ * Metabolism kit typologies indexed by name
+ **/
+export const MetabolismKitTypologiesByName = typologyLookup.byName;
 /**
  * Metabolism kit families indexed by id
  **/

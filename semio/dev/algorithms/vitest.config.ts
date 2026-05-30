@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/dev/algorithms/vitest.config.ts
 // Specs: Vitest for @semio/algorithms index (embedded tests + WASM-backed runner smoke).
-// Summary: Mirrors semio/js wasm resolution; `@semio/assets` alias for fixture imports in tests.
+// Summary: Mirrors semio/js wasm resolution; `@semio/assets` and `@semio/fixtures` aliases.
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -14,12 +14,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const semioWasmBg = path.resolve(__dirname, "../../client/lib/rs/pkg/semio_bg.wasm");
 const semioRsPkg = path.resolve(__dirname, "../../client/lib/rs/pkg/semio.js");
 const semioAssets = path.resolve(__dirname, "../../assets");
+const semioFixtures = path.resolve(__dirname, "../../fixtures");
 
 export default defineConfig({
   resolve: {
     alias: {
       "@semio/rs-wasm": semioRsPkg,
       "@semio/assets": semioAssets,
+      "@semio/fixtures": semioFixtures,
     },
   },
   test: {

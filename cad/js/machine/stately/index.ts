@@ -7,7 +7,7 @@ import { createActor, setup } from "xstate";
 import {
 	applyTransition,
 	createInteractionRuntime,
-	SHAPE_MODEL_DEFINITION_ID,
+	defaultModelDefinitionId,
 	initialContextForSpec,
 	isEmptyModelDiff,
 	listSpatialInteractionsForModelDefinition,
@@ -391,9 +391,9 @@ if (import.meta.vitest) {
 
 	describe("@cad/js/machine/stately", () => {
 		it("buildSpatialStatelyMachineCatalogView lists scoped interactions with edges and mermaid", () => {
-			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: SHAPE_MODEL_DEFINITION_ID });
+			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: defaultModelDefinitionId() });
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
-			expect(doc.machines.length).toBe(listSpatialInteractionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).length);
+			expect(doc.machines.length).toBe(listSpatialInteractionsForModelDefinition(defaultModelDefinitionId()).length);
 			const box = doc.machines.find((m) => m.interactionId === "primitive.box");
 			expect(box?.edges.length).toBeGreaterThan(0);
 			expect(box?.mermaid).toContain("primitive_box");

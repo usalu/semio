@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'date'
+require 'securerandom'
 
 module Semio
   # ✖️ A 3D point (xyz) with floating-point coordinates.
@@ -51,6 +52,21 @@ module Semio
     keyword_init: true
   )
 
+  # 🏛️ Identifier for a typology that owns types and designs.
+  TypologyId = Struct.new(:id_, keyword_init: true)
+
+  # 🏛️ A kit partition owning types and designs; families stay at kit root.
+  Typology = Struct.new(
+    :id_,
+    :name,
+    :description,
+    :icon,
+    :folder,
+    :types,
+    :designs,
+    keyword_init: true
+  )
+
   # 🧩 A positioned instance of a type within a design.
   Piece = Struct.new(:id_, :description, :type, :plane, :center, :attributes, keyword_init: true)
 
@@ -84,6 +100,7 @@ module Semio
     :stock,
     :virtual,
     :unit,
+    :typology,
     :created,
     :updated,
     :location,
@@ -104,6 +121,7 @@ module Semio
     :view,
     :location,
     :unit,
+    :typology,
     :created,
     :updated,
     :pieces,
@@ -126,9 +144,36 @@ module Semio
     :license,
     :created,
     :updated,
+    :typologies,
     :types,
     :designs,
     :attributes,
     keyword_init: true
   )
+
+  # 🏛️ Flattens typology-owned types and designs onto a kit.
+  def self.kit_flatten_typologies!(kit)
+    kit.types = []
+    kit.designs = []
+    (kit.typologies || []).each do |topo|
+      (topo.types || []).each { |t| kit.types << t }
+      (topo.designs || []).each { |d| kit.designs << d }
+    end
+    kit
+  end
+
+  # 🏛️ Packs flat types and designs into a default typology when typologies are absent.
+  def self.kit_pack_typologies_from_flat!(kit)
+    return kit if kit.typologies && !kit.typologies.empty?
+
+    types = kit.types || []
+    designs = kit.designs || []
+    return kit if types.empty? && designs.empty?
+
+    topo_id = types.first&.typology || designs.first&.typology || SecureRandom.uuid
+    kit.typologies = [
+      Typology.new(id_: topo_id, name: 'Default', types: types, designs: designs)
+    ]
+    kit_flatten_typologies!(kit)
+  end
 end

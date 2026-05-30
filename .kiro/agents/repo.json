@@ -5,33 +5,35 @@
     "@coda"
   ],
   "description": "Interacts with the semio monorepo via repo CLI hooks and MCP tools",
-  "hooks": {
-    "agentSpawn": [
-      {
-        "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
-      }
-    ],
-    "postToolUse": [
-      {
-        "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
-      }
-    ],
-    "preToolUse": [
-      {
-        "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
-      }
-    ],
-    "stop": [
-      {
-        "command": "bun ./script.ts dev mcp stdio kiro hook stop"
-      }
-    ],
-    "userPromptSubmit": [
-      {
-        "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
-      }
-    ]
-  },
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {},
+  // "hooks": {
+  //   "agentSpawn": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
+  //     }
+  //   ],
+  //   "postToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
+  //     }
+  //   ],
+  //   "preToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
+  //     }
+  //   ],
+  //   "stop": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook stop"
+  //     }
+  //   ],
+  //   "userPromptSubmit": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
+  //     }
+  //   ]
+  // },
   "includeMcpJson": true,
   "name": "repo",
   "prompt": "file://../../AGENTS.md",

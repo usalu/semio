@@ -3,7 +3,7 @@
   "emoji": "📦",
   "status": "open",
   "description": "Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points (Vite main.ts, package.json subpath exports for puzzle plays, vitest/playwright configs). Merge playground core index+core, renderer boot into index, fold lint.script.ts into script.ts where present. Update imports and package exports. Run tests.",
-  "summary": "Continued single-file consolidation: merged cad/js/renderer/play/index.ts into main.tsx (Vite entry + headless shell + React chrome + combined vitest); updated renderer vitest include. Integrated repo/client/cli/mcp_ide.go into main.go and removed mcp_ide.go. Removed stray duplicate framework/playground/core/renderer tree. Deduplicated playgroundTreePanelRootItems via @framework/playground export in renderer index. Prior slice: playground core→core.ts, renderer shell+boot→index.tsx.",
+  "summary": "Continued single-file consolidation: merged cad/js/renderer/play/index.ts into main.tsx (Vite entry + headless shell + React chrome + combined vitest); updated renderer vitest include. Integrated repo/client/cli/mcp_ide.go into main.go and removed mcp_ide.go. Removed stray duplicate framework/playground/core/renderer tree. Deduplicated playgroundTreePanelRootItems via @framework/playground/core export in renderer index. Prior slice: playground core→core.ts, renderer shell+boot→index.tsx.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1508"
   },

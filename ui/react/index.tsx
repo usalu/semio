@@ -30,6 +30,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
+import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
 import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
@@ -90,6 +91,9 @@ import {
   Plus as AddIcon,
   AlertCircle as AlertCircleIcon,
   BookOpen as BookIcon,
+  Box as BoxIcon,
+  CircleDot as CircleDotIcon,
+  Component as ComponentIcon,
   Camera as CameraIcon,
   Check as CheckIcon,
   CheckIcon as CheckIconAlt,
@@ -100,12 +104,18 @@ import {
   ChevronsUpDown as ChevronsUpDownIcon,
   X as CloseIcon,
   XIcon as CloseIconAlt,
+  FileArchive as FileArchiveIcon,
+  FileCode as FileCodeIcon,
+  FileImage as FileImageIcon,
+  FileJson as FileJsonIcon,
+  FileSpreadsheet as FileSpreadsheetIcon,
   FileText as DocumentIcon,
+  FileType as FileTypeIcon,
   ExternalLink as ExternalLinkIcon,
   Folder as FolderIcon,
   GripVertical as GripVerticalIcon,
-  Image as BoardIconRasterGlyphIcon,
-  ImagePlus as BoardIconFileImportIcon,
+  Image as Puzzle2dIconRasterGlyphIcon,
+  ImagePlus as Puzzle2dIconFileImportIcon,
   Info as InfoIcon,
   Lightbulb as LightbulbIcon,
   Maximize2 as Maximize2Icon,
@@ -116,20 +126,27 @@ import {
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
   SearchIcon,
+  TextSearch as FindInViewIcon,
   Hand as HandIcon,
   Lasso as LassoIcon,
+  Layout as LayoutIcon,
   LayoutGrid as LayoutGridIcon,
+  Landmark as LandmarkIcon,
+  Link as LinkIcon,
   MousePointer2 as MousePointerIcon,
   MoreHorizontal as MoreHorizontalIcon,
   FolderOpen as FolderOpenIcon,
   Plus as PlusIcon,
+  Plug as PlugIcon,
+  Puzzle as PuzzleIcon,
   Filter as FilterIcon,
   Settings2 as Settings2Icon,
-  Shapes as BoardIconCatalogGlyphIcon,
-  Sigma as BoardIconMathGlyphIcon,
-  Smile as BoardIconEmojiGlyphIcon,
+  Shapes as Puzzle2dIconCatalogGlyphIcon,
+  Sigma as Puzzle2dIconMathGlyphIcon,
+  Smile as Puzzle2dIconEmojiGlyphIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
+  Users as UsersIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -282,7 +299,7 @@ const contextMenuItemClassName =
 const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
 
 /**
- * 🧩 Serializable right-click entry for {@link ContextMenu} and board/window surfaces.
+ * 🧩 Serializable right-click entry for {@link ContextMenu} and puzzle 2d/window surfaces.
  **/
 export interface ContextMenuItem {
   id: string;
@@ -435,27 +452,34 @@ export interface ContextMenuProps {
 }
 
 /**
- * 🧩 Right-click menu via Radix dropdown primitives; passes children through when `items` is empty.
+ * 🧩 Right-click host: always suppresses the native menu; opens the Radix menu only when `items` is non-empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const close = reactHostPort.useCallback(() => setOpen(false), []);
-  if (!items?.length) {
-    return <>{children}</>;
+  const hasItems = !!items?.length;
+  const host = (
+    <div
+      className="contents"
+      onContextMenu={(event) => {
+        event.preventDefault();
+        if (!hasItems) {
+          return;
+        }
+        setPoint({ x: event.clientX, y: event.clientY });
+        setOpen(true);
+      }}
+    >
+      {children}
+    </div>
+  );
+  if (!hasItems) {
+    return host;
   }
   return (
     <DropdownMenuPrimitive.Root modal={false} onOpenChange={setOpen} open={open}>
-      <div
-        className="contents"
-        onContextMenu={(event) => {
-          event.preventDefault();
-          setPoint({ x: event.clientX, y: event.clientY });
-          setOpen(true);
-        }}
-      >
-        {children}
-      </div>
+      {host}
       {renderContextMenuTrigger(point)}
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
@@ -516,7 +540,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
 }
 
 /**
- * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the board `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
+ * 🧩 Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -589,6 +613,7 @@ export interface ElementsSurfaceChromeInput {
   theme: ElementsSurfaceTheme;
   device: ElementsSurfaceDevice;
   expertise: Expertise;
+  compact?: boolean;
 }
 
 function applyDocumentBodyBaseColors(): void {
@@ -598,11 +623,15 @@ function applyDocumentBodyBaseColors(): void {
 }
 
 /**
- * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state and resets tooltip expertise.
+ * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and tooltip expertise.
  */
-export function applyElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): () => void {
+export function applyElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): () => void {
   setExpertiseProvider(() => expertise);
-  const cleanups: Array<() => void> = [() => setExpertiseProvider(() => Expertise.NORMAL)];
+  setUiChromeCompactProvider(() => compact);
+  const cleanups: Array<() => void> = [
+    () => setExpertiseProvider(() => Expertise.NORMAL),
+    () => setUiChromeCompactProvider(() => readStoredUiChromeCompact()),
+  ];
 
   if (typeof window !== "undefined" && typeof document !== "undefined") {
     const root = document.documentElement;
@@ -616,6 +645,7 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
     };
     applyTheme();
     bindings.listen(mq, "change", applyTheme);
+    installElementsSurfaceBrowserDefaultSuppression(bindings);
     cleanups.push(() => {
       bindings.dispose();
       root.classList.remove("dark");
@@ -638,6 +668,14 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
     });
   }
 
+  if (typeof document !== "undefined") {
+    const root = document.documentElement;
+    root.dataset.uiCompact = compact ? "true" : "false";
+    cleanups.push(() => {
+      delete root.dataset.uiCompact;
+    });
+  }
+
   return () => {
     while (cleanups.length > 0) {
       cleanups.pop()?.();
@@ -648,5043 +686,590 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
 /**
  * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
-export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise }), [device, expertise, theme]);
+export function useElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): { mobile: boolean } {
+  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
 
   return { mobile: device === "mobile" };
 }
+
+// #region 🎛️UiChromeCompact
+/** @emoji 🎛️ localStorage key for icon-only button/toggle chrome. */
+export const UI_CHROME_COMPACT_STORAGE_KEY = "ui.chrome.compact";
+
+/** @emoji 🎛️ Reads whether compact chrome is enabled from localStorage. */
+export function readStoredUiChromeCompact(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return localStorage.getItem(UI_CHROME_COMPACT_STORAGE_KEY) === "true";
+}
+
+/** @emoji 🎛️ Persists compact chrome preference to localStorage. */
+export function writeStoredUiChromeCompact(compact: boolean): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_COMPACT_STORAGE_KEY, compact ? "true" : "false");
+}
+
+const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
+
+/** @emoji 🏷️ When `always`, inline button/toggle captions stay visible even if compact chrome is on. */
+export type UiChromeLabelPolicy = "compact" | "always";
+
+const UiChromeLabelPolicyContext = reactHostPort.createContext<UiChromeLabelPolicy>("compact");
+
+/** @emoji 🏷️ Overrides {@link useControlInlineText} for a subtree (e.g. navbar always shows captions). */
+export function UiChromeLabelPolicyProvider({
+  policy,
+  children,
+}: {
+  readonly policy: UiChromeLabelPolicy;
+  readonly children: React.ReactNode;
+}): React.ReactElement {
+  return <UiChromeLabelPolicyContext.Provider value={policy}>{children}</UiChromeLabelPolicyContext.Provider>;
+}
+
+/** @emoji 🏷️ True when inline captions should show regardless of compact chrome. */
+export function useUiChromeLabelPolicy(): UiChromeLabelPolicy {
+  return reactHostPort.useContext(UiChromeLabelPolicyContext);
+}
+
+let _uiChromeCompactProvider: (() => boolean) | null = null;
+
+/** @emoji 🎛️ Registers the active compact-chrome resolver for non-React consumers. */
+export function setUiChromeCompactProvider(fn: () => boolean): void {
+  _uiChromeCompactProvider = fn;
+}
+
+/** @emoji 🎛️ True when global compact chrome hides inline button/toggle labels. */
+export function useUiChromeCompact(): boolean {
+  const contextValue = reactHostPort.useContext(UiChromeCompactContext);
+  if (contextValue !== null) return contextValue;
+  return _uiChromeCompactProvider ? _uiChromeCompactProvider() : readStoredUiChromeCompact();
+}
+
+/** @emoji 🎛️ Supplies compact-chrome state to buttons and toggles in the subtree. */
+export function UiChromeCompactProvider({ compact, children }: { readonly compact: boolean; readonly children: React.ReactNode }): React.ReactElement {
+  reactHostPort.useEffect(() => {
+    setUiChromeCompactProvider(() => compact);
+    return () => setUiChromeCompactProvider(() => readStoredUiChromeCompact());
+  }, [compact]);
+  return <UiChromeCompactContext.Provider value={compact}>{children}</UiChromeCompactContext.Provider>;
+}
+
+let _controlLabelIdResolver: (id: string) => string = (id) => id;
+
+/** @emoji 🏷️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
+export function setControlLabelIdResolver(resolver: (id: string) => string): void {
+  _controlLabelIdResolver = resolver;
+}
+
+/** @emoji 🏷️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
+export function resolveControlLabelId(id: string): string {
+  if (id.startsWith("ui.nav.")) {
+    const segment = id.slice("ui.nav.".length);
+    if (segment === "back" || segment === "forward" || segment === "up") {
+      return _controlLabelIdResolver(`ui.nav.${segment}`);
+    }
+  }
+  if (id === "ui.search.toggle") {
+    return _controlLabelIdResolver("ui.search.toggle");
+  }
+  if (id === "ui.find.toggle") {
+    return _controlLabelIdResolver("ui.find.toggle");
+  }
+  if (id.startsWith("ui.panelToggle.")) {
+    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
+  }
+  if (id.startsWith("ui.toolbar.group.")) {
+    return _controlLabelIdResolver(`ui.toolbar.group.${id.slice("ui.toolbar.group.".length)}`);
+  }
+  if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
+    return _controlLabelIdResolver("ui.engagement.suggestions");
+  }
+  if (id === "engagement-options" || id === "ui.engagement.commands") {
+    return _controlLabelIdResolver("ui.engagement.commands");
+  }
+  if (id === "engagement-input" || id === "ui.engagement.command") {
+    return _controlLabelIdResolver("ui.engagement.command");
+  }
+  if (id.startsWith("playground.panel.")) {
+    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
+  }
+  return _controlLabelIdResolver(id);
+}
+
+/** @emoji 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */
+export function panelKindFromPanelToggleControlId(id: string): string | undefined {
+  if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
+  if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
+  if (id.startsWith("semio.sketchpad.navbar.panelToggle.")) return id.slice("semio.sketchpad.navbar.panelToggle.".length);
+  return undefined;
+}
+
+/** @emoji 🏷️ True for legacy engagement element ids that must not surface as humanized tooltips. */
+export function isInternalChromeControlId(id: string): boolean {
+  return id.startsWith("engagement-") || id.startsWith("engagement.");
+}
+
+/** @emoji 🔤 Turns a control id segment into a short title (e.g. `panelToggle` → `Panel Toggle`). */
+export function humanizeControlSegment(segment: string): string {
+  const normalized = segment
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[._-]+/g, " ")
+    .trim();
+  if (!normalized) return segment;
+  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** @emoji 🔤 Human-readable caption from the last segment of a dotted control id. */
+export function humanizeControlId(id: string): string {
+  const segment = id.split(".").filter(Boolean).pop() ?? id;
+  return humanizeControlSegment(segment);
+}
+
+/** @emoji 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
+export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
+  if (text !== undefined && text !== "") return text;
+  if (!id || isInternalChromeControlId(id)) return undefined;
+  const labelId = resolveControlLabelId(id);
+  const localized = useLabel(labelId);
+  if (localized && localized !== labelId) return localized;
+  const panelKind = panelKindFromPanelToggleControlId(id);
+  if (panelKind) {
+    const uiPanelKey = `ui.panelToggle.${panelKind}` as UiTranslationKey;
+    const fromUiPanel = useLabel(uiPanelKey);
+    if (fromUiPanel && fromUiPanel !== uiPanelKey) return fromUiPanel;
+    return humanizeEngagementStepId(panelKind);
+  }
+  if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
+  return undefined;
+}
+
+/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
+export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
+  const compact = useUiChromeCompact();
+  const labelPolicy = useUiChromeLabelPolicy();
+  if (compact && labelPolicy !== "always") return undefined;
+  return useControlAccessibleLabel(id, text);
+}
+// #endregion 🎛️UiChromeCompact
+
 // #endregion 🌈SurfaceChrome
 
 // #region 🪁I18n Resources
 
-// Shared UI translation bundles and initialization for all multilingual UI surfaces.
-// UI bundles MUST keep translation resources in source code and MUST not rely on sketchpad-local JSON files.
 
-const elementUiTranslationBundles = {
+// Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
+// Product-specific bundles (e.g. semio sketchpad) register via {@link registerUiTranslationBundles}.
+
+/** @emoji 🪁 Supported UI locale codes. */
+export type UiLocale = "en" | "de";
+
+/** @emoji 🪁 Expertise-specific label pair. */
+export type UiLabelPair = { readonly normal: string; readonly beginner: string };
+
+/** @emoji 🪁 Translation leaf with optional manual, tutorial, and hotkey metadata. */
+export type UiLabelValue = {
+  readonly label: UiLabelPair;
+  readonly manual?: string;
+  readonly tutorial?: string;
+  readonly hotkey?: string;
+};
+
+/** @emoji 🪁 Toolbar parent category ids mirrored from {@link @framework/core AppToolCategory}. */
+export type UiToolbarParentCategory =
+  | "history"
+  | "hand"
+  | "selection"
+  | "lasso"
+  | "filter"
+  | "open"
+  | "save"
+  | "transfer"
+  | "transform"
+  | "create"
+  | "view"
+  | "actions"
+  | "settings";
+
+/** @emoji 🪁 i18n key for a toolbar parent category toggle. */
+export type UiToolbarParentKey = `ui.toolbar.parent.${UiToolbarParentCategory}`;
+
+type UiToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
+
+type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
+  ? Prefix extends ""
+    ? never
+    : Prefix
+  : T extends string
+    ? Prefix extends ""
+      ? never
+      : Prefix
+    : T extends number | boolean | null | undefined
+      ? never
+      : T extends readonly unknown[]
+        ? never
+        : {
+            [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
+          }[keyof T & string];
+
+/** @emoji 🪁 Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
+export type UiTranslationSchema = {
+  readonly ui: {
+    readonly nav: {
+      readonly back: UiLabelValue;
+      readonly forward: UiLabelValue;
+      readonly up: UiLabelValue;
+    };
+    readonly search: {
+      readonly toggle: UiLabelValue;
+      readonly close: UiLabelValue;
+      readonly title: UiLabelValue;
+      readonly description: UiLabelValue;
+      readonly placeholder: UiLabelValue;
+      readonly empty: UiLabelValue;
+    };
+    readonly find: {
+      readonly toggle: UiLabelValue;
+      readonly title: UiLabelValue;
+      readonly description: UiLabelValue;
+      readonly placeholder: UiLabelValue;
+      readonly empty: UiLabelValue;
+    };
+    readonly panelToggle: {
+      readonly windows: UiLabelValue;
+      readonly overview: UiLabelValue;
+      readonly workbench: UiLabelValue;
+      readonly details: UiLabelValue;
+      readonly settings: UiLabelValue;
+      readonly chat: UiLabelValue;
+    };
+    readonly toolbar: {
+      readonly group: {
+        readonly parent: UiLabelValue;
+      };
+      readonly parent: UiToolbarParentEntries;
+    };
+    readonly common: {
+      readonly mixedValues: UiLabelValue;
+    };
+    readonly docs: {
+      readonly navigation: {
+        readonly previous: UiLabelValue;
+        readonly next: UiLabelValue;
+      };
+    };
+    readonly ring: {
+      readonly demo: UiLabelValue;
+    };
+    readonly stepper: {
+      readonly demo: UiLabelValue;
+    };
+    readonly engagement: {
+      readonly command: UiLabelValue;
+      readonly commandActive: UiLabelValue;
+      readonly commands: UiLabelValue;
+      readonly suggestions: UiLabelValue;
+      readonly noMatches: UiLabelValue;
+    };
+  };
+  readonly settings: {
+    readonly layout: {
+      readonly normal: UiLabelValue;
+      readonly desktop: UiLabelValue;
+      readonly tablet: UiLabelValue;
+      readonly mobile: UiLabelValue;
+    };
+    readonly compact: UiLabelValue;
+    readonly mode: {
+      readonly dev: UiLabelValue;
+      readonly user: UiLabelValue;
+      readonly beginner: UiLabelValue;
+      readonly normal: UiLabelValue;
+    };
+    readonly expertise: {
+      readonly beginner: UiLabelValue;
+      readonly normal: UiLabelValue;
+      readonly expert: UiLabelValue;
+    };
+  };
+  readonly tooltip: {
+    readonly manual: UiLabelValue;
+    readonly tutorial: UiLabelValue;
+  };
+};
+
+/** @emoji 🪁 Dot-path union of keys in {@link UiTranslationSchema}. */
+export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
+
+/** @emoji 🪁 Compile-time check that every toolbar category has a chrome translation key. */
+export type AssertUiToolbarParentKeysCovered<Categories extends string> = {
+  readonly [K in Categories]: `ui.toolbar.parent.${K & UiToolbarParentCategory}` extends UiTranslationKey ? true : false;
+}[Categories] extends true
+  ? true
+  : false;
+
+/** @emoji 🪁 Typed translate function for domain-neutral chrome keys. */
+export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
+
+/** @emoji 🪁 Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
+export interface UiI18nPort {
+  readonly t: UiTranslateFn;
+  changeLanguage(locale: UiLocale): Promise<unknown>;
+  readonly language: string | undefined;
+  readonly resolvedLanguage: string | undefined;
+  readonly isInitialized: boolean;
+}
+
+const uiToolbarParentDe: UiToolbarParentEntries = {
+  history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
+  hand: { label: { normal: "Hand", beginner: "Hand" } },
+  selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
+  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+  filter: { label: { normal: "Filter", beginner: "Filter" } },
+  open: { label: { normal: "Oeffnen", beginner: "Oeffnen" } },
+  save: { label: { normal: "Speichern", beginner: "Speichern" } },
+  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+  transform: { label: { normal: "Transformieren", beginner: "Transformieren" } },
+  create: { label: { normal: "Erstellen", beginner: "Erstellen" } },
+  view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
+  actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+  settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
+};
+
+const uiToolbarParentEn: UiToolbarParentEntries = {
+  history: { label: { normal: "History", beginner: "History" } },
+  hand: { label: { normal: "Hand", beginner: "Hand" } },
+  selection: { label: { normal: "Selection", beginner: "Selection" } },
+  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+  filter: { label: { normal: "Filter", beginner: "Filter" } },
+  open: { label: { normal: "Open", beginner: "Open" } },
+  save: { label: { normal: "Save", beginner: "Save" } },
+  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+  transform: { label: { normal: "Transform", beginner: "Transform" } },
+  create: { label: { normal: "Create", beginner: "Create" } },
+  view: { label: { normal: "View", beginner: "View" } },
+  actions: { label: { normal: "Actions", beginner: "Actions" } },
+  settings: { label: { normal: "Settings", beginner: "Settings" } },
+};
+
+const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
+
+export const uiChromeTranslationBundles = {
   de: {
-    translation: JSON.parse(String.raw`{
-  "semio": {
-    "label": {
-      "normal": "",
-      "beginner": ""
+    translation: {
+  "ui": {
+    "nav": {
+      "back": {
+        "label": {
+          "normal": "Zurueck",
+          "beginner": "Zurueck"
+        }
+      },
+      "forward": {
+        "label": {
+          "normal": "Vorwaerts",
+          "beginner": "Vorwaerts"
+        }
+      },
+      "up": {
+        "label": {
+          "normal": "Eine Ebene hoch",
+          "beginner": "Eine Ebene hoch"
+        }
+      }
     },
-    "file": {
-      "name": "Name",
-      "size": "Groesse",
-      "created": "Erstellt",
-      "updated": "Aktualisiert"
+    "search": {
+      "toggle": {
+        "label": {
+          "normal": "Suche",
+          "beginner": "Suche"
+        }
+      },
+      "close": {
+        "label": {
+          "normal": "Suche schliessen",
+          "beginner": "Suche schliessen"
+        }
+      },
+      "title": {
+        "label": {
+          "normal": "Suche",
+          "beginner": "Suche"
+        }
+      },
+      "description": {
+        "label": {
+          "normal": "Nach Elementen suchen",
+          "beginner": "Nach Elementen suchen"
+        }
+      },
+      "placeholder": {
+        "label": {
+          "normal": "Suchen...",
+          "beginner": "Suchen..."
+        }
+      },
+      "empty": {
+        "label": {
+          "normal": "Keine Ergebnisse gefunden.",
+          "beginner": "Keine Ergebnisse gefunden."
+        }
+      }
     },
-    "folder": {
-      "created": "Erstellt",
-      "updated": "Aktualisiert"
+    find: {
+      toggle: {
+        label: {
+          normal: "Finden",
+          beginner: "Im aktuellen Kontext finden",
+        },
+      },
+      title: {
+        label: {
+          normal: "Finden",
+          beginner: "Finden",
+        },
+      },
+      description: {
+        label: {
+          normal: "Elemente in dieser Ansicht finden",
+          beginner: "Elemente in dieser Ansicht finden",
+        },
+      },
+      placeholder: {
+        label: {
+          normal: "Finden...",
+          beginner: "Finden...",
+        },
+      },
+      empty: {
+        label: {
+          normal: "Keine Ergebnisse gefunden.",
+          beginner: "Keine Ergebnisse gefunden.",
+        },
+      },
     },
-    "sketchpad": {
-      "label": {
-        "normal": "",
-        "beginner": ""
-      },
-      "navbar": {
+    "panelToggle": {
+      "windows": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "back": {
-          "label": {
-            "normal": "Zurueck",
-            "beginner": "Klicken, um zurueckzugehen, halten um Historie zu sehen"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Links"
-        },
-        "forward": {
-          "label": {
-            "normal": "Vorwaerts",
-            "beginner": "Klicken, um vorwaerts zu gehen, halten um Historie zu sehen"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Rechts"
-        },
-        "up": {
-          "label": {
-            "normal": "Eine Ebene hoch",
-            "beginner": "Klicken, um eine Ebene hoeher in der Navigationshierarchie zu gehen"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Oben"
-        },
-        "kits": {
-          "label": {
-            "normal": "Kits",
-            "beginner": "Klicken, um alle Kits zu sehen"
-          }
-        },
-        "navigationButtons": {
-          "label": {
-            "normal": "Navigation",
-            "beginner": "Navigationsknoepfe"
-          }
-        },
-        "docs": {
-          "label": {
-            "normal": "Dokumentation",
-            "beginner": "Klicken, um Dokumentation anzuzeigen"
-          },
-          "hotkey": "Ctrl+Shift+D"
-        },
-        "search": {
-          "label": {
-            "normal": "Suche",
-            "beginner": "Nach Inhalten suchen"
-          },
-          "open": {
-            "label": {
-              "normal": "Suche",
-              "beginner": "Klicken, um Suche zu oeffnen und schnell zu jedem Element zu navigieren"
-            },
-            "manual": "navigation#search",
-            "tutorial": "getting-started/intro#search",
-            "hotkey": "Ctrl+K"
-          },
-          "close": {
-            "label": {
-              "normal": "Suche schliessen",
-              "beginner": "Klicken, um den Suchdialog zu schliessen"
-            },
-            "manual": "navigation#search",
-            "tutorial": "getting-started/intro#search",
-            "hotkey": "Escape"
-          },
-          "title": {
-            "label": {
-              "normal": "Suche",
-              "beginner": "Suche"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Nach Kits, Entwuerfen, Typen und mehr suchen",
-              "beginner": "Nach Kits, Entwuerfen, Typen und mehr suchen"
-            }
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Suchen...",
-              "beginner": "Suchen..."
-            }
-          },
-          "noResults": {
-            "label": {
-              "normal": "Keine Ergebnisse gefunden",
-              "beginner": "Keine Ergebnisse gefunden"
-            }
-          }
-        },
-        "focus": {
-          "label": {
-            "normal": "Fokusmodus",
-            "beginner": "Fokusmodus umschalten um Ablenkungen auszublenden"
-          },
-          "open": {
-            "label": {
-              "normal": "Fokus",
-              "beginner": "Klicken, um in den Fokusmodus zu wechseln und Ablenkungen auszublenden"
-            },
-            "manual": "navigation#focus",
-            "tutorial": "getting-started/intro#focus",
-            "hotkey": "Ctrl+Shift+F"
-          },
-          "close": {
-            "label": {
-              "normal": "Fokus verlassen",
-              "beginner": "Klicken, um den Fokusmodus zu verlassen und alle UI-Elemente anzuzeigen"
-            },
-            "manual": "navigation#focus",
-            "tutorial": "getting-started/intro#focus",
-            "hotkey": "Escape"
-          },
-          "input": {
-            "label": {
-              "normal": "Fokus-Eingabe",
-              "beginner": "Tippen, um nach einem Element zum Fokussieren zu suchen"
-            }
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Nach einem Element suchen...",
-              "beginner": "Nach einem Element suchen..."
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Fokus",
-              "beginner": "Fokus"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Auf ein Element in der aktuellen Ansicht fokussieren",
-              "beginner": "Auf ein Element in der aktuellen Ansicht fokussieren"
-            }
-          },
-          "other": {
-            "label": {
-              "normal": "Andere",
-              "beginner": "Andere"
-            }
-          }
-        },
-        "copyJsonToClipboard": {
-          "label": {
-            "normal": "JSON kopieren",
-            "beginner": "Den aktuellen Sketchpad-JSON-Status in die Zwischenablage kopieren"
-          },
-          "hotkey": "Ctrl+Shift+J"
-        },
-        "breadcrumb": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "designs": {
-            "label": {
-              "normal": "Entwuerfe",
-              "beginner": "Entwuerfe"
-            }
-          },
-          "types": {
-            "label": {
-              "normal": "Typen",
-              "beginner": "Typen"
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualitaeten",
-              "beginner": "Qualitaeten"
-            }
-          },
-          "temporary": {
-            "label": {
-              "normal": "Temporär",
-              "beginner": "Temporär"
-            }
-          },
-          "local": {
-            "label": {
-              "normal": "Lokal",
-              "beginner": "Lokal"
-            }
-          },
-          "remote": {
-            "label": {
-              "normal": "Remote",
-              "beginner": "Remote"
-            }
-          },
-          "files": {
-            "label": {
-              "normal": "Files",
-              "beginner": "Files"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Autoren",
-              "beginner": "Autoren"
-            }
-          }
-        },
-        "tutorials": {
-          "label": {
-            "normal": "Tutorials",
-            "beginner": "Tutorials"
-          }
-        },
-        "tutorial": {
-          "controls": {
-            "stop": {
-              "label": {
-                "normal": "Tutorial beenden",
-                "beginner": "Klicken, um das aktuelle Tutorial zu beenden"
-              }
-            },
-            "previous": {
-              "label": {
-                "normal": "Vorheriger Schritt",
-                "beginner": "Zum vorherigen Schritt im Tutorial gehen"
-              }
-            },
-            "playPause": {
-              "label": {
-                "normal": "Abspielen/Pause",
-                "beginner": "Tutorial abspielen oder pausieren"
-              }
-            },
-            "next": {
-              "label": {
-                "normal": "Nächster Schritt",
-                "beginner": "Zum nächsten Schritt im Tutorial gehen"
-              }
-            }
-          }
-        },
-        "recording": {
-          "controls": {
-            "playPause": {
-              "label": {
-                "normal": "Aufnahme abspielen/pausieren",
-                "beginner": "Aufnahme abspielen oder pausieren"
-              }
-            },
-            "stop": {
-              "label": {
-                "normal": "Aufnahme beenden",
-                "beginner": "Aufnahme beenden und speichern"
-              }
-            }
-          }
-        },
-        "createKit": {
-          "label": {
-            "normal": "Kit erstellen",
-            "beginner": "Klicken, um ein neues Kit zu erstellen"
-          }
-        },
-        "createDesign": {
-          "label": {
-            "normal": "Entwurf erstellen",
-            "beginner": "Klicken, um einen neuen Entwurf zu erstellen"
-          }
-        },
-        "createChild": {
-          "label": {
-            "normal": "Kind erstellen",
-            "beginner": "Klicken, um ein Kind-Artefakt zu erstellen"
-          }
-        },
-        "createType": {
-          "label": {
-            "normal": "Typ erstellen",
-            "beginner": "Klicken, um einen neuen Typ zu erstellen"
-          }
-        },
-        "createVersion": {
-          "label": {
-            "normal": "Version erstellen",
-            "beginner": "Klicken, um eine neue Version zu erstellen"
-          }
-        },
-        "searchInput": {
-          "label": {
-            "normal": "Such-Eingabe",
-            "beginner": "Tippen, um nach Elementen zu suchen"
-          }
-        },
-        "panelToggle": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "workbench": {
-            "label": {
-              "normal": "Workbench umschalten",
-              "beginner": "Das Workbench-Panel auf der linken Seite ein- oder ausblenden"
-            },
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "hud": {
-            "label": {
-              "normal": "HUD umschalten",
-              "beginner": "Das HUD-Panel in der Mitte ein- oder ausblenden"
-            },
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "right": {
-            "label": {
-              "normal": "Rechtes Panel umschalten",
-              "beginner": "Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden"
-            }
-          },
-          "tools": {
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "toolbar": {
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "stats": {
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "details": {
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat umschalten",
-              "beginner": "Chat-Panel umschalten"
-            },
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen umschalten",
-              "beginner": "Einstellungen-Panel umschalten"
-            },
-            "show": {
-              "label": {
-                "normal": "Anzeigen",
-                "beginner": "Anzeigen"
-              }
-            }
-          },
-          "leftSidePanel": {
-            "label": {
-              "normal": "Linkes Panel umschalten",
-              "beginner": "Das linke Seitenfeld mit Workbench-Tabs umschalten"
-            }
-          },
-          "rightSidePanel": {
-            "label": {
-              "normal": "Rechtes Panel umschalten",
-              "beginner": "Das rechte Seitenfeld mit Detail-Tabs umschalten"
-            }
-          },
-          "hudPanel": {
-            "label": {
-              "normal": "HUD-Panel umschalten",
-              "beginner": "Das zentrale HUD-Panel umschalten"
-            }
-          }
-        },
-        "home": {
-          "label": {
-            "normal": "Home",
-            "beginner": "Home"
-          }
-        },
-        "kitName": {
-          "label": {
-            "normal": "Kit Name",
-            "beginner": "Kit Name"
-          }
-        },
-        "kitVersion": {
-          "label": {
-            "normal": "Kit Version",
-            "beginner": "Kit Version"
-          }
-        },
-        "name": {
-          "label": {
-            "normal": "Name",
-            "beginner": "Name"
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Design",
-            "beginner": "Design"
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Typ",
-            "beginner": "Typ"
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "Quality",
-            "beginner": "Quality"
-          }
-        },
-        "navigation": {
-          "label": {
-            "normal": "Navigation",
-            "beginner": "Navigation"
-          }
-        },
-        "panelToggles": {
-          "label": {
-            "normal": "Panel-Umschalter",
-            "beginner": "Panel-Umschalter"
-          }
-        },
-        "fullscreenToggle": {
-          "label": {
-            "normal": "Fullscreen Toggle",
-            "beginner": "Fullscreen Toggle"
-          }
+          "normal": "Fenster",
+          "beginner": "Fenster"
         }
       },
-      "panel": {
+      "overview": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "chat": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Fragen Sie etwas...",
-              "beginner": "Fragen Sie etwas..."
-            }
-          }
-        },
-        "settings": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "theme": {
-            "label": {
-              "normal": "Design",
-              "beginner": "Wählen Sie das Farbschema für die Anwendung"
-            },
-            "dark": {
-              "label": {
-                "normal": "Dunkel",
-                "beginner": "Dunkles Farbschema verwenden"
-              }
-            },
-            "light": {
-              "label": {
-                "normal": "Hell",
-                "beginner": "Helles Farbschema verwenden"
-              }
-            },
-            "system": {
-              "label": {
-                "normal": "System",
-                "beginner": "Systemdesign-Einstellung folgen"
-              }
-            }
-          },
-          "device": {
-            "label": {
-              "normal": "Geraet",
-              "beginner": "Geraetemodus fuer die Interaktion waehlen"
-            },
-            "desktop": {
-              "label": {
-                "normal": "Desktop",
-                "beginner": "Optimiertes Layout für Desktop-Computer"
-              }
-            },
-            "tablet": {
-              "label": {
-                "normal": "Tablet",
-                "beginner": "Optimiertes Layout für Tablets"
-              }
-            },
-            "mobile": {
-              "label": {
-                "normal": "Mobil",
-                "beginner": "Optimiertes Layout für mobile Geräte"
-              }
-            }
-          },
-          "mode": {
-            "label": {
-              "normal": "Modus",
-              "beginner": "Wählen Sie den Benutzeroberflächenmodus: Experte (minimale Tooltips), Normal (Standard) oder Anfänger (detaillierte Hilfe)"
-            },
-            "dev": {
-              "label": {
-                "normal": "Entwickler",
-                "beginner": "Entwicklermodus mit erweiterten Werkzeugen und Debugging-Funktionen"
-              }
-            },
-            "user": {
-              "label": {
-                "normal": "Benutzer",
-                "beginner": "Standardbenutzermodus für reguläre Operationen"
-              }
-            }
-          },
-          "expertise": {
-            "label": {
-              "normal": "Erfahrung",
-              "beginner": "Wählen Sie Ihre Erfahrungsstufe um die Komplexität der Oberfläche anzupassen"
-            },
-            "beginner": {
-              "label": {
-                "normal": "Anfänger",
-                "beginner": "Detaillierte Erklärungen und Tutorials anzeigen"
-              }
-            },
-            "normal": {
-              "label": {
-                "normal": "Normal",
-                "beginner": "Standard-Tooltips und Hilfe anzeigen"
-              }
-            },
-            "expert": {
-              "label": {
-                "normal": "Experte",
-                "beginner": "Minimale Tooltips für erfahrene Benutzer"
-              }
-            }
-          }
+          "normal": "Uebersicht",
+          "beginner": "Uebersicht"
         }
       },
-      "common": {
+      "workbench": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "selectVariant": "Variante auswaehlen...",
-        "selectView": "Ansicht auswaehlen...",
-        "search": {
-          "label": {
-            "normal": "Suche",
-            "beginner": "Suche"
-          }
-        },
-        "mixedValues": {
-          "label": {
-            "normal": "Gemischte Werte",
-            "beginner": "Gemischte Werte"
-          }
-        },
-        "selectDesign": {
-          "label": {
-            "normal": "Entwurf auswaehlen",
-            "beginner": "Entwurf auswaehlen"
-          }
-        },
-        "selectType": {
-          "label": {
-            "normal": "Typ auswaehlen",
-            "beginner": "Typ auswaehlen"
-          }
-        },
-        "no": {
-          "label": {
-            "normal": "Nein",
-            "beginner": "Nein"
-          }
-        },
-        "yes": {
-          "label": {
-            "normal": "Ja",
-            "beginner": "Ja"
-          }
-        },
-        "add": {
-          "label": {
-            "normal": "Hinzufügen",
-            "beginner": "Hinzufügen"
-          }
-        },
-        "remove": {
-          "label": {
-            "normal": "Entfernen",
-            "beginner": "Entfernen"
-          }
-        },
-        "addChild": {
-          "label": {
-            "normal": "Kind hinzufügen",
-            "beginner": "Kind hinzufügen"
-          }
-        },
-        "duplicateType": {
-          "label": {
-            "normal": "Typ duplizieren (Hover)",
-            "beginner": "Typ duplizieren (Hover)"
-          }
-        },
-        "addType": {
-          "label": {
-            "normal": "Typ hinzufügen",
-            "beginner": "Typ hinzufügen"
-          }
-        },
-        "addDesign": {
-          "label": {
-            "normal": "Entwurf hinzufügen",
-            "beginner": "Entwurf hinzufügen"
-          }
-        },
-        "settings": {
-          "label": {
-            "normal": "Sketchpad",
-            "beginner": "Globale Sketchpad-Einstellungen"
-          },
-          "theme": {
-            "label": {
-              "normal": "Design",
-              "beginner": "Farbschema wählen"
-            }
-          },
-          "layout": {
-            "label": {
-              "normal": "Layout",
-              "beginner": "Layoutmodus wählen"
-            }
-          },
-          "mode": {
-            "label": {
-              "normal": "Modus",
-              "beginner": "Oberflächenmodus wählen"
-            }
-          },
-          "expertise": {
-            "label": {
-              "normal": "Erfahrungsstufe",
-              "beginner": "Erfahrungsstufe wählen"
-            }
-          }
+          "normal": "Arbeitsbereich",
+          "beginner": "Arbeitsbereich"
         }
       },
-      "footer": {
+      "details": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "feedback": {
-          "label": {
-            "normal": "Feedback",
-            "beginner": "Feedback senden, um semio zu verbessern"
-          }
-        }
-      },
-      "app": {
-        "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "home": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "title": "Home",
-          "fileInput": {
-            "label": {
-              "normal": "Kit-Datei waehlen",
-              "beginner": "Eine .zip-Kit-Datei von Ihrem Geraet auswaehlen"
-            }
-          },
-          "searchPlaceholder": {
-            "label": {
-              "normal": "Kits suchen...",
-              "beginner": "Kits suchen..."
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Art",
-              "beginner": "Art"
-            }
-          },
-          "lastUpdated": {
-            "label": {
-              "normal": "Zuletzt aktualisiert",
-              "beginner": "Zuletzt aktualisiert"
-            }
-          },
-          "created": {
-            "label": {
-              "normal": "Erstellt",
-              "beginner": "Erstellt"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "kind": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "show": {
-                "label": {
-                  "normal": "Nach Art filtern",
-                  "beginner": "Kits nach ihrem Speichertyp filtern (temporaer, lokal oder remote)"
-                },
-                "hotkey": "Ctrl+K"
-              },
-              "create": {
-                "label": {
-                  "normal": "Neues Kit erstellen",
-                  "beginner": "Ein neues Kit dieses Typs erstellen"
-                },
-                "hotkey": "Ctrl+Shift+K"
-              },
-              "temporary": {
-                "label": {
-                  "normal": "Temporaere Kits anzeigen",
-                  "beginner": "Kits anzeigen, die im Browser-Speicher gespeichert sind (gehen beim Neuladen verloren)"
-                },
-                "hotkey": "Ctrl+1"
-              },
-              "createTemporary": {
-                "label": {
-                  "normal": "Temporaeres Kit erstellen",
-                  "beginner": "Ein neues temporaeres Kit erstellen, das im Browser-Speicher gespeichert wird"
-                },
-                "hotkey": "Ctrl+Shift+1"
-              },
-              "local": {
-                "label": {
-                  "normal": "Lokale Kits anzeigen",
-                  "beginner": "Kits anzeigen, die lokal auf Ihrem Geraet gespeichert sind"
-                },
-                "hotkey": "Ctrl+2"
-              },
-              "createLocal": {
-                "label": {
-                  "normal": "Lokales Kit erstellen",
-                  "beginner": "Ein neues Kit erstellen, das lokal auf Ihrem Geraet gespeichert wird"
-                },
-                "hotkey": "Ctrl+Shift+2"
-              },
-              "remote": {
-                "label": {
-                  "normal": "Remote-Kits anzeigen",
-                  "beginner": "Kits anzeigen, die mit Remote-Speicher synchronisiert sind"
-                },
-                "hotkey": "Ctrl+3"
-              },
-              "createRemote": {
-                "label": {
-                  "normal": "Remote-Kit erstellen",
-                  "beginner": "Ein neues Kit erstellen, das mit Remote-Speicher synchronisiert wird"
-                },
-                "hotkey": "Ctrl+Shift+3"
-              }
-            },
-            "name": {
-              "label": {
-                "normal": "Nach Name filtern",
-                "beginner": "Kits nach diesem spezifischen Namen filtern"
-              },
-              "hotkey": "Ctrl+N"
-            },
-            "version": {
-              "label": {
-                "normal": "Nach Version filtern",
-                "beginner": "Kits nach dieser spezifischen Version filtern"
-              },
-              "hotkey": "Ctrl+V"
-            },
-            "band": {
-              "label": {
-                "normal": "Filterleiste",
-                "beginner": "Filterleiste ein- oder ausblenden"
-              },
-              "hotkey": "Ctrl+F"
-            }
-          },
-          "search": {
-            "label": {
-              "normal": "Suche",
-              "beginner": "Nach Kits suchen"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Home-Einstellungen"
-            },
-            "theme": {
-              "label": {
-                "normal": "Design",
-                "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Sprache",
-                "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-              },
-              "placeholder": {
-                "label": {
-                  "normal": "Sprache waehlen...",
-                  "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
-                }
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Modus",
-                "beginner": "Waehlen Sie den Benutzeroberflaechen-Modus"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Erfahrung",
-                "beginner": "Waehlen Sie Ihr Erfahrungsniveau"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Geraet",
-                "beginner": "Waehlen Sie das Eingabegeraet"
-              }
-            },
-            "layout": {
-              "label": {
-                "normal": "Layout",
-                "beginner": "Waehlen Sie das Layout fuer die Kit-Uebersicht"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagramm",
-                "beginner": "Konfigurieren Sie das kraftgerichtete Diagramm-Layout"
-              },
-              "chargeStrength": {
-                "label": {
-                  "normal": "Ladungsstaerke",
-                  "beginner": "Steuert, wie stark Knoten sich abstossen. Negativere Werte druecken Knoten weiter auseinander."
-                }
-              },
-              "linkDistance": {
-                "label": {
-                  "normal": "Verbindungsabstand",
-                  "beginner": "Der Zielabstand zwischen verbundenen Knoten. Groessere Werte verteilen das Diagramm."
-                }
-              },
-              "collideRadius": {
-                "label": {
-                  "normal": "Kollisionsradius",
-                  "beginner": "Der Mindestabstand zwischen Knotenzentren zur Vermeidung von Ueberlappung."
-                }
-              },
-              "centerStrength": {
-                "label": {
-                  "normal": "Zentrierungsstaerke",
-                  "beginner": "Wie stark Knoten zur Mitte des Diagramms gezogen werden."
-                }
-              }
-            }
-          },
-          "canvas": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "table": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "createKit": {
-                "label": {
-                  "normal": "Kit erstellen",
-                  "beginner": "Neues Kit aus der Home-Tabelle anlegen"
-                }
-              },
-              "createVersion": {
-                "label": {
-                  "normal": "Version erstellen",
-                  "beginner": "Neue Kit-Version aus der Home-Tabelle anlegen"
-                }
-              },
-              "hover": {
-                "label": {
-                  "normal": "Kit hervorheben",
-                  "beginner": "Ueber eine Kit-Zeile fahren, um sie im Diagramm hervorzuheben"
-                }
-              },
-              "toggleSort": {
-                "label": {
-                  "normal": "Sortierung umschalten",
-                  "beginner": "Sortierrichtung fuer diese Spalte aendern"
-                }
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "kit": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "Der Name des Kits"
-                  }
-                },
-                "version": {
-                  "label": {
-                    "normal": "Version",
-                    "beginner": "Die Version des Kits"
-                  }
-                },
-                "description": {
-                  "label": {
-                    "normal": "Beschreibung",
-                    "beginner": "Eine Beschreibung des Kits"
-                  }
-                },
-                "icon": {
-                  "label": {
-                    "normal": "Symbol",
-                    "beginner": "Das Symbol des Kits"
-                  }
-                },
-                "image": {
-                  "label": {
-                    "normal": "Bild",
-                    "beginner": "Das Vorschaubild des Kits"
-                  }
-                }
-              },
-              "kits": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "Der Name der ausgewählten Kits"
-                  }
-                },
-                "version": {
-                  "label": {
-                    "normal": "Version",
-                    "beginner": "Die Version der ausgewählten Kits"
-                  }
-                },
-                "description": {
-                  "label": {
-                    "normal": "Beschreibung",
-                    "beginner": "Eine Beschreibung der ausgewählten Kits"
-                  }
-                },
-                "icon": {
-                  "label": {
-                    "normal": "Symbol",
-                    "beginner": "Das Symbol der ausgewählten Kits"
-                  }
-                },
-                "image": {
-                  "label": {
-                    "normal": "Bild",
-                    "beginner": "Das Vorschaubild der ausgewählten Kits"
-                  }
-                }
-              }
-            }
-          },
-          "dropzone": {
-            "label": {
-              "normal": "Zip-Datei zum Importieren eines Kits ablegen",
-              "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als neues Kit zu importieren"
-            },
-            "description": {
-              "normal": "Nur Kits mit .semio-Ordner können importiert werden",
-              "beginner": "Die Zip-Datei muss einen .semio-Ordner mit kit.db enthalten, um als Kit importiert zu werden."
-            }
-          },
-          "noKits": {
-            "label": {
-              "normal": "Keine Kits",
-              "beginner": "Keine Kits"
-            }
-          },
-          "sortByName": {
-            "label": {
-              "normal": "Sort By Name",
-              "beginner": "Sort By Name"
-            }
-          },
-          "toggleRow": {
-            "label": {
-              "normal": "Zeile umschalten",
-              "beginner": "Zeile umschalten"
-            }
-          },
-          "createVersion": {
-            "label": {
-              "normal": "Version erstellen",
-              "beginner": "Version erstellen"
-            }
-          },
-          "hideKind": {
-            "label": {
-              "normal": "Art ausblenden",
-              "beginner": "Art ausblenden"
-            }
-          },
-          "showTemporary": {
-            "label": {
-              "normal": "Temporär anzeigen",
-              "beginner": "Temporär anzeigen"
-            }
-          },
-          "showLocal": {
-            "label": {
-              "normal": "Lokal anzeigen",
-              "beginner": "Lokal anzeigen"
-            }
-          },
-          "showRemote": {
-            "label": {
-              "normal": "Remote anzeigen",
-              "beginner": "Remote anzeigen"
-            }
-          },
-          "sortByType": {
-            "label": {
-              "normal": "Sort By Type",
-              "beginner": "Sort By Type"
-            }
-          },
-          "sortByUpdatedAt": {
-            "label": {
-              "normal": "Sort By Updated At",
-              "beginner": "Sort By Updated At"
-            }
-          },
-          "sortByCreatedAt": {
-            "label": {
-              "normal": "Sort By Created At",
-              "beginner": "Sort By Created At"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Home-Chat"
-            }
-          },
-          "createKit": {
-            "label": {
-              "normal": "Kit erstellen",
-              "beginner": "Kit erstellen"
-            }
-          },
-          "createTemporary": {
-            "label": {
-              "normal": "Temporär erstellen",
-              "beginner": "Temporär erstellen"
-            }
-          },
-          "createLocal": {
-            "label": {
-              "normal": "Lokal erstellen",
-              "beginner": "Lokal erstellen"
-            }
-          },
-          "createRemote": {
-            "label": {
-              "normal": "Remote erstellen",
-              "beginner": "Remote erstellen"
-            }
-          },
-          "importKit": {
-            "label": {
-              "normal": "Kit importieren",
-              "beginner": "Kit importieren"
-            }
-          },
-          "toolbar": {
-            "showTemporary": {
-              "label": {
-                "normal": "Temporär",
-                "beginner": "Temporär"
-              }
-            },
-            "showLocal": {
-              "label": {
-                "normal": "Lokal",
-                "beginner": "Lokal"
-              }
-            },
-            "showRemote": {
-              "label": {
-                "normal": "Remote",
-                "beginner": "Remote"
-              }
-            },
-            "createTemporary": {
-              "label": {
-                "normal": "Temporär",
-                "beginner": "Temporär"
-              }
-            },
-            "createLocal": {
-              "label": {
-                "normal": "Lokal",
-                "beginner": "Lokal"
-              }
-            },
-            "createRemote": {
-              "label": {
-                "normal": "Remote",
-                "beginner": "Remote"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filter",
-                "beginner": "Kits nach Standort filtern"
-              }
-            },
-            "create": {
-              "label": {
-                "normal": "Erstellen",
-                "beginner": "Neues Kit erstellen"
-              }
-            },
-            "createKit": {
-              "label": {
-                "normal": "Neues Kit",
-                "beginner": "Ein neues leeres Kit erstellen"
-              }
-            },
-            "openFolder": {
-              "label": {
-                "normal": "Ordner oeffnen",
-                "beginner": "Ein Kit aus einem Ordner oeffnen"
-              }
-            },
-            "openFile": {
-              "label": {
-                "normal": "Datei oeffnen",
-                "beginner": "Ein Kit aus einer Zip-Datei oeffnen"
-              }
-            },
-            "openRemote": {
-              "label": {
-                "normal": "Remote oeffnen",
-                "beginner": "Ein Kit von einer Remote-URL oeffnen"
-              }
-            },
-            "createFile": {
-              "label": {
-                "normal": "Neues Datei-Kit",
-                "beginner": "Ein Kit anlegen, das in einer Datei gespeichert wird"
-              }
-            },
-            "createFolder": {
-              "label": {
-                "normal": "Neues Ordner-Kit",
-                "beginner": "Ein Kit anlegen, das in einem Ordner gespeichert wird"
-              }
-            },
-            "showFile": {
-              "label": {
-                "normal": "Datei-Kits anzeigen",
-                "beginner": "Kits anzeigen, die als Datei gespeichert sind"
-              }
-            },
-            "showFolder": {
-              "label": {
-                "normal": "Ordner-Kits anzeigen",
-                "beginner": "Kits anzeigen, die in Ordnern gespeichert sind"
-              }
-            },
-            "exportArchive": {
-              "label": {
-                "normal": "Archiv exportieren",
-                "beginner": "Das ausgewaehlte Kit als Zip-Archiv exportieren"
-              }
-            }
-          }
-        },
-        "kit": {
-          "label": {
-            "normal": "Kit",
-            "beginner": "Kit"
-          },
-          "properties": {
-            "label": {
-              "normal": "Kit-Eigenschaften",
-              "beginner": "Kit-Eigenschaften"
-            }
-          },
-          "notFound": {
-            "label": {
-              "normal": "Kit nicht gefunden",
-              "beginner": "Das angeforderte Kit wurde nicht gefunden"
-            },
-            "description": {
-              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
-              "beginner": "Zurueck zur Startseite und ein anderes Kit oeffnen oder ein neues erstellen."
-            }
-          },
-          "noKitLoaded": {
-            "label": {
-              "normal": "Kein Kit geladen",
-              "beginner": "Kein Kit geladen"
-            }
-          },
-          "loading": {
-            "label": {
-              "normal": "Kit wird geladen...",
-              "beginner": "Kit wird geladen..."
-            }
-          },
-          "notAvailable": {
-            "label": {
-              "normal": "Kit nicht verfuegbar",
-              "beginner": "Kit nicht verfuegbar"
-            }
-          },
-          "dropzone": {
-            "label": {
-              "normal": "Zip-Datei zum Importieren ablegen",
-              "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als Kit zu importieren oder Dateien zum aktuellen Kit hinzuzufuegen"
-            },
-            "description": {
-              "normal": "Kits mit .semio-Ordner werden importiert, andere als Dateien hinzugefuegt",
-              "beginner": "Wenn die Zip-Datei einen .semio-Ordner enthaelt, wird sie als vollstaendiges Kit importiert. Andernfalls werden die Dateien zum aktuellen Kit hinzugefuegt."
-            }
-          },
-          "versionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "z.B., 1.0.0",
-                "beginner": "z.B., 1.0.0"
-              }
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Beschreiben Sie den Inhalt dieses Kits...",
-                "beginner": "Beschreiben Sie den Inhalt dieses Kits..."
-              }
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "🎨 oder URL zum Icon",
-                "beginner": "🎨 oder URL zum Icon"
-              }
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "URL zum Vorschaubild",
-                "beginner": "URL zum Vorschaubild"
-              }
-            }
-          },
-          "homepagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "https://beispiel.de",
-                "beginner": "https://beispiel.de"
-              }
-            }
-          },
-          "licensePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "z.B., MIT, GPL-3.0, Apache-2.0",
-                "beginner": "z.B., MIT, GPL-3.0, Apache-2.0"
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neues Kit",
-              "beginner": "Neues Kit"
-            }
-          },
-          "defaultDesignName": {
-            "label": {
-              "normal": "Neuer Entwurf",
-              "beginner": "Neuer Entwurf"
-            }
-          },
-          "defaultTypeName": {
-            "label": {
-              "normal": "Neuer Typ",
-              "beginner": "Neuer Typ"
-            }
-          },
-          "newVersion": {
-            "label": {
-              "normal": "Neue Version",
-              "beginner": "Neue Version"
-            }
-          },
-          "defaultVersion": {
-            "label": {
-              "normal": "Standard",
-              "beginner": "Standard"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "name": {
-              "label": {
-                "normal": "Nach Name filtern",
-                "beginner": "Klicken, um Artefakte nach diesem Namen zu filtern"
-              },
-              "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design",
-              "hotkey": "Ctrl+N",
-              "hide": {
-                "label": {
-                  "normal": "Namensfilter ausblenden",
-                  "beginner": "Klicken, um den Namensfilter auszublenden"
-                },
-                "hotkey": "Ctrl+Shift+N"
-              }
-            },
-            "band": {
-              "label": {
-                "normal": "Filterleiste",
-                "beginner": "Filterleiste ein- oder ausblenden"
-              },
-              "hotkey": "Ctrl+F"
-            },
-            "search": {
-              "label": {
-                "normal": "Suchfilter",
-                "beginner": "Nach bestimmten Filtern suchen"
-              },
-              "hotkey": "Ctrl+Shift+F"
-            }
-          },
-          "pieces": {
-            "label": {
-              "normal": "Teile",
-              "beginner": "Typen und Entwuerfe in diesem Kit"
-            }
-          },
-          "designs": {
-            "label": {
-              "normal": "Entwuerfe",
-              "beginner": "Entwuerfe in diesem Kit"
-            },
-            "manual": "manuals/semio/kit#designs",
-            "tutorial": "hello-semio/model-design",
-            "multipleSelected": {
-              "label": {
-                "normal": "Mehrere ausgewählt",
-                "beginner": "Mehrere ausgewählt"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "types": {
-            "label": {
-              "normal": "Typen",
-              "beginner": "Typen in diesem Kit"
-            },
-            "manual": "manuals/semio/kit#types",
-            "tutorial": "hello-semio/model-brick-set",
-            "multipleSelected": {
-              "label": {
-                "normal": "Mehrere ausgewählt",
-                "beginner": "Mehrere ausgewählt"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "sortByArtifact": {
-            "label": {
-              "normal": "Nach Artefakt sortieren",
-              "beginner": "Artefakte nach ihrem Namen sortieren"
-            },
-            "hotkey": "Ctrl+Shift+A"
-          },
-          "sortByKind": {
-            "label": {
-              "normal": "Nach Art sortieren",
-              "beginner": "Artefakte nach ihrem Typ sortieren (Entwurf, Typ, Qualitaet, usw.)"
-            },
-            "hotkey": "Ctrl+Shift+K"
-          },
-          "sortByCreatedAt": {
-            "label": {
-              "normal": "Nach Erstellungsdatum sortieren",
-              "beginner": "Artefakte nach ihrem Erstellungsdatum sortieren"
-            },
-            "hotkey": "Ctrl+Shift+C"
-          },
-          "sortByUpdatedAt": {
-            "label": {
-              "normal": "Nach Aenderungsdatum sortieren",
-              "beginner": "Artefakte nach ihrem letzten Aenderungsdatum sortieren"
-            },
-            "hotkey": "Ctrl+Shift+U"
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showDesigns": {
-              "label": {
-                "normal": "Entwuerfe anzeigen",
-                "beginner": "Klicken, um alle Entwuerfe in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
-            },
-            "createDesign": {
-              "label": {
-                "normal": "Entwurf erstellen",
-                "beginner": "Klicken, um einen neuen Entwurf in diesem Kit zu erstellen"
-              },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
-            },
-            "showTypes": {
-              "label": {
-                "normal": "Typen anzeigen",
-                "beginner": "Klicken, um alle Typen in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "createType": {
-              "label": {
-                "normal": "Typ erstellen",
-                "beginner": "Klicken, um einen neuen Typ in diesem Kit zu erstellen"
-              },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "showQualities": {
-              "label": {
-                "normal": "Qualitaeten anzeigen",
-                "beginner": "Klicken, um alle Qualitaeten in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#qualities",
-              "tutorial": "getting-started/intro#quality"
-            },
-            "createQuality": {
-              "label": {
-                "normal": "Qualitaet erstellen",
-                "beginner": "Klicken, um eine neue Qualitaetsdefinition in diesem Kit zu erstellen"
-              },
-              "manual": "manuals/semio/kit#qualities",
-              "tutorial": "getting-started/intro#quality"
-            },
-            "showPorts": {
-              "label": {
-                "normal": "Schnittstellen anzeigen",
-                "beginner": "Klicken, um alle Schnittstellen in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#ports",
-              "tutorial": "getting-started/intro#port"
-            },
-            "createPort": {
-              "label": {
-                "normal": "Schnittstelle erstellen",
-                "beginner": "Klicken, um eine neue Schnittstellendefinition in diesem Kit zu erstellen"
-              },
-              "manual": "manuals/semio/kit#ports",
-              "tutorial": "getting-started/intro#port"
-            },
-            "showFiles": {
-              "label": {
-                "normal": "Dateien anzeigen",
-                "beginner": "Klicken, um alle Dateien in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#files",
-              "tutorial": "getting-started/intro#files"
-            },
-            "createFile": {
-              "label": {
-                "normal": "Datei erstellen",
-                "beginner": "Klicken, um eine neue Datei zu diesem Kit hinzuzufuegen"
-              },
-              "manual": "manuals/semio/kit#files",
-              "tutorial": "getting-started/intro#files"
-            },
-            "showFolders": {
-              "label": {
-                "normal": "Ordner anzeigen",
-                "beginner": "Klicken, um alle Ordner in diesem Kit anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
-            },
-            "createFolder": {
-              "label": {
-                "normal": "Ordner erstellen",
-                "beginner": "Klicken, um einen neuen Ordner in diesem Kit zu erstellen"
-              },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
-            },
-            "reset": {
-              "label": {
-                "normal": "Zuruecksetzen",
-                "beginner": "Klicken, um das Kit auf den urspruenglichen Zustand zurueckzusetzen"
-              }
-            },
-            "showAuthors": {
-              "label": {
-                "normal": "Autoren anzeigen",
-                "beginner": "Klicken, um alle Autoren dieses Kits anzuzeigen"
-              },
-              "manual": "manuals/semio/kit#authors",
-              "tutorial": "getting-started/intro#authors"
-            },
-            "createAuthor": {
-              "label": {
-                "normal": "Autor erstellen",
-                "beginner": "Klicken, um einen neuen Autor zu diesem Kit hinzuzufuegen"
-              },
-              "manual": "manuals/semio/kit#authors",
-              "tutorial": "getting-started/intro#authors"
-            },
-            "hideKind": {
-              "label": {
-                "normal": "Ausblenden",
-                "beginner": "Klicken, um diese Artefaktkategorie auszublenden"
-              }
-            },
-            "createArtifact": {
-              "label": {
-                "normal": "Erstellen",
-                "beginner": "Klicken, um ein neues Artefakt dieses Typs zu erstellen"
-              }
-            },
-            "createChild": {
-              "label": {
-                "normal": "Kind erstellen",
-                "beginner": "Ein Kindelement erstellen"
-              }
-            },
-            "showTags": {
-              "label": {
-                "normal": "Tags anzeigen",
-                "beginner": "Tags anzeigen"
-              }
-            },
-            "showConcepts": {
-              "label": {
-                "normal": "Konzepte anzeigen",
-                "beginner": "Konzepte anzeigen"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filter",
-                "beginner": "Artefakte nach Typ filtern"
-              }
-            },
-            "resetFilters": {
-              "label": {
-                "normal": "Filter Zurücksetzen",
-                "beginner": "Aktive Artefaktfilter entfernen und alle Artefaktarten anzeigen"
-              }
-            },
-            "selection": {
-              "label": {
-                "normal": "Auswahl",
-                "beginner": "Auswahlwerkzeuge"
-              }
-            },
-            "create": {
-              "label": {
-                "normal": "Erstellen",
-                "beginner": "Neue Artefakte erstellen"
-              }
-            }
-          },
-          "canvas": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "table": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "search": {
-                "label": {
-                  "normal": "Tabelle durchsuchen",
-                  "beginner": "Nach Artefakten in der Tabelle suchen"
-                },
-                "hotkey": "Ctrl+F"
-              },
-              "header": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "kind": {
-                  "label": {
-                    "normal": "Art",
-                    "beginner": "Art des Artefakts"
-                  }
-                },
-                "artifact": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "Der Name"
-                  }
-                },
-                "updatedAt": {
-                  "label": {
-                    "normal": "Aktualisiert",
-                    "beginner": "Letzte Aktualisierungszeit"
-                  }
-                },
-                "createdAt": {
-                  "label": {
-                    "normal": "Erstellt",
-                    "beginner": "Erstellungszeit"
-                  }
-                }
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagramm",
-                "beginner": "Ein kraftgerichteter Graph, der alle Kit-Artefakte und ihre Beziehungen zeigt"
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "kit": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Kit-Name",
-                      "beginner": "Der Name des Kits. Dies ist die primaere Kennung fuer Ihr Kit."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "version": {
-                    "label": {
-                      "normal": "Version",
-                      "beginner": "Die Version des Kits im semantischen Versionierungsformat (z.B. 1.0.0)."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine detaillierte Beschreibung dessen, was dieses Kit enthaelt und wie es verwendet werden sollte."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Symbol",
-                      "beginner": "Ein Icon zur Darstellung dieses Kits. Kann ein Emoji oder eine URL zu einem Bild sein."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Bild",
-                      "beginner": "URL zu einem Vorschaubild, das dieses Kit praesentiert."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "homepage": {
-                    "label": {
-                      "normal": "Homepage",
-                      "beginner": "URL zur Homepage oder Dokumentation fuer dieses Kit."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "license": {
-                    "label": {
-                      "normal": "Lizenz",
-                      "beginner": "Die Lizenz, unter der dieses Kit verteilt wird (z.B. MIT, GPL)."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  }
-                },
-                "folder": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der Anzeigename des Ordners."
-                    },
-                    "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Optionale Beschreibung, die den Zweck dieses Ordners erlaeutert."
-                    },
-                    "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
-                  }
-                },
-                "port": {
-                  "compatible": {
-                    "label": {
-                      "normal": "Kompatibel",
-                      "beginner": "Kompatibel"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Beschreibung"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  }
-                },
-                "tag": {
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Beschreibung"
-                    }
-                  }
-                },
-                "concept": {
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Beschreibung"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "notFound": {
-            "label": {
-              "normal": "Kit nicht gefunden",
-              "beginner": "Das angeforderte Kit wurde nicht gefunden"
-            },
-            "description": {
-              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
-              "beginner": "Zurueck zur Startseite und ein anderes Kit oeffnen oder ein neues erstellen."
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Kit-Einstellungen"
-            },
-            "diagram": {
-              "chargeStrength": {
-                "label": {
-                  "normal": "Ladungsstärke",
-                  "beginner": "Abstoßungskraft zwischen Knoten"
-                }
-              },
-              "linkDistance": {
-                "label": {
-                  "normal": "Verbindungsabstand",
-                  "beginner": "Zielabstand zwischen verbundenen Knoten"
-                }
-              },
-              "collideRadius": {
-                "label": {
-                  "normal": "Kollisionsradius",
-                  "beginner": "Kollisionsradius zur Vermeidung von Knotenüberlappung"
-                }
-              },
-              "centerStrength": {
-                "label": {
-                  "normal": "Zentrierungsstärke",
-                  "beginner": "Kraft, die Knoten zur Mitte zieht"
-                }
-              }
-            },
-            "theme": {
-              "label": {
-                "normal": "Thema",
-                "beginner": "Farbthema"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Sprache",
-                "beginner": "Oberflächensprache"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Gerät",
-                "beginner": "Eingabegerätetyp"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Expertise",
-                "beginner": "Benutzerexpertise-Stufe"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Modus",
-                "beginner": "Benutzer- oder Entwicklermodus"
-              }
-            }
-          },
-          "port": {
-            "allCompatible": {
-              "label": {
-                "normal": "Alle kompatibel",
-                "beginner": "Alle kompatibel"
-              }
-            },
-            "compatiblePorts": {
-              "label": {
-                "normal": "Kompatible Schnittstellen",
-                "beginner": "Kompatible Schnittstellen"
-              }
-            },
-            "descriptionPlaceholder": {
-              "label": {
-                "label": {
-                  "normal": "Label",
-                  "beginner": "Label"
-                }
-              }
-            }
-          },
-          "ports": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Mehrere ausgewählt",
-                "beginner": "Mehrere ausgewählt"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "{{count}} Schnittstellen",
-                "beginner": "{{count}} Schnittstellen ausgewaehlt"
-              }
-            }
-          },
-          "qualities": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "files": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "authors": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "tag": {
-            "descriptionPlaceholder": {
-              "label": {
-                "normal": "Beschreiben Sie diesen Tag...",
-                "beginner": "Beschreiben Sie diesen Tag..."
-              }
-            }
-          },
-          "tags": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Mehrere Tags ausgewaehlt",
-                "beginner": "Mehrere Tags ausgewaehlt"
-              }
-            },
-            "multipleTitle": "{{count}} Tags"
-          },
-          "concept": {
-            "descriptionPlaceholder": {
-              "label": {
-                "normal": "Beschreiben Sie dieses Konzept...",
-                "beginner": "Beschreiben Sie dieses Konzept..."
-              }
-            }
-          },
-          "concepts": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Mehrere Konzepte ausgewaehlt",
-                "beginner": "Mehrere Konzepte ausgewaehlt"
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Titel",
-              "beginner": "Titel"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            },
-            "select": {
-              "mode": {
-                "additive": {
-                  "label": {
-                    "normal": "Additiv",
-                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
-                  }
-                },
-                "subtractive": {
-                  "label": {
-                    "normal": "Subtraktiv",
-                    "beginner": "Subtraktiver Auswahlmodus - aus vorhandener Auswahl entfernen"
-                  }
-                },
-                "intersect": {
-                  "label": {
-                    "normal": "Schnittmenge",
-                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
-                  }
-                }
-              },
-              "shape": {
-                "rectangular": {
-                  "label": {
-                    "normal": "Rechteckig",
-                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
-                  }
-                },
-                "lasso": {
-                  "label": {
-                    "normal": "Lasso",
-                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiform-Form"
-                  }
-                }
-              },
-              "navigation": {
-                "hand": {
-                  "label": {
-                    "normal": "Hand",
-                    "beginner": "Hand-Werkzeug - schwenken und navigieren Sie auf der Leinwand"
-                  }
-                }
-              }
-            }
-          },
-          "folder": {
-            "label": {
-              "normal": "Ordner",
-              "beginner": "Ordner"
-            },
-            "descriptionPlaceholder": {
-              "label": {
-                "label": {
-                  "normal": "Describe this folder...",
-                  "beginner": "Describe this folder..."
-                }
-              }
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Kit-Chat"
-            }
-          }
-        },
-        "port": {
-          "label": {
-            "normal": "Schnittstelle",
-            "beginner": "Schnittstelle"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neue Schnittstelle",
-              "beginner": "Neue Schnittstelle"
-            }
-          }
-        },
-        "tag": {
-          "label": {
-            "normal": "Tag",
-            "beginner": "Tag"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neuer Tag",
-              "beginner": "Neuer Tag"
-            }
-          }
-        },
-        "concept": {
-          "label": {
-            "normal": "Konzept",
-            "beginner": "Konzept"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neues Konzept",
-              "beginner": "Neues Konzept"
-            }
-          }
-        },
-        "folder": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neuer Ordner",
-              "beginner": "Neuer Ordner"
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Beschreiben Sie diesen Ordner...",
-                "beginner": "Beschreiben Sie diesen Ordner..."
-              }
-            }
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Entwurf",
-            "beginner": "Entwurf"
-          },
-          "properties": {
-            "label": {
-              "normal": "Entwurfs-Eigenschaften",
-              "beginner": "Entwurfs-Eigenschaften"
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neuer Entwurf",
-              "beginner": "Neuer Entwurf"
-            }
-          },
-          "windowLibrary": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "scene": {
-              "label": {
-                "normal": "Szenen-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von 3D-Szenen-Fenstern zum Betrachten Ihres Entwurfs im 3D-Raum."
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagramm-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von 2D-Diagramm-Fenstern zum Betrachten der Verbindungstopologie."
-              }
-            },
-            "table": {
-              "label": {
-                "normal": "Tabellen-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von Tabellen-Fenstern zum Betrachten von Entwurfsdaten in tabellarischer Form."
-              }
-            }
-          },
-          "diagram": {
-            "clusterMenu": {
-              "cluster": {
-                "label": {
-                  "normal": "Gruppieren",
-                  "beginner": "Ausgewählte Entwurfsteile zu einem einzelnen Cluster gruppieren"
-                }
-              }
-            },
-            "expandMenu": {
-              "expand": {
-                "label": {
-                  "normal": "Erweitern",
-                  "beginner": "Das Entwurfsteil erweitern, um seine internen Komponenten anzuzeigen"
-                }
-              }
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "normal": "Beschreiben Sie diesen Entwurf...",
-              "beginner": "Beschreiben Sie diesen Entwurf..."
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "normal": "???",
-              "beginner": "???"
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "normal": "https://example.com/image.png",
-              "beginner": "https://example.com/image.png"
-            }
-          },
-          "variantPlaceholder": {
-            "label": {
-              "normal": "z.B. klein, mittel, gross",
-              "beginner": "z.B. klein, mittel, gross"
-            }
-          },
-          "viewPlaceholder": {
-            "label": {
-              "normal": "z.B. vorne, seite, oben",
-              "beginner": "z.B. vorne, seite, oben"
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "variant": {
-            "label": {
-              "normal": "Variante",
-              "beginner": "Variante"
-            }
-          },
-          "view": {
-            "label": {
-              "normal": "Ansicht",
-              "beginner": "Ansicht"
-            }
-          },
-          "location": {
-            "label": {
-              "normal": "Standort",
-              "beginner": "Standort"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Autoren",
-              "beginner": "Autoren"
-            }
-          },
-          "author": {
-            "label": {
-              "normal": "Autor",
-              "beginner": "Autor"
-            }
-          },
-          "attributes": {
-            "label": {
-              "normal": "Attribute",
-              "beginner": "Attribute"
-            }
-          },
-          "attribute": {
-            "label": {
-              "normal": "Attribut",
-              "beginner": "Attribut"
-            }
-          },
-          "attributeValuePlaceholder": {
-            "label": {
-              "normal": "Wert...",
-              "beginner": "Wert..."
-            }
-          },
-          "attributeUnitPlaceholder": {
-            "label": {
-              "normal": "Einheit...",
-              "beginner": "Einheit..."
-            }
-          },
-          "attributeDefinitionPlaceholder": {
-            "label": {
-              "normal": "Definition oder URL...",
-              "beginner": "Definition oder URL..."
-            }
-          },
-          "piece": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "id": {
-              "label": {
-                "normal": "ID",
-                "beginner": "ID"
-              }
-            },
-            "type": {
-              "label": {
-                "normal": "Typ",
-                "beginner": "Typ"
-              }
-            },
-            "center": {
-              "label": {
-                "normal": "Zentrum",
-                "beginner": "Zentrum"
-              }
-            },
-            "plane": {
-              "label": {
-                "normal": "Ebene",
-                "beginner": "Ebene"
-              }
-            },
-            "planeOrigin": {
-              "label": {
-                "normal": "Ursprung",
-                "beginner": "Ursprung"
-              }
-            },
-            "planeXAxis": {
-              "label": {
-                "normal": "X-Achse",
-                "beginner": "X-Achse"
-              }
-            },
-            "planeYAxis": {
-              "label": {
-                "normal": "Y-Achse",
-                "beginner": "Y-Achse"
-              }
-            },
-            "mixedSelectionMessage": {
-              "label": {
-                "normal": "Mehrere Teile mit unterschiedlichen Werten ausgewaehlt",
-                "beginner": "Mehrere Teile mit unterschiedlichen Werten ausgewaehlt"
-              }
-            },
-            "connectedPieceInfo": {
-              "label": {
-                "normal": "Dieses Teil ist mit einem anderen Teil verbunden. Seine Position und Ausrichtung werden aus der Verbindung berechnet. Um es unabhängig zu machen, klicken Sie auf 'Teil fixieren'.",
-                "beginner": "Dieses Teil ist mit einem anderen Teil verbunden. Seine Position und Ausrichtung werden aus der Verbindung berechnet. Um es unabhängig zu machen, klicken Sie auf 'Teil fixieren'."
-              }
-            },
-            "fixPiece": {
-              "label": {
-                "normal": "Teil fixieren",
-                "beginner": "Teil fixieren"
-              }
-            }
-          },
-          "connection": {
-            "label": {},
-            "rotation": {
-              "label": {
-                "normal": "Rotation",
-                "beginner": "Rotation"
-              }
-            },
-            "turn": {
-              "label": {
-                "normal": "Drehung",
-                "beginner": "Drehung"
-              }
-            },
-            "tilt": {
-              "label": {
-                "normal": "Neigung",
-                "beginner": "Neigung"
-              }
-            },
-            "plane": {
-              "label": {
-                "normal": "Ebene",
-                "beginner": "Ebene"
-              }
-            },
-            "translation": {
-              "label": {
-                "normal": "Verschiebung",
-                "beginner": "Verschiebung"
-              }
-            },
-            "orientation": {
-              "label": {
-                "normal": "Ausrichtung",
-                "beginner": "Ausrichtung"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagramm",
-                "beginner": "Diagramm"
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "design": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der Name des Entwurfs. Dies ist die primaere Kennung fuer Ihre Komposition."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine detaillierte Beschreibung dessen, was dieser Entwurf darstellt und wie er verwendet werden sollte."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Symbol",
-                      "beginner": "URL oder Pfad zu einem Icon, das diesen Entwurf in Listen und Vorschauen darstellt."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Bild",
-                      "beginner": "URL oder Pfad zu einem Vorschaubild, das diesen Entwurf praesentiert."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "variant": {
-                    "label": {
-                      "normal": "Variante",
-                      "beginner": "Eine Variantenkennung fuer verschiedene Versionen oder Konfigurationen dieses Entwurfs."
-                    },
-                    "manual": "design#variants",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "view": {
-                    "label": {
-                      "normal": "Ansicht",
-                      "beginner": "Die Ansichtsperspektive oder Kamerawinkel zur Anzeige dieses Entwurfs."
-                    },
-                    "manual": "design#views",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer alle Abmessungen in diesem Entwurf (z.B. mm, cm, m)."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "createdAt": {
-                    "label": {
-                      "normal": "Erstellt am",
-                      "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf erstmals erstellt wurde."
-                    }
-                  },
-                  "updatedAt": {
-                    "label": {
-                      "normal": "Aktualisiert am",
-                      "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf zuletzt geaendert wurde."
-                    }
-                  },
-                  "pieceCount": {
-                    "label": {
-                      "normal": "Bauteile",
-                      "beginner": "Die Gesamtanzahl der Bauteile in diesem Entwurf."
-                    }
-                  },
-                  "connectionCount": {
-                    "label": {
-                      "normal": "Verbindungen",
-                      "beginner": "Die Gesamtanzahl der Verbindungen in diesem Entwurf."
-                    }
-                  }
-                },
-                "location": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "longitude": {
-                    "label": {
-                      "normal": "Laengengrad",
-                      "beginner": "Die Ost-West-Position dieses Entwurfsstandorts in Dezimalgrad."
-                    },
-                    "manual": "design#location"
-                  },
-                  "latitude": {
-                    "label": {
-                      "normal": "Breitengrad",
-                      "beginner": "Die Nord-Sued-Position dieses Entwurfsstandorts in Dezimalgrad."
-                    },
-                    "manual": "design#location"
-                  }
-                },
-                "authors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der vollstaendige Name der Person, die zu diesem Entwurf beigetragen hat."
-                    },
-                    "manual": "design#authors"
-                  },
-                  "email": {
-                    "label": {
-                      "normal": "E-Mail",
-                      "beginner": "Kontakt-E-Mail-Adresse fuer diesen Autor."
-                    },
-                    "manual": "design#authors"
-                  }
-                },
-                "attributes": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Die eindeutige Kennung fuer dieses Attribut im Kebab-Case-Format (z.B. 'material.type')."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "value": {
-                    "label": {
-                      "normal": "Wert",
-                      "beginner": "Der Wert, der mit diesem Attribut verbunden ist. Leer lassen, um als Kategorie-Flag zu verwenden."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer den Wert dieses Attributs (z.B. mm, kg, °C)."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "definition": {
-                    "label": {
-                      "normal": "Definition",
-                      "beginner": "Eine URL oder ein Text, der definiert, was dieses Attribut bedeutet und wie es interpretiert werden sollte."
-                    },
-                    "manual": "design#attributes"
-                  }
-                },
-                "piece": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "properties": {
-                    "label": {
-                      "normal": "Bauteil",
-                      "beginner": "Eigenschaften des ausgewaehlten Bauteils."
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "Bauteile",
-                      "beginner": "Eigenschaften der ausgewaehlten Bauteile."
-                    }
-                  },
-                  "pieceInfo": {
-                    "label": {
-                      "normal": "Bauteil",
-                      "beginner": "Grundinformationen ueber das Bauteil."
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Ein optionaler Name für dieses Bauteil zur Identifikation innerhalb des Entwurfs."
-                    }
-                  },
-                  "namePlaceholder": {
-                    "label": {
-                      "normal": "Bauteilname eingeben...",
-                      "beginner": "Bauteilname eingeben..."
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung des Zwecks oder der Rolle dieses Bauteils im Entwurf."
-                    }
-                  },
-                  "descriptionPlaceholder": {
-                    "label": {
-                      "normal": "Bauteilbeschreibung eingeben...",
-                      "beginner": "Bauteilbeschreibung eingeben..."
-                    }
-                  },
-                  "scale": {
-                    "label": {
-                      "normal": "Skalierung",
-                      "beginner": "Der Skalierungsfaktor für dieses Bauteil. Standard ist 1.0."
-                    }
-                  },
-                  "color": {
-                    "label": {
-                      "normal": "Farbe",
-                      "beginner": "Eine optionale Farbüberschreibung für dieses Bauteil (z.B. #FF0000)."
-                    }
-                  },
-                  "colorPlaceholder": {
-                    "label": {
-                      "normal": "Farbe eingeben...",
-                      "beginner": "Farbe eingeben..."
-                    }
-                  },
-                  "attributes": {
-                    "label": {
-                      "normal": "Attribute",
-                      "beginner": "Benutzerdefinierte Schlüssel-Wert-Attribute für dieses Bauteil."
-                    },
-                    "name": {
-                      "label": {
-                        "normal": "Name",
-                        "beginner": "Der Schlüsselbezeichner für dieses Attribut."
-                      }
-                    },
-                    "value": {
-                      "label": {
-                        "normal": "Wert",
-                        "beginner": "Der Wert für dieses Attribut."
-                      }
-                    },
-                    "unit": {
-                      "label": {
-                        "normal": "Einheit",
-                        "beginner": "Die Maßeinheit für dieses Attribut."
-                      }
-                    },
-                    "definition": {
-                      "label": {
-                        "normal": "Definition",
-                        "beginner": "Eine URL oder ein Text, der dieses Attribut definiert."
-                      }
-                    }
-                  },
-                  "attribute": {
-                    "label": {
-                      "normal": "Attribut",
-                      "beginner": "Ein benutzerdefiniertes Attribut dieses Bauteils."
-                    }
-                  },
-                  "center": {
-                    "label": {
-                      "normal": "Zentrum",
-                      "beginner": "Die Zentrumsposition des Bauteils im 2D-Diagramm-Layout."
-                    },
-                    "manual": "design#diagram",
-                    "tutorial": "metabolism/thinking-about-the-diagram",
-                    "x": {
-                      "label": {
-                        "normal": "U",
-                        "beginner": "U-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum."
-                      },
-                      "manual": "design#diagram",
-                      "tutorial": "metabolism/thinking-about-the-diagram"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "V",
-                        "beginner": "V-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum."
-                      },
-                      "manual": "design#diagram",
-                      "tutorial": "metabolism/thinking-about-the-diagram"
-                    }
-                  },
-                  "plane": {
-                    "label": {
-                      "normal": "Ebene",
-                      "beginner": "Die 3D-Platzierungsebene fuer dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces",
-                    "origin": {
-                      "label": {
-                        "normal": "Ursprung",
-                        "beginner": "Ursprung"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "Ursprung X",
-                          "beginner": "X-Koordinate des Ursprungs"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "Ursprung Y",
-                          "beginner": "Y-Koordinate des Ursprungs"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "Ursprung Z",
-                          "beginner": "Z-Koordinate des Ursprungs"
-                        }
-                      }
-                    },
-                    "xaxis": {
-                      "label": {
-                        "normal": "X-Achse",
-                        "beginner": "X-Achse"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "X-Achse X",
-                          "beginner": "X-Komponente der X-Achse"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "X-Achse Y",
-                          "beginner": "Y-Komponente der X-Achse"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "X-Achse Z",
-                          "beginner": "Z-Komponente der X-Achse"
-                        }
-                      }
-                    },
-                    "yaxis": {
-                      "label": {
-                        "normal": "Y-Achse",
-                        "beginner": "Y-Achse"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "Y-Achse X",
-                          "beginner": "X-Komponente der Y-Achse"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "Y-Achse Y",
-                          "beginner": "Y-Komponente der Y-Achse"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "Y-Achse Z",
-                          "beginner": "Z-Komponente der Y-Achse"
-                        }
-                      }
-                    }
-                  }
-                },
-                "connection": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "properties": {
-                    "label": {
-                      "normal": "Verbindung",
-                      "beginner": "Eigenschaften der ausgewaehlten Verbindung."
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "Verbindungen",
-                      "beginner": "Eigenschaften der ausgewaehlten Verbindungen."
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung des Zwecks dieser Verbindung."
-                    }
-                  },
-                  "descriptionPlaceholder": {
-                    "label": {
-                      "normal": "Verbindungsbeschreibung eingeben...",
-                      "beginner": "Verbindungsbeschreibung eingeben..."
-                    }
-                  },
-                  "multipleEditing": {
-                    "label": {
-                      "normal": "{{count}} Verbindungen werden gleichzeitig bearbeitet",
-                      "beginner": "{{count}} Verbindungen werden gleichzeitig bearbeitet"
-                    }
-                  },
-                  "connecting": {
-                    "label": {
-                      "normal": "Verbindend",
-                      "beginner": "Verbindend"
-                    }
-                  },
-                  "connectingPieceId": {
-                    "label": {
-                      "normal": "Verbindendes Stück",
-                      "beginner": "Verbindendes Stück"
-                    }
-                  },
-                  "connectingPortId": {
-                    "label": {
-                      "normal": "Verbindender Anschluss",
-                      "beginner": "Verbindender Anschluss"
-                    }
-                  },
-                  "connectingDesignPieceId": {
-                    "label": {
-                      "normal": "Verbindendes Designstück",
-                      "beginner": "Verbindendes Designstück"
-                    }
-                  },
-                  "connected": {
-                    "label": {
-                      "normal": "Verbunden",
-                      "beginner": "Verbunden"
-                    }
-                  },
-                  "connectedPieceId": {
-                    "label": {
-                      "normal": "Verbundenes Stück",
-                      "beginner": "Verbundenes Stück"
-                    }
-                  },
-                  "connectedPortId": {
-                    "label": {
-                      "normal": "Verbundener Anschluss",
-                      "beginner": "Verbundener Anschluss"
-                    }
-                  },
-                  "connectedDesignPieceId": {
-                    "label": {
-                      "normal": "Verbundenes Designstück",
-                      "beginner": "Verbundenes Designstück"
-                    }
-                  },
-                  "gap": {
-                    "label": {
-                      "normal": "Abstand",
-                      "beginner": "Abstand"
-                    }
-                  },
-                  "shift": {
-                    "label": {
-                      "normal": "Verschiebung",
-                      "beginner": "Verschiebung"
-                    }
-                  },
-                  "rise": {
-                    "label": {
-                      "normal": "Anstieg",
-                      "beginner": "Anstieg"
-                    }
-                  },
-                  "rotation": {
-                    "label": {
-                      "normal": "Rotation",
-                      "beginner": "Rotation"
-                    }
-                  },
-                  "turn": {
-                    "label": {
-                      "normal": "Drehung",
-                      "beginner": "Drehung"
-                    }
-                  },
-                  "tilt": {
-                    "label": {
-                      "normal": "Neigung",
-                      "beginner": "Neigung"
-                    }
-                  },
-                  "x": {
-                    "label": {
-                      "normal": "Diagramm X-Versatz",
-                      "beginner": "X-Versatz im Diagramm"
-                    }
-                  },
-                  "y": {
-                    "label": {
-                      "normal": "Diagramm Y-Versatz",
-                      "beginner": "Y-Versatz im Diagramm"
-                    }
-                  },
-                  "u": {
-                    "label": {
-                      "normal": "X-Versatz",
-                      "beginner": "X-Versatz"
-                    }
-                  },
-                  "v": {
-                    "label": {
-                      "normal": "Y-Versatz",
-                      "beginner": "Y-Versatz"
-                    }
-                  }
-                },
-                "connector": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "Connector-ID",
-                      "beginner": "Die eindeutige Kennung des Connectors"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der Name dieses Connectors."
-                    }
-                  },
-                  "t": {
-                    "label": {
-                      "normal": "T",
-                      "beginner": "Der Parameter t entlang der Kurve des Typs für diesen Connector."
-                    }
-                  },
-                  "position": {
-                    "label": {
-                      "normal": "Position",
-                      "beginner": "Die Position des Connectors"
-                    }
-                  },
-                  "direction": {
-                    "label": {
-                      "normal": "Richtung",
-                      "beginner": "Der Richtungsvektor des Connectors"
-                    }
-                  },
-                  "mandatory": {
-                    "label": {
-                      "normal": "Erforderlich",
-                      "beginner": "Ob dieser Connector verbunden sein muss"
-                    }
-                  },
-                  "port": {
-                    "label": {
-                      "normal": "Familie",
-                      "beginner": "Die Connectorfamilie für Kompatibilitätsprüfung"
-                    }
-                  },
-                  "compatiblePort": {
-                    "label": {
-                      "normal": "Kompatible Familie",
-                      "beginner": "Die Familien, mit denen dieser Connector kompatibel ist"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung des Connectors"
-                    }
-                  },
-                  "attribute": {
-                    "label": {
-                      "normal": "Attribut",
-                      "beginner": "Benutzerdefinierte Attribute des Connectors"
-                    }
-                  },
-                  "notFound": {
-                    "label": {
-                      "normal": "Nicht gefunden",
-                      "beginner": "Nicht gefunden"
-                    }
-                  }
-                }
-              },
-              "parentConnection": {
-                "label": {
-                  "normal": "Elternverbindung",
-                  "beginner": "Elternverbindung"
-                }
-              },
-              "parentConnections": {
-                "label": {
-                  "normal": "Elternverbindungen",
-                  "beginner": "Elternverbindungen"
-                }
-              }
-            },
-            "hud": {
-              "overview": {
-                "label": {
-                  "normal": "HUD-Uebersicht",
-                  "beginner": "HUD-Uebersicht"
-                }
-              },
-              "selection": {
-                "pieces": {
-                  "label": {
-                    "normal": "Ausgewaehlte Bauteile",
-                    "beginner": "Ausgewaehlte Bauteile"
-                  }
-                },
-                "connections": {
-                  "label": {
-                    "normal": "Ausgewaehlte Verbindungen",
-                    "beginner": "Ausgewaehlte Verbindungen"
-                  }
-                },
-                "connector": {
-                  "label": {
-                    "normal": "Connector ausgewaehlt",
-                    "beginner": "Connector ausgewaehlt"
-                  }
-                }
-              }
-            },
-            "stats": {
-              "overview": {
-                "label": {
-                  "normal": "Statistik",
-                  "beginner": "Statistik"
-                }
-              },
-              "pieces": {
-                "label": {
-                  "normal": "Bauteile gesamt",
-                  "beginner": "Bauteile gesamt"
-                }
-              },
-              "connections": {
-                "label": {
-                  "normal": "Verbindungen gesamt",
-                  "beginner": "Verbindungen gesamt"
-                }
-              },
-              "windows": {
-                "label": {
-                  "normal": "Fensterlayout geladen",
-                  "beginner": "Fensterlayout geladen"
-                }
-              }
-            },
-            "workbench": {
-              "types": {
-                "addPiece": {
-                  "label": {
-                    "normal": "Bauteil hinzufügen",
-                    "beginner": "Ein neues Bauteil dieses Typs zum Entwurf hinzufügen"
-                  }
-                },
-                "duplicateType": {
-                  "label": {
-                    "normal": "Typ duplizieren",
-                    "beginner": "Eine Kopie dieses Typs erstellen"
-                  }
-                }
-              },
-              "designs": {
-                "addPiece": {
-                  "label": {
-                    "normal": "Bauteil hinzufügen",
-                    "beginner": "Ein neues Bauteil dieses Entwurfs zum aktuellen Entwurf hinzufügen"
-                  }
-                }
-              }
-            }
-          },
-          "gridSize": {
-            "label": {
-              "normal": "Rastergröße",
-              "beginner": "Rastergröße"
-            }
-          },
-          "proximityConnectDistance": {
-            "label": {
-              "normal": "Näherungsverbindungs-Abstand",
-              "beginner": "Näherungsverbindungs-Abstand"
-            }
-          },
-          "selectOnlyPiecesOrConnections": {
-            "label": {
-              "normal": "Nur Bauteile oder Verbindungen auswählen",
-              "beginner": "Nur Bauteile oder Verbindungen auswählen"
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Titel",
-              "beginner": "Titel"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            },
-            "select": {
-              "label": {
-                "normal": "Auswählen",
-                "beginner": "Auswahlwerkzeug"
-              },
-              "mode": {
-                "additive": {
-                  "label": {
-                    "normal": "Additiv",
-                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
-                  }
-                },
-                "subtractive": {
-                  "label": {
-                    "normal": "Subtraktiv",
-                    "beginner": "Subtraktiver Auswahlmodus - von vorhandener Auswahl entfernen"
-                  }
-                },
-                "intersect": {
-                  "label": {
-                    "normal": "Schnittmenge",
-                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
-                  }
-                }
-              },
-              "shape": {
-                "rectangular": {
-                  "label": {
-                    "normal": "Rechteckig",
-                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
-                  }
-                },
-                "lasso": {
-                  "label": {
-                    "normal": "Lasso",
-                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiformform"
-                  }
-                }
-              },
-              "navigation": {
-                "hand": {
-                  "label": {
-                    "normal": "Hand",
-                    "beginner": "Hand-Werkzeug - die Leinwand schwenken und navigieren"
-                  }
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rechteck-Lasso",
-                  "beginner": "Rechteck fuer Lasso-Auswahl ziehen"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freiform-Lasso",
-                  "beginner": "Freihand-Lasso-Pfad zeichnen"
-                }
-              }
-            }
-          },
-          "windows": {
-            "label": {
-              "normal": "Fenster",
-              "beginner": "Fenster"
-            }
-          },
-          "appTitle": {
-            "label": {
-              "normal": "App Title",
-              "beginner": "App Title"
-            }
-          },
-          "canvas": {
-            "diagram": {
-              "label": {
-                "normal": "Diagramm",
-                "beginner": "Diagramm"
-              },
-              "pieceNode": {
-                "label": {
-                  "normal": "Bauteil",
-                  "beginner": "Diagramm-Bauteilknoten"
-                }
-              }
-            },
-            "label": {
-              "normal": "Leinwand",
-              "beginner": "Leinwand"
-            }
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showPieces": {
-              "label": {
-                "normal": "Bauteile",
-                "beginner": "Sichtbarkeit von Bauteilen umschalten"
-              }
-            },
-            "showConnections": {
-              "label": {
-                "normal": "Verbindungen",
-                "beginner": "Sichtbarkeit von Verbindungen zwischen Bauteilen umschalten"
-              }
-            },
-            "showPorts": {
-              "label": {
-                "normal": "Anschlüsse",
-                "beginner": "Sichtbarkeit von Anschlüssen an Bauteilen umschalten"
-              }
-            },
-            "addPiece": {
-              "label": {
-                "normal": "Bauteil hinzufügen",
-                "beginner": "Ein neues Bauteil zum Entwurf hinzufügen"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filter",
-                "beginner": "Design-Elemente nach Sichtbarkeit filtern"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Entwurfs-Einstellungen"
-            },
-            "theme": {
-              "label": {
-                "normal": "Design",
-                "beginner": "Wählen Sie das Farbschema für die Anwendung"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Sprache",
-                "beginner": "Wählen Sie die Sprache für die Anwendungsoberfläche"
-              },
-              "placeholder": {
-                "label": {
-                  "normal": "Sprache wählen...",
-                  "beginner": "Wählen Sie die Sprache, in der die Anwendung angezeigt wird"
-                }
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Gerät",
-                "beginner": "Wählen Sie das Eingabegerät"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Erfahrung",
-                "beginner": "Wählen Sie Ihr Erfahrungsniveau"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Modus",
-                "beginner": "Wählen Sie den Benutzeroberflächenmodus"
-              }
-            },
-            "panel": {
-              "label": {
-                "normal": "Panels",
-                "beginner": "Panel-Sichtbarkeit konfigurieren"
-              },
-              "toolbar": {
-                "label": {
-                  "normal": "Toolbar anzeigen",
-                  "beginner": "Toolbar-Panel umschalten"
-                }
-              },
-              "workbench": {
-                "label": {
-                  "normal": "Werkbank anzeigen",
-                  "beginner": "Werkbank-Panel umschalten"
-                }
-              },
-              "windows": {
-                "label": {
-                  "normal": "Fenster anzeigen",
-                  "beginner": "Fenster-Panel umschalten"
-                }
-              },
-              "details": {
-                "label": {
-                  "normal": "Details anzeigen",
-                  "beginner": "Details-Panel umschalten"
-                }
-              }
-            }
-          }
-        },
-        "docs": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noHeadings": {
-            "label": {
-              "normal": "Keine Ueberschriften gefunden",
-              "beginner": "Keine Ueberschriften gefunden"
-            }
-          },
-          "docs": {
-            "label": {
-              "normal": "Dokumentation",
-              "beginner": "Dokumentation"
-            }
-          },
-          "overview": {
-            "label": {
-              "normal": "Übersicht",
-              "beginner": "Übersicht"
-            }
-          },
-          "page": {
-            "label": {
-              "normal": "Seite",
-              "beginner": "Seite"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Einstellungen"
-            },
-            "theme": {
-              "label": {
-                "normal": "Design",
-                "beginner": "Farbschema waehlen"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Sprache",
-                "beginner": "Sprache auswaehlen"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Geraet",
-                "beginner": "Eingabegeraet waehlen"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Erfahrung",
-                "beginner": "Erfahrungsniveau waehlen"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Modus",
-                "beginner": "Benutzer- oder Entwicklermodus waehlen"
-              }
-            }
-          },
-          "navigation": {
-            "previous": {
-              "label": {
-                "normal": "Zurück",
-                "beginner": "Zur vorherigen Seite navigieren"
-              }
-            },
-            "next": {
-              "label": {
-                "normal": "Weiter",
-                "beginner": "Zur nächsten Seite navigieren"
-              }
-            }
-          }
-        },
-        "feedback": {
-          "label": {
-            "normal": "Feedback",
-            "beginner": "Feedback"
-          },
-          "form": {
-            "label": {
-              "normal": "Feedback-Formular",
-              "beginner": "Teilen Sie Ihre Gedanken mit uns"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Art",
-              "beginner": "Welche Art von Feedback möchten Sie geben?"
-            }
-          },
-          "bugReport": {
-            "label": {
-              "normal": "Fehlerbericht",
-              "beginner": "Einen Fehler oder ein Problem melden"
-            }
-          },
-          "featureIdea": {
-            "label": {
-              "normal": "Feature-Idee",
-              "beginner": "Ein neues Feature oder eine Verbesserung vorschlagen"
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Titel",
-              "beginner": "Eine kurze Zusammenfassung Ihres Feedbacks"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "Kurze Zusammenfassung eingeben...",
-                "beginner": "Kurze Zusammenfassung eingeben..."
-              }
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Beschreibung",
-              "beginner": "Detaillierte Beschreibung Ihres Feedbacks"
-            },
-            "bugPlaceholder": {
-              "label": {
-                "normal": "Beschreiben Sie, was passiert ist und wie es reproduziert werden kann...",
-                "beginner": "Beschreiben Sie, was passiert ist und wie es reproduziert werden kann..."
-              }
-            },
-            "ideaPlaceholder": {
-              "label": {
-                "normal": "Beschreiben Sie Ihre Feature-Idee oder Verbesserung...",
-                "beginner": "Beschreiben Sie Ihre Feature-Idee oder Verbesserung..."
-              }
-            }
-          },
-          "app": {
-            "label": {
-              "normal": "App",
-              "beginner": "In welcher App ist der Fehler aufgetreten?"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "App auswählen...",
-                "beginner": "App auswählen..."
-              }
-            },
-            "options": {
-              "home": {
-                "label": {
-                  "normal": "Home",
-                  "beginner": "Home"
-                }
-              },
-              "kit": {
-                "label": {
-                  "normal": "Kit",
-                  "beginner": "Kit"
-                }
-              },
-              "design": {
-                "label": {
-                  "normal": "Design",
-                  "beginner": "Design"
-                }
-              },
-              "type": {
-                "label": {
-                  "normal": "Typ",
-                  "beginner": "Typ"
-                }
-              },
-              "quality": {
-                "label": {
-                  "normal": "Qualität",
-                  "beginner": "Qualität"
-                }
-              },
-              "docs": {
-                "label": {
-                  "normal": "Dokumentation",
-                  "beginner": "Dokumentation"
-                }
-              },
-              "feedback": {
-                "label": {
-                  "normal": "Feedback",
-                  "beginner": "Feedback"
-                }
-              }
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Ihr Name",
-              "beginner": "Optional: Ihr Name für Rückmeldungen"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "Name (optional)",
-                "beginner": "Name (optional)"
-              }
-            }
-          },
-          "email": {
-            "label": {
-              "normal": "E-Mail",
-              "beginner": "Optional: Ihre E-Mail für Rückmeldungen"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "email@beispiel.de (optional)",
-                "beginner": "email@beispiel.de (optional)"
-              }
-            }
-          },
-          "submit": {
-            "label": {
-              "normal": "Feedback senden",
-              "beginner": "Klicken, um Ihr Feedback zu senden"
-            }
-          },
-          "submitting": {
-            "label": {
-              "normal": "Wird gesendet...",
-              "beginner": "Ihr Feedback wird gesendet"
-            }
-          },
-          "success": {
-            "title": {
-              "label": {
-                "normal": "Vielen Dank!",
-                "beginner": "Vielen Dank!"
-              }
-            },
-            "message": {
-              "label": {
-                "normal": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio.",
-                "beginner": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio."
-              }
-            },
-            "sendAnother": {
-              "label": {
-                "normal": "Weiteres Feedback senden",
-                "beginner": "Klicken, um ein weiteres Feedback zu senden"
-              }
-            }
-          },
-          "error": {
-            "title": {
-              "label": {
-                "normal": "Fehler",
-                "beginner": "Fehler"
-              }
-            },
-            "message": {
-              "label": {
-                "normal": "Beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-                "beginner": "Beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
-              }
-            },
-            "retry": {
-              "label": {
-                "normal": "Erneut versuchen",
-                "beginner": "Klicken, um erneut zu versuchen"
-              }
-            }
-          },
-          "validation": {
-            "titleRequired": {
-              "label": {
-                "normal": "Titel ist erforderlich",
-                "beginner": "Titel ist erforderlich"
-              }
-            },
-            "descriptionRequired": {
-              "label": {
-                "normal": "Beschreibung ist erforderlich",
-                "beginner": "Beschreibung ist erforderlich"
-              }
-            },
-            "appRequired": {
-              "label": {
-                "normal": "Bitte wählen Sie die App aus, in der der Fehler aufgetreten ist",
-                "beginner": "Bitte wählen Sie die App aus, in der der Fehler aufgetreten ist"
-              }
-            },
-            "invalidEmail": {
-              "label": {
-                "normal": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
-                "beginner": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
-              }
-            }
-          },
-          "toolbar": {
-            "send": {
-              "label": {
-                "normal": "Senden",
-                "beginner": "Feedback senden"
-              }
-            }
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Typ",
-            "beginner": "Typ"
-          },
-          "properties": {
-            "label": {
-              "normal": "Typ-Eigenschaften",
-              "beginner": "Typ-Eigenschaften"
-            }
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showConnectors": {
-              "label": {
-                "normal": "Connectors",
-                "beginner": "Connectors"
-              }
-            },
-            "showModels": {
-              "label": {
-                "normal": "Darstellungen",
-                "beginner": "Darstellungen"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filter",
-                "beginner": "Typ-Elemente nach Sichtbarkeit filtern"
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neuer Typ",
-              "beginner": "Neuer Typ"
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Beschreiben Sie diesen Typ...",
-                "beginner": "Beschreiben Sie diesen Typ..."
-              }
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "??",
-                "beginner": "??"
-              }
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "https://example.com/image.png",
-                "beginner": "https://example.com/image.png"
-              }
-            }
-          },
-          "variantPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "z.B. gross, klein",
-                "beginner": "z.B. gross, klein"
-              }
-            }
-          },
-          "parentPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Elterntyp auswaehlen...",
-                "beginner": "Elterntyp auswaehlen..."
-              }
-            }
-          },
-          "variant": {
-            "label": {
-              "normal": "Variante",
-              "beginner": "Variante"
-            }
-          },
-          "models": {
-            "label": {
-              "normal": "Darstellungen",
-              "beginner": "Verschiedene 3D-Modelle, Bilder und visuelle Darstellungen fuer diesen Typ verwalten."
-            },
-            "manual": "type#models",
-            "tutorial": "hello-semio/model-brick-set#models"
-          },
-          "model": {
-            "label": {
-              "normal": "Darstellung",
-              "beginner": "Darstellung"
-            }
-          },
-          "modelDescriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Beschreiben Sie diese Darstellung...",
-                "beginner": "Beschreiben Sie diese Darstellung..."
-              }
-            }
-          },
-          "modelTagsPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "tag1, tag2, tag3",
-                "beginner": "tag1, tag2, tag3"
-              }
-            }
-          },
-          "connectors": {
-            "label": {
-              "normal": "Connectors",
-              "beginner": "Verbindungsports fuer diesen Typ verwalten. Connectors definieren, wo und wie Bauteile verbunden werden koennen."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connector": {
-            "label": {
-              "normal": "Connector",
-              "beginner": "Connector"
-            },
-            "properties": {
-              "label": {
-                "normal": "Connector-Eigenschaften",
-                "beginner": "Connector-Eigenschaften"
-              }
-            },
-            "title": {
-              "label": {
-                "normal": "Titel",
-                "beginner": "Titel"
-              }
-            }
-          },
-          "connectorPortPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "z.B. elektrisch, mechanisch",
-                "beginner": "z.B. elektrisch, mechanisch"
-              }
-            }
-          },
-          "connectorNamePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Name hinzufuegen",
-                "beginner": "Name hinzufuegen"
-              }
-            }
-          },
-          "connectorDescriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Beschreiben Sie diesen Connector...",
-                "beginner": "Beschreiben Sie diesen Connector..."
-              }
-            }
-          },
-          "connectorPoint": {
-            "label": {
-              "normal": "Punkt",
-              "beginner": "Die 3D-Position des Connectors in lokalen Koordinaten."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connectorDirection": {
-            "label": {
-              "normal": "Richtung",
-              "beginner": "Der Auswaerts-Richtungsvektor des Connectors in lokalen Koordinaten."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connectorCompatiblePortsPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "familie1, familie2",
-                "beginner": "familie1, familie2"
-              }
-            }
-          },
-          "connectorNotFound": {
-            "label": {
-              "normal": "Connector nicht gefunden",
-              "beginner": "Connector nicht gefunden"
-            }
-          },
-          "connectorsNotFound": {
-            "label": {
-              "normal": "Keine Connectors gefunden",
-              "beginner": "Keine Connectors gefunden"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Autoren",
-              "beginner": "Autoren"
-            }
-          },
-          "author": {
-            "label": {
-              "normal": "Autor",
-              "beginner": "Autor"
-            }
-          },
-          "attributes": {
-            "label": {
-              "normal": "Attribute",
-              "beginner": "Attribute"
-            }
-          },
-          "attribute": {
-            "label": {
-              "normal": "Attribut",
-              "beginner": "Attribut"
-            }
-          },
-          "attributeValuePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Wert...",
-                "beginner": "Wert..."
-              }
-            }
-          },
-          "attributeDefinitionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Definition oder URL...",
-                "beginner": "Definition oder URL..."
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "type": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der Name des Typs. Dies ist die primaere Kennung fuer die Komponente."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine detaillierte Beschreibung dessen, was dieser Typ darstellt und wie er verwendet werden sollte."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Symbol",
-                      "beginner": "Ein Icon zur visuellen Darstellung dieses Typs. Kann ein Emoji, Iconname oder URL zu einem Bild sein."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Bild",
-                      "beginner": "URL zu einem Bild, das diesen Typ darstellt. Wird fuer Vorschauen und visuelle Identifikation verwendet."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer diesen Typ (z.B. mm, m, ft)."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "parent": {
-                    "label": {
-                      "normal": "Elterntyp",
-                      "beginner": "Der Elterntyp, von dem dieser Typ erbt"
-                    }
-                  },
-                  "abstract": {
-                    "label": {
-                      "normal": "Abstrakt",
-                      "beginner": "Ob dies ein abstrakter Typ ist"
-                    }
-                  }
-                },
-                "models": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "url": {
-                    "label": {
-                      "normal": "URL",
-                      "beginner": "URL zu einem 3D-Modell, Bild oder einer anderen Ressource, die diesen Typ darstellt."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung dessen, was diese Darstellung zeigt oder wie sie verwendet werden sollte."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "tags": {
-                    "label": {
-                      "normal": "Tags",
-                      "beginner": "Tags zum Kategorisieren und Filtern von Darstellungen (z.B. 'detailliert', 'vereinfacht', 'lod1')."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "connectors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "port": {
-                    "label": {
-                      "normal": "Familie",
-                      "beginner": "Connector-Familienname. Connectors derselben Familie koennen miteinander verbunden werden."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "compatiblePorts": {
-                    "label": {
-                      "normal": "Kompatible Familien",
-                      "beginner": "Liste anderer Connector-Familien, mit denen dieser Connector verbunden werden kann. Leer lassen, um alle Familien zuzulassen."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung dessen, was dieser Connector darstellt und wie er fuer Verbindungen verwendet werden sollte."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "t": {
-                    "label": {
-                      "normal": "T",
-                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "ring": {
-                    "label": {
-                      "normal": "Ring",
-                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "direction": {
-                    "label": {
-                      "normal": "",
-                      "beginner": ""
-                    },
-                    "x": {
-                      "label": {
-                        "normal": "X",
-                        "beginner": "X-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "Y",
-                        "beginner": "Y-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "z": {
-                      "label": {
-                        "normal": "Z",
-                        "beginner": "Z-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Ein optionaler Name fuer diesen Connector."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "mandatory": {
-                    "label": {
-                      "normal": "Pflichtfeld",
-                      "beginner": "Ob dieser Connector fuer eine gueltige Verbindung zwingend erforderlich ist."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "maxChildren": {
-                    "label": {
-                      "normal": "Max. Kinder",
-                      "beginner": "Die maximale Anzahl von Verbindungen, die an diesem Connector erlaubt sind."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "point": {
-                    "label": {
-                      "normal": "",
-                      "beginner": ""
-                    },
-                    "x": {
-                      "label": {
-                        "normal": "X",
-                        "beginner": "X-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "Y",
-                        "beginner": "Y-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "z": {
-                      "label": {
-                        "normal": "Z",
-                        "beginner": "Z-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    }
-                  }
-                },
-                "connector": {
-                  "ring": {
-                    "label": {
-                      "normal": "Ring",
-                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "attributes": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Der Name des Attributs im Kebab-Case (z.B. 'material.holz', 'kosten.arbeit')."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "value": {
-                    "label": {
-                      "normal": "Wert",
-                      "beginner": "Der Wert des Attributs. Leer lassen fuer boolesche Attribute (Anwesenheit = wahr)."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "definition": {
-                    "label": {
-                      "normal": "Definition",
-                      "beginner": "Optionale Definition oder Dokumentation fuer dieses Attribut. Kann Text oder eine URL sein."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "authors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Vollstaendiger Name des Autors oder Mitwirkenden."
-                    },
-                    "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "email": {
-                    "label": {
-                      "normal": "E-Mail",
-                      "beginner": "E-Mail-Adresse zur Kontaktaufnahme mit dem Autor."
-                    },
-                    "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                }
-              }
-            }
-          },
-          "footer": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "someAction": {
-              "label": {
-                "normal": "Some Action",
-                "beginner": "Some Action"
-              }
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            },
-            "select": {
-              "normal": {
-                "label": {
-                  "normal": "Normal",
-                  "beginner": "Normale Auswahl"
-                }
-              },
-              "additive": {
-                "label": {
-                  "normal": "Additiv",
-                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
-                }
-              },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtraktiv",
-                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
-                }
-              },
-              "intersect": {
-                "label": {
-                  "normal": "Schnittmenge",
-                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rechteckig",
-                  "beginner": "Rechteckige Lasso-Auswahl"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freihand",
-                  "beginner": "Freihand-Lasso-Auswahl"
-                }
-              }
-            },
-            "hand": {
-              "label": {
-                "normal": "Hand",
-                "beginner": "Hand-Werkzeug - Schwenken und Navigieren"
-              }
-            },
-            "connector": {
-              "label": {
-                "normal": "Konnektor",
-                "beginner": "Konnektor-Erstellungswerkzeug"
-              }
-            },
-            "selection": {
-              "label": {
-                "normal": "Auswahl",
-                "beginner": "Auswahlwerkzeug"
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Titel",
-              "beginner": "Titel"
-            }
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "description": {
-            "label": {
-              "normal": "Messqualitaeten definieren",
-              "beginner": "Messqualitaeten definieren"
-            }
-          },
-          "tools": {
-            "select": {
-              "additive": {
-                "label": {
-                  "normal": "Additiv",
-                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
-                }
-              },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtraktiv",
-                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
-                }
-              },
-              "intersect": {
-                "label": {
-                  "normal": "Schnittmenge",
-                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
-                }
-              }
-            },
-            "selection": {
-              "label": {
-                "normal": "Auswahl",
-                "beginner": "Auswahlwerkzeug"
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "Neue Qualitaet",
-              "beginner": "Neue Qualitaet"
-            }
-          },
-          "numericFunctions": {
-            "label": {
-              "normal": "Numerische Funktionen",
-              "beginner": "Numerische Funktionen"
-            }
-          },
-          "add": {
-            "label": {
-              "normal": "Addieren",
-              "beginner": "Addieren"
-            }
-          },
-          "subtract": {
-            "label": {
-              "normal": "Subtrahieren",
-              "beginner": "Subtrahieren"
-            }
-          },
-          "multiply": {
-            "label": {
-              "normal": "Multiplizieren",
-              "beginner": "Multiplizieren"
-            }
-          },
-          "divide": {
-            "label": {
-              "normal": "Dividieren",
-              "beginner": "Dividieren"
-            }
-          },
-          "branchingFunctions": {
-            "label": {
-              "normal": "Verzweigungsfunktionen",
-              "beginner": "Verzweigungsfunktionen"
-            }
-          },
-          "if": {
-            "label": {
-              "normal": "Wenn",
-              "beginner": "Wenn"
-            }
-          },
-          "switch": {
-            "label": {
-              "normal": "Schalter",
-              "beginner": "Schalter"
-            }
-          },
-          "dataStructures": {
-            "label": {
-              "normal": "Datenstrukturen",
-              "beginner": "Datenstrukturen"
-            }
-          },
-          "list": {
-            "label": {
-              "normal": "Liste",
-              "beginner": "Liste"
-            }
-          },
-          "dictionary": {
-            "label": {
-              "normal": "Woerterbuch",
-              "beginner": "Woerterbuch"
-            }
-          },
-          "noQualities": {
-            "label": {
-              "normal": "Keine Qualitaeten definiert",
-              "beginner": "Keine Qualitaeten definiert"
-            }
-          },
-          "key": {
-            "label": {
-              "normal": "Schluessel",
-              "beginner": "Der eindeutige Bezeichner fuer diese Qualitaet"
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Der Anzeigename fuer diese Qualitaet"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Art",
-              "beginner": "Der Entitaetstyp, auf den diese Qualitaet anwendbar ist"
-            }
-          },
-          "formula": {
-            "label": {
-              "normal": "Formel",
-              "beginner": "Die Formel zur Berechnung dieser Qualitaet"
-            }
-          },
-          "formulaPlaceholder": "Formel eingeben...",
-          "defaultValue": {
-            "label": {
-              "normal": "Standardwert",
-              "beginner": "Der Standardwert fuer diese Qualitaet"
-            }
-          },
-          "defaultSiUnit": {
-            "label": {
-              "normal": "Standard-SI-Einheit",
-              "beginner": "Die Standardeinheit im SI-System"
-            }
-          },
-          "defaultImperialUnit": {
-            "label": {
-              "normal": "Standard-Imperial-Einheit",
-              "beginner": "Die Standardeinheit im Imperial-System"
-            }
-          },
-          "min": {
-            "label": {
-              "normal": "Minimum",
-              "beginner": "Der minimal zulaessige Wert"
-            }
-          },
-          "isMinExcluded": {
-            "label": {
-              "normal": "Minimum ausschliessen",
-              "beginner": "Ob der Minimalwert ausgeschlossen ist"
-            }
-          },
-          "max": {
-            "label": {
-              "normal": "Maximum",
-              "beginner": "Der maximal zulaessige Wert"
-            }
-          },
-          "isMaxExcluded": {
-            "label": {
-              "normal": "Maximum ausschliessen",
-              "beginner": "Ob der Maximalwert ausgeschlossen ist"
-            }
-          },
-          "canScale": {
-            "label": {
-              "normal": "Kann skalieren",
-              "beginner": "Ob diese Qualitaet mit der Teilegroesse skaliert"
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "key": {
-                "label": {
-                  "normal": "Schlüssel",
-                  "beginner": "Die eindeutige Schlüsselkennung der Qualität"
-                }
-              },
-              "name": {
-                "label": {
-                  "normal": "Name",
-                  "beginner": "Der Anzeigename der Qualität"
-                }
-              },
-              "description": {
-                "label": {
-                  "normal": "Beschreibung",
-                  "beginner": "Eine Beschreibung dessen, was diese Qualität misst"
-                }
-              },
-              "formula": {
-                "label": {
-                  "normal": "Formel",
-                  "beginner": "Die Formel zur Berechnung dieser Qualität"
-                }
-              },
-              "defaultSiUnit": {
-                "label": {
-                  "normal": "Standard-SI-Einheit",
-                  "beginner": "Die Standardeinheit im SI-System"
-                }
-              },
-              "defaultImperialUnit": {
-                "label": {
-                  "normal": "Standard-Imperial-Einheit",
-                  "beginner": "Die Standardeinheit im imperialen System"
-                }
-              },
-              "kind": {
-                "label": {
-                  "normal": "Art",
-                  "beginner": "Der Entitätstyp, auf den diese Qualität anwendbar ist"
-                }
-              },
-              "canScale": {
-                "label": {
-                  "normal": "Skalierbar",
-                  "beginner": "Ob diese Qualität mit der Teilgröße skaliert"
-                }
-              },
-              "defaultValue": {
-                "label": {
-                  "normal": "Standardwert",
-                  "beginner": "Der Standardwert für diese Qualität"
-                }
-              },
-              "min": {
-                "label": {
-                  "normal": "Minimum",
-                  "beginner": "Der minimal zulässige Wert"
-                }
-              },
-              "max": {
-                "label": {
-                  "normal": "Maximum",
-                  "beginner": "Der maximal zulässige Wert"
-                }
-              },
-              "isMinExcluded": {
-                "label": {
-                  "normal": "Minimum ausgeschlossen",
-                  "beginner": "Ob der Minimalwert exklusiv ist"
-                }
-              },
-              "isMaxExcluded": {
-                "label": {
-                  "normal": "Maximum ausgeschlossen",
-                  "beginner": "Ob der Maximalwert exklusiv ist"
-                }
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Qualität",
-              "beginner": "Qualität"
-            }
-          },
-          "functions": {
-            "label": {
-              "normal": "Funktionen",
-              "beginner": "Funktionen"
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualitäten",
-              "beginner": "Qualitäten"
-            }
-          },
-          "toolbar": {
-            "view": {
-              "label": {
-                "normal": "Ansicht",
-                "beginner": "Ansichtsoptionen"
-              }
-            },
-            "actions": {
-              "label": {
-                "normal": "Aktionen",
-                "beginner": "Qualitätsaktionen"
-              }
-            }
-          },
-          "workbench": {
-            "nodes": {
-              "label": {
-                "normal": "Knoten",
-                "beginner": "Qualitätsformel-Knoten"
-              }
-            },
-            "qualities": {
-              "label": {
-                "normal": "Qualitäten",
-                "beginner": "Verfügbare Qualitäten"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Qualitäts-Einstellungen"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Qualitäts-Chat"
-            }
-          }
+          "normal": "Details",
+          "beginner": "Details"
         }
       },
       "settings": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "theme": {
-          "label": {
-            "normal": "Design",
-            "beginner": "Farbschema für die Oberfläche"
-          },
-          "system": {
-            "label": {
-              "normal": "System",
-              "beginner": "System"
-            }
-          },
-          "light": {
-            "label": {
-              "normal": "Hell",
-              "beginner": "Hell"
-            }
-          },
-          "dark": {
-            "label": {
-              "normal": "Dunkel",
-              "beginner": "Dunkel"
-            }
-          }
-        },
-        "device": {
-          "label": {
-            "normal": "Geraet",
-            "beginner": "Layoutmodus für die Oberfläche"
-          },
-          "desktop": {
-            "label": {
-              "normal": "Desktop",
-              "beginner": "Desktop"
-            }
-          },
-          "tablet": {
-            "label": {
-              "normal": "Tablet",
-              "beginner": "Tablet"
-            }
-          }
-        },
-        "mode": {
-          "label": {
-            "normal": "Modus",
-            "beginner": "Oberflächenmodus"
-          },
-          "user": {
-            "label": {
-              "normal": "Benutzer",
-              "beginner": "Benutzer"
-            }
-          },
-          "dev": {
-            "label": {
-              "normal": "Dev",
-              "beginner": "Dev"
-            }
-          }
-        },
-        "expertise": {
-          "label": {
-            "normal": "Erfahrung",
-            "beginner": "Ihre Erfahrungsstufe"
-          },
-          "beginner": {
-            "label": {
-              "normal": "Anfänger",
-              "beginner": "Detaillierte Hilfe und Tutorials anzeigen"
-            }
-          },
-          "normal": {
-            "label": {
-              "normal": "Normal",
-              "beginner": "Standard-Tooltips anzeigen"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Experte",
-              "beginner": "Experte"
-            }
-          }
-        },
-        "language": {
-          "label": {
-            "normal": "Sprache",
-            "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Sprache waehlen...",
-              "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
-            }
-          },
-          "de": {
-            "label": {
-              "normal": "Deutsch",
-              "beginner": "Deutsch"
-            }
-          },
-          "en": {
-            "label": {
-              "normal": "Englisch",
-              "beginner": "Englisch"
-            }
-          }
+          "normal": "Einstellungen",
+          "beginner": "Einstellungen"
         }
       },
-      "tool": {
+      "chat": {
         "label": {
-          "normal": "Werkzeuge",
-          "beginner": "Werkzeuge"
-        },
-        "selection": {
-          "label": {
-            "normal": "Auswahl",
-            "beginner": "Auswahl"
-          },
-          "normal": {
-            "label": {
-              "normal": "Normale Auswahl",
-              "beginner": "Klicken Sie, um jeweils ein Element auszuwählen"
-            },
-            "manual": "selection",
-            "hotkey": "1"
-          },
-          "additive": {
-            "label": {
-              "normal": "Zur Auswahl hinzufügen",
-              "beginner": "Klicken Sie, um Elemente zur Auswahl hinzuzufügen, ohne Strg zu halten"
-            },
-            "manual": "selection",
-            "hotkey": "2"
-          },
-          "subtractive": {
-            "label": {
-              "normal": "Von Auswahl entfernen",
-              "beginner": "Klicken Sie, um Elemente aus der Auswahl zu entfernen, ohne Alt zu halten"
-            },
-            "manual": "selection",
-            "hotkey": "3"
-          }
+          "normal": "Chat",
+          "beginner": "Chat"
         }
-      },
-      "sort": {
-        "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "ascending": {
-          "label": {
-            "normal": "Aufsteigend",
-            "beginner": "Aufsteigend"
-          }
-        },
-        "descending": {
-          "label": {
-            "normal": "Absteigend",
-            "beginner": "Absteigend"
-          }
-        }
-      },
-      "docs": {
-        "navigation": {
-          "previous": {
-            "label": {
-              "normal": "Previous",
-              "beginner": "Previous"
-            }
-          },
-          "next": {
-            "label": {
-              "normal": "Next",
-              "beginner": "Next"
-            }
-          }
-        }
-      },
-      "toolbar": {
-        "label": {
-          "normal": "Werkzeugleiste",
-          "beginner": "Werkzeugleiste"
-        },
-        "group": {
-          "hand": {
-            "label": {
-              "normal": "Hand",
-              "beginner": "Hand"
-            }
-          },
-          "selection": {
-            "label": {
-              "normal": "Auswahl",
-              "beginner": "Auswahl"
-            }
-          },
-          "lasso": {
-            "label": {
-              "normal": "Lasso",
-              "beginner": "Lasso"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "Filter",
-              "beginner": "Filter"
-            }
-          },
-          "open": {
-            "label": {
-              "normal": "Öffnen",
-              "beginner": "Öffnen"
-            }
-          },
-          "create": {
-            "label": {
-              "normal": "Erstellen",
-              "beginner": "Erstellen"
-            }
-          },
-          "view": {
-            "label": {
-              "normal": "Ansicht",
-              "beginner": "Ansicht"
-            }
-          },
-          "actions": {
-            "label": {
-              "normal": "Aktionen",
-              "beginner": "Aktionen"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Einstellungen"
-            }
-          }
-        },
-        "parent": {
-          "selection": {
-            "label": {
-              "normal": "Auswahl",
-              "beginner": "Auswahl"
-            }
-          },
-          "hand": {
-            "label": {
-              "normal": "Hand",
-              "beginner": "Hand"
-            }
-          },
-          "lasso": {
-            "label": {
-              "normal": "Lasso",
-              "beginner": "Lasso"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "Filter",
-              "beginner": "Filter"
-            }
-          },
-          "open": {
-            "label": {
-              "normal": "Öffnen",
-              "beginner": "Öffnen"
-            }
-          },
-          "create": {
-            "label": {
-              "normal": "Erstellen",
-              "beginner": "Erstellen"
-            }
-          },
-          "view": {
-            "label": {
-              "normal": "Ansicht",
-              "beginner": "Ansicht"
-            }
-          },
-          "actions": {
-            "label": {
-              "normal": "Aktionen",
-              "beginner": "Aktionen"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Einstellungen"
-            }
-          }
-        }
-      },
-      "tutorial": {
-        "controls": {
-          "stop": {
-            "label": {
-              "normal": "Stop",
-              "beginner": "Stop"
-            }
-          },
-          "previous": {
-            "label": {
-              "normal": "Previous",
-              "beginner": "Previous"
-            }
-          },
-          "playPause": {
-            "label": {
-              "normal": "Play Pause",
-              "beginner": "Play Pause"
-            }
-          },
-          "next": {
-            "label": {
-              "normal": "Next",
-              "beginner": "Next"
-            }
-          }
-        }
-      },
-      "recording": {
-        "controls": {
-          "playPause": {
-            "label": {
-              "normal": "Play Pause",
-              "beginner": "Play Pause"
-            }
-          },
-          "stop": {
-            "label": {
-              "normal": "Stop",
-              "beginner": "Stop"
-            }
-          }
-        }
-      }
-    }
-  },
-  "tooltip": {
-    "manual": {
-      "label": {
-        "normal": "Handbuch",
-        "beginner": "Handbuch"
       }
     },
-    "tutorial": {
-      "label": {
-        "normal": "Tutorial",
-        "beginner": "Tutorial"
-      }
-    }
+    toolbar: {
+      group: {
+        parent: {
+          label: {
+            normal: "Werkzeug",
+            beginner: "Werkzeug",
+          },
+        },
+      },
+      parent: uiToolbarParentDe,
+    },
+    common: {
+      mixedValues: {
+        label: {
+          normal: "Gemischt",
+          beginner: "Gemischt",
+        },
+      },
+    },
+    docs: {
+      navigation: {
+        previous: {
+          label: {
+            normal: "Zurueck",
+            beginner: "Zurueck",
+          },
+        },
+        next: {
+          label: {
+            normal: "Weiter",
+            beginner: "Weiter",
+          },
+        },
+      },
+    },
+    ring: {
+      demo: {
+        label: {
+          normal: "Ring",
+          beginner: "Ring",
+        },
+      },
+    },
+    stepper: {
+      demo: {
+        label: {
+          normal: "Wert",
+          beginner: "Wert",
+        },
+      },
+    },
+    engagement: {
+      command: {
+        label: {
+          normal: "Befehl",
+          beginner: "Befehl eingeben oder aus der Liste waehlen",
+        },
+      },
+      commandActive: {
+        label: {
+          normal: "Befehl oder Wert",
+          beginner: "Befehl oder Zahl fuer den aktuellen Schritt",
+        },
+      },
+      commands: {
+        label: {
+          normal: "Befehle",
+          beginner: "Schnellbefehle fuer den aktuellen Schritt",
+        },
+      },
+      suggestions: {
+        label: {
+          normal: "Vorschlaege",
+          beginner: "Liste der passenden Befehle oeffnen",
+        },
+      },
+      noMatches: {
+        label: {
+          normal: "Keine Treffer",
+          beginner: "Keine passenden Befehle",
+        },
+      },
+    },
   },
-  "settings": {
+  settings: {
     "layout": {
       "normal": {
         "label": {
@@ -5709,6 +1294,12 @@ const elementUiTranslationBundles = {
           "normal": "Mobile layout",
           "beginner": "Use the mobile layout optimized for small screens."
         }
+      }
+    },
+    "compact": {
+      "label": {
+        "normal": "Kompakt",
+        "beginner": "Schaltflaechen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen"
       }
     },
     "mode": {
@@ -5757,5006 +1348,245 @@ const elementUiTranslationBundles = {
         }
       }
     }
-  }
-}
-`),
+  },
+  "tooltip": {
+    "manual": {
+      "label": {
+        "normal": "Handbuch",
+        "beginner": "Handbuch"
+      }
+    },
+    tutorial: {
+      label: {
+        normal: "Tutorial",
+        beginner: "Tutorial",
+      },
+    },
+  },
+} satisfies UiTranslationSchema,
   },
   en: {
-    translation: JSON.parse(String.raw`{
-  "semio": {
-    "label": {
-      "normal": "",
-      "beginner": ""
-    },
-    "file": {
-      "name": "Name",
-      "size": "Size",
-      "created": "Created",
-      "updated": "Updated"
-    },
-    "folder": {
-      "created": "Created",
-      "updated": "Updated"
-    },
-    "sketchpad": {
-      "label": {
-        "normal": "",
-        "beginner": ""
-      },
-      "navbar": {
+    translation: {
+  "ui": {
+    "nav": {
+      "back": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "back": {
-          "label": {
-            "normal": "Go back",
-            "beginner": "Click to go back, hold to see history"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Left"
-        },
-        "forward": {
-          "label": {
-            "normal": "Go forward",
-            "beginner": "Click to go forward, hold to see history"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Right"
-        },
-        "up": {
-          "label": {
-            "normal": "Go up one level",
-            "beginner": "Click to go up one level in the navigation hierarchy"
-          },
-          "manual": "navigation",
-          "tutorial": "getting-started/intro",
-          "hotkey": "Alt+Up"
-        },
-        "kits": {
-          "label": {
-            "normal": "Kits",
-            "beginner": "Click to see all kits"
-          }
-        },
-        "navigationButtons": {
-          "label": {
-            "normal": "Navigation",
-            "beginner": "Navigation buttons"
-          }
-        },
-        "docs": {
-          "label": {
-            "normal": "Documentation",
-            "beginner": "Click to view documentation"
-          },
-          "hotkey": "Ctrl+Shift+D"
-        },
-        "search": {
-          "label": {
-            "normal": "Search",
-            "beginner": "Search for content"
-          },
-          "open": {
-            "label": {
-              "normal": "Search",
-              "beginner": "Click to open search to quickly find and navigate to any element"
-            },
-            "manual": "navigation#search",
-            "tutorial": "getting-started/intro#search",
-            "hotkey": "Ctrl+K"
-          },
-          "close": {
-            "label": {
-              "normal": "Close Search",
-              "beginner": "Click to close the search dialog"
-            },
-            "manual": "navigation#search",
-            "tutorial": "getting-started/intro#search",
-            "hotkey": "Escape"
-          },
-          "title": {
-            "label": {
-              "normal": "Search",
-              "beginner": "Search"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Search for kits, designs, types, and more",
-              "beginner": "Search for kits, designs, types, and more"
-            }
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Search...",
-              "beginner": "Search..."
-            }
-          },
-          "noResults": {
-            "label": {
-              "normal": "No results found",
-              "beginner": "No results found"
-            }
-          }
-        },
-        "focus": {
-          "label": {
-            "normal": "Focus Mode",
-            "beginner": "Toggle focus mode to hide distractions"
-          },
-          "open": {
-            "label": {
-              "normal": "Focus",
-              "beginner": "Click to enter focus mode and hide distractions"
-            },
-            "manual": "navigation#focus",
-            "tutorial": "getting-started/intro#focus",
-            "hotkey": "Ctrl+Shift+F"
-          },
-          "close": {
-            "label": {
-              "normal": "Exit Focus",
-              "beginner": "Click to exit focus mode and show all UI elements"
-            },
-            "manual": "navigation#focus",
-            "tutorial": "getting-started/intro#focus",
-            "hotkey": "Escape"
-          },
-          "input": {
-            "label": {
-              "normal": "Focus Input",
-              "beginner": "Type to search for an element to focus on"
-            }
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Search for an element...",
-              "beginner": "Search for an element..."
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Focus",
-              "beginner": "Focus"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Focus on an element in the current view",
-              "beginner": "Focus on an element in the current view"
-            }
-          },
-          "other": {
-            "label": {
-              "normal": "Other",
-              "beginner": "Other"
-            }
-          }
-        },
-        "copyJsonToClipboard": {
-          "label": {
-            "normal": "Copy JSON",
-            "beginner": "Copy the current sketchpad JSON state to clipboard"
-          },
-          "hotkey": "Ctrl+Shift+J"
-        },
-        "breadcrumb": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "designs": {
-            "label": {
-              "normal": "Designs",
-              "beginner": "Designs"
-            }
-          },
-          "types": {
-            "label": {
-              "normal": "Types",
-              "beginner": "Types"
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualities",
-              "beginner": "Qualities"
-            }
-          },
-          "temporary": {
-            "label": {
-              "normal": "Temporary",
-              "beginner": "Temporary"
-            }
-          },
-          "local": {
-            "label": {
-              "normal": "Local",
-              "beginner": "Local"
-            }
-          },
-          "remote": {
-            "label": {
-              "normal": "Remote",
-              "beginner": "Remote"
-            }
-          },
-          "files": {
-            "label": {
-              "normal": "Files",
-              "beginner": "Files"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Authors",
-              "beginner": "Authors"
-            }
-          }
-        },
-        "tutorials": {
-          "label": {
-            "normal": "Tutorials",
-            "beginner": "Tutorials"
-          }
-        },
-        "tutorial": {
-          "controls": {
-            "stop": {
-              "label": {
-                "normal": "Stop Tutorial",
-                "beginner": "Click to stop the current tutorial"
-              }
-            },
-            "previous": {
-              "label": {
-                "normal": "Previous Step",
-                "beginner": "Go to the previous step in the tutorial"
-              }
-            },
-            "playPause": {
-              "label": {
-                "normal": "Play/Pause",
-                "beginner": "Play or pause the tutorial"
-              }
-            },
-            "next": {
-              "label": {
-                "normal": "Next Step",
-                "beginner": "Go to the next step in the tutorial"
-              }
-            }
-          }
-        },
-        "recording": {
-          "controls": {
-            "playPause": {
-              "label": {
-                "normal": "Play/Pause Recording",
-                "beginner": "Play or pause the recording"
-              }
-            },
-            "stop": {
-              "label": {
-                "normal": "Stop Recording",
-                "beginner": "Stop the recording and save it"
-              }
-            }
-          }
-        },
-        "createKit": {
-          "label": {
-            "normal": "Create Kit",
-            "beginner": "Click to create a new kit"
-          }
-        },
-        "createDesign": {
-          "label": {
-            "normal": "Create Design",
-            "beginner": "Click to create a new design"
-          }
-        },
-        "createChild": {
-          "label": {
-            "normal": "Create Child",
-            "beginner": "Click to create a child artifact"
-          }
-        },
-        "createType": {
-          "label": {
-            "normal": "Create Type",
-            "beginner": "Click to create a new type"
-          }
-        },
-        "createVersion": {
-          "label": {
-            "normal": "Create Version",
-            "beginner": "Click to create a new version"
-          }
-        },
-        "searchInput": {
-          "label": {
-            "normal": "Search Input",
-            "beginner": "Type to search for elements"
-          }
-        },
-        "panelToggle": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "workbench": {
-            "label": {
-              "normal": "Toggle Workbench",
-              "beginner": "Toggle the Workbench panel on the left side"
-            },
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "hud": {
-            "label": {
-              "normal": "Toggle HUD",
-              "beginner": "Toggle the HUD panel in the middle"
-            },
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "right": {
-            "label": {
-              "normal": "Toggle Right Panel",
-              "beginner": "Toggle the right panel for details and settings"
-            }
-          },
-          "tools": {
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "toolbar": {
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "stats": {
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "details": {
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Toggle Chat",
-              "beginner": "Toggle the chat panel"
-            },
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "console": {
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Toggle Settings",
-              "beginner": "Toggle the settings panel"
-            },
-            "show": {
-              "label": {
-                "normal": "Show",
-                "beginner": "Show"
-              }
-            }
-          },
-          "leftSidePanel": {
-            "label": {
-              "normal": "Toggle Left Panel",
-              "beginner": "Toggle the left side panel with workbench tabs"
-            }
-          },
-          "rightSidePanel": {
-            "label": {
-              "normal": "Toggle Right Panel",
-              "beginner": "Toggle the right side panel with details tabs"
-            }
-          },
-          "hudPanel": {
-            "label": {
-              "normal": "Toggle HUD Panel",
-              "beginner": "Toggle the center HUD panel"
-            }
-          }
-        },
-        "home": {
-          "label": {
-            "normal": "Home",
-            "beginner": "Home"
-          }
-        },
-        "kitName": {
-          "label": {
-            "normal": "Kit Name",
-            "beginner": "Kit Name"
-          }
-        },
-        "kitVersion": {
-          "label": {
-            "normal": "Kit Version",
-            "beginner": "Kit Version"
-          }
-        },
-        "name": {
-          "label": {
-            "normal": "Name",
-            "beginner": "Name"
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Design",
-            "beginner": "Design"
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Type",
-            "beginner": "Type"
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "Quality",
-            "beginner": "Quality"
-          }
-        },
-        "navigation": {
-          "label": {
-            "normal": "Navigation",
-            "beginner": "Navigation"
-          }
-        },
-        "panelToggles": {
-          "label": {
-            "normal": "Panel Toggles",
-            "beginner": "Panel Toggles"
-          }
-        },
-        "fullscreenToggle": {
-          "label": {
-            "normal": "Fullscreen Toggle",
-            "beginner": "Fullscreen Toggle"
-          }
+          "normal": "Go back",
+          "beginner": "Go back"
         }
       },
-      "panel": {
+      "forward": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "chat": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Ask anything...",
-              "beginner": "Ask anything..."
-            }
-          }
-        },
-        "settings": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "theme": {
-            "label": {
-              "normal": "Theme",
-              "beginner": "Choose the color theme for the application"
-            },
-            "dark": {
-              "label": {
-                "normal": "Dark",
-                "beginner": "Use dark color scheme"
-              }
-            },
-            "light": {
-              "label": {
-                "normal": "Light",
-                "beginner": "Use light color scheme"
-              }
-            },
-            "system": {
-              "label": {
-                "normal": "System",
-                "beginner": "Follow system theme preference"
-              }
-            }
-          },
-          "device": {
-            "label": {
-              "normal": "Device",
-              "beginner": "Choose the device mode for interaction"
-            },
-            "desktop": {
-              "label": {
-                "normal": "Desktop",
-                "beginner": "Optimized for mouse and keyboard"
-              }
-            },
-            "tablet": {
-              "label": {
-                "normal": "Tablet",
-                "beginner": "Optimized for touch interaction"
-              }
-            },
-            "mobile": {
-              "label": {
-                "normal": "Mobile",
-                "beginner": "Optimized for touch interaction on small screens"
-              }
-            }
-          },
-          "mode": {
-            "label": {
-              "normal": "Mode",
-              "beginner": "Select the user port mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)"
-            },
-            "dev": {
-              "label": {
-                "normal": "Developer",
-                "beginner": "Developer mode with advanced tools and debugging features"
-              }
-            },
-            "user": {
-              "label": {
-                "normal": "User",
-                "beginner": "Standard user mode for regular operations"
-              }
-            }
-          },
-          "expertise": {
-            "label": {
-              "normal": "Expertise",
-              "beginner": "Select your expertise level to adjust the port complexity"
-            },
-            "beginner": {
-              "label": {
-                "normal": "Beginner",
-                "beginner": "Show detailed explanations and tutorials"
-              }
-            },
-            "normal": {
-              "label": {
-                "normal": "Normal",
-                "beginner": "Show standard tooltips and help"
-              }
-            },
-            "expert": {
-              "label": {
-                "normal": "Expert",
-                "beginner": "Minimal tooltips for experienced users"
-              }
-            }
-          }
+          "normal": "Go forward",
+          "beginner": "Go forward"
         }
       },
-      "common": {
+      "up": {
         "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "selectVariant": "Select variant...",
-        "selectView": "Select view...",
-        "search": {
-          "label": {
-            "normal": "Search",
-            "beginner": "Search"
-          }
-        },
-        "mixedValues": {
-          "label": {
-            "normal": "Mixed values",
-            "beginner": "Mixed values"
-          }
-        },
-        "selectDesign": {
-          "label": {
-            "normal": "Select design",
-            "beginner": "Select design"
-          }
-        },
-        "selectType": {
-          "label": {
-            "normal": "Select type",
-            "beginner": "Select type"
-          }
-        },
-        "settings": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "theme": {
-            "label": {
-              "normal": "Theme",
-              "beginner": "Choose the color theme"
-            }
-          },
-          "layout": {
-            "label": {
-              "normal": "Layout",
-              "beginner": "Choose the layout mode"
-            }
-          },
-          "mode": {
-            "label": {
-              "normal": "Mode",
-              "beginner": "Choose the port mode"
-            }
-          },
-          "expertise": {
-            "label": {
-              "normal": "Expertise Level",
-              "beginner": "Choose your expertise level"
-            }
-          }
-        },
-        "no": {
-          "label": {
-            "normal": "No",
-            "beginner": "No"
-          }
-        },
-        "yes": {
-          "label": {
-            "normal": "Yes",
-            "beginner": "Yes"
-          }
-        },
-        "add": {
-          "label": {
-            "normal": "Add",
-            "beginner": "Add"
-          }
-        },
-        "remove": {
-          "label": {
-            "normal": "Remove",
-            "beginner": "Remove"
-          }
-        },
-        "addChild": {
-          "label": {
-            "normal": "Add Child",
-            "beginner": "Add Child"
-          }
-        },
-        "duplicateType": {
-          "label": {
-            "normal": "Duplicate Type by Hover",
-            "beginner": "Duplicate Type by Hover"
-          }
-        },
-        "addType": {
-          "label": {
-            "normal": "Add Type",
-            "beginner": "Add Type"
-          }
-        },
-        "addDesign": {
-          "label": {
-            "normal": "Add Design",
-            "beginner": "Add Design"
-          }
+          "normal": "Go up one level",
+          "beginner": "Go up one level"
+        }
+      }
+    },
+    "search": {
+      "toggle": {
+        "label": {
+          "normal": "Search",
+          "beginner": "Search"
         }
       },
-      "footer": {
+      "close": {
         "label": {
-          "normal": "",
-          "beginner": ""
+          "normal": "Close search",
+          "beginner": "Close search"
+        }
+      },
+      "title": {
+        "label": {
+          "normal": "Search",
+          "beginner": "Search"
+        }
+      },
+      "description": {
+        "label": {
+          "normal": "Search for items",
+          "beginner": "Search for items"
+        }
+      },
+      "placeholder": {
+        "label": {
+          "normal": "Search...",
+          "beginner": "Search..."
+        }
+      },
+      "empty": {
+        "label": {
+          "normal": "No results found.",
+          "beginner": "No results found."
+        }
+      }
+    },
+    find: {
+      toggle: {
+        label: {
+          normal: "Find",
+          beginner: "Find in view",
         },
-        "feedback": {
-          "label": {
-            "normal": "Feedback",
-            "beginner": "Send feedback to help improve Semio"
-          }
+      },
+      title: {
+        label: {
+          normal: "Find",
+          beginner: "Find",
+        },
+      },
+      description: {
+        label: {
+          normal: "Find items in this view",
+          beginner: "Find items in this view",
+        },
+      },
+      placeholder: {
+        label: {
+          normal: "Find...",
+          beginner: "Find...",
+        },
+      },
+      empty: {
+        label: {
+          normal: "No results found.",
+          beginner: "No results found.",
+        },
+      },
+    },
+    "panelToggle": {
+      "windows": {
+        "label": {
+          "normal": "Windows",
+          "beginner": "Windows"
+        }
+      },
+      "overview": {
+        "label": {
+          "normal": "Overview",
+          "beginner": "Overview"
+        }
+      },
+      "workbench": {
+        "label": {
+          "normal": "Workbench",
+          "beginner": "Workbench"
+        }
+      },
+      "details": {
+        "label": {
+          "normal": "Details",
+          "beginner": "Details"
         }
       },
       "settings": {
         "label": {
-          "normal": "Sketchpad",
-          "beginner": "Global sketchpad settings"
-        },
-        "theme": {
-          "label": {
-            "normal": "Theme",
-            "beginner": "Color scheme for the port"
-          },
-          "system": {
-            "label": {
-              "normal": "System",
-              "beginner": "System"
-            }
-          },
-          "light": {
-            "label": {
-              "normal": "Light",
-              "beginner": "Light"
-            }
-          },
-          "dark": {
-            "label": {
-              "normal": "Dark",
-              "beginner": "Dark"
-            }
-          }
-        },
-        "device": {
-          "label": {
-            "normal": "Device",
-            "beginner": "Device mode for the port"
-          },
-          "desktop": {
-            "label": {
-              "normal": "Desktop",
-              "beginner": "Desktop"
-            }
-          },
-          "tablet": {
-            "label": {
-              "normal": "Tablet",
-              "beginner": "Tablet"
-            }
-          }
-        },
-        "mode": {
-          "label": {
-            "normal": "Mode",
-            "beginner": "Port mode"
-          },
-          "user": {
-            "label": {
-              "normal": "User",
-              "beginner": "User"
-            }
-          },
-          "dev": {
-            "label": {
-              "normal": "Dev",
-              "beginner": "Dev"
-            }
-          }
-        },
-        "expertise": {
-          "label": {
-            "normal": "Expertise",
-            "beginner": "Your expertise level"
-          },
-          "beginner": {
-            "label": {
-              "normal": "Beginner",
-              "beginner": "Show detailed help and tutorials"
-            }
-          },
-          "normal": {
-            "label": {
-              "normal": "Normal",
-              "beginner": "Show standard tooltips"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Expert",
-              "beginner": "Expert"
-            }
-          }
-        },
-        "language": {
-          "label": {
-            "normal": "Language",
-            "beginner": "Select the language for the application port"
-          },
-          "placeholder": {
-            "label": {
-              "normal": "Select language...",
-              "beginner": "Select the port language"
-            }
-          },
-          "de": {
-            "label": {
-              "normal": "Deutsch",
-              "beginner": "Deutsch"
-            }
-          },
-          "en": {
-            "label": {
-              "normal": "English",
-              "beginner": "English"
-            }
-          }
+          "normal": "Settings",
+          "beginner": "Settings"
         }
       },
-      "tool": {
+      "chat": {
         "label": {
-          "normal": "Tools",
-          "beginner": "Tools"
-        },
-        "selection": {
-          "label": {
-            "normal": "Selection",
-            "beginner": "Selection"
-          },
-          "normal": {
-            "label": {
-              "normal": "Normal Selection",
-              "beginner": "Click to select one item at a time"
-            },
-            "manual": "selection",
-            "hotkey": "1"
-          },
-          "additive": {
-            "label": {
-              "normal": "Add to Selection",
-              "beginner": "Click to add items to your selection without holding Ctrl"
-            },
-            "manual": "selection",
-            "hotkey": "2"
-          },
-          "subtractive": {
-            "label": {
-              "normal": "Remove from Selection",
-              "beginner": "Click to remove items from your selection without holding Alt"
-            },
-            "manual": "selection",
-            "hotkey": "3"
-          }
-        }
-      },
-      "sort": {
-        "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "ascending": {
-          "label": {
-            "normal": "Ascending",
-            "beginner": "Ascending"
-          }
-        },
-        "descending": {
-          "label": {
-            "normal": "Descending",
-            "beginner": "Descending"
-          }
-        }
-      },
-      "app": {
-        "label": {
-          "normal": "",
-          "beginner": ""
-        },
-        "home": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "title": "Home",
-          "fileInput": {
-            "label": {
-              "normal": "Choose kit file",
-              "beginner": "Select a .zip kit file from your device"
-            }
-          },
-          "searchPlaceholder": {
-            "label": {
-              "normal": "Search kits...",
-              "beginner": "Search kits..."
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Kind",
-              "beginner": "Kind"
-            }
-          },
-          "lastUpdated": {
-            "label": {
-              "normal": "Last Updated",
-              "beginner": "Last Updated"
-            }
-          },
-          "created": {
-            "label": {
-              "normal": "Created",
-              "beginner": "Created"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "band": {
-              "label": {
-                "normal": "Filter band",
-                "beginner": "Toggle the filter band to show or hide filter options"
-              },
-              "hotkey": "Ctrl+F"
-            },
-            "kind": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "show": {
-                "label": {
-                  "normal": "Filter by kind",
-                  "beginner": "Filter kits by their storage type (temporary, local, or remote)"
-                },
-                "hotkey": "Ctrl+K"
-              },
-              "create": {
-                "label": {
-                  "normal": "Create new kit",
-                  "beginner": "Create a new kit of this type"
-                },
-                "hotkey": "Ctrl+Shift+K"
-              },
-              "temporary": {
-                "label": {
-                  "normal": "Show temporary kits",
-                  "beginner": "Show kits stored in browser memory (lost on refresh)"
-                },
-                "hotkey": "Ctrl+1"
-              },
-              "createTemporary": {
-                "label": {
-                  "normal": "Create temporary kit",
-                  "beginner": "Create a new temporary kit stored in browser memory"
-                },
-                "hotkey": "Ctrl+Shift+1"
-              },
-              "local": {
-                "label": {
-                  "normal": "Show local kits",
-                  "beginner": "Show kits stored locally on your device"
-                },
-                "hotkey": "Ctrl+2"
-              },
-              "createLocal": {
-                "label": {
-                  "normal": "Create local kit",
-                  "beginner": "Create a new kit stored locally on your device"
-                },
-                "hotkey": "Ctrl+Shift+2"
-              },
-              "remote": {
-                "label": {
-                  "normal": "Show remote kits",
-                  "beginner": "Show kits synced with remote storage"
-                },
-                "hotkey": "Ctrl+3"
-              },
-              "createRemote": {
-                "label": {
-                  "normal": "Create remote kit",
-                  "beginner": "Create a new kit synced with remote storage"
-                },
-                "hotkey": "Ctrl+Shift+3"
-              }
-            },
-            "name": {
-              "label": {
-                "normal": "Filter by name",
-                "beginner": "Filter kits by this specific name"
-              },
-              "hotkey": "Ctrl+N"
-            },
-            "version": {
-              "label": {
-                "normal": "Filter by version",
-                "beginner": "Filter kits to this specific version"
-              },
-              "hotkey": "Ctrl+V"
-            }
-          },
-          "search": {
-            "label": {
-              "normal": "Search",
-              "beginner": "Search for kits"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Home settings"
-            },
-            "theme": {
-              "label": {
-                "normal": "Theme",
-                "beginner": "Choose the color theme for the application"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Language",
-                "beginner": "Select the language for the application port"
-              },
-              "placeholder": {
-                "label": {
-                  "normal": "Select language...",
-                  "beginner": "Select the port language"
-                }
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Mode",
-                "beginner": "Select the user port mode"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Expertise",
-                "beginner": "Select your expertise level"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Device",
-                "beginner": "Select the input device"
-              }
-            },
-            "layout": {
-              "label": {
-                "normal": "Layout",
-                "beginner": "Choose the layout for the kit overview"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagram",
-                "beginner": "Configure the force-directed diagram layout"
-              },
-              "chargeStrength": {
-                "label": {
-                  "normal": "Charge Strength",
-                  "beginner": "Controls how strongly nodes repel each other. More negative values push nodes further apart."
-                }
-              },
-              "linkDistance": {
-                "label": {
-                  "normal": "Link Distance",
-                  "beginner": "The target distance between connected nodes. Larger values spread the diagram out."
-                }
-              },
-              "collideRadius": {
-                "label": {
-                  "normal": "Collision Radius",
-                  "beginner": "The minimum distance between node centers to prevent overlap."
-                }
-              },
-              "centerStrength": {
-                "label": {
-                  "normal": "Center Strength",
-                  "beginner": "How strongly nodes are pulled toward the center of the diagram."
-                }
-              }
-            }
-          },
-          "canvas": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "table": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "createKit": {
-                "label": {
-                  "normal": "Create kit",
-                  "beginner": "Create a new kit from the home table"
-                }
-              },
-              "createVersion": {
-                "label": {
-                  "normal": "Create version",
-                  "beginner": "Create a new kit version from the home table"
-                }
-              },
-              "hover": {
-                "label": {
-                  "normal": "Highlight kit",
-                  "beginner": "Hover a kit row to highlight it in the diagram"
-                }
-              },
-              "toggleSort": {
-                "label": {
-                  "normal": "Toggle sort",
-                  "beginner": "Change sort direction for this column"
-                }
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "kit": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "The name of the kit"
-                  }
-                },
-                "version": {
-                  "label": {
-                    "normal": "Version",
-                    "beginner": "The version of the kit"
-                  }
-                },
-                "description": {
-                  "label": {
-                    "normal": "Description",
-                    "beginner": "A description of the kit"
-                  }
-                },
-                "icon": {
-                  "label": {
-                    "normal": "Icon",
-                    "beginner": "The icon of the kit"
-                  }
-                },
-                "image": {
-                  "label": {
-                    "normal": "Image",
-                    "beginner": "The preview image of the kit"
-                  }
-                }
-              },
-              "kits": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "The name of the selected kits"
-                  }
-                },
-                "version": {
-                  "label": {
-                    "normal": "Version",
-                    "beginner": "The version of the selected kits"
-                  }
-                },
-                "description": {
-                  "label": {
-                    "normal": "Description",
-                    "beginner": "A description of the selected kits"
-                  }
-                },
-                "icon": {
-                  "label": {
-                    "normal": "Icon",
-                    "beginner": "The icon of the selected kits"
-                  }
-                },
-                "image": {
-                  "label": {
-                    "normal": "Image",
-                    "beginner": "The preview image of the selected kits"
-                  }
-                }
-              }
-            }
-          },
-          "dropzone": {
-            "label": {
-              "normal": "Drop zip file to import kit",
-              "beginner": "Drop a zip file here to import it as a new kit"
-            },
-            "description": {
-              "normal": "Only kits with .semio folder can be imported",
-              "beginner": "The zip file must contain a .semio folder with kit.db to be imported as a kit."
-            }
-          },
-          "noKits": {
-            "label": {
-              "normal": "No Kits",
-              "beginner": "No Kits"
-            }
-          },
-          "sortByName": {
-            "label": {
-              "normal": "Sort By Name",
-              "beginner": "Sort By Name"
-            }
-          },
-          "toggleRow": {
-            "label": {
-              "normal": "Toggle Row",
-              "beginner": "Toggle Row"
-            }
-          },
-          "createVersion": {
-            "label": {
-              "normal": "Create Version",
-              "beginner": "Create Version"
-            }
-          },
-          "hideKind": {
-            "label": {
-              "normal": "Hide Kind",
-              "beginner": "Hide Kind"
-            }
-          },
-          "showTemporary": {
-            "label": {
-              "normal": "Show Temporary",
-              "beginner": "Show Temporary"
-            }
-          },
-          "showLocal": {
-            "label": {
-              "normal": "Show Local",
-              "beginner": "Show Local"
-            }
-          },
-          "showRemote": {
-            "label": {
-              "normal": "Show Remote",
-              "beginner": "Show Remote"
-            }
-          },
-          "sortByType": {
-            "label": {
-              "normal": "Sort By Type",
-              "beginner": "Sort By Type"
-            }
-          },
-          "sortByUpdatedAt": {
-            "label": {
-              "normal": "Sort By Updated At",
-              "beginner": "Sort By Updated At"
-            }
-          },
-          "sortByCreatedAt": {
-            "label": {
-              "normal": "Sort By Created At",
-              "beginner": "Sort By Created At"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Chat"
-            }
-          },
-          "createKit": {
-            "label": {
-              "normal": "Create Kit",
-              "beginner": "Create Kit"
-            }
-          },
-          "createTemporary": {
-            "label": {
-              "normal": "Create Temporary",
-              "beginner": "Create Temporary"
-            }
-          },
-          "createLocal": {
-            "label": {
-              "normal": "Create Local",
-              "beginner": "Create Local"
-            }
-          },
-          "createRemote": {
-            "label": {
-              "normal": "Create Remote",
-              "beginner": "Create Remote"
-            }
-          },
-          "importKit": {
-            "label": {
-              "normal": "Import Kit",
-              "beginner": "Import Kit"
-            }
-          },
-          "toolbar": {
-            "showTemporary": {
-              "label": {
-                "normal": "Temporary",
-                "beginner": "Temporary"
-              }
-            },
-            "showLocal": {
-              "label": {
-                "normal": "Local",
-                "beginner": "Local"
-              }
-            },
-            "showRemote": {
-              "label": {
-                "normal": "Remote",
-                "beginner": "Remote"
-              }
-            },
-            "createTemporary": {
-              "label": {
-                "normal": "Temporary",
-                "beginner": "Temporary"
-              }
-            },
-            "createLocal": {
-              "label": {
-                "normal": "Local",
-                "beginner": "Local"
-              }
-            },
-            "createRemote": {
-              "label": {
-                "normal": "Remote",
-                "beginner": "Remote"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filters",
-                "beginner": "Filter kits by location"
-              }
-            },
-            "create": {
-              "label": {
-                "normal": "Create",
-                "beginner": "Create a new kit"
-              }
-            },
-            "createKit": {
-              "label": {
-                "normal": "New kit",
-                "beginner": "Create a new empty kit"
-              }
-            },
-            "openFolder": {
-              "label": {
-                "normal": "Open folder",
-                "beginner": "Open a kit from a folder on disk"
-              }
-            },
-            "openFile": {
-              "label": {
-                "normal": "Open file",
-                "beginner": "Open a kit from a .zip file"
-              }
-            },
-            "openRemote": {
-              "label": {
-                "normal": "Open remote",
-                "beginner": "Open a kit from a remote URL"
-              }
-            },
-            "createFile": {
-              "label": {
-                "normal": "New file kit",
-                "beginner": "Create a kit backed by a file"
-              }
-            },
-            "createFolder": {
-              "label": {
-                "normal": "New folder kit",
-                "beginner": "Create a kit backed by a folder"
-              }
-            },
-            "showFile": {
-              "label": {
-                "normal": "Show file kits",
-                "beginner": "Show kits stored as files"
-              }
-            },
-            "showFolder": {
-              "label": {
-                "normal": "Show folder kits",
-                "beginner": "Show kits stored in folders"
-              }
-            },
-            "exportArchive": {
-              "label": {
-                "normal": "Export archive",
-                "beginner": "Export the selected kit as a .zip archive"
-              }
-            }
-          }
-        },
-        "kit": {
-          "label": {
-            "normal": "Kit",
-            "beginner": "Kit"
-          },
-          "properties": {
-            "label": {
-              "normal": "Kit Properties",
-              "beginner": "Kit properties"
-            }
-          },
-          "notFound": {
-            "label": {
-              "normal": "Kit not found",
-              "beginner": "The requested kit could not be found"
-            },
-            "description": {
-              "normal": "The kit may have been removed or the link is invalid.",
-              "beginner": "Return home and open another kit, or create a new one."
-            }
-          },
-          "noKitLoaded": {
-            "label": {
-              "normal": "No kit loaded",
-              "beginner": "No kit loaded"
-            }
-          },
-          "loading": {
-            "label": {
-              "normal": "Loading kit...",
-              "beginner": "Loading kit..."
-            }
-          },
-          "notAvailable": {
-            "label": {
-              "normal": "Kit not available",
-              "beginner": "Kit not available"
-            }
-          },
-          "search": {
-            "placeholder": {
-              "label": {
-                "normal": "Filter...",
-                "beginner": "Search for artifacts..."
-              }
-            }
-          },
-          "dropzone": {
-            "label": {
-              "normal": "Drop zip file to import",
-              "beginner": "Drop a zip file here to import it as a kit or add files to the current kit"
-            },
-            "description": {
-              "normal": "Kits with .semio folder will be imported, others will be added as files",
-              "beginner": "If the zip contains a .semio folder, it will be imported as a complete kit. Otherwise, the files will be added to the current kit."
-            }
-          },
-          "versionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "e.g., 1.0.0",
-                "beginner": "e.g., 1.0.0"
-              }
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Describe what this kit contains...",
-                "beginner": "Describe what this kit contains..."
-              }
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "\ud83c\udfa8 or URL to icon",
-                "beginner": "\ud83c\udfa8 or URL to icon"
-              }
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "URL to preview image",
-                "beginner": "URL to preview image"
-              }
-            }
-          },
-          "homepagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "https://example.com",
-                "beginner": "https://example.com"
-              }
-            }
-          },
-          "licensePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "e.g., MIT, GPL-3.0, Apache-2.0",
-                "beginner": "e.g., MIT, GPL-3.0, Apache-2.0"
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Kit",
-              "beginner": "New Kit"
-            }
-          },
-          "defaultDesignName": {
-            "label": {
-              "normal": "New Design",
-              "beginner": "New Design"
-            }
-          },
-          "defaultTypeName": {
-            "label": {
-              "normal": "New Type",
-              "beginner": "New Type"
-            }
-          },
-          "newVersion": {
-            "label": {
-              "normal": "New Version",
-              "beginner": "New Version"
-            }
-          },
-          "defaultVersion": {
-            "label": {
-              "normal": "Default",
-              "beginner": "Default"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "name": {
-              "label": {
-                "normal": "Filter by name",
-                "beginner": "Click to filter artifacts by this name"
-              },
-              "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design",
-              "hotkey": "Ctrl+N",
-              "hide": {
-                "label": {
-                  "normal": "Hide name filter",
-                  "beginner": "Click to hide the name filter"
-                },
-                "hotkey": "Ctrl+Shift+N"
-              }
-            },
-            "band": {
-              "label": {
-                "normal": "Filter band",
-                "beginner": "Toggle the filter band to show or hide filter options"
-              },
-              "hotkey": "Ctrl+F"
-            },
-            "search": {
-              "label": {
-                "normal": "Search filter",
-                "beginner": "Search for specific filters"
-              },
-              "hotkey": "Ctrl+Shift+F"
-            }
-          },
-          "pieces": {
-            "label": {
-              "normal": "Pieces",
-              "beginner": "Types and designs in this kit"
-            }
-          },
-          "designs": {
-            "label": {
-              "normal": "Designs",
-              "beginner": "Designs in this kit"
-            },
-            "manual": "manuals/semio/kit#designs",
-            "tutorial": "hello-semio/model-design",
-            "multipleSelected": {
-              "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "types": {
-            "label": {
-              "normal": "Types",
-              "beginner": "Types in this kit"
-            },
-            "manual": "manuals/semio/kit#types",
-            "tutorial": "hello-semio/model-brick-set",
-            "multipleSelected": {
-              "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "folder": {
-            "label": {
-              "normal": "Folder",
-              "beginner": "Folder"
-            },
-            "descriptionPlaceholder": {
-              "label": {
-                "label": {
-                  "normal": "Describe this folder...",
-                  "beginner": "Describe this folder..."
-                }
-              }
-            }
-          },
-          "sortByArtifact": {
-            "label": {
-              "normal": "Sort by artifact",
-              "beginner": "Sort artifacts by their name"
-            },
-            "hotkey": "Ctrl+Shift+A"
-          },
-          "sortByKind": {
-            "label": {
-              "normal": "Sort by kind",
-              "beginner": "Sort artifacts by their type (design, type, quality, etc.)"
-            },
-            "hotkey": "Ctrl+Shift+K"
-          },
-          "sortByCreatedAt": {
-            "label": {
-              "normal": "Sort by creation date",
-              "beginner": "Sort artifacts by when they were created"
-            },
-            "hotkey": "Ctrl+Shift+C"
-          },
-          "sortByUpdatedAt": {
-            "label": {
-              "normal": "Sort by update date",
-              "beginner": "Sort artifacts by when they were last updated"
-            },
-            "hotkey": "Ctrl+Shift+U"
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showDesigns": {
-              "label": {
-                "normal": "Designs",
-                "beginner": "Designs"
-              }
-            },
-            "createDesign": {
-              "label": {
-                "normal": "Design",
-                "beginner": "Create Design"
-              },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
-            },
-            "showTypes": {
-              "label": {
-                "normal": "Types",
-                "beginner": "Types"
-              }
-            },
-            "createType": {
-              "label": {
-                "normal": "Type",
-                "beginner": "Create Type"
-              },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "showQualities": {
-              "label": {
-                "normal": "Qualities",
-                "beginner": "Qualities"
-              }
-            },
-            "createQuality": {
-              "label": {
-                "normal": "Quality",
-                "beginner": "Create Quality"
-              },
-              "manual": "manuals/semio/kit#qualities",
-              "tutorial": "getting-started/intro#quality"
-            },
-            "showPorts": {
-              "label": {
-                "normal": "Ports",
-                "beginner": "Ports"
-              }
-            },
-            "createPort": {
-              "label": {
-                "normal": "Port",
-                "beginner": "Create Port"
-              },
-              "manual": "manuals/semio/kit#ports",
-              "tutorial": "getting-started/intro#port"
-            },
-            "showFiles": {
-              "label": {
-                "normal": "Files",
-                "beginner": "Files"
-              }
-            },
-            "createFile": {
-              "label": {
-                "normal": "Create File",
-                "beginner": "Click to add a new file to this kit"
-              },
-              "manual": "manuals/semio/kit#files",
-              "tutorial": "getting-started/intro#files"
-            },
-            "showFolders": {
-              "label": {
-                "normal": "Folders",
-                "beginner": "Folders"
-              }
-            },
-            "createFolder": {
-              "label": {
-                "normal": "Folder",
-                "beginner": "Create Folder"
-              },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
-            },
-            "reset": {
-              "label": {
-                "normal": "Reset",
-                "beginner": "Click to reset the kit to its original state"
-              }
-            },
-            "showAuthors": {
-              "label": {
-                "normal": "Authors",
-                "beginner": "Authors"
-              }
-            },
-            "createAuthor": {
-              "label": {
-                "normal": "Create Author",
-                "beginner": "Click to add a new author to this kit"
-              },
-              "manual": "manuals/semio/kit#authors",
-              "tutorial": "getting-started/intro#authors"
-            },
-            "hideKind": {
-              "label": {
-                "normal": "Hide",
-                "beginner": "Click to hide this artifact category"
-              }
-            },
-            "createArtifact": {
-              "label": {
-                "normal": "Create",
-                "beginner": "Click to create a new artifact of this type"
-              }
-            },
-            "createChild": {
-              "label": {
-                "normal": "Create Child",
-                "beginner": "Create a child element"
-              }
-            },
-            "showTags": {
-              "label": {
-                "normal": "Tags",
-                "beginner": "Tags"
-              }
-            },
-            "showConcepts": {
-              "label": {
-                "normal": "Concepts",
-                "beginner": "Concepts"
-              }
-            },
-            "selection": {
-              "label": {
-                "normal": "Selection",
-                "beginner": "Selection tools"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filters",
-                "beginner": "Filter artifacts by type"
-              }
-            },
-            "create": {
-              "label": {
-                "normal": "Create",
-                "beginner": "Create new artifacts"
-              }
-            },
-            "resetFilters": {
-              "label": {
-                "normal": "Reset Filters",
-                "beginner": "Clear active artifact filters and show all artifact kinds"
-              }
-            },
-            "createTag": {
-              "label": {
-                "normal": "Tag",
-                "beginner": "Create Tag"
-              }
-            },
-            "createConcept": {
-              "label": {
-                "normal": "Concept",
-                "beginner": "Create Concept"
-              }
-            }
-          },
-          "canvas": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "table": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "search": {
-                "label": {
-                  "normal": "Search table",
-                  "beginner": "Search for artifacts in the table"
-                },
-                "hotkey": "Ctrl+F"
-              },
-              "header": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "kind": {
-                  "label": {
-                    "normal": "Kind",
-                    "beginner": "Type of artifact"
-                  }
-                },
-                "artifact": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "The name"
-                  }
-                },
-                "updatedAt": {
-                  "label": {
-                    "normal": "Updated",
-                    "beginner": "Last update time"
-                  }
-                },
-                "createdAt": {
-                  "label": {
-                    "normal": "Created",
-                    "beginner": "Creation time"
-                  }
-                }
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagram",
-                "beginner": "A force-directed graph showing all kit artifacts and their relationships"
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "kit": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Kit name",
-                      "beginner": "The name of the kit. This is the primary identifier for your kit."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "version": {
-                    "label": {
-                      "normal": "Version",
-                      "beginner": "The version of the kit in semantic versioning format (e.g., 1.0.0)."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A detailed description of what this kit contains and how it should be used."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Icon",
-                      "beginner": "An icon to represent this kit. Can be an emoji or URL to an image."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Image",
-                      "beginner": "URL to a preview image that showcases this kit."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "homepage": {
-                    "label": {
-                      "normal": "Homepage",
-                      "beginner": "URL to the homepage or documentation for this kit."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "license": {
-                    "label": {
-                      "normal": "License",
-                      "beginner": "The license under which this kit is distributed (e.g., MIT, GPL)."
-                    },
-                    "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
-                  }
-                },
-                "folder": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The display name of the folder."
-                    },
-                    "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "Optional description that explains the purpose of this folder."
-                    },
-                    "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
-                  }
-                },
-                "port": {
-                  "compatible": {
-                    "label": {
-                      "normal": "Compatible",
-                      "beginner": "Compatible"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "Description"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  }
-                },
-                "tag": {
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "Description"
-                    }
-                  }
-                },
-                "concept": {
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Name"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "Description"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Kit settings"
-            },
-            "diagram": {
-              "chargeStrength": {
-                "label": {
-                  "normal": "Charge Strength",
-                  "beginner": "Repulsion force between nodes"
-                }
-              },
-              "linkDistance": {
-                "label": {
-                  "normal": "Link Distance",
-                  "beginner": "Target distance between connected nodes"
-                }
-              },
-              "collideRadius": {
-                "label": {
-                  "normal": "Collide Radius",
-                  "beginner": "Collision radius preventing node overlap"
-                }
-              },
-              "centerStrength": {
-                "label": {
-                  "normal": "Center Strength",
-                  "beginner": "Force pulling nodes toward center"
-                }
-              }
-            },
-            "theme": {
-              "label": {
-                "normal": "Theme",
-                "beginner": "Color theme"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Language",
-                "beginner": "Port language"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Device",
-                "beginner": "Input device type"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Expertise",
-                "beginner": "User expertise level"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Mode",
-                "beginner": "User or developer mode"
-              }
-            }
-          },
-          "port": {
-            "allCompatible": {
-              "label": {
-                "normal": "All Compatible",
-                "beginner": "All Compatible"
-              }
-            },
-            "compatiblePorts": {
-              "label": {
-                "normal": "Compatible Ports",
-                "beginner": "Compatible Ports"
-              }
-            },
-            "descriptionPlaceholder": {
-              "label": {
-                "label": {
-                  "normal": "Label",
-                  "beginner": "Label"
-                }
-              }
-            }
-          },
-          "ports": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
-              }
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "{{count}} ports",
-                "beginner": "{{count}} ports selected"
-              }
-            }
-          },
-          "qualities": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "files": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "authors": {
-            "multipleTitle": {
-              "label": {
-                "normal": "Multiple Title",
-                "beginner": "Multiple Title"
-              }
-            }
-          },
-          "tag": {
-            "descriptionPlaceholder": {
-              "label": {
-                "normal": "Describe this tag...",
-                "beginner": "Describe this tag..."
-              }
-            }
-          },
-          "tags": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Multiple tags selected",
-                "beginner": "Multiple tags selected"
-              }
-            },
-            "multipleTitle": "{{count}} tags"
-          },
-          "concept": {
-            "descriptionPlaceholder": {
-              "label": {
-                "normal": "Describe this concept...",
-                "beginner": "Describe this concept..."
-              }
-            }
-          },
-          "concepts": {
-            "multipleSelected": {
-              "label": {
-                "normal": "Multiple concepts selected",
-                "beginner": "Multiple concepts selected"
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Title",
-              "beginner": "Title"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
-            },
-            "select": {
-              "mode": {
-                "additive": {
-                  "label": {
-                    "normal": "Additive",
-                    "beginner": "Additive selection mode - add to existing selection"
-                  }
-                },
-                "subtractive": {
-                  "label": {
-                    "normal": "Subtractive",
-                    "beginner": "Subtractive selection mode - remove from existing selection"
-                  }
-                },
-                "intersect": {
-                  "label": {
-                    "normal": "Intersect",
-                    "beginner": "Intersect selection mode - select only overlapping items"
-                  }
-                }
-              },
-              "shape": {
-                "rectangular": {
-                  "label": {
-                    "normal": "Rectangular",
-                    "beginner": "Rectangular selection - drag to select in a rectangle"
-                  }
-                },
-                "lasso": {
-                  "label": {
-                    "normal": "Lasso",
-                    "beginner": "Freeform lasso selection - draw a freeform shape"
-                  }
-                }
-              },
-              "navigation": {
-                "hand": {
-                  "label": {
-                    "normal": "Hand",
-                    "beginner": "Hand tool - pan and navigate the canvas"
-                  }
-                }
-              }
-            }
-          },
-          "tool": {
-            "pointer": {
-              "label": {
-                "normal": "Selection",
-                "beginner": "Selection"
-              }
-            },
-            "hand": {
-              "label": {
-                "normal": "Hand",
-                "beginner": "Hand"
-              }
-            }
-          }
-        },
-        "port": {
-          "label": {
-            "normal": "Port",
-            "beginner": "Port"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Port",
-              "beginner": "New Port"
-            }
-          }
-        },
-        "tag": {
-          "label": {
-            "normal": "Tag",
-            "beginner": "Tag"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Tag",
-              "beginner": "New Tag"
-            }
-          }
-        },
-        "concept": {
-          "label": {
-            "normal": "Concept",
-            "beginner": "Concept"
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Concept",
-              "beginner": "New Concept"
-            }
-          }
-        },
-        "folder": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Folder",
-              "beginner": "New Folder"
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Describe this folder...",
-                "beginner": "Describe this folder..."
-              }
-            }
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Design",
-            "beginner": "Design"
-          },
-          "properties": {
-            "label": {
-              "normal": "Design Properties",
-              "beginner": "Design properties"
-            }
-          },
-          "console": {
-            "label": {
-              "normal": "Console",
-              "beginner": "Console"
-            },
-            "empty": {
-              "label": {
-                "normal": "Console output will appear here.",
-                "beginner": "Console output will appear here."
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Design",
-              "beginner": "New Design"
-            }
-          },
-          "windowLibrary": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "scene": {
-              "label": {
-                "normal": "Scene Windows",
-                "beginner": "Scene Windows"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagram Windows",
-                "beginner": "Diagram Windows"
-              }
-            },
-            "table": {
-              "label": {
-                "normal": "Table Windows",
-                "beginner": "Table Windows"
-              }
-            }
-          },
-          "diagram": {
-            "clusterMenu": {
-              "cluster": {
-                "label": {
-                  "normal": "Cluster",
-                  "beginner": "Group selected design pieces into a single cluster"
-                }
-              }
-            },
-            "expandMenu": {
-              "expand": {
-                "label": {
-                  "normal": "Expand",
-                  "beginner": "Expand the design piece to show its internal components"
-                }
-              }
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "normal": "Describe this design...",
-              "beginner": "Describe this design..."
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "normal": "???",
-              "beginner": "???"
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "normal": "https://example.com/image.png",
-              "beginner": "https://example.com/image.png"
-            }
-          },
-          "variantPlaceholder": {
-            "label": {
-              "normal": "e.g., small, medium, large",
-              "beginner": "e.g., small, medium, large"
-            }
-          },
-          "viewPlaceholder": {
-            "label": {
-              "normal": "e.g., front, side, top",
-              "beginner": "e.g., front, side, top"
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "variant": {
-            "label": {
-              "normal": "Variant",
-              "beginner": "Variant"
-            }
-          },
-          "view": {
-            "label": {
-              "normal": "View",
-              "beginner": "View"
-            }
-          },
-          "location": {
-            "label": {
-              "normal": "Location",
-              "beginner": "Location"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Authors",
-              "beginner": "Authors"
-            }
-          },
-          "author": {
-            "label": {
-              "normal": "Author",
-              "beginner": "Author"
-            }
-          },
-          "attributes": {
-            "label": {
-              "normal": "Attributes",
-              "beginner": "Attributes"
-            }
-          },
-          "attribute": {
-            "label": {
-              "normal": "Attribute",
-              "beginner": "Attribute"
-            }
-          },
-          "attributeValuePlaceholder": {
-            "label": {
-              "normal": "Value...",
-              "beginner": "Value..."
-            }
-          },
-          "attributeUnitPlaceholder": {
-            "label": {
-              "normal": "Unit...",
-              "beginner": "Unit..."
-            }
-          },
-          "attributeDefinitionPlaceholder": {
-            "label": {
-              "normal": "Definition or URL...",
-              "beginner": "Definition or URL..."
-            }
-          },
-          "piece": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "id": {
-              "label": {
-                "normal": "ID",
-                "beginner": "ID"
-              }
-            },
-            "type": {
-              "label": {
-                "normal": "Type",
-                "beginner": "Type"
-              }
-            },
-            "center": {
-              "label": {
-                "normal": "Center",
-                "beginner": "Center"
-              }
-            },
-            "plane": {
-              "label": {
-                "normal": "Plane",
-                "beginner": "Plane"
-              }
-            },
-            "planeOrigin": {
-              "label": {
-                "normal": "Origin",
-                "beginner": "Origin"
-              }
-            },
-            "planeXAxis": {
-              "label": {
-                "normal": "X Axis",
-                "beginner": "X Axis"
-              }
-            },
-            "planeYAxis": {
-              "label": {
-                "normal": "Y Axis",
-                "beginner": "Y Axis"
-              }
-            },
-            "mixedSelectionMessage": {
-              "label": {
-                "normal": "Multiple pieces selected with different values",
-                "beginner": "Multiple pieces selected with different values"
-              }
-            },
-            "connectedPieceInfo": {
-              "label": {
-                "normal": "This piece is connected to another piece. Its position and orientation are computed from the connection. To make it independent, click 'Fix Piece'.",
-                "beginner": "This piece is connected to another piece. Its position and orientation are computed from the connection. To make it independent, click 'Fix Piece'."
-              }
-            },
-            "fixPiece": {
-              "label": {
-                "normal": "Fix Piece",
-                "beginner": "Fix Piece"
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "design": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The name of the design. This is the primary identifier for your composition."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A detailed description of what this design represents and how it should be used."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Icon",
-                      "beginner": "URL or path to an icon that represents this design in listings and previews."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Image",
-                      "beginner": "URL or path to a preview image that showcases this design."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "variant": {
-                    "label": {
-                      "normal": "Variant",
-                      "beginner": "A variant identifier for different versions or configurations of this design."
-                    },
-                    "manual": "design#variants",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "view": {
-                    "label": {
-                      "normal": "View",
-                      "beginner": "The viewing perspective or camera angle for displaying this design."
-                    },
-                    "manual": "design#views",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Unit",
-                      "beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m)."
-                    },
-                    "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
-                  },
-                  "createdAt": {
-                    "label": {
-                      "normal": "Created At",
-                      "beginner": "The date and time when this design was first created."
-                    }
-                  },
-                  "updatedAt": {
-                    "label": {
-                      "normal": "Updated At",
-                      "beginner": "The date and time when this design was last modified."
-                    }
-                  },
-                  "pieceCount": {
-                    "label": {
-                      "normal": "Pieces",
-                      "beginner": "The total number of pieces in this design."
-                    }
-                  },
-                  "connectionCount": {
-                    "label": {
-                      "normal": "Connections",
-                      "beginner": "The total number of connections in this design."
-                    }
-                  }
-                },
-                "location": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "longitude": {
-                    "label": {
-                      "normal": "Longitude",
-                      "beginner": "The east-west position of this design's location in decimal degrees."
-                    },
-                    "manual": "design#location"
-                  },
-                  "latitude": {
-                    "label": {
-                      "normal": "Latitude",
-                      "beginner": "The north-south position of this design's location in decimal degrees."
-                    },
-                    "manual": "design#location"
-                  }
-                },
-                "authors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The full name of the person who contributed to this design."
-                    },
-                    "manual": "design#authors"
-                  },
-                  "email": {
-                    "label": {
-                      "normal": "Email",
-                      "beginner": "Contact email address for this author."
-                    },
-                    "manual": "design#authors"
-                  }
-                },
-                "attributes": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The unique identifier for this attribute in kebab-case format (e.g., 'material.type')."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "value": {
-                    "label": {
-                      "normal": "Value",
-                      "beginner": "The value associated with this attribute. Leave empty to use as a category flag."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Unit",
-                      "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, \u00b0C)."
-                    },
-                    "manual": "design#attributes"
-                  },
-                  "definition": {
-                    "label": {
-                      "normal": "Definition",
-                      "beginner": "A URL or text that defines what this attribute means and how it should be interpreted."
-                    },
-                    "manual": "design#attributes"
-                  }
-                },
-                "piece": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "properties": {
-                    "label": {
-                      "normal": "Piece",
-                      "beginner": "Properties of the selected piece."
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "Pieces",
-                      "beginner": "Properties of the selected pieces."
-                    }
-                  },
-                  "pieceInfo": {
-                    "label": {
-                      "normal": "Piece",
-                      "beginner": "Basic information about the piece."
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "An optional name for this piece to identify it within the design."
-                    }
-                  },
-                  "namePlaceholder": {
-                    "label": {
-                      "normal": "Enter piece name...",
-                      "beginner": "Enter piece name..."
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A description of this piece's purpose or role in the design."
-                    }
-                  },
-                  "descriptionPlaceholder": {
-                    "label": {
-                      "normal": "Enter piece description...",
-                      "beginner": "Enter piece description..."
-                    }
-                  },
-                  "scale": {
-                    "label": {
-                      "normal": "Scale",
-                      "beginner": "The scaling factor applied to this piece. Default is 1.0."
-                    }
-                  },
-                  "color": {
-                    "label": {
-                      "normal": "Color",
-                      "beginner": "An optional color override for this piece (e.g., #FF0000)."
-                    }
-                  },
-                  "colorPlaceholder": {
-                    "label": {
-                      "normal": "Enter color...",
-                      "beginner": "Enter color..."
-                    }
-                  },
-                  "attributes": {
-                    "label": {
-                      "normal": "Attributes",
-                      "beginner": "Custom key-value attributes for this piece."
-                    },
-                    "name": {
-                      "label": {
-                        "normal": "Name",
-                        "beginner": "The key identifier for this attribute."
-                      }
-                    },
-                    "value": {
-                      "label": {
-                        "normal": "Value",
-                        "beginner": "The value for this attribute."
-                      }
-                    },
-                    "unit": {
-                      "label": {
-                        "normal": "Unit",
-                        "beginner": "The measurement unit for this attribute."
-                      }
-                    },
-                    "definition": {
-                      "label": {
-                        "normal": "Definition",
-                        "beginner": "A URL or text defining this attribute."
-                      }
-                    }
-                  },
-                  "attribute": {
-                    "label": {
-                      "normal": "Attribute",
-                      "beginner": "A custom attribute of this piece."
-                    }
-                  },
-                  "center": {
-                    "label": {
-                      "normal": "Center",
-                      "beginner": "The center position of the piece in the 2D diagram layout."
-                    },
-                    "manual": "design#diagram",
-                    "tutorial": "metabolism/thinking-about-the-diagram",
-                    "x": {
-                      "label": {
-                        "normal": "U",
-                        "beginner": "U diagram coordinate of the center of the piece in 2D layout space."
-                      },
-                      "manual": "design#diagram",
-                      "tutorial": "metabolism/thinking-about-the-diagram"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "V",
-                        "beginner": "V diagram coordinate of the center of the piece in 2D layout space."
-                      },
-                      "manual": "design#diagram",
-                      "tutorial": "metabolism/thinking-about-the-diagram"
-                    }
-                  },
-                  "plane": {
-                    "label": {
-                      "normal": "Plane",
-                      "beginner": "The 3D placement plane for this piece. Defines position and orientation in 3D space."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces",
-                    "origin": {
-                      "label": {
-                        "normal": "Origin",
-                        "beginner": "Origin"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "Origin X",
-                          "beginner": "Origin X"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "Origin Y",
-                          "beginner": "Origin Y"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "Origin Z",
-                          "beginner": "Origin Z"
-                        }
-                      }
-                    },
-                    "xaxis": {
-                      "label": {
-                        "normal": "X Axis",
-                        "beginner": "X Axis"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "Axis X",
-                          "beginner": "Axis X"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "Axis Y",
-                          "beginner": "Axis Y"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "Axis Z",
-                          "beginner": "Axis Z"
-                        }
-                      }
-                    },
-                    "yaxis": {
-                      "label": {
-                        "normal": "Y Axis",
-                        "beginner": "Y Axis"
-                      },
-                      "x": {
-                        "label": {
-                          "normal": "Axis X",
-                          "beginner": "Axis X"
-                        }
-                      },
-                      "y": {
-                        "label": {
-                          "normal": "Axis Y",
-                          "beginner": "Axis Y"
-                        }
-                      },
-                      "z": {
-                        "label": {
-                          "normal": "Axis Z",
-                          "beginner": "Axis Z"
-                        }
-                      }
-                    }
-                  }
-                },
-                "connection": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "properties": {
-                    "label": {
-                      "normal": "Connection",
-                      "beginner": "Properties of the selected connection."
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "Connections",
-                      "beginner": "Properties of the selected connections."
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A description of this connection's purpose."
-                    }
-                  },
-                  "descriptionPlaceholder": {
-                    "label": {
-                      "normal": "Enter connection description...",
-                      "beginner": "Enter connection description..."
-                    }
-                  },
-                  "multipleEditing": {
-                    "label": {
-                      "normal": "Editing {{count}} connections simultaneously",
-                      "beginner": "Editing {{count}} connections simultaneously"
-                    }
-                  },
-                  "connecting": {
-                    "label": {
-                      "normal": "Connecting",
-                      "beginner": "Connecting"
-                    }
-                  },
-                  "connectingPieceId": {
-                    "label": {
-                      "normal": "Connecting Piece",
-                      "beginner": "Connecting Piece"
-                    }
-                  },
-                  "connectingPortId": {
-                    "label": {
-                      "normal": "Connecting Port",
-                      "beginner": "Connecting Port"
-                    }
-                  },
-                  "connectingDesignPieceId": {
-                    "label": {
-                      "normal": "Connecting Design Piece",
-                      "beginner": "Connecting Design Piece"
-                    }
-                  },
-                  "connected": {
-                    "label": {
-                      "normal": "Connected",
-                      "beginner": "Connected"
-                    }
-                  },
-                  "connectedPieceId": {
-                    "label": {
-                      "normal": "Connected Piece",
-                      "beginner": "Connected Piece"
-                    }
-                  },
-                  "connectedPortId": {
-                    "label": {
-                      "normal": "Connected Port",
-                      "beginner": "Connected Port"
-                    }
-                  },
-                  "connectedDesignPieceId": {
-                    "label": {
-                      "normal": "Connected Design Piece",
-                      "beginner": "Connected Design Piece"
-                    }
-                  },
-                  "gap": {
-                    "label": {
-                      "normal": "Gap",
-                      "beginner": "Gap"
-                    }
-                  },
-                  "shift": {
-                    "label": {
-                      "normal": "Shift",
-                      "beginner": "Shift"
-                    }
-                  },
-                  "rise": {
-                    "label": {
-                      "normal": "Rise",
-                      "beginner": "Rise"
-                    }
-                  },
-                  "rotation": {
-                    "label": {
-                      "normal": "Rotation",
-                      "beginner": "Rotation"
-                    }
-                  },
-                  "turn": {
-                    "label": {
-                      "normal": "Turn",
-                      "beginner": "Turn"
-                    }
-                  },
-                  "tilt": {
-                    "label": {
-                      "normal": "Tilt",
-                      "beginner": "Tilt"
-                    }
-                  },
-                  "x": {
-                    "label": {
-                      "normal": "Diagram X Offset",
-                      "beginner": "Diagram X Offset"
-                    }
-                  },
-                  "y": {
-                    "label": {
-                      "normal": "Diagram Y Offset",
-                      "beginner": "Diagram Y Offset"
-                    }
-                  },
-                  "u": {
-                    "label": {
-                      "normal": "X Offset",
-                      "beginner": "X Offset"
-                    }
-                  },
-                  "v": {
-                    "label": {
-                      "normal": "Y Offset",
-                      "beginner": "Y Offset"
-                    }
-                  }
-                },
-                "connector": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "Connector ID",
-                      "beginner": "The unique identifier of the connector"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The name of this connector."
-                    }
-                  },
-                  "t": {
-                    "label": {
-                      "normal": "T",
-                      "beginner": "The parameter t along the type's curve for this connector."
-                    }
-                  },
-                  "position": {
-                    "label": {
-                      "normal": "Position",
-                      "beginner": "The position of the connector"
-                    }
-                  },
-                  "direction": {
-                    "label": {
-                      "normal": "Direction",
-                      "beginner": "The direction vector of the connector"
-                    }
-                  },
-                  "mandatory": {
-                    "label": {
-                      "normal": "Mandatory",
-                      "beginner": "Whether this connector must be connected"
-                    }
-                  },
-                  "port": {
-                    "label": {
-                      "normal": "Port",
-                      "beginner": "The connector port for compatibility checking"
-                    }
-                  },
-                  "compatiblePort": {
-                    "label": {
-                      "normal": "Compatible Port",
-                      "beginner": "The ports this connector is compatible with"
-                    }
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A description of the connector"
-                    }
-                  },
-                  "attribute": {
-                    "label": {
-                      "normal": "Attribute",
-                      "beginner": "Custom attributes of the connector"
-                    }
-                  },
-                  "notFound": {
-                    "label": {
-                      "normal": "Not Found",
-                      "beginner": "Not Found"
-                    }
-                  }
-                }
-              },
-              "parentConnection": {
-                "label": {
-                  "normal": "Parent Connection",
-                  "beginner": "Parent Connection"
-                }
-              },
-              "parentConnections": {
-                "label": {
-                  "normal": "Parent Connections",
-                  "beginner": "Parent Connections"
-                }
-              }
-            },
-            "hud": {
-              "overview": {
-                "label": {
-                  "normal": "HUD Overview",
-                  "beginner": "HUD Overview"
-                }
-              },
-              "selection": {
-                "pieces": {
-                  "label": {
-                    "normal": "Selected Pieces",
-                    "beginner": "Selected Pieces"
-                  }
-                },
-                "connections": {
-                  "label": {
-                    "normal": "Selected Connections",
-                    "beginner": "Selected Connections"
-                  }
-                },
-                "connector": {
-                  "label": {
-                    "normal": "Connector Selected",
-                    "beginner": "Connector Selected"
-                  }
-                }
-              }
-            },
-            "stats": {
-              "overview": {
-                "label": {
-                  "normal": "Statistics",
-                  "beginner": "Statistics"
-                }
-              },
-              "pieces": {
-                "label": {
-                  "normal": "Total Pieces",
-                  "beginner": "Total Pieces"
-                }
-              },
-              "connections": {
-                "label": {
-                  "normal": "Total Connections",
-                  "beginner": "Total Connections"
-                }
-              },
-              "windows": {
-                "label": {
-                  "normal": "Window Layout Loaded",
-                  "beginner": "Window Layout Loaded"
-                }
-              }
-            },
-            "workbench": {
-              "types": {
-                "addPiece": {
-                  "label": {
-                    "normal": "Add Piece",
-                    "beginner": "Add a new piece of this type to the design"
-                  }
-                },
-                "duplicateType": {
-                  "label": {
-                    "normal": "Duplicate Type",
-                    "beginner": "Create a duplicate of this type"
-                  }
-                }
-              },
-              "designs": {
-                "addPiece": {
-                  "label": {
-                    "normal": "Add Piece",
-                    "beginner": "Add a new piece of this design to the current design"
-                  }
-                }
-              }
-            }
-          },
-          "gridSize": {
-            "label": {
-              "normal": "Grid Size",
-              "beginner": "Grid Size"
-            }
-          },
-          "proximityConnectDistance": {
-            "label": {
-              "normal": "Proximity Connect Distance",
-              "beginner": "Proximity Connect Distance"
-            }
-          },
-          "selectOnlyPiecesOrConnections": {
-            "label": {
-              "normal": "Select Only Pieces Or Connections",
-              "beginner": "Select Only Pieces Or Connections"
-            }
-          },
-          "connection": {
-            "rotation": {
-              "label": {
-                "normal": "Rotation",
-                "beginner": "Rotation"
-              }
-            },
-            "tilt": {
-              "label": {
-                "normal": "Tilt",
-                "beginner": "Tilt"
-              }
-            },
-            "turn": {
-              "label": {
-                "normal": "Turn",
-                "beginner": "Turn"
-              }
-            },
-            "plane": {
-              "label": {
-                "normal": "Plane",
-                "beginner": "Plane"
-              }
-            },
-            "translation": {
-              "label": {
-                "normal": "Translation",
-                "beginner": "Translation"
-              }
-            },
-            "orientation": {
-              "label": {
-                "normal": "Orientation",
-                "beginner": "Orientation"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagram",
-                "beginner": "Diagram"
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Title",
-              "beginner": "Title"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
-            },
-            "select": {
-              "label": {
-                "normal": "Select",
-                "beginner": "Selection tool"
-              },
-              "mode": {
-                "additive": {
-                  "label": {
-                    "normal": "Additive",
-                    "beginner": "Additive selection mode - add to existing selection"
-                  }
-                },
-                "subtractive": {
-                  "label": {
-                    "normal": "Subtractive",
-                    "beginner": "Subtractive selection mode - remove from existing selection"
-                  }
-                },
-                "intersect": {
-                  "label": {
-                    "normal": "Intersect",
-                    "beginner": "Intersect selection mode - select only overlapping items"
-                  }
-                }
-              },
-              "shape": {
-                "rectangular": {
-                  "label": {
-                    "normal": "Rectangular",
-                    "beginner": "Rectangular selection - drag to select in a rectangle"
-                  }
-                },
-                "lasso": {
-                  "label": {
-                    "normal": "Lasso",
-                    "beginner": "Freeform lasso selection - draw a freeform shape"
-                  }
-                }
-              },
-              "navigation": {
-                "hand": {
-                  "label": {
-                    "normal": "Hand",
-                    "beginner": "Hand tool - pan and navigate the canvas"
-                  }
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rectangular lasso",
-                  "beginner": "Drag a rectangle for lasso selection"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freeform lasso",
-                  "beginner": "Draw a freehand lasso path"
-                }
-              }
-            }
-          },
-          "windows": {
-            "label": {
-              "normal": "Windows",
-              "beginner": "Windows"
-            }
-          },
-          "appTitle": {
-            "label": {
-              "normal": "App Title",
-              "beginner": "App Title"
-            }
-          },
-          "canvas": {
-            "diagram": {
-              "label": {
-                "normal": "Diagram",
-                "beginner": "Diagram"
-              },
-              "pieceNode": {
-                "label": {
-                  "normal": "Piece",
-                  "beginner": "Diagram piece node"
-                }
-              }
-            },
-            "label": {
-              "normal": "Canvas",
-              "beginner": "Canvas"
-            }
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showPieces": {
-              "label": {
-                "normal": "Pieces",
-                "beginner": "Toggle visibility of design pieces"
-              }
-            },
-            "showConnections": {
-              "label": {
-                "normal": "Connections",
-                "beginner": "Toggle visibility of connections between pieces"
-              }
-            },
-            "showPorts": {
-              "label": {
-                "normal": "Ports",
-                "beginner": "Toggle visibility of ports on pieces"
-              }
-            },
-            "addPiece": {
-              "label": {
-                "normal": "Add Piece",
-                "beginner": "Add a new piece to the design"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filters",
-                "beginner": "Filter design elements by visibility"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Design settings"
-            },
-            "theme": {
-              "label": {
-                "normal": "Theme",
-                "beginner": "Choose the color scheme for the application"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Language",
-                "beginner": "Choose the language for the application interface"
-              },
-              "placeholder": {
-                "label": {
-                  "normal": "Select language...",
-                  "beginner": "Select the language in which the application is displayed"
-                }
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Device",
-                "beginner": "Choose the input device"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Expertise",
-                "beginner": "Choose your experience level"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Mode",
-                "beginner": "Choose the user interface mode"
-              }
-            },
-            "panel": {
-              "label": {
-                "normal": "Panels",
-                "beginner": "Configure panel visibility"
-              },
-              "toolbar": {
-                "label": {
-                  "normal": "Show Toolbar",
-                  "beginner": "Toggle the toolbar panel"
-                }
-              },
-              "workbench": {
-                "label": {
-                  "normal": "Show Workbench",
-                  "beginner": "Toggle the workbench panel"
-                }
-              },
-              "windows": {
-                "label": {
-                  "normal": "Show Windows",
-                  "beginner": "Toggle the windows panel"
-                }
-              },
-              "details": {
-                "label": {
-                  "normal": "Show Details",
-                  "beginner": "Toggle the details panel"
-                }
-              }
-            }
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Type",
-            "beginner": "Type"
-          },
-          "properties": {
-            "label": {
-              "normal": "Type Properties",
-              "beginner": "Type properties"
-            }
-          },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "showConnectors": {
-              "label": {
-                "normal": "Connectors",
-                "beginner": "Connectors"
-              }
-            },
-            "showModels": {
-              "label": {
-                "normal": "Models",
-                "beginner": "Models"
-              }
-            },
-            "filters": {
-              "label": {
-                "normal": "Filters",
-                "beginner": "Filter type elements by visibility"
-              }
-            }
-          },
-          "footer": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "someAction": {
-              "label": {
-                "normal": "Some Action",
-                "beginner": "Some Action"
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Type",
-              "beginner": "New Type"
-            }
-          },
-          "descriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Describe this type...",
-                "beginner": "Describe this type..."
-              }
-            }
-          },
-          "iconPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "??",
-                "beginner": "??"
-              }
-            }
-          },
-          "imagePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "https://example.com/image.png",
-                "beginner": "https://example.com/image.png"
-              }
-            }
-          },
-          "variantPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "e.g., large, small",
-                "beginner": "e.g., large, small"
-              }
-            }
-          },
-          "parentPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Select parent type...",
-                "beginner": "Select parent type..."
-              }
-            }
-          },
-          "variant": {
-            "label": {
-              "normal": "Variant",
-              "beginner": "Variant"
-            }
-          },
-          "models": {
-            "label": {
-              "normal": "Models",
-              "beginner": "Manage different 3D models, images, and visual models for this type."
-            },
-            "manual": "type#models",
-            "tutorial": "hello-semio/model-brick-set#models"
-          },
-          "model": {
-            "label": {
-              "normal": "Model",
-              "beginner": "Model"
-            }
-          },
-          "modelDescriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Describe this model...",
-                "beginner": "Describe this model..."
-              }
-            }
-          },
-          "modelTagsPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "tag1, tag2, tag3",
-                "beginner": "tag1, tag2, tag3"
-              }
-            }
-          },
-          "connectors": {
-            "label": {
-              "normal": "Connectors",
-              "beginner": "Manage connection connectors for this type. Connectors define where and how pieces can connect."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connector": {
-            "label": {
-              "normal": "Connector",
-              "beginner": "Connector"
-            },
-            "properties": {
-              "label": {
-                "normal": "Connector Properties",
-                "beginner": "Connector properties"
-              }
-            },
-            "title": {
-              "label": {
-                "normal": "Title",
-                "beginner": "Title"
-              }
-            }
-          },
-          "connectorPortPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "e.g., electrical, mechanical",
-                "beginner": "e.g., electrical, mechanical"
-              }
-            }
-          },
-          "connectorNamePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Add a name",
-                "beginner": "Add a name"
-              }
-            }
-          },
-          "connectorDescriptionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Describe this connector...",
-                "beginner": "Describe this connector..."
-              }
-            }
-          },
-          "connectorPoint": {
-            "label": {
-              "normal": "Point",
-              "beginner": "The 3D position of the connector in local coordinates."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connectorDirection": {
-            "label": {
-              "normal": "Direction",
-              "beginner": "The outward direction vector of the connector in local coordinates."
-            },
-            "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
-          },
-          "connectorCompatiblePortsPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "port1, port2",
-                "beginner": "port1, port2"
-              }
-            }
-          },
-          "connectorNotFound": {
-            "label": {
-              "normal": "Connector not found",
-              "beginner": "Connector not found"
-            }
-          },
-          "connectorsNotFound": {
-            "label": {
-              "normal": "No connectors found",
-              "beginner": "No connectors found"
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "Authors",
-              "beginner": "Authors"
-            }
-          },
-          "author": {
-            "label": {
-              "normal": "Author",
-              "beginner": "Author"
-            }
-          },
-          "attributes": {
-            "label": {
-              "normal": "Attributes",
-              "beginner": "Attributes"
-            }
-          },
-          "attribute": {
-            "label": {
-              "normal": "Attribute",
-              "beginner": "Attribute"
-            }
-          },
-          "attributeValuePlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Value...",
-                "beginner": "Value..."
-              }
-            }
-          },
-          "attributeDefinitionPlaceholder": {
-            "label": {
-              "label": {
-                "normal": "Definition or URL...",
-                "beginner": "Definition or URL..."
-              }
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "type": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The name of the type. This is the primary identifier for the component."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A detailed description of what this type represents and how it should be used."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "icon": {
-                    "label": {
-                      "normal": "Icon",
-                      "beginner": "An icon to visually represent this type. Can be an emoji, icon name, or URL to an image."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "image": {
-                    "label": {
-                      "normal": "Image",
-                      "beginner": "URL to an image that represents this type. Used for previews and visual identification."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "unit": {
-                    "label": {
-                      "normal": "Unit",
-                      "beginner": "The unit of measurement used for this type (e.g., mm, m, ft)."
-                    },
-                    "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "parent": {
-                    "label": {
-                      "normal": "Parent",
-                      "beginner": "The parent type this type inherits from"
-                    }
-                  },
-                  "abstract": {
-                    "label": {
-                      "normal": "Abstract",
-                      "beginner": "Whether this is an abstract type"
-                    }
-                  }
-                },
-                "models": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "url": {
-                    "label": {
-                      "normal": "URL",
-                      "beginner": "URL to a 3D model, image, or other resource representing this type."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A description of what this model shows or how it should be used."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "tags": {
-                    "label": {
-                      "normal": "Tags",
-                      "beginner": "Tags to categorize and filter models (e.g., 'detailed', 'simplified', 'lod1')."
-                    },
-                    "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "connectors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "port": {
-                    "label": {
-                      "normal": "Port",
-                      "beginner": "Connector port name. Connectors of the same port can connect to each other."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "compatiblePorts": {
-                    "label": {
-                      "normal": "Compatible Ports",
-                      "beginner": "List of other connector ports this connector can connect to. Leave empty to allow all ports."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "description": {
-                    "label": {
-                      "normal": "Description",
-                      "beginner": "A description of what this connector represents and how it should be used for connections."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "t": {
-                    "label": {
-                      "normal": "T",
-                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "ring": {
-                    "label": {
-                      "normal": "Ring",
-                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "direction": {
-                    "label": {
-                      "normal": "",
-                      "beginner": ""
-                    },
-                    "x": {
-                      "label": {
-                        "normal": "X",
-                        "beginner": "X coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "Y",
-                        "beginner": "Y coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "z": {
-                      "label": {
-                        "normal": "Z",
-                        "beginner": "Z coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    }
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "An optional name for this connector."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "mandatory": {
-                    "label": {
-                      "normal": "Mandatory",
-                      "beginner": "Whether this connector is required for a valid connection."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "maxChildren": {
-                    "label": {
-                      "normal": "Max Children",
-                      "beginner": "The maximum number of connections allowed at this connector."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "point": {
-                    "label": {
-                      "normal": "",
-                      "beginner": ""
-                    },
-                    "x": {
-                      "label": {
-                        "normal": "X",
-                        "beginner": "X position of the connector in 3D space relative to the type's origin."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "y": {
-                      "label": {
-                        "normal": "Y",
-                        "beginner": "Y position of the connector in 3D space relative to the type's origin."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    },
-                    "z": {
-                      "label": {
-                        "normal": "Z",
-                        "beginner": "Z position of the connector in 3D space relative to the type's origin."
-                      },
-                      "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
-                    }
-                  }
-                },
-                "connector": {
-                  "ring": {
-                    "label": {
-                      "normal": "Ring",
-                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
-                    },
-                    "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "attributes": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "The name of the attribute in kebab-case (e.g., 'material.wood', 'cost.labor')."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "value": {
-                    "label": {
-                      "normal": "Value",
-                      "beginner": "The value of the attribute. Leave empty for boolean attributes (presence = true)."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "definition": {
-                    "label": {
-                      "normal": "Definition",
-                      "beginner": "Optional definition or documentation for this attribute. Can be text or a URL."
-                    },
-                    "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                },
-                "authors": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
-                  },
-                  "name": {
-                    "label": {
-                      "normal": "Name",
-                      "beginner": "Full name of the author or contributor."
-                    },
-                    "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
-                  "email": {
-                    "label": {
-                      "normal": "Email",
-                      "beginner": "Email address for contacting the author."
-                    },
-                    "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
-                  }
-                }
-              }
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
-            },
-            "select": {
-              "normal": {
-                "label": {
-                  "normal": "Normal",
-                  "beginner": "Normal selection"
-                }
-              },
-              "additive": {
-                "label": {
-                  "normal": "Additive",
-                  "beginner": "Additive selection - add to existing selection"
-                }
-              },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtractive",
-                  "beginner": "Subtractive selection - remove from existing selection"
-                }
-              },
-              "intersect": {
-                "label": {
-                  "normal": "Intersect",
-                  "beginner": "Intersect selection - select only overlapping items"
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rectangular",
-                  "beginner": "Rectangular lasso selection"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freeform",
-                  "beginner": "Freeform lasso selection"
-                }
-              }
-            },
-            "selection": {
-              "label": {
-                "normal": "Selection",
-                "beginner": "Selection tool"
-              }
-            },
-            "hand": {
-              "label": {
-                "normal": "Hand",
-                "beginner": "Hand tool - pan and navigate"
-              }
-            },
-            "connector": {
-              "label": {
-                "normal": "Connector",
-                "beginner": "Connector creation tool"
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Title",
-              "beginner": "Title"
-            }
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "description": {
-            "label": {
-              "normal": "Define measurement qualities",
-              "beginner": "Define measurement qualities"
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Quality",
-              "beginner": "Quality"
-            }
-          },
-          "toolbar": {
-            "view": {
-              "label": {
-                "normal": "View",
-                "beginner": "View options"
-              }
-            },
-            "actions": {
-              "label": {
-                "normal": "Actions",
-                "beginner": "Quality actions"
-              }
-            }
-          },
-          "workbench": {
-            "nodes": {
-              "label": {
-                "normal": "Nodes",
-                "beginner": "Quality formula nodes"
-              }
-            },
-            "qualities": {
-              "label": {
-                "normal": "Qualities",
-                "beginner": "Available qualities"
-              }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Quality settings"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Quality chat"
-            }
-          },
-          "tools": {
-            "selection": {
-              "label": {
-                "normal": "Selection",
-                "beginner": "Selection tool"
-              }
-            },
-            "select": {
-              "additive": {
-                "label": {
-                  "normal": "Additive",
-                  "beginner": "Additive selection - add to existing selection"
-                }
-              },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtractive",
-                  "beginner": "Subtractive selection - remove from existing selection"
-                }
-              },
-              "intersect": {
-                "label": {
-                  "normal": "Intersect",
-                  "beginner": "Intersect selection - select only overlapping items"
-                }
-              }
-            }
-          },
-          "defaultName": {
-            "label": {
-              "normal": "New Quality",
-              "beginner": "New Quality"
-            }
-          },
-          "numericFunctions": {
-            "label": {
-              "normal": "Numeric Functions",
-              "beginner": "Numeric Functions"
-            }
-          },
-          "add": {
-            "label": {
-              "normal": "Add",
-              "beginner": "Add"
-            }
-          },
-          "subtract": {
-            "label": {
-              "normal": "Subtract",
-              "beginner": "Subtract"
-            }
-          },
-          "multiply": {
-            "label": {
-              "normal": "Multiply",
-              "beginner": "Multiply"
-            }
-          },
-          "divide": {
-            "label": {
-              "normal": "Divide",
-              "beginner": "Divide"
-            }
-          },
-          "branchingFunctions": {
-            "label": {
-              "normal": "Branching Functions",
-              "beginner": "Branching Functions"
-            }
-          },
-          "if": {
-            "label": {
-              "normal": "If",
-              "beginner": "If"
-            }
-          },
-          "switch": {
-            "label": {
-              "normal": "Switch",
-              "beginner": "Switch"
-            }
-          },
-          "dataStructures": {
-            "label": {
-              "normal": "Data Structures",
-              "beginner": "Data Structures"
-            }
-          },
-          "list": {
-            "label": {
-              "normal": "List",
-              "beginner": "List"
-            }
-          },
-          "dictionary": {
-            "label": {
-              "normal": "Dictionary",
-              "beginner": "Dictionary"
-            }
-          },
-          "noQualities": {
-            "label": {
-              "normal": "No qualities defined",
-              "beginner": "No qualities defined"
-            }
-          },
-          "key": {
-            "label": {
-              "normal": "Key",
-              "beginner": "The unique identifier for this quality"
-            }
-          },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "The display name for this quality"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Kind",
-              "beginner": "The type of entity this quality applies to"
-            }
-          },
-          "formula": {
-            "label": {
-              "normal": "Formula",
-              "beginner": "The formula to calculate this quality"
-            }
-          },
-          "formulaPlaceholder": "Enter formula...",
-          "defaultValue": {
-            "label": {
-              "normal": "Default value",
-              "beginner": "The default value for this quality"
-            }
-          },
-          "defaultSiUnit": {
-            "label": {
-              "normal": "Default SI unit",
-              "beginner": "The default unit in the SI system"
-            }
-          },
-          "defaultImperialUnit": {
-            "label": {
-              "normal": "Default Imperial unit",
-              "beginner": "The default unit in the Imperial system"
-            }
-          },
-          "min": {
-            "label": {
-              "normal": "Minimum",
-              "beginner": "The minimum allowed value"
-            }
-          },
-          "isMinExcluded": {
-            "label": {
-              "normal": "Exclude minimum",
-              "beginner": "Whether the minimum value is excluded"
-            }
-          },
-          "max": {
-            "label": {
-              "normal": "Maximum",
-              "beginner": "The maximum allowed value"
-            }
-          },
-          "isMaxExcluded": {
-            "label": {
-              "normal": "Exclude maximum",
-              "beginner": "Whether the maximum value is excluded"
-            }
-          },
-          "canScale": {
-            "label": {
-              "normal": "Can scale",
-              "beginner": "Whether this quality scales with piece size"
-            }
-          },
-          "panel": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "details": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "key": {
-                "label": {
-                  "normal": "Key",
-                  "beginner": "The unique key identifier of the quality"
-                }
-              },
-              "name": {
-                "label": {
-                  "normal": "Name",
-                  "beginner": "The display name of the quality"
-                }
-              },
-              "description": {
-                "label": {
-                  "normal": "Description",
-                  "beginner": "A description of what this quality measures"
-                }
-              },
-              "formula": {
-                "label": {
-                  "normal": "Formula",
-                  "beginner": "The formula to calculate this quality"
-                }
-              },
-              "defaultSiUnit": {
-                "label": {
-                  "normal": "Default SI Unit",
-                  "beginner": "The default unit in the SI system"
-                }
-              },
-              "defaultImperialUnit": {
-                "label": {
-                  "normal": "Default Imperial Unit",
-                  "beginner": "The default unit in the Imperial system"
-                }
-              },
-              "kind": {
-                "label": {
-                  "normal": "Kind",
-                  "beginner": "The type of entity this quality applies to"
-                }
-              },
-              "canScale": {
-                "label": {
-                  "normal": "Can Scale",
-                  "beginner": "Whether this quality scales with piece size"
-                }
-              },
-              "defaultValue": {
-                "label": {
-                  "normal": "Default Value",
-                  "beginner": "The default value for this quality"
-                }
-              },
-              "min": {
-                "label": {
-                  "normal": "Minimum",
-                  "beginner": "The minimum allowed value"
-                }
-              },
-              "max": {
-                "label": {
-                  "normal": "Maximum",
-                  "beginner": "The maximum allowed value"
-                }
-              },
-              "isMinExcluded": {
-                "label": {
-                  "normal": "Minimum Excluded",
-                  "beginner": "Whether the minimum value is exclusive"
-                }
-              },
-              "isMaxExcluded": {
-                "label": {
-                  "normal": "Maximum Excluded",
-                  "beginner": "Whether the maximum value is exclusive"
-                }
-              }
-            }
-          },
-          "functions": {
-            "label": {
-              "normal": "Functions",
-              "beginner": "Functions"
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualities",
-              "beginner": "Qualities"
-            }
-          }
-        },
-        "docs": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noHeadings": {
-            "label": {
-              "normal": "No headings found",
-              "beginner": "No headings found"
-            }
-          },
-          "docs": {
-            "label": {
-              "normal": "Docs",
-              "beginner": "Docs"
-            }
-          },
-          "overview": {
-            "label": {
-              "normal": "Overview",
-              "beginner": "Overview"
-            }
-          },
-          "page": {
-            "label": {
-              "normal": "Page",
-              "beginner": "Page"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Settings"
-            },
-            "theme": {
-              "label": {
-                "normal": "Theme",
-                "beginner": "Choose the color theme"
-              }
-            },
-            "language": {
-              "label": {
-                "normal": "Language",
-                "beginner": "Select the language"
-              }
-            },
-            "device": {
-              "label": {
-                "normal": "Device",
-                "beginner": "Select the input device"
-              }
-            },
-            "expertise": {
-              "label": {
-                "normal": "Expertise",
-                "beginner": "Select your expertise level"
-              }
-            },
-            "mode": {
-              "label": {
-                "normal": "Mode",
-                "beginner": "Select user or developer mode"
-              }
-            }
-          },
-          "navigation": {
-            "previous": {
-              "label": {
-                "normal": "Previous",
-                "beginner": "Navigate to the previous page"
-              }
-            },
-            "next": {
-              "label": {
-                "normal": "Next",
-                "beginner": "Navigate to the next page"
-              }
-            }
-          }
-        },
-        "feedback": {
-          "label": {
-            "normal": "Feedback",
-            "beginner": "Send feedback to help improve Semio"
-          },
-          "title": {
-            "label": {
-              "normal": "Feedback",
-              "beginner": "Feedback"
-            }
-          },
-          "subtitle": {
-            "label": {
-              "normal": "Help us improve semio by reporting bugs or sharing ideas.",
-              "beginner": "Help us improve semio by reporting bugs or sharing ideas."
-            }
-          },
-          "form": {
-            "kind": {
-              "label": {
-                "normal": "Type",
-                "beginner": "Select bug report or feature idea"
-              }
-            },
-            "title": {
-              "label": {
-                "normal": "Title",
-                "beginner": "A brief summary of your feedback"
-              }
-            },
-            "titlePlaceholder": {
-              "label": {
-                "normal": "Enter a brief title...",
-                "beginner": "Enter a brief title..."
-              }
-            },
-            "description": {
-              "label": {
-                "normal": "Description",
-                "beginner": "Detailed description of the problem or idea"
-              }
-            },
-            "bugDescriptionPlaceholder": {
-              "label": {
-                "normal": "Describe what happened...",
-                "beginner": "Describe what happened..."
-              }
-            },
-            "ideaDescriptionPlaceholder": {
-              "label": {
-                "normal": "Describe your idea...",
-                "beginner": "Describe your idea..."
-              }
-            },
-            "app": {
-              "label": {
-                "normal": "App",
-                "beginner": "Which app did the bug occur in?"
-              }
-            },
-            "appPlaceholder": {
-              "label": {
-                "normal": "Select app...",
-                "beginner": "Select app..."
-              }
-            },
-            "name": {
-              "label": {
-                "normal": "Name",
-                "beginner": "Your name (optional)"
-              }
-            },
-            "namePlaceholder": {
-              "label": {
-                "normal": "Your name (optional)",
-                "beginner": "Your name (optional)"
-              }
-            },
-            "email": {
-              "label": {
-                "normal": "Email",
-                "beginner": "Your email address (optional)"
-              }
-            },
-            "emailPlaceholder": {
-              "label": {
-                "normal": "your@email.com (optional)",
-                "beginner": "your@email.com (optional)"
-              }
-            },
-            "submit": {
-              "label": {
-                "normal": "Submit Feedback",
-                "beginner": "Submit your feedback"
-              }
-            },
-            "submitting": {
-              "label": {
-                "normal": "Submitting...",
-                "beginner": "Submitting..."
-              }
-            }
-          },
-          "kind": {
-            "bug": {
-              "label": {
-                "normal": "Bug Report",
-                "beginner": "Report a problem or error"
-              }
-            },
-            "idea": {
-              "label": {
-                "normal": "Feature Idea",
-                "beginner": "Suggest a new feature or improvement"
-              }
-            }
-          },
-          "appOption": {
-            "home": {
-              "label": {
-                "normal": "Home",
-                "beginner": "Home"
-              }
-            },
-            "kit": {
-              "label": {
-                "normal": "Kit",
-                "beginner": "Kit"
-              }
-            },
-            "design": {
-              "label": {
-                "normal": "Design",
-                "beginner": "Design"
-              }
-            },
-            "type": {
-              "label": {
-                "normal": "Type",
-                "beginner": "Type"
-              }
-            },
-            "quality": {
-              "label": {
-                "normal": "Quality",
-                "beginner": "Quality"
-              }
-            },
-            "docs": {
-              "label": {
-                "normal": "Docs",
-                "beginner": "Docs"
-              }
-            },
-            "feedback": {
-              "label": {
-                "normal": "Feedback",
-                "beginner": "Feedback"
-              }
-            }
-          },
-          "optional": {
-            "label": {
-              "normal": "Optional contact information",
-              "beginner": "Optional contact information"
-            }
-          },
-          "success": {
-            "thankYou": {
-              "label": {
-                "normal": "Thank You!",
-                "beginner": "Thank You!"
-              }
-            },
-            "message": {
-              "label": {
-                "normal": "Your feedback has been received. We appreciate your contribution!",
-                "beginner": "Your feedback has been received. We appreciate your contribution!"
-              }
-            },
-            "sendAnother": {
-              "label": {
-                "normal": "Send Another",
-                "beginner": "Submit another feedback"
-              }
-            },
-            "goHome": {
-              "label": {
-                "normal": "Go Home",
-                "beginner": "Return to home page"
-              }
-            }
-          },
-          "error": {
-            "titleRequired": {
-              "label": {
-                "normal": "Title is required",
-                "beginner": "Title is required"
-              }
-            },
-            "descriptionRequired": {
-              "label": {
-                "normal": "Description is required",
-                "beginner": "Description is required"
-              }
-            },
-            "appRequired": {
-              "label": {
-                "normal": "Please select which app the bug occurred in",
-                "beginner": "Please select which app the bug occurred in"
-              }
-            },
-            "submitFailed": {
-              "label": {
-                "normal": "Failed to submit feedback. Please try again.",
-                "beginner": "Failed to submit feedback. Please try again."
-              }
-            }
-          },
-          "toolbar": {
-            "send": {
-              "label": {
-                "normal": "Send",
-                "beginner": "Send feedback"
-              }
-            }
-          }
-        }
-      },
-      "docs": {
-        "navigation": {
-          "previous": {
-            "label": {
-              "normal": "Previous",
-              "beginner": "Previous"
-            }
-          },
-          "next": {
-            "label": {
-              "normal": "Next",
-              "beginner": "Next"
-            }
-          }
-        }
-      },
-      "toolbar": {
-        "label": {
-          "normal": "Toolbar",
-          "beginner": "Toolbar"
-        },
-        "group": {
-          "hand": {
-            "label": {
-              "normal": "Hand",
-              "beginner": "Hand"
-            }
-          },
-          "selection": {
-            "label": {
-              "normal": "Selection",
-              "beginner": "Selection"
-            }
-          },
-          "lasso": {
-            "label": {
-              "normal": "Lasso",
-              "beginner": "Lasso"
-            }
-          },
-          "filter": {
-            "label": {
-              "normal": "Filter",
-              "beginner": "Filter"
-            }
-          },
-          "open": {
-            "label": {
-              "normal": "Open",
-              "beginner": "Open"
-            }
-          },
-          "create": {
-            "label": {
-              "normal": "Create",
-              "beginner": "Create"
-            }
-          },
-          "view": {
-            "label": {
-              "normal": "View",
-              "beginner": "View"
-            }
-          },
-          "actions": {
-            "label": {
-              "normal": "Actions",
-              "beginner": "Actions"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Settings"
-            }
-          }
-        },
-        "parent": {
-          "hand": "Hand",
-          "selection": "Selection",
-          "lasso": "Lasso",
-          "filter": "Filter",
-          "open": "Open",
-          "create": "Create",
-          "view": "View",
-          "actions": "Actions",
-          "settings": "Settings"
-        }
-      },
-      "tutorial": {
-        "controls": {
-          "stop": {
-            "label": {
-              "normal": "Stop",
-              "beginner": "Stop"
-            }
-          },
-          "previous": {
-            "label": {
-              "normal": "Previous",
-              "beginner": "Previous"
-            }
-          },
-          "playPause": {
-            "label": {
-              "normal": "Play Pause",
-              "beginner": "Play Pause"
-            }
-          },
-          "next": {
-            "label": {
-              "normal": "Next",
-              "beginner": "Next"
-            }
-          }
-        }
-      },
-      "recording": {
-        "controls": {
-          "playPause": {
-            "label": {
-              "normal": "Play Pause",
-              "beginner": "Play Pause"
-            }
-          },
-          "stop": {
-            "label": {
-              "normal": "Stop",
-              "beginner": "Stop"
-            }
-          }
+          "normal": "Chat",
+          "beginner": "Chat"
         }
       }
-    }
+    },
+    toolbar: {
+      group: {
+        parent: {
+          label: {
+            normal: "Tool",
+            beginner: "Tool",
+          },
+        },
+      },
+      parent: uiToolbarParentEn,
+    },
+    common: {
+      mixedValues: {
+        label: {
+          normal: "Mixed",
+          beginner: "Mixed",
+        },
+      },
+    },
+    docs: {
+      navigation: {
+        previous: {
+          label: {
+            normal: "Previous",
+            beginner: "Previous",
+          },
+        },
+        next: {
+          label: {
+            normal: "Next",
+            beginner: "Next",
+          },
+        },
+      },
+    },
+    ring: {
+      demo: {
+        label: {
+          normal: "Ring",
+          beginner: "Ring",
+        },
+      },
+    },
+    stepper: {
+      demo: {
+        label: {
+          normal: "Value",
+          beginner: "Value",
+        },
+      },
+    },
+    engagement: {
+      command: {
+        label: {
+          normal: "Command",
+          beginner: "Type a command or pick one from the list",
+        },
+      },
+      commandActive: {
+        label: {
+          normal: "Command or value",
+          beginner: "Command or number for the current step",
+        },
+      },
+      commands: {
+        label: {
+          normal: "Commands",
+          beginner: "Quick commands for the current step",
+        },
+      },
+      suggestions: {
+        label: {
+          normal: "Suggestions",
+          beginner: "Open the list of matching commands",
+        },
+      },
+      noMatches: {
+        label: {
+          normal: "No matches",
+          beginner: "No matching commands",
+        },
+      },
+    },
   },
-  "settings": {
-    "layout": {
-      "normal": {
-        "label": {
-          "normal": "Normal layout",
-          "beginner": "Use the standard layout optimized for mouse and keyboard."
-        }
+  settings: {
+    layout: {
+      normal: {
+        label: {
+          normal: "Normal layout",
+          beginner: "Use the standard layout optimized for mouse and keyboard.",
+        },
       },
       "desktop": {
         "label": {
@@ -10775,6 +1605,12 @@ const elementUiTranslationBundles = {
           "normal": "Mobile layout",
           "beginner": "Use the mobile layout optimized for small screens."
         }
+      }
+    },
+    "compact": {
+      "label": {
+        "normal": "Compact",
+        "beginner": "Show icon-only buttons and toggles to save space"
       }
     },
     "mode": {
@@ -10831,51 +1667,89 @@ const elementUiTranslationBundles = {
         "beginner": "Manual"
       }
     },
-    "tutorial": {
-      "label": {
-        "normal": "Tutorial",
-        "beginner": "Tutorial"
-      }
-    }
+    tutorial: {
+      label: {
+        normal: "Tutorial",
+        beginner: "Tutorial",
+      },
+    },
+  },
+} satisfies UiTranslationSchema,
+  },
+} satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
+
+export type UiTranslationLocaleCode = UiLocale;
+
+export type UiTranslationBundlesInput = {
+  readonly [L in UiLocale]: { readonly translation: Record<string, unknown> };
+};
+
+
+
+declare module "i18next" {
+  interface CustomTypeOptions {
+    defaultNS: "translation";
+    resources: {
+      readonly en: { readonly translation: UiTranslationSchema };
+      readonly de: { readonly translation: UiTranslationSchema };
+    };
   }
 }
-`),
-  },
-} as const;
 
-type ElementUiLocaleCode = keyof typeof elementUiTranslationBundles;
+/** @emoji 🪁 Merges additional locale bundles into the shared UI i18n instance. */
+export function registerUiTranslationBundles(bundles: UiTranslationBundlesInput): void {
+  for (const [language, resource] of Object.entries(bundles)) {
+    if (!i18next.hasResourceBundle(language, "translation")) {
+      i18next.addResourceBundle(language, "translation", resource.translation, true, true);
+      continue;
+    }
+    i18next.addResourceBundle(language, "translation", resource.translation, true, true);
+  }
+}
 
-function normalizeElementUiLocale(language?: string): ElementUiLocaleCode {
+function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
   return language?.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
-function resolveRequestedElementUiLocale(): ElementUiLocaleCode {
-  return normalizeElementUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
+function resolveRequestedUiLocale(): UiTranslationLocaleCode {
+  return normalizeUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
 }
 
-function registerElementUiTranslationBundles() {
-  for (const [language, resource] of Object.entries(elementUiTranslationBundles)) {
-    if (!i18next.hasResourceBundle(language, "translation")) {
-      i18next.addResourceBundle(language, "translation", resource.translation, true, true);
-    }
-  }
+function registerUiChromeTranslationBundles() {
+  registerUiTranslationBundles(uiChromeTranslationBundles);
 }
 
-function initializeElementUiI18n() {
-  const requestedLocale = resolveRequestedElementUiLocale();
+function createUiI18nPort(instance: typeof i18next): UiI18nPort {
+  return {
+    t: ((key, options) => instance.t(key as never, options as never)) as UiTranslateFn,
+    changeLanguage: (locale) => instance.changeLanguage(locale),
+    get language() {
+      return instance.language;
+    },
+    get resolvedLanguage() {
+      return instance.resolvedLanguage;
+    },
+    get isInitialized() {
+      return instance.isInitialized;
+    },
+  };
+}
+
+function initializeUiI18n(): UiI18nPort {
+  const requestedLocale = resolveRequestedUiLocale();
 
   if (i18next.isInitialized) {
-    registerElementUiTranslationBundles();
+    registerUiChromeTranslationBundles();
     if (i18next.language !== requestedLocale) {
       void i18next.changeLanguage(requestedLocale);
     }
-    return i18next;
+    return createUiI18nPort(i18next);
   }
 
   i18next.use(LanguageDetector).use(initReactI18next);
 
   void i18next.init({
-    resources: elementUiTranslationBundles,
+    resources: uiChromeTranslationBundles,
     fallbackLng: "en",
     supportedLngs: ["en", "de"],
     nonExplicitSupportedLngs: true,
@@ -10892,22 +1766,35 @@ function initializeElementUiI18n() {
     },
   });
 
-  return i18next;
+  return createUiI18nPort(i18next);
 }
 
-export const elementUiI18n = initializeElementUiI18n();
+/** @emoji 🪁 Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
+export const uiI18n = initializeUiI18n();
+
+/** @emoji 🪁 Sets the active UI locale on the shared i18n port. */
+export function setUiLocale(locale: UiLocale): Promise<unknown> {
+  return uiI18n.changeLanguage(locale);
+}
+
+/** @emoji 🪁 Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
+export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
+  const { t, i18n } = useTranslation();
+  return { t: t as UiTranslateFn, i18n };
+}
 
 // #endregion 🪁I18n Resources
 
 /**
  * React hook that resolves a localized label by i18n key and expertise level.
  **/
-export function useLabel(id: string): string | undefined {
-  const { t } = useTranslation();
+export function useLabel(id: UiTranslationKey | (string & {})): string | undefined {
+  const { t } = useUiTranslation();
   const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
-  const value = t(id as any) as any;
+  const value = t(id as UiTranslationKey);
 
   if (typeof value === "string") {
+    if (isInternalChromeControlId(id) || isInternalChromeControlId(value)) return undefined;
     return value;
   }
 
@@ -11005,15 +1892,15 @@ export function resolveHotkeyValue(value: unknown): string | undefined {
 /**
  * React hook that resolves a localized hotkey by i18n key.
  **/
-export function useTranslatedHotkey(id: string): string | undefined {
-  const { t } = useTranslation();
-  const directHotkey = resolveHotkeyValue(t(id as any));
+export function useTranslatedHotkey(id: UiTranslationKey | (string & {})): string | undefined {
+  const { t } = useUiTranslation();
+  const directHotkey = resolveHotkeyValue(t(id as UiTranslationKey));
 
   if (directHotkey) {
     return directHotkey;
   }
 
-  return resolveHotkeyValue(t(`${id}.hotkey` as any));
+  return resolveHotkeyValue(t(`${id}.hotkey` as UiTranslationKey));
 }
 
 /**
@@ -11175,7 +2062,7 @@ const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionCon
 
 // #region 🎈Level Context
 /** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
-export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
+export type Level = "base" | "canvas" | "window" | "panel" | "overlay" | "temporary";
 
 const LevelContext = reactHostPort.createContext<Level>("base");
 
@@ -11193,6 +2080,8 @@ export function useLevel(): Level {
 /** @emoji 🎨 Tailwind background class for a {@link Level}. */
 export function getLevelBgClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "bg-canvas";
 		case "window":
 			return "bg-window";
 		case "panel":
@@ -11209,6 +2098,8 @@ export function getLevelBgClass(level: Level): string {
 /** @emoji 🎨 Tailwind hover background class for a {@link Level}. */
 export function getLevelHoverClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "hover:bg-hover-canvas";
 		case "window":
 			return "hover:bg-hover-window";
 		case "panel":
@@ -11225,6 +2116,8 @@ export function getLevelHoverClass(level: Level): string {
 /** @emoji 🎨 Tailwind active-hover class for a {@link Level}. */
 export function getLevelActiveHoverClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "data-[state=active]:bg-hover-canvas";
 		case "window":
 			return "data-[state=active]:bg-hover-window";
 		case "panel":
@@ -11241,6 +2134,8 @@ export function getLevelActiveHoverClass(level: Level): string {
 /** @emoji 🎨 Tailwind z-index class for a {@link Level}. */
 export function getLevelZClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "z-canvas";
 		case "window":
 			return "z-window";
 		case "panel":
@@ -11254,9 +2149,125 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
+/** @emoji 📏 Secondary chrome line (`border-element`) for window frames and in-window controls. */
+export const secondaryLineClass = "border-element";
+
+/** @emoji 📏 Primary chrome line (`border-active-base`) recolors the window U-frame when that stack is globally active. */
+export const activeLineClass = "border-active-base";
+
+/** @emoji 📏 Secondary chrome frame (`border border-element`) wrapping window body or caps. */
+export const windowFrameClass = `border ${secondaryLineClass}`;
+
+/** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
+export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+
+/** @emoji 📏 Top cap with primary chrome line when the stack owns the globally active window. */
+export const windowCapFrameActiveClass = `relative z-[2] border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+
+/** @emoji 📏 Canvas gap stroke — horizontal segment of the U between tab and fullscreen caps. */
+export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${secondaryLineClass}`;
+
+/** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
+export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
+
+/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides). */
+export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${secondaryLineClass} bg-canvas`;
+
+/** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
+export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
+
+/** @emoji 📐 Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
+export interface ModeDockChromeGrid {
+  readonly templateColumns: string;
+  readonly activeCol: number;
+  readonly gapCol: number;
+  readonly controlsCol: number;
+  readonly bodyColumnSpan: string;
+  readonly activeTabIndex: number;
+  readonly tabCol: (tabIndex: number) => number;
+}
+
+/** @emoji 📐 Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
+export function modeDockChromeGridPlacement(
+  tabs: readonly { id: string; title: string }[],
+  activeId: string | undefined,
+): ModeDockChromeGrid {
+  const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeId));
+  const gapCol = tabs.length + 1;
+  const controlsCol = tabs.length + 2;
+  const activeCol = activeTabIndex + 1;
+  const templateParts = [...tabs.map(() => "max-content"), "minmax(0, 1fr)", "max-content"];
+  return {
+    templateColumns: templateParts.join(" "),
+    activeCol,
+    gapCol,
+    controlsCol,
+    bodyColumnSpan: `${activeCol} / ${gapCol + 1}`,
+    activeTabIndex,
+    tabCol: (tabIndex) => tabIndex + 1,
+  };
+}
+
+/** @emoji 📏 Inactive sibling tab — gray pill resting on the U-frame baseline; its bottom stroke color is applied per-stack (active vs secondary) so the chrome reads as one continuous outline. */
+export const modeDockInactiveTabClass =
+  "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
+
+/** @emoji 📏 Inactive sibling tab resting on baseline with no bottom stroke — gap owns the horizontal segment before controls. */
+export const modeDockInactiveTabBeforeGapClass =
+  "relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 border-element bg-window";
+
+/** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
+export const modeDockActiveTabFillClass =
+  "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
+
+/** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body (no bottom stroke). */
+export const modeDockActiveTabClass =
+  `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-active-base ${modeDockActiveTabFillClass}`;
+
+/** @emoji 📏 Maximize cap on the right of the gap (secondary chrome line). */
+export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+
+/** @emoji 📏 Maximize cap on the right when the stack owns the globally active window. */
+export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+
+/** @emoji 📏 Maximize cap on the right of the gap when multi-tab chrome uses a split column layout. */
+export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+
+/** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
+export const windowMeasuresRailWidthClass = "w-[min(10rem,calc(100%-0.5rem))]";
+
+/** @emoji 📐 Outer overlay for floating window measures along the right edge. */
+export const windowMeasuresOverlayClass =
+  "pointer-events-none absolute inset-y-0 right-0 z-panel flex flex-col items-stretch p-single";
+
+/** @emoji 📐 Scrollable stack of measure tiles inside the rail (tiles opt in to hits; gaps pass through to the canvas). */
+export const windowMeasuresStackClass =
+  "pointer-events-none flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
+
+/** @emoji 📐 Single measure tile in the window rail. */
+export const windowMeasureTileClass =
+  "pointer-events-auto select-none border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
+
+/** @emoji 📐 Optional measure caption above a control. */
+export const windowMeasureLabelClass =
+  "text-muted-foreground mb-half block min-w-0 truncate text-[10px] font-medium leading-none";
+
+/** @emoji 📐 Measure section title without a heavy chrome box. */
+export const windowMeasureSectionClass =
+  "text-muted-foreground w-full truncate px-single py-tiny text-center text-[10px] font-medium uppercase tracking-wide";
+
+/** @emoji 📐 Constrains measure controls to the rail width. */
+export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
+
+/** @emoji 📐 Toggle sized to fit inside a measure tile. */
+export const windowMeasureToggleClass =
+  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
+
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "border-hover-canvas";
 		case "window":
 			return "border-hover-window";
 		case "panel":
@@ -11273,6 +2284,8 @@ export function getLevelBorderElementClass(level: Level): string {
 /** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
 export function getLevelDivideElementClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "divide-hover-canvas";
 		case "window":
 			return "divide-hover-window";
 		case "panel":
@@ -11351,12 +2364,15 @@ function CommandDialog({
   children,
   className,
   showCloseButton = true,
+  shouldFilter,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string;
   description?: string;
   className?: string;
   showCloseButton?: boolean;
+  /** @emoji 🔍 When false, host filters items (e.g. Fuse) and cmdk must not re-filter. */
+  shouldFilter?: boolean;
 }) {
   return (
     <Dialog {...props}>
@@ -11365,7 +2381,10 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent className={cn("overflow-hidden p-0", className)} showCloseButton={showCloseButton}>
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-single [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-single [&_[cmdk-item]]:py-tiny [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small">
+        <Command
+          shouldFilter={shouldFilter}
+          className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-single [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-single [&_[cmdk-item]]:py-tiny [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small"
+        >
           {children}
         </Command>
       </DialogContent>
@@ -11481,7 +2500,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="semio.sketchpad.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -11529,11 +2548,11 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
       </div>
     ) : (
       <div className="flex flex-1 min-h-0 relative">
-        {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
+        {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
         <div className="flex flex-col flex-1 min-w-0 relative">
           <div className="flex flex-1 min-h-0 relative">
             <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-            {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
+            {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
           </div>
           {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
         </div>
@@ -11541,7 +2560,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
     )}
     {(footer || toolbar) && (
       <div className="flex-shrink-0 relative">
-        {toolbar && <div className="pointer-events-none absolute bottom-[calc(100%+var(--spacing-double))] left-0 right-0 z-panel flex justify-center">{toolbar}</div>}
+        {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
         {footer}
       </div>
     )}
@@ -11770,16 +2789,20 @@ interface DescriptionTooltipContentProps {
 function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const { t } = useTranslation();
   const mode = useTooltipMode();
+  const labelId = resolveControlLabelId(id);
 
   if (mode === Expertise.EXPERT) return null;
+  if (isInternalChromeControlId(id)) return null;
 
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
-  const value = t(id as any) as any;
+  const value = t(labelId as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
+  const localized = useLabel(labelId);
   const label =
-    typeof value === "string"
+    localized ??
+    (typeof value === "string" && value !== labelId
       ? value
       : typeof value === "object" && value?.label
         ? typeof value.label === "string"
@@ -11793,13 +2816,15 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
                   ? String(value.label.beginner)
                   : undefined
             : undefined
-        : undefined;
+        : labelId.startsWith("ui.")
+          ? humanizeControlId(labelId)
+          : undefined);
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
     hotkey = typeof value.hotkey === "string" ? value.hotkey : undefined;
   } else {
-    const hotkeyKey = `${id}.hotkey`;
+    const hotkeyKey = `${labelId}.hotkey`;
     const hotkeyValue = t(hotkeyKey as any) as any;
     if (typeof hotkeyValue === "string" && hotkeyValue !== hotkeyKey) {
       hotkey = hotkeyValue;
@@ -12211,7 +3236,7 @@ export interface DraggableAvatarProps {
   onPointerLeave?: () => void;
   className?: string;
   avatarClassName?: string;
-  dataDragKind?: "type" | "design";
+  dataDragKind?: string;
   dataDragGuid?: string;
 }
 
@@ -12674,6 +3699,7 @@ const actionGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -12863,7 +3889,10 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
-  const hasText = Boolean(text);
+  const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const hasText = Boolean(inlineText);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const actionElement = (
     <Comp
@@ -12872,6 +3901,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       role={Comp === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
+      aria-label={ariaLabel}
       className={cn(
         "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border",
         hasText && "aspect-auto gap-single",
@@ -12886,11 +3916,11 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       {...(props as any)}
     >
       {icon}
-      {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
+      {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
 
-  if (id) {
+  if (id && !isInternalChromeControlId(id)) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{actionElement}</TooltipTrigger>
@@ -12918,6 +3948,7 @@ const buttonGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -13004,28 +4035,32 @@ function ButtonGroupItem({
   const context = reactHostPort.useContext(ButtonGroupContext);
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
+  const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const buttonGroupItemElement = (
     <Comp
       data-slot="button-group-item"
       id={id}
+      aria-label={ariaLabel}
       data-level={context.level || level}
       className={cn(
         buttonGroupItemVariants({
           level: context.level || level,
         }),
-        text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        text && "flex items-center gap-single py-single px-double w-auto aspect-auto",
+        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,
       )}
       {...(props as any)}
     >
       {icon || children}
-      {text && <span className="text-xs whitespace-nowrap">{text}</span>}
+      {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
 
-  if (id) {
+  if (id && !isInternalChromeControlId(id)) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{buttonGroupItemElement}</TooltipTrigger>
@@ -13075,11 +4110,10 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
 /**
  **/
 function Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
-  const level = useLevel();
   return (
     <ButtonGroup className={className}>
-      <ButtonGroupItem id={id} asChild={asChild} text={text} {...props}>
-        {icon || children}
+      <ButtonGroupItem id={id} asChild={asChild} icon={icon} text={text} {...props}>
+        {children}
       </ButtonGroupItem>
     </ButtonGroup>
   );
@@ -13089,9 +4123,14 @@ function Button({ className, asChild = false, id, icon, text, children, ...props
  * ButtonCycle holds the data fields for a ButtonCycle record.
  **/
 function ButtonCycle<T extends string = string>({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
-  const level = useLevel();
   const currentIndex = items.findIndex((item) => item.value === value);
   const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
+  const cycleText =
+    typeof currentItem?.text === "string"
+      ? currentItem.text
+      : typeof currentItem?.label === "string"
+        ? currentItem.label
+        : undefined;
 
   const handleCycle = () => {
     const nextIndex = (currentIndex + 1) % items.length;
@@ -13100,9 +4139,7 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
 
   return (
     <ButtonGroup id={id} showLabel={showLabel} className={className}>
-      <ButtonGroupItem id={id} onClick={handleCycle} text={currentItem?.label} {...props}>
-        {currentItem?.icon}
-      </ButtonGroupItem>
+      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem?.icon} text={cycleText} {...props} />
     </ButtonGroup>
   );
 }
@@ -13559,7 +4596,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const placeholderLabel = useLabel(placeholderId || "");
-  const mixedLabel = useLabel("semio.sketchpad.common.mixedValues");
+  const mixedLabel = useLabel("ui.common.mixedValues");
   const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
 
   reactHostPort.useEffect(() => {
@@ -14433,7 +5470,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
-  const mixedLabel = useLabel("semio.sketchpad.common.mixedValues");
+  const mixedLabel = useLabel("ui.common.mixedValues");
   const effectivePlaceholder = mixed ? mixedLabel || "—" : computedPlaceholder;
 
   reactHostPort.useEffect(() => {
@@ -14560,6 +5597,7 @@ const toggleVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -14684,12 +5722,17 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
       data-state={rootDataState}
       id={id}
       type={kind}
-      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)}
+      className={cn(
+        "group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x",
+        borderClass,
+        divideClass,
+        className,
+      )}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
-          <ToggleGroupItem key={item.value} {...item} />
+          <ToggleGroupItem key={item.value} {...item} id={item.id ?? id} />
         ))}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -14712,26 +5755,34 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
 function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
   const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
+  const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       id={id}
+      aria-label={ariaLabel}
       className={cn(
         toggleVariants({
           level,
         }),
-        text
+        inlineText
           ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90"
           : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
-        (text || action) && "flex items-center gap-single py-single px-double aspect-auto",
-        text && "w-auto",
+        (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
+        inlineText && "w-auto",
         className,
       )}
       {...props}
     >
       <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{icon as React.ReactNode}</span>
-      {text && <span className="text-xs whitespace-nowrap">{text}</span>}
+      {inlineText ? (
+        <span data-slot="inline-label" className="text-xs whitespace-nowrap">
+          {inlineText}
+        </span>
+      ) : null}
       {action && (
         <div
           className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ml-single")}
@@ -14945,6 +5996,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       items={[
         {
           value: "on",
+          id,
           icon: addIconSize(icon),
           text: text,
         },
@@ -15355,8 +6407,20 @@ export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 
 // #region 🪬Resizable
 
-function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
-  return <ResizablePrimitive.Group data-slot="resizable-panel-group" className={cn("flex h-full w-full", className)} {...props} />;
+function ResizablePanelGroup({
+  className,
+  orientation = "horizontal",
+  ...props
+}: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+  return (
+    <ResizablePrimitive.Group
+      data-slot="resizable-panel-group"
+      data-panel-group-direction={orientation}
+      className={cn("flex h-full w-full", orientation === "vertical" ? "flex-col" : "flex-row", className)}
+      orientation={orientation}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -15368,13 +6432,21 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
 
 function ResizableHandle({
   className,
+  orientation = "horizontal",
   onMouseDown: externalOnMouseDown,
   onMouseEnter: externalOnMouseEnter,
   onMouseLeave: externalOnMouseLeave,
+  style,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Separator> & { onMouseDown?: React.MouseEventHandler<HTMLDivElement>; onMouseEnter?: React.MouseEventHandler<HTMLDivElement>; onMouseLeave?: React.MouseEventHandler<HTMLDivElement> }) {
+}: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
+  orientation?: "horizontal" | "vertical";
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+}) {
   const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const [isDragging, setIsDragging] = reactHostPort.useState(false);
+  const horizontal = orientation === "horizontal";
 
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     setIsDragging(true);
@@ -15404,15 +6476,22 @@ function ResizableHandle({
   return (
     <ResizablePrimitive.Separator
       data-slot="resizable-handle"
+      data-resize-orientation={orientation}
       className={cn(
-        "relative flex w-px items-center justify-center",
-        "border-r",
-        isDragging || isHovered ? "bg-accent border-accent" : "hover:border-accent",
-        "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize",
+        "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
+        horizontal ? "h-full min-h-0 w-double" : "w-full min-w-0 h-double",
+        isDragging || isHovered ? "bg-accent/25" : "hover:bg-accent/25",
+        horizontal
+          ? "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize"
+          : "before:absolute before:inset-x-0 before:-top-2 before:h-tiny before:cursor-ns-resize",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-single after:-translate-x-1/2",
+        "after:hidden",
         className,
       )}
+      style={{
+        ...(horizontal ? { width: "var(--spacing-double)" } : { height: "var(--spacing-double)" }),
+        ...style,
+      }}
       onMouseDown={handleMouseDown as any}
       onMouseEnter={handleMouseEnter as any}
       onMouseLeave={handleMouseLeave as any}
@@ -15461,13 +6540,13 @@ function ScrollBar({ className, orientation = "vertical", ...props }: React.Comp
       orientation={orientation}
       className={cn(
         "flex touch-none select-none transition-colors",
-        orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent p-[1px]",
-        orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+        orientation === "vertical" && "h-full w-[var(--scrollbar-size)] border-l border-l-transparent p-[1px]",
+        orientation === "horizontal" && "h-[var(--scrollbar-size)] flex-col border-t border-t-transparent p-[1px]",
         className,
       )}
       {...props}
     >
-      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="bg-border relative flex-1 rounded-full" />
+      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="relative flex-1" />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   );
 }
@@ -15610,14 +6689,16 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="semio.sketchpad.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
-      <div className="p-single flex gap-single items-center min-w-0">
-        {items.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
-            {item.content}
-          </div>
-        ))}
-      </div>
+    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+      <UiChromeLabelPolicyProvider policy="always">
+        <div className="p-single flex gap-single items-center min-w-0">
+          {items.map((item, index) => (
+            <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+              {item.content}
+            </div>
+          ))}
+        </div>
+      </UiChromeLabelPolicyProvider>
     </nav>
   );
 }
@@ -15680,8 +6761,8 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🖼️IconSelector
 
-/** @emoji 🎛️ Tab buckets for {@link IconSelector} (board WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
-export type ElementsBoardIconSelectorMode = "data" | "emoji" | "math" | "vector";
+/** @emoji 🎛️ Tab buckets for {@link IconSelector} (puzzle 2d WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
+export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
 
 function stripLegacyImageDataPrefixForIconSelectorUi(raw: string): string {
 	const t = raw.trim();
@@ -15708,8 +6789,8 @@ function looksLikeAsciiCatalogishVectorStemForIconSelectorUi(s: string): boolean
 	return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyElementsBoardIconSelectorMode` in `@puzzle/2d/react`. */
-function defaultClassifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
+/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyPuzzle2dIconSelectorMode` in `@puzzle/2d/react`. */
+function defaultClassifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
 	const t = raw.trim();
 	if (t === "") {
 		return "math";
@@ -15768,8 +6849,8 @@ function emitEmojiIconKindFromInner(inner: string): string {
 
 function migrateIconKindToIconSelectorMode(
 	prev: string,
-	mode: ElementsBoardIconSelectorMode,
-	classify: (raw: string) => ElementsBoardIconSelectorMode,
+	mode: Puzzle2dIconSelectorMode,
+	classify: (raw: string) => Puzzle2dIconSelectorMode,
 ): string {
 	const cur = classify(prev);
 	if (cur === mode) {
@@ -15800,19 +6881,19 @@ export interface IconSelectorProps {
 	onChange: (next: string) => void;
 	disabled?: boolean;
 	uniform?: boolean;
-	classifyElementsBoardIconSelectorMode?: (raw: string) => ElementsBoardIconSelectorMode;
+	classifyPuzzle2dIconSelectorMode?: (raw: string) => Puzzle2dIconSelectorMode;
 }
 
-/** @emoji 🖼️ Board `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
+/** @emoji 🖼️ Puzzle 2d `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
 export function IconSelector({
 	id,
 	value,
 	onChange,
 	disabled = false,
 	uniform = true,
-	classifyElementsBoardIconSelectorMode: classifyModeProp,
+	classifyPuzzle2dIconSelectorMode: classifyModeProp,
 }: IconSelectorProps): React.ReactElement {
-	const classifyMode = classifyModeProp ?? defaultClassifyElementsBoardIconSelectorMode;
+	const classifyMode = classifyModeProp ?? defaultClassifyPuzzle2dIconSelectorMode;
 	const activeMode = classifyMode(value);
 	const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
 	const locked = disabled || !uniform;
@@ -15825,7 +6906,7 @@ export function IconSelector({
 		if (locked) {
 			return;
 		}
-		const mode = next as ElementsBoardIconSelectorMode;
+		const mode = next as Puzzle2dIconSelectorMode;
 		onChange(migrateIconKindToIconSelectorMode(value, mode, classifyMode));
 	};
 
@@ -15977,25 +7058,25 @@ export function IconSelector({
 				<SelectContent position="popper">
 					<SelectItem id={`${id}.mode.math`} value="math">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Math
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.data`} value="data">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Data URL
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.emoji`} value="emoji">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Emoji
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.vector`} value="vector">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Catalog / SVG
 						</span>
 					</SelectItem>
@@ -16015,7 +7096,7 @@ export function IconSelector({
 			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
 			<div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
 				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
-					<BoardIconFileImportIcon className="size-3.5" />
+					<Puzzle2dIconFileImportIcon className="size-3.5" />
 					Import file…
 				</Button>
 				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">
@@ -16090,7 +7171,7 @@ const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
   return { open, setOpen };
 };
 
-const treeSectionElementMarker = Symbol.for("semio.tree.section");
+const treeSectionElementMarker = Symbol.for("ui.tree.section");
 
 type TreeComponentMarker = {
   [treeSectionElementMarker]?: boolean;
@@ -16174,6 +7255,14 @@ const treeSubtreeGapPx = 0;
 const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
+const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
+
+/** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
+const renderTreeRowIcon = (icon: React.ReactNode | undefined, DefaultIcon: LucideIcon) => (
+  <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0">
+    {icon ?? <DefaultIcon className={treeRowDefaultIconClassName} />}
+  </span>
+);
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
 const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : `${anchorOffsetPx}px`);
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
@@ -16401,6 +7490,7 @@ export interface TreeSectionAction {
   icon: React.ReactNode;
   onClick: () => void;
   title?: string;
+  text?: string;
   id?: string;
 }
 
@@ -16457,6 +7547,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
           }}
           id={action.id}
           icon={action.icon}
+          text={action.text ?? action.title}
         />
       ),
     )}
@@ -16512,8 +7603,12 @@ export interface TreeDataItem {
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
   draggable?: boolean;
+  /** @emoji 📤 Extra `dataTransfer` MIME entries merged on drag start (in-app palette drags). */
+  dragData?: Record<string, string>;
   onClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 export interface TreeDataSection {
@@ -16532,8 +7627,16 @@ export interface TreeDataSection {
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
+/** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
+export interface TreePointerPaletteDragController {
+  readEncodedDragPayload: (dragData: Record<string, string>) => string | undefined;
+  begin: (encoded: string) => void;
+  cancel: () => void;
+}
+
 export interface TreeDragAndDropController {
   getDragData?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => Record<string, string> | undefined;
+  pointerPaletteDrag?: TreePointerPaletteDragController;
   onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   onDragEnd?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   handleDrop?: (context: { target: TreeDataItem | TreeDataSection; targetKind: "item" | "section"; data: Record<string, string>; sourceItems: TreeDataItem[]; section: TreeDataSection }) => void | Promise<void>;
@@ -16642,6 +7745,8 @@ interface SortableTreeItemProps {
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
   layoutKind?: "default" | "property";
 }
 
@@ -16670,6 +7775,7 @@ interface TreeItemProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
   draggable?: boolean;
   onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragEnd?: React.DragEventHandler<HTMLDivElement>;
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
@@ -16679,6 +7785,12 @@ interface TreeItemProps {
   activeBranchIndex?: number;
   /** Callback when the user navigates to a different branch. */
   onBranchChange?: (index: number) => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerMove?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerCancel?: React.PointerEventHandler<HTMLDivElement>;
   layoutKind?: "default" | "property";
 }
 
@@ -16702,32 +7814,161 @@ interface TreeRootProps {
   selectedIds?: string[];
   defaultSelectedIds?: string[];
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  highlightedIds?: readonly string[];
   dragAndDropController?: TreeDragAndDropController;
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
 }
 
-/**
- * TreeDataRenderingContextValue holds the data fields for a TreeDataRenderingContextValue record.
- **/
+/** @emoji ✅ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+interface TreeSelectionStore {
+  subscribe: (listener: () => void) => () => void;
+  getSelectedIds: () => readonly string[];
+  isSelected: (itemId: string) => boolean;
+  setSelectedIds: (selectedIds: readonly string[]) => void;
+}
+
+function createTreeSelectionStore(): TreeSelectionStore {
+  let selectedIds: readonly string[] = [];
+  let selectedIdSet = new Set<string>();
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSelectedIds() {
+      return selectedIds;
+    },
+    isSelected(itemId) {
+      return selectedIdSet.has(itemId);
+    },
+    setSelectedIds(nextIds) {
+      if (nextIds.length === selectedIds.length && nextIds.every((id, index) => id === selectedIds[index])) {
+        return;
+      }
+      selectedIds = nextIds;
+      selectedIdSet = new Set(nextIds);
+      notify();
+    },
+  };
+}
+
+const TreeSelectionContext = reactHostPort.createContext<TreeSelectionStore | null>(null);
+
+function useTreeSelectionStore(): TreeSelectionStore {
+  const value = reactHostPort.useContext(TreeSelectionContext);
+  if (!value) {
+    throw new Error("Tree selection hooks must render inside Tree");
+  }
+  return value;
+}
+
+function useTreeItemRowSelected(itemId: string, itemSelectedOverride: boolean | undefined): boolean {
+  const selectionStore = useTreeSelectionStore();
+  const subscribedSelected = reactHostPort.useSyncExternalStore(
+    selectionStore.subscribe,
+    () => selectionStore.isSelected(itemId),
+    () => selectionStore.isSelected(itemId),
+  );
+  return itemSelectedOverride ?? subscribedSelected;
+}
+
+/** @emoji 🖱️ Per-tree highlight store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+interface TreeHighlightStore {
+  subscribe: (listener: () => void) => () => void;
+  getHighlightedIds: () => readonly string[];
+  isHighlighted: (itemId: string) => boolean;
+  setHighlightedIds: (highlightedIds: readonly string[]) => void;
+}
+
+function createTreeHighlightStore(): TreeHighlightStore {
+  let highlightedIds: readonly string[] = [];
+  let highlightedIdSet = new Set<string>();
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getHighlightedIds() {
+      return highlightedIds;
+    },
+    isHighlighted(itemId) {
+      return highlightedIdSet.has(itemId);
+    },
+    setHighlightedIds(nextIds) {
+      if (nextIds.length === highlightedIds.length && nextIds.every((id, index) => id === highlightedIds[index])) {
+        return;
+      }
+      highlightedIds = nextIds;
+      highlightedIdSet = new Set(nextIds);
+      notify();
+    },
+  };
+}
+
+const TreeHighlightContext = reactHostPort.createContext<TreeHighlightStore | null>(null);
+
+function useTreeHighlightStore(): TreeHighlightStore {
+  const value = reactHostPort.useContext(TreeHighlightContext);
+  if (!value) {
+    throw new Error("Tree highlight hooks must render inside Tree");
+  }
+  return value;
+}
+
+function useTreeItemRowHighlighted(itemId: string, itemHighlightedOverride: boolean | undefined): boolean {
+  const highlightStore = useTreeHighlightStore();
+  const subscribedHighlighted = reactHostPort.useSyncExternalStore(
+    highlightStore.subscribe,
+    () => highlightStore.isHighlighted(itemId),
+    () => highlightStore.isHighlighted(itemId),
+  );
+  return itemHighlightedOverride ?? subscribedHighlighted;
+}
+
+/** @emoji 🌲 Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
 interface TreeDataRenderingContextValue {
-  sectionItemsById: Record<string, TreeDataItem[]>;
-  itemItemsById: Record<string, TreeDataItem[]>;
-  loadingById: Record<string, boolean>;
-  selectedIds: string[];
-  draggedIds: string[];
-  loadSectionItems: (section: TreeDataSection) => Promise<void>;
-  loadItemItems: (item: TreeDataItem) => Promise<void>;
-  handleSelectItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
-  handleDoubleClickItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
-  handleDragStart: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
-  handleDragEnd: (item: TreeDataItem, section: TreeDataSection) => void;
-  handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
-  handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
-  handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly sectionItemsById: Record<string, TreeDataItem[]>;
+  readonly itemItemsById: Record<string, TreeDataItem[]>;
+  readonly loadingById: Record<string, boolean>;
+  readonly dragAndDropController?: TreeDragAndDropController;
+  readonly loadSectionItems: (section: TreeDataSection) => Promise<void>;
+  readonly loadItemItems: (item: TreeDataItem) => Promise<void>;
+  readonly handleSelectItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  readonly handleDoubleClickItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  readonly handleDragStart: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDragEnd: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
+  readonly handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
 }
 
 const TreeDataRenderingContext = reactHostPort.createContext<TreeDataRenderingContextValue | null>(null);
+
+function useTreeDataRendering(): TreeDataRenderingContextValue {
+  const value = reactHostPort.useContext(TreeDataRenderingContext);
+  if (!value) {
+    throw new Error("Tree data row components must render inside Tree");
+  }
+  return value;
+}
 
 const treeDefaultDragMimeKind = "application/vnd.code.tree.item";
 
@@ -16763,6 +8004,29 @@ const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Re
   return orderedIds;
 };
 
+const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"]';
+
+const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]`;
+
+/** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
+function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean): string {
+  if (isSelected) {
+    return "bg-active-base text-active-foreground";
+  }
+  if (isHighlighted) {
+    return "bg-hover-base text-foreground";
+  }
+  return "";
+}
+
+/** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
+function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | null): boolean {
+  if (!(relatedTarget instanceof Element)) {
+    return true;
+  }
+  return relatedTarget.closest(treeSemanticHoverStaySelector) === null;
+}
+
 /**
  * Collapsible tree section header with optional action buttons.
  **/
@@ -16788,8 +8052,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDrop,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const localizedLabel = id ? useLabel(id) : undefined;
-  const displayLabel = label !== undefined ? label : localizedLabel;
+  const suppressLocalizedLabel = label === "";
+  const resolvedLabel = label === "" ? undefined : label;
+  const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? useLabel(id) : undefined;
+  const displayLabel = resolvedLabel ?? localizedLabel;
   assertNoNestedTreeSections(children, "TreeSection");
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
@@ -16801,7 +8067,6 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
@@ -16819,12 +8084,11 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         id={id}
         className={rowClassName}
         draggable={draggable}
-        onPointerEnter={() => {
-          setIsHovered(true);
-          onSectionPointerEnter?.();
-        }}
-        onPointerLeave={() => {
-          setIsHovered(false);
+        onPointerEnter={onSectionPointerEnter}
+        onPointerLeave={(event) => {
+          if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+            return;
+          }
           onSectionPointerLeave?.();
         }}
         onDragStart={onDragStart}
@@ -16841,7 +8105,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, FolderIcon)}
               {id ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -16876,12 +8140,11 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           className={rowClassName}
           role="button"
           draggable={draggable}
-          onPointerEnter={() => {
-            setIsHovered(true);
-            onSectionPointerEnter?.();
-          }}
-          onPointerLeave={() => {
-            setIsHovered(false);
+          onPointerEnter={onSectionPointerEnter}
+          onPointerLeave={(event) => {
+            if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+              return;
+            }
             onSectionPointerLeave?.();
           }}
           onDragStart={onDragStart}
@@ -16906,7 +8169,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 {id ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -16968,7 +8231,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
@@ -16978,7 +8240,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   };
 
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
+  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren && displayLabel) {
@@ -17000,8 +8262,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               event.stopPropagation();
               onDoubleClick(event);
             }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
           >
             <TreeAlignedRow
               level={level}
@@ -17026,7 +8286,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
                   {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                  {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                  {renderTreeRowIcon(icon, FolderIcon)}
                   <span
                     data-slot="tree-label"
                     className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -17073,8 +8333,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             event.stopPropagation();
             onDoubleClick(event);
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <TreeAlignedRow
             level={level}
@@ -17099,7 +8357,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -17153,14 +8411,12 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           event.stopPropagation();
           onDoubleClick(event);
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, DocumentIcon)}
               <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
@@ -17191,14 +8447,12 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         event.stopPropagation();
         onDoubleClick(event);
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-            {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+            {renderTreeRowIcon(icon, DocumentIcon)}
             <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
@@ -17261,12 +8515,19 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   loading = false,
   draggable = false,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
   branchCount = 0,
   activeBranchIndex = 0,
   onBranchChange,
+  onPointerEnter,
+  onPointerLeave,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   layoutKind = "default",
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
@@ -17286,6 +8547,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         isLastItem={isLastItem}
         actions={actions}
         onDoubleClick={onDoubleClick}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
       >
         {children}
       </SortableTreeItem>
@@ -17304,12 +8567,24 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
+  const handlePointerEnter = reactHostPort.useCallback(() => {
+    onPointerEnter?.();
+  }, [onPointerEnter]);
+  const handlePointerLeave = reactHostPort.useCallback(
+    (event: React.MouseEvent) => {
+      if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+        return;
+      }
+      onPointerLeave?.();
+    },
+    [onPointerLeave],
+  );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
+  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
+  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
+  const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property" && resolvedLabel) {
     return (
@@ -17322,6 +8597,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         className={cn("group min-w-0 w-full", className)}
         draggable={draggable}
         onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -17331,8 +8607,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           event.stopPropagation();
           onDoubleClick(event);
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handlePointerEnter}
+        onMouseLeave={handlePointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
       >
         <TreeAlignedRow
           level={level}
@@ -17359,7 +8639,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         >
           <div className={cn(treeHeaderRowClassName, "h-[22px]", treeInspectorInnerRowClassName)}>
             <div className={cn(treeHeaderMainClassName, "h-[22px]")}>
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, isExpandable ? FolderIcon : DocumentIcon)}
               {id ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -17433,6 +8713,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           className={itemClasses}
           draggable={draggable}
           onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
@@ -17442,8 +8723,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             event.stopPropagation();
             onDoubleClick(event);
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handlePointerEnter}
+          onMouseLeave={handlePointerLeave}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
         >
           <TreeAlignedRow
             level={level}
@@ -17467,7 +8752,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -17541,19 +8826,24 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       className={itemClasses}
       draggable={draggable}
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handlePointerEnter}
+      onMouseLeave={handlePointerLeave}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
-            {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-            <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text" style={treeItemLabelStyle}>
+            {renderTreeRowIcon(icon, DocumentIcon)}
+            <span data-slot="tree-label" className={cn("flex-1 text-xs font-normal truncate text-foreground", draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
           </div>
@@ -17835,6 +9125,135 @@ const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
 };
 //#endregion 🎃TreeHoverPath
 
+/** @emoji 🌿 Hoisted data-tree item row (stable component type across Tree re-renders). */
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
+  readonly item: TreeDataItem;
+  readonly section: TreeDataSection;
+  readonly path: readonly string[];
+  readonly isLastItem: boolean;
+}): React.ReactElement {
+  const { item, section, path, isLastItem } = props;
+  const {
+    itemItemsById,
+    loadingById,
+    dragAndDropController,
+    loadItemItems,
+    handleSelectItem,
+    handleDoubleClickItem,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDropOnItem,
+    buildPalettePointerProps,
+  } = useTreeDataRendering();
+  const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
+  const isRowHighlighted = useTreeItemRowHighlighted(item.id, item.isHighlighted);
+  const baseChildItems = getTreeItemItems(item, itemItemsById);
+  const alternatives = item.alternatives ?? [];
+  const branchCount = alternatives.length;
+  const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
+  const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
+  const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
+  const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
+  const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
+  const hasDynamicChildren = Boolean(item.getItems);
+  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
+  const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+
+  reactHostPort.useEffect(() => {
+    if (treeOpenState.open && hasDynamicChildren) {
+      void loadItemItems(item);
+    }
+  }, [hasDynamicChildren, item, loadItemItems, treeOpenState.open]);
+
+  const palettePointerProps = buildPalettePointerProps(item, section);
+  const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
+
+  return (
+    <TreeItem
+      id={item.id}
+      label={getTreeItemLabel(item)}
+      icon={item.icon}
+      className={cn(item.className, palettePointerClassName)}
+      isSelected={isRowSelected}
+      isHighlighted={isRowHighlighted}
+      isDragHandle={item.isDragHandle}
+      defaultOpen={getTreeItemDefaultOpen(item)}
+      open={treeOpenState.open}
+      onOpenChange={treeOpenState.setOpen}
+      expandable={isExpandable}
+      loading={isLoading}
+      isLastItem={isLastItem}
+      actions={item.actions}
+      draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
+      onClick={(event) => handleSelectItem(event, item, section, [...path])}
+      onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
+      onDragStart={(event) => handleDragStart(event, item, section)}
+      onDragEnd={(event) => handleDragEnd(event, item, section)}
+      onDragOver={handleDragOver}
+      onDrop={(event) => handleDropOnItem(event, item, section)}
+      onPointerEnter={item.onPointerEnter}
+      onPointerLeave={item.onPointerLeave}
+      {...palettePointerProps}
+      branchCount={branchCount}
+      activeBranchIndex={clampedBranchIndex}
+      onBranchChange={setActiveBranchIndex}
+    >
+      {childItems.map((childItem, index) => (
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
+      ))}
+      {!isLoading && childItems.length === 0 && item.emptyState && (
+        <TreeItem>
+          <TreeContent>{item.emptyState}</TreeContent>
+        </TreeItem>
+      )}
+    </TreeItem>
+  );
+});
+
+/** @emoji 🌿 Hoisted data-tree section row (stable component type across Tree re-renders). */
+const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection }): React.ReactElement {
+  const { section } = props;
+  const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
+  const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
+  const items = getTreeSectionItems(section, sectionItemsById);
+  const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
+  const hasDynamicChildren = Boolean(section.getItems);
+  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
+
+  reactHostPort.useEffect(() => {
+    if (treeOpenState.open && hasDynamicChildren) {
+      void loadSectionItems(section);
+    }
+  }, [hasDynamicChildren, loadSectionItems, section, treeOpenState.open]);
+
+  return (
+    <TreeSection
+      id={section.id}
+      label={section.label}
+      icon={section.icon}
+      className={section.className}
+      defaultOpen={section.defaultOpen}
+      open={treeOpenState.open}
+      onOpenChange={treeOpenState.setOpen}
+      expandable={isExpandable}
+      loading={isLoading}
+      actions={section.actions}
+      onPointerEnter={section.onPointerEnter}
+      onPointerLeave={section.onPointerLeave}
+      onDoubleClick={section.onDoubleClick}
+      onDragOver={handleDragOver}
+      onDrop={(event) => handleDropOnSection(event, section)}
+    >
+      {section.content}
+      {items.map((item, index) => (
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
+      ))}
+      {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
+    </TreeSection>
+  );
+});
+
 /**
  * Hierarchical tree view component with optional file tree rendering.
  **/
@@ -17851,6 +9270,7 @@ export const Tree = (({
   selectedIds: controlledSelectedIds,
   defaultSelectedIds = [],
   onSelectionChange,
+  highlightedIds: controlledHighlightedIds = [],
   dragAndDropController,
   emptyState,
   indentMultiplier = 1,
@@ -17872,20 +9292,45 @@ export const Tree = (({
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
   const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
   const resolvedSections = sections ?? [];
+  const suppressPaletteClickRef = reactHostPort.useRef(false);
+  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number }>({
+    pending: false,
+    dragging: false,
+    encoded: null,
+    startX: 0,
+    startY: 0,
+  });
+  const palettePointerWindowCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
+  const clearPalettePointerWindowListeners = reactHostPort.useCallback(() => {
+    palettePointerWindowCleanupRef.current?.();
+    palettePointerWindowCleanupRef.current = null;
+  }, []);
+  reactHostPort.useEffect(() => () => clearPalettePointerWindowListeners(), [clearPalettePointerWindowListeners]);
   const anchorIdRef = reactHostPort.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
   const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
+  const [selectionStore] = reactHostPort.useState(createTreeSelectionStore);
+  const selectionStoreRef = reactHostPort.useRef(selectionStore);
+  selectionStoreRef.current = selectionStore;
+  const [highlightStore] = reactHostPort.useState(createTreeHighlightStore);
+  const resolvedHighlightedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledHighlightedIds, "multiple"), [controlledHighlightedIds]);
 
   reactHostPort.useEffect(() => {
-    setSectionItemsById((previousItems) => {
-      let hasChanges = false;
-      const nextItems = { ...previousItems };
-      resolvedSections.forEach((section) => {
-        if (section.items && previousItems[section.id] !== section.items) {
+    selectionStore.setSelectedIds(resolvedSelectedIds);
+  }, [resolvedSelectedIds, selectionStore]);
+
+  reactHostPort.useLayoutEffect(() => {
+    highlightStore.setHighlightedIds(resolvedHighlightedIds);
+  }, [highlightStore, resolvedHighlightedIds]);
+
+  reactHostPort.useEffect(() => {
+    setSectionItemsById(() => {
+      const nextItems: Record<string, TreeDataItem[]> = {};
+      for (const section of resolvedSections) {
+        if (section.items) {
           nextItems[section.id] = section.items;
-          hasChanges = true;
         }
-      });
-      return hasChanges ? nextItems : previousItems;
+      }
+      return nextItems;
     });
   }, [resolvedSections]);
 
@@ -17950,10 +9395,15 @@ export const Tree = (({
 
   const handleSelectItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+      if (suppressPaletteClickRef.current) {
+        suppressPaletteClickRef.current = false;
+        return;
+      }
+      const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
       const nextSelection = getTreeNextSelectionState({
         selectionMode,
-        selectedIds: resolvedSelectedIds,
+        selectedIds: currentSelectedIds,
         orderedIds,
         targetId: item.id,
         anchorId: anchorIdRef.current,
@@ -17964,30 +9414,53 @@ export const Tree = (({
       updateSelection(nextSelection.selectedIds);
       item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });
     },
-    [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection],
+    [itemItemsById, resolvedSections, sectionItemsById, selectionMode, updateSelection],
   );
 
   const handleDoubleClickItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
-      item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
+      item.onDoubleClick?.(event, { path, selectedIds: selectionStoreRef.current.getSelectedIds(), sectionId: section.id });
     },
-    [resolvedSelectedIds],
+    [],
   );
 
   const handleDragStart = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
-      const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
+      event.stopPropagation();
+      const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
+      const nextDraggedIds = currentSelectedIds.includes(item.id) ? currentSelectedIds : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
-      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });
+      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section }) ?? item.dragData;
       Object.entries(customData ?? {}).forEach(([kind, value]) => {
         event.dataTransfer.setData(kind, value);
       });
+      if (customData && Object.keys(customData).length > 0) {
+        event.dataTransfer.effectAllowed = "copy";
+        const labelText = typeof item.label === "string" ? item.label : typeof item.label === "number" ? String(item.label) : "Kind";
+        const ghost = document.createElement("div");
+        ghost.textContent = labelText;
+        ghost.setAttribute("data-puzzle3d-fixture-drag-ghost", "true");
+        ghost.className = "border-primary bg-panel text-foreground pointer-events-none fixed left-[-9999px] top-0 z-[9999] rounded-md border px-2 py-1 text-xs shadow-md";
+        document.body.appendChild(ghost);
+        event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
+        requestAnimationFrame(() => ghost.remove());
+      }
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
-    [dragAndDropController, itemMap, resolvedSelectedIds],
+    [dragAndDropController, itemMap],
+  );
+
+  const handleDragEnd = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      const sourceIds = draggedIds.length > 0 ? draggedIds : [item.id];
+      const sourceItems = sourceIds.map((id) => itemMap[id]).filter(Boolean);
+      dragAndDropController?.onDragEnd?.({ items: sourceItems, sourceItem: item, section });
+      setDraggedIds([]);
+    },
+    [dragAndDropController, draggedIds, itemMap],
   );
 
   const handleDrop = reactHostPort.useCallback(
@@ -18006,114 +9479,191 @@ export const Tree = (({
     [dragAndDropController, draggedIds, itemMap],
   );
 
-  const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
-    const baseChildItems = getTreeItemItems(item, itemItemsById);
-    const alternatives = item.alternatives ?? [];
-    const branchCount = alternatives.length;
-    const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
-    const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
-    const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
-    const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
-    const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
-    const hasDynamicChildren = Boolean(item.getItems);
-    const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
-    const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+  const resolveItemDragData = reactHostPort.useCallback(
+    (treeItem: TreeDataItem, treeSection: TreeDataSection) =>
+      dragAndDropController?.getDragData?.({ items: [treeItem], sourceItem: treeItem, section: treeSection }) ?? treeItem.dragData,
+    [dragAndDropController],
+  );
 
-    reactHostPort.useEffect(() => {
-      if (treeOpenState.open && hasDynamicChildren) {
-        void loadItemItems(item);
+  const buildPalettePointerProps = reactHostPort.useCallback(
+    (item: TreeDataItem, section: TreeDataSection): Pick<TreeItemProps, "onPointerDown"> => {
+      const palettePointer = dragAndDropController?.pointerPaletteDrag;
+      if (!palettePointer) {
+        return {};
       }
-    }, [hasDynamicChildren, item, treeOpenState.open]);
+      const beginPalettePointerDrag = (): void => {
+        const gesture = palettePointerGestureRef.current;
+        if (!gesture.pending || !gesture.encoded) {
+          return;
+        }
+        gesture.pending = false;
+        gesture.dragging = true;
+        suppressPaletteClickRef.current = true;
+        palettePointer.begin(gesture.encoded);
+        dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
+      };
+      const finishPalettePointerGesture = (): void => {
+        clearPalettePointerWindowListeners();
+        if (palettePointerGestureRef.current.dragging) {
+          suppressPaletteClickRef.current = true;
+        }
+        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+      };
+      return {
+        onPointerDown: (event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          const dragData = resolveItemDragData(item, section);
+          if (!dragData) {
+            return;
+          }
+          const encoded = palettePointer.readEncodedDragPayload(dragData);
+          if (!encoded) {
+            return;
+          }
+          clearPalettePointerWindowListeners();
+          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY };
+          event.preventDefault();
+          event.stopPropagation();
+          const onWindowPointerMove = (moveEvent: PointerEvent): void => {
+            const gesture = palettePointerGestureRef.current;
+            if (!gesture.pending && !gesture.dragging) {
+              return;
+            }
+            const deltaX = moveEvent.clientX - gesture.startX;
+            const deltaY = moveEvent.clientY - gesture.startY;
+            if (gesture.pending && deltaX * deltaX + deltaY * deltaY < 36) {
+              return;
+            }
+            beginPalettePointerDrag();
+          };
+          const onWindowPointerUp = (): void => {
+            if (palettePointerGestureRef.current.pending) {
+              finishPalettePointerGesture();
+              return;
+            }
+            finishPalettePointerGesture();
+          };
+          const onWindowPointerCancel = (): void => {
+            if (palettePointerGestureRef.current.dragging) {
+              palettePointer.cancel();
+              dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
+            }
+            finishPalettePointerGesture();
+          };
+          window.addEventListener("pointermove", onWindowPointerMove);
+          window.addEventListener("pointerup", onWindowPointerUp);
+          window.addEventListener("pointercancel", onWindowPointerCancel);
+          palettePointerWindowCleanupRef.current = () => {
+            window.removeEventListener("pointermove", onWindowPointerMove);
+            window.removeEventListener("pointerup", onWindowPointerUp);
+            window.removeEventListener("pointercancel", onWindowPointerCancel);
+          };
+        },
+      };
+    },
+    [clearPalettePointerWindowListeners, dragAndDropController, resolveItemDragData],
+  );
 
-    return (
-      <TreeItem
-        id={item.id}
-        label={getTreeItemLabel(item)}
-        icon={item.icon}
-        className={item.className}
-        isSelected={item.isSelected ?? resolvedSelectedIds.includes(item.id)}
-        isHighlighted={item.isHighlighted}
-        isDragHandle={item.isDragHandle}
-        defaultOpen={getTreeItemDefaultOpen(item)}
-        open={treeOpenState.open}
-        onOpenChange={treeOpenState.setOpen}
-        expandable={isExpandable}
-        loading={isLoading}
-        isLastItem={isLastItem}
-        actions={item.actions}
-        draggable={item.draggable ?? Boolean(dragAndDropController)}
-        onClick={(event) => handleSelectItem(event, item, section, path)}
-        onDoubleClick={(event) => handleDoubleClickItem(event, item, section, path)}
-        onDragStart={(event) => handleDragStart(event, item, section)}
-        onDragOver={handleDragOver}
-        onDrop={(event) => handleDrop(event, item, "item", section)}
-        branchCount={branchCount}
-        activeBranchIndex={clampedBranchIndex}
-        onBranchChange={setActiveBranchIndex}
-      >
-        {childItems.map((childItem, index) => (
-          <DataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
-        ))}
-        {!isLoading && childItems.length === 0 && item.emptyState && (
-          <TreeItem>
-            <TreeContent>{item.emptyState}</TreeContent>
-          </TreeItem>
-        )}
-      </TreeItem>
-    );
-  };
+  const handleDropOnItem = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      handleDrop(event, item, "item", section);
+    },
+    [handleDrop],
+  );
 
-  const DataSectionView: React.FC<{ section: TreeDataSection }> = ({ section }) => {
-    const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
-    const items = getTreeSectionItems(section, sectionItemsById);
-    const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
-    const hasDynamicChildren = Boolean(section.getItems);
-    const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
+  const handleDropOnSection = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => {
+      handleDrop(event, section, "section", section);
+    },
+    [handleDrop],
+  );
 
-    reactHostPort.useEffect(() => {
-      if (treeOpenState.open && hasDynamicChildren) {
-        void loadSectionItems(section);
-      }
-    }, [hasDynamicChildren, section, treeOpenState.open]);
-
-    return (
-      <TreeSection
-        id={section.id}
-        label={section.label}
-        icon={section.icon}
-        className={section.className}
-        defaultOpen={section.defaultOpen}
-        open={treeOpenState.open}
-        onOpenChange={treeOpenState.setOpen}
-        expandable={isExpandable}
-        loading={isLoading}
-        actions={section.actions}
-        onPointerEnter={section.onPointerEnter}
-        onPointerLeave={section.onPointerLeave}
-        onDoubleClick={section.onDoubleClick}
-        onDragOver={handleDragOver}
-        onDrop={(event) => handleDrop(event, section, "section", section)}
-      >
-        {section.content}
-        {items.map((item, index) => (
-          <DataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
-        ))}
-        {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
-      </TreeSection>
-    );
-  };
+  const treeDataRenderingValue = reactHostPort.useMemo<TreeDataRenderingContextValue>(
+    () => ({
+      sectionItemsById,
+      itemItemsById,
+      loadingById,
+      dragAndDropController,
+      loadSectionItems,
+      loadItemItems,
+      handleSelectItem,
+      handleDoubleClickItem,
+      handleDragStart,
+      handleDragEnd,
+      handleDropOnItem,
+      handleDropOnSection,
+      handleDragOver,
+      buildPalettePointerProps,
+    }),
+    [
+      buildPalettePointerProps,
+      dragAndDropController,
+      handleDoubleClickItem,
+      handleDragEnd,
+      handleDragOver,
+      handleDragStart,
+      handleDropOnItem,
+      handleDropOnSection,
+      handleSelectItem,
+      itemItemsById,
+      loadItemItems,
+      loadSectionItems,
+      loadingById,
+      sectionItemsById,
+    ],
+  );
 
   const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const lastHoverRowRef = reactHostPort.useRef<Element | null>(null);
+  const hoverPathFrameRef = reactHostPort.useRef<number | null>(null);
+  const pendingHoverRowRef = reactHostPort.useRef<Element | null>(null);
 
-  const handleTreePointerOver = reactHostPort.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const flushTreeHoverPath = reactHostPort.useCallback(() => {
+    hoverPathFrameRef.current = null;
     const root = treeRootRef.current;
+    const row = pendingHoverRowRef.current;
+    pendingHoverRowRef.current = null;
     if (!root) return;
-    const row = resolveHoverRow(e.target as HTMLElement, root);
-    if (row) applyTreeHoverPath(row, root);
-    else clearTreeHoverPath(root);
+    if (row) {
+      applyTreeHoverPath(row, root);
+      lastHoverRowRef.current = row;
+      return;
+    }
+    clearTreeHoverPath(root);
+    lastHoverRowRef.current = null;
   }, []);
 
+  const scheduleTreeHoverPath = reactHostPort.useCallback(
+    (row: Element | null) => {
+      pendingHoverRowRef.current = row;
+      if (hoverPathFrameRef.current !== null) {
+        return;
+      }
+      hoverPathFrameRef.current = requestAnimationFrame(flushTreeHoverPath);
+    },
+    [flushTreeHoverPath],
+  );
+
+  const handleTreePointerOver = reactHostPort.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const root = treeRootRef.current;
+      if (!root) return;
+      const row = resolveHoverRow(e.target as HTMLElement, root);
+      if (row === lastHoverRowRef.current) return;
+      scheduleTreeHoverPath(row);
+    },
+    [scheduleTreeHoverPath],
+  );
+
   const handleTreePointerLeave = reactHostPort.useCallback(() => {
+    if (hoverPathFrameRef.current !== null) {
+      cancelAnimationFrame(hoverPathFrameRef.current);
+      hoverPathFrameRef.current = null;
+    }
+    pendingHoverRowRef.current = null;
+    lastHoverRowRef.current = null;
     const root = treeRootRef.current;
     if (root) clearTreeHoverPath(root);
   }, []);
@@ -18122,11 +9672,17 @@ export const Tree = (({
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
-          {resolvedSections.map((section, index) => (
-            <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
-              <DataSectionView section={section} />
-            </div>
-          ))}
+          <TreeSelectionContext.Provider value={selectionStore}>
+            <TreeHighlightContext.Provider value={highlightStore}>
+              <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+                {resolvedSections.map((section, index) => (
+                  <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
+                    <TreeDataSectionView section={section} />
+                  </div>
+                ))}
+              </TreeDataRenderingContext.Provider>
+            </TreeHighlightContext.Provider>
+          </TreeSelectionContext.Provider>
           {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
@@ -18264,7 +9820,6 @@ interface FileTreeItemProps {
  **/
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
   const { level, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const itemId = `file-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, true);
 
@@ -18296,8 +9851,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
     className: itemClasses,
     style: { paddingLeft: `${detailPanelIndentPx(level, indentMultiplier) + 12}px` },
     onClick: handleClick,
-    onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => setIsHovered(false),
   };
 
   const itemElement =
@@ -18468,8 +10021,18 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
       return <Stepper id={controlId} value={def.value} onChange={def.onChange} min={def.meta?.min} max={def.meta?.max} step={def.meta?.step ?? 1} />;
     case "slider":
       return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} />;
-    case "boolean":
-      return <Toggle id={controlId} pressed={def.value} onPressedChange={def.onChange} icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />} />;
+    case "boolean": {
+      const labelText = typeof def.meta?.label === "string" ? def.meta.label : def.key;
+      return (
+        <Toggle
+          id={controlId}
+          pressed={def.value}
+          onPressedChange={def.onChange}
+          icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />}
+          text={labelText}
+        />
+      );
+    }
     case "string":
       return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} />;
     case "color":
@@ -18895,7 +10458,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   return (
     <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
       {prev ? (
-        <Button id="semio.sketchpad.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
+        <Button id="ui.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
             <div className="font-medium">{prev.title}</div>
@@ -18905,7 +10468,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
-        <Button id="semio.sketchpad.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
+        <Button id="ui.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
@@ -19208,7 +10771,10 @@ export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
   order?: number;
-  tree: TreePanelSource;
+  /** @emoji 🌲 Static or callback tree sections; omit when {@link panel} is set. */
+  tree?: TreePanelSource;
+  /** @emoji 🌲 Live React panel body (e.g. declarative `UiTreeNode` rebuilt from runtime snapshot). */
+  panel?: React.ReactNode;
 }
 
 export interface TreePanelConfig {
@@ -19218,6 +10784,7 @@ export interface TreePanelConfig {
   selectedIds?: string[];
   defaultSelectedIds?: string[];
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  highlightedIds?: readonly string[];
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   className?: string;
@@ -19342,6 +10909,26 @@ export interface SidePanelProps {
   className?: string;
 }
 
+/** @emoji 🌲 Side-panel tree body; skipped when only panel visibility toggles. */
+const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config }: { readonly config: TreePanelConfig }) {
+  return (
+    <TreeStateProvider>
+      <Tree
+        className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
+        defaultSelectedIds={config.defaultSelectedIds}
+        dragAndDropController={config.dragAndDropController}
+        emptyState={config.emptyState}
+        highlightedIds={config.highlightedIds}
+        indentMultiplier={config.indentMultiplier}
+        onSelectionChange={config.onSelectionChange}
+        sections={config.sections}
+        selectedIds={config.selectedIds}
+        selectionMode={config.selectionMode}
+      />
+    </TreeStateProvider>
+  );
+});
+
 const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
@@ -19354,10 +10941,17 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   }, [size]);
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const showTabBar = sortedTabs.length > 1;
-  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTab = reactHostPort.useMemo(
+    () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
+    [currentActiveTab, sortedTabs],
+  );
+  const activeTabTree = reactHostPort.useMemo(
+    () => (activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
+    [activeTab],
+  );
+  const activeTabPanel = activeTab?.panel;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -19404,7 +10998,17 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
 
   return (
     <LevelProvider level="panel">
-      <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
+      <div
+        data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
+        data-panel-visible={visible ? "true" : "false"}
+        className={cn(
+          "absolute min-w-0 overflow-hidden flex flex-col",
+          visible ? cn("text-foreground border bg-panel", borderClass) : "hidden pointer-events-none",
+          className,
+        )}
+        style={positionStyle}
+        aria-hidden={visible ? undefined : true}
+      >
         {showTabBar && (
           <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
             {sortedTabs.map((tab) => {
@@ -19432,24 +11036,12 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? (
-              <TreeStateProvider>
-                <Tree
-                  className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
-                  defaultSelectedIds={activeTabTree.defaultSelectedIds}
-                  dragAndDropController={activeTabTree.dragAndDropController}
-                  emptyState={activeTabTree.emptyState}
-                  indentMultiplier={activeTabTree.indentMultiplier}
-                  onSelectionChange={activeTabTree.onSelectionChange}
-                  sections={activeTabTree.sections}
-                  selectedIds={activeTabTree.selectedIds}
-                  selectionMode={activeTabTree.selectionMode}
-                />
-              </TreeStateProvider>
-            ) : null}
+            {activeTabPanel ?? (activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null)}
           </div>
         </Scrollable>
-        {onSizeChange && <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />}
+        {visible && onSizeChange ? (
+          <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />
+        ) : null}
       </div>
     </LevelProvider>
   );
@@ -19486,7 +11078,8 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabTree = activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabPanel = activeTab?.panel;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -19526,7 +11119,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
         )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? (
+            {activeTabPanel ?? (activeTabTree ? (
               <TreeStateProvider>
                 <Tree
                   className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
@@ -19540,7 +11133,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                   selectionMode={activeTabTree.selectionMode}
                 />
               </TreeStateProvider>
-            ) : null}
+            ) : null)}
           </div>
         </Scrollable>
       </div>
@@ -19561,7 +11154,14 @@ interface ToolbarZoneProps extends React.ComponentProps<"div"> {
 
 function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
   return (
-    <div data-slot="toolbar-zone" className={cn("bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] rounded-md shadow-sm overflow-hidden", className)} {...props}>
+    <div
+      data-slot="toolbar-zone"
+      className={cn(
+        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border border-element",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -19616,6 +11216,10 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
+  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command (no active session). */
+  onRepeatLast?: () => void;
+  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
+  onAbort?: () => void;
   disabled?: boolean;
 }
 
@@ -19624,11 +11228,285 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
+/** @emoji 🔎 One autocomplete row for {@link EngagementSpec.possibleEngagements} (interaction, transition, …). */
+export interface EngagementPossible {
+  id: string;
+  label: string;
+  detail?: string;
+  onSelect?: () => void;
+}
+
+/** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+export const UI_ENGAGEMENT = {
+  command: "ui.engagement.command",
+  commandActive: "ui.engagement.commandActive",
+  commands: "ui.engagement.commands",
+  suggestions: "ui.engagement.suggestions",
+  noMatches: "ui.engagement.noMatches",
+} as const;
+
+/** @emoji 🏷 Default English copy for window command chrome (matches `ui.engagement.*` en bundle). */
+export const ENGAGEMENT_USER = {
+  commandPlaceholder: "Command",
+  commandPlaceholderActive: "Command or value",
+  commandsAria: "Commands",
+  suggestionsAria: "Suggestions",
+  noMatches: "No matches",
+} as const;
+
+/** @emoji 🏷 Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
+export function humanizeEngagementStepId(stepId: string): string {
+  const trimmed = stepId.trim();
+  if (!trimmed) return "";
+  return trimmed
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+/** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
+export function normalizeEngagementCommandText(text: string): string {
+  const words = text
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((word) => word.split(/(?=[A-Z])/))
+    .filter(Boolean);
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
+}
+
+/** @emoji ⚖️ True when two engagement command tokens match after {@link normalizeEngagementCommandText} (case-insensitive). */
+export function engagementCommandTokenEquals(a: string, b: string): boolean {
+  return normalizeEngagementCommandText(a).toLowerCase() === normalizeEngagementCommandText(b).toLowerCase();
+}
+
+/** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
+export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
+  const trimmed = normalizeEngagementCommandText(query).toLowerCase();
+  if (!trimmed) return [...items];
+  return items.filter((item) => {
+    const haystack = `${normalizeEngagementCommandText(item.label)} ${item.detail ?? ""} ${item.id}`.toLowerCase();
+    return haystack.includes(trimmed) || item.id.toLowerCase().startsWith(trimmed);
+  });
+}
+
+/** @emoji ⌨️ Inline completion segments for one {@link EngagementPossible} using label casing for the matched name prefix. */
+export interface EngagementInlineCompletion {
+  readonly prefix: string;
+  readonly suffix: string;
+}
+
+/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
+export function engagementInlineCompletion(query: string, item: EngagementPossible | undefined): EngagementInlineCompletion | null {
+  if (!query.trim() || !item) return null;
+  const q = query;
+  const ql = q.toLowerCase();
+  const label = normalizeEngagementCommandText(item.label);
+  let best: EngagementInlineCompletion | null = null;
+  const consider = (matched: boolean) => {
+    if (!matched || !label.toLowerCase().startsWith(ql)) return;
+    const prefix = label.slice(0, q.length);
+    const suffix = label.slice(q.length);
+    if (!suffix.length) return;
+    if (!best || suffix.length > best.suffix.length) best = { prefix, suffix };
+  };
+  consider(label.toLowerCase().startsWith(ql));
+  consider(Boolean(item.detail?.toLowerCase().startsWith(ql)));
+  consider(item.id.toLowerCase().startsWith(ql));
+  return best;
+}
+
+/** @emoji ⌨️ Inline completion suffix for one {@link EngagementPossible} (longest prefix match on label, detail, or id). */
+export function engagementCompletionSuffix(query: string, item: EngagementPossible | undefined): string {
+  return engagementInlineCompletion(query, item)?.suffix ?? "";
+}
+
+/** @emoji ⌨️ First non-empty inline completion across ranked {@link EngagementPossible} matches. */
+export function engagementActiveInlineCompletion(query: string, matches: readonly EngagementPossible[], index: number): EngagementInlineCompletion | null {
+  if (!query.trim() || !matches.length) return null;
+  const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
+  const seen = new Set<EngagementPossible>();
+  for (const item of order) {
+    if (seen.has(item)) continue;
+    seen.add(item);
+    const completion = engagementInlineCompletion(query, item);
+    if (completion) return completion;
+  }
+  return null;
+}
+
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link EngagementPossible} matches. */
+export function engagementActiveCompletionSuffix(query: string, matches: readonly EngagementPossible[], index: number): string {
+  return engagementActiveInlineCompletion(query, matches, index)?.suffix ?? "";
+}
+
+/** @emoji 🔎 Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
+export function engagementHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
+  const displayLabel = normalizeEngagementCommandText(label);
+  const trimmed = normalizeEngagementCommandText(query);
+  if (!trimmed) return displayLabel;
+  const ql = trimmed.toLowerCase();
+  const ll = displayLabel.toLowerCase();
+  let start = ll.startsWith(ql) ? 0 : -1;
+  if (start < 0 && detail?.toLowerCase().startsWith(ql)) start = ll.indexOf(ql) >= 0 ? ll.indexOf(ql) : ll.indexOf(ql[0] ?? "");
+  if (start < 0) return displayLabel;
+  const end = start + trimmed.length;
+  return (
+    <>
+      {start > 0 ? <span>{displayLabel.slice(0, start)}</span> : null}
+      <span className="font-semibold text-foreground">{displayLabel.slice(start, end)}</span>
+      <span>{displayLabel.slice(end)}</span>
+    </>
+  );
+}
+
+/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
+export function isUiTypingTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
+  if (t.isContentEditable) return true;
+  if (t instanceof HTMLInputElement) {
+    const kind = (t.type || "text").toLowerCase();
+    return kind !== "button" && kind !== "checkbox" && kind !== "radio" && kind !== "file" && kind !== "range" && kind !== "color";
+  }
+  if (t.closest('[data-slot="input-root"], [data-slot="textarea-root"], [data-collapsed="true"], [data-slot="command-input"], [data-slot="select-trigger"], [data-slot="select-content"]')) {
+    return true;
+  }
+  return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
+}
+
+/** @emoji 🚫 Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}. */
+export function installElementsSurfaceBrowserDefaultSuppression(bindings: ReturnType<typeof createDOMEventBinding>): void {
+  if (typeof document === "undefined") return;
+  const onContextMenu = (event: Event): void => {
+    event.preventDefault();
+  };
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Tab") return;
+    if (isUiTypingTarget(event.target)) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && isUiTypingTarget(active)) return;
+    event.preventDefault();
+  };
+  bindings.listen(document, "contextmenu", onContextMenu as EventListener, true);
+  bindings.listen(document, "keydown", onKeyDown as EventListener, true);
+}
+
+/** @emoji ⌨️ True when the event target is already the active window engagement command field. */
+export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  return Boolean(
+    t.closest(
+      '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea',
+    ),
+  );
+}
+
+/** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
+export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolean {
+  if (isEngagementCommandTypingTarget(t)) return false;
+  const engagementField = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const active = document.activeElement;
+  if (engagementField && (active === engagementField || engagementField.contains(active))) return false;
+  if (active instanceof HTMLElement && isUiTypingTarget(active) && !active.closest('[data-slot="engagement"]')) return false;
+  if (isUiTypingTarget(t)) return false;
+  return true;
+}
+
+/** @emoji ⌨️ Returns the window engagement command input, optionally requiring {@link EngagementProps.active}. */
+export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement | null {
+  const engagementActive = activeOnly ? '[data-active="true"]' : "";
+  return document.querySelector<HTMLInputElement>(
+    `[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`,
+  );
+}
+
+/** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
+export function focusActiveEngagementInput(): boolean {
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  if (!field || field.disabled) return false;
+  field.focus({ preventScroll: true });
+  return true;
+}
+
+/** @emoji 👁 True when the window engagement chrome should render (non-empty command, hover, click, or focus in the engagement zone). */
+export function windowEngagementChromeVisible(
+  engagement: EngagementSpec | undefined,
+  zone: { readonly hovered: boolean; readonly activated: boolean; readonly focused: boolean },
+): boolean {
+  if (!engagement) return false;
+  if (engagement.input?.value?.trim()) return true;
+  return zone.hovered || zone.activated || zone.focused;
+}
+
+/** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets and active command). */
+export function shouldDismissEmptyWindowEngagement(
+  engagement: EngagementSpec | undefined,
+  relatedTarget: EventTarget | null,
+  zoneRoot: HTMLElement | null,
+  zone: { readonly commandActive: boolean },
+): boolean {
+  if (zone.commandActive) return false;
+  if (engagement?.input?.value?.trim()) return false;
+  if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
+  if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
+  if (zoneRoot?.querySelector('[data-slot="engagement"][data-possibles-open="true"]')) return false;
+  return true;
+}
+
+/** @emoji 🔁 Routes Space to {@link EngagementInput.onRepeatLast} when the command line is empty and focus is outside the engagement field. */
+export function routeWindowEngagementSpace(
+  engagement: EngagementSpec | undefined,
+  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
+): boolean {
+  const input = engagement?.input;
+  if (!input?.onRepeatLast || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
+  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
+  if (draft.trim()) return false;
+  input.onRepeatLast();
+  return true;
+}
+
+/** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
+export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
+  const input = engagement?.input;
+  if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  if (event.key === " ") return false;
+  const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+  if (!printable) return false;
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const next = normalizeEngagementCommandText(`${input.value ?? field?.value ?? ""}${event.key}`);
+  input.onChange?.(next);
+  return true;
+}
+
+/** @emoji ⎋ Routes Escape to {@link EngagementInput.onAbort} when window engagement chrome is active (skips other typing targets). */
+export function routeWindowEngagementEscape(
+  engagement: EngagementSpec | undefined,
+  event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">,
+  zone: { readonly chromeVisible: boolean; readonly commandActive: boolean },
+): boolean {
+  if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
+  const onAbort = engagement?.input?.onAbort;
+  if (!onAbort) return false;
+  if (!zone.chromeVisible && !zone.commandActive) return false;
+  if (isUiTypingTarget(event.target) && !isEngagementCommandTypingTarget(event.target)) return false;
+  const focused = document.activeElement;
+  if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
+  onAbort();
+  return true;
+}
+
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
   options?: EngagementOption[];
   input?: EngagementInput;
   status?: EngagementStatus[];
+  possibleEngagements?: EngagementPossible[];
 }
 
 export interface WindowLayoutWindowNode {
@@ -19669,62 +11547,221 @@ export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayo
 
 export interface EngagementProps extends EngagementSpec {
   className?: string;
+  /** @emoji 🎯 When true, focuses the command input whenever this engagement belongs to the globally active window. */
+  active?: boolean;
 }
 
-/** @emoji 💬 Floating three-line engagement panel with options, input, and status rows. */
-const Engagement: React.FC<EngagementProps> = ({ options, input, status, className = "" }) => {
-  const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
+/** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
+const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
+  const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
+  const isControlledInput = !!input?.onChange;
+  const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
+  const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
+  const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
+  const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const filteredPossibles = reactHostPort.useMemo(
+    () => filterEngagementPossibles(draft, possibleEngagements ?? []),
+    [draft, possibleEngagements],
+  );
+
   reactHostPort.useEffect(() => {
-    setDraft(input?.value ?? "");
-  }, [input?.value]);
+    setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
+  }, [filteredPossibles.length, draft]);
+
+  reactHostPort.useEffect(() => {
+    setPossiblesExpanded(false);
+  }, [possibleEngagements]);
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
+  const hasPossibles = !!possibleEngagements?.length;
+  const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
+  const inlineCompletion = reactHostPort.useMemo(
+    () => (showPossiblesList ? null : engagementActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)),
+    [activePossibleIndex, draft, filteredPossibles, showPossiblesList],
+  );
+
+  const applyDraft = reactHostPort.useCallback(
+    (value: string) => {
+      const normalized = normalizeEngagementCommandText(value);
+      if (isControlledInput) input?.onChange?.(normalized);
+      else setUncontrolledDraft(normalized);
+    },
+    [input, isControlledInput],
+  );
+
+  const selectPossible = reactHostPort.useCallback(
+    (item: EngagementPossible) => {
+      item.onSelect?.();
+      applyDraft("");
+      setPossiblesExpanded(false);
+      setActivePossibleIndex(0);
+    },
+    [applyDraft],
+  );
+
+  const activatePossible = reactHostPort.useCallback((): boolean => {
+    if (!filteredPossibles.length) return false;
+    selectPossible(filteredPossibles[activePossibleIndex] ?? filteredPossibles[0]!);
+    return true;
+  }, [activePossibleIndex, filteredPossibles, selectPossible]);
+
+  const wasActiveRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    const becameActive = active && !wasActiveRef.current;
+    wasActiveRef.current = active;
+    if (!becameActive || !hasInput || input?.disabled) return;
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return;
+    const field = engagementRef.current?.querySelector<HTMLInputElement>('[data-slot="input"]');
+    field?.focus({ preventScroll: true });
+  }, [active, hasInput, input?.disabled, input?.id]);
+
   if (!hasOptions && !hasInput && !hasStatus) return null;
 
   return (
-    <div
-      data-slot="engagement"
-      className={cn(
-        "pointer-events-auto absolute bottom-single left-1/2 z-panel flex w-[min(100%,28rem)] -translate-x-1/2 flex-col gap-half rounded border border-element bg-panel p-single shadow-md",
-        className,
-      )}
-    >
-      {hasOptions ? (
-        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
-          <ButtonGroup id="engagement-options">
-            {options!.map((option) => (
-              <ButtonGroupItem
-                key={option.id}
-                id={option.id}
-                className={cn(option.pressed && "bg-active-base")}
-                onClick={option.onPress}
-                disabled={option.disabled}
-              >
-                {option.icon ?? option.label}
-              </ButtonGroupItem>
-            ))}
-          </ButtonGroup>
-        </div>
-      ) : null}
+    <LevelProvider level="overlay">
+      <div
+        ref={engagementRef}
+        data-slot="engagement"
+        data-active={active ? "true" : undefined}
+        data-possibles-open={showPossiblesList ? "true" : undefined}
+        className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}
+      >
       {hasInput ? (
-        <Input
-          id={input!.id ?? "engagement-input"}
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            input!.onChange?.(event.target.value);
+        <Popover
+          open={showPossiblesList}
+          onOpenChange={(open) => {
+            if (!open) setPossiblesExpanded(false);
           }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              input!.onSubmit?.(draft);
-              event.preventDefault();
-            }
-          }}
-          placeholder={input!.placeholder}
-          disabled={input!.disabled}
-        />
+        >
+          <PopoverAnchor asChild>
+            <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
+              <div
+                data-slot="engagement-command-input"
+                className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0"
+              >
+                <Input
+                  id={
+                    !input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id)
+                      ? UI_ENGAGEMENT.command
+                      : input!.id
+                  }
+                  className="relative z-[1] min-w-0 flex-1 bg-transparent"
+                  value={draft}
+                  tabIndex={active ? 0 : -1}
+                  onChange={(event) => applyDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      if (showPossiblesList) {
+                        event.preventDefault();
+                        setPossiblesExpanded(false);
+                        return;
+                      }
+                      if (input!.onAbort) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        input!.onAbort();
+                      }
+                      return;
+                    }
+                    if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
+                      event.preventDefault();
+                      applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
+                      return;
+                    }
+                    if (event.key === "ArrowDown" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === "ArrowUp" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                      event.preventDefault();
+                      if (showPossiblesList && activatePossible()) return;
+                      if (!draft.trim() && input!.onRepeatLast) {
+                        input!.onRepeatLast();
+                        return;
+                      }
+                      input!.onSubmit?.(draft);
+                      return;
+                    }
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (showPossiblesList && activatePossible()) return;
+                      input!.onSubmit?.(draft);
+                    }
+                  }}
+                  placeholder={input!.placeholder ?? ENGAGEMENT_USER.commandPlaceholder}
+                  disabled={input!.disabled}
+                  aria-label={ENGAGEMENT_USER.commandPlaceholder}
+                />
+                {inlineCompletion ? (
+                  <div
+                    aria-hidden
+                    data-slot="engagement-inline-completion"
+                    className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm"
+                  >
+                    <span className="relative inline-flex min-w-0 truncate">
+                      <span className="truncate text-transparent">{draft}</span>
+                      <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
+                    </span>
+                    <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
+                      {inlineCompletion.suffix}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+              {hasPossibles ? (
+                <Action
+                  id={UI_ENGAGEMENT.suggestions}
+                  aria-expanded={possiblesExpanded}
+                  aria-label={ENGAGEMENT_USER.suggestionsAria}
+                  data-slot="engagement-possibles-toggle"
+                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
+                  onClick={() => setPossiblesExpanded((open) => !open)}
+                />
+              ) : null}
+            </div>
+          </PopoverAnchor>
+          {hasPossibles ? (
+            <PopoverContent
+              data-slot="engagement-autocomplete"
+              className="w-[min(100vw-1rem,28rem)] p-0"
+              align="end"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+              onPointerDown={(event) => event.preventDefault()}
+            >
+              <Command shouldFilter={false}>
+                <CommandList>
+                  {filteredPossibles.length ? (
+                    <CommandGroup>
+                      {filteredPossibles.map((item, index) => (
+                        <CommandItem
+                          key={item.id}
+                          value={item.id}
+                          data-active={index === activePossibleIndex ? "true" : undefined}
+                          className={cn(index === activePossibleIndex && "bg-active-base")}
+                          onSelect={() => selectPossible(item)}
+                        >
+                          <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
+                          {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ) : (
+                    <CommandEmpty>{ENGAGEMENT_USER.noMatches}</CommandEmpty>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          ) : null}
+        </Popover>
       ) : null}
       {hasStatus ? (
         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
@@ -19735,7 +11772,30 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, classNa
           ))}
         </div>
       ) : null}
-    </div>
+      {hasOptions ? (
+        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half" role="group" aria-label={ENGAGEMENT_USER.commandsAria}>
+          <ButtonGroup id={UI_ENGAGEMENT.commands}>
+            {options!.map((option) => {
+              const commandLabel = normalizeEngagementCommandText(option.label);
+              const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
+              return (
+              <ButtonGroupItem
+                key={option.id}
+                id={optionControlId}
+                aria-label={commandLabel}
+                icon={option.icon}
+                text={commandLabel}
+                className={cn(option.pressed && "bg-active-base")}
+                onClick={option.onPress}
+                disabled={option.disabled}
+              />
+            );
+            })}
+          </ButtonGroup>
+        </div>
+      ) : null}
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -19796,6 +11856,44 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
  **/
 const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate }) => {
   const bgClass = "bg-window";
+  const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const engagementDraftRef = reactHostPort.useRef("");
+  const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
+  const [engagementActivated, setEngagementActivated] = reactHostPort.useState(false);
+  const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
+  const engagementCommandActive = engagementActivated || engagementZoneFocused;
+  const showEngagementChrome =
+    active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
+
+  reactHostPort.useEffect(() => {
+    const draft = engagement?.input?.value ?? "";
+    const hadDraft = engagementDraftRef.current.trim().length > 0;
+    const hasDraft = draft.trim().length > 0;
+    engagementDraftRef.current = draft;
+    if (!hasDraft || hadDraft) return;
+    setEngagementActivated(true);
+    queueMicrotask(() => focusActiveEngagementInput());
+  }, [engagement?.input?.value]);
+
+  reactHostPort.useEffect(() => {
+    if (!active) {
+      engagementDraftRef.current = "";
+      setEngagementZoneHovered(false);
+      setEngagementActivated(false);
+      setEngagementZoneFocused(false);
+    }
+  }, [active]);
+
+  const dismissEngagementIfEmpty = reactHostPort.useCallback(
+    (relatedTarget: EventTarget | null) => {
+      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current, { commandActive: engagementActivated })) return;
+      setEngagementZoneHovered(false);
+      setEngagementActivated(false);
+      setEngagementZoneFocused(false);
+    },
+    [engagement, engagementActivated],
+  );
 
   if (!isVisible) return null;
 
@@ -19829,29 +11927,55 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   return (
     <LevelProvider level="window">
       <div
+        ref={windowRef}
         data-slot="window"
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDown={() => onActivate?.()}
-        className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, active && "ring-2 ring-inset ring-accent", className)}
+        onPointerDownCapture={() => onActivate?.()}
+        className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
-            <div
-              data-slot="window-measures-overlay"
-              className="pointer-events-none absolute top-0 right-0 bottom-0 left-auto z-panel flex w-max max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end justify-start gap-half overflow-hidden p-single"
-            >
-              <div
-                data-slot="window-measures-stack"
-                className="pointer-events-auto flex max-h-full max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end gap-half overflow-y-auto overscroll-contain"
-              >
+            <div data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
+              <div data-slot="window-measures-stack" className={windowMeasuresStackClass}>
                 {measures}
               </div>
             </div>
           ) : null}
-          {engagement ? <Engagement {...engagement} /> : null}
+          {engagement && active ? (
+            <div
+              data-slot="window-engagement-overlay"
+              data-expanded={showEngagementChrome ? "true" : undefined}
+              className="pointer-events-none absolute left-0 top-0 z-panel flex max-w-full flex-col items-start justify-start pl-1 pt-1"
+            >
+              <div
+                ref={engagementZoneRef}
+                data-slot="window-engagement-hover-zone"
+                className={cn(
+                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 select-none flex-col items-stretch",
+                  !showEngagementChrome && "h-large",
+                )}
+                onPointerEnter={() => setEngagementZoneHovered(true)}
+                onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
+                onPointerDownCapture={() => {
+                  setEngagementActivated(true);
+                  if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                }}
+                onFocusCapture={() => {
+                  setEngagementActivated(true);
+                  setEngagementZoneFocused(true);
+                }}
+                onBlurCapture={(event) => {
+                  setEngagementZoneFocused(false);
+                  dismissEngagementIfEmpty(event.relatedTarget);
+                }}
+              >
+                {showEngagementChrome ? <Engagement {...engagement} active={engagementCommandActive} /> : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </LevelProvider>
@@ -21526,6 +13650,12 @@ export interface HierarchicalRowData {
  **/
 export interface DragDropConfig {
   enabled?: boolean;
+  /** @emoji ⏱️ Delay (ms) before pointer drag activates so double-click can reach the row. */
+  pointerActivationDelayMs?: number;
+  /** @emoji ↔️ Pointer movement tolerance (px) while waiting for {@link DragDropConfig.pointerActivationDelayMs}. */
+  pointerActivationTolerancePx?: number;
+  /** @emoji ↔️ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
+  pointerActivationDistancePx?: number;
   onDragStart?: (rowId: string) => void;
   onDragEnd?: (event: { active: string; over: string | null }) => void;
   canDrag?: (rowId: string) => boolean;
@@ -21604,6 +13734,7 @@ const Table = <T,>({
   const level = useLevel();
   const headerBgClass = {
     base: "bg-base",
+    canvas: "bg-canvas",
     window: "bg-window",
     panel: "bg-panel",
     overlay: "bg-overlay",
@@ -21612,9 +13743,15 @@ const Table = <T,>({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint:
+        dragDrop?.pointerActivationDelayMs != null
+          ? {
+              delay: dragDrop.pointerActivationDelayMs,
+              tolerance: dragDrop.pointerActivationTolerancePx ?? 5,
+            }
+          : {
+              distance: dragDrop?.pointerActivationDistancePx ?? 8,
+            },
     }),
   );
 
@@ -21699,8 +13836,13 @@ const Table = <T,>({
         style={style}
         className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
         {...(canDragRow ? { ...attributes, ...listeners } : {})}
-        onClick={(e) => onRowClick?.(row, index, e)}
-        onDoubleClick={() => onRowDoubleClick?.(row, index)}
+        onClick={(e) => {
+          if (e.detail >= 2) {
+            onRowDoubleClick?.(row, index);
+            return;
+          }
+          onRowClick?.(row, index, e);
+        }}
         onMouseEnter={() => onRowMouseEnter?.(row, index)}
         onMouseLeave={() => onRowMouseLeave?.(row, index)}
         role={onRowClick ? "button" : undefined}
@@ -21783,8 +13925,13 @@ const Table = <T,>({
                   <tr
                     key={key}
                     className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
-                    onClick={(e) => onRowClick?.(row, index, e)}
-                    onDoubleClick={() => onRowDoubleClick?.(row, index)}
+                    onClick={(e) => {
+                      if (e.detail >= 2) {
+                        onRowDoubleClick?.(row, index);
+                        return;
+                      }
+                      onRowClick?.(row, index, e);
+                    }}
                     onMouseEnter={() => onRowMouseEnter?.(row, index)}
                     onMouseLeave={() => onRowMouseLeave?.(row, index)}
                     role={onRowClick ? "button" : undefined}
@@ -21864,6 +14011,550 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
 
 // #endregion 🛎️Table
 
+// #region 📁VirtualFileSystem
+/** @emoji 🏷️ Render-agnostic descriptor presentation kinds for {@link VirtualFileSystem} columns. */
+export type DescriptorKind =
+  | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "text" }
+  | {
+      readonly id: string;
+      readonly name: string;
+      readonly description?: string;
+      readonly presentation: "time";
+      readonly format?: "date" | "datetime" | "relative";
+    }
+  | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "avatar" };
+
+/** @emoji 🏷️ Column binding on a {@link FileNodeKind} referencing a {@link DescriptorKind}. */
+export interface FileNodeDescriptor {
+  readonly id: string;
+  readonly descriptorKindId: string;
+  readonly label?: string;
+  readonly description?: string;
+}
+
+/** @emoji 📁 File node kind registry entry (icon, labels, column descriptors). */
+export interface FileNodeKind {
+  readonly id: string;
+  readonly name: string;
+  readonly icon?: string;
+  readonly description?: string;
+  readonly descriptors: readonly FileNodeDescriptor[];
+}
+
+/** @emoji 📁 Cell value for one {@link FileNodeDescriptor} column on a {@link FileNode}. */
+export type FileNodeDescriptorValue =
+  | { readonly presentation: "text"; readonly text: string }
+  | { readonly presentation: "time"; readonly iso: string }
+  | { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
+
+/** @emoji 📁 Schema driving {@link VirtualFileSystem} columns and glyphs. */
+export interface VirtualFileSystemSchema {
+  readonly fileNodeKinds: Readonly<Record<string, FileNodeKind>>;
+  readonly descriptorKinds: Readonly<Record<string, DescriptorKind>>;
+  readonly descriptorColumnIds: readonly string[];
+}
+
+/** @emoji 📁 Demo VFS descriptor kinds for stories and unit tests. */
+export const VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS: Readonly<Record<string, DescriptorKind>> = {
+  text: { id: "text", name: "Text", presentation: "text" },
+  time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
+  avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
+};
+
+/** @emoji 📁 Demo VFS file node kinds for stories and unit tests. */
+export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, FileNodeKind>> = {
+  root: {
+    id: "root",
+    name: "Root",
+    icon: "layout-grid",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  branch: {
+    id: "branch",
+    name: "Branch",
+    icon: "folder",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  leaf: {
+    id: "leaf",
+    name: "Leaf",
+    icon: "file",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+};
+
+/** @emoji 📁 Demo virtual file system schema for stories and unit tests. */
+export const VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchema = {
+  fileNodeKinds: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
+  descriptorKinds: VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
+  descriptorColumnIds: ["path", "fileNodeKind"],
+};
+
+/** @emoji 📁 One node in a virtual file system tree (children may be loaded lazily by the host). */
+export interface FileNode {
+  readonly id: string;
+  readonly fileNodeKindId: string;
+  readonly name: string;
+  readonly path?: string;
+  readonly parentId?: string | null;
+  readonly hasChildren?: boolean;
+  readonly icon?: string;
+  readonly descriptorValues?: Readonly<Record<string, FileNodeDescriptorValue>>;
+}
+
+/** @emoji 📁 {@link FileNode} alias used by {@link VirtualFileSystem}. */
+export type VirtualFileSystemNode = FileNode;
+
+/** @emoji 📁 Flattened visible row for {@link VirtualFileSystem} (only expanded branches). */
+export interface VirtualFileSystemRow extends FileNode, HierarchicalRowData {
+  readonly level: number;
+  readonly isExpanded?: boolean;
+  readonly navigateUri?: string;
+}
+
+/** @emoji 📁 Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for virtual file tree nodes. */
+export interface VirtualFileSystemProps {
+  readonly schema: VirtualFileSystemSchema;
+  readonly rows: readonly VirtualFileSystemRow[];
+  readonly selectionMode?: TreeSelectionMode;
+  readonly selectedRowIds?: Set<string> | readonly string[];
+  readonly defaultSelectedRowIds?: readonly string[];
+  readonly onSelectionChange?: (selectedRowIds: readonly string[], context: { readonly anchorRowId?: string }) => void;
+  readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
+  readonly onRowDoubleClick?: (row: VirtualFileSystemRow, index: number) => void;
+  readonly onToggleExpand?: (rowId: string) => void;
+  readonly emptyMessage?: string;
+  readonly className?: string;
+  readonly rowHeight?: TableProps<VirtualFileSystemRow>["rowHeight"];
+  readonly dragDrop?: DragDropConfig;
+  readonly extraColumns?: readonly TableColumn<VirtualFileSystemRow>[];
+}
+
+/** @emoji 📁 Visible row order for shift-range selection in {@link VirtualFileSystem}. */
+export function getVirtualFileSystemOrderedRowIds(rows: readonly VirtualFileSystemRow[]): string[] {
+  return rows.map((row) => row.id);
+}
+
+/** @emoji 📁 Normalizes selected row ids for {@link VirtualFileSystem} selection mode. */
+export function normalizeVirtualFileSystemSelectedRowIds(selectedRowIds: readonly string[], selectionMode: TreeSelectionMode): string[] {
+  return normalizeTreeSelectedIds([...selectedRowIds], selectionMode);
+}
+
+/** @emoji 📁 Next selection after a row click (shift range, ctrl/cmd toggle, plain replace). */
+export function getVirtualFileSystemNextSelectionState(args: {
+  readonly selectionMode: TreeSelectionMode;
+  readonly selectedRowIds: readonly string[];
+  readonly orderedRowIds: readonly string[];
+  readonly targetRowId: string;
+  readonly anchorRowId?: string;
+  readonly additiveKey: boolean;
+  readonly rangeKey: boolean;
+}): { readonly selectedRowIds: string[]; readonly anchorRowId?: string } {
+  const next = getTreeNextSelectionState({
+    selectionMode: args.selectionMode,
+    selectedIds: [...args.selectedRowIds],
+    orderedIds: [...args.orderedRowIds],
+    targetId: args.targetRowId,
+    anchorId: args.anchorRowId,
+    additiveKey: args.additiveKey,
+    rangeKey: args.rangeKey,
+  });
+  return { selectedRowIds: next.selectedIds, anchorRowId: next.anchorId };
+}
+
+/** @emoji 📁 Resolves a {@link FileNodeKind} from a {@link VirtualFileSystemSchema}. */
+export function resolveVirtualFileSystemFileNodeKind(schema: VirtualFileSystemSchema, fileNodeKindId: string): FileNodeKind | undefined {
+  return schema.fileNodeKinds[fileNodeKindId];
+}
+
+/** @emoji 📁 Resolves a {@link DescriptorKind} from a {@link VirtualFileSystemSchema}. */
+export function resolveVirtualFileSystemDescriptorKind(schema: VirtualFileSystemSchema, descriptorKindId: string): DescriptorKind | undefined {
+  return schema.descriptorKinds[descriptorKindId];
+}
+
+/** @emoji 📁 Finds the first {@link FileNodeDescriptor} binding for a column id across all file node kinds. */
+export function resolveVirtualFileSystemDescriptorBinding(
+  schema: VirtualFileSystemSchema,
+  descriptorColumnId: string,
+): { readonly binding: FileNodeDescriptor; readonly descriptorKind: DescriptorKind } | undefined {
+  for (const fileNodeKind of Object.values(schema.fileNodeKinds)) {
+    const binding = fileNodeKind.descriptors.find((entry) => entry.id === descriptorColumnId);
+    if (!binding) continue;
+    const descriptorKind = schema.descriptorKinds[binding.descriptorKindId];
+    if (!descriptorKind) continue;
+    return { binding, descriptorKind };
+  }
+  return undefined;
+}
+
+/** @emoji 📁 Builds descriptor cell values from a {@link VirtualFileSystemSchema}. */
+export function buildVirtualFileSystemDescriptorValues(
+  schema: VirtualFileSystemSchema,
+  fileNodeKindId: string,
+  options: {
+    readonly path?: string;
+    readonly updatedIso?: string;
+    readonly createdBy?: { readonly name: string; readonly icon?: string };
+    readonly textByDescriptorId?: Readonly<Record<string, string>>;
+    readonly extra?: Readonly<Record<string, FileNodeDescriptorValue>>;
+  } = {},
+): Readonly<Record<string, FileNodeDescriptorValue>> {
+  const fileNodeKind = schema.fileNodeKinds[fileNodeKindId];
+  const values: Record<string, FileNodeDescriptorValue> = { ...options.extra };
+  if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
+  if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
+  if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
+  if (options.createdBy) values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
+  if (options.textByDescriptorId) {
+    for (const [descriptorId, text] of Object.entries(options.textByDescriptorId)) {
+      values[descriptorId] = { presentation: "text", text };
+    }
+  }
+  return values;
+}
+
+/** @emoji 📁 Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
+export function renderVirtualFileSystemDescriptorCell(
+  descriptorKind: DescriptorKind,
+  value: FileNodeDescriptorValue | undefined,
+): React.ReactNode {
+  if (!value || value.presentation !== descriptorKind.presentation) return "";
+  switch (value.presentation) {
+    case "text":
+      return value.text;
+    case "time": {
+      const parsed = Date.parse(value.iso);
+      if (Number.isNaN(parsed)) return value.iso;
+      const date = new Date(parsed);
+      if (descriptorKind.presentation === "time" && descriptorKind.format === "relative") {
+        return formatDistanceToNow(date, { addSuffix: true });
+      }
+      if (descriptorKind.presentation === "time" && descriptorKind.format === "date") {
+        return format(date, "yyyy-MM-dd");
+      }
+      return format(date, "yyyy-MM-dd HH:mm");
+    }
+    case "avatar":
+      return <TableAvatar name={value.name} icon={value.icon} />;
+    default:
+      return "";
+  }
+}
+
+/** @emoji 📁 Builds {@link TableColumn} entries from {@link VirtualFileSystemSchema} descriptor columns. */
+export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSystemSchema): TableColumn<VirtualFileSystemRow>[] {
+  const columns: TableColumn<VirtualFileSystemRow>[] = [];
+  for (const columnId of schema.descriptorColumnIds) {
+    const resolved = resolveVirtualFileSystemDescriptorBinding(schema, columnId);
+    if (!resolved) continue;
+    const { binding, descriptorKind } = resolved;
+    columns.push({
+      id: columnId,
+      header: binding.label ?? descriptorKind.name,
+      width: descriptorKind.presentation === "avatar" ? "12%" : "14%",
+      accessor: (row) => {
+        const fileNodeKind = schema.fileNodeKinds[row.fileNodeKindId];
+        if (!fileNodeKind?.descriptors.some((entry) => entry.id === columnId)) return "";
+        return renderVirtualFileSystemDescriptorCell(descriptorKind, row.descriptorValues?.[columnId]);
+      },
+    });
+  }
+  return columns;
+}
+
+/** @emoji 📁 Lucide icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
+const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, LucideIcon>> = {
+  "layout-grid": LayoutGridIcon,
+  folder: FolderIcon,
+  file: DocumentIcon,
+  branch: FolderIcon,
+  leaf: DocumentIcon,
+  layout: LayoutIcon,
+  component: ComponentIcon,
+  users: UsersIcon,
+  landmark: LandmarkIcon,
+  puzzle: PuzzleIcon,
+  link: LinkIcon,
+  box: BoxIcon,
+  "circle-dot": CircleDotIcon,
+  plug: PlugIcon,
+  root: LayoutGridIcon,
+  kit: LayoutGridIcon,
+  design: LayoutIcon,
+  type: ComponentIcon,
+  family: UsersIcon,
+  typology: LandmarkIcon,
+  piece: PuzzleIcon,
+  connection: LinkIcon,
+  representation: BoxIcon,
+  port: CircleDotIcon,
+  connector: PlugIcon,
+  json: FileJsonIcon,
+  jsonc: FileJsonIcon,
+  json5: FileJsonIcon,
+  yaml: FileCodeIcon,
+  yml: FileCodeIcon,
+  toml: FileCodeIcon,
+  xml: FileCodeIcon,
+  md: DocumentIcon,
+  markdown: DocumentIcon,
+  txt: DocumentIcon,
+  log: DocumentIcon,
+  pdf: FileTypeIcon,
+  png: FileImageIcon,
+  jpg: FileImageIcon,
+  jpeg: FileImageIcon,
+  gif: FileImageIcon,
+  webp: FileImageIcon,
+  svg: FileImageIcon,
+  ico: FileImageIcon,
+  bmp: FileImageIcon,
+  glb: BoxIcon,
+  gltf: BoxIcon,
+  obj: BoxIcon,
+  fbx: BoxIcon,
+  stl: BoxIcon,
+  usdz: BoxIcon,
+  zip: FileArchiveIcon,
+  tar: FileArchiveIcon,
+  gz: FileArchiveIcon,
+  tgz: FileArchiveIcon,
+  "7z": FileArchiveIcon,
+  rar: FileArchiveIcon,
+  csv: FileSpreadsheetIcon,
+  tsv: FileSpreadsheetIcon,
+  xlsx: FileSpreadsheetIcon,
+  xls: FileSpreadsheetIcon,
+  ts: FileCodeIcon,
+  tsx: FileCodeIcon,
+  js: FileCodeIcon,
+  jsx: FileCodeIcon,
+  mjs: FileCodeIcon,
+  cjs: FileCodeIcon,
+  rs: FileCodeIcon,
+  py: FileCodeIcon,
+  wasm: FileCodeIcon,
+  html: FileCodeIcon,
+  css: FileCodeIcon,
+  scss: FileCodeIcon,
+  sql: FileCodeIcon,
+  semio: FileJsonIcon,
+};
+
+/** @emoji 📁 Resolves a lucide icon for a VFS schema icon id or file node kind id. */
+export function resolveVirtualFileSystemSchemaIcon(iconOrKindId: string): LucideIcon | undefined {
+  return VIRTUAL_FILE_SYSTEM_ICON_BY_ID[iconOrKindId];
+}
+
+/** @emoji 📁 Returns a lucide icon component for a generic VFS file node kind id. */
+export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
+  return resolveVirtualFileSystemSchemaIcon(fileNodeKindId) ?? DocumentIcon;
+}
+
+/** @emoji 📁 True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
+export function isVirtualFileSystemRemoteIcon(icon: string): boolean {
+  const trimmed = icon.trim();
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./")
+  );
+}
+
+/** @emoji 📁 DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
+export function buildVirtualFileSystemVisibleRows(
+  rootId: string,
+  childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>,
+  expandedIds: ReadonlySet<string>,
+  root?: VirtualFileSystemNode,
+): VirtualFileSystemRow[] {
+  const rows: VirtualFileSystemRow[] = [];
+  const visit = (node: VirtualFileSystemNode, level: number) => {
+    const hasChildren = Boolean(node.hasChildren);
+    const expanded = hasChildren && expandedIds.has(node.id);
+    rows.push({
+      ...node,
+      level,
+      parentId: node.parentId ?? undefined,
+      hasChildren,
+      isExpanded: expanded,
+    });
+    if (!expanded) return;
+    const children = childrenByParentId.get(node.id);
+    if (!children?.length) return;
+    for (const child of children) visit(child, level + 1);
+  };
+  const rootNode = root ?? {
+    id: rootId,
+    fileNodeKindId: "root",
+    name: rootId,
+    hasChildren: childrenByParentId.has(rootId) || expandedIds.has(rootId),
+  };
+  visit(rootNode, 0);
+  return rows;
+}
+
+const VirtualFileSystemNodeGlyph: React.FC<{
+  readonly schema: VirtualFileSystemSchema;
+  readonly fileNodeKindId: string;
+  readonly icon?: string;
+  readonly name: string;
+}> = ({ schema, fileNodeKindId, icon }) => {
+  const kindIcon = icon ?? schema.fileNodeKinds[fileNodeKindId]?.icon;
+  const glyphClass = "inline-flex size-small shrink-0 items-center justify-center text-muted-foreground";
+  const schemaIcon = kindIcon ? resolveVirtualFileSystemSchemaIcon(kindIcon) : undefined;
+  if (schemaIcon) {
+    const Icon = schemaIcon;
+    return (
+      <span className={glyphClass}>
+        <Icon size={14} aria-hidden />
+      </span>
+    );
+  }
+  if (kindIcon && isVirtualFileSystemRemoteIcon(kindIcon)) {
+    return (
+      <span className={`${glyphClass} overflow-hidden rounded-sm`}>
+        <img src={kindIcon} alt="" className="size-full object-cover" />
+      </span>
+    );
+  }
+  if (kindIcon) {
+    return (
+      <span className={`${glyphClass} text-base leading-none`} aria-hidden>
+        {kindIcon}
+      </span>
+    );
+  }
+  const Icon = virtualFileSystemKindIcon(fileNodeKindId);
+  return (
+    <span className={glyphClass}>
+      <Icon size={14} aria-hidden />
+    </span>
+  );
+};
+
+/** @emoji 📁 Hierarchical virtual file-system table (specialized {@link Table}). */
+export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
+  schema,
+  rows,
+  selectionMode = "multiple",
+  selectedRowIds: controlledSelectedRowIds,
+  defaultSelectedRowIds = [],
+  onSelectionChange,
+  onRowClick,
+  onRowDoubleClick,
+  onToggleExpand,
+  emptyMessage = "No file system nodes",
+  className = "",
+  rowHeight = "normal",
+  dragDrop,
+  extraColumns = [],
+}) => {
+  const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(
+    () => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)),
+  );
+  const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(
+    normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0],
+  );
+  const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
+  const resolvedSelectedRowIds = reactHostPort.useMemo(() => {
+    if (controlledSelectedRowIds === undefined) return uncontrolledSelectedRowIds;
+    return controlledSelectedRowIds instanceof Set ? controlledSelectedRowIds : new Set(controlledSelectedRowIds);
+  }, [controlledSelectedRowIds, uncontrolledSelectedRowIds]);
+  const applySelection = reactHostPort.useCallback(
+    (next: { readonly selectedRowIds: string[]; readonly anchorRowId?: string }) => {
+      const normalized = normalizeVirtualFileSystemSelectedRowIds(next.selectedRowIds, selectionMode);
+      selectionAnchorRowIdRef.current = next.anchorRowId ?? normalized[normalized.length - 1];
+      if (controlledSelectedRowIds === undefined) {
+        setUncontrolledSelectedRowIds(new Set(normalized));
+      }
+      onSelectionChange?.(normalized, { anchorRowId: selectionAnchorRowIdRef.current });
+    },
+    [controlledSelectedRowIds, onSelectionChange, selectionMode],
+  );
+  const handleRowClick = reactHostPort.useCallback(
+    (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => {
+      const next = getVirtualFileSystemNextSelectionState({
+        selectionMode,
+        selectedRowIds: [...resolvedSelectedRowIds],
+        orderedRowIds,
+        targetRowId: row.id,
+        anchorRowId: selectionAnchorRowIdRef.current,
+        additiveKey: event.metaKey || event.ctrlKey,
+        rangeKey: event.shiftKey,
+      });
+      applySelection(next);
+      onRowClick?.(row, index, event);
+    },
+    [applySelection, onRowClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
+  );
+  const columns = reactHostPort.useMemo((): TableColumn<VirtualFileSystemRow>[] => {
+    const base: TableColumn<VirtualFileSystemRow>[] = [
+      {
+        id: "name",
+        header: "Name",
+        width: "32%",
+        accessor: (row) => (
+          <div className="flex min-w-0 items-center gap-single" style={{ paddingLeft: (row.level ?? 0) * 14 }}>
+            {row.hasChildren ? (
+              <button
+                type="button"
+                data-vfs-expand
+                className="inline-flex size-small shrink-0 items-center justify-center rounded hover:bg-hover-base"
+                aria-label={row.isExpanded ? "Collapse" : "Expand"}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleExpand?.(row.id);
+                }}
+                onDoubleClick={(event) => event.stopPropagation()}
+              >
+                {row.isExpanded ? "▾" : "▸"}
+              </button>
+            ) : (
+              <span className="inline-block size-small shrink-0" aria-hidden />
+            )}
+            <VirtualFileSystemNodeGlyph schema={schema} fileNodeKindId={row.fileNodeKindId} icon={row.icon} name={row.name} />
+            <span className="truncate">{row.name}</span>
+          </div>
+        ),
+      },
+      ...buildVirtualFileSystemDescriptorColumns(schema),
+    ];
+    return [...base, ...extraColumns];
+  }, [extraColumns, onToggleExpand, schema]);
+
+  return (
+    <Table<VirtualFileSystemRow>
+      className={className}
+      columns={columns}
+      data={[...rows]}
+      getRowId={(row) => row.id}
+      selectedRows={resolvedSelectedRowIds}
+      onRowClick={handleRowClick}
+      onRowDoubleClick={onRowDoubleClick}
+      emptyMessage={emptyMessage}
+      rowHeight={rowHeight}
+      hierarchical
+      dragDrop={dragDrop}
+    />
+  );
+};
+
+VirtualFileSystem.displayName = "VirtualFileSystem";
+
+// #endregion 📁VirtualFileSystem
+
 // #region ⚙️Canvas
 
 /**
@@ -21871,9 +14562,11 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
   return (
-    <div id={id} className="h-full w-full box-border p-single">
-      {children}
-    </div>
+    <LevelProvider level="canvas">
+      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-double">
+        {children}
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -21881,14 +14574,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ c
  * Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-double">{children}</div>;
 };
 
 /**
  * Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-double">{children}</div>;
 };
 
 // #region 🧭Mode
@@ -21907,6 +14600,13 @@ export interface ModeProps {
   children?: React.ReactNode;
   className?: string;
 }
+
+//#region 🧭ModeCanvasSpacing
+
+/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-double} step. */
+const MODE_CANVAS_INSET_CLASS = "p-double";
+
+//#endregion 🧭ModeCanvasSpacing
 
 //#region 🧭ModeLayoutUtils
 
@@ -22182,8 +14882,28 @@ function pointerInRect(x: number, y: number, rect: DOMRect): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
-function modeDropEdgeDepth(size: number, ratio = 0.2, minPx = 28): number {
-  return Math.min(size / 2, Math.max(minPx, size * ratio));
+/** @emoji 🧭 Maps pointer position in a rectangle to a split side using half-panel zones (dominant axis from center). */
+function resolveModeSplitSideInBody(localX: number, localY: number, bodyWidth: number, bodyHeight: number): ModeDockSide {
+  const midX = bodyWidth / 2;
+  const midY = bodyHeight / 2;
+  const dx = Math.abs(localX - midX);
+  const dy = Math.abs(localY - midY);
+  if (dx >= dy) return localX < midX ? "left" : "right";
+  return localY < midY ? "top" : "bottom";
+}
+
+/** @emoji 📐 Half-panel rectangle for split drop preview inside a stack body (origin top-left of body). */
+function computeModeSplitPreviewInBody(
+  bodyWidth: number,
+  bodyHeight: number,
+  side: ModeDockSide,
+): { left: number; top: number; width: number; height: number } {
+  const halfWidth = bodyWidth / 2;
+  const halfHeight = bodyHeight / 2;
+  if (side === "left") return { left: 0, top: 0, width: halfWidth, height: bodyHeight };
+  if (side === "right") return { left: bodyWidth - halfWidth, top: 0, width: halfWidth, height: bodyHeight };
+  if (side === "top") return { left: 0, top: 0, width: bodyWidth, height: halfHeight };
+  return { left: 0, top: bodyHeight - halfHeight, width: bodyWidth, height: halfHeight };
 }
 
 function computeModeDropZone(
@@ -22200,35 +14920,25 @@ function computeModeDropZone(
   for (const [stackPath, targets] of stackTargets) {
     const rect = targets.body;
     if (!rect || !pointerInRect(pointerX, pointerY, rect)) continue;
-    const edgeX = modeDropEdgeDepth(rect.width);
-    const edgeY = modeDropEdgeDepth(rect.height);
-    const x = pointerX - rect.left;
-    const y = pointerY - rect.top;
-    if (x < edgeX) return { kind: "split", stackPath, side: "left" };
-    if (x > rect.width - edgeX) return { kind: "split", stackPath, side: "right" };
-    if (y < edgeY) return { kind: "split", stackPath, side: "top" };
-    if (y > rect.height - edgeY) return { kind: "split", stackPath, side: "bottom" };
+    const side = resolveModeSplitSideInBody(pointerX - rect.left, pointerY - rect.top, rect.width, rect.height);
+    return { kind: "split", stackPath, side };
   }
-  if (!modeRect) return null;
-  const relX = (pointerX - modeRect.left) / modeRect.width;
-  const relY = (pointerY - modeRect.top) / modeRect.height;
-  const edge = 0.12;
-  if (relX < edge) return { kind: "root-split", side: "left" };
-  if (relX > 1 - edge) return { kind: "root-split", side: "right" };
-  if (relY < edge) return { kind: "root-split", side: "top" };
-  if (relY > 1 - edge) return { kind: "root-split", side: "bottom" };
-  return null;
+  if (!modeRect || !pointerInRect(pointerX, pointerY, modeRect)) return null;
+  const side = resolveModeSplitSideInBody(
+    pointerX - modeRect.left,
+    pointerY - modeRect.top,
+    modeRect.width,
+    modeRect.height,
+  );
+  return { kind: "root-split", side };
 }
 
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
   const { windowId, stackPath: sourcePath, tabIndex } = drag;
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
-  if (zone.kind === "split") {
-    if (zone.stackPath === sourcePath) return layout;
-    return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
-  }
+  if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   if (zone.stackPath === sourcePath) {
-    const stackNode = getLayoutNodeAtPath(layout, sourcePath);
+    const stackNode = readLayoutAtPath(layout, sourcePath);
     const childCount = stackNode?.kind === "stack" ? stackNode.children.length : 0;
     const withoutLength = Math.max(0, childCount - 1);
     const toIndex = zone.index < 0 ? tabIndex : Math.min(zone.index, withoutLength);
@@ -22240,43 +14950,81 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   return insertWindowAsTab(without, zone.stackPath, windowId, zone.index < 0 ? undefined : zone.index);
 }
 
+/** @emoji 🪓 Removes the dragged window from the committed layout while it floats on the cursor. */
+function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): WindowLayoutNode {
+  return removeWindowFromLayout(committed, windowId) ?? committed;
+}
+
+interface ModeTabInsertPreview {
+  stackPath: ModeLayoutPath;
+  index: number;
+}
+
+type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
+
+/** @emoji 📑 Tab bar row with a ghost tab at the drop index so layout matches the committed drop. */
+function modeDockTabsWithInsertPreview(
+  tabs: readonly { id: string; title: string }[],
+  insertPreview: ModeTabInsertPreview | null,
+  stackPath: ModeLayoutPath,
+  ghost: { id: string; title: string },
+): ModeDockTabDisplayItem[] {
+  if (!insertPreview || insertPreview.stackPath !== stackPath || !ghost.id) return tabs.map((tab) => ({ ...tab }));
+  const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
+  const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
+  row.splice(insertAt, 0, { id: ghost.id, title: ghost.title, preview: "ghost" });
+  return row;
+}
+
+const modeDockTabInsertPreviewClass =
+  "mx-half my-half flex h-[calc(100%-4px)] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+
 //#endregion 🧭ModeDockDrag
 
 //#region 🧭ModeDockDragPreview
 
-const MODE_DRAG_FLOAT_WIDTH = 220;
-const MODE_DRAG_FLOAT_HEIGHT = 148;
+const MODE_DRAG_CURSOR_OFFSET_X = 8;
+const MODE_DRAG_CURSOR_OFFSET_Y = 10;
 
 interface ModeDockDragPreviewProps {
   title: string;
   content?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  compact?: boolean;
   tabOnly?: boolean;
 }
 
-/** @emoji 🪟 Floating popped-out window preview used while docking tabs. */
-const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, compact = false, tabOnly = false }) => (
-  <div
-    data-slot="mode-dock-drag-preview"
-    className={cn(
-      "pointer-events-none flex flex-col overflow-hidden border border-element bg-window shadow-lg",
-      compact ? "rounded-sm" : "rounded",
-      className,
-    )}
-    style={style}
-  >
-    <div data-slot="mode-dock-drag-preview-header" className="flex h-medium shrink-0 items-center border-b border-element bg-base px-single text-xs">
+/** @emoji 🪟 Floating tab or window preview shown while docking. */
+const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, tabOnly = false }) =>
+  tabOnly ? (
+    <div
+      data-slot="mode-dock-drag-preview"
+      className={cn(
+        "pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-foreground shadow-md select-none",
+        modeDockInactiveTabClass,
+        className,
+      )}
+      style={style}
+    >
       <span className="truncate">{title}</span>
     </div>
-    {tabOnly ? null : (
-      <div data-slot="mode-dock-drag-preview-body" className={cn("relative min-h-0 flex-1 overflow-hidden bg-window", compact ? "opacity-90" : "opacity-95")}>
-        {content ? <div className="h-full w-full overflow-hidden [&_*]:pointer-events-none">{content}</div> : null}
+  ) : (
+    <div
+      data-slot="mode-dock-drag-preview"
+      className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)}
+      style={style}
+    >
+      <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
+        <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
       </div>
-    )}
-  </div>
-);
+      <div
+        data-slot="mode-dock-drag-preview-body"
+        className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}
+      >
+        {content ? <div className="h-full w-full overflow-hidden bg-window [&_*]:pointer-events-none">{content}</div> : null}
+      </div>
+    </div>
+  );
 
 //#endregion 🧭ModeDockDragPreview
 
@@ -22284,6 +15032,8 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
+  tabInsertPreview: ModeTabInsertPreview | null;
+  draggedTab: { id: string; title: string } | null;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22299,68 +15049,190 @@ interface ModeDockTabBarProps {
   stackPath: ModeLayoutPath;
   tabs: readonly { id: string; title: string }[];
   activeId: string | undefined;
+  activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
+  chromeGrid?: ModeDockChromeGrid;
+  chromeBody?: React.ReactNode;
 }
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
-  const dragState = dock?.dragState;
+  const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
+  const perTabActiveChrome = Boolean(chromeGrid);
+  const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
+  const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
+  const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
+  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
+  const displayTabs = reactHostPort.useMemo(
+    () =>
+      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedTab ?? { id: "", title: "" }),
+    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedTab],
+  );
+  const displayChromeGrid =
+    displayTabs.length > 1 ? modeDockChromeGridPlacement(
+        displayTabs.map(({ id, title }) => ({ id, title })),
+        activeId,
+      ) : undefined;
+
+  const renderGhostTab = (tab: { id: string; title: string }) => (
+    <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
+      <span className="truncate">{tab.title}</span>
+    </div>
+  );
+
+  const inactiveTabChromeClass = (stackIndex: number) => {
+    const isLastBeforeGap = perTabActiveChrome && stackIndex === tabs.length - 1;
+    return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : cn(modeDockInactiveTabClass, baselineBottomClass);
+  };
+
+  const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => (
+    <div
+      key={tab.id}
+      data-slot="mode-dock-tab"
+      data-window-id={tab.id}
+      data-stack-active={activeId === tab.id ? "true" : undefined}
+      data-active={activeWindowId === tab.id ? "true" : undefined}
+      className={cn(
+        "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-window hover:text-foreground",
+        !perTabActiveChrome && "bg-window",
+        perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
+        perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
+        perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
+        !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
+        activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
+        perTabActiveChrome && activeId === tab.id && "text-foreground",
+      )}
+      onClick={() => onSelectTab(tab.id)}
+      onPointerUp={(event) => {
+        if (event.button !== 0) return;
+        dock?.clearPendingDrag?.(event.pointerId);
+      }}
+      onPointerDownCapture={(event) => {
+        if ((event.target as HTMLElement).closest("[data-slot='mode-dock-tab-close']")) return;
+        dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event);
+      }}
+    >
+      <span className="truncate">{tab.title}</span>
+      <button
+        type="button"
+        data-slot="mode-dock-tab-close"
+        className="ml-auto flex size-small shrink-0 items-center justify-center rounded opacity-60 hover:bg-hover-window hover:opacity-100"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          dock?.closeWindow(tab.id);
+        }}
+      >
+        <CloseIcon className="size-tiny" />
+      </button>
+    </div>
+  );
+
+  const controlsCap = (
+    <div
+      data-slot="mode-dock-controls-cap"
+      className={cn(
+        perTabActiveChrome
+          ? stackGloballyActive
+            ? windowControlsCapActiveSplitClass
+            : windowControlsCapClass
+          : stackGloballyActive
+            ? windowControlsCapActiveClass
+            : windowControlsCapClass,
+      )}
+    >
+      <button
+        type="button"
+        data-slot="mode-dock-maximize"
+        className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
+        onClick={() => dock?.toggleMaximize(stackPath)}
+      >
+        {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+      </button>
+    </div>
+  );
+
+  const tabGap = (
+    <div
+      data-slot="mode-dock-tab-gap"
+      className={cn("relative min-h-medium min-w-0 flex-1 bg-canvas", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
+      aria-hidden
+    />
+  );
+
+  if (perTabActiveChrome && displayChromeGrid && chromeBody) {
+    return (
+      <div
+        data-slot="mode-dock-chrome-column"
+        className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]"
+        style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}
+      >
+        <div
+          ref={ref}
+          data-slot="mode-dock-tabbar"
+          className="grid min-h-medium min-w-0 items-stretch"
+          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
+        >
+          {displayTabs.map((tab, index) =>
+            tab.preview === "ghost" ? (
+              <div
+                key={`ghost-${tab.id}`}
+                className="relative z-20 flex min-h-medium items-stretch justify-self-start"
+                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
+              >
+                {renderGhostTab(tab)}
+              </div>
+            ) : (
+              <div
+                key={tab.id}
+                data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
+                className={cn(
+                  "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
+                  activeId === tab.id && stackGloballyActive ? "z-10" : "z-20",
+                )}
+                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
+              >
+                {renderTab(tab, tabs.findIndex((row) => row.id === tab.id))}
+              </div>
+            ),
+          )}
+          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: displayChromeGrid.gapCol }}>
+            {tabGap}
+          </div>
+          <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: displayChromeGrid.controlsCol }}>
+            {controlsCap}
+          </div>
+        </div>
+        <div
+          className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+          style={{ gridColumn: displayChromeGrid.bodyColumnSpan, gridRow: 2 }}
+        >
+          {chromeBody}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-base">
-      <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
-        {tabs.map((tab, index) => {
-          const isDragSource = dragState?.windowId === tab.id && dragState.stackPath === stackPath;
-          return (
-          <div
-            key={tab.id}
-            data-slot="mode-dock-tab"
-            data-window-id={tab.id}
-            data-drag-source={isDragSource ? "true" : undefined}
-            data-active={activeId === tab.id ? "true" : undefined}
-            className={cn(
-              "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half border-r border-element px-single text-xs select-none",
-              activeId === tab.id ? "bg-window text-foreground" : "bg-base text-muted-foreground hover:bg-hover-window",
-              isDragSource && "pointer-events-none max-w-0 min-w-0 flex-[0_0_0] overflow-hidden border-0 px-0 opacity-0",
-            )}
-            onClick={() => onSelectTab(tab.id)}
-            onPointerUp={(event) => {
-              if (event.button !== 0) return;
-              dock?.clearPendingDrag?.(event.pointerId);
-            }}
-            onPointerDownCapture={(event) => {
-              if ((event.target as HTMLElement).closest("[data-slot='mode-dock-tab-close']")) return;
-              dock?.startTabDrag(tab.id, stackPath, index, tab.title, event);
-            }}
-          >
-            <span className="truncate">{tab.title}</span>
-            <button
-              type="button"
-              data-slot="mode-dock-tab-close"
-              className="ml-auto flex size-small shrink-0 items-center justify-center rounded opacity-60 hover:bg-hover-window hover:opacity-100"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                dock?.closeWindow(tab.id);
-              }}
-            >
-              <CloseIcon className="size-tiny" />
-            </button>
-          </div>
-          );
-        })}
+    <div ref={ref} data-slot="mode-dock-tabbar" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+      <div
+        data-slot="mode-dock-tab-cap"
+        className={cn(
+          "relative flex min-h-medium min-w-0 max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch",
+          capFrameClass,
+        )}
+      >
+        <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
+          {displayTabs.map((tab) =>
+            tab.preview === "ghost"
+              ? <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
+              : renderTab(tab, tabs.findIndex((row) => row.id === tab.id)),
+          )}
+        </div>
       </div>
-      <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
-        <button
-          type="button"
-          data-slot="mode-dock-maximize"
-          className="flex size-medium items-center justify-center hover:bg-hover-window"
-          onClick={() => dock?.toggleMaximize(stackPath)}
-        >
-          {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-        </button>
-      </div>
+      {tabGap}
+      {controlsCap}
     </div>
   );
 });
@@ -22380,7 +15252,6 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const dock = reactHostPort.useContext(ModeDockContext);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const dragState = dock?.dragState;
   const activeId = node.activeId ?? node.children[0]?.id;
   const tabs = node.children.map((child) => ({
     id: child.id,
@@ -22393,25 +15264,62 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   }, [dock, stackPath, node.children.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
-  const hideActiveBody = dragState?.windowId === activeId && dragState.stackPath === stackPath;
+  const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
+  const chromeGrid = tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
+
+  const stackBody = (
+    <div
+      ref={bodyRef}
+      data-slot="mode-dock-stack-body"
+      className={cn(
+        "relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single",
+        stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass,
+      )}
+    >
+      {activeDescriptor ? (
+        (() => {
+          const { children, engagement, ...windowProps } = activeDescriptor;
+          return (
+            <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+              {children}
+            </Window>
+          );
+        })()
+      ) : null}
+    </div>
+  );
 
   return (
-    <div data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
-      <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
-      <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {activeDescriptor && !hideActiveBody ? (
-          (() => {
-            const { children, engagement, ...windowProps } = activeDescriptor;
-            return (
-              <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
-                {children}
-              </Window>
-            );
-          })()
-        ) : (
-          <div data-slot="mode-dock-stack-body-placeholder" className="h-full w-full bg-base" />
-        )}
-      </div>
+    <div
+      data-slot="mode-dock-stack"
+      data-stack-path={stackPath}
+      data-active={stackGloballyActive ? "true" : undefined}
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent"
+    >
+      {chromeGrid ? (
+        <ModeDockTabBar
+          ref={tabBarRef}
+          stackPath={stackPath}
+          tabs={tabs}
+          activeId={activeId}
+          activeWindowId={activeWindowId}
+          chromeGrid={chromeGrid}
+          chromeBody={stackBody}
+          onSelectTab={(windowId) => dock?.activateWindow(windowId)}
+        />
+      ) : (
+        <>
+          <ModeDockTabBar
+            ref={tabBarRef}
+            stackPath={stackPath}
+            tabs={tabs}
+            activeId={activeId}
+            activeWindowId={activeWindowId}
+            onSelectTab={(windowId) => dock?.activateWindow(windowId)}
+          />
+          {stackBody}
+        </>
+      )}
     </div>
   );
 };
@@ -22434,9 +15342,10 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
-    if (index > 0) panels.push(<ResizableHandle key={`sep-${childPath}`} />);
+    if (index > 0)
+      panels.push(<ResizableHandle key={`sep-${childPath}`} orientation={orientation} />);
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8}>
+      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
         {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
       </ResizablePanel>,
     );
@@ -22470,8 +15379,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
+  const layoutStateRef = reactHostPort.useRef(layoutState);
+  const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
   const layoutKeyRef = reactHostPort.useRef(layoutKey);
   const windowsKeyRef = reactHostPort.useRef(windowsKey);
+  layoutStateRef.current = layoutState;
 
   reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
@@ -22486,6 +15398,35 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     if (!activeWindowId) return;
     setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
   }, [activeWindowId]);
+
+  reactHostPort.useEffect(() => {
+    if (!activeWindowId) return;
+    const engagement = windowsById.get(activeWindowId)?.engagement;
+    if (!engagement?.input) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        routeWindowEngagementEscape(engagement, event, {
+          chromeVisible: true,
+          commandActive: true,
+        })
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (routeWindowEngagementSpace(engagement, event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (!routeWindowEngagementKeydown(engagement, event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      queueMicrotask(() => focusActiveEngagementInput());
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [activeWindowId, windowsById, windowsKey]);
 
   const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
@@ -22579,6 +15520,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       if (pendingDrag && !dragState) {
         const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY);
         if (distance < 6) return;
+        dragLayoutSnapshotRef.current = layoutStateRef.current;
         setDragState({
           windowId: pendingDrag.windowId,
           stackPath: pendingDrag.stackPath,
@@ -22600,6 +15542,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
       if (activePointerId === undefined || event.pointerId !== activePointerId) return;
       if (dragState) finishDrag(dragState, dropZoneRef.current);
+      dragLayoutSnapshotRef.current = null;
       setDragState(null);
       setPendingDrag(null);
       dropZoneRef.current = null;
@@ -22613,13 +15556,39 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     };
   }, [pendingDrag, dragState, finishDrag, refreshDropZone]);
 
+  reactHostPort.useEffect(() => {
+    if (!dragState) return;
+    const cancelDrag = () => {
+      if (dragLayoutSnapshotRef.current) setLayoutState(dragLayoutSnapshotRef.current);
+      dragLayoutSnapshotRef.current = null;
+      setDragState(null);
+      setPendingDrag(null);
+      dropZoneRef.current = null;
+      setDropZone(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      cancelDrag();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dragState]);
+
   const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
+  const draggedPreviewTitle = dragState ? (windowsById.get(dragState.windowId)?.title ?? dragState.ghostLabel) : "";
+  const tabInsertPreview =
+    dragState && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
+  const draggedTab = dragState ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
+
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
+      tabInsertPreview,
+      draggedTab,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -22628,16 +15597,32 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [
+      dragState,
+      tabInsertPreview,
+      draggedTab,
+      registerStackDropTargets,
+      startTabDrag,
+      clearPendingDrag,
+      closeWindow,
+      activateWindow,
+      maximizedStackPath,
+      toggleMaximize,
+    ],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
+
+  const dockOutLayout = reactHostPort.useMemo(
+    () => (dragState ? modeDockOutLayout(layoutState, dragState.windowId) : layoutState),
+    [layoutState, dragState],
+  );
 
   const maximizedStack =
     maximizedStackPath !== null
       ? (() => {
           let found: WindowLayoutStackNode | null = null;
-          mapLayoutStacks(layoutState, (stack, path) => {
+          mapLayoutStacks(dockOutLayout, (stack, path) => {
             if (path === maximizedStackPath) found = stack;
             return stack;
           });
@@ -22652,142 +15637,85 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
       </ModeDockContext.Provider>
     ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(layoutState, "", renderContext)}</ModeDockContext.Provider>
+      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
     ));
 
-  const draggedWindow = dragState ? windowsById.get(dragState.windowId) : undefined;
-  const draggedPreviewTitle = draggedWindow?.title ?? dragState?.ghostLabel ?? "";
-  const draggedPreviewContent = draggedWindow?.children;
-
   return (
-    <div data-slot="mode" data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
-      <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {body}
-        {dragState && !dropZone ? (
-          <ModeDockDragPreview
-            title={draggedPreviewTitle}
-            content={draggedPreviewContent}
-            style={{
-              position: "fixed",
-              left: dragState.x - MODE_DRAG_FLOAT_WIDTH / 2,
-              top: dragState.y - 18,
-              width: MODE_DRAG_FLOAT_WIDTH,
-              height: MODE_DRAG_FLOAT_HEIGHT,
-              zIndex: 60,
-            }}
-          />
-        ) : null}
-        {dragState && dropZone ? (
-          <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
-            {dropZone.kind === "split" || dropZone.kind === "root-split" ? (
-              <>
+    <div
+      data-slot="mode"
+      data-dragging={dragState ? "true" : undefined}
+      data-maximized-path={maximizedStackPath ?? undefined}
+      className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
+    >
+      <LevelProvider level="canvas">
+        <div ref={modeBodyRef} data-slot="mode-body" className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}>
+          {body}
+        {dragState ? (
+          <>
+            {dropZone?.kind !== "tab" ? (
+              <ModeDockDragPreview
+                title={draggedPreviewTitle}
+                tabOnly
+                style={{
+                  position: "fixed",
+                  left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
+                  top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
+                  zIndex: 70,
+                }}
+              />
+            ) : null}
+            {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
+              <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
                 <div
-                  className="absolute bg-accent/25 border-2 border-accent"
+                  className="absolute rounded-sm border-2 border-accent bg-accent/20"
                   style={(() => {
                     if (dropZone.kind === "root-split") {
                       const side = dropZone.side;
-                      if (side === "left") return { left: 0, top: 0, width: "30%", height: "100%" };
-                      if (side === "right") return { right: 0, top: 0, width: "30%", height: "100%" };
-                      if (side === "top") return { left: 0, top: 0, width: "100%", height: "30%" };
-                      return { left: 0, bottom: 0, width: "100%", height: "30%" };
+                      if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
+                      if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
+                      if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
+                      return { left: 0, bottom: 0, width: "100%", height: "50%" };
                     }
                     const elements = stackDropElementsRef.current.get(dropZone.stackPath);
                     const rect = elements?.body?.getBoundingClientRect();
                     const modeRect = modeBodyRef.current?.getBoundingClientRect();
                     if (!rect || !modeRect) return { display: "none" };
-                    const left = rect.left - modeRect.left;
-                    const top = rect.top - modeRect.top;
-                    const edgeX = modeDropEdgeDepth(rect.width);
-                    const edgeY = modeDropEdgeDepth(rect.height);
-                    if (dropZone.side === "left") return { left, top, width: edgeX, height: rect.height };
-                    if (dropZone.side === "right") return { left: left + rect.width - edgeX, top, width: edgeX, height: rect.height };
-                    if (dropZone.side === "top") return { left, top, width: rect.width, height: edgeY };
-                    return { left, top: top + rect.height - edgeY, width: rect.width, height: edgeY };
+                    const bodyOriginLeft = rect.left - modeRect.left;
+                    const bodyOriginTop = rect.top - modeRect.top;
+                    const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
+                    return {
+                      left: bodyOriginLeft + preview.left,
+                      top: bodyOriginTop + preview.top,
+                      width: preview.width,
+                      height: preview.height,
+                    };
                   })()}
                 />
-                {(() => {
-                  const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                  if (!modeRect) return null;
-                  let previewStyle: React.CSSProperties = { display: "none" };
-                  if (dropZone.kind === "root-split") {
-                    const side = dropZone.side;
-                    const width = modeRect.width * 0.3;
-                    const height = modeRect.height * 0.3;
-                    if (side === "left") previewStyle = { left: 8, top: modeRect.height * 0.35, width: width - 16, height: height };
-                    if (side === "right") previewStyle = { right: 8, top: modeRect.height * 0.35, width: width - 16, height: height };
-                    if (side === "top") previewStyle = { left: modeRect.width * 0.35, top: 8, width: width, height: height - 16 };
-                    if (side === "bottom") previewStyle = { left: modeRect.width * 0.35, bottom: 8, width: width, height: height - 16 };
-                  } else {
-                    const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                    const rect = elements?.body?.getBoundingClientRect();
-                    if (!rect) return null;
-                    const left = rect.left - modeRect.left;
-                    const top = rect.top - modeRect.top;
-                    const edgeX = modeDropEdgeDepth(rect.width);
-                    const edgeY = modeDropEdgeDepth(rect.height);
-                    if (dropZone.side === "left") previewStyle = { left: left + 4, top: top + 4, width: edgeX - 8, height: rect.height - 8 };
-                    if (dropZone.side === "right") previewStyle = { left: left + rect.width - edgeX + 4, top: top + 4, width: edgeX - 8, height: rect.height - 8 };
-                    if (dropZone.side === "top") previewStyle = { left: left + 4, top: top + 4, width: rect.width - 8, height: edgeY - 8 };
-                    if (dropZone.side === "bottom") previewStyle = { left: left + 4, top: top + rect.height - edgeY + 4, width: rect.width - 8, height: edgeY - 8 };
-                  }
-                  return (
-                    <ModeDockDragPreview
-                      title={draggedPreviewTitle}
-                      content={draggedPreviewContent}
-                      className="absolute"
-                      style={previewStyle}
-                      compact
-                    />
-                  );
-                })()}
-              </>
-            ) : (
-              (() => {
-                const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                const preview = computeTabInsertPreview(elements?.tabBar ?? null, dropZone.index);
-                const bodyRect = elements?.body?.getBoundingClientRect();
-                const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                if (!preview || !modeRect) return null;
-                const lineLeft = preview.insertX - modeRect.left - 1;
-                const slotLeft = preview.slotLeft - modeRect.left;
-                const slotTop = preview.top - modeRect.top;
-                const bodyLeft = bodyRect ? bodyRect.left - modeRect.left : 0;
-                const bodyTop = bodyRect ? bodyRect.top - modeRect.top : slotTop + preview.height;
-                const bodyWidth = bodyRect?.width ?? 0;
-                const bodyHeight = bodyRect?.height ?? 0;
-                return (
-                  <>
-                    <div
-                      data-slot="mode-dock-tab-insert-line"
-                      className="absolute w-[2px] rounded-full bg-accent shadow-[0_0_0_1px_var(--accent)]"
-                      style={{ left: lineLeft, top: slotTop + 2, height: preview.height - 4 }}
-                    />
-                    <ModeDockDragPreview
-                      title={draggedPreviewTitle}
-                      tabOnly
-                      compact
-                      className="absolute border-accent shadow-md"
-                      style={{ left: slotLeft, top: slotTop + 1, width: preview.slotWidth, height: preview.height - 2 }}
-                    />
-                    {bodyRect ? (
-                      <div
-                        data-slot="mode-dock-tab-target-body"
-                        className="absolute rounded border-2 border-accent/70 bg-accent/10"
-                        style={{ left: bodyLeft, top: bodyTop, width: bodyWidth, height: bodyHeight }}
-                      />
-                    ) : null}
-                  </>
-                );
-              })()
-            )}
-          </div>
+              </div>
+            ) : null}
+          </>
         ) : null}
-      </div>
+        </div>
+      </LevelProvider>
     </div>
   );
 };
 
-export { Mode, removeWindowFromLayout, splitWithWindow, reconcileWindows, normalizeLayoutToStacks, collapseLayout, computeModeDropZone, computeTabInsertPreview };
+export {
+  Mode,
+  removeWindowFromLayout,
+  splitWithWindow,
+  applyModeDrop,
+  reconcileWindows,
+  normalizeLayoutToStacks,
+  collapseLayout,
+  computeModeDropZone,
+  computeModeSplitPreviewInBody,
+  resolveModeSplitSideInBody,
+  computeTabInsertPreview,
+  modeDockOutLayout,
+  modeDockTabsWithInsertPreview,
+};
 
 // #endregion 🧭Mode
 
@@ -22903,9 +15831,13 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
       {navbarItems.length > 0 ? <Navbar items={navbarItems} /> : null}
       <div data-slot="ui-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
-        {toolbar ? <div className="pointer-events-none absolute inset-x-0 bottom-large z-toolbar flex justify-center">{toolbar}</div> : null}
       </div>
-      {footer ? <div data-slot="ui-footer">{footer}</div> : null}
+      {(footer || toolbar) && (
+        <div data-slot="ui-footer" className="relative shrink-0">
+          {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
+          {footer}
+        </div>
+      )}
     </div>
   );
 };
@@ -22917,8 +15849,36 @@ export { Ui };
 // #endregion ⚙️Canvas
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { render, screen, fireEvent } = await import("@testing-library/react");
+  const { describe, expect, it, vi } = import.meta.vitest;
+  const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+
+  describe("ContextMenu", () => {
+    it("prevents the native context menu when no items are registered", () => {
+      render(
+        <ContextMenu>
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      const target = screen.getByRole("button", { name: "Target" });
+      const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+      const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+      target.dispatchEvent(event);
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(screen.queryByRole("menu")).toBeNull();
+    });
+
+    it("opens the custom menu when items are registered", async () => {
+      render(
+        <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }));
+      await waitFor(() => {
+        expect(screen.getByRole("menuitem", { name: "Demo action" })).toBeTruthy();
+      });
+    });
+  });
 
   describe("Shell components", () => {
     it("Ui renders the active app body", () => {
@@ -22939,7 +15899,7 @@ if (import.meta.vitest) {
       render(
         <App
           modes={[
-            { id: "design", label: "Design", children: <div>Design Mode</div> },
+            { id: "edit", label: "Edit", children: <div>Edit Mode</div> },
             { id: "review", label: "Review", children: <div>Review Mode</div> },
           ]}
           activeModeId="review"
@@ -22949,14 +15909,73 @@ if (import.meta.vitest) {
       expect(screen.getByText("Review Mode")).toBeTruthy();
     });
 
+    it("SidePanel stays mounted when visible is false", () => {
+      const StubIcon = (): null => null;
+      const tabs: SidePanelTabConfig[] = [
+        {
+          id: "tab-a",
+          icon: StubIcon,
+          tree: {
+            sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }],
+          },
+        },
+      ];
+      const { rerender } = render(<SidePanel position="left" visible tabs={tabs} />);
+      expect(screen.getByText("Leaf row")).toBeTruthy();
+      rerender(<SidePanel position="left" visible={false} tabs={tabs} />);
+      expect(screen.getByText("Leaf row")).toBeTruthy();
+      expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
+    });
+
+    it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "a", title: "A" },
+          { id: "b", title: "B" },
+          { id: "c", title: "C" },
+        ],
+        "b",
+      );
+      expect(grid.templateColumns).toBe("max-content max-content max-content minmax(0, 1fr) max-content");
+      expect(grid.tabCol(0)).toBe(1);
+      expect(grid.tabCol(1)).toBe(2);
+      expect(grid.tabCol(2)).toBe(3);
+      expect(grid.activeCol).toBe(2);
+      expect(grid.gapCol).toBe(4);
+      expect(grid.controlsCol).toBe(5);
+      expect(grid.bodyColumnSpan).toBe("2 / 5");
+    });
+
+    it("modeDockChromeGridPlacement keeps every tab left of the flex gap", () => {
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "a", title: "A" },
+          { id: "b", title: "B" },
+          { id: "c", title: "C" },
+        ],
+        "b",
+      );
+      expect(grid.tabCol(0)).toBeLessThan(grid.gapCol);
+      expect(grid.tabCol(1)).toBeLessThan(grid.gapCol);
+      expect(grid.tabCol(2)).toBeLessThan(grid.gapCol);
+      expect(grid.gapCol).toBeLessThan(grid.controlsCol);
+    });
+
     it("Mode lays out all windows and marks the active one", () => {
-      render(
+      const { container } = render(
         <div className="h-[400px] w-[600px]">
           <Mode
             windows={[
               { id: "left", title: "Left", children: <div>Left Pane</div> },
               { id: "right", title: "Right", children: <div>Right Pane</div> },
             ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
+                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+              ],
+            }}
             activeWindowId="right"
             onActiveWindowChange={() => {}}
           />
@@ -22964,13 +15983,166 @@ if (import.meta.vitest) {
       );
       expect(screen.getByText("Left Pane")).toBeTruthy();
       expect(screen.getByText("Right Pane")).toBeTruthy();
-      expect(document.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')?.className).not.toContain("border-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="right"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
+      const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
+      expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
+      expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(
+        [...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean),
+      ).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
+      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
+      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-b-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-l-0");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-t-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-element");
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-element");
+    });
+
+    it("Mode clears multi-tab active chrome on inactive stacks", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[800px]">
+          <Mode
+            windows={[
+              { id: "a1", title: "A1", children: <div>A1 Body</div> },
+              { id: "a2", title: "A2", children: <div>A2 Body</div> },
+              { id: "b1", title: "B1", children: <div>B1 Body</div> },
+              { id: "b2", title: "B2", children: <div>B2 Body</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                {
+                  kind: "stack",
+                  children: [{ kind: "window", id: "a1" }, { kind: "window", id: "a2" }],
+                  activeId: "a1",
+                },
+                {
+                  kind: "stack",
+                  children: [{ kind: "window", id: "b1" }, { kind: "window", id: "b2" }],
+                  activeId: "b2",
+                },
+              ],
+            }}
+            activeWindowId="b2"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
+      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
+      const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
+      const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
+      expect(inactiveStackTab?.className).toContain("border-element");
+      expect(inactiveStackTab?.className).not.toContain("border-active-base");
+      expect(inactiveStackTab?.className).not.toContain("border-b-0");
+      expect(activeStackTab?.className).toContain("border-active-base");
+      expect(activeStackTab?.className).toContain("border-b-0");
+      expect(activeStackTab?.className).toContain("bg-active-base");
+      expect(activeStackTab?.className).toContain("text-active-foreground");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
+    });
+
+    it("Mode keeps one canvas inset and one gutter between adjacent stacks", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "left", title: "Left", children: <div>Left Pane</div> },
+              { id: "right", title: "Right", children: <div>Right Pane</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
+                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+              ],
+            }}
+            activeWindowId="left"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const modeBody = container.querySelector('[data-slot="mode-body"]');
+      expect(modeBody?.className).toContain(MODE_CANVAS_INSET_CLASS);
+      const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+      expect(panelGroup?.getAttribute("data-panel-group-direction")).toBe("horizontal");
+      const panels = [...container.querySelectorAll('[data-slot="resizable-panel"]')];
+      expect(panels.length).toBeGreaterThanOrEqual(2);
+      for (const panel of panels) {
+        expect(panel.className).not.toContain("p-single");
+        expect(panel.className).not.toContain("p-double");
+      }
+      const horizontalHandle = container.querySelector('[data-slot="resizable-handle"]');
+      expect(horizontalHandle).toBeTruthy();
+      expect(horizontalHandle!.className).toContain("w-double");
+      expect(horizontalHandle!.className).not.toContain("data-[panel-group-direction=horizontal]:w-double");
+      expect((horizontalHandle as HTMLElement).style.width).toBe("var(--spacing-double)");
+    });
+
+    it("Mode uses the same gutter for vertical splits as canvas inset", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "top", title: "Top", children: <div>Top Pane</div> },
+              { id: "bottom", title: "Bottom", children: <div>Bottom Pane</div> },
+            ]}
+            layout={{
+              kind: "column",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "top" }], activeId: "top" },
+                { kind: "stack", children: [{ kind: "window", id: "bottom" }], activeId: "bottom" },
+              ],
+            }}
+            activeWindowId="top"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const modeBody = container.querySelector('[data-slot="mode-body"]');
+      expect(modeBody?.className).toContain(MODE_CANVAS_INSET_CLASS);
+      const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+      expect(panelGroup?.getAttribute("data-panel-group-direction")).toBe("vertical");
+      const verticalHandle = container.querySelector('[data-slot="resizable-handle"]') as HTMLElement | null;
+      expect(verticalHandle).toBeTruthy();
+      expect(verticalHandle!.getAttribute("data-resize-orientation")).toBe("vertical");
+      expect(verticalHandle!.className).toContain("h-double");
+      expect(verticalHandle!.style.height).toBe("var(--spacing-double)");
     });
 
     it("Mode tab stack shows only the active window body", () => {
-      render(
+      const { container } = render(
         <div className="h-[400px] w-[600px]">
           <Mode
             windows={[
@@ -22983,11 +16155,86 @@ if (import.meta.vitest) {
           />
         </div>,
       );
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-single");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')?.className).toContain("z-[2]");
+      expect(container.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("bg-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-active-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-r");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-b-0");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-element");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-b-0");
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
+      const multiTabBar = container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-tabbar"]');
+      expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-active-base");
+      const tabOrder = () =>
+        [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
+      expect(tabOrder()).toEqual(["a", "b"]);
       fireEvent.click(screen.getByText("Beta"));
       expect(screen.getByText("Beta Body")).toBeTruthy();
       expect(screen.queryByText("Alpha Body")).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.getAttribute("data-window-id")).toBe("b");
+      expect(tabOrder()).toEqual(["a", "b"]);
+    });
+
+    it("Mode tab stack places body under active tab and gap only", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "shape", title: "Shape", children: <div>Shape Body</div> },
+              { id: "energy", title: "Energy", children: <div>Energy Body</div> },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "shape" }, { kind: "window", id: "energy" }], activeId: "energy" }}
+            activeWindowId="energy"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "shape", title: "Shape" },
+          { id: "energy", title: "Energy" },
+        ],
+        "energy",
+      );
+      expect(grid.bodyColumnSpan).toBe("2 / 4");
+      const chromeColumn = container.querySelector('[data-slot="mode-dock-chrome-column"]');
+      const stackBody = chromeColumn?.querySelector('[data-slot="mode-dock-stack-body"]');
+      expect(stackBody).toBeTruthy();
+      expect(chromeColumn?.querySelectorAll('[data-slot="mode-dock-tab-cell"], [data-slot="mode-dock-tab-active-cell"]').length).toBe(2);
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-before"]')).toBeNull();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-after"]')).toBeNull();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tab-gap"]')).toBeTruthy();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(screen.getByText("Energy Body")).toBeTruthy();
+      const bodyRow = chromeColumn?.querySelector('[data-slot="mode-dock-stack-body"]')?.parentElement;
+      expect(bodyRow?.className).toContain("flex");
+      expect(bodyRow?.className).toContain("flex-col");
+      expect(bodyRow?.className).toContain("min-h-0");
+      const gapCell = chromeColumn?.querySelector('[data-slot="mode-dock-tab-gap"]')?.parentElement;
+      expect(gapCell?.className).toContain("flex");
+      expect(gapCell?.className).toContain("items-stretch");
+      const inactiveTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
+      expect(inactiveTab?.className).toContain("border-b-active-base");
+      expect(inactiveTab?.className).not.toContain("border-b-0");
+      const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
+      expect(activeTab?.className).toContain("border-active-base");
+      expect(activeTab?.className).toContain("border-b-0");
+      expect(activeTab?.className).toContain("bg-active-base");
+      expect(activeTab?.className).toContain("text-active-foreground");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
@@ -23017,6 +16264,20 @@ if (import.meta.vitest) {
       expect(screen.getByText("Peer Body")).toBeTruthy();
     });
 
+    it("modeDockTabsWithInsertPreview inserts a ghost tab at the drop index for that stack", () => {
+      const tabs = [
+        { id: "a", title: "A" },
+        { id: "b", title: "B" },
+      ];
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", { id: "drag", title: "Drag" });
+      expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
+      expect(row[1]?.preview).toBe("ghost");
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", { id: "drag", title: "Drag" }).map((tab) => tab.id)).toEqual([
+        "a",
+        "b",
+      ]);
+    });
+
     it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
       const tabBar = document.createElement("div");
       tabBar.setAttribute("data-slot", "mode-dock-tabbar");
@@ -23035,14 +16296,52 @@ if (import.meta.vitest) {
       expect(end?.insertX).toBe(160);
     });
 
-    it("computeModeDropZone treats tab bar hits as tab drops not vertical splits", () => {
+    it("computeModeSplitPreviewInBody covers half the stack body on each side", () => {
+      expect(computeModeSplitPreviewInBody(400, 300, "left")).toEqual({ left: 0, top: 0, width: 200, height: 300 });
+      expect(computeModeSplitPreviewInBody(400, 300, "right")).toEqual({ left: 200, top: 0, width: 200, height: 300 });
+      expect(computeModeSplitPreviewInBody(400, 300, "top")).toEqual({ left: 0, top: 0, width: 400, height: 150 });
+      expect(computeModeSplitPreviewInBody(400, 300, "bottom")).toEqual({ left: 0, top: 150, width: 400, height: 150 });
+    });
+
+    it("resolveModeSplitSideInBody uses half-panel zones with dominant axis at corners", () => {
+      expect(resolveModeSplitSideInBody(50, 100, 200, 200)).toBe("left");
+      expect(resolveModeSplitSideInBody(150, 100, 200, 200)).toBe("right");
+      expect(resolveModeSplitSideInBody(100, 50, 200, 200)).toBe("top");
+      expect(resolveModeSplitSideInBody(100, 150, 200, 200)).toBe("bottom");
+      expect(resolveModeSplitSideInBody(40, 40, 200, 200)).toBe("left");
+      expect(resolveModeSplitSideInBody(160, 40, 200, 200)).toBe("right");
+    });
+
+    it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {
       const tabBar = { left: 0, top: 0, right: 200, bottom: 24, width: 200, height: 24 } as DOMRect;
       const body = { left: 0, top: 24, right: 200, bottom: 224, width: 200, height: 200 } as DOMRect;
       const targets = new Map([["1", { tabBar, body, tabBarElement: null }]]);
       expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", index: 0 });
       expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
       expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
-      expect(computeModeDropZone(100, 120, targets, null)).toBeNull();
+      expect(computeModeDropZone(50, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "left" });
+      expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "right" });
+    });
+
+    it("computeModeDropZone root-split uses half of the mode when pointer is outside stack bodies", () => {
+      const modeRect = { left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300 } as DOMRect;
+      expect(computeModeDropZone(80, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "left" });
+      expect(computeModeDropZone(320, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "right" });
+      expect(computeModeDropZone(200, 40, new Map(), modeRect)).toEqual({ kind: "root-split", side: "top" });
+      expect(computeModeDropZone(200, 260, new Map(), modeRect)).toEqual({ kind: "root-split", side: "bottom" });
+    });
+
+    it("modeDockOutLayout removes the dragged window without mutating drop targets", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const dockedOut = modeDockOutLayout(layout, "b");
+      expect(modeCollectWindowIds(dockedOut)).toEqual(["a", "c"]);
+      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
 
     it("removeWindowFromLayout and splitWithWindow mutate the layout tree", () => {
@@ -23061,6 +16360,34 @@ if (import.meta.vitest) {
         const target = split.children[1];
         expect(target?.kind === "row" || target?.kind === "column").toBe(true);
       }
+    });
+
+    it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }],
+        activeId: "a",
+      };
+      const drag = {
+        windowId: "a",
+        stackPath: "",
+        tabIndex: 0,
+        pointerId: 1,
+        ghostLabel: "A",
+        x: 0,
+        y: 0,
+      };
+      const zone = { kind: "split" as const, stackPath: "", side: "right" as const };
+      const next = applyModeDrop(layout, drag, zone);
+      expect(next.kind).toBe("row");
+      if (next.kind !== "row") return;
+      expect(next.children).toHaveLength(2);
+      const leftStack = next.children[0];
+      const rightStack = next.children[1];
+      expect(leftStack?.kind).toBe("stack");
+      expect(rightStack?.kind).toBe("stack");
+      if (leftStack?.kind === "stack") expect(leftStack.children.map((c) => c.id)).toEqual(["b"]);
+      if (rightStack?.kind === "stack") expect(rightStack.children.map((c) => c.id)).toEqual(["a"]);
     });
 
     it("Mode maximize shows only one stack", () => {
@@ -23090,16 +16417,466 @@ if (import.meta.vitest) {
     });
 
     it("Engagement renders options, input, and status lines", () => {
-      render(
+      const { container } = render(
         <Engagement
           options={[{ id: "opt-a", label: "Option A", onPress: () => {} }]}
           input={{ placeholder: "Type here" }}
           status={[{ id: "status-a", content: "Ready" }]}
         />,
       );
-      expect(screen.getByRole("button", { name: "Option A" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "OptionA" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
+      expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
+    });
+
+    it("Engagement option buttons size to label text without clipping", () => {
+      const longLabel = "C Confirm selection";
+      const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, onPress: () => {} }]} />);
+      const item = container.querySelector('[data-slot="button-group-item"]') as HTMLElement;
+      expect(item?.textContent).toContain("CConfirmSelection");
+      expect(item?.className).toContain("aspect-auto");
+      expect(item?.className).not.toContain("aspect-square");
+    });
+
+    it("Engagement focuses its input when active", async () => {
+      const { rerender } = render(<Engagement active={false} input={{ id: "engagement-input", placeholder: "Command" }} />);
+      const field = () => screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(document.activeElement).not.toBe(field());
+      rerender(<Engagement active input={{ id: "engagement-input", placeholder: "Command" }} />);
+      await waitFor(() => expect(document.activeElement).toBe(field()));
+      expect(field().tabIndex).toBe(0);
+    });
+
+    it("Engagement input is removed from tab order when inactive", () => {
+      render(<Engagement active={false} input={{ placeholder: "Command" }} />);
+      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).tabIndex).toBe(-1);
+    });
+
+    it("filterEngagementPossibles matches label, detail, and id", () => {
+      const items = [
+        { id: "primitive.box", label: "Box", detail: "b" },
+        { id: "primitive.sphere", label: "Sphere", detail: "s" },
+      ];
+      expect(filterEngagementPossibles("", items)).toHaveLength(2);
+      expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
+    });
+
+    it("engagementInlineCompletion uses label casing for matched name prefix", () => {
+      const box = { id: "primitive.box", label: "Box", detail: "b" };
+      const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
+      expect(engagementInlineCompletion("b", box)).toEqual({ prefix: "B", suffix: "ox" });
+      expect(engagementInlineCompletion("Sp", sphere)).toEqual({ prefix: "Sp", suffix: "here" });
+      expect(engagementInlineCompletion("sph", sphere)).toEqual({ prefix: "Sph", suffix: "ere" });
+      expect(engagementActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
+    });
+
+    it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const selected: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          possibleEngagements={[
+            { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
+            { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
+          ]}
+        />,
+      );
+      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.change(field, { target: { value: "b" } });
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ox");
+        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.querySelector(".font-semibold")?.textContent).toBe("B");
+      });
+      fireEvent.change(field, { target: { value: "Sp" } });
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("here");
+        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.textContent).toContain("Sphere");
+      });
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
+      expect(document.querySelector('[data-value="primitive.sphere"]')).toBeTruthy();
+      fireEvent.change(field, { target: { value: "sph" } });
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      fireEvent.keyDown(field, { key: " " });
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const sphereRow = document.querySelector('[data-slot="command-item"][data-value="primitive.sphere"]');
+      expect(sphereRow).toBeTruthy();
+      fireEvent.click(sphereRow!);
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box", "primitive.sphere"]));
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("windowEngagementChromeVisible hides until hover, click, focus, or draft", () => {
+      const engagement = { input: { value: "" }, status: [{ id: "s", content: "Idle" }] };
+      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: false, focused: false })).toBe(false);
+      expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+    });
+
+    it("routeWindowEngagementSpace calls onRepeatLast for empty command", () => {
+      const repeated: string[] = [];
+      const engagement = { input: { value: "", onRepeatLast: () => repeated.push("last") } };
+      const body = document.createElement("div");
+      expect(
+        routeWindowEngagementSpace(engagement, {
+          key: " ",
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          target: body,
+        }),
+      ).toBe(true);
+      expect(repeated).toEqual(["last"]);
+    });
+
+    it("Engagement Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{
+            placeholder: "Command",
+            onSubmit: () => submitted.push("submit"),
+            onRepeatLast: () => repeated.push("last"),
+          }}
+        />,
+      );
+      const field = await screen.findByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: " " });
+      expect(repeated).toEqual(["last"]);
+      expect(submitted).toEqual([]);
+    });
+
+    it("Mode routes printable keys to the active window engagement", async () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <div className="h-[240px] w-[360px]">
+            <Mode
+              activeWindowId="engagement-window"
+              windows={[
+                {
+                  id: "engagement-window",
+                  title: "Viewport",
+                  active: true,
+                  engagement: { input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } },
+                  children: <div data-testid="window-body">Body</div>,
+                },
+              ]}
+              layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+            />
+          </div>
+        );
+      };
+      const { container } = render(<Harness />);
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "b", bubbles: true });
+      await waitFor(() => {
+        const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        expect(typedField.value).toBe("B");
+        expect(typedField.tabIndex).toBe(0);
+        expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
+      });
+    });
+
+    it("installElementsSurfaceBrowserDefaultSuppression blocks native context menu and Tab outside typing targets", () => {
+      const bindings = createDOMEventBinding();
+      installElementsSurfaceBrowserDefaultSuppression(bindings);
+      const panel = document.createElement("div");
+      document.body.appendChild(panel);
+      const contextEvent = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+      const contextPrevent = vi.spyOn(contextEvent, "preventDefault");
+      panel.dispatchEvent(contextEvent);
+      expect(contextPrevent).toHaveBeenCalled();
+      const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      const tabPrevent = vi.spyOn(tabEvent, "preventDefault");
+      panel.dispatchEvent(tabEvent);
+      expect(tabPrevent).toHaveBeenCalled();
+      const input = document.createElement("input");
+      document.body.appendChild(input);
+      input.focus();
+      const tabInField = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      const tabInFieldPrevent = vi.spyOn(tabInField, "preventDefault");
+      input.dispatchEvent(tabInField);
+      expect(tabInFieldPrevent).not.toHaveBeenCalled();
+      bindings.dispose();
+      panel.remove();
+      input.remove();
+    });
+
+    it("isUiTypingTarget treats text inputs, collapsed fields, and command inputs as typing targets", () => {
+      const text = document.createElement("input");
+      text.type = "text";
+      expect(isUiTypingTarget(text)).toBe(true);
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      expect(isUiTypingTarget(checkbox)).toBe(false);
+      const collapsed = document.createElement("div");
+      collapsed.setAttribute("data-slot", "input");
+      collapsed.setAttribute("data-collapsed", "true");
+      expect(isUiTypingTarget(collapsed)).toBe(true);
+      const command = document.createElement("input");
+      command.setAttribute("data-slot", "command-input");
+      expect(isUiTypingTarget(command)).toBe(true);
+      expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
+    });
+
+    it("Window does not route keys to engagement while another input is focused", () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <Input id="other-input" placeholder="Other" />
+          </Window>
+        );
+      };
+      render(<Harness />);
+      const other = screen.getByPlaceholderText("Other") as HTMLInputElement;
+      other.focus();
+      fireEvent.keyDown(other, { key: "x", bubbles: true });
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+    });
+
+    it("Engagement does not steal focus from another input when it becomes active", async () => {
+      const Harness = ({ active }: { active: boolean }) => (
+        <>
+          <Input id="other-input" placeholder="Other" />
+          <Engagement active={active} input={{ placeholder: "Command" }} />
+        </>
+      );
+      const { rerender } = render(<Harness active={false} />);
+      const other = screen.getByPlaceholderText("Other") as HTMLInputElement;
+      other.focus();
+      rerender(<Harness active />);
+      await waitFor(() => expect(document.activeElement).toBe(other));
+    });
+
+    it("Engagement Escape calls onAbort when possibles list is closed", () => {
+      const aborted: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
+          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
+        />,
+      );
+      const field = screen.getByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual(["abort"]);
+    });
+
+    it("Engagement Escape closes possibles list before onAbort", () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const aborted: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
+          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
+        />,
+      );
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const field = screen.getByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual([]);
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual(["abort"]);
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("Mode Escape aborts active window engagement", async () => {
+      const aborted: string[] = [];
+      const Harness = () => (
+        <div className="h-[240px] w-[360px]">
+          <Mode
+            activeWindowId="engagement-window"
+            windows={[
+              {
+                id: "engagement-window",
+                title: "Viewport",
+                active: true,
+                engagement: {
+                  input: { value: "Box", placeholder: "Command", onChange: () => {}, onAbort: () => aborted.push("abort") },
+                },
+                children: <div data-testid="window-body">Body</div>,
+              },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+          />
+        </div>
+      );
+      const { container } = render(<Harness />);
+      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-hover-zone"]')!);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
+      expect(aborted).toEqual(["abort"]);
+    });
+
+    it("Window reveals engagement on hover but activates only on click or typing", async () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <div data-testid="window-body">Body</div>
+          </Window>
+        );
+      };
+      const { container } = render(<Harness />);
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]')!;
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.pointerEnter(zone);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(field.tabIndex).toBe(-1);
+      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBeNull();
+      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
+      await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
+      fireEvent.pointerEnter(zone);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      fireEvent.pointerDown(zone, { bubbles: true });
+      const activeField = await waitFor(() => {
+        const next = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        expect(document.activeElement).toBe(next);
+        return next;
+      });
+      expect(activeField.tabIndex).toBe(0);
+      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
+      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
+      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
+      fireEvent.change(activeField, { target: { value: "b" } });
+      await waitFor(() => {
+        expect(activeField.value).toBe("B");
+      });
+    });
+
+    it("Engagement onChange PascalCases spaced command without window routing", () => {
+      const changed: string[] = [];
+      render(<Engagement input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Command" }} />);
+      fireEvent.change(screen.getByPlaceholderText("Command"), { target: { value: "set height" } });
+      expect(changed).toEqual(["SetHeight"]);
+    });
+
+    it("normalizeEngagementCommandText strips separators and PascalCases tokens", () => {
+      expect(normalizeEngagementCommandText("set height 5")).toBe("SetHeight5");
+      expect(normalizeEngagementCommandText("b ")).toBe("B");
+      expect(normalizeEngagementCommandText("box")).toBe("Box");
+      expect(normalizeEngagementCommandText("SetHeight")).toBe("SetHeight");
+    });
+
+    it("engagementCommandTokenEquals matches tokens regardless of casing", () => {
+      expect(engagementCommandTokenEquals("brush", "Brush")).toBe(true);
+      expect(engagementCommandTokenEquals("SELECT", "select")).toBe(true);
+      expect(engagementCommandTokenEquals("box", "sphere")).toBe(false);
+    });
+
+    it("Engagement input PascalCases command text and space confirms like enter", async () => {
+      const submitted: string[] = [];
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("SetHeight");
+        return (
+          <Engagement
+            active
+            input={{
+              id: "engagement-input",
+              value,
+              placeholder: "Command",
+              onChange: setValue,
+              onSubmit: (next) => submitted.push(next),
+            }}
+          />
+        );
+      };
+      render(<Harness />);
+      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(field.value).toBe("SetHeight");
+      fireEvent.keyDown(field, { key: " " });
+      await waitFor(() => expect(submitted).toEqual(["SetHeight"]));
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(submitted).toEqual(["SetHeight", "SetHeight"]));
+    });
+
+    it("Window anchors engagement in a top overlay when active", () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]');
+      expect(overlay).toBeTruthy();
+      expect(overlay?.className).toContain("pointer-events-none");
+      expect(overlay?.className).not.toContain("inset-x-0");
+      expect(zone?.className).toContain("h-large");
+      expect(zone?.className).toContain("pointer-events-auto");
+      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+      fireEvent.pointerEnter(zone!);
+      expect(overlay?.getAttribute("data-expanded")).toBe("true");
+      expect(screen.getByText("Idle")).toBeTruthy();
+      fireEvent.pointerDown(zone!, { bubbles: true });
+      expect(overlay?.getAttribute("data-expanded")).toBe("true");
+      expect(screen.getByText("Idle")).toBeTruthy();
+    });
+
+    it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
+      const bodyDown = vi.fn();
+      const { container } = render(
+        <Window
+          id="canvas-window"
+          active
+          engagement={{ options: [{ id: "opt-a", label: "Alpha", onPress: () => {} }] }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+        >
+          <div data-testid="window-body" className="size-full" onPointerDown={bodyDown}>
+            Body
+          </div>
+        </Window>,
+      );
+      const body = container.querySelector('[data-testid="window-body"]') as HTMLElement;
+      const bodyRect = body.getBoundingClientRect();
+      fireEvent.pointerDown(body, { clientX: bodyRect.right - 8, clientY: bodyRect.top + bodyRect.height * 0.55, bubbles: true });
+      expect(bodyDown).toHaveBeenCalledTimes(1);
+      fireEvent.pointerDown(body, { clientX: bodyRect.left + 12, clientY: bodyRect.top + 12, bubbles: true });
+      expect(bodyDown).toHaveBeenCalledTimes(2);
+    });
+
+    it("Window hides engagement overlay when inactive", () => {
+      const { container } = render(
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+    });
+
+    it("Window measures overlay uses a fixed right rail without clipping overflow", () => {
+      const { container } = render(
+        <Window id="measures-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]');
+      expect(overlay?.className).toContain("min(10rem");
+      expect(overlay?.className).not.toContain("overflow-hidden");
+      expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {
@@ -23118,7 +16895,7 @@ if (import.meta.vitest) {
 // #region 🗿Framework Re-exports
 
 // Re-exports of common libraries used alongside UI primitives.
-// Workbench shell types and chrome live in `@framework/platform` / `@framework/platform/renderer/react`.
+// Workbench shell types and chrome live in `@framework/platform/core` / `@framework/platform/renderer/react`.
 
 // #region 🌩️DnD Kit
 export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
@@ -23153,7 +16930,7 @@ export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, 
 // #endregion 🌈Routing
 
 // #region 🗿I18n
-export { i18next, initReactI18next, LanguageDetector, useTranslation };
+export { useTranslation };
 // #endregion 🗿I18n
 
 // #region 🌙Hotkeys
@@ -23161,7 +16938,7 @@ export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🌙Hotkeys
 
 // #region ⛅Date
-export { formatDistanceToNow } from "date-fns";
+export { format, formatDistanceToNow } from "date-fns";
 export { de as dateFnsDe, enUS as dateFnsEnUS } from "date-fns/locale";
 // #endregion ⛅Date
 
@@ -23218,6 +16995,71 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
+    });
+
+    it("tree highlight store notifies subscribers only when highlighted ids change", () => {
+      const store = createTreeHighlightStore();
+      let calls = 0;
+      const unsub = store.subscribe(() => {
+        calls++;
+      });
+      store.setHighlightedIds(["a"]);
+      expect(calls).toBe(1);
+      expect(store.isHighlighted("a")).toBe(true);
+      store.setHighlightedIds(["a"]);
+      expect(calls).toBe(1);
+      store.setHighlightedIds([]);
+      expect(calls).toBe(2);
+      expect(store.isHighlighted("a")).toBe(false);
+      unsub();
+    });
+
+    it("shouldDispatchTreeRowPointerLeave skips leave when moving between tree rows", () => {
+      document.body.innerHTML = `
+        <div data-slot="tree-item-row" id="row-a"></div>
+        <div data-slot="tree-item-row" id="row-b"></div>
+      `;
+      const rowA = document.getElementById("row-a")!;
+      const rowB = document.getElementById("row-b")!;
+      expect(shouldDispatchTreeRowPointerLeave(rowB)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(rowA)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(null)).toBe(true);
+      expect(shouldDispatchTreeRowPointerLeave(document.body)).toBe(true);
+    });
+
+    it("shouldDispatchTreeRowPointerLeave skips leave when moving into nested tree branch content", () => {
+      document.body.innerHTML = `
+        <div data-slot="tree-item-row" id="row-a"></div>
+        <div data-slot="tree-item-content" id="branch-a"><span id="gap"></span></div>
+      `;
+      const branch = document.getElementById("branch-a")!;
+      const gap = document.getElementById("gap")!;
+      expect(shouldDispatchTreeRowPointerLeave(branch)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(gap)).toBe(false);
+    });
+
+    it("treeRowStateClasses uses hover tokens for highlight and active tokens for selection", () => {
+      expect(treeRowStateClasses(false, false)).toBe("");
+      expect(treeRowStateClasses(false, true)).toContain("bg-hover-base");
+      expect(treeRowStateClasses(true, true)).toContain("bg-active-base");
+      expect(treeRowStateClasses(true, false)).toContain("bg-active-base");
+    });
+
+    it("tree selection store notifies subscribers only when selection changes", () => {
+      const store = createTreeSelectionStore();
+      let calls = 0;
+      const unsub = store.subscribe(() => {
+        calls++;
+      });
+      store.setSelectedIds(["a"]);
+      expect(calls).toBe(1);
+      expect(store.isSelected("a")).toBe(true);
+      store.setSelectedIds(["a"]);
+      expect(calls).toBe(1);
+      store.setSelectedIds([]);
+      expect(calls).toBe(2);
+      expect(store.isSelected("a")).toBe(false);
+      unsub();
     });
 
     it("computes additive and range multi selection", () => {
@@ -23386,8 +17228,25 @@ if (treeVitest) {
       expect(markup).not.toContain("padding-left:10px");
     });
 
+    it("renders default icons before tree section and item labels when icon is omitted", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeSection id="tooltip.manual" label="Section">
+            <TreeItem id="tooltip.tutorial" label="Folder">
+              <TreeItem id="tooltip.docs" label="Leaf" />
+            </TreeItem>
+          </TreeSection>
+        </TreeContext.Provider>,
+      );
+
+      expect(markup.match(/data-slot="tree-icon"/g)?.length ?? 0).toBe(3);
+      expect(markup).toContain('data-slot="tree-section-row"');
+      expect(markup).toContain('data-tree-row-kind="group"');
+      expect(markup).toContain('data-tree-row-kind="leaf"');
+    });
+
     it("renders steppers at full control width with the current numeric value visible", () => {
-      const markup = renderToStaticMarkup(<Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={12.5} />);
+      const markup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={12.5} />);
 
       expect(markup).toContain('data-slot="stepper-group"');
       expect(markup).toContain('data-detail-panel-control="fill"');
@@ -23435,7 +17294,7 @@ if (treeVitest) {
           <TreeRowAlignmentContext.Provider value={true}>
             <div data-slot="tree-row">
               <TreeAlignedRow level={1} isLastAtLevel={[true]} showLines={true} connectCurrentLevel={true} contentClassName="min-w-0">
-                <Ring id="semio.sketchpad.app.type.panel.details.section.connectors.ring" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />
+                <Ring id="ui.ring.demo" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />
               </TreeAlignedRow>
             </div>
           </TreeRowAlignmentContext.Provider>
@@ -23450,7 +17309,7 @@ if (treeVitest) {
       expect(ringMarkup).toContain('data-slot="ring"');
       expect(ringMarkup).toContain('data-detail-panel-control="fit"');
       expect(ringMarkup).toContain("w-fit shrink-0");
-      expect(ringMarkup).toContain('id="semio.sketchpad.app.type.panel.details.section.connectors.ring-label"');
+      expect(ringMarkup).toContain('id="ui.ring.demo-label"');
       expect(ringMarkup).toContain(">Ring<");
     });
 
@@ -23803,20 +17662,185 @@ if (treeVitest) {
     it("renders Stepper with undefined value inside a Label property row with muted opacity and full opacity when value is defined", () => {
       const emptyMarkup = renderToStaticMarkup(
         <Label id="tooltip.manual">
-          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={undefined} />
+          <Stepper id="ui.stepper.demo" value={undefined} />
         </Label>,
       );
       const filledMarkup = renderToStaticMarkup(
         <Label id="tooltip.manual">
-          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={5} />
+          <Stepper id="ui.stepper.demo" value={5} />
         </Label>,
       );
-      const standaloneMarkup = renderToStaticMarkup(<Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={undefined} />);
+      const standaloneMarkup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={undefined} />);
 
       expect(emptyMarkup).toContain('data-slot="stepper-group"');
       expect(emptyMarkup).toContain("opacity:0.6");
       expect(filledMarkup).toContain("opacity:1");
       expect(standaloneMarkup).not.toContain("opacity:0.6");
+    });
+  });
+
+  describe("VirtualFileSystem", () => {
+    it("buildVirtualFileSystemVisibleRows only includes children of expanded parents", () => {
+      const root: VirtualFileSystemNode = { id: "root", fileNodeKindId: "root", name: "Root", hasChildren: true };
+      const childrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
+        [
+          "root",
+          [
+            { id: "f1", fileNodeKindId: "branch", name: "Models", parentId: "root", hasChildren: true },
+            { id: "d1", fileNodeKindId: "leaf", name: "Tower", parentId: "root", hasChildren: false },
+          ],
+        ],
+        ["f1", [{ id: "t1", fileNodeKindId: "leaf", name: "Capsule", parentId: "f1", hasChildren: false }]],
+      ]);
+      const collapsed = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root"]), root);
+      expect(collapsed.map((row) => row.id)).toEqual(["root", "f1", "d1"]);
+      const expanded = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root", "f1"]), root);
+      expect(expanded.map((row) => row.id)).toEqual(["root", "f1", "t1", "d1"]);
+    });
+
+    it("buildVirtualFileSystemDescriptorColumns renders avatar and time cells", () => {
+      const schemaWithMeta: VirtualFileSystemSchema = {
+        ...VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
+        descriptorColumnIds: ["updated", "createdBy", "path", "fileNodeKind"],
+        fileNodeKinds: {
+          ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
+          root: {
+            ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root,
+            descriptors: [
+              ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors,
+              { id: "updated", descriptorKindId: "time", label: "Updated" },
+              { id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
+            ],
+          },
+        },
+      };
+      const columns = buildVirtualFileSystemDescriptorColumns(schemaWithMeta);
+      const createdBy = columns.find((column) => column.id === "createdBy");
+      expect(createdBy?.header).toBe("Created by");
+      const updated = columns.find((column) => column.id === "updated");
+      expect(updated?.header).toBe("Updated");
+      const row: VirtualFileSystemRow = {
+        id: "root:1",
+        fileNodeKindId: "root",
+        name: "Alpha",
+        level: 0,
+        descriptorValues: {
+          updated: { presentation: "time", iso: "2026-05-01T12:00:00.000Z" },
+          createdBy: { presentation: "avatar", name: "Ada", icon: "https://example.com/a.png" },
+        },
+      };
+      const updatedMarkup = renderToStaticMarkup(<>{updated?.accessor(row)}</>);
+      expect(updatedMarkup).toContain("2026");
+      const avatarColumn = buildVirtualFileSystemDescriptorColumns({
+        ...schemaWithMeta,
+        descriptorColumnIds: ["createdBy"],
+      })[0];
+      const avatarMarkup = renderToStaticMarkup(<>{avatarColumn?.accessor(row)}</>);
+      expect(avatarMarkup).toContain("avatar-fallback");
+      expect(avatarMarkup).toContain(">A<");
+    });
+
+    it("renders expand affordance only for rows with children", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[
+            { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: true, isExpanded: true },
+            { id: "file", fileNodeKindId: "leaf", name: "readme.md", level: 1, hasChildren: false },
+          ]}
+        />,
+      );
+      expect(markup).toContain("data-vfs-expand");
+      expect(markup).toContain("readme.md");
+      expect(markup).toContain("cursor-selectable");
+    });
+
+    it("renders file node kind lucide icons instead of avatars for schema icon ids", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]}
+        />,
+      );
+      expect(markup).toContain("lucide-layout-grid");
+      expect(markup).not.toContain("avatar-fallback");
+    });
+
+    it("resolveVirtualFileSystemSchemaIcon maps sketchpad vfs icon ids", () => {
+      expect(resolveVirtualFileSystemSchemaIcon("component")).toBe(ComponentIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe(CircleDotIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("type")).toBe(ComponentIcon);
+    });
+
+    it("resolveVirtualFileSystemSchemaIcon maps file extension ids", () => {
+      expect(resolveVirtualFileSystemSchemaIcon("glb")).toBe(BoxIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("pdf")).toBe(FileTypeIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("json")).toBe(FileJsonIcon);
+    });
+
+    it("renders per-row extension icons for kit files", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]}
+        />,
+      );
+      expect(markup).toContain("lucide-box");
+      expect(markup).not.toContain("avatar-fallback");
+    });
+
+    it("invokes onRowDoubleClick on double-click", async () => {
+      const { render } = await import("@testing-library/react");
+      const userEvent = (await import("@testing-library/user-event")).default;
+      const user = userEvent.setup();
+      const onRowDoubleClick = vi.fn();
+      const { container } = render(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[{ id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" }]}
+          onRowDoubleClick={onRowDoubleClick}
+        />,
+      );
+      const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
+      expect(leafRow).toBeTruthy();
+      await user.dblClick(leafRow!);
+      expect(onRowDoubleClick).toHaveBeenCalledWith(expect.objectContaining({ id: "leaf-a", navigateUri: "/alpha" }), 0);
+    });
+
+    it("computes shift range and ctrl toggle selection for visible rows", () => {
+      const orderedRowIds = ["root", "branch", "leaf-a", "leaf-b"];
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "multiple",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-b",
+          anchorRowId: "root",
+          additiveKey: false,
+          rangeKey: true,
+        }).selectedRowIds,
+      ).toEqual(["root", "branch", "leaf-a", "leaf-b"]);
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "multiple",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-b",
+          anchorRowId: "root",
+          additiveKey: true,
+          rangeKey: false,
+        }).selectedRowIds,
+      ).toEqual(["root", "leaf-b"]);
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "single",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-a",
+          additiveKey: true,
+          rangeKey: true,
+        }).selectedRowIds,
+      ).toEqual(["leaf-a"]);
     });
   });
 
@@ -23891,17 +17915,190 @@ if (treeVitest) {
     });
   });
 
-  describe("sketchpad kit i18n", () => {
-    function resourceAt(path: string): unknown {
-      const tr = elementUiTranslationBundles.en.translation as Record<string, unknown>;
-      return path.split(".").reduce<unknown>((acc, k) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[k] : undefined), tr);
-    }
+  describe("control chrome", () => {
+    it("shows inline labels on buttons when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Button id="settings.compact" icon={<CheckIcon />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Compact");
+      expect(markup).toContain("aspect-auto");
+    });
 
-    it("defines kit-level tag, tags, concept, and concepts strings used by sketchpad", () => {
-      expect(resourceAt("semio.sketchpad.app.kit.tags.multipleTitle")).toBeDefined();
-      expect(resourceAt("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")).toBeDefined();
-      expect(resourceAt("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")).toBeDefined();
-      expect(resourceAt("semio.sketchpad.app.kit.concepts.multipleSelected")).toBeDefined();
+    it("hides inline labels on buttons when compact is on", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Button id="settings.compact" icon={<CheckIcon />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).not.toContain(">Compact<");
+    });
+
+    it("maps ui shell ids to domain-neutral ui i18n keys by default", () => {
+      expect(resolveControlLabelId("ui.nav.back")).toBe("ui.nav.back");
+      expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("ui.panelToggle.workbench");
+      expect(resolveControlLabelId("playground.panel.details")).toBe("ui.panelToggle.details");
+      expect(panelKindFromPanelToggleControlId("playground.panel.workbench")).toBe("workbench");
+    });
+
+    it("resolves every ui.toolbar.parent category in en and de", () => {
+      const categories: readonly UiToolbarParentCategory[] = [
+        "history",
+        "hand",
+        "selection",
+        "lasso",
+        "filter",
+        "open",
+        "save",
+        "transfer",
+        "transform",
+        "create",
+        "view",
+        "actions",
+        "settings",
+      ];
+      for (const locale of ["en", "de"] as const) {
+        void uiI18n.changeLanguage(locale);
+        for (const category of categories) {
+          const key = `ui.toolbar.parent.${category}` as const;
+          const label = resolveTranslationLabel(uiI18n.t(key));
+          expect(label, `${locale}:${key}`).toBeTruthy();
+          expect(label).not.toBe(key);
+        }
+      }
+      void uiI18n.changeLanguage("en");
+    });
+
+    it("renders navbar navigation buttons with inline labels when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <ButtonGroup id="ui.nav.back">
+            <ButtonGroupItem id="ui.nav.back">
+              <NavigateBackIcon className="size-small" />
+            </ButtonGroupItem>
+          </ButtonGroup>
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Go back");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("renders toggles with inline labels from the toggle group id when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("renders search and find toggles with distinct labels", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+          <Toggle id="ui.find.toggle" pressed={false} onPressedChange={() => undefined} icon={<FindInViewIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain("Find");
+      expect(resolveControlLabelId("ui.search.toggle")).not.toBe(resolveControlLabelId("ui.find.toggle"));
+    });
+
+    it("humanizes unknown control ids when no i18n entry exists", () => {
+      expect(humanizeControlId("ui.panelToggle.details")).toBe("Details");
+      expect(humanizeControlSegment("puzzle2dGridSnap")).toBe("Puzzle2d Grid Snap");
+    });
+
+    it("maps legacy engagement control ids to ui.engagement i18n keys", () => {
+      expect(isInternalChromeControlId("engagement-possibles-toggle")).toBe(true);
+      expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
+      expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.commands");
+      expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
+    });
+
+    it("navbar keeps inline labels when compact chrome is enabled", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Navbar
+            items={[
+              {
+                key: "search",
+                content: <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />,
+              },
+            ]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain('id="ui.search.toggle"');
+    });
+
+    it("renders engagement suggestions toggle without internal-id humanized labels", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Engagement
+            input={{ placeholder: "Command" }}
+            possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain('id="ui.engagement.suggestions"');
+      expect(markup).not.toMatch(/Engagement Possibles/i);
+      expect(markup).not.toMatch(/Possibles Toggle/i);
+    });
+
+    it("renders panel toggle details with inline label when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Details");
+      expect(markup).toContain("aspect-auto");
+      expect(markup).toContain("data-slot=\"inline-label\"");
+    });
+
+    it("navbar keeps workbench and details panel toggle labels when compact chrome is enabled", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Navbar
+            items={[
+              {
+                key: "panels",
+                content: (
+                  <div className="flex min-w-0 items-stretch border border-element h-medium">
+                    <Toggle id="ui.panelToggle.workbench" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 shrink-0" />
+                    <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Workbench");
+      expect(markup).toContain("Details");
+      expect(markup).toContain("has-[_[data-slot=inline-label]]:overflow-visible");
+    });
+
+    it("renders control-tree boolean toggles with inline labels when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          {defaultControlRenderer({
+            path: "folder/enabled",
+            key: "Enabled",
+            controlKind: "boolean",
+            value: true,
+            onChange: () => undefined,
+          })}
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Enabled");
+      expect(markup).toContain("aspect-auto");
     });
   });
+
+
 }

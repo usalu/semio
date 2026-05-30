@@ -3943,9 +3943,9 @@ def _mcp_app_tool_payload(result: object) -> dict:
 
 
 # #region 👓Constants
-ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
-KIT_METABOLISM_PATH = ASSETS_DIR / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
-METABOLISM_DIR = ASSETS_DIR / "metabolism"
+FIXTURES_DIR = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "fixtures"
+KIT_METABOLISM_PATH = FIXTURES_DIR / "kit" / "dev" / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
+METABOLISM_DIR = FIXTURES_DIR / "kit" / "dev" / "metabolism"
 
 # #endregion 👓Constants
 
@@ -4505,7 +4505,7 @@ class TestMcp:
     def test_start_working_in_local_kit_loads_from_folder(self):
         """🔖start_working_in_local_kit loads kit from a split store folder containing wip/initialKit/kit.semio.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
+        result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
@@ -4513,7 +4513,7 @@ class TestMcp:
         assert "designs" in kit
 
     def test_start_working_in_local_kit_loads_from_metabolism_folder(self):
-        """🖼️start_working_in_local_kit loads kit from a folder backed by .semio/kit.db (semio/assets/semio/metabolism)."""
+        """🖼️start_working_in_local_kit loads kit from the dev metabolism fixture folder (semio/fixtures/kit/dev/metabolism)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)
@@ -4540,7 +4540,7 @@ class TestMcp:
         """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         metabolism_path = METABOLISM_DIR.resolve()
-        workspace_default = pathlib.Path("/workspaces/semio/semio/assets/semio/metabolism")
+        workspace_default = pathlib.Path("/workspaces/semio/semio/fixtures/kit/dev/metabolism")
         path_arg = str(workspace_default) if workspace_default.is_dir() else str(metabolism_path)
 
         kit_result = engine.start_working_in_local_kit(path_arg, mock_ctx)
@@ -5054,7 +5054,7 @@ class TestMcp:
     def test_shallow_kit_hydrates_nakagin_design_from_disk(self):
         """🔖metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by id."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        shallow_kit_path = ASSETS_DIR / "metabolism.shallow.kit.semio.json"
+        shallow_kit_path = FIXTURES_DIR / "metabolism.shallow.kit.semio.json"
         engine.start_working_in_local_kit(str(shallow_kit_path), mock_ctx)
         engine.start_working_in_design("9a890dd4-0a9c-48ac-920a-9e62666465ef", mock_ctx)
         d = engine._get_session_design(mock_ctx)

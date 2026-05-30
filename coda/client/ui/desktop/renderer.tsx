@@ -16,21 +16,14 @@
 // #region 🔌Adapters
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { elementUiI18n as i18next, initReactI18next, reactHostPort, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
+import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
 // #endregion 🔌Adapters
 
 import "./globals.css";
 
 console.log("[DEBUG] renderer.tsx imports resolved, module body executing");
 
-// Initialize i18next for elements.tsx components that use useTranslation().
-// Without this, useTranslation() logs a warning and returns empty strings.
-i18next.use(initReactI18next).init({
-  lng: "en",
-  fallbackLng: "en",
-  interpolation: { escapeValue: false },
-  resources: { en: { translation: {} } },
-});
+void setUiLocale("en");
 
 // #region ⚙️Types
 // TypeScript interfaces for coda domain models used in the renderer.

@@ -95,6 +95,7 @@
     --toolbar-group-gap: var(--spacing-double);
     --toolbar-padding-inline: var(--spacing-single);
     --toolbar-divider-height: var(--size-small);
+    --toolbar-footer-offset: calc(2 * var(--spacing-double));
     --text-2xs: 0.6rem;
     --text-2xs--line-height: calc(0.9 / 0.6);
     --text-xs: 0.7rem;
@@ -124,12 +125,14 @@
     --text-9xl: 7.2rem;
     --text-9xl--line-height: 1;
     --base: var(--color-light);
+    --canvas: var(--color-light-8-9);
     --window: var(--color-light-6-7);
     --panel: var(--color-light-5-7);
     --overlay: transparent;
     --temporary: var(--color-light-4-7);
     --foreground: var(--color-dark);
     --z-base: 0;
+    --z-canvas: 3;
     --z-window: 5;
     --z-panel: 10;
     --z-overlay: 20;
@@ -144,6 +147,7 @@
     --accent-tertiary: var(--color-tertiary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
+    --hover-canvas: var(--color-light-7-9);
     --hover-window: var(--color-light-gray);
     --hover-panel: var(--color-gray-600);
     --hover-overlay: var(--color-gray-600);
@@ -167,6 +171,10 @@
     --destructive-bg: var(--color-light-8-9);
     --destructive-foreground: var(--color-danger);
     --destructive-border: var(--color-danger);
+    --scrollbar-size: var(--spacing-double);
+    --scrollbar-track: color-mix(in srgb, var(--muted) 55%, transparent);
+    --scrollbar-thumb: var(--border-color);
+    --scrollbar-thumb-hover: var(--muted-foreground);
     --color-new: var(--success-border);
     --color-modified: var(--warning-border);
     --color-removed: var(--destructive-border);
@@ -199,6 +207,59 @@
 
     ::-moz-selection {
       background-color: var(--accent);
+    }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar {
+      width: var(--scrollbar-size);
+      height: var(--scrollbar-size);
+    }
+
+    *::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 0;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: var(--scrollbar-track);
+    }
+
+    [data-slot="scroll-area-scrollbar"] {
+      background: var(--scrollbar-track);
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
+      width: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="horizontal"] {
+      height: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-thumb"] {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 0;
+    }
+
+    [data-slot="scroll-area-thumb"]:hover {
+      background-color: var(--scrollbar-thumb-hover);
     }
 
     body.cursor-selectable {
@@ -421,14 +482,31 @@
   }
 }
 
+/* Floating toolbar anchor: twice the window canvas inset (--spacing-double) above the footer. */
+[data-slot="toolbar-anchor"] {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(100% + var(--toolbar-footer-offset));
+  z-index: var(--z-panel);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
 /* Toolbar zone interactive element normalization.
  * Placed outside @layer so it overrides Tailwind utility classes (border, divide, etc.)
  * which live in @layer utilities and beat @layer base by cascade priority.
  * Uses design tokens (--toolbar-*, --spacing-*, --text-*, --size-*) for all values. */
 
+[data-slot="toolbar-zone"] :is([data-slot="toolbar-group"], [data-slot="toolbar-item"]) {
+  height: 100%;
+  min-height: 0;
+}
+
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) {
   border-style: none;
   height: 100%;
+  min-height: 0;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) > :not(:first-child) {
@@ -495,6 +573,7 @@
 
 .dark {
   --base: var(--color-dark);
+  --canvas: var(--color-dark-6-7);
   --window: var(--color-dark-8-9);
   --panel: var(--color-dark-7-9);
   --overlay: transparent;
@@ -509,6 +588,7 @@
   --accent-tertiary: var(--color-tertiary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
+  --hover-canvas: var(--color-dark-5-7);
   --hover-window: var(--color-dark-gray);
   --hover-panel: var(--color-gray-400);
   --hover-overlay: var(--color-gray-400);
@@ -637,6 +717,7 @@
 
 @theme inline {
   --color-base: var(--base);
+  --color-canvas: var(--canvas);
   --color-window: var(--window);
   --color-panel: var(--panel);
   --color-overlay: var(--overlay);
@@ -647,6 +728,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-hover-base: var(--hover-base);
+  --color-hover-canvas: var(--hover-canvas);
   --color-hover-window: var(--hover-window);
   --color-hover-panel: var(--hover-panel);
   --color-hover-overlay: var(--hover-overlay);
@@ -792,6 +874,16 @@
 @utility h-single {
   height: var(--spacing-single);
 }
+@utility size-double {
+  width: var(--spacing-double);
+  height: var(--spacing-double);
+}
+@utility w-double {
+  width: var(--spacing-double);
+}
+@utility h-double {
+  height: var(--spacing-double);
+}
 
 @utility size-tiny {
   width: var(--size-tiny);
@@ -914,6 +1006,18 @@
   max-height: var(--size-large);
 }
 
+@utility min-h-tiny {
+  min-height: var(--size-tiny);
+}
+@utility min-h-small {
+  min-height: var(--size-small);
+}
+@utility min-h-medium {
+  min-height: var(--size-medium);
+}
+@utility min-h-large {
+  min-height: var(--size-large);
+}
 @utility min-h-huge {
   min-height: var(--size-huge);
 }
@@ -936,6 +1040,10 @@
 
 @utility z-base {
   z-index: var(--z-base);
+}
+
+@utility z-canvas {
+  z-index: var(--z-canvas);
 }
 
 @utility z-window {
@@ -969,4 +1077,9 @@
 @utility text-tiny {
   font-size: var(--text-2xs);
   line-height: var(--text-2xs--line-height);
+}
+
+/* Puzzle 2d (and other full-bleed canvases) fill the window body; stack padding is for panel chrome only. */
+[data-slot="mode-dock-stack-body"]:has([data-testid="puzzle2d-canvas"]) {
+  padding: 0;
 }

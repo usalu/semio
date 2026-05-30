@@ -12,7 +12,7 @@ if (start < 0 || end < 0) {
 }
 c = c.slice(0, start) + c.slice(end + endMarker.length);
 
-const inject = `import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
+const inject = `import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -20,7 +20,7 @@ import {
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	createContext,

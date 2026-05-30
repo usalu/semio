@@ -24,7 +24,7 @@ import {
 } from "@semio/algorithms";
 
 import { MetabolismKit as metabolismKit } from "@semio/assets";
-import { DragPieces, MoveStoryDesign, MoveVector } from "@semio/assets";
+import { DragPieces, MoveStoryDesign, MoveVector } from "@semio/fixtures";
 
 const rawDesign = { ...MoveStoryDesign, id: "move-preset-id", name: "Move Preset" };
 const defaultPieceIds = pieceIdsFromWire(DragPieces as { pieces?: { id?: string }[] });

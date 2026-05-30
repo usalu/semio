@@ -3887,6 +3887,52 @@ public class Connector : Entity<Connector>
 
 
 
+#region 🏛️Typology
+// 🏛️Typology owns types and designs; families remain at kit root for port compatibility.
+
+public class TypologyId : Entity<TypologyId>
+{
+    public string Id { get; set; } = "";
+    public static implicit operator TypologyId(Typology topo) => new() { Id = topo.Id };
+    public static implicit operator TypologyId(string id) => new() { Id = id };
+}
+
+public class TypologyDiff : Entity<TypologyDiff>
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Folder { get; set; }
+    public TypesDiff? Types { get; set; }
+    public DesignsDiff? Designs { get; set; }
+}
+
+public class TypologiesDiff : Entity<TypologiesDiff>
+{
+    public List<TypologyId> Removed { get; set; } = new();
+    public List<Typology> Added { get; set; } = new();
+    public List<TypologyModification> Modified { get; set; } = new();
+}
+
+public class TypologyModification
+{
+    public TypologyId Typology { get; set; } = new();
+    public TypologyDiff Diff { get; set; } = new();
+}
+
+public class Typology : Entity<Typology>
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Folder { get; set; }
+    public List<Type> Types { get; set; } = new();
+    public List<Design> Designs { get; set; } = new();
+}
+
+#endregion 🏛️Typology
+
 #region 🧱Type
 // Implementations MUST compose ports, connectors, and representations into a parametric type.
 
@@ -4004,6 +4050,7 @@ public class Type : Entity<Type>
 {
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
+    public TypologyId Typology { get; set; } = new();
     public TypeId? Parent { get; set; }
     public bool? IsAbstract { get; set; }
     public string? Folder { get; set; }
@@ -5148,6 +5195,7 @@ public class Design : Entity<Design>
 {
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
+    public TypologyId Typology { get; set; } = new();
     public DesignId? Parent { get; set; }
     public bool? IsAbstract { get; set; }
     public string? Folder { get; set; }
@@ -7520,8 +7568,7 @@ public class KitDiff : Entity<KitDiff>
     private string? _remote;
     private string? _homepage;
     private string? _license;
-    private TypesDiff? _types;
-    private DesignsDiff? _designs;
+    private TypologiesDiff? _typologies;
     private TagsDiff? _tags;
     private FilesDiff? _files;
     private FoldersDiff? _folders;
@@ -7542,8 +7589,7 @@ public class KitDiff : Entity<KitDiff>
     public string? Remote { get => _remote; set { _remote = value; _setProperties.Add("Remote"); } }
     public string? Homepage { get => _homepage; set { _homepage = value; _setProperties.Add("Homepage"); } }
     public string? License { get => _license; set { _license = value; _setProperties.Add("License"); } }
-    public TypesDiff? Types { get => _types; set { _types = value; _setProperties.Add("Types"); } }
-    public DesignsDiff? Designs { get => _designs; set { _designs = value; _setProperties.Add("Designs"); } }
+    public TypologiesDiff? Typologies { get => _typologies; set { _typologies = value; _setProperties.Add("Typologies"); } }
     public TagsDiff? Tags { get => _tags; set { _tags = value; _setProperties.Add("Tags"); } }
     public FilesDiff? Files { get => _files; set { _files = value; _setProperties.Add("Files"); } }
     public FoldersDiff? Folders { get => _folders; set { _folders = value; _setProperties.Add("Folders"); } }
@@ -7564,8 +7610,7 @@ public class KitDiff : Entity<KitDiff>
     public bool ShouldSerializeRemote() => _setProperties.Contains("Remote");
     public bool ShouldSerializeHomepage() => _setProperties.Contains("Homepage");
     public bool ShouldSerializeLicense() => _setProperties.Contains("License");
-    public bool ShouldSerializeTypes() => _setProperties.Contains("Types");
-    public bool ShouldSerializeDesigns() => _setProperties.Contains("Designs");
+    public bool ShouldSerializeTypologies() => _setProperties.Contains("Typologies");
     public bool ShouldSerializeTags() => _setProperties.Contains("Tags");
     public bool ShouldSerializeFiles() => _setProperties.Contains("Files");
     public bool ShouldSerializeFolders() => _setProperties.Contains("Folders");
@@ -7590,8 +7635,7 @@ public class KitDiff : Entity<KitDiff>
             Remote = other.Remote ?? Remote,
             Homepage = other.Homepage ?? Homepage,
             License = other.License ?? License,
-            Types = other.Types ?? Types,
-            Designs = other.Designs ?? Designs,
+            Typologies = other.Typologies ?? Typologies,
             Files = other.Files ?? Files,
             Folders = other.Folders ?? Folders,
             Ports = other.Ports ?? Ports,
@@ -7667,10 +7711,52 @@ public partial class Kit : Entity<Kit>
     public List<Port> Ports { get; set; } = new();
     public List<File> Files { get; set; } = new();
     public List<Folder> Folders { get; set; } = new();
+    [JsonProperty("typologies")]
+    public List<Typology> Typologies { get; set; } = new();
+    [JsonIgnore]
     public List<Type> Types { get; set; } = new();
+    [JsonIgnore]
     public List<Design> Designs { get; set; } = new();
     public string CreatedAt { get; set; } = "";
     public string ModificationdAt { get; set; } = "";
+
+    public void EnsureTypologies()
+    {
+        if (Typologies.Count > 0)
+        {
+            FlattenFromTypologies();
+            return;
+        }
+        if (Types.Count == 0 && Designs.Count == 0) return;
+        var topoId = !string.IsNullOrEmpty(Types.FirstOrDefault()?.Typology.Id)
+            ? Types[0].Typology.Id
+            : !string.IsNullOrEmpty(Designs.FirstOrDefault()?.Typology.Id)
+                ? Designs[0].Typology.Id
+                : Guid.NewGuid().ToString();
+        foreach (var t in Types) t.Typology = topoId;
+        foreach (var d in Designs) d.Typology = topoId;
+        Typologies = new List<Typology> { new() { Id = topoId, Name = "Default", Types = Types, Designs = Designs } };
+        FlattenFromTypologies();
+    }
+
+    public void FlattenFromTypologies()
+    {
+        Types = new List<Type>();
+        Designs = new List<Design>();
+        foreach (var topo in Typologies)
+        {
+            foreach (var t in topo.Types)
+            {
+                if (string.IsNullOrEmpty(t.Typology.Id)) t.Typology = topo.Id;
+                Types.Add(t);
+            }
+            foreach (var d in topo.Designs)
+            {
+                if (string.IsNullOrEmpty(d.Typology.Id)) d.Typology = topo.Id;
+                Designs.Add(d);
+            }
+        }
+    }
 
     public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files?.Added ?? new(), Attributes = diff.Attributes?.Added ?? new() };
     public static implicit operator string(Kit kit) => kit.Name;
@@ -7678,18 +7764,14 @@ public partial class Kit : Entity<Kit>
 
     public static Kit ApplyDiff(Kit kit, KitDiff diff)
     {
-        var types = kit.Types;
-        var designs = kit.Designs;
+        kit.EnsureTypologies();
+        var typologies = kit.Typologies;
         var files = kit.Files;
         var attributes = kit.Attributes;
 
-        if (diff.Types is not null)
+        if (diff.Typologies is not null)
         {
-            types = ApplyTypesDiff(kit.Types, diff.Types);
-        }
-        if (diff.Designs is not null)
-        {
-            designs = ApplyDesignsDiff(kit.Designs, diff.Designs);
+            typologies = ApplyTypologiesDiff(kit.Typologies, diff.Typologies);
         }
         if (diff.Files is not null)
         {
@@ -7700,7 +7782,7 @@ public partial class Kit : Entity<Kit>
             attributes = ApplyAttributesDiff(kit.Attributes, diff.Attributes);
         }
 
-        return new Kit
+        var result = new Kit
         {
             Name = string.IsNullOrEmpty(diff.Name) ? kit.Name : diff.Name,
             Description = string.IsNullOrEmpty(diff.Description) ? kit.Description : diff.Description,
@@ -7714,10 +7796,32 @@ public partial class Kit : Entity<Kit>
             Authors = kit.Authors,
             Qualities = kit.Qualities,
             Files = files,
-            Types = types,
-            Designs = designs,
+            Typologies = typologies,
             Attributes = attributes
         };
+        result.FlattenFromTypologies();
+        return result;
+    }
+
+    private static List<Typology> ApplyTypologiesDiff(List<Typology> original, TypologiesDiff diff)
+    {
+        var result = original.Where(t => !diff.Removed.Any(r => r.Id == t.Id)).ToList();
+        foreach (var updated in diff.Modified)
+        {
+            var index = result.FindIndex(t => t.Id == updated.Typology.Id);
+            if (index >= 0)
+            {
+                var topo = result[index];
+                if (updated.Diff.Name is not null) topo.Name = updated.Diff.Name;
+                if (updated.Diff.Description is not null) topo.Description = updated.Diff.Description;
+                if (updated.Diff.Icon is not null) topo.Icon = updated.Diff.Icon;
+                if (updated.Diff.Folder is not null) topo.Folder = updated.Diff.Folder;
+                if (updated.Diff.Types is not null) topo.Types = ApplyTypesDiff(topo.Types, updated.Diff.Types);
+                if (updated.Diff.Designs is not null) topo.Designs = ApplyDesignsDiff(topo.Designs, updated.Diff.Designs);
+            }
+        }
+        result.AddRange(diff.Added);
+        return result;
     }
 
     private static List<Attribute> ApplyAttributesDiff(List<Attribute> original, AttributesDiff diff)

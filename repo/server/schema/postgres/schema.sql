@@ -281,6 +281,18 @@ CREATE TABLE IF NOT EXISTS kit_snapshot_families (
     UNIQUE (snapshot_id, ordinal)
 );
 
+CREATE TABLE IF NOT EXISTS kit_snapshot_typologies (
+    snapshot_id           TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
+    external_id           TEXT NOT NULL,
+    ordinal               INT NOT NULL DEFAULT 0,
+    name                  TEXT NOT NULL DEFAULT '',
+    description           TEXT NOT NULL DEFAULT '',
+    icon                  TEXT NOT NULL DEFAULT '',
+    folder_external_id    TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (snapshot_id, external_id),
+    UNIQUE (snapshot_id, ordinal)
+);
+
 CREATE TABLE IF NOT EXISTS kit_snapshot_family_endpoints (
     snapshot_id           TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
     family_external_id    TEXT NOT NULL,
@@ -358,24 +370,26 @@ CREATE TABLE IF NOT EXISTS kit_snapshot_folders (
 );
 
 CREATE TABLE IF NOT EXISTS kit_snapshot_kind_entities (
-    snapshot_id            TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
-    external_id            TEXT NOT NULL,
-    ordinal                INT NOT NULL DEFAULT 0,
-    folder_external_id     TEXT NOT NULL DEFAULT '',
-    location_external_id   TEXT NOT NULL DEFAULT '',
-    name                   TEXT NOT NULL DEFAULT '',
-    description            TEXT NOT NULL DEFAULT '',
-    icon                   TEXT NOT NULL DEFAULT '',
-    image                  TEXT NOT NULL DEFAULT '',
-    variant                TEXT NOT NULL DEFAULT '',
-    stock_value            BIGINT,
-    is_abstract            BOOLEAN,
-    is_virtual             BOOLEAN,
-    unit_name              TEXT NOT NULL DEFAULT '',
-    created_value          TIMESTAMPTZ,
-    updated_value          TIMESTAMPTZ,
+    snapshot_id             TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
+    typology_external_id    TEXT NOT NULL,
+    external_id             TEXT NOT NULL,
+    ordinal                 INT NOT NULL DEFAULT 0,
+    folder_external_id      TEXT NOT NULL DEFAULT '',
+    location_external_id    TEXT NOT NULL DEFAULT '',
+    name                    TEXT NOT NULL DEFAULT '',
+    description             TEXT NOT NULL DEFAULT '',
+    icon                    TEXT NOT NULL DEFAULT '',
+    image                   TEXT NOT NULL DEFAULT '',
+    variant                 TEXT NOT NULL DEFAULT '',
+    stock_value             BIGINT,
+    is_abstract             BOOLEAN,
+    is_virtual              BOOLEAN,
+    unit_name               TEXT NOT NULL DEFAULT '',
+    created_value           TIMESTAMPTZ,
+    updated_value           TIMESTAMPTZ,
     PRIMARY KEY (snapshot_id, external_id),
-    UNIQUE (snapshot_id, ordinal)
+    UNIQUE (snapshot_id, typology_external_id, ordinal),
+    FOREIGN KEY (snapshot_id, typology_external_id) REFERENCES kit_snapshot_typologies(snapshot_id, external_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS kit_snapshot_kind_family_refs (
@@ -471,24 +485,26 @@ CREATE TABLE IF NOT EXISTS kit_snapshot_kind_representations (
 );
 
 CREATE TABLE IF NOT EXISTS kit_snapshot_layouts (
-    snapshot_id             TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
-    external_id             TEXT NOT NULL,
-    ordinal                 INT NOT NULL DEFAULT 0,
-    folder_external_id      TEXT NOT NULL DEFAULT '',
-    active_stratum_external_id TEXT NOT NULL DEFAULT '',
-    location_external_id    TEXT NOT NULL DEFAULT '',
-    name                    TEXT NOT NULL DEFAULT '',
-    description             TEXT NOT NULL DEFAULT '',
-    icon                    TEXT NOT NULL DEFAULT '',
-    image                   TEXT NOT NULL DEFAULT '',
-    unit_name               TEXT NOT NULL DEFAULT '',
-    is_abstract             BOOLEAN,
-    can_scale               BOOLEAN,
-    can_mirror              BOOLEAN,
-    created_value           TIMESTAMPTZ,
-    updated_value           TIMESTAMPTZ,
+    snapshot_id                 TEXT NOT NULL REFERENCES kit_snapshots(id) ON DELETE CASCADE,
+    typology_external_id        TEXT NOT NULL,
+    external_id                 TEXT NOT NULL,
+    ordinal                     INT NOT NULL DEFAULT 0,
+    folder_external_id          TEXT NOT NULL DEFAULT '',
+    active_stratum_external_id  TEXT NOT NULL DEFAULT '',
+    location_external_id        TEXT NOT NULL DEFAULT '',
+    name                        TEXT NOT NULL DEFAULT '',
+    description                 TEXT NOT NULL DEFAULT '',
+    icon                        TEXT NOT NULL DEFAULT '',
+    image                       TEXT NOT NULL DEFAULT '',
+    unit_name                   TEXT NOT NULL DEFAULT '',
+    is_abstract                 BOOLEAN,
+    can_scale                   BOOLEAN,
+    can_mirror                  BOOLEAN,
+    created_value               TIMESTAMPTZ,
+    updated_value               TIMESTAMPTZ,
     PRIMARY KEY (snapshot_id, external_id),
-    UNIQUE (snapshot_id, ordinal)
+    UNIQUE (snapshot_id, typology_external_id, ordinal),
+    FOREIGN KEY (snapshot_id, typology_external_id) REFERENCES kit_snapshot_typologies(snapshot_id, external_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS kit_snapshot_layout_family_refs (

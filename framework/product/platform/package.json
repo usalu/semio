@@ -1,0 +1,5 @@
+{
+	"name": "@framework/platform",
+	"private": true,
+	"workspaces": ["core", "renderer/react"]
+}

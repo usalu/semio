@@ -1,0 +1,21 @@
+{
+  "name": "@semio/fixtures",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "regenerate-metabolism-light": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/fixtures",
+        "command": "bun ./script.ts regenerate-metabolism-light"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/fixtures",
+        "command": "bun -e \"console.log('@semio/fixtures is a source-only workspace and does not require a build step.')\"",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

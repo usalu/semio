@@ -1,0 +1,24 @@
+{
+	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@framework/presentation/core",
+	"version": "0.1.0",
+	"description": "framework · presentation declarative core (render-independent)",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./index.ts"
+	},
+	"dependencies": {
+		"@framework/core": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	},
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/usalu/semio.git",
+		"directory": "framework/product/presentation/core"
+	},
+	"bundleKind": "library"
+}

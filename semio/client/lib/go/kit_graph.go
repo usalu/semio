@@ -54,9 +54,10 @@ func kitStripRuntime(k *Kit) Kit {
 		return Kit{}
 	}
 	return Kit{
-		Id:        k.Id,
+		Id:          k.Id,
 		Name:        k.Name,
 		Version:     k.Version,
+		Typologies:  k.Typologies,
 		Types:       k.Types,
 		Designs:     k.Designs,
 		Tags:        k.Tags,

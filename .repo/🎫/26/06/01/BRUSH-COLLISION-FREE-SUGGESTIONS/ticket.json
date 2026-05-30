@@ -1,0 +1,18 @@
+{
+  "title": "Brush Collision Free Suggestions",
+  "emoji": "🖌️",
+  "status": "closed",
+  "description": "Complete puzzle3d brush tool: engagement suggestions and commits must be collision-free. Random compatible order, probe AABB vs scene meshes (exclude host), empty placement when none free.",
+  "summary": "Fixed false brush collision on tambour stack commit. Collision probes used raw GLB roots without GlbMeshFrame (PI/2 X) while the preview ghost used MeshBody, so AABB probes disagreed with the visible mesh. BrushPreviewGhost also applied kind scale twice (outer pose + MeshBody), inflating the ghost AABB and failing commit/reconcile after a valid suggestion. Added brushPreviewMeshFrameGroup; brushProbeGroupFromPreview now matches scene object mesh graph; removed duplicate scale on ghost MeshBody. Tests: frame rotation, excluded-host stack probe (242 passing).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "c18d0df1",
+    "local": "brush_collision-free_suggestions_c18d0df1.plan.md"
+  },
+  "sessions": [
+    "⚪52ee497fa3b34dbe8f83cc1ce92e402d",
+    "⚪b597be8c4dc74e038540df7353f95610",
+    "⚪e4caba2ba0674511a1f1d5d781662d04"
+  ]
+}

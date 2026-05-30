@@ -25,6 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -32,6 +33,65 @@ type CjsFacadeResolveOpts = {
   shimWithSelector: string;
   schedulerEntry: string;
 };
+
+/** @emoji 🧱 Pre-transforms workspace TypeScript sources so Rollup import analysis accepts JSX and types. */
+function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
+  const root = workspaceRoot.replace(/\\/g, "/");
+  return {
+    name: "semio-monorepo-workspace-transform",
+    enforce: "pre",
+    async transform(code, id) {
+      const file = id.replace(/\\/g, "/");
+      if (file.includes("/node_modules/")) return;
+      const allowed =
+        file.startsWith(`${root}/framework/`) ||
+        file.startsWith(`${root}/puzzle/`) ||
+        file.startsWith(`${root}/ui/react/`) ||
+        file.startsWith(`${root}/cad/`) ||
+        file.startsWith(`${root}/semio/client/lib/sketchpad/`) ||
+        file.startsWith(`${root}/semio/client/lib/react/`) ||
+        file.startsWith(`${root}/semio/assets/`) ||
+        file.startsWith(`${root}/framework/product/playground/`);
+      if (!allowed) return;
+      if (!/\.(tsx?|mts|cts)$/.test(file)) return;
+      const loader = file.endsWith(".tsx") || (file.endsWith(".ts") && /<[A-Za-z/]/.test(code)) ? "tsx" : "ts";
+      const esbuild = await import("esbuild");
+      const result = await esbuild.transform(code, {
+        loader,
+        jsx: "automatic",
+        format: "esm",
+        sourcefile: id,
+        target: "es2022",
+      });
+      return { code: result.code, map: result.map || undefined };
+    },
+  };
+}
+
+/** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
+function stripSketchpadEmbeddedNodeTestsPlugin(): Plugin {
+  const regions = [
+    /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
+    /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
+  ];
+  return {
+    name: "semio-sketchpad-strip-embedded-node-tests",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts")) return;
+      let next = code;
+      let changed = false;
+      for (const region of regions) {
+        if (region.test(next)) {
+          next = next.replace(region, "");
+          changed = true;
+        }
+      }
+      if (!changed) return;
+      return { code: next, map: null };
+    },
+  };
+}
 
 function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
   return {
@@ -63,11 +123,12 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
-const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations"]);
+const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations", "semio"]);
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
   const assetsPath = path.resolve(__dirname, "../../../../assets");
+  const fixturesPath = path.resolve(__dirname, "../../../../fixtures");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
       const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -75,6 +136,19 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
         res.setHeader("Content-Type", "application/wasm");
         fsMod.createReadStream(wasmFile).pipe(res);
         return;
+      }
+    }
+    if (req.url?.startsWith("/fixtures/")) {
+      const requestedFixturePath = req.url.replace("/fixtures/", "").split(/[?#]/, 1)[0];
+      if (requestedFixturePath && !requestedFixturePath.includes("..")) {
+        const filePath = path.join(fixturesPath, requestedFixturePath);
+        if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
+          if (requestedFixturePath.endsWith(".json")) {
+            res.setHeader("Content-Type", "application/json");
+          }
+          fsMod.createReadStream(filePath).pipe(res);
+          return;
+        }
       }
     }
     if (req.url?.startsWith("/assets/")) {
@@ -86,6 +160,9 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
       }
       const filePath = path.join(assetsPath, requestedAssetPath);
       if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
+        if (requestedAssetPath.endsWith(".woff2")) {
+          res.setHeader("Content-Type", "font/woff2");
+        }
         fsMod.createReadStream(filePath).pipe(res);
         return;
       }
@@ -113,20 +190,55 @@ export default defineConfig(async ({ mode }) => {
       __SEMIO_JS_RUN_BENCHMARKS__: "false",
       __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
       __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+      "import.meta.env.SEMIO_SKETCHPAD_E2E": JSON.stringify(process.env.SEMIO_SKETCHPAD_E2E ?? ""),
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
-        { find: "@semio/react", replacement: path.resolve(__dirname, "../../react/logic") },
+        { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
         // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
         // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
         { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../react/rendering") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+        { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
+        { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/board/index.ts") },
+        { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
+        { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
+        { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
+        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/index.ts") },
+        {
+          find: "@framework/playground/renderer/react/puzzle/2d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/puzzle/3d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/puzzle/5d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/shell",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/boot",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
+        { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
+        { find: "@puzzle/5d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
+        { find: "@cad/js/renderer", replacement: path.resolve(__dirname, "../../../../../cad/js/renderer/index.tsx") },
+        { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
         { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
         { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },
         { find: /^@elements\/ui-shell$/, replacement: path.resolve(__dirname, "../../../../../elements/core/index.ts") },
@@ -138,6 +250,10 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
+      ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
+      ...puzzle3dMeshesVitePlugin(workspaceRoot),
+      stripSketchpadEmbeddedNodeTestsPlugin(),
+      monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
       {
@@ -148,7 +264,7 @@ export default defineConfig(async ({ mode }) => {
         }),
         enforce: "pre",
       },
-      react(),
+      react({ include: [/\.(tsx?|jsx?)$/, /[\\/]puzzle[\\/].*\.tsx$/] }),
       wasm(),
       topLevelAwait(), // needed for older browsers to run wasm
       {
@@ -177,7 +293,7 @@ export default defineConfig(async ({ mode }) => {
       /** Workers + wasm-bindgen glue may use syntax older `esbuild` targets cannot downlevel (see vite-plugin-top-level-await). */
       target: "es2022",
       rollupOptions: {
-        external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/fixtures/stores/metabolism/wip/initialKit/kit.semio.json", "fs", "path", "url"],
+        external: ["@playwright/test", "@semio/fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json"],
       },
     },
     worker: {

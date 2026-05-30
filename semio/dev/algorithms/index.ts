@@ -25,7 +25,7 @@ import {
 } from "@semio/ui";
 import * as React from "react";
 
-import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/assets";
+import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/fixtures";
 
 import { openSessionInMemory, type Store as JsStore } from "@semio/js";
 // #endregion 🔌Adapters
@@ -344,10 +344,10 @@ async function __withJsStore<T>(kit: unknown, fn: (store: JsStore) => Promise<T>
 async function __readFlattenLayout(store: JsStore, designId: string): Promise<readonly { pieceId: string; plane: unknown; center: { u: number; v: number } }[]> {
   const flat = await store.design(designId).flatten();
   if (!flat.ok) throw new Error(flat.error.message);
-  const sel = `design(id: ${JSON.stringify(designId)}) { pieces { edges { node { id flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } }`;
+  const sel = `design(id: ${JSON.stringify(designId)}) { hasPieces { edges { node { id flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } }`;
   const frag = (await store.readKitInner(sel)) as GqlWireObject | null;
   const design = frag?.["design"] as GqlWireObject | undefined;
-  const pieces = design?.["pieces"] as GqlWireObject | undefined;
+  const pieces = design?.["hasPieces"] as GqlWireObject | undefined;
   const edges = (pieces?.["edges"] as readonly GqlWireObject[] | undefined) ?? [];
   const out: { pieceId: string; plane: unknown; center: { u: number; v: number } }[] = [];
   for (const e of edges) {

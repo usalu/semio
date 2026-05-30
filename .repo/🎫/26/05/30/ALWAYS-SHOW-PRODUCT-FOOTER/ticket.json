@@ -1,0 +1,11 @@
+{
+  "title": "Always Show Product Footer",
+  "emoji": "👣",
+  "status": "closed",
+  "description": "ProductShell must always render footer chrome; PlaygroundView merges platform globalFooterItems like PlatformView.",
+  "summary": "ProductShell always renders Footer chrome (empty strip when no items). mergePlatformFooterChromeRows merges platform global + app footers; PlaygroundView uses it so play apps match PlatformView.",
+  "goal": "🎯r26-02/🎯runningsketchpad",
+  "sessions": [
+    "⚪2874ad56a6874f069f014621f3f5715b"
+  ]
+}

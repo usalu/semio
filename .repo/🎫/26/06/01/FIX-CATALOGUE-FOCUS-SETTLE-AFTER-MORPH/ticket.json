@@ -1,0 +1,11 @@
+{
+  "title": "Fix Catalogue Focus Settle After Morph",
+  "emoji": "📽",
+  "status": "closed",
+  "description": "Slide 11 to 12 transition animates correctly but wrong arrangement at end.",
+  "summary": "Replaced settleAfterMorphFrom with settleBeforeMorphTo on catalogue-focus so Bauteilarten rests on 10 separated tiles after catalogue morph; column crop anchors only swap in when auto-animating to catalogue-labels.",
+  "goal": "🎯runningsketchpad",
+  "sessions": [
+    "⚪6818b164a14646fe8ef512a64302d9f5"
+  ]
+}

@@ -336,6 +336,20 @@
             "title": "FamilyId",
             "type": "object"
         },
+        "TypologyId": {
+            "description": "Reference to a kit typology by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "TypologyId",
+            "type": "object"
+        },
         "Family": {
             "description": "Kit-level family grouping ports.",
             "properties": {
@@ -377,6 +391,61 @@
                 "name"
             ],
             "title": "Family",
+            "type": "object"
+        },
+        "Typology": {
+            "description": "Kit-level typology grouping types and designs.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                },
+                "name": {
+                    "maxLength": 256,
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "type": "string"
+                },
+                "icon": {
+                    "default": "",
+                    "maxLength": 1024,
+                    "type": "string"
+                },
+                "folder": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Folder"
+                },
+                "types": {
+                    "items": {
+                        "$ref": "#/$defs/Type"
+                    },
+                    "title": "Types",
+                    "type": "array"
+                },
+                "designs": {
+                    "items": {
+                        "$ref": "#/$defs/Design"
+                    },
+                    "title": "Designs",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "title": "Typology",
             "type": "object"
         },
         "PortId": {
@@ -1185,18 +1254,11 @@
             "title": "Updated",
             "type": "string"
         },
-        "types": {
+        "typologies": {
             "items": {
-                "$ref": "#/$defs/Type"
+                "$ref": "#/$defs/Typology"
             },
-            "title": "Types",
-            "type": "array"
-        },
-        "designs": {
-            "items": {
-                "$ref": "#/$defs/Design"
-            },
-            "title": "Designs",
+            "title": "Typologies",
             "type": "array"
         },
         "families": {

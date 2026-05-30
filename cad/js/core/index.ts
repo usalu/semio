@@ -1,95 +1,145 @@
 // #region 🧲Header
-/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `spatial/AGENTS.md` and `spatial/assets/modelDefinition`. */
+/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/assets/modelDefinition`. */
 // #endregion 🧲Header
 
-// #region 📥ModelDefinitionAssets
-import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
-import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";
-import smallBuildingModelFixtureJson from "../../fixtures/small-building.model.json";
+// #region 📥ModelDefinitionRegistry
+/** @emoji 📥 Registered model-definition asset modules (populated by `ModelDefinitionAssets` region). */
+export interface ModelDefinitionAssetModules {
+  readonly typologies: Readonly<Record<string, unknown>>;
+  readonly actions: Readonly<Record<string, unknown>>;
+  readonly interactions: Readonly<Record<string, unknown>>;
+  readonly manifests: Readonly<Record<string, unknown>>;
+  readonly extensions: Readonly<Record<string, unknown>>;
+  readonly attributes: Readonly<Record<string, unknown>>;
+  readonly propertyDefinitions: Readonly<Record<string, unknown>>;
+  readonly properties: Readonly<Record<string, unknown>>;
+  readonly transformations: Readonly<Record<string, unknown>>;
+}
 
-const modelDefinitionTypologyModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
-  {
-    eager: true,
-    import: "default",
-  },
-) as Record<string, unknown>;
+const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
+  typologies: {},
+  actions: {},
+  interactions: {},
+  manifests: {},
+  extensions: {},
+  attributes: {},
+  propertyDefinitions: {},
+  properties: {},
+  transformations: {},
+});
 
-const modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
 
-const modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
+let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let defaultModelDefinitionIdCache: string | null = null;
 
-const modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+function resetModelDefinitionCaches(): void {
+  modelDefinitionFolderIdMapCache = null;
+  typologyOwnerByIdCache = null;
+  actionOwnerByIdCache = null;
+  interactionOwnerByIdCache = null;
+  attributeOwnerByIdCache = null;
+  propertyOwnerByIdCache = null;
+  defaultModelDefinitionIdCache = null;
+}
 
-const modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const modelDefinitionPropertyDefinitionModules = import.meta.glob(
-  [
-    "../../assets/modelDefinition/**/propertyDefinition/*.json",
-    "../../assets/modelDefinition/**/propertyKind/*.json",
-  ],
-  {
-    eager: true,
-    import: "default",
-  },
-) as Record<string, unknown>;
-
-const modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+/** @emoji 📥 Replaces shipped model-definition catalogs (tests or host injection). */
+export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
+  modelDefinitionAssetModules = modules;
+  resetModelDefinitionCaches();
+}
 
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionTypologyModules);
+  return Object.values(modelDefinitionAssetModules.typologies);
 }
 
 function modelDefinitionActionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionActionModules);
+  return Object.values(modelDefinitionAssetModules.actions);
 }
 
 function modelDefinitionInteractionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionInteractionModules);
+  return Object.values(modelDefinitionAssetModules.interactions);
 }
 
 function modelDefinitionManifestCatalog(): readonly unknown[] {
-  return [
-    ...Object.values(modelDefinitionManifestModules),
-    ...Object.values(modelDefinitionExtensionManifestModules),
-  ];
+  return [...Object.values(modelDefinitionAssetModules.manifests), ...Object.values(modelDefinitionAssetModules.extensions)];
 }
 
 function modelDefinitionAttributeCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAttributeModules);
+  return Object.values(modelDefinitionAssetModules.attributes);
 }
 
 function modelDefinitionPropertyCatalog(): readonly unknown[] {
-  return [
-    ...Object.values(modelDefinitionPropertyDefinitionModules),
-    ...Object.values(modelDefinitionPropertyModules),
-  ];
+  return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
 }
+
+function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
+  return modelDefinitionAssetModules.transformations;
+}
+// #endregion 📥ModelDefinitionRegistry
+
+// #region 📥ModelDefinitionAssets
+const __modelDefinitionTypologyModules = import.meta.glob(
+  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
+  { eager: true, import: "default" },
+) as Record<string, unknown>;
+
+const __modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionPropertyDefinitionModules = import.meta.glob(
+  ["../../assets/modelDefinition/**/propertyDefinition/*.json", "../../assets/modelDefinition/**/propertyKind/*.json"],
+  { eager: true, import: "default" },
+) as Record<string, unknown>;
+
+const __modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+registerModelDefinitionAssets({
+  typologies: __modelDefinitionTypologyModules,
+  actions: __modelDefinitionActionModules,
+  interactions: __modelDefinitionInteractionModules,
+  manifests: __modelDefinitionManifestModules,
+  extensions: __modelDefinitionExtensionManifestModules,
+  attributes: __modelDefinitionAttributeModules,
+  propertyDefinitions: __modelDefinitionPropertyDefinitionModules,
+  properties: __modelDefinitionPropertyModules,
+  transformations: __modelDefinitionTransformationModules,
+});
 // #endregion 📥ModelDefinitionAssets
 
 // #region 🧮Vec
@@ -98,7 +148,7 @@ export type Vec3 = readonly [number, number, number];
 // #endregion 🧮Vec
 
 // #region 🌀EdgeGeometry
-/** @emoji 🌀 OCCT-style edge curve kinds (`Geom_Curve` under a topologic `Edge`). */
+/** @emoji 🌀 Edge curve geometry kinds (`line`, `arc`, `circle`, `ellipse`, `nurbs`). */
 export type EdgeCurve =
   | { readonly kind: "line" }
   | { readonly kind: "arc"; readonly center: Vec3 }
@@ -115,6 +165,7 @@ export type EdgeCurve =
       readonly kind: "nurbs";
       readonly poles: readonly Vec3[];
       readonly degree: number;
+      readonly through?: boolean;
       readonly weights?: readonly number[];
       readonly knots?: readonly number[];
       readonly multiplicities?: readonly number[];
@@ -167,6 +218,33 @@ export interface SelectionSpec {
 /** @emoji 🧭 Returns `targets` whose `kind` is listed in `spec.accept`. */
 export function filterSelectionTargets(spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
   return targets.filter((t) => spec.accept.includes(t.kind));
+}
+
+/** @emoji 🧭 Maps object picks to wire/edge primitives when `spec.accept` lists curve geometry kinds. */
+export function expandSelectionTargetsForAccept(model: Model, spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
+  const accept = new Set(spec.accept);
+  const out: SelectionTarget[] = [];
+  const seen = new Set<string>();
+  const push = (kind: ModelEntityKind, id: string): void => {
+    const key = `${kind}:${id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ kind, id, editable: true });
+  };
+  for (const target of targets) {
+    if (accept.has(target.kind)) {
+      push(target.kind, target.id);
+      continue;
+    }
+    if (target.kind !== "object") continue;
+    const row = model.objects[target.id as ObjectRef];
+    if (!row) continue;
+    const wireRef = row.primitives.wire;
+    const edgeRef = row.primitives.edge;
+    if (accept.has("wire") && wireRef) push("wire", String(wireRef));
+    else if (accept.has("edge") && edgeRef) push("edge", String(edgeRef));
+  }
+  return out;
 }
 
 /** @emoji 🧭 True when every target is accepted (and at least one target exists). */
@@ -719,6 +797,8 @@ export interface InteractionSpec {
   };
   /** @emoji 📞 `standalone` (default) for hosts; `callable` only via `interaction.call`. */
   readonly invocation?: InteractionInvocation;
+  /** @emoji 🏷️ Typology object created when this interaction commits geometry. */
+  readonly produces?: { readonly typology: string };
 }
 
 /** @emoji 📞 How hosts may start an interaction (`standalone` vs nested-only `callable`). */
@@ -1016,7 +1096,7 @@ export namespace kernelGeometry {
     readonly attachment: AnchorAttachment;
   }
 
-  /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve` (`Geom_Curve` analog). */
+  /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve`. */
   export interface EdgeRecord {
     readonly id: EdgeRef;
     readonly vertexIds: readonly VertexRef[];
@@ -1029,7 +1109,7 @@ export namespace kernelGeometry {
     readonly edgeIds: readonly EdgeRef[];
   }
 
-  /** @emoji 🌊 Face-support geometry (`Geom_Surface` under a topologic `Face`). */
+  /** @emoji 🌊 Face-support geometry (`plane`, `cylinder`, `cone`, `sphere`, `torus`, `nurbs`). */
   export type FaceSurface =
     | { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
     | { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
@@ -1162,9 +1242,90 @@ function normalizeSpatialObjectRecord(row: SpatialObjectRecord | Record<string, 
   return {
     id: String(row.id) as ObjectRef,
     typology: String(row.typology ?? "spatial.shape.object") as TypologyRef,
-    primitives: normalizeSpatialObjectPrimitives(row.primitives),
+    primitives: Array.isArray(row.primitives) ? {} : normalizeSpatialObjectPrimitives(row.primitives),
     ...(row.attributes && typeof row.attributes === "object" ? { attributes: row.attributes as Readonly<Record<string, unknown>> } : {}),
   };
+}
+
+function readVec3FromUnknown(value: unknown): Vec3 | null {
+  if (!Array.isArray(value) || value.length < 3) return null;
+  const x = Number(value[0]);
+  const y = Number(value[1]);
+  const z = Number(value[2]);
+  if (![x, y, z].every((n) => Number.isFinite(n))) return null;
+  return [x, y, z];
+}
+
+/** @emoji 🧱 Promotes inline `objects[].primitives[]` rows into kernel geometry tables and slot refs. */
+export function materializeInlineObjectPrimitives(model: Model, rawObjects: readonly unknown[] = []): void {
+  let changed = false;
+  const rawById = new Map<string, Record<string, unknown>>();
+  for (const entry of rawObjects) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    if (typeof row.id === "string") rawById.set(row.id, row);
+  }
+  for (const [objectId, object] of Object.entries(model.objects)) {
+    const raw = rawById.get(objectId)?.primitives;
+    if (!Array.isArray(raw)) continue;
+    const slots: Record<string, string> = {};
+    for (const entry of raw) {
+      if (!entry || typeof entry !== "object") continue;
+      const row = entry as Record<string, unknown>;
+      const kind = typeof row.kind === "string" ? row.kind : "";
+      const id = typeof row.id === "string" ? row.id : "";
+      if (!kind || !id) continue;
+      const slot = typeof row.slot === "string" && row.slot.length > 0 ? row.slot : kind;
+      slots[slot] = id;
+      if (kind === "vertex") {
+        const position = readVec3FromUnknown(row.position);
+        if (position) {
+          model.vertices[id as VertexRef] = { id: id as VertexRef, position };
+          changed = true;
+        }
+        continue;
+      }
+      if (kind === "edge" && Array.isArray(row.vertexIds) && row.vertexIds.length >= 2) {
+        model.edges[id as EdgeRef] = {
+          id: id as EdgeRef,
+          vertexIds: [String(row.vertexIds[0]), String(row.vertexIds[1])] as [VertexRef, VertexRef],
+          ...(row.curve && typeof row.curve === "object" ? { curve: row.curve as EdgeCurve } : {}),
+        };
+        changed = true;
+        continue;
+      }
+      if (kind === "wire" && Array.isArray(row.edgeIds)) {
+        model.wires[id as WireRef] = { id: id as WireRef, edgeIds: row.edgeIds.map(String) as EdgeRef[] };
+        changed = true;
+        continue;
+      }
+      if (kind === "face" && Array.isArray(row.wireIds)) {
+        model.faces[id as FaceRef] = {
+          id: id as FaceRef,
+          wireIds: row.wireIds.map(String) as WireRef[],
+          ...(row.surface && typeof row.surface === "object" ? { surface: row.surface as FaceSurface } : {}),
+        };
+        changed = true;
+        continue;
+      }
+      if (kind === "shell" && Array.isArray(row.faceIds)) {
+        model.shells[id as ShellRef] = { id: id as ShellRef, faceIds: row.faceIds.map(String) as FaceRef[] };
+        changed = true;
+        continue;
+      }
+      if (kind === "solid") {
+        model.solids[id as SolidRef] = {
+          id: id as SolidRef,
+          shellIds: Array.isArray(row.shellIds) ? (row.shellIds.map(String) as ShellRef[]) : [],
+          ...(row.solid && typeof row.solid === "object" ? { solid: row.solid as SolidPrimitive } : {}),
+        };
+        changed = true;
+      }
+    }
+    model.objects[objectId] = { ...object, primitives: normalizeSpatialObjectPrimitives(slots) };
+    changed = true;
+  }
+  if (changed) model.bump();
 }
 
 export function objectPrimitiveEntries(object: SpatialObjectRecord): readonly (readonly [string, string])[] {
@@ -1216,7 +1377,8 @@ export class Model {
   static fromJSON(j: ModelJson): Model {
     const g = new Model();
     g.revision = j.revision;
-    g.objects = recordsById((j.objects ?? []).map((row) => normalizeSpatialObjectRecord(row as SpatialObjectRecord | Record<string, unknown>)));
+    const rawObjects = j.objects ?? [];
+    g.objects = recordsById(rawObjects.map((row) => normalizeSpatialObjectRecord(row as SpatialObjectRecord | Record<string, unknown>)));
     const geo = j.geometry ?? (j as unknown as KernelGeometryJson);
     g.anchors = recordsById(geo.anchors ?? []);
     g.vertices = recordsById(geo.vertices ?? []);
@@ -1226,12 +1388,37 @@ export class Model {
     g.shells = recordsById(geo.shells ?? []);
     g.solids = recordsById(geo.solids ?? []);
     if (j.metadata?.length) g.metadata.loadSnapshot(j.metadata, false);
+    materializeInlineObjectPrimitives(g, rawObjects);
     return g;
   }
 
   bump(): void {
     this.revision += 1;
   }
+}
+
+/** @emoji 🗑️ Removes object rows by id; geometry primitives stay intact so linked topology remains valid. */
+export function deleteObjectsFromModel(model: Model, objectIds: readonly string[]): readonly string[] {
+  const removed: string[] = [];
+  for (const id of objectIds) {
+    if (!model.objects[id]) continue;
+    delete model.objects[id];
+    removed.push(id);
+  }
+  if (removed.length > 0) model.bump();
+  return removed;
+}
+
+/** @emoji 🪪 Object ids from selection eligible for deletion (excludes geometry primitives). */
+export function deletableObjectIdsFromSelection(selection: readonly SelectionTarget[]): readonly string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const target of selection) {
+    if (target.kind !== "object" || seen.has(target.id)) continue;
+    seen.add(target.id);
+    ids.push(target.id);
+  }
+  return ids;
 }
 
 /** @emoji #️⃣ Stable FNV-1a digest for canonical geometry fingerprints. */
@@ -1258,7 +1445,7 @@ export function hashPrimitivePayload(kind: string, payload: string): GeometryPri
   return `${kind[0]}:${fnv1aHex(payload)}` as GeometryPrimitiveHash;
 }
 
-/** @emoji #️⃣ Hashes a vertex position (`spatial/AGENTS.md` primitive hashing). */
+/** @emoji #️⃣ Hashes a vertex position (`cad/AGENTS.md` primitive hashing). */
 export function hashVertexPosition(position: Vec3): GeometryPrimitiveHash {
   const q = position.map((c) => quantizeCoord(c)) as Vec3;
   return hashPrimitivePayload("vertex", `${q[0]},${q[1]},${q[2]}`);
@@ -1301,10 +1488,10 @@ export function hashAnchorRecord(anchor: AnchorRecord): GeometryPrimitiveHash {
   return hashPrimitivePayload("anchor", `${anchor.position.map((c) => quantizeCoord(c)).join(",")}|${JSON.stringify(anchor.attachment)}`);
 }
 
-/** @emoji #️⃣ Per-topology primitive hashes for one model (`ModelSpace` geometry fingerprint). */
+/** @emoji #️⃣ Per-primitive hashes for one model (`ModelSpace` geometry fingerprint). */
 export type ModelPrimitiveHashes = Readonly<Partial<Record<TypologyPrimitiveKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
 
-/** @emoji #️⃣ Maps topology tables on `model` to content hashes (every vertex and primitive). */
+/** @emoji #️⃣ Maps primitive tables on `model` to content hashes (every vertex and primitive). */
 export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
   const out: Partial<Record<TypologyPrimitiveKind, Record<string, GeometryPrimitiveHash>>> = {};
   const put = (kind: TypologyPrimitiveKind, id: string, hash: GeometryPrimitiveHash): void => {
@@ -1363,18 +1550,18 @@ export class ModelSpace {
     return out;
   }
 
-  /** @emoji #️⃣ Full topology primitive hashes keyed by linked model id. */
+  /** @emoji #️⃣ Full primitive hashes keyed by linked model id. */
   geometryHashesByModel(): Readonly<Record<string, ModelPrimitiveHashes>> {
     const out: Record<string, ModelPrimitiveHashes> = {};
     for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelPrimitives(model);
     return out;
   }
 
-  /** @emoji 🔄 Applies a transformation from a linked source model into a new linked target model. */
-  transform(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec): Model {
+  /** @emoji 🔄 Transfers a transformation from a linked source model into a new linked target model. */
+  transfer(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec, preview: SpatialPreviewKernel): Model {
     const source = this.models[linkedSourceId];
     if (!source) throw new Error(`ModelSpace: unknown source model ${linkedSourceId}`);
-    const target = applyTransformation(spec, source);
+    const target = applyTransformation(spec, source, preview);
     this.link(linkedTargetId, target);
     return target;
   }
@@ -1658,6 +1845,9 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
+/** @emoji 🧱 Primitive kind allowed on typology objects (`cad/AGENTS.md`). */
+export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
+
 /** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
   readonly schema: "spatial.modelDefinition/v1";
@@ -1666,14 +1856,31 @@ export interface ModelDefinitionManifest {
   readonly label: string;
   readonly description?: string;
   readonly kinds: readonly string[];
+  readonly default?: boolean;
+  readonly kernelTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
 }
 
-/** @emoji 🧭 ModelDefinition geometry model definition id (raw kernel topology editing). */
-export const SHAPE_MODEL_DEFINITION_ID = "spatial.shape";
+/** @emoji 🧭 Default geometry-edit model definition id (manifest `default: true`). */
+export function defaultModelDefinitionId(): string {
+  if (defaultModelDefinitionIdCache) return defaultModelDefinitionIdCache;
+  const manifests = listModelDefinitionManifests();
+  const row = manifests.find((m) => m.default) ?? manifests[0];
+  defaultModelDefinitionIdCache = row?.id ?? "";
+  return defaultModelDefinitionIdCache;
+}
 
 /** @emoji 🧭 True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
 export function isShapeModelDefinition(modelDefinitionId: string | null | undefined): boolean {
-  return modelDefinitionId == null || modelDefinitionId === SHAPE_MODEL_DEFINITION_ID;
+  if (modelDefinitionId == null) return true;
+  return kernelTypologyIds(modelDefinitionId) !== null;
+}
+
+/** @emoji 🪪 Kernel typology ids per primitive kind on a model-definition manifest. */
+export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | null {
+  const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
+  const map = manifest?.kernelTypologies;
+  if (!map || Object.keys(map).length === 0) return null;
+  return map;
 }
 
 /** @emoji 🧾 Parses a model-definition manifest JSON or returns `null`. */
@@ -1683,6 +1890,7 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
   if (r.schema !== "spatial.modelDefinition/v1" && r.schema !== "spatial.extension/v1") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.kinds) || r.kinds.length === 0) return null;
+  const kernelTypologies = parseKernelTypologies(r.kernelTypologies);
   return {
     schema: "spatial.modelDefinition/v1",
     id: r.id,
@@ -1690,7 +1898,20 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
     label: r.label,
     description: typeof r.description === "string" ? r.description : undefined,
     kinds: r.kinds as string[],
+    ...(r.default === true ? { default: true } : {}),
+    ...(kernelTypologies ? { kernelTypologies } : {}),
   };
+}
+
+function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const out: Partial<Record<TypologyPrimitiveKind, string>> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!allowed.has(key as TypologyPrimitiveKind) || typeof value !== "string" || value.length === 0) continue;
+    out[key as TypologyPrimitiveKind] = value;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** @emoji 📚 Lists model-definition manifests under spatial/assets/modelDefinition. */
@@ -1699,9 +1920,6 @@ export function listModelDefinitionManifests(): readonly ModelDefinitionManifest
     .map((raw) => parseModelDefinitionManifest(raw))
     .filter((m): m is ModelDefinitionManifest => m !== null);
 }
-
-/** @emoji 🧱 Topology primitive kind allowed on typology objects (`spatial/AGENTS.md`). */
-export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
 
 /** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
@@ -1724,8 +1942,6 @@ export function inferTypologyPrimitiveKinds(typology: string): readonly Typology
   if (id.includes(".measure.") && id.includes("volume")) return [];
   if (id.includes(".entity.") || id.includes("create-anchor")) return ["anchor"];
   if (id.includes(".measure.")) return ["anchor"];
-  if (id.includes("energy.energy.") || id.includes("structure.structure.")) return ["solid"];
-  if (id.includes("lineelement") || id.includes("surfaceelement") || id.includes("solidelement")) return ["solid"];
   if (id.includes(".curve.")) return ["edge", "wire"];
   if (id.includes(".surface.")) return ["face"];
   if (id.includes(".primitive.") || id.includes(".solid.")) return ["solid"];
@@ -1907,7 +2123,7 @@ export function loadPropertyDefinition(propertyId: string): PropertyDefinitionSp
   return shippedPropertyDefinitionCatalog().find((row) => row.id === propertyId) ?? null;
 }
 
-/** @emoji 🧭 Resolves the topology kind referenced by one primitive ref. */
+/** @emoji 🧭 Resolves the primitive kind referenced by one primitive ref. */
 export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): TypologyPrimitiveKind | null {
   if (model.anchors[primitiveRef]) return "anchor";
   if (model.vertices[primitiveRef]) return "vertex";
@@ -1919,25 +2135,25 @@ export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): Typ
   return null;
 }
 
-/** @emoji 🌳 Kernel topology node nested under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
-export interface ModelTopologyHierarchyNode {
+/** @emoji 🌳 Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
+export interface ModelPrimitiveHierarchyNode {
   readonly kind: TypologyPrimitiveKind;
   readonly id: string;
-  readonly children: readonly ModelTopologyHierarchyNode[];
+  readonly children: readonly ModelPrimitiveHierarchyNode[];
 }
 
-function sortedTopologyChildIds(ids: readonly string[]): string[] {
+function sortedPrimitiveChildIds(ids: readonly string[]): string[] {
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
-function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelTopologyHierarchyNode | null {
-  const children: ModelTopologyHierarchyNode[] = [];
+function buildModelPrimitiveHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelPrimitiveHierarchyNode | null {
+  const children: ModelPrimitiveHierarchyNode[] = [];
   switch (kind) {
     case "solid": {
       const solid = model.solids[id];
       if (!solid) return null;
-      for (const shellId of sortedTopologyChildIds(solid.shellIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "shell", shellId);
+      for (const shellId of sortedPrimitiveChildIds(solid.shellIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "shell", shellId);
         if (child) children.push(child);
       }
       break;
@@ -1945,8 +2161,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "shell": {
       const shell = model.shells[id];
       if (!shell) return null;
-      for (const faceId of sortedTopologyChildIds(shell.faceIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "face", faceId);
+      for (const faceId of sortedPrimitiveChildIds(shell.faceIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "face", faceId);
         if (child) children.push(child);
       }
       break;
@@ -1954,8 +2170,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "face": {
       const face = model.faces[id];
       if (!face) return null;
-      for (const wireId of sortedTopologyChildIds(face.wireIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "wire", wireId);
+      for (const wireId of sortedPrimitiveChildIds(face.wireIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "wire", wireId);
         if (child) children.push(child);
       }
       break;
@@ -1963,8 +2179,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "wire": {
       const wire = model.wires[id];
       if (!wire) return null;
-      for (const edgeId of sortedTopologyChildIds(wire.edgeIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "edge", edgeId);
+      for (const edgeId of sortedPrimitiveChildIds(wire.edgeIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "edge", edgeId);
         if (child) children.push(child);
       }
       break;
@@ -1972,8 +2188,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "edge": {
       const edge = model.edges[id];
       if (!edge) return null;
-      for (const vertexId of sortedTopologyChildIds(edge.vertexIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "vertex", vertexId);
+      for (const vertexId of sortedPrimitiveChildIds(edge.vertexIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "vertex", vertexId);
         if (child) children.push(child);
       }
       break;
@@ -1988,11 +2204,11 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
   return { kind, id, children };
 }
 
-/** @emoji 🌳 Builds nested kernel topology under one object primitive ref in `model`. */
-export function buildModelTopologyHierarchy(model: Model, primitiveRef: string): ModelTopologyHierarchyNode | null {
+/** @emoji 🌳 Builds nested primitive hierarchy under one object primitive ref in `model`. */
+export function buildModelPrimitiveHierarchy(model: Model, primitiveRef: string): ModelPrimitiveHierarchyNode | null {
   const kind = resolvePrimitiveRefKind(model, primitiveRef);
   if (!kind) return null;
-  return buildModelTopologyHierarchyNode(model, kind, primitiveRef);
+  return buildModelPrimitiveHierarchyNode(model, kind, primitiveRef);
 }
 
 /** @emoji ✅ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
@@ -2010,22 +2226,14 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
   return primitiveKinds.length > 0 && primitiveKinds.every((kind) => typologyAllowsPrimitiveKind(typology, kind));
 }
 
-/** @emoji 🪪 Kernel topology typology ids used by construct `MATCH` on geometry rows. */
-export const KERNEL_TOPOLOGY_TYPOLOGY_IDS: Readonly<Record<TypologyPrimitiveKind, string>> = {
-  anchor: "spatial.shape.kernel.anchor",
-  vertex: "spatial.shape.kernel.vertex",
-  edge: "spatial.shape.kernel.edge",
-  wire: "spatial.shape.kernel.wire",
-  face: "spatial.shape.kernel.face",
-  shell: "spatial.shape.kernel.shell",
-  solid: "spatial.shape.kernel.solid",
-};
-
-/** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel topology ids; AEC typologies map to `object`). */
+/** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel typology ids; AEC typologies map to `object`). */
 export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId: string): Readonly<Record<string, ModelEntityKind>> {
   const out: Record<string, ModelEntityKind> = {};
-  if (isShapeModelDefinition(modelDefinitionId)) {
-    for (const [kind, id] of Object.entries(KERNEL_TOPOLOGY_TYPOLOGY_IDS)) out[id] = kind as ModelEntityKind;
+  const kernelTypologies = kernelTypologyIds(modelDefinitionId);
+  if (kernelTypologies) {
+    for (const [kind, id] of Object.entries(kernelTypologies)) {
+      if (typeof id === "string" && id.length > 0) out[id] = kind as ModelEntityKind;
+    }
     for (const spec of listTypologiesForModelDefinition(modelDefinitionId)) {
       if (spec.primitiveKinds.length !== 1) continue;
       const kind = spec.primitiveKinds[0]!;
@@ -2052,17 +2260,12 @@ export async function derivePropertyValue(
 ): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
   const primaryPrimitiveRef = objectPrimaryPrimitiveRef(ctx.object);
-  if (defn.id === "spatial.shape.volume") {
+  if (defn.id === "spatial.shape.volume" || defn.id === "energy.heatedvolume") {
     const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
-    if (kind !== "solid") return { volume: 0 };
-    const volume = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
-    return { volume };
-  }
-  if (defn.id === "energy.heatedvolume") {
-    const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
-    if (kind !== "solid") return { heatedvolume: 0 };
-    const heatedvolume = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
-    return { heatedvolume };
+    if (kind !== "solid") return defn.id === "energy.heatedvolume" ? { heatedvolume: 0 } : { volume: 0 };
+    await ctx.kernel.syncSolidsFromModel(ctx.model);
+    const amount = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
+    return defn.id === "energy.heatedvolume" ? { heatedvolume: amount } : { volume: amount };
   }
   const output = defn.output ?? {};
   return { ...output };
@@ -2080,14 +2283,14 @@ export function listApplicablePropertyDefinitionsForModelDefinition(
 
 /** @emoji 🧭 Throws when `actionId` is outside the active model definition catalog. */
 export function assertActionAvailableInModelDefinition(actionId: string, activeModelDefinitionId?: string | null): void {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (!actionAvailableInModelDefinition(actionId, mdId)) {
     throw new Error(`action ${actionId} is not available in model definition ${mdId}`);
   }
 }
 
-/** @emoji 🧱 Topology entity kinds selectable on factory geometry (excludes typology `object` rows). */
-export const TOPOLOGY_MODEL_ENTITY_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"];
+/** @emoji 🧱 Primitive entity kinds selectable on factory geometry (excludes typology `object` rows). */
+export const PRIMITIVE_MODEL_ENTITY_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"];
 
 /** @emoji ✅ True when `defn` applies to a model entity kind under the active model definition. */
 export function attributeDefinitionAppliesToEntity(defn: AttributeDefinitionSpec, entityKind: ModelEntityKind): boolean {
@@ -2172,6 +2375,69 @@ export function qualifiedTransformationId(modelDefinitionId: string, transformat
   return `${modelDefinitionId}.${transformationId}`;
 }
 
+/** @emoji 🔄 Z-band selector for surface classification rules. */
+export type TransformationDeriveZBand = "min" | "max" | "mid";
+
+/** @emoji 🔄 One surface-classification rule in a transformation `derive` block. */
+export interface TransformationDeriveClassifyRule {
+  readonly role: string;
+  readonly typology: string;
+  readonly dominantAxis?: "x" | "y" | "z";
+  readonly minDominantNormal?: number;
+  readonly minAxisNormal?: number;
+  readonly zBand?: TransformationDeriveZBand;
+  readonly fallback?: boolean;
+}
+
+/** @emoji 🔄 Opening metadata → typology mapping in a transformation `derive` block. */
+export interface TransformationDeriveOpening {
+  readonly fields: readonly string[];
+  readonly values: readonly (string | boolean)[];
+  readonly typology: string;
+  readonly role: string;
+}
+
+/** @emoji 🔄 Solid-fuse options for a transformation `derive` block. */
+export interface TransformationDeriveFuse {
+  readonly hullSolidId?: string;
+  readonly contactPairs?: readonly (readonly [string, string])[];
+  readonly maxSeparation?: number;
+}
+
+/** @emoji 🔄 Source primitive collection for a transformation `derive` block. */
+export interface TransformationDeriveCollect {
+  readonly sourceModelDefinition: string;
+  readonly primitiveKind: TypologyPrimitiveKind;
+}
+
+/** @emoji 🔄 Hull object row for a transformation `derive` block. */
+export interface TransformationDeriveHull {
+  readonly typology: string;
+  readonly primitiveKind: string;
+}
+
+/** @emoji 🔄 Ensures typology rows exist after derive. */
+export interface TransformationDeriveEnsure {
+  readonly typology: string;
+  readonly empty?: boolean;
+}
+
+/** @emoji 🔄 Declarative surface-classification derive spec on `spatial.transformation/v1`. */
+export interface TransformationDeriveSpec {
+  readonly collect: TransformationDeriveCollect;
+  readonly fuse?: TransformationDeriveFuse;
+  readonly hull: TransformationDeriveHull;
+  readonly classify: {
+    readonly zTolRatio?: number;
+    readonly zTolMin?: number;
+    readonly rules: readonly TransformationDeriveClassifyRule[];
+    readonly opening?: TransformationDeriveOpening;
+    readonly mergeRoles?: readonly string[];
+    readonly mergeByPlane?: boolean;
+  };
+  readonly ensure?: readonly TransformationDeriveEnsure[];
+}
+
 /** @emoji 🔄 Parsed transformation (`spatial.transformation/v1`). */
 export interface TransformationSpec {
   readonly schema: "spatial.transformation/v1";
@@ -2183,6 +2449,94 @@ export interface TransformationSpec {
   readonly source: { readonly modelDefinition: string };
   readonly target: { readonly modelDefinition: string };
   readonly typologies: readonly string[];
+  readonly derive?: TransformationDeriveSpec;
+}
+
+function parseTransformationDeriveClassifyRule(raw: unknown): TransformationDeriveClassifyRule | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.role !== "string" || typeof r.typology !== "string") return null;
+  const dominantAxis = r.dominantAxis === "x" || r.dominantAxis === "y" || r.dominantAxis === "z" ? r.dominantAxis : undefined;
+  const zBand = r.zBand === "min" || r.zBand === "max" || r.zBand === "mid" ? r.zBand : undefined;
+  return {
+    role: r.role,
+    typology: r.typology,
+    ...(dominantAxis ? { dominantAxis } : {}),
+    ...(typeof r.minDominantNormal === "number" ? { minDominantNormal: r.minDominantNormal } : {}),
+    ...(typeof r.minAxisNormal === "number" ? { minAxisNormal: r.minAxisNormal } : {}),
+    ...(zBand ? { zBand } : {}),
+    ...(r.fallback === true ? { fallback: true } : {}),
+  };
+}
+
+function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const collect = r.collect as Record<string, unknown> | undefined;
+  const hull = r.hull as Record<string, unknown> | undefined;
+  const classify = r.classify as Record<string, unknown> | undefined;
+  if (typeof collect?.sourceModelDefinition !== "string") return null;
+  const primitiveKind = collect.primitiveKind;
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  if (typeof primitiveKind !== "string" || !allowed.has(primitiveKind as TypologyPrimitiveKind)) return null;
+  if (typeof hull?.typology !== "string" || typeof hull?.primitiveKind !== "string") return null;
+  if (!classify || !Array.isArray(classify.rules) || classify.rules.length === 0) return null;
+  const rules = classify.rules.map(parseTransformationDeriveClassifyRule).filter((row): row is TransformationDeriveClassifyRule => row !== null);
+  if (rules.length !== classify.rules.length) return null;
+  const fuseRaw = r.fuse as Record<string, unknown> | undefined;
+  const fuse: TransformationDeriveFuse | undefined =
+    fuseRaw && typeof fuseRaw === "object"
+      ? {
+          ...(typeof fuseRaw.hullSolidId === "string" ? { hullSolidId: fuseRaw.hullSolidId } : {}),
+          ...(Array.isArray(fuseRaw.contactPairs)
+            ? {
+                contactPairs: fuseRaw.contactPairs
+                  .filter((pair): pair is [string, string] => Array.isArray(pair) && pair.length === 2 && typeof pair[0] === "string" && typeof pair[1] === "string")
+                  .map((pair) => [pair[0], pair[1]] as const),
+              }
+            : {}),
+          ...(typeof fuseRaw.maxSeparation === "number" ? { maxSeparation: fuseRaw.maxSeparation } : {}),
+        }
+      : undefined;
+  const openingRaw = classify.opening as Record<string, unknown> | undefined;
+  const opening: TransformationDeriveOpening | undefined =
+    openingRaw &&
+    Array.isArray(openingRaw.fields) &&
+    openingRaw.fields.every((f) => typeof f === "string") &&
+    Array.isArray(openingRaw.values) &&
+    typeof openingRaw.typology === "string" &&
+    typeof openingRaw.role === "string"
+      ? {
+          fields: openingRaw.fields as string[],
+          values: openingRaw.values as (string | boolean)[],
+          typology: openingRaw.typology,
+          role: openingRaw.role,
+        }
+      : undefined;
+  const ensure: TransformationDeriveEnsure[] | undefined = Array.isArray(r.ensure)
+    ? r.ensure
+        .map((row) => {
+          if (!row || typeof row !== "object") return null;
+          const e = row as Record<string, unknown>;
+          if (typeof e.typology !== "string") return null;
+          return { typology: e.typology, ...(e.empty === true ? { empty: true } : {}) };
+        })
+        .filter((row): row is TransformationDeriveEnsure => row !== null)
+    : undefined;
+  return {
+    collect: { sourceModelDefinition: collect.sourceModelDefinition, primitiveKind: primitiveKind as TypologyPrimitiveKind },
+    ...(fuse ? { fuse } : {}),
+    hull: { typology: hull.typology, primitiveKind: hull.primitiveKind },
+    classify: {
+      rules,
+      ...(typeof classify.zTolRatio === "number" ? { zTolRatio: classify.zTolRatio } : {}),
+      ...(typeof classify.zTolMin === "number" ? { zTolMin: classify.zTolMin } : {}),
+      ...(opening ? { opening } : {}),
+      ...(Array.isArray(classify.mergeRoles) ? { mergeRoles: classify.mergeRoles.filter((x): x is string => typeof x === "string") } : {}),
+      ...(classify.mergeByPlane === true ? { mergeByPlane: true } : {}),
+    },
+    ...(ensure?.length ? { ensure } : {}),
+  };
 }
 
 /** @emoji 🧾 Parses `spatial.transformation/v1` JSON; `modelDefinitionId` comes from the asset folder. */
@@ -2197,6 +2551,8 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
   if (!Array.isArray(r.typologies) || r.typologies.length === 0) return null;
   const typologies = r.typologies.filter((row): row is string => typeof row === "string");
   if (typologies.length !== r.typologies.length) return null;
+  const derive = r.derive !== undefined ? parseTransformationDeriveSpec(r.derive) : undefined;
+  if (r.derive !== undefined && !derive) return null;
   return {
     schema: "spatial.transformation/v1",
     id: r.id,
@@ -2207,6 +2563,7 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
     source: { modelDefinition: source.modelDefinition },
     target: { modelDefinition: target.modelDefinition },
     typologies,
+    ...(derive ? { derive } : {}),
   };
 }
 
@@ -2225,7 +2582,7 @@ function modelDefinitionIdFromTransformationAssetPath(assetPath: string): string
 function shippedTransformationCatalog(): readonly TransformationSpec[] {
   const seen = new Set<string>();
   const out: TransformationSpec[] = [];
-  for (const [path, raw] of Object.entries(modelDefinitionTransformationModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionTransformationModules())) {
     const modelDefinitionId = modelDefinitionIdFromTransformationAssetPath(path);
     if (!modelDefinitionId) continue;
     const spec = parseTransformationSpec(raw, modelDefinitionId);
@@ -2269,14 +2626,12 @@ function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
   return folder || null;
 }
 
-let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
-
 function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
   const map = new Map<string, string>();
   const modules = {
-    ...modelDefinitionManifestModules,
-    ...modelDefinitionExtensionManifestModules,
+    ...modelDefinitionAssetModules.manifests,
+    ...modelDefinitionAssetModules.extensions,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -2295,12 +2650,10 @@ export function modelDefinitionIdFromAssetPath(assetPath: string): string | null
   return modelDefinitionFolderIdMap().get(folder) ?? null;
 }
 
-let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function typologyOwnerById(): ReadonlyMap<string, string> {
   if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionTypologyModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.typologies)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseTypologySpec(raw);
     if (!owner || !spec) continue;
@@ -2316,12 +2669,10 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
   return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
-let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function actionOwnerById(): ReadonlyMap<string, string> {
   if (actionOwnerByIdCache) return actionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseActionSpec(raw);
     if (!owner || !spec) continue;
@@ -2349,12 +2700,10 @@ export interface SpatialInteraction {
   readonly key: string;
 }
 
-let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function interactionOwnerById(): ReadonlyMap<string, string> {
   if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionInteractionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.interactions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseInteractionSpec(raw);
     if (!owner || !spec) continue;
@@ -2393,12 +2742,10 @@ export function listSpatialInteractionsForModelDefinition(
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function attributeOwnerById(): ReadonlyMap<string, string> {
   if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAttributeModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.attributes)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseAttributeDefinitionSpec(raw);
     if (!owner || !spec) continue;
@@ -2414,14 +2761,12 @@ export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: st
   return shippedAttributeDefinitionCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
-let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function propertyOwnerById(): ReadonlyMap<string, string> {
   if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
   const map = new Map<string, string>();
   for (const [path, raw] of Object.entries({
-    ...modelDefinitionPropertyDefinitionModules,
-    ...modelDefinitionPropertyModules,
+    ...modelDefinitionAssetModules.propertyDefinitions,
+    ...modelDefinitionAssetModules.properties,
   })) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parsePropertyDefinitionSpec(raw);
@@ -2500,7 +2845,7 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
       if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
     }
   }
-  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
@@ -2532,8 +2877,8 @@ export function listSelectionOperationsForModelDefinition(modelDefinitionId: str
 
 /** @emoji 🧭 Selection entity kinds available while a model definition is active (factory primitives + objects). */
 export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
-  const entityKindIds = new Set<string>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
-  const kinds = new Set<ModelEntityKind>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object"]);
+  const entityKindIds = new Set<string>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
+  const kinds = new Set<ModelEntityKind>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object"]);
   for (const defn of listAttributeDefinitionsForModelDefinition(modelDefinitionId)) {
     for (const kind of defn.targets) {
       if (entityKindIds.has(kind)) kinds.add(kind as ModelEntityKind);
@@ -2543,11 +2888,11 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
     }
   }
   const ordered: ModelEntityKind[] = [];
-  for (const kind of TOPOLOGY_MODEL_ENTITY_KINDS) {
+  for (const kind of PRIMITIVE_MODEL_ENTITY_KINDS) {
     if (kinds.has(kind)) ordered.push(kind);
   }
   for (const kind of kinds) {
-    if (!(TOPOLOGY_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) ordered.push(kind);
+    if (!(PRIMITIVE_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) ordered.push(kind);
   }
   return ordered;
 }
@@ -2590,8 +2935,84 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
 }
 // #endregion 🧭ModelDefinitionScope
 
-/** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
-export function applyTransformation(spec: TransformationSpec, source: Model): Model {
+// #region 🔄TransformationGeometry
+type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
+
+const transformationAppliers = new Map<string, TransformationApplier>();
+
+/** @emoji 🔄 Registers a model-definition-specific transformation implementation. */
+export function registerTransformationApplier(qualifiedTransformationId: string, applier: TransformationApplier): void {
+  transformationAppliers.set(qualifiedTransformationId, applier);
+}
+
+function collectTransformationPrimitiveRefs(
+  model: Model,
+  sourceModelDefinition: string,
+  primitiveKind: TypologyPrimitiveKind,
+): readonly SolidRef[] {
+  const refs = new Set<string>();
+  for (const obj of listModelObjectsForModelDefinition(model, sourceModelDefinition)) {
+    for (const [kind, primitiveRef] of objectPrimitiveEntries(obj)) {
+      if (kind === primitiveKind && model.solids[primitiveRef]) refs.add(primitiveRef);
+    }
+  }
+  if (!refs.size) {
+    for (const id of Object.keys(model.solids)) refs.add(id);
+  }
+  return [...refs].sort().map((id) => id as SolidRef);
+}
+
+function transformationObjectId(typology: string, index: number): ObjectRef {
+  return (index === 0 ? typology : `${typology}#${index}`) as ObjectRef;
+}
+
+function deriveOpeningMatch(model: Model, faceId: FaceRef, opening: TransformationDeriveOpening): boolean {
+  const fields = model.metadata.get(String(faceId));
+  if (!fields) return false;
+  for (const field of opening.fields) {
+    const value = fields[field];
+    if (opening.values.some((candidate) => candidate === value)) return true;
+  }
+  return false;
+}
+
+function deriveClassifyRuleMatches(
+  rule: TransformationDeriveClassifyRule,
+  normal: Vec3,
+  centroid: Vec3,
+  zMin: number,
+  zMax: number,
+  zTol: number,
+): boolean {
+  if (rule.fallback) return true;
+  const ax = Math.abs(normal[0]);
+  const ay = Math.abs(normal[1]);
+  const az = Math.abs(normal[2]);
+  if (rule.dominantAxis === 'z' && rule.minDominantNormal != null) {
+    if (!(az >= ax && az >= ay && az >= rule.minDominantNormal)) return false;
+    if (rule.zBand === 'max') return centroid[2] >= zMax - zTol;
+    if (rule.zBand === 'min') return centroid[2] <= zMin + zTol;
+    return true;
+  }
+  if (rule.minAxisNormal != null) return ax >= rule.minAxisNormal || ay >= rule.minAxisNormal;
+  return false;
+}
+
+function classifyFaceFromDeriveRules(
+  derive: TransformationDeriveSpec,
+  normal: Vec3,
+  centroid: Vec3,
+  zMin: number,
+  zMax: number,
+  zTol: number,
+): TransformationDeriveClassifyRule {
+  for (const rule of derive.classify.rules) {
+    if (deriveClassifyRuleMatches(rule, normal, centroid, zMin, zMax, zTol)) return rule;
+  }
+  return derive.classify.rules[derive.classify.rules.length - 1]!;
+}
+
+function cloneModelGeometryShell(source: Model): Model {
   const target = new Model();
   target.revision = source.revision;
   target.anchors = source.anchors;
@@ -2599,29 +3020,131 @@ export function applyTransformation(spec: TransformationSpec, source: Model): Mo
   target.edges = source.edges;
   target.wires = source.wires;
   target.faces = source.faces;
-  target.shells = source.shells;
-  target.solids = source.solids;
-  const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
-  const primaryPrimitiveRef =
-    sourceObjectIds.length > 0
-      ? (objectPrimaryPrimitiveRef(source.objects[sourceObjectIds[0]!]!) ?? sourceObjectIds[0]!)
-      : (Object.keys(source.solids)[0] ?? "");
-  if (!primaryPrimitiveRef) {
+  target.shells = { ...source.shells };
+  target.solids = { ...source.solids };
+  return target;
+}
+
+/** @emoji 🔄 Copies geometry and keeps only object rows whose typology is listed on the transformation spec. */
+function applyTransformationFallback(spec: TransformationSpec, source: Model): Model {
+  const target = cloneModelGeometryShell(source);
+  const allowedTypologies = new Set(spec.typologies);
+  const objects: Model["objects"] = {};
+  for (const row of Object.values(source.objects)) {
+    if (!allowedTypologies.has(row.typology)) continue;
+    objects[row.id] = row;
+  }
+  target.objects = objects;
+  target.bump();
+  return target;
+}
+
+function runDeriveTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
+  const derive = spec.derive;
+  if (!derive) throw new Error(`transformation ${qualifiedTransformationId(spec.modelDefinitionId, spec.id)} is missing derive`);
+  const target = cloneModelGeometryShell(source);
+  const solidRefs = collectTransformationPrimitiveRefs(source, derive.collect.sourceModelDefinition, derive.collect.primitiveKind);
+  if (!solidRefs.length) {
     target.bump();
     return target;
   }
-  const primaryPrimitiveKind = resolvePrimitiveRefKind(source, primaryPrimitiveRef) ?? "primitive";
-  for (const typologyId of spec.typologies) {
-    if (!loadTypology(typologyId)) continue;
-    target.objects[typologyId] = {
-      id: typologyId as ObjectRef,
-      typology: typologyId as TypologyRef,
-      primitives: { [primaryPrimitiveKind]: primaryPrimitiveRef },
-      attributes: { sourceObjectIds },
+  const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
+  const { hullSolid, externalFaces } = preview.fuseSolidsToExternalFaces(target, solidRefs, {
+    hullSolidId: derive.fuse?.hullSolidId,
+    contactPairs: derive.fuse?.contactPairs,
+    maxSeparation: derive.fuse?.maxSeparation,
+  });
+  if (solidRefs.length > 1) {
+    target.metadata.setField(String(hullSolid), 'fuseSourceSolidIds', solidRefs.map(String));
+    target.solids[hullSolid] = { id: hullSolid, shellIds: [] };
+  }
+  const centroids: Vec3[] = [];
+  const faceMeta: { readonly face: FaceRef; readonly normal: Vec3; readonly centroid: Vec3 }[] = [];
+  for (const faceId of externalFaces) {
+    const face = target.faces[faceId];
+    if (!face) continue;
+    const normal = preview.faceNormal(target, face);
+    const centroid = preview.faceCentroid(target, face);
+    if (!normal || !centroid) continue;
+    faceMeta.push({ face: faceId, normal, centroid });
+    centroids.push(centroid);
+  }
+  let zMin = Infinity;
+  let zMax = -Infinity;
+  for (const c of centroids) {
+    zMin = Math.min(zMin, c[2]);
+    zMax = Math.max(zMax, c[2]);
+  }
+  if (!Number.isFinite(zMin)) {
+    zMin = 0;
+    zMax = 0;
+  }
+  const zTolRatio = derive.classify.zTolRatio ?? 0.02;
+  const zTolMin = derive.classify.zTolMin ?? 1e-3;
+  const zTol = Math.max((zMax - zMin) * zTolRatio, zTolMin);
+  const roleCounts = new Map<string, number>();
+  const hullTypology = derive.hull.typology as TypologyRef;
+  target.objects[transformationObjectId(hullTypology, 0)] = {
+    id: transformationObjectId(hullTypology, 0),
+    typology: hullTypology,
+    primitives: { [derive.hull.primitiveKind]: String(hullSolid) },
+    attributes: { sourceObjectIds, fusedSolidIds: solidRefs.map(String) },
+  };
+  const mergeRoles = new Set(derive.classify.mergeRoles ?? []);
+  const mergeByPlane = derive.classify.mergeByPlane === true;
+  const groupedFaces = new Map<string, { readonly role: string; readonly typology: TypologyRef; readonly faces: FaceRef[] }>();
+  for (const row of faceMeta) {
+    const opening = derive.classify.opening;
+    const classified =
+      opening && deriveOpeningMatch(source, row.face, opening)
+        ? { role: opening.role, typology: opening.typology as TypologyRef }
+        : (() => {
+            const rule = classifyFaceFromDeriveRules(derive, row.normal, row.centroid, zMin, zMax, zTol);
+            return { role: rule.role, typology: rule.typology as TypologyRef };
+          })();
+    const mergeGroup = mergeRoles.has(classified.role);
+    const groupKey = mergeGroup && mergeByPlane
+      ? `${classified.typology}:${preview.facePlaneGroupKey(row.normal, row.centroid)}`
+      : `${classified.typology}:${String(row.face)}`;
+    const existing = groupedFaces.get(groupKey);
+    if (existing) existing.faces.push(row.face);
+    else groupedFaces.set(groupKey, { role: classified.role, typology: classified.typology, faces: [row.face] });
+  }
+  for (const group of groupedFaces.values()) {
+    const index = roleCounts.get(group.typology) ?? 0;
+    roleCounts.set(group.typology, index + 1);
+    const objectId = transformationObjectId(group.typology, index);
+    target.objects[objectId] = {
+      id: objectId,
+      typology: group.typology,
+      primitives: { face: String(group.faces[0]!) },
+      attributes: { sourceObjectIds, surfaceRole: group.role, faceIds: group.faces.map(String) },
     };
+  }
+  for (const ensure of derive.ensure ?? []) {
+    if (!roleCounts.has(ensure.typology)) {
+      const objectId = transformationObjectId(ensure.typology, 0);
+      target.objects[objectId] = {
+        id: objectId,
+        typology: ensure.typology as TypologyRef,
+        primitives: ensure.empty ? {} : { face: String(externalFaces[0] ?? '') },
+        attributes: { sourceObjectIds },
+      };
+    }
   }
   target.bump();
   return target;
+}
+
+// #endregion 🔄TransformationGeometry
+
+/** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
+export function applyTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
+  const qualified = qualifiedTransformationId(spec.modelDefinitionId, spec.id);
+  const applier = transformationAppliers.get(qualified);
+  if (applier) return applier(spec, source);
+  if (spec.derive) return runDeriveTransformation(spec, source, preview);
+  return applyTransformationFallback(spec, source);
 }
 
 // #endregion 🧱Model
@@ -2740,22 +3263,35 @@ export function listConstructableTypologiesForModelDefinition(modelDefinitionId:
 
 /** @emoji 🧭 Typology id for an interaction commit (`construct` kit or typology `interactions` list). */
 export function typologyIdForInteractionCommit(interactionId: string): string | null {
-  return typologyConstructKitByInteraction().get(interactionId)?.typology ?? typologyForInteraction(interactionId)?.id ?? null;
+  const fromKit = typologyConstructKitByInteraction().get(interactionId)?.typology;
+  if (fromKit) return fromKit;
+  const fromTypology = typologyForInteraction(interactionId)?.id;
+  if (fromTypology) return fromTypology;
+  const produces = loadSpatialInteraction(interactionId)?.produces?.typology;
+  return typeof produces === "string" && produces.length > 0 ? produces : null;
 }
 
-/** @emoji 📦 Binds a typology object row to the primary solid added by a create/construct diff. */
+/** @emoji 📦 Binds a typology object row to the primary primitive added by a create/construct diff. */
 export function ensureTypologyObjectFromCreateDiff(model: Model, typology: string, diff: ModelDiff): ObjectRef | null {
   const typologySpec = loadTypology(typology);
   if (!typologySpec) return null;
   const solidId = diff.solids?.added?.[0]?.id;
-  if (!solidId) return null;
-  const primitiveKind = typologySpec.primitiveKinds[0] ?? "solid";
+  const wireId = diff.wires?.added?.[0]?.id;
+  const edgeId = diff.edges?.added?.[0]?.id;
+  const primitiveRef = solidId ?? wireId ?? edgeId;
+  if (!primitiveRef) return null;
+  const primitiveKind =
+    (solidId && typologySpec.primitiveKinds.includes("solid") && "solid") ||
+    (wireId && typologySpec.primitiveKinds.includes("wire") && "wire") ||
+    (edgeId && typologySpec.primitiveKinds.includes("edge") && "edge") ||
+    typologySpec.primitiveKinds[0] ||
+    "solid";
   const typologyObjectId = typology as ObjectRef;
-  const objectId = model.objects[typologyObjectId] ? (String(solidId) as ObjectRef) : typologyObjectId;
+  const objectId = model.objects[typologyObjectId] ? (String(primitiveRef) as ObjectRef) : typologyObjectId;
   model.objects[objectId] = {
     id: objectId,
     typology: typology as TypologyRef,
-    primitives: { [primitiveKind]: String(solidId) },
+    primitives: { [primitiveKind]: String(primitiveRef) },
   };
   model.bump();
   return objectId;
@@ -2872,6 +3408,25 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   applyEntityDiff(model.faces as Record<string, FaceRecord>, diff.faces, fInv);
   applyEntityDiff(model.shells as Record<string, ShellRecord>, diff.shells, sInv);
   applyEntityDiff(model.solids as Record<string, SolidRecord>, diff.solids, cInv);
+  const movedVertexIds = diff.vertices?.modified?.map((row) => row.id) ?? [];
+  let nurbsEdgeSyncApplied = false;
+  if (movedVertexIds.length > 0) {
+    const nurbsSync = modelDiffSyncNurbsThroughEdgesForMovedVertices(model, movedVertexIds);
+    if (!isEmptyModelDiff(nurbsSync)) {
+      const eInvSync: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
+      applyEntityDiff(model.edges as Record<string, EdgeRecord>, nurbsSync.edges, eInvSync);
+      if (!isEntityDiffEmpty(eInvSync)) {
+        nurbsEdgeSyncApplied = true;
+        inv.edges = inv.edges
+          ? {
+              added: [...(inv.edges.added ?? []), ...(eInvSync.added ?? [])],
+              modified: [...(inv.edges.modified ?? []), ...(eInvSync.modified ?? [])],
+              removed: [...(inv.edges.removed ?? []), ...(eInvSync.removed ?? [])],
+            }
+          : eInvSync;
+      }
+    }
+  }
   if (!isEntityDiffEmpty(aInv)) inv.anchors = aInv;
   if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
   if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
@@ -2879,7 +3434,7 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   if (!isEntityDiffEmpty(fInv)) inv.faces = fInv;
   if (!isEntityDiffEmpty(sInv)) inv.shells = sInv;
   if (!isEntityDiffEmpty(cInv)) inv.solids = cInv;
-  if (!isEmptyModelDiff(diff)) model.bump();
+  if (!isEmptyModelDiff(diff) || nurbsEdgeSyncApplied) model.bump();
   return inv;
 }
 
@@ -2909,7 +3464,7 @@ export interface SpatialPreviewKernel {
   edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number;
   edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
   circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null;
-  nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null;
+  nurbsCurveFromPoles(poles: readonly Vec3[], through?: boolean): EdgeCurve | null;
   aabbFromPoints(points: readonly Vec3[]): Aabb | null;
   aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[];
   aabbIntersect(a: Aabb, b: Aabb): Aabb | null;
@@ -2922,6 +3477,19 @@ export interface SpatialPreviewKernel {
   computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number): { readonly position: Vec3; readonly scale: Vec3 };
   transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>): (point: Vec3) => Vec3;
   constrainMovePoint(from: Vec3, to: Vec3, mode: string, cplaneNormal?: Vec3): Vec3;
+  facePoints(model: Model, face: FaceRecord): readonly Vec3[];
+  faceCentroid(model: Model, face: FaceRecord): Vec3 | null;
+  faceNormal(model: Model, face: FaceRecord): Vec3 | null;
+  solidFaceIds(model: Model, solidId: string): readonly FaceRef[];
+  fuseSolidsToExternalFaces(
+    model: Model,
+    solidRefs: readonly SolidRef[],
+    options?: { readonly hullSolidId?: string; readonly contactPairs?: readonly (readonly [string, string])[]; readonly maxSeparation?: number },
+  ): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] };
+  facePlaneGroupKey(normal: Vec3, centroid: Vec3): string;
+  projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3): { readonly projected: Vec3; readonly t: number };
+  scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3;
+  clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3;
   abs(x: number): number;
   min2(a: number, b: number): number;
   max2(a: number, b: number): number;
@@ -2961,6 +3529,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number>;
   edgeLength(e: EdgeRef, model: Model): Promise<number>;
   faceArea(f: FaceRef, model: Model): Promise<number>;
+  syncSolidsFromModel(model: Model): Promise<void>;
   solidVolume(c: SolidRef): Promise<number>;
   adjacentSolids(solid: SolidRef, model: Model): Promise<readonly SolidRef[]>;
   sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
@@ -3222,6 +3791,7 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         const field = String(params.field ?? "points");
         const key = params.key != null ? String(params.key) : null;
         const point = vec3Param(params, "point");
+        const snap = interactionPointSnapFromEvent(params.__event as InteractionEvent | undefined);
         const cur = ctx[field];
         if (key) {
           const base = cur && typeof cur === "object" && !Array.isArray(cur) ? { ...(cur as Record<string, unknown>) } : {};
@@ -3232,7 +3802,40 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         }
         const arr = Array.isArray(cur) ? [...(cur as Vec3[])] : [];
         arr.push(point);
-        return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: arr } } };
+        const patch: Record<string, unknown> = { [field]: arr };
+        if (field === "points") {
+          const snaps = Array.isArray(ctx.pointSnaps) ? [...(ctx.pointSnaps as (InteractionPointSnap | null)[])] : [];
+          snaps.push(snap);
+          patch.pointSnaps = snaps;
+        }
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: patch } };
+      },
+    },
+    {
+      id: "command.assignExtrusionDistance",
+      run: (params) => {
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const origin = vec3Param(bag, "origin", vec3Param(bag, "prevPoint", [0, 0, 0]));
+        const cursor = vec3Param(bag, "cursor", origin);
+        const direction = vec3Param(bag, "direction", [0, 0, 1]);
+        const len = Math.hypot(direction[0], direction[1], direction[2]) || 1;
+        const dir: Vec3 = [direction[0] / len, direction[1] / len, direction[2] / len];
+        const delta = [cursor[0] - origin[0], cursor[1] - origin[1], cursor[2] - origin[2]] as Vec3;
+        const distance = Math.abs(delta[0] * dir[0] + delta[1] * dir[1] + delta[2] * dir[2]);
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { distance } }, data: distance };
+      },
+    },
+    {
+      id: "command.assignDirectionFromPoint",
+      run: (params) => {
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const event = params.__event as InteractionEvent | undefined;
+        const origin = vec3Param(bag, "origin", vec3Param(bag, "prevPoint", [0, 0, 0]));
+        const point = vec3Param(params, "point", event?.point ?? origin);
+        const delta = [point[0] - origin[0], point[1] - origin[1], point[2] - origin[2]] as Vec3;
+        const len = Math.hypot(delta[0], delta[1], delta[2]);
+        const direction: Vec3 = len > 1e-9 ? [delta[0] / len, delta[1] / len, delta[2] / len] : [0, 0, 1];
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { direction } }, data: direction };
       },
     },
     {
@@ -3282,12 +3885,12 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
       id: "command.finish",
       run: async (params, ctx) => {
         const commandId = String(params.commandId ?? "");
-        const bag: Record<string, unknown> = { ...((params.__context as Record<string, unknown>) ?? {}) };
+        const bag: Record<string, unknown> = { ...withResolvedInteractionPointsContext(ctx.model, (params.__context as Record<string, unknown>) ?? {}) };
         const points = bag.points;
         if (points && typeof points === "object" && !Array.isArray(points)) Object.assign(bag, points as Record<string, unknown>);
-        for (const k of ["commandId", "resultKind", "__context", "__event"]) delete bag[k];
+        for (const k of ["commandId", "resultKind", "__context", "__event", "pointSnaps"]) delete bag[k];
         if (!ctx.kernel.executeCommandDiff) return { diff: EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
-        const { diff } = await ctx.kernel.executeCommandDiff(commandId, bag);
+        const { diff } = await ctx.kernel.executeCommandDiff(commandId, { ...bag, model: ctx.model });
         return { diff: diff ?? EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
       },
     },
@@ -3304,9 +3907,30 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
     },
     { id: "transform.move", run: (params, ctx) => ({ diff: transformDiff(params, ctx, false) }) },
     { id: "transform.copy", run: (params, ctx) => ({ diff: transformDiff(params, ctx, true) }) },
-    { id: "transform.rotate", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
-    { id: "transform.scale1d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
-    { id: "transform.scale3d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
+    {
+      id: "transform.rotate",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("rotate-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
+    {
+      id: "transform.scale1d",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("scale1d-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
+    {
+      id: "transform.scale3d",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("scale-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
     {
       id: "measure.vertexDistance",
       run: async (params, ctx) => {
@@ -3563,6 +4187,142 @@ export function selectionTargetsCenter(model: Model, targets: readonly Selection
   return [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
 }
 
+/** @emoji 🎛 CAD play gumball modes (move / rotate / scale). */
+export type CadTransformGumballMode = "move" | "rotate" | "scale";
+
+/** @emoji 🪟 Per-window transform combobox value (`none` disables the gumball). */
+export type CadPlayTransformWindowMode = "none" | CadTransformGumballMode;
+
+/** @emoji 🪟 Ordered transform combobox entries for CAD play window measures. */
+export const CAD_PLAY_TRANSFORM_WINDOW_MODES: readonly CadPlayTransformWindowMode[] = ["none", "move", "rotate", "scale"];
+
+/** @emoji 🪟 Type guard for CAD play transform window measure values. */
+export function isCadPlayTransformWindowMode(value: string): value is CadPlayTransformWindowMode {
+  return (CAD_PLAY_TRANSFORM_WINDOW_MODES as readonly string[]).includes(value);
+}
+
+/** @emoji 🪟 Maps window combobox value to active gumball mode or `null` when disabled. */
+export function cadTransformGumballModeFromWindowMode(mode: CadPlayTransformWindowMode): CadTransformGumballMode | null {
+  return mode === "none" ? null : mode;
+}
+
+/** @emoji 🪟 Human label for a CAD play transform window measure item. */
+export function cadPlayTransformWindowModeLabel(mode: CadPlayTransformWindowMode): string {
+  if (mode === "none") return "None";
+  if (mode === "move") return "Move";
+  if (mode === "rotate") return "Rotate";
+  return "Scale";
+}
+
+/** @emoji ✋ True when `targets` resolve to at least one model vertex. */
+export function selectionTargetsHaveTransformableVertices(model: Model, targets: readonly SelectionTarget[]): boolean {
+  return collectTargetVertices(model, targets).size > 0;
+}
+
+/** @emoji 🎛 Maps toolbar gumball mode to TransformControls mode. */
+export function cadTransformGumballModeToControlsMode(mode: CadTransformGumballMode): "translate" | "rotate" | "scale" {
+  if (mode === "rotate") return "rotate";
+  if (mode === "scale") return "scale";
+  return "translate";
+}
+
+function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  const vertexIds = collectTargetVertices(model, targets);
+  const modified: VertexRecordDiff[] = [];
+  for (const vid of vertexIds) {
+    const v = model.vertices[vid];
+    if (!v) continue;
+    const next = mapPoint(v.position);
+    if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
+    modified.push({ id: v.id, position: next });
+  }
+  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+}
+
+// #region 📍InteractionPointBinding
+/** @emoji 📍 Optional geometry snap stored beside a committed interaction point. */
+export type InteractionPointSnap = { readonly kind: string; readonly id: string };
+
+/** @emoji 📍 Reads parallel `pointSnaps` rows aligned with `context.points`. */
+export function readInteractionPointSnaps(context: Record<string, unknown>): readonly (InteractionPointSnap | null)[] {
+  const raw = context.pointSnaps;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    if (!row || typeof row !== "object") return null;
+    const kind = (row as { kind?: unknown }).kind;
+    const id = (row as { id?: unknown }).id;
+    return typeof kind === "string" && typeof id === "string" ? { kind, id } : null;
+  });
+}
+
+function interactionPointSnapFromEvent(event: InteractionEvent | undefined): InteractionPointSnap | null {
+  if (!event || typeof event !== "object") return null;
+  const snap = (event as { snap?: { kind?: unknown; id?: unknown } }).snap;
+  if (!snap || typeof snap.kind !== "string" || typeof snap.id !== "string") return null;
+  return { kind: snap.kind, id: snap.id };
+}
+
+function vec3Eq(a: Vec3, b: Vec3): boolean {
+  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
+/** @emoji 📍 Replaces interaction points bound to moved vertices with live model positions. */
+export function resolveLiveInteractionPoints(
+  model: Model,
+  points: readonly Vec3[],
+  snaps: readonly (InteractionPointSnap | null)[],
+): readonly Vec3[] {
+  if (!snaps.length) return points;
+  return points.map((point, index) => {
+    const snap = snaps[index];
+    if (!snap || snap.kind !== "vertex") return point;
+    const live = model.vertices[snap.id as VertexRef]?.position;
+    return live ?? point;
+  });
+}
+
+/** @emoji 📍 Shallow context copy with `points` resolved from bound vertex snaps. */
+export function withResolvedInteractionPointsContext(model: Model, context: Record<string, unknown>): Record<string, unknown> {
+  const points = context.points;
+  if (!Array.isArray(points)) return context;
+  const snaps = readInteractionPointSnaps(context);
+  if (!snaps.some((row) => row?.kind === "vertex")) return context;
+  const resolved = resolveLiveInteractionPoints(model, points as Vec3[], snaps);
+  if (resolved.every((point, index) => vec3Eq(point, points[index] as Vec3))) return context;
+  return { ...context, points: [...resolved] };
+}
+
+function modelDiffSyncNurbsThroughEdgesForMovedVertices(model: Model, movedVertexIds: readonly VertexRef[]): ModelDiff {
+  const moved = new Set(movedVertexIds.map(String));
+  const edgeMods: EdgeRecordDiff[] = [];
+  for (const edge of Object.values(model.edges)) {
+    const curve = edge.curve;
+    if (curve?.kind !== "nurbs" || !curve.through || curve.poles.length < 2) continue;
+    const startId = String(edge.vertexIds[0] ?? "");
+    const endId = String(edge.vertexIds[1] ?? edge.vertexIds[0] ?? "");
+    let poles: Vec3[] | null = null;
+    if (startId && moved.has(startId)) {
+      const position = model.vertices[startId as VertexRef]?.position;
+      if (position) {
+        poles = [...curve.poles];
+        poles[0] = [position[0], position[1], position[2]];
+      }
+    }
+    if (endId && moved.has(endId)) {
+      const position = model.vertices[endId as VertexRef]?.position;
+      if (position) {
+        poles = poles ? [...poles] : [...curve.poles];
+        poles[poles.length - 1] = [position[0], position[1], position[2]];
+      }
+    }
+    if (!poles) continue;
+    if (poles.every((point, index) => vec3Eq(point, curve.poles[index]!))) continue;
+    edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
+  }
+  return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
+}
+// #endregion 📍InteractionPointBinding
+
 function selectionTargetKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
@@ -3675,7 +4435,7 @@ function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTar
   });
 }
 
-/** @emoji 🎯 Primary selection row for attribute editing (topology first, then typology object). */
+/** @emoji 🎯 Primary selection row for attribute editing (primitive first, then typology object). */
 export function primaryAttributeSelectionTarget(selection: readonly SelectionTarget[]): SelectionTarget | null {
   if (!selection.length) return null;
   for (const row of selection) {
@@ -3686,7 +4446,7 @@ export function primaryAttributeSelectionTarget(selection: readonly SelectionTar
 
 /** @emoji 🪪 Collects stable `SelectionTarget` rows for kernel `kinds` scoped to the active model definition. */
 export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const allowed = new Set(scopeKinds);
   const out: SelectionTarget[] = [];
@@ -3733,10 +4493,10 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
   return sortSelectionTargets(out);
 }
 
-/** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
+/** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `model`. */
 export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const universe = collectGeometrySelectionTargets(model, scopeKinds, mdId);
   if (operation === "selectAll" || operation === "selectKinds") return universe;
@@ -4028,12 +4788,45 @@ export function parseNumericCommandLine(cmdLine: string): number | null | undefi
   return v;
 }
 
-/** @emoji 🔢 Locked numeric value from context when live entry already applied. */
-export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
+/** @emoji 📏 Live distance along a length-entry anchor→cursor axis (extrusion rod, rubber band). */
+export function interactionLengthEntryLiveDistance(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): number | null {
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  const cursor = readInteractionContextVec3(ctx, entry.field);
+  if (!anchor || !cursor) return null;
+  const direction = readInteractionContextVec3(ctx, "direction");
+  if (direction) {
+    const len = Math.hypot(direction[0], direction[1], direction[2]) || 1;
+    const dir: Vec3 = [direction[0] / len, direction[1] / len, direction[2] / len];
+    const distance = Math.abs((cursor[0] - anchor[0]) * dir[0] + (cursor[1] - anchor[1]) * dir[1] + (cursor[2] - anchor[2]) * dir[2]);
+    return distance > 1e-9 ? distance : null;
+  }
+  const distance = Math.hypot(cursor[0] - anchor[0], cursor[1] - anchor[1], cursor[2] - anchor[2]);
+  return distance > 1e-9 ? distance : null;
+}
+
+/** @emoji 🔢 Explicit length/height lock from context (`set.length` / `set.height`), not live rubber-band distance. */
+export function interactionNumericEntryExplicitLockValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) {
     const lock = ctx[LENGTH_LOCK_CTX];
     if (typeof lock === "number" && Number.isFinite(lock) && lock > 0) return lock;
+  }
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (scalarEntry) {
+    const heightLock = ctx[HEIGHT_LOCK_CTX];
+    if (typeof heightLock === "number" && Number.isFinite(heightLock) && heightLock > 0) return heightLock;
+  }
+  return null;
+}
+
+/** @emoji 🔢 Locked numeric value from context when live entry already applied. */
+export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
+  const lengthEntry = interactionLengthEntryForState(spec, state);
+  if (lengthEntry) {
+    const lock = interactionNumericEntryExplicitLockValue(spec, state, ctx);
+    if (lock != null) return lock;
+    const live = interactionLengthEntryLiveDistance(ctx, lengthEntry);
+    if (live != null) return live;
   }
   const scalarEntry = interactionScalarEntryForState(spec, state);
   if (scalarEntry) {
@@ -4054,7 +4847,7 @@ export function interactionNumericEntryApplyEvent(spec: InteractionSpec, state: 
   return null;
 }
 
-function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): Vec3 | null {
+function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, preview: SpatialPreviewKernel): Vec3 | null {
   const fromField = readInteractionContextVec3(ctx, entry.field);
   if (fromField) return fromField;
   const lock = positiveLengthLock(ctx);
@@ -4062,7 +4855,7 @@ function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: Interaction
   const raw = lengthEntryRawPoint(ctx, entry);
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   if (!raw || !anchor) return null;
-  return clampPointAlongDirection(anchor, raw, lock);
+  return preview.clampPointAlongDirection(anchor, raw, lock);
 }
 
 /** @emoji 🔢 Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
@@ -4070,6 +4863,7 @@ export function interactionNumericEntryCommitEvent(
   spec: InteractionSpec,
   state: string,
   ctx: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
 ): InteractionEvent | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   const scalarEntry = interactionScalarEntryForState(spec, state);
@@ -4080,17 +4874,42 @@ export function interactionNumericEntryCommitEvent(
   const commitKind =
     scalarEntry?.commit ?? lengthEntry?.commit ?? (scalarEntry ? "confirm" : events.has("pointer.down") ? "pointer.down" : "confirm");
   if (commitKind === "pointer.down" && events.has("pointer.down") && lengthEntry) {
-    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    const point = lengthEntryCommitPoint(ctx, lengthEntry, preview);
     if (point) return { kind: "pointer.down", point, modifiers: {} };
     return null;
   }
   if (commitKind === "confirm" && events.has("confirm")) return { kind: "confirm", modifiers: {} };
   if (events.has("pointer.down") && lengthEntry) {
-    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    const point = lengthEntryCommitPoint(ctx, lengthEntry, preview);
     if (point) return { kind: "pointer.down", point, modifiers: {} };
   }
   if (events.has("confirm")) return { kind: "confirm", modifiers: {} };
   return null;
+}
+
+/** @emoji ✅ Whether `state` has a passable `confirm` transition (non-selection finalize). */
+export function interactionCanFinalizeStep(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): boolean {
+  const handler = spec.machine.states.find((s) => s.name === state)?.on?.find((h) => h.event === "confirm");
+  if (!handler) return false;
+  for (const tr of handler.transitions) {
+    if (tr.guard) {
+      const g = lookupGuard(spec, tr.guard);
+      if (!g || !evalGuard(g, { context: ctx, preview })) continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+/** @emoji ✅ Enter/Space finalize: `confirm` when available, else length-entry `pointer.down`. */
+export function interactionStepFinalizeEvent(
+  spec: InteractionSpec,
+  state: string,
+  ctx: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
+): InteractionEvent | null {
+  if (interactionCanFinalizeStep(spec, state, ctx, preview)) return { kind: "confirm", modifiers: {} };
+  return interactionNumericEntryCommitEvent(spec, state, ctx, preview);
 }
 
 const LENGTH_LOCK_CTX = "__lengthLock";
@@ -4116,19 +4935,9 @@ export function projectPointOnScalarAxis(
   base: Vec3,
   axis: Vec3,
   raw: Vec3,
+  preview: SpatialPreviewKernel,
 ): { readonly projected: Vec3; readonly t: number } {
-  const ax = axis[0];
-  const ay = axis[1];
-  const az = axis[2];
-  const len = Math.hypot(ax, ay, az) || 1;
-  const ux = ax / len;
-  const uy = ay / len;
-  const uz = az / len;
-  const t = (raw[0] - base[0]) * ux + (raw[1] - base[1]) * uy + (raw[2] - base[2]) * uz;
-  return {
-    projected: [base[0] + ux * t, base[1] + uy * t, base[2] + uz * t],
-    t,
-  };
+  return preview.projectPointOnScalarAxis(base, axis, raw);
 }
 
 function scalarEntryAxis(entry: InteractionScalarEntrySpec): Vec3 {
@@ -4144,18 +4953,6 @@ function positiveHeightLock(ctx: Record<string, unknown>): number | null {
 
 function scalarHeightFromAxisT(t: number): number {
   return Math.max(0.01, Math.abs(t));
-}
-
-function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3 {
-  const ax = axis[0];
-  const ay = axis[1];
-  const az = axis[2];
-  const len = Math.hypot(ax, ay, az) || 1;
-  const ux = ax / len;
-  const uy = ay / len;
-  const uz = az / len;
-  const sign = signedT < 0 ? -1 : 1;
-  return [base[0] + ux * height * sign, base[1] + uy * height * sign, base[2] + uz * height * sign];
 }
 
 /** @emoji 📏 Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
@@ -4205,14 +5002,8 @@ export function writeInteractionContextVec3(ctx: Record<string, unknown>, path: 
 }
 
 /** @emoji 📏 Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
-export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3 {
-  const dx = target[0] - anchor[0];
-  const dy = target[1] - anchor[1];
-  const dz = target[2] - anchor[2];
-  const d = Math.hypot(dx, dy, dz);
-  if (d < 1e-9) return [target[0], target[1], target[2]];
-  const s = length / d;
-  return [anchor[0] + dx * s, anchor[1] + dy * s, anchor[2] + dz * s];
+export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number, preview: SpatialPreviewKernel): Vec3 {
+  return preview.clampPointAlongDirection(anchor, target, length);
 }
 
 function positiveLengthLock(ctx: Record<string, unknown>): number | null {
@@ -4228,10 +5019,16 @@ function lengthEntryRawPoint(ctx: Record<string, unknown>, entry: InteractionLen
   return [anchor[0] + 1, anchor[1], anchor[2]];
 }
 
-function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, raw: Vec3, lock: number): void {
+function applyLengthEntryToContext(
+  ctx: Record<string, unknown>,
+  entry: InteractionLengthEntrySpec,
+  raw: Vec3,
+  lock: number,
+  preview: SpatialPreviewKernel,
+): void {
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   if (!anchor) return;
-  const clamped = clampPointAlongDirection(anchor, raw, lock);
+  const clamped = preview.clampPointAlongDirection(anchor, raw, lock);
   writeInteractionContextVec3(ctx, entry.field, clamped);
   if (entry.field === "cursor" && "prevPoint" in ctx) ctx.prevPoint = anchor;
 }
@@ -4342,8 +5139,14 @@ export interface DisplayModel {
 }
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
-export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>): DisplayModel {
-  const env: ExprEnv = { context };
+export function resolveDisplay(
+  spec: InteractionSpec,
+  state: string,
+  context: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
+  model?: Model,
+): DisplayModel {
+  const env: ExprEnv = { context: model ? withResolvedInteractionPointsContext(model, context) : context, preview };
   const section = spec.display?.states?.find((s) => s.state === state);
   const raw = section?.items ?? [];
   const items: DisplayItem[] = [];
@@ -4466,7 +5269,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         typeof context[SCALAR_AXIS_T_CTX] === "number" && Number.isFinite(context[SCALAR_AXIS_T_CTX])
           ? (context[SCALAR_AXIS_T_CTX] as number)
           : height;
-      const top = scalarTopOnAxis(base, axis, height, signedT);
+      const top = preview.scalarTopOnAxis(base, axis, height, signedT);
       items.push({
         kind: "segment",
         id: `${state}-scalar-height`,
@@ -4474,7 +5277,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         params: { from: base, to: top },
       });
       if (raw) {
-        const projected = heightLock != null ? top : projectPointOnScalarAxis(base, axis, raw).projected;
+        const projected = heightLock != null ? top : preview.projectPointOnScalarAxis(base, axis, raw).projected;
         items.push({
           kind: "point",
           id: `${state}-scalar-cursor`,
@@ -4792,9 +5595,17 @@ export class InteractionRuntime {
     return true;
   }
 
+  private restoreUndoSnapshotAfterFailedFinalCommit(): void {
+    const snap = this.snapUndoStack.pop();
+    if (!snap) return;
+    this.sm.restore(snap.state, JSON.parse(snap.context) as Record<string, unknown>);
+    this.snapRedoStack.length = 0;
+  }
+
   private async continueHostSessionAfterEngineSend(): Promise<void> {
     if (isFinalInteractionState(this.spec, this.sm.getState())) {
-      await this.runCommit(false);
+      const res = await this.runCommit(false);
+      if (!res.ok) this.restoreUndoSnapshotAfterFailedFinalCommit();
       return;
     }
     if (this.canCommit()) {
@@ -4853,7 +5664,7 @@ export class InteractionRuntime {
     if (lock == null) return event;
     const anchor = readInteractionContextVec3(ctx, entry.anchor);
     if (!anchor) return event;
-    return { ...event, point: clampPointAlongDirection(anchor, raw, lock) };
+    return { ...event, point: this.previewKernel().clampPointAlongDirection(anchor, raw, lock) };
   }
 
   private handleSetLength(event: InteractionEvent): void {
@@ -4874,7 +5685,7 @@ export class InteractionRuntime {
     const raw = lengthEntryRawPoint(ctx, entry);
     if (raw) {
       ctx[CURSOR_RAW_CTX] = raw;
-      applyLengthEntryToContext(ctx, entry, raw, lock);
+      applyLengthEntryToContext(ctx, entry, raw, lock, this.previewKernel());
     }
     this.emit();
   }
@@ -4890,7 +5701,7 @@ export class InteractionRuntime {
     const base = scalarEntryAxisBase(ctx, entry);
     if (!base) return false;
     const axis = scalarEntryAxis(entry);
-    const { t } = projectPointOnScalarAxis(base, axis, raw);
+    const { t } = this.previewKernel().projectPointOnScalarAxis(base, axis, raw);
     ctx[SCALAR_AXIS_T_CTX] = t;
     const lock = positiveHeightLock(ctx);
     ctx[entry.field] = lock ?? scalarHeightFromAxisT(t);
@@ -4932,7 +5743,7 @@ export class InteractionRuntime {
 
   private selectionEventFromStart(event: InteractionEvent, spec: SelectionSpec): SelectionEvent | null {
     const rawTargets = Array.isArray(event.targets) ? (event.targets as readonly SelectionTarget[]) : [];
-    const selected = filterSelectionTargets(spec, rawTargets);
+    const selected = expandSelectionTargetsForAccept(this.opts.document.model, spec, rawTargets);
     if (selected.length === 0) return null;
     return { kind: "selection.changed", targets: spec.multiple ? selected : selected.slice(0, 1) };
   }
@@ -4994,7 +5805,7 @@ export class InteractionRuntime {
     if (this.snapshotCache) return this.snapshotCache;
     const ctx = this.sm.getContext();
     const st = this.sm.getState();
-    const display = resolveDisplay(this.spec, st, ctx);
+    const display = resolveDisplay(this.spec, st, ctx, this.previewKernel(), this.opts.document.model);
     const spatialInteraction = mergeInteractionSpatial(this.spec);
     const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
     const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
@@ -5206,7 +6017,9 @@ export class InteractionRuntime {
     if (advanceToFinalState && isFinalInteractionState(this.spec, st)) {
       return fail("interaction.alreadyCommitted", "Interaction already finalized.");
     }
-    if (advanceToFinalState && !this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
+    if (!this.canCommitFromState(st)) {
+      return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
+    }
     const ctx = this.sm.getContext();
     const op = this.spec.commit.operation;
     const env: ExprEnv = { context: ctx, preview: this.previewKernel() };
@@ -5230,6 +6043,9 @@ export class InteractionRuntime {
       if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
       diff = ar.diff ?? EMPTY_MODEL_DIFF;
       data = ar.data ?? null;
+      if (isEmptyModelDiff(diff) && op.action === "command.finish") {
+        return fail("interaction.emptyCommit", "Command produced no geometry; add more points and finish again.");
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       return fail("interaction.commitFailed", msg);
@@ -5280,7 +6096,7 @@ export async function runSelectionOperationInteraction(
   interactionId: string,
   opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] },
 ): Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }> {
-  const mdId = opts.activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = opts.activeModelDefinitionId ?? defaultModelDefinitionId();
   const defn = selectionOperationsForModelDefinitionFromActions(mdId).find((row) => row.id === interactionId);
   if (!defn) throw new Error(`Not a selection operation: ${interactionId}`);
   assertActionAvailableInModelDefinition(interactionId, mdId);
@@ -5429,11 +6245,18 @@ export class InteractionRegistry {
   }
 }
 
-/** @emoji 📚 Loads a model-definition interaction by stable `id`. */
+const COMPILED_INTERACTION_BY_ID = new Map<string, InteractionSpec>();
+
+/** @emoji 📚 Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
+  const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
+  if (cached) return cached;
   const raw = shippedInteractionJsons.find((spec) => spec.id === interactionId);
   const spec = raw ? parseInteractionSpec(raw) : null;
-  return spec ? compileInteraction(spec) : null;
+  if (!spec) return null;
+  const compiled = compileInteraction(spec);
+  COMPILED_INTERACTION_BY_ID.set(interactionId, compiled);
+  return compiled;
 }
 
 function requireSpatialInteraction(interactionId: string): InteractionSpec {
@@ -5471,9 +6294,19 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 
 // #region 🧪Tests
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __cadInteractionE2EFixtureModules = import.meta.vitest
+  ? await Promise.all([
+      import("../../assets/play/geometry-loom.json"),
+      import("../../assets/play/geometry-routes.json"),
+      import("../../assets/play/small-building.model.json"),
+    ])
+  : null;
 
 if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath } = __spatialCoreTestKernel!;
+  const geometryLoomFixtureJson = __cadInteractionE2EFixtureModules![0].default;
+  const geometryRoutesFixtureJson = __cadInteractionE2EFixtureModules![1].default;
+  const smallBuildingModelFixtureJson = __cadInteractionE2EFixtureModules![2].default;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = import.meta.vitest;
 
@@ -5515,11 +6348,12 @@ if (import.meta.vitest) {
       };
       const defn = loadPropertyDefinition("spatial.shape.volume")!;
       const kernel = {
+        syncSolidsFromModel: async () => {},
         solidVolume: async () => 42,
       } as unknown as SpatialKernel;
       const out = await derivePropertyValue(defn, { model, kernel, object });
       expect(out.volume).toBe(42);
-      expect(listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, model, object).map((row) => row.id)).toContain("spatial.shape.volume");
+      expect(listApplicablePropertyDefinitionsForModelDefinition(defaultModelDefinitionId(), model, object).map((row) => row.id)).toContain("spatial.shape.volume");
     });
     it("validates object geometry against typology primitiveKinds", () => {
       const model = new Model();
@@ -5574,6 +6408,15 @@ if (import.meta.vitest) {
   });
 
   describe("@cad/js/core transformations", () => {
+    it("maps CAD play transform window combobox values to gumball modes", () => {
+      expect(cadTransformGumballModeFromWindowMode("none")).toBeNull();
+      expect(cadTransformGumballModeFromWindowMode("rotate")).toBe("rotate");
+      expect(isCadPlayTransformWindowMode("scale")).toBe(true);
+      expect(isCadPlayTransformWindowMode("nope")).toBe(false);
+      expect(cadPlayTransformWindowModeLabel("none")).toBe("None");
+      expect(cadPlayTransformWindowModeLabel("move")).toBe("Move");
+    });
+
     it("lists model definition manifests and transformation directions", () => {
       const manifests = listModelDefinitionManifests();
       expect(manifests.some((row) => row.id === "spatial.shape")).toBe(true);
@@ -5582,7 +6425,7 @@ if (import.meta.vitest) {
       expect(listTransformationsFromModelDefinition("spatial.shape").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
     });
     it("scopes catalogs to active model definition", () => {
-      const shape = resolveModelDefinitionScope(SHAPE_MODEL_DEFINITION_ID);
+      const shape = resolveModelDefinitionScope(defaultModelDefinitionId());
       const energy = resolveModelDefinitionScope("aec.building.energy");
       expect(shape.interactions.some((row) => row.id === "primitive.box")).toBe(true);
       expect(energy.interactions.length).toBe(5);
@@ -5600,16 +6443,16 @@ if (import.meta.vitest) {
         true,
       );
       expect(listPropertyDefinitionsForModelDefinition("aec.building.energy").some((row) => row.id === "energy.heatedvolume")).toBe(true);
-      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", SHAPE_MODEL_DEFINITION_ID)).toBe(true);
+      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", defaultModelDefinitionId())).toBe(true);
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
-      expect(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
+      expect(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
-    it("buildModelTopologyHierarchy nests shell through vertex under solid", () => {
+    it("buildModelPrimitiveHierarchy nests shell through vertex under solid", () => {
       const model = new Model();
       const solid = solidRef("box-solid");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
-      const tree = buildModelTopologyHierarchy(model, String(solid));
+      const tree = buildModelPrimitiveHierarchy(model, String(solid));
       expect(tree?.kind).toBe("solid");
       expect(tree?.children).toHaveLength(1);
       const shell = tree!.children[0]!;
@@ -5666,14 +6509,72 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "box" },
       };
-      const target = applyTransformation(spec!, source);
+      const target = applyTransformation(spec!, source, M);
       expect(target.objects["energy.energy.hull"]?.typology).toBe("energy.energy.hull");
       expect(target.objects["energy.energy.hull"]?.primitives).toEqual({ solid: "box" });
       expect(target.solids.box).toBe(source.solids.box);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall")).toHaveLength(4);
+      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-box-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-box-face-bottom");
       const space = new ModelSpace();
       space.link("geometry", source);
-      space.transform("geometry", "energy", spec!);
+      space.transfer("geometry", "energy", spec!, M);
       expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
+    });
+    it("from_geometry fuses touching shape solids and drops internal faces", () => {
+      const spec = loadTransformation("aec.building.energy.from_geometry")!;
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("lower")));
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 1], height: 1 }, solidRef("upper")));
+      source.objects["lower"] = {
+        id: "lower" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "lower" },
+      };
+      source.objects["upper"] = {
+        id: "upper" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "upper" },
+      };
+      const target = applyTransformation(spec, source, M);
+      expect(target.solids["from_geometry-hull"]?.shellIds).toEqual([]);
+      expect(target.metadata.get("from_geometry-hull")?.fuseSourceSolidIds).toEqual(["lower", "upper"]);
+      expect(target.objects["energy.energy.hull"]?.primitives.solid).toBe("from_geometry-hull");
+      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-upper-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-lower-face-bottom");
+      expect(
+        listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall"),
+      ).toHaveLength(4);
+      expect(
+        listModelObjectsForModelDefinition(target, "aec.building.energy").filter(
+          (row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull",
+        ),
+      ).toHaveLength(0);
+      expect(target.objects["box-lower-face-top"]).toBeUndefined();
+      expect(target.objects["box-upper-face-bottom"]).toBeUndefined();
+    });
+    it("from_geometry hull heated volume is boolean union not vertex AABB", async () => {
+      const spec = loadTransformation("aec.building.energy.from_geometry")!;
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("west")));
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 1 }, solidRef("east")));
+      source.objects["west"] = {
+        id: "west" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "west" },
+      };
+      source.objects["east"] = {
+        id: "east" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "east" },
+      };
+      const target = applyTransformation(spec, source, M);
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const hull = target.objects["energy.energy.hull"]!;
+      const heated = await derivePropertyValue(loadPropertyDefinition("energy.heatedvolume")!, { model: target, kernel, object: hull });
+      expect(heated.heatedvolume).toBeCloseTo(2, 3);
     });
   });
 
@@ -5698,7 +6599,7 @@ if (import.meta.vitest) {
       expect(pts[pts.length - 1]![0]).toBeCloseTo(0, 5);
       expect(pts[pts.length - 1]![1]).toBeCloseTo(2, 5);
     });
-    it("circleSamplePoints and edgeCurveLength for Geom_Circle", () => {
+    it("circleSamplePoints and edgeCurveLength for circle curves", () => {
       const pts = M.circleSamplePoints([0, 0, 0], [0, 0, 1], 2, 64);
       expect(pts.length).toBeGreaterThan(8);
       expect(
@@ -5761,6 +6662,13 @@ if (import.meta.vitest) {
   });
 
   describe("@cad/js/core model json", () => {
+    it("materializeInlineObjectPrimitives promotes play fixture wires into model geometry", () => {
+      const space = ModelSpace.fromJSON(geometryRoutesFixtureJson as ModelSpaceJson);
+      const model = space.models["spatial.shape"]!;
+      expect(model.wires["stub-wire"]?.edgeIds.length).toBeGreaterThan(0);
+      expect(model.objects["object-wire-stub-wire"]?.primitives.wire).toBe("stub-wire");
+    });
+
     it("parseModelJson fills missing entity arrays with empty lists", () => {
       const model = parseModelJson({
         schema: "spatial.model/v1",
@@ -6166,6 +7074,128 @@ if (import.meta.vitest) {
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
+    it("curve.interpolateCurve rolls back from committed when kernel returns empty commit diff", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = {
+        executeCommandDiff: async () => ({ diff: {} }),
+      } as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        previewKernel: kernel as unknown as SpatialPreviewKernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 1, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("next_point");
+      expect(rt.getSnapshot().lastResponse?.ok).toBe(false);
+      expect(rt.getSnapshot().lastResponse?.errors?.[0]?.code).toBe("interaction.emptyCommit");
+    });
+
+    it("interactionStepFinalizeEvent confirms interpolate curve with two points instead of pointer.down", () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const ctx = { points: [[0, 0, 0] as Vec3, [2, 1, 0] as Vec3], cursor: [5, 5, 0] as Vec3 };
+      expect(interactionStepFinalizeEvent(spec, "next_point", ctx, M)?.kind).toBe("confirm");
+      expect(interactionNumericEntryCommitEvent(spec, "next_point", ctx, M)?.kind).toBe("pointer.down");
+    });
+
+    it("interactionNumericEntryExplicitLockValue ignores live rubber-band distance", () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const ctx = { points: [[0, 0, 0] as Vec3], cursor: [4, 0, 0] as Vec3, __lengthLock: 2 };
+      expect(interactionNumericEntryExplicitLockValue(spec, "next_point", ctx)).toBe(2);
+      const liveOnly = { points: [[0, 0, 0] as Vec3], cursor: [4, 0, 0] as Vec3 };
+      expect(interactionNumericEntryExplicitLockValue(spec, "next_point", liveOnly)).toBeNull();
+      expect(interactionNumericEntryLockedValue(spec, "next_point", liveOnly)).toBeCloseTo(4, 5);
+    });
+
+    it("curve.interpolateCurve confirm with one point stays in next_point", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("next_point");
+      expect(Object.keys(model.edges).length).toBe(0);
+    });
+
+    it("curve.interpolateCurve commit binds typology object rows for hierarchy", async () => {
+      const typology = "spatial.shape.curve.interpolate-curve";
+      expect(typologyIdForInteractionCommit("curve.interpolateCurve")).toBe(typology);
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 1, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      const res = rt.getSnapshot().lastResponse!;
+      expect(res.ok).toBe(true);
+      expect(Object.keys(model.edges).length).toBeGreaterThan(0);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
+      expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
+      expect(model.objects[typology as ObjectRef]?.primitives.wire).toBeTruthy();
+    });
+
+    it("curve.interpolateCurve commit uses live snapped vertex positions after vertex move", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const vertexId = "v-live" as VertexRef;
+      model.vertices[vertexId] = { id: vertexId, position: [0, 0, 0] };
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({
+        kind: "pointer.down",
+        point: [0, 0, 0],
+        modifiers: {},
+        snap: { kind: "vertex", id: vertexId, point: [0, 0, 0] },
+      } as InteractionEvent);
+      await rt.send({ kind: "pointer.down", point: [2, 0, 0], modifiers: {} });
+      model.vertices[vertexId] = { id: vertexId, position: [0, 4, 0] };
+      await rt.send({ kind: "confirm", modifiers: {} });
+      const edge = Object.values(model.edges)[0];
+      expect(edge?.curve?.kind).toBe("nurbs");
+      if (edge?.curve?.kind === "nurbs") {
+        expect(edge.curve.poles[0]).toEqual([0, 4, 0]);
+      }
+    });
+
+    it("applyModelDiff syncs nurbs through-curve poles when endpoint vertices move", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.interpolateCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [2, 1, 0],
+          [4, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const startId = edge.vertexIds[0]!;
+      applyModelDiff(model, { vertices: { modified: [{ id: startId, position: [0, 3, 0] }] } });
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs") {
+        expect(updated.curve.poles[0]).toEqual([0, 3, 0]);
+      }
+    });
+
     it("primitive.box commit binds typology object rows for hierarchy", async () => {
       const typology = "spatial.shape.primitive.box";
       const spec = loadSpatialInteraction("primitive.box")!;
@@ -6174,7 +7204,7 @@ if (import.meta.vitest) {
       const rt = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },
-        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+        activeModelDefinitionId: defaultModelDefinitionId(),
       });
       await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
@@ -6182,20 +7212,20 @@ if (import.meta.vitest) {
       await rt.send({ kind: "confirm", modifiers: {} });
       const res = rt.getSnapshot().lastResponse!;
       expect(res.ok).toBe(true);
-      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
       expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
       expect(model.objects[typology as ObjectRef]?.primitives.solid).toBeTruthy();
       const rt2 = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },
-        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+        activeModelDefinitionId: defaultModelDefinitionId(),
       });
       await rt2.send({ kind: "pointer.down", point: [5, 0, 0], modifiers: {} });
       await rt2.send({ kind: "pointer.down", point: [7, 2, 0], modifiers: {} });
       await rt2.send({ kind: "set.height", value: 2, modifiers: {} });
       await rt2.send({ kind: "confirm", modifiers: {} });
       expect(rt2.getSnapshot().lastResponse?.ok).toBe(true);
-      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(2);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(2);
     });
     it("typologyConstructCommitActionForMode resolves exactly one mode construct action", () => {
       const ids = typologyConstructAssetIds("energy.energy.hull", "Hull");
@@ -6474,6 +7504,9 @@ if (import.meta.vitest) {
       expect(isCallableOnlyInteraction(spec!)).toBe(true);
       expect(loadSpatialInteraction("curve.construct")?.invocation).toBe("callable");
     });
+    it("loadSpatialInteraction returns the same compiled instance per interaction id", () => {
+      expect(loadSpatialInteraction("primitive.box")).toBe(loadSpatialInteraction("primitive.box"));
+    });
     it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
       class StubKernel extends BrepjsKernel {
         lastInput: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
@@ -6586,7 +7619,7 @@ if (import.meta.vitest) {
       );
       expect(hist.entries()).toEqual([]);
     });
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("registers selection command action $id", (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("registers selection command action $id", (defn) => {
       expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action/v1");
     });
     it("selection.invert honors seed targets", async () => {
@@ -6630,7 +7663,7 @@ if (import.meta.vitest) {
       const headless = await runSelectionApply(params, ctx);
       expect(headless).toEqual(direct);
     });
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -6695,6 +7728,27 @@ if (import.meta.vitest) {
       expect(Object.keys(g.shells).length).toBe(1);
       expect(Object.keys(g.solids)).toEqual(["box-solid"]);
     });
+
+    it("deleteObjectsFromModel removes object rows but keeps geometry primitives", () => {
+      const g = new Model();
+      applyModelDiff(g, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-solid")));
+      g.objects["box-a"] = { id: "box-a" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      g.objects["box-b"] = { id: "box-b" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      const removed = deleteObjectsFromModel(g, ["box-a", "missing"]);
+      expect(removed).toEqual(["box-a"]);
+      expect(g.objects["box-a"]).toBeUndefined();
+      expect(g.objects["box-b"]).toBeTruthy();
+      expect(Object.keys(g.solids)).toEqual(["box-solid"]);
+    });
+
+    it("deletableObjectIdsFromSelection keeps only object targets", () => {
+      const selection: SelectionTarget[] = [
+        { kind: "object", id: "box-a", editable: true },
+        { kind: "solid", id: "box-solid", editable: true },
+        { kind: "object", id: "box-a", editable: true },
+      ];
+      expect(deletableObjectIdsFromSelection(selection)).toEqual(["box-a"]);
+    });
   });
   describe("@cad/js/core selection filter", () => {
     it("selectionEventMatches rejects kinds outside accept", () => {
@@ -6709,6 +7763,19 @@ if (import.meta.vitest) {
       };
       expect(selectionEventMatches(spec, ok)).toBe(true);
       expect(selectionEventMatches(spec, bad)).toBe(false);
+    });
+
+    it("expandSelectionTargetsForAccept maps object picks to wire primitives", () => {
+      const model = new Model();
+      const typology = "spatial.shape.curve.interpolate-curve";
+      model.objects[typology as ObjectRef] = {
+        id: typology as ObjectRef,
+        typology: typology as TypologyRef,
+        primitives: { wire: "w-interp" },
+      };
+      const spec: SelectionSpec = { accept: ["wire", "edge"], multiple: true };
+      const expanded = expandSelectionTargetsForAccept(model, spec, [{ kind: "object", id: typology, editable: true }]);
+      expect(expanded).toEqual([{ kind: "wire", id: "w-interp", editable: true }]);
     });
   });
   describe("@cad/js/core interaction box", () => {
@@ -6895,7 +7962,7 @@ if (import.meta.vitest) {
         __scalarAxisT: 3,
         __cursorRaw: [5, 6, 4] as Vec3,
       };
-      const d = resolveDisplay(spec, "first_corner_height", ctx);
+      const d = resolveDisplay(spec, "first_corner_height", ctx, M);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-height")).toBe(true);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-cursor" && i.role === "cursor")).toBe(true);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-guide" && i.role === "guide")).toBe(true);
@@ -6975,7 +8042,7 @@ if (import.meta.vitest) {
     });
 
     it("clampPointAlongDirection preserves direction and length", () => {
-      expect(clampPointAlongDirection([0, 0, 0], [3, 4, 0], 2.5)).toEqual([1.5, 2, 0]);
+      expect(clampPointAlongDirection([0, 0, 0], [3, 4, 0], 2.5, M)).toEqual([1.5, 2, 0]);
     });
 
     it("set.length clamps cursor along anchor direction", async () => {
@@ -7023,18 +8090,79 @@ if (import.meta.vitest) {
       expect(rt.getSnapshot().context.__lengthLock).toBeNull();
     });
 
+    it("interactionLengthEntryLiveDistance reads Z rod cursor offset for extrusion_distance", () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const entry = interactionLengthEntryForState(spec, "extrusion_distance")!;
+      const distance = interactionLengthEntryLiveDistance(
+        { origin: [0, 0, 0] as Vec3, cursor: [0, 0, 1.25] as Vec3, direction: [0, 0, 1] as Vec3 },
+        entry,
+      );
+      expect(distance).toBeCloseTo(1.25, 5);
+      expect(interactionNumericEntryLockedValue(spec, "extrusion_distance", { origin: [0, 0, 0], cursor: [0, 0, 2], direction: [0, 0, 1] })).toBe(2);
+    });
+
+    it("surface.extrudeCrv confirm in extrusion_distance commits solid", async () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const space = ModelSpace.fromJSON(geometryRoutesFixtureJson as ModelSpaceJson);
+      const model = space.models["spatial.shape"]!;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "selection.changed", targets: [{ kind: "wire", id: "stub-wire" }], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [0, 0, 0.8], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("committed");
+      expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
+      expect(Object.keys(model.solids).length).toBeGreaterThan(0);
+    });
+
+    it("surface.extrudeCrv start seeds curves from selected interpolate object", async () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.interpolateCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [2, 1, 0],
+          [4, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const typology = "spatial.shape.curve.interpolate-curve";
+      const wireId = created.diff.wires?.added?.[0]?.id ?? Object.values(model.wires)[0]?.id;
+      expect(wireId).toBeTruthy();
+      const objectId = String(ensureTypologyObjectFromCreateDiff(model, typology, created.diff)!);
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({
+        kind: "start",
+        targets: [{ kind: "object", id: objectId, editable: true }],
+        modifiers: {},
+      });
+      expect(rt.getSnapshot().state).toBe("extrusion_distance");
+      expect((rt.getSnapshot().context.curves as { id: string }[])[0]?.id).toBe(wireId);
+    });
+
     it("interactionNumericEntryCommitEvent uses pointer.down for length and confirm for scalar", () => {
       const line = requireSpatialInteraction("curve.line");
       const box = buildBoxInteractionSpec();
       const ctx = { points: { start: [0, 0, 0] as Vec3 }, cursor: [3, 0, 0] as Vec3 };
-      expect(interactionNumericEntryCommitEvent(line, "end_of_line", ctx)?.kind).toBe("pointer.down");
-      expect(interactionNumericEntryCommitEvent(box, "first_corner_height", { height: 2 })?.kind).toBe("confirm");
+      expect(interactionNumericEntryCommitEvent(line, "end_of_line", ctx, M)?.kind).toBe("pointer.down");
+      expect(interactionNumericEntryCommitEvent(box, "first_corner_height", { height: 2 }, M)?.kind).toBe("confirm");
     });
 
     it("interactionNumericEntryCommitEvent pointer.down from length lock without field", () => {
       const box = buildBoxInteractionSpec();
       const ctx = { origin: [0, 0, 0] as Vec3, diagA: [0, 0, 0] as Vec3, __lengthLock: 4 };
-      const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx);
+      const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx, M);
       expect(ev?.kind).toBe("pointer.down");
       if (ev?.kind === "pointer.down") {
         expect(ev.point[0]).toBeCloseTo(4, 5);
@@ -7057,7 +8185,7 @@ if (import.meta.vitest) {
       await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
-      const commitEv = interactionNumericEntryCommitEvent(spec, rt.getSnapshot().state, rt.getSnapshot().context);
+      const commitEv = interactionNumericEntryCommitEvent(spec, rt.getSnapshot().state, rt.getSnapshot().context, M);
       expect(commitEv?.kind).toBe("pointer.down");
       await rt.send(commitEv!);
       expect(rt.getSnapshot().state).toBe("committed");
@@ -7439,7 +8567,7 @@ if (import.meta.vitest) {
         corner: [2, 3, 0] as Vec3,
         height: 4,
       };
-      const d = resolveDisplay(spec, "committed", ctx);
+      const d = resolveDisplay(spec, "committed", ctx, M);
       const prev = d.items.find((i) => i.kind === "box-preview" && i.id === "preview-committed");
       expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
       expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
@@ -7460,9 +8588,13 @@ if (import.meta.vitest) {
       editable: kind === "surface" || kind === "part" ? false : editable,
     });
 
-    const topoFromFixture = (kind: InteractionE2EFixtureKind): Model => {
+    const modelFromFixture = (kind: InteractionE2EFixtureKind): Model => {
       if (kind === "empty") return new Model();
       const raw = kind === "loom" ? geometryLoomFixtureJson : kind === "routes" ? geometryRoutesFixtureJson : smallBuildingModelFixtureJson;
+      if (raw && typeof raw === "object" && (raw as ModelSpaceJson).schema === "spatial.modelspace/v1") {
+        const space = ModelSpace.fromJSON(raw as ModelSpaceJson);
+        return space.models["spatial.shape"] ?? space.models[Object.keys(space.models)[0]!] ?? new Model();
+      }
       return parseModelJson(raw) ?? new Model();
     };
 
@@ -7862,6 +8994,10 @@ if (import.meta.vitest) {
           { kind: "confirm", modifiers: MOD },
           { kind: "set.distance", value: 0.8, modifiers: MOD },
         ],
+        assert: ({ after, model }) => {
+          expect(after.solids).toBeGreaterThanOrEqual(1);
+          expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId()).length).toBeGreaterThanOrEqual(1);
+        },
       },
       {
         id: "solid.booleanUnion",
@@ -7906,7 +9042,7 @@ if (import.meta.vitest) {
     ];
 
     it("covers every shipped interaction", () => {
-      const ids = listSpatialInteractionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID)
+      const ids = listSpatialInteractionsForModelDefinition(defaultModelDefinitionId())
         .map((row) => row.id)
         .filter((id) => {
           const spec = loadSpatialInteraction(id);
@@ -7916,8 +9052,8 @@ if (import.meta.vitest) {
       expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
     });
 
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("$id selection action completes on seeded box", async (defn) => {
-      const model = topoFromFixture("empty");
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("$id selection action completes on seeded box", async (defn) => {
+      const model = modelFromFixture("empty");
       seedBoxCell(model);
       if (defn.kinds?.includes("object")) {
         const solidId = Object.keys(model.solids)[0]!;
@@ -7941,7 +9077,7 @@ if (import.meta.vitest) {
     it.each(e2eCases)("$id completes end-to-end on $fixture fixture", async (row) => {
       const spec = row.spec ?? loadSpatialInteraction(row.id);
       expect(spec).not.toBeNull();
-      const model = topoFromFixture(row.fixture);
+      const model = modelFromFixture(row.fixture);
       if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(model);
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const before = entityCounts(model);

@@ -1,0 +1,14 @@
+{
+  "title": "Projektetage Column Text Morph",
+  "emoji": "🏷",
+  "status": "closed",
+  "description": "Fix projektetage tiles-to-text transition: all column tiles should morph into one shared label per column (not first tile to text then text to stack). Use column ghost bridge slide and columnMorphId labels.",
+  "summary": "Fixed forward column→label auto-animate: reveal.js animates the `to` element, but empty opacity-0 tile sinks were invisible forward (tiles faded as unmatched). Labels now render real figure tiles at the stack via morphSourceTiles (presentation-column-morph-label-tile, visible only while data-auto-animate=running). Headings stay fixed without data-id. Backward morph unchanged.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪9fa3ba0d4a9648759940cf9e24f7fdb0",
+    "⚪53cfb2824ab24e75bcc0dcb857ae75b4",
+    "⚪3dc9c6d756d04c12b49d1817cd9bdd3f",
+    "⚪062926a55a574efeb5a3373e358c3563"
+  ]
+}

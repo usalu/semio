@@ -234,6 +234,12 @@ schema:
           layers: [*layer]
           groups: [*group]
           attributes: [*attribute]
+      typology: &typology
+        implements: [*artifact]
+        fields:
+          folder: *folder
+          types: [*type]
+          designs: [*design]
       kit: &kit
         implements: [*artifact]
         fields:
@@ -248,6 +254,7 @@ schema:
             updatedAt: *timestamp
           places: [*place]
           families: [*family]
+          typologies: [*typology]
           folders: [*folder]
           files: [*file]
           authors: [*author]
@@ -259,12 +266,13 @@ schema:
           ports: [*port]
           connectors: [*connector]
           representations: [*representation]
-          types: [*type]
+          computed:
+            types: [*type]
+            designs: [*design]
           layers: [*layer]
           pieces: [*piece]
           connections: [*connection]
           groups: [*group]
-          designs: [*design]
       edit: &edit
         implements: [*strongEntity]
         fields:

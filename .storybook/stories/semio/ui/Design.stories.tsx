@@ -6,7 +6,8 @@
 // #endregion 🧲Header
 
 import { Design, Kit, type Connection, type Design as DesignType, type DesignPlain, type Piece } from "@semio/react";
-import { MetabolismKit as metabolismKit, NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio/assets";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
+import { NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio/fixtures";
 import { SemioDesign as DesignView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";

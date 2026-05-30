@@ -201,6 +201,255 @@ macro_rules! entity_input {
     };
 }
 
+/// @emoji 📁 VFS computed fields for types implementing golden `FileSystemNode`.
+#[macro_export]
+macro_rules! file_system_node_complex_methods {
+    ($variant:ident) => {
+        pub async fn file_system_parent(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::parent(&iface).await)
+        }
+        pub async fn file_system_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::children(&iface).await)
+        }
+        pub async fn file_system_child(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            id: $crate::id::Id,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::child(&iface, &id).await)
+        }
+        pub async fn file_system_path(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::path(&iface).await)
+        }
+        pub async fn file_system_name(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::name(&iface).await)
+        }
+        pub async fn is_file_system_root(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let _ = ctx;
+            Ok(matches!(
+                $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
+                $crate::gql::interfaces::FileSystemNodeInterface::Kit(_)
+            ))
+        }
+        pub async fn file_system_kind(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            let _ = ctx;
+            Ok($crate::gql::interfaces::file_system_vfs::kind(
+                &$crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
+            ))
+        }
+        pub async fn file_system_has_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::has_children(&iface).await)
+        }
+    };
+}
+
+/// @emoji 📁 `#[Object]` VFS fields resolved via `file_system_vfs::node_for_*` (must live on the GraphQL object, not a detached `ComplexObject`).
+#[macro_export]
+macro_rules! file_system_node_object_methods {
+    ($ty:ty, $node_for:path, $default_kind:ident) => {
+        pub async fn file_system_parent(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(None);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
+        }
+        pub async fn file_system_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
+        }
+        pub async fn file_system_child(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            id: $crate::id::Id,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(None);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
+        }
+        pub async fn file_system_path(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(String::new());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
+        }
+        pub async fn file_system_name(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(String::new());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
+        }
+        pub async fn is_file_system_root(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            Ok(matches!(
+                $node_for(self, ctx).await,
+                Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
+            ))
+        }
+        pub async fn file_system_kind(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            Ok($node_for(self, ctx).await
+                .map(|node| $crate::gql::interfaces::file_system_vfs::kind(&node))
+                .unwrap_or($crate::gql::interfaces::FileSystemNodeKind::$default_kind))
+        }
+        pub async fn file_system_has_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(false);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::has_children(&node).await)
+        }
+    };
+}
+
+/// @emoji 📁 `#[ComplexObject]` VFS fields resolved via `file_system_vfs::node_for_*` (for `#[Object]` types without a direct `Arc` handle).
+#[macro_export]
+macro_rules! file_system_node_vfs_complex_ctx {
+    ($ty:ty, $node_for:path) => {
+        #[crate::external_adapters::async_graphql::ComplexObject]
+        impl $ty {
+            pub async fn file_system_parent(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<
+                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+            > {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(None);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
+            }
+            pub async fn file_system_children(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
+            }
+            pub async fn file_system_child(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+                id: $crate::id::Id,
+            ) -> crate::external_adapters::async_graphql::Result<
+                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+            > {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(None);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
+            }
+            pub async fn file_system_path(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<String> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(String::new());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
+            }
+            pub async fn file_system_name(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<String> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(String::new());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
+            }
+            pub async fn is_file_system_root(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<bool> {
+                Ok(matches!(
+                    $node_for(self, ctx).await,
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
+                ))
+            }
+            pub async fn file_system_kind(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+                Ok(match $node_for(self, ctx).await {
+                    Some(node) => $crate::gql::interfaces::file_system_vfs::kind(&node),
+                    None => $crate::gql::interfaces::FileSystemNodeKind::Kit,
+                })
+            }
+            pub async fn file_system_has_children(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<bool> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(false);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::has_children(&node).await)
+            }
+        }
+    };
+}
+
 /// @emoji 🏷️ `entity_family!` — `SimpleObject` + sync `compute_entity_hash` + `ComplexObject::hash` resolver shell.
 #[macro_export]
 macro_rules! entity_family {
@@ -210,7 +459,8 @@ macro_rules! entity_family {
             $($(#[$fm:meta])* $fvis:vis $field:ident : $ftype:ty),* $(,)?
         }
         hash = |$this:ident| $body:block
-        $(, extra = ($($extra:item)+))?
+        $(, extra = ( $($extra:tt)* ))?
+        , vfs = $vfs_variant:ident
     ) => {
         $(#[$sm])*
         #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
@@ -229,7 +479,36 @@ macro_rules! entity_family {
             pub async fn hash(&self) -> String {
                 self.compute_entity_hash()
             }
-            $($($extra)+)?
+            $($($extra)*)?
+            $crate::file_system_node_complex_methods!($vfs_variant);
+        }
+    };
+    (
+        $(#[$sm:meta])*
+        $vis:vis struct $Name:ident {
+            $($(#[$fm:meta])* $fvis:vis $field:ident : $ftype:ty),* $(,)?
+        }
+        hash = |$this:ident| $body:block
+        $(, extra = ( $($extra:tt)* ))?
+    ) => {
+        $(#[$sm])*
+        #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
+        #[graphql(complex)]
+        $vis struct $Name {
+            $($(#[$fm])* $fvis $field : $ftype),*
+        }
+        impl $Name {
+            pub fn compute_entity_hash(&self) -> String {
+                let $this = self;
+                $body
+            }
+        }
+        #[async_graphql::ComplexObject]
+        impl $Name {
+            pub async fn hash(&self) -> String {
+                self.compute_entity_hash()
+            }
+            $($($extra)*)?
         }
     };
 }
@@ -501,6 +780,12 @@ pub mod id {
     impl From<&str> for Id {
         fn from(s: &str) -> Self {
             Self(s.to_string())
+        }
+    }
+
+    impl From<&Id> for Id {
+        fn from(id: &Id) -> Self {
+            id.clone()
         }
     }
 
@@ -984,7 +1269,8 @@ pub mod geom {
 pub mod gql_relay {
     use std::sync::Arc;
 
-    use crate::external_adapters::async_graphql::SimpleObject;
+    use crate::external_adapters::async_graphql::{Object, SimpleObject};
+    use crate::external_adapters::async_lock::RwLock;
 
     use crate::hash::{h, merkle_collection};
     use crate::id::Id;
@@ -1239,16 +1525,161 @@ pub mod gql_relay {
             pub name: String,
             pub description: Option<String>,
             pub icon: Option<String>,
+            pub folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
         }
         hash = |this| {
             crate::hash::merkle_node_str(
-                &["Family", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or("")],
+                &[
+                    "Family",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
                 Vec::new(),
             )
         }
+        , extra = (
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+                None
+            }
+        )
+        , vfs = Family
     }
 
     crate::entity_relay_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
+
+    //#region 🏛️ typology
+    /// @emoji 🏛️ Kit [`Typology`] — owns [`Type`] and [`Design`] entities; [`Family`] stays at kit root for port compatibility.
+    pub struct Typology {
+        pub id: Id,
+        pub name: RwLock<String>,
+        pub description: RwLock<Option<String>>,
+        pub icon: RwLock<Option<String>>,
+        pub folder_id: RwLock<Option<Id>>,
+        pub owner_kit: std::sync::Weak<crate::kit::Kit>,
+        pub types: RwLock<Vec<std::sync::Arc<crate::kit::r#type::Type>>>,
+        pub designs: RwLock<Vec<std::sync::Arc<crate::kit::design::Design>>>,
+    }
+
+    impl Default for Typology {
+        fn default() -> Self {
+            Self {
+                id: Id::default(),
+                name: RwLock::new(String::new()),
+                description: RwLock::new(None),
+                icon: RwLock::new(None),
+                folder_id: RwLock::new(None),
+                owner_kit: std::sync::Weak::new(),
+                types: RwLock::new(Vec::new()),
+                designs: RwLock::new(Vec::new()),
+            }
+        }
+    }
+
+    impl Typology {
+        pub async fn new(owner_kit: std::sync::Weak<crate::kit::Kit>, name: String) -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self {
+                id: Id::new().await,
+                name: RwLock::new(name),
+                owner_kit,
+                ..Default::default()
+            })
+        }
+
+        pub async fn new_with_external_id(
+            owner_kit: std::sync::Weak<crate::kit::Kit>,
+            id: Id,
+            name: String,
+        ) -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self {
+                id,
+                name: RwLock::new(name),
+                owner_kit,
+                ..Default::default()
+            })
+        }
+
+        pub async fn compute_entity_hash(&self) -> String {
+            let name = self.name.read().await;
+            let desc = self.description.read().await;
+            let icon = self.icon.read().await;
+            let folder_id = self.folder_id.read().await;
+            crate::hash::merkle_node_str(
+                &[
+                    "Typology",
+                    self.id.as_str(),
+                    name.as_str(),
+                    desc.as_deref().unwrap_or(""),
+                    icon.as_deref().unwrap_or(""),
+                    folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
+                Vec::new(),
+            )
+        }
+
+        pub async fn compute_hash(&self) -> String {
+            self.compute_entity_hash().await
+        }
+    }
+
+    #[Object(name = "Typology")]
+    impl Typology {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash().await
+        }
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            None
+        }
+        pub async fn name(&self) -> String {
+            self.name.read().await.clone()
+        }
+        pub async fn description(&self) -> Option<String> {
+            self.description.read().await.clone()
+        }
+        pub async fn icon(&self) -> Option<String> {
+            self.icon.read().await.clone()
+        }
+        #[graphql(name = "folderId")]
+        pub async fn folder_id(&self) -> Option<Id> {
+            self.folder_id.read().await.clone()
+        }
+        /// @emoji 🧰 Kinds owned by this typology.
+        #[graphql(name = "hasTypes")]
+        pub async fn has_types(&self) -> TypeConnection {
+            TypeConnection::from_types(self.types.read().await.clone()).await
+        }
+        /// @emoji 🏘 Designs owned by this typology.
+        #[graphql(name = "hasDesigns")]
+        pub async fn has_designs(&self) -> DesignConnection {
+            DesignConnection::from_designs(self.designs.read().await.clone()).await
+        }
+    }
+
+    crate::file_system_node_vfs_complex_ctx!(
+        Typology,
+        crate::gql::interfaces::file_system_vfs::node_for_typology
+    );
+
+    crate::entity_relay!(TypologyConnection, TypologyEdge, std::sync::Arc<Typology>);
+    impl TypologyConnection {
+        pub async fn from_typologies(entities: Vec<std::sync::Arc<Typology>>) -> Self {
+            Self::from_entities(entities).await
+        }
+    }
+    //#endregion 🏛️ typology
 }
 
 //#endregion 🪢 gql_relay
@@ -1450,6 +1881,10 @@ pub mod schema_gap_surfaces {
         CreatedDesignInput,
         CreatedDesigns,
         CreatedDesignsInput,
+        CreatedFolder,
+        CreatedFolderInput,
+        MovedToFolder,
+        MovedToFolderInput,
         CreatedPort,
         CreatedPorts,
         CreatedQualities,
@@ -1650,6 +2085,10 @@ pub mod schema_gap_surfaces {
         CreatedDesignInput,
         CreatedDesigns,
         CreatedDesignsInput,
+        CreatedFolder,
+        CreatedFolderInput,
+        MovedToFolder,
+        MovedToFolderInput,
         CreatedPort,
         CreatedPorts,
         CreatedQualities,
@@ -2071,6 +2510,7 @@ pub mod meta {
     crate::entity_family! {
         pub struct File {
             pub id: Id,
+            pub name: String,
             pub url: String,
             pub mime: Option<String>,
             pub size: Option<i32>,
@@ -2078,6 +2518,10 @@ pub mod meta {
             #[graphql(skip)]
             pub hash: String,
             pub description: Option<String>,
+            pub icon: Option<String>,
+            pub folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
             pub created: Option<Timestamp>,
             pub updated: Option<Timestamp>,
         }
@@ -2086,11 +2530,14 @@ pub mod meta {
                 &[
                     "File",
                     this.id.as_str(),
+                    this.name.as_str(),
                     this.url.as_str(),
                     this.mime.as_deref().unwrap_or(""),
                     &this.size.map(|sz| sz.to_string()).unwrap_or_default(),
                     this.hash.as_str(),
                     this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
                     this.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                     this.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                 ],
@@ -2098,6 +2545,12 @@ pub mod meta {
             )
         }
         , extra = (
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+                None
+            }
             pub async fn tag(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Tag>> {
                 None
             }
@@ -2107,37 +2560,212 @@ pub mod meta {
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
                 None
             }
+            /// @emoji 💾 Representations that reference this file.
+            #[graphql(name = "hasRepresentations")]
+            pub async fn has_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.has_representations().await).await
+            }
+            /// @emoji 🧰 Kinds that own a representation referencing this file.
+            #[graphql(name = "referencesTypes")]
+            pub async fn references_types_field(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.references_types().await).await
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+            #[graphql(name = "referencesDesigns")]
+            pub async fn references_designs_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.references_designs().await).await
+            }
+            /// @emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+            #[graphql(name = "referencesTypesTransitive")]
+            pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
+            }
+            /// @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+            #[graphql(name = "referencesDesignsTransitive")]
+            pub async fn references_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.references_designs_transitive().await).await
+            }
         )
+        , vfs = File
+    }
+
+    impl File {
+        async fn owner_kit_arc(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
+            self.owner_kit.upgrade()
+        }
+
+        /// @emoji 💾 Representations on kit kinds that reference this file.
+        pub async fn has_representations(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Representation>> {
+            let Some(kit) = self.owner_kit_arc().await else {
+                return Vec::new();
+            };
+            kit.representations_for_file(&self.id).await
+        }
+
+        /// @emoji 🧰 Kinds that own a representation referencing this file.
+        pub async fn references_types(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
+            let Some(kit) = self.owner_kit_arc().await else {
+                return Vec::new();
+            };
+            kit.types_for_file(&self.id).await
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+        pub async fn references_designs(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
+            let Some(kit) = self.owner_kit_arc().await else {
+                return Vec::new();
+            };
+            kit.designs_with_direct_file_reference(&self.id).await
+        }
+
+        /// @emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+        pub async fn references_types_transitive(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
+            self.references_types().await
+        }
+
+        /// @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+        pub async fn references_designs_transitive(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
+            let Some(kit) = self.owner_kit_arc().await else {
+                return Vec::new();
+            };
+            kit.designs_referencing_file_transitive(&self.id).await
+        }
     }
 
     crate::entity_family! {
         pub struct Folder {
             pub id: Id,
+            pub name: String,
             pub path: String,
             pub description: Option<String>,
+            pub icon: Option<String>,
+            pub parent_folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
         }
         hash = |this| {
-            crate::hash::merkle_node_str(&["Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
+            crate::hash::merkle_node_str(
+                &[
+                    "Folder",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.path.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.parent_folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
+                Vec::new(),
+            )
         }
         , extra = (
-            pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 None
+            }
+            pub async fn file(&self, #[graphql(name = "id")] id: Id) -> Option<File> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.files.read().await;
+                rows.iter().find(|f| f.id == id && f.folder_id.as_ref() == Some(&self.id)).cloned()
+            }
+            pub async fn files(&self) -> crate::gql_relay::FileConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.files.read().await.iter().filter(|f| f.folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FileConnection::from_entities(rows)
             }
             #[graphql(name = "subFolder")]
-            pub async fn sub_folder(&self, #[graphql(name = "id")] _id: Id) -> Option<Folder> {
-                None
+            pub async fn sub_folder(&self, #[graphql(name = "id")] id: Id) -> Option<Folder> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.folders.read().await;
+                rows.iter().find(|f| f.id == id && f.parent_folder_id.as_ref() == Some(&self.id)).cloned()
             }
-            pub async fn family(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::gql_relay::Family> {
-                None
+            #[graphql(name = "subFolders")]
+            pub async fn sub_folders(&self) -> crate::gql_relay::FolderConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.folders.read().await.iter().filter(|f| f.parent_folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FolderConnection::from_entities(rows)
+            }
+            pub async fn family(&self, #[graphql(name = "id")] id: Id) -> Option<crate::gql_relay::Family> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.families.read().await;
+                rows.iter().find(|f| f.id == id && f.folder_id.as_ref() == Some(&self.id)).cloned()
+            }
+            pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.families.read().await.iter().filter(|f| f.folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FamilyConnection::from_entities(rows)
             }
             #[graphql(name = "type")]
-            pub async fn type_(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-                None
+            pub async fn type_(&self, #[graphql(name = "id")] id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+                let kit = self.owner_kit.upgrade()?;
+                let ty = kit.type_by_external_id(&id).await?;
+                if ty.folder_id.read().await.as_ref() == Some(&self.id) {
+                    Some(ty)
+                } else {
+                    None
+                }
             }
-            pub async fn design(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-                None
+            /// @emoji 🧰 Kinds in this folder.
+            #[graphql(name = "hasTypes")]
+            pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
+            }
+            pub async fn design(&self, #[graphql(name = "id")] id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
+                let kit = self.owner_kit.upgrade()?;
+                let d = kit.design_by_external_id(&id).await?;
+                if d.folder_id.read().await.as_ref() == Some(&self.id) {
+                    Some(d)
+                } else {
+                    None
+                }
+            }
+            /// @emoji 🏘 Designs in this folder.
+            #[graphql(name = "hasDesigns")]
+            pub async fn has_designs_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.has_designs().await).await
             }
         )
+        , vfs = Folder
+    }
+
+    impl Folder {
+        /// @emoji 🧰 Kinds assigned to this folder.
+        pub async fn has_types(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
+            let Some(kit) = self.owner_kit.upgrade() else {
+                return Vec::new();
+            };
+            let mut out = Vec::new();
+            for ty in kit.has_types().await.iter() {
+                if ty.folder_id.read().await.as_ref() == Some(&self.id) {
+                    out.push(ty.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs assigned to this folder.
+        pub async fn has_designs(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
+            let Some(kit) = self.owner_kit.upgrade() else {
+                return Vec::new();
+            };
+            let mut out = Vec::new();
+            for design in kit.has_designs().await.iter() {
+                if design.folder_id.read().await.as_ref() == Some(&self.id) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
     }
 
     crate::entity_family! {
@@ -2426,17 +3054,29 @@ pub mod kit {
             pub code: RwLock<Option<String>>,
             pub label: RwLock<Option<String>>,
             pub order: RwLock<Option<i32>>,
+            pub compatible_with: RwLock<Vec<Arc<Port>>>,
         }
 
         impl Default for Port {
             fn default() -> Self {
-                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) }
+                Self {
+                    id: Id::default(),
+                    owner_type: Weak::new(),
+                    code: RwLock::new(None),
+                    label: RwLock::new(None),
+                    order: RwLock::new(None),
+                    compatible_with: RwLock::new(Vec::new()),
+                }
             }
         }
 
         impl Port {
             pub async fn new(owner_type: Weak<Type>) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) })
+                Arc::new(Self { id: Id::new().await, owner_type, ..Default::default() })
+            }
+
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id) -> Arc<Self> {
+                Arc::new(Self { id, owner_type, ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -2471,10 +3111,17 @@ pub mod kit {
                 *self.order.read().await
             }
 
+            #[graphql(name = "copatibleWith")]
+            pub async fn copatible_with(&self) -> crate::gql_relay::PortConnection {
+                crate::gql_relay::PortConnection::from_entities(self.compatible_with.read().await.clone()).await
+            }
+
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::meta::Attribute> {
                 None
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(Port, crate::gql::interfaces::file_system_vfs::node_for_port);
         //#endregion 🛟 port
 
         //#region ⚓ connector
@@ -2515,6 +3162,20 @@ pub mod kit {
                     id: Id::new().await,
                     owner_type,
                     name: RwLock::new(String::new()),
+                    code: RwLock::new(code),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    port: RwLock::new(None),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                })
+            }
+
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, code: String) -> Arc<Self> {
+                Arc::new(Self {
+                    id,
+                    owner_type,
+                    name: RwLock::new(code.clone()),
                     code: RwLock::new(code),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
@@ -2577,6 +3238,8 @@ pub mod kit {
                 self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(Connector, crate::gql::interfaces::file_system_vfs::node_for_connector);
         //#endregion ⚓ connector
 
         //#region 💾 representation
@@ -2628,12 +3291,65 @@ pub mod kit {
                 })
             }
 
+            /// 🧾 Insert a representation with caller-controlled external [`Id`] (JSON snapshot hydration).
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, url: String) -> Arc<Self> {
+                Arc::new(Self {
+                    id,
+                    owner_type,
+                    url: RwLock::new(url),
+                    ..Default::default()
+                })
+            }
+
             pub async fn compute_hash(&self) -> String {
                 let url = self.url.read().await;
                 let name = self.name.read().await;
                 let desc = self.description.read().await;
                 let icon = self.icon.read().await;
                 h(&[self.id.as_str(), name.as_str(), url.as_str(), desc.as_str(), icon.as_str()])
+            }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_type(&ty.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_type_transitive(&ty.id).await
+            }
+
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this representation's owner kind.
+            pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.pieces_with_blueprint_type(&ty.id).await
+            }
+
+            /// @emoji 🧰 Owner kind of this representation (zero or one).
+            pub async fn owner_types(&self) -> Vec<Arc<Type>> {
+                self.owner_type.upgrade().into_iter().collect()
+            }
+
+            /// @emoji 📄 Linked file for this representation (zero or one).
+            pub async fn linked_files(&self) -> Vec<File> {
+                self.file.read().await.clone().into_iter().collect()
             }
         }
 
@@ -2687,13 +3403,43 @@ pub mod kit {
             pub async fn attribute(&self, id: Id) -> Option<Attribute> {
                 self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
+            /// @emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+            #[graphql(name = "referencedBy")]
+            pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🧰 Owner kind of this representation.
+            #[graphql(name = "hasTypes")]
+            pub async fn has_types(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.owner_types().await).await
+            }
+            /// @emoji 📄 File linked from this representation.
+            #[graphql(name = "referencesFiles")]
+            pub async fn references_files(&self) -> crate::gql_relay::FileConnection {
+                crate::gql_relay::FileConnection::from_entities(self.linked_files().await)
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            #[graphql(name = "referencedByDesignsTransitive")]
+            pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
+            }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Representation,
+            crate::gql::interfaces::file_system_vfs::node_for_representation
+        );
         //#endregion 💾 representation
 
         //#region 🏠 type
         pub struct Type {
             pub id: Id,
-            pub owner_kit: Weak<crate::kit::Kit>,
+            pub owner_typology: Weak<crate::gql_relay::Typology>,
             pub name: RwLock<String>,
             pub description: RwLock<String>,
             pub icon: RwLock<String>,
@@ -2715,13 +3461,14 @@ pub mod kit {
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
+            pub folder_id: RwLock<Option<Id>>,
         }
 
         impl Default for Type {
             fn default() -> Self {
                 Self {
                     id: Id::default(),
-                    owner_kit: Weak::new(),
+                    owner_typology: Weak::new(),
                     name: RwLock::new(String::new()),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
@@ -2742,18 +3489,23 @@ pub mod kit {
                     props: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
                     stats: RwLock::new(Vec::new()),
+                    folder_id: RwLock::new(None),
                 }
             }
         }
 
         impl Type {
-            pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn owner_kit(&self) -> Option<Arc<crate::kit::Kit>> {
+                self.owner_typology.upgrade()?.owner_kit.upgrade()
+            }
+
+            pub async fn new(owner_typology: Weak<crate::gql_relay::Typology>, name: String) -> Arc<Self> {
+                Arc::new(Self { id: Id::new().await, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             /// 🧾 Insert a workspace kind with caller-controlled external [`Id`] (wasm / JSON snapshot hydration).
-            pub async fn new_with_external_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
-                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn new_with_external_id(owner_typology: Weak<crate::gql_relay::Typology>, id: Id, name: String) -> Arc<Self> {
+                Arc::new(Self { id, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -2806,6 +3558,60 @@ pub mod kit {
                 }
                 best.map(|(_, r)| r)
             }
+
+            /// @emoji 📄 Distinct kit [`File`] nodes linked from this kind's representations (order preserved).
+            pub async fn files_from_representations(&self) -> Vec<File> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for r in self.representations.read().await.iter() {
+                    if let Some(f) = r.file.read().await.clone() {
+                        if seen.insert(f.id.clone()) {
+                            out.push(f);
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.pieces_with_blueprint_type(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_type(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_type_transitive(&self.id).await
+            }
+
+            /// @emoji ⚓ Connectors owned directly by this kind.
+            pub async fn has_connectors(&self) -> Vec<Arc<Connector>> {
+                self.connectors.read().await.clone()
+            }
+
+            /// @emoji 🔘 Ports owned directly by this kind.
+            pub async fn has_ports(&self) -> Vec<Arc<Port>> {
+                self.ports.read().await.clone()
+            }
+
+            /// @emoji 💾 Representations owned directly by this kind.
+            pub async fn has_representations(&self) -> Vec<Arc<Representation>> {
+                self.representations.read().await.clone()
+            }
         }
 
         #[Object(name = "Type")]
@@ -2817,7 +3623,9 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+                self.owner_typology
+                    .upgrade()
+                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -2843,11 +3651,15 @@ pub mod kit {
             pub async fn updated(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            pub async fn connectors(&self) -> crate::gql_relay::ConnectorConnection {
-                crate::gql_relay::ConnectorConnection::from_connectors(self.connectors.read().await.clone()).await
+            /// @emoji ⚓ Connectors owned directly by this kind.
+            #[graphql(name = "hasConnectors")]
+            pub async fn has_connectors_field(&self) -> crate::gql_relay::ConnectorConnection {
+                crate::gql_relay::ConnectorConnection::from_connectors(self.has_connectors().await).await
             }
-            pub async fn ports(&self) -> crate::gql_relay::PortConnection {
-                crate::gql_relay::PortConnection::from_entities(self.ports.read().await.clone()).await
+            /// @emoji 🔘 Ports owned directly by this kind.
+            #[graphql(name = "hasPorts")]
+            pub async fn has_ports_field(&self) -> crate::gql_relay::PortConnection {
+                crate::gql_relay::PortConnection::from_entities(self.has_ports().await).await
             }
             pub async fn port(&self, id: Id) -> Option<Arc<Port>> {
                 self.refresh_connector_child_weak_maps().await;
@@ -2857,8 +3669,10 @@ pub mod kit {
                 self.refresh_connector_child_weak_maps().await;
                 self.connector_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
             }
-            pub async fn representations(&self) -> crate::gql_relay::RepresentationConnection {
-                crate::gql_relay::RepresentationConnection::from_representations(self.representations.read().await.clone()).await
+            /// @emoji 💾 Representations owned directly by this kind.
+            #[graphql(name = "hasRepresentations")]
+            pub async fn has_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.has_representations().await).await
             }
             pub async fn representation(&self, id: Id) -> Option<Arc<Representation>> {
                 self.refresh_connector_child_weak_maps().await;
@@ -2867,6 +3681,26 @@ pub mod kit {
             #[graphql(name = "bestRepresentation")]
             pub async fn best_representation(&self, tag_ids: Vec<Id>) -> Option<Arc<Representation>> {
                 self.best_representation_for_tags(&tag_ids).await
+            }
+            /// @emoji 📄 Files referenced indirectly via representations on this kind.
+            #[graphql(name = "referencesFiles")]
+            pub async fn references_files(&self) -> crate::gql_relay::FileConnection {
+                crate::gql_relay::FileConnection::from_entities(self.files_from_representations().await)
+            }
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            #[graphql(name = "referencedBy")]
+            pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            #[graphql(name = "referencedByDesignsTransitive")]
+            pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
             pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
                 crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -2918,6 +3752,12 @@ pub mod kit {
                 self.stats.read().await.iter().find(|s| s.id == id).cloned()
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Type,
+            crate::gql::interfaces::file_system_vfs::node_for_type
+        );
+
         //#endregion 🏠 type
 
         //#region 🧩 blueprint
@@ -3041,6 +3881,119 @@ pub mod kit {
                     }
                     PositionInput::default()
                 }
+
+                /// @emoji 🧰 Direct blueprint when this piece is a kind instance.
+                pub async fn is_type(&self) -> Option<Arc<super::super::r#type::Type>> {
+                    match self.blueprint.read().await.clone() {
+                        super::super::r#type::Blueprint::Type(t) => Some(t),
+                        super::super::r#type::Blueprint::Design(_) => None,
+                    }
+                }
+
+                /// @emoji 🏘 Direct blueprint when this piece is a nested design instance.
+                pub async fn is_design(&self) -> Option<Arc<super::Design>> {
+                    match self.blueprint.read().await.clone() {
+                        super::super::r#type::Blueprint::Design(d) => Some(d),
+                        super::super::r#type::Blueprint::Type(_) => None,
+                    }
+                }
+
+                /// @emoji 🧰 Kinds reachable through this piece's blueprint, expanding nested designs.
+                pub async fn is_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
+                    use std::collections::{HashSet, VecDeque};
+                    let mut type_seen = HashSet::new();
+                    let mut out = Vec::new();
+                    let mut pending: VecDeque<Arc<Piece>> = VecDeque::new();
+                    if let Some(t) = self.is_type().await {
+                        if type_seen.insert(t.id.clone()) {
+                            out.push(t);
+                        }
+                    }
+                    if let Some(d) = self.is_design().await {
+                        pending.extend(d.has_pieces().await);
+                    }
+                    while let Some(piece) = pending.pop_front() {
+                        if let Some(t) = piece.is_type().await {
+                            if type_seen.insert(t.id.clone()) {
+                                out.push(t);
+                            }
+                        }
+                        if let Some(d) = piece.is_design().await {
+                            pending.extend(d.has_pieces().await);
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji 🏘 Designs reachable through this piece's blueprint, expanding nested designs.
+                pub async fn is_designs_transitive(&self) -> Vec<Arc<super::Design>> {
+                    use std::collections::{HashSet, VecDeque};
+                    let mut design_seen = HashSet::new();
+                    let mut out = Vec::new();
+                    let mut pending: VecDeque<Arc<Piece>> = VecDeque::new();
+                    if let Some(d) = self.is_design().await {
+                        if design_seen.insert(d.id.clone()) {
+                            out.push(d.clone());
+                            pending.extend(d.has_pieces().await);
+                        }
+                    }
+                    while let Some(piece) = pending.pop_front() {
+                        if let Some(d) = piece.is_design().await {
+                            if design_seen.insert(d.id.clone()) {
+                                out.push(d.clone());
+                                pending.extend(d.has_pieces().await);
+                            }
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji 🪢 Direct child pieces in the piece tree.
+                pub async fn has_pieces(&self) -> Vec<Arc<Piece>> {
+                    self.child_pieces.read().await.clone()
+                }
+
+                /// @emoji 🔗 Direct child connections in the piece tree.
+                pub async fn has_connections(&self) -> Vec<Arc<super::connection::Connection>> {
+                    self.child_connections.read().await.clone()
+                }
+
+                /// @emoji 🪢 All descendant pieces in the piece tree.
+                pub async fn has_pieces_transitive(&self) -> Vec<Arc<Piece>> {
+                    use std::collections::{HashSet, VecDeque};
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    let mut queue: VecDeque<Arc<Piece>> = self.has_pieces().await.into_iter().collect();
+                    while let Some(piece) = queue.pop_front() {
+                        if seen.insert(piece.id.clone()) {
+                            let children = piece.has_pieces().await;
+                            out.push(piece);
+                            for child in children {
+                                queue.push_back(child);
+                            }
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji 🔗 All descendant connections in the piece tree.
+                pub async fn has_connections_transitive(&self) -> Vec<Arc<super::connection::Connection>> {
+                    use std::collections::{HashSet, VecDeque};
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    let mut queue: VecDeque<Arc<Piece>> = self.has_pieces().await.into_iter().collect();
+                    while let Some(piece) = queue.pop_front() {
+                        for conn in piece.has_connections().await {
+                            if seen.insert(conn.id.clone()) {
+                                out.push(conn);
+                            }
+                        }
+                        for child in piece.has_pieces().await {
+                            queue.push_back(child);
+                        }
+                    }
+                    out
+                }
             }
 
             #[Object(name = "Piece")]
@@ -3065,6 +4018,46 @@ pub mod kit {
                         super::super::r#type::Blueprint::Type(t) => crate::gql::interfaces::EntityInterface::Type(t),
                         super::super::r#type::Blueprint::Design(d) => crate::gql::interfaces::EntityInterface::Design(d),
                     }
+                }
+                /// @emoji 🧰 Kind blueprint when this piece instances a kind.
+                #[graphql(name = "isType")]
+                pub async fn is_type_field(&self) -> Option<Arc<super::super::r#type::Type>> {
+                    self.is_type().await
+                }
+                /// @emoji 🏘 Design blueprint when this piece instances a nested design.
+                #[graphql(name = "isDesign")]
+                pub async fn is_design_field(&self) -> Option<Arc<super::Design>> {
+                    self.is_design().await
+                }
+                /// @emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
+                #[graphql(name = "isTypesTransitive")]
+                pub async fn is_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
+                    crate::gql_relay::TypeConnection::from_types(self.is_types_transitive().await).await
+                }
+                /// @emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
+                #[graphql(name = "isDesignsTransitive")]
+                pub async fn is_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                    crate::gql_relay::DesignConnection::from_designs(self.is_designs_transitive().await).await
+                }
+                /// @emoji 🪢 Direct child pieces in the piece tree.
+                #[graphql(name = "hasPieces")]
+                pub async fn has_pieces_field(&self) -> crate::gql_relay::PieceConnection {
+                    crate::gql_relay::PieceConnection::from_pieces(self.has_pieces().await).await
+                }
+                /// @emoji 🔗 Direct child connections in the piece tree.
+                #[graphql(name = "hasConnections")]
+                pub async fn has_connections_field(&self) -> crate::gql_relay::ConnectionConnection {
+                    crate::gql_relay::ConnectionConnection::from_connections(self.has_connections().await).await
+                }
+                /// @emoji 🪢 All descendant pieces in the piece tree.
+                #[graphql(name = "hasPiecesTransitive")]
+                pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
+                    crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
+                }
+                /// @emoji 🔗 All descendant connections in the piece tree.
+                #[graphql(name = "hasConnectionsTransitive")]
+                pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
+                    crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
                 }
                 pub async fn name(&self) -> Option<String> {
                     self.name.read().await.clone()
@@ -3097,17 +4090,9 @@ pub mod kit {
                 pub async fn parent_connection(&self) -> Option<Arc<super::connection::Connection>> {
                     self.parent_connection.read().await.upgrade()
                 }
-                #[graphql(name = "childConnections")]
-                pub async fn child_connections(&self) -> Vec<Arc<super::connection::Connection>> {
-                    self.child_connections.read().await.clone()
-                }
                 #[graphql(name = "parentPiece")]
                 pub async fn parent_piece(&self) -> Option<Arc<Piece>> {
                     self.parent_piece.read().await.upgrade()
-                }
-                #[graphql(name = "childPieces")]
-                pub async fn child_pieces(&self) -> Vec<Arc<Piece>> {
-                    self.child_pieces.read().await.clone()
                 }
                 pub async fn depth(&self) -> i32 {
                     *self.depth.read().await
@@ -3141,6 +4126,11 @@ pub mod kit {
                     self.child_pieces.read().await.iter().find(|p| p.id == id).cloned()
                 }
             }
+
+            crate::file_system_node_vfs_complex_ctx!(
+                Piece,
+                crate::gql::interfaces::file_system_vfs::node_for_piece
+            );
         }
         //#endregion ⭕ piece
 
@@ -3193,6 +4183,46 @@ pub mod kit {
                     parts.push(self.piece.read().await.id.as_str().to_string());
                     let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
                     h(&refs)
+                }
+
+                /// @emoji 🪢 Piece referenced by this connection end.
+                pub async fn references_piece(&self) -> Arc<super::piece::Piece> {
+                    self.piece.read().await.clone()
+                }
+
+                /// @emoji ⚓ Connector referenced by this connection end.
+                pub async fn references_connector(&self) -> Option<Arc<super::super::r#type::Connector>> {
+                    self.connector.read().await.clone()
+                }
+
+                /// @emoji 🔘 Port referenced by this connection end.
+                pub async fn references_port(&self) -> Option<Arc<super::super::r#type::Port>> {
+                    self.port.read().await.clone()
+                }
+
+                /// @emoji 🪢 Nested design piece referenced by this connection end.
+                pub async fn references_design_piece(&self) -> Option<Arc<super::piece::Piece>> {
+                    self.design_piece.read().await.clone()
+                }
+
+                /// @emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+                pub async fn references_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
+                    self.references_piece().await.is_types_transitive().await
+                }
+
+                /// @emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive over nested designs).
+                pub async fn references_connectors_transitive(&self) -> Vec<Arc<super::super::r#type::Connector>> {
+                    use std::collections::HashSet;
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    for ty in self.references_types_transitive().await {
+                        for connector in ty.has_connectors().await {
+                            if seen.insert(connector.id.clone()) {
+                                out.push(connector);
+                            }
+                        }
+                    }
+                    out
                 }
             }
 
@@ -3285,6 +4315,97 @@ pub mod kit {
                     let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
                     h(&refs)
                 }
+
+                /// @emoji ⛓️ Parent and child sides owned by this connection.
+                pub async fn has_sides(&self) -> Vec<Arc<Side>> {
+                    vec![self.parent.read().await.clone(), self.child.read().await.clone()]
+                }
+
+                /// @emoji 🪢 Pieces referenced by the parent and child sides (deduplicated).
+                pub async fn references_pieces(&self) -> Vec<Arc<super::piece::Piece>> {
+                    use std::collections::HashSet;
+                    let parent = self.parent.read().await;
+                    let child = self.child.read().await;
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    for piece in [parent.references_piece().await, child.references_piece().await] {
+                        if seen.insert(piece.id.clone()) {
+                            out.push(piece);
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji ⚓ Connectors referenced by the parent and child sides (deduplicated).
+                pub async fn references_connectors(&self) -> Vec<Arc<super::super::r#type::Connector>> {
+                    use std::collections::HashSet;
+                    let parent = self.parent.read().await;
+                    let child = self.child.read().await;
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    for connector in [
+                        parent.references_connector().await,
+                        child.references_connector().await,
+                    ]
+                    .into_iter()
+                    .flatten()
+                    {
+                        if seen.insert(connector.id.clone()) {
+                            out.push(connector);
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+                pub async fn references_pieces_transitive(&self) -> Vec<Arc<super::piece::Piece>> {
+                    use std::collections::HashSet;
+                    let parent = self.parent.read().await;
+                    let child = self.child.read().await;
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    for side in [parent.as_ref(), child.as_ref()] {
+                        let mut queue = vec![side.references_piece().await];
+                        if let Some(dp) = side.references_design_piece().await {
+                            queue.push(dp);
+                        }
+                        while let Some(piece) = queue.pop() {
+                            if seen.insert(piece.id.clone()) {
+                                out.push(piece.clone());
+                            }
+                            for nested in piece.has_pieces_transitive().await {
+                                if seen.insert(nested.id.clone()) {
+                                    out.push(nested);
+                                }
+                            }
+                            if let Some(d) = piece.is_design().await {
+                                for p in d.has_pieces_transitive().await {
+                                    if seen.insert(p.id.clone()) {
+                                        out.push(p);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    out
+                }
+
+                /// @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+                pub async fn references_connectors_transitive(&self) -> Vec<Arc<super::super::r#type::Connector>> {
+                    use std::collections::HashSet;
+                    let parent = self.parent.read().await;
+                    let child = self.child.read().await;
+                    let mut out = Vec::new();
+                    let mut seen = HashSet::new();
+                    for side in [parent.as_ref(), child.as_ref()] {
+                        for connector in side.references_connectors_transitive().await {
+                            if seen.insert(connector.id.clone()) {
+                                out.push(connector);
+                            }
+                        }
+                    }
+                    out
+                }
             }
 
             #[Object(name = "Connection")]
@@ -3347,7 +4468,44 @@ pub mod kit {
                 pub async fn attribute(&self, id: Id) -> Option<Attribute> {
                     self.attributes.read().await.iter().find(|a| a.id == id).cloned()
                 }
+
+                /// @emoji ⛓️ Parent and child sides owned by this connection.
+                #[graphql(name = "hasSides")]
+                pub async fn has_sides_field(&self) -> Vec<Arc<Side>> {
+                    self.has_sides().await
+                }
+
+                /// @emoji 🪢 Pieces referenced by the parent and child sides.
+                #[graphql(name = "referencesPieces")]
+                pub async fn references_pieces_field(&self) -> crate::gql_relay::PieceConnection {
+                    crate::gql_relay::PieceConnection::from_pieces(self.references_pieces().await).await
+                }
+
+                /// @emoji ⚓ Connectors referenced by the parent and child sides.
+                #[graphql(name = "referencesConnectors")]
+                pub async fn references_connectors_field(&self) -> crate::gql_relay::ConnectorConnection {
+                    crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors().await).await
+                }
+
+                /// @emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+                #[graphql(name = "referencesPiecesTransitive")]
+                pub async fn references_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
+                    crate::gql_relay::PieceConnection::from_pieces(self.references_pieces_transitive().await).await
+                }
+
+                /// @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+                #[graphql(name = "referencesConnectorsTransitive")]
+                pub async fn references_connectors_transitive_field(
+                    &self,
+                ) -> crate::gql_relay::ConnectorConnection {
+                    crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors_transitive().await).await
+                }
             }
+
+            crate::file_system_node_vfs_complex_ctx!(
+                Connection,
+                crate::gql::interfaces::file_system_vfs::node_for_connection
+            );
 
             #[Object(name = "Side")]
             impl Side {
@@ -3367,18 +4525,35 @@ pub mod kit {
                 pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                     Some(crate::gql::interfaces::empty_entity_connection())
                 }
-                pub async fn piece(&self) -> Arc<super::piece::Piece> {
-                    self.piece.read().await.clone()
+                /// @emoji 🪢 Piece referenced by this connection end.
+                #[graphql(name = "referencesPiece")]
+                pub async fn references_piece_field(&self) -> Arc<super::piece::Piece> {
+                    self.references_piece().await
                 }
-                pub async fn port(&self) -> Option<Arc<super::super::r#type::Port>> {
-                    self.port.read().await.clone()
+                /// @emoji 🔘 Port referenced by this connection end.
+                #[graphql(name = "referencesPort")]
+                pub async fn references_port_field(&self) -> Option<Arc<super::super::r#type::Port>> {
+                    self.references_port().await
                 }
-                #[graphql(name = "designPiece")]
-                pub async fn design_piece(&self) -> Option<Arc<super::piece::Piece>> {
-                    self.design_piece.read().await.clone()
+                /// @emoji 🪢 Nested design piece referenced by this connection end.
+                #[graphql(name = "referencesDesignPiece")]
+                pub async fn references_design_piece_field(&self) -> Option<Arc<super::piece::Piece>> {
+                    self.references_design_piece().await
                 }
-                pub async fn connector(&self) -> Option<Arc<super::super::r#type::Connector>> {
-                    self.connector.read().await.clone()
+                /// @emoji ⚓ Connector referenced by this connection end.
+                #[graphql(name = "referencesConnector")]
+                pub async fn references_connector_field(&self) -> Option<Arc<super::super::r#type::Connector>> {
+                    self.references_connector().await
+                }
+                /// @emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+                #[graphql(name = "referencesTypesTransitive")]
+                pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
+                    crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
+                }
+                /// @emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
+                #[graphql(name = "referencesConnectorsTransitive")]
+                pub async fn references_connectors_transitive_field(&self) -> crate::gql_relay::ConnectorConnection {
+                    crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors_transitive().await).await
                 }
             }
             //#endregion 🔗 connection
@@ -3440,7 +4615,7 @@ pub mod kit {
 
         pub struct Design {
             pub id: Id,
-            pub owner_kit: Weak<crate::kit::Kit>,
+            pub owner_typology: Weak<crate::gql_relay::Typology>,
             pub name: RwLock<String>,
             pub description: RwLock<Option<String>>,
             pub icon: RwLock<Option<String>>,
@@ -3460,13 +4635,14 @@ pub mod kit {
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
+            pub folder_id: RwLock<Option<Id>>,
         }
 
         impl Default for Design {
             fn default() -> Self {
                 Self {
                     id: Id::default(),
-                    owner_kit: Weak::new(),
+                    owner_typology: Weak::new(),
                     name: RwLock::new(String::new()),
                     description: RwLock::new(None),
                     icon: RwLock::new(None),
@@ -3485,17 +4661,22 @@ pub mod kit {
                     props: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
                     stats: RwLock::new(Vec::new()),
+                    folder_id: RwLock::new(None),
                 }
             }
         }
 
         impl Design {
-            pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn owner_kit(&self) -> Option<Arc<crate::kit::Kit>> {
+                self.owner_typology.upgrade()?.owner_kit.upgrade()
             }
 
-            pub async fn with_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
-                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn new(owner_typology: Weak<crate::gql_relay::Typology>, name: String) -> Arc<Self> {
+                Arc::new(Self { id: Id::new().await, owner_typology, name: RwLock::new(name), ..Default::default() })
+            }
+
+            pub async fn with_id(owner_typology: Weak<crate::gql_relay::Typology>, id: Id, name: String) -> Arc<Self> {
+                Arc::new(Self { id, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -3529,6 +4710,285 @@ pub mod kit {
             pub async fn piece_by_external_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
                 self.piece_weak_by_external_id.read().await.get(id).and_then(|w| w.upgrade())
             }
+
+            /// @emoji 🧰 Distinct [`Type`] blueprints on this design's own pieces (one hop).
+            pub async fn references_types(&self) -> Vec<Arc<super::r#type::Type>> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for piece in self.has_pieces().await {
+                    if let Some(t) = piece.is_type().await {
+                        if seen.insert(t.id.clone()) {
+                            out.push(t);
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 🏘 Distinct [`Design`] blueprints on this design's own pieces (one hop).
+            pub async fn references_designs(&self) -> Vec<Arc<Design>> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for piece in self.has_pieces().await {
+                    if let Some(d) = piece.is_design().await {
+                        if seen.insert(d.id.clone()) {
+                            out.push(d);
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 📄 Files from representations of direct [`Type`] blueprints on this design's pieces.
+            pub async fn references_files(&self) -> Vec<crate::meta::File> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for t in self.references_types().await {
+                    for f in t.files_from_representations().await {
+                        if seen.insert(f.id.clone()) {
+                            out.push(f);
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 💾 Representations on direct [`Type`] blueprints on this design's pieces.
+            pub async fn references_representations(&self) -> Vec<Arc<super::r#type::Representation>> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for t in self.references_types().await {
+                    for r in t.representations.read().await.iter() {
+                        if seen.insert(r.id.clone()) {
+                            out.push(r.clone());
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 💾 Representations on [`Type`] blueprints reachable transitively through nested designs.
+            pub async fn references_representations_transitive(&self) -> Vec<Arc<super::r#type::Representation>> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for t in self.references_types_transitive().await {
+                    for r in t.representations.read().await.iter() {
+                        if seen.insert(r.id.clone()) {
+                            out.push(r.clone());
+                        }
+                    }
+                }
+                out
+            }
+
+            async fn collect_transitive_references_from_design(
+                design: &Design,
+                root_design_id: &Id,
+                type_seen: &mut std::collections::HashSet<Id>,
+                design_seen: &mut std::collections::HashSet<Id>,
+                file_seen: &mut std::collections::HashSet<Id>,
+                all_types: &mut Vec<Arc<super::r#type::Type>>,
+                all_designs: &mut Vec<Arc<Design>>,
+                all_files: &mut Vec<crate::meta::File>,
+                pending_designs: &mut std::collections::VecDeque<Arc<Design>>,
+            ) {
+                for piece in design.has_pieces().await {
+                    if let Some(t) = piece.is_type().await {
+                        if type_seen.insert(t.id.clone()) {
+                            all_types.push(t.clone());
+                            for f in t.files_from_representations().await {
+                                if file_seen.insert(f.id.clone()) {
+                                    all_files.push(f);
+                                }
+                            }
+                        }
+                    } else if let Some(d) = piece.is_design().await {
+                        if d.id == *root_design_id {
+                            continue;
+                        }
+                        if design_seen.insert(d.id.clone()) {
+                            pending_designs.push_back(d.clone());
+                            all_designs.push(d);
+                        }
+                    }
+                }
+            }
+
+            /// @emoji 🧰 Kinds referenced transitively through nested design blueprints.
+            pub async fn references_types_transitive(&self) -> Vec<Arc<super::r#type::Type>> {
+                self.transitive_reference_closure().await.0
+            }
+
+            /// @emoji 🏘 Designs referenced transitively through nested design blueprints.
+            pub async fn references_designs_transitive(&self) -> Vec<Arc<Design>> {
+                self.transitive_reference_closure().await.1
+            }
+
+            /// @emoji 📄 Files referenced transitively through nested design and kind blueprints.
+            pub async fn references_files_transitive(&self) -> Vec<crate::meta::File> {
+                self.transitive_reference_closure().await.2
+            }
+
+            /// @emoji 🪢 Pieces owned directly by this design.
+            pub async fn has_pieces(&self) -> Vec<Arc<piece::Piece>> {
+                self.pieces.read().await.clone()
+            }
+
+            /// @emoji 🔗 Connections owned directly by this design.
+            pub async fn has_connections(&self) -> Vec<Arc<connection::Connection>> {
+                self.connections.read().await.clone()
+            }
+
+            /// @emoji 🎨 Layers owned directly by this design.
+            pub async fn has_layers(&self) -> Vec<Layer> {
+                self.layers.read().await.clone()
+            }
+
+            /// @emoji 👥 Groups owned directly by this design.
+            pub async fn has_groups(&self) -> Vec<Group> {
+                self.groups.read().await.clone()
+            }
+
+            /// @emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+            pub async fn has_pieces_transitive(&self) -> Vec<Arc<piece::Piece>> {
+                use std::collections::{HashSet, VecDeque};
+                let mut piece_seen = HashSet::new();
+                let mut design_seen = HashSet::new();
+                let mut out = Vec::new();
+                let mut pending: VecDeque<Arc<Design>> = VecDeque::new();
+                design_seen.insert(self.id.clone());
+                for piece in self.has_pieces().await {
+                    let nested = piece.is_design().await;
+                    if piece_seen.insert(piece.id.clone()) {
+                        out.push(piece);
+                    }
+                    if let Some(nested) = nested {
+                        if design_seen.insert(nested.id.clone()) {
+                            pending.push_back(nested);
+                        }
+                    }
+                }
+                while let Some(design) = pending.pop_front() {
+                    for piece in design.has_pieces().await {
+                        let nested = piece.is_design().await;
+                        if piece_seen.insert(piece.id.clone()) {
+                            out.push(piece);
+                        }
+                        if let Some(nested) = nested {
+                            if design_seen.insert(nested.id.clone()) {
+                                pending.push_back(nested);
+                            }
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 🔗 Connections in this design and nested design blueprints (transitive).
+            pub async fn has_connections_transitive(&self) -> Vec<Arc<connection::Connection>> {
+                use std::collections::{HashSet, VecDeque};
+                let mut connection_seen = HashSet::new();
+                let mut design_seen = HashSet::new();
+                let mut out = Vec::new();
+                let mut pending: VecDeque<Arc<Design>> = VecDeque::new();
+                design_seen.insert(self.id.clone());
+                for connection in self.has_connections().await {
+                    if connection_seen.insert(connection.id.clone()) {
+                        out.push(connection);
+                    }
+                }
+                for piece in self.has_pieces().await {
+                    if let Some(nested) = piece.is_design().await {
+                        if design_seen.insert(nested.id.clone()) {
+                            pending.push_back(nested);
+                        }
+                    }
+                }
+                while let Some(design) = pending.pop_front() {
+                    for connection in design.has_connections().await {
+                        if connection_seen.insert(connection.id.clone()) {
+                            out.push(connection);
+                        }
+                    }
+                    for piece in design.has_pieces().await {
+                        if let Some(nested) = piece.is_design().await {
+                            if design_seen.insert(nested.id.clone()) {
+                                pending.push_back(nested);
+                            }
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 🔗 Transitive closure of referenced types, designs, and files through nested design blueprints.
+            pub async fn transitive_reference_closure(&self) -> (Vec<Arc<super::r#type::Type>>, Vec<Arc<Design>>, Vec<crate::meta::File>) {
+                use std::collections::{HashSet, VecDeque};
+                let mut all_types = Vec::new();
+                let mut all_designs = Vec::new();
+                let mut all_files = Vec::new();
+                let mut type_seen = HashSet::new();
+                let mut design_seen = HashSet::new();
+                let mut file_seen = HashSet::new();
+                let mut pending = VecDeque::new();
+                let root_id = self.id.clone();
+                Self::collect_transitive_references_from_design(
+                    self,
+                    &root_id,
+                    &mut type_seen,
+                    &mut design_seen,
+                    &mut file_seen,
+                    &mut all_types,
+                    &mut all_designs,
+                    &mut all_files,
+                    &mut pending,
+                )
+                .await;
+                while let Some(d) = pending.pop_front() {
+                    Self::collect_transitive_references_from_design(
+                        d.as_ref(),
+                        &root_id,
+                        &mut type_seen,
+                        &mut design_seen,
+                        &mut file_seen,
+                        &mut all_types,
+                        &mut all_designs,
+                        &mut all_files,
+                        &mut pending,
+                    )
+                    .await;
+                }
+                (all_types, all_designs, all_files)
+            }
+
+            /// @emoji 🪢 Pieces anywhere in the owner kit whose blueprint is this design.
+            pub async fn referenced_by_pieces(&self) -> Vec<Arc<piece::Piece>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.pieces_with_blueprint_design(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<Design>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_design(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<Design>> {
+                let Some(kit) = self.owner_kit().await else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_design_transitive(&self.id).await
+            }
         }
 
         #[Object(name = "Design")]
@@ -3540,7 +5000,9 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+                self.owner_typology
+                    .upgrade()
+                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -3571,23 +5033,41 @@ pub mod kit {
             pub async fn updated_at(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
-                crate::gql_relay::PieceConnection::from_pieces(self.pieces.read().await.clone()).await
+            /// @emoji 🪢 Pieces owned directly by this design.
+            #[graphql(name = "hasPieces")]
+            pub async fn has_pieces_field(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.has_pieces().await).await
             }
             pub async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
                 self.piece_by_external_id(&id).await
             }
-            pub async fn connections(&self) -> crate::gql_relay::ConnectionConnection {
-                crate::gql_relay::ConnectionConnection::from_connections(self.connections.read().await.clone()).await
+            /// @emoji 🔗 Connections owned directly by this design.
+            #[graphql(name = "hasConnections")]
+            pub async fn has_connections_field(&self) -> crate::gql_relay::ConnectionConnection {
+                crate::gql_relay::ConnectionConnection::from_connections(self.has_connections().await).await
             }
             pub async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
                 self.connections.read().await.iter().find(|c| c.id == id).cloned()
             }
-            pub async fn layers(&self) -> crate::gql_relay::LayerConnection {
-                crate::gql_relay::LayerConnection::from_entities(self.layers.read().await.clone())
+            /// @emoji 🎨 Layers owned directly by this design.
+            #[graphql(name = "hasLayers")]
+            pub async fn has_layers_field(&self) -> crate::gql_relay::LayerConnection {
+                crate::gql_relay::LayerConnection::from_entities(self.has_layers().await)
             }
-            pub async fn groups(&self) -> crate::gql_relay::GroupConnection {
-                crate::gql_relay::GroupConnection::from_entities(self.groups.read().await.clone())
+            /// @emoji 👥 Groups owned directly by this design.
+            #[graphql(name = "hasGroups")]
+            pub async fn has_groups_field(&self) -> crate::gql_relay::GroupConnection {
+                crate::gql_relay::GroupConnection::from_entities(self.has_groups().await)
+            }
+            /// @emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+            #[graphql(name = "hasPiecesTransitive")]
+            pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
+            }
+            /// @emoji 🔗 Connections in this design and nested design blueprints (transitive).
+            #[graphql(name = "hasConnectionsTransitive")]
+            pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
+                crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
             }
             pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
                 crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -3609,14 +5089,67 @@ pub mod kit {
                 0.0
             }
 
-            pub async fn references(&self) -> crate::gql_relay::DesignConnection {
-                crate::gql_relay::DesignConnection::from_designs(Vec::new()).await
+            /// @emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
+            #[graphql(name = "referencesTypes")]
+            pub async fn references_types_field(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.references_types().await).await
             }
+            /// @emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
+            #[graphql(name = "referencesDesigns")]
+            pub async fn references_designs_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.references_designs().await).await
+            }
+            /// @emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
+            #[graphql(name = "referencesFiles")]
+            pub async fn references_files_field(&self) -> crate::gql_relay::FileConnection {
+                crate::gql_relay::FileConnection::from_entities(self.references_files().await)
+            }
+            /// @emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
+            #[graphql(name = "referencesRepresentations")]
+            pub async fn references_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.references_representations().await).await
+            }
+            /// @emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
+            #[graphql(name = "referencesRepresentationsTransitive")]
+            pub async fn references_representations_transitive_field(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.references_representations_transitive().await).await
+            }
+            /// @emoji 🧰 Kinds referenced transitively through nested design blueprints.
+            #[graphql(name = "referencesTypesTransitive")]
+            pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
+            }
+            /// @emoji 🏘 Designs referenced transitively through nested design blueprints.
+            #[graphql(name = "referencesDesignsTransitive")]
+            pub async fn references_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.references_designs_transitive().await).await
+            }
+            /// @emoji 📄 Files referenced transitively through nested design and kind blueprints.
+            #[graphql(name = "referencesFilesTransitive")]
+            pub async fn references_files_transitive_field(&self) -> crate::gql_relay::FileConnection {
+                crate::gql_relay::FileConnection::from_entities(self.references_files_transitive().await)
+            }
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this design.
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
-                crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
+                crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            #[graphql(name = "referencedByDesignsTransitive")]
+            pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Design,
+            crate::gql::interfaces::file_system_vfs::node_for_design
+        );
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
@@ -3932,6 +5465,7 @@ pub mod kit {
 
     use crate::hash::h;
     use crate::id::Id;
+    use crate::gql_relay::{Family, Typology};
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
 
@@ -3950,14 +5484,15 @@ pub mod kit {
         pub created: RwLock<Option<Timestamp>>,
         pub updated: RwLock<Option<Timestamp>>,
         pub version: RwLock<Option<String>>,
-        pub designs: RwLock<Vec<Arc<design::Design>>>,
-        /// 🧷 Write-side only: external design [`Id`] → `Weak` (GraphQL `design(id:)` upgrades here).
-        pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
-        pub types: RwLock<Vec<Arc<r#type::Type>>>,
-        /// 🧷 Write-side: type [`Id`] → `Weak` for GraphQL `type(id:)` (filled on snapshot hydration).
+        /// 🏛️ Typologies own kit [`Type`] and [`Design`] entities (kit no longer stores them directly).
+        pub typologies: RwLock<Vec<Arc<Typology>>>,
+        /// 🧷 Kit-wide type [`Id`] → `Weak` for GraphQL `type(id:)` across all typologies.
         pub type_weak_by_id: RwLock<HashMap<Id, Weak<r#type::Type>>>,
+        /// 🧷 Kit-wide design [`Id`] → `Weak` for GraphQL `design(id:)` across all typologies.
+        pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
+        pub families: RwLock<Vec<Family>>,
         pub authors: RwLock<Vec<Author>>,
         pub concepts: RwLock<Vec<Arc<Concept>>>,
         pub tags: RwLock<Vec<Arc<Tag>>>,
@@ -3973,6 +5508,8 @@ pub mod kit {
         pub touch_epoch: RwLock<u64>,
         /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@semio/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
+        /// @emoji 👨‍👩‍👦 Preserved `families` projection subtree (kit-level ports) for `initialKit` round-trips.
+        pub snapshot_families_projection: RwLock<Option<crate::external_adapters::serde_json::Value>>,
     }
 
     impl Default for Kit {
@@ -3992,12 +5529,12 @@ pub mod kit {
                 created: RwLock::new(None),
                 updated: RwLock::new(None),
                 version: RwLock::new(None),
-                designs: RwLock::new(Vec::new()),
-                design_weak_by_id: RwLock::new(HashMap::new()),
-                types: RwLock::new(Vec::new()),
+                typologies: RwLock::new(Vec::new()),
                 type_weak_by_id: RwLock::new(HashMap::new()),
+                design_weak_by_id: RwLock::new(HashMap::new()),
                 files: RwLock::new(Vec::new()),
                 folders: RwLock::new(Vec::new()),
+                families: RwLock::new(Vec::new()),
                 authors: RwLock::new(Vec::new()),
                 concepts: RwLock::new(Vec::new()),
                 tags: RwLock::new(Vec::new()),
@@ -4010,6 +5547,7 @@ pub mod kit {
                 quality_by_id: RwLock::new(HashMap::new()),
                 touch_epoch: RwLock::new(0),
                 snapshot_external_kit_id: RwLock::new(None),
+                snapshot_families_projection: RwLock::new(None),
             }
         }
     }
@@ -4030,6 +5568,51 @@ pub mod kit {
         pub async fn bump_touch_epoch(&self) {
             let mut g = self.touch_epoch.write().await;
             *g = g.saturating_add(1);
+        }
+
+        /// @emoji 🏛️ Flatten all types owned by typologies (computed kit view).
+        pub async fn types_flat(&self) -> Vec<Arc<r#type::Type>> {
+            let mut out = Vec::new();
+            for topo in self.typologies.read().await.iter() {
+                out.extend(topo.types.read().await.iter().cloned());
+            }
+            out
+        }
+
+        /// @emoji 🏛️ Flatten all designs owned by typologies (computed kit view).
+        pub async fn designs_flat(&self) -> Vec<Arc<design::Design>> {
+            let mut out = Vec::new();
+            for topo in self.typologies.read().await.iter() {
+                out.extend(topo.designs.read().await.iter().cloned());
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs contained in this kit (in-memory projection).
+        pub async fn has_designs(&self) -> Vec<Arc<design::Design>> {
+            self.designs_flat().await
+        }
+
+        /// @emoji 🧰 Kinds contained in this kit (in-memory projection).
+        pub async fn has_types(&self) -> Vec<Arc<r#type::Type>> {
+            self.types_flat().await
+        }
+
+        /// @emoji 🏛️ Ensure a default typology exists when legacy flat snapshots omit `typologies`.
+        pub async fn ensure_default_typology(self: &Arc<Self>) -> Arc<Typology> {
+            {
+                let tops = self.typologies.read().await;
+                if let Some(t) = tops.first() {
+                    return t.clone();
+                }
+            }
+            let topo = Typology::new(Arc::downgrade(self), "Default".to_string()).await;
+            self.typologies.write().await.push(topo.clone());
+            topo
+        }
+
+        pub async fn typology_by_id(&self, id: &Id) -> Option<Arc<Typology>> {
+            self.typologies.read().await.iter().find(|t| t.id == *id).cloned()
         }
 
         /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / operation replay.
@@ -4087,15 +5670,14 @@ pub mod kit {
             if let Some(q) = &d.qualities {
                 self.apply_qualities_collection_diff(q).await?;
             }
-            if let Some(v) = &d.files {
-                if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
-                }
+            if let Some(f) = &d.files {
+                self.apply_files_collection_diff(f).await?;
             }
-            if let Some(v) = &d.folders {
-                if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
-                }
+            if let Some(f) = &d.folders {
+                self.apply_folders_collection_diff(f).await?;
+            }
+            if let Some(f) = &d.families {
+                self.apply_families_collection_diff(f).await?;
             }
             if let Some(v) = &d.authors {
                 if *v {
@@ -4106,12 +5688,19 @@ pub mod kit {
             Ok(())
         }
 
+        async fn resolve_typology_owner(self: &Arc<Self>, owner_id: &Id) -> Arc<Typology> {
+            if let Some(topo) = self.typology_by_id(owner_id).await {
+                return topo;
+            }
+            self.ensure_default_typology().await
+        }
+
         async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::SemioError> {
             for r in &t.removed {
                 let id = r.id.clone();
-                let mut tys = self.types.write().await;
-                tys.retain(|ty| ty.id != id);
-                drop(tys);
+                for topo in self.typologies.read().await.iter() {
+                    topo.types.write().await.retain(|ty| ty.id != id);
+                }
                 self.type_weak_by_id.write().await.remove(&id);
             }
             for entity in &t.modified {
@@ -4135,6 +5724,9 @@ pub mod kit {
                 if diff.unit.is_some() {
                     *ty.unit.write().await = diff.unit.clone().unwrap_or_default();
                 }
+                if let Some(folder_id) = &diff.folder_id {
+                    *ty.folder_id.write().await = folder_id.clone();
+                }
             }
             for entity in &t.added {
                 self.apply_create_type_scoped(
@@ -4151,12 +5743,68 @@ pub mod kit {
             Ok(())
         }
 
+        async fn apply_folders_collection_diff(self: &Arc<Self>, f: &crate::operation::FoldersCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &f.removed {
+                let id = r.id.clone();
+                self.folders.write().await.retain(|folder| folder.id != id);
+            }
+            for entity in &f.modified {
+                let fid = entity.folder.id.clone();
+                let mut folders = self.folders.write().await;
+                if let Some(folder) = folders.iter_mut().find(|x| x.id == fid) {
+                    if let Some(parent_folder_id) = &entity.patch.parent_folder_id {
+                        folder.parent_folder_id = parent_folder_id.clone();
+                    }
+                }
+            }
+            for entity in &f.added {
+                self.folders.write().await.push(crate::meta::Folder {
+                    id: entity.id.clone(),
+                    name: entity.name.clone(),
+                    path: entity.path.clone(),
+                    description: entity.description.clone(),
+                    icon: entity.icon.clone(),
+                    parent_folder_id: entity.parent_folder_id.clone(),
+                    owner_kit: std::sync::Arc::downgrade(self),
+                });
+            }
+            Ok(())
+        }
+
+        async fn apply_files_collection_diff(self: &Arc<Self>, f: &crate::operation::FilesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for entity in &f.modified {
+                let fid = entity.file.id.clone();
+                let mut files = self.files.write().await;
+                if let Some(file) = files.iter_mut().find(|x| x.id == fid) {
+                    if let Some(folder_id) = &entity.patch.folder_id {
+                        file.folder_id = folder_id.clone();
+                        file.owner_kit = std::sync::Arc::downgrade(self);
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        async fn apply_families_collection_diff(self: &Arc<Self>, f: &crate::operation::FamiliesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for entity in &f.modified {
+                let fid = entity.family.id.clone();
+                let mut families = self.families.write().await;
+                if let Some(family) = families.iter_mut().find(|x| x.id == fid) {
+                    if let Some(folder_id) = &entity.patch.folder_id {
+                        family.folder_id = folder_id.clone();
+                        family.owner_kit = std::sync::Arc::downgrade(self);
+                    }
+                }
+            }
+            Ok(())
+        }
+
         async fn apply_designs_collection_diff(self: &Arc<Self>, d: &crate::operation::DesignsCollectionDiff) -> Result<(), crate::error::SemioError> {
             for r in &d.removed {
                 let id = r.id.clone();
-                let mut ds = self.designs.write().await;
-                ds.retain(|des| des.id != id);
-                drop(ds);
+                for topo in self.typologies.read().await.iter() {
+                    topo.designs.write().await.retain(|des| des.id != id);
+                }
                 self.design_weak_by_id.write().await.remove(&id);
             }
             for entity in &d.modified {
@@ -4175,6 +5823,9 @@ pub mod kit {
                     }
                     if sc.image.is_some() {
                         *design.image.write().await = sc.image.clone();
+                    }
+                    if let Some(folder_id) = &sc.folder_id {
+                        *design.folder_id.write().await = folder_id.clone();
                     }
                 }
                 if let Some(pc) = &diff.pieces {
@@ -4213,7 +5864,13 @@ pub mod kit {
             let name = entity.name.clone();
             let description = entity.description.clone();
             let (_handle, design) = self.bind_external_design_id(design_id).await;
-            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
+            let topo = self.ensure_default_typology().await;
+            let blueprint_type = crate::kit::r#type::Type::new(std::sync::Arc::downgrade(&topo), format!("type-{}", blueprint_id.as_str())).await;
+            topo.types.write().await.push(blueprint_type.clone());
+            self.type_weak_by_id
+                .write()
+                .await
+                .insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
             let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
             piece.set_name(name).await;
@@ -4448,7 +6105,7 @@ pub mod kit {
 
         async fn apply_create_type_scoped(
             self: &Arc<Self>,
-            _owner_id: &Id,
+            owner_id: &Id,
             type_id: &Id,
             name: String,
             description: Option<String>,
@@ -4459,13 +6116,14 @@ pub mod kit {
             if self.type_by_external_id(type_id).await.is_some() {
                 return Err(crate::error::SemioError::invalid(format!("Type already exists: {}", type_id.as_str())));
             }
-            let ty = crate::kit::r#type::Type::new_with_external_id(Arc::downgrade(self), type_id.clone(), name).await;
+            let topo = self.resolve_typology_owner(owner_id).await;
+            let ty = crate::kit::r#type::Type::new_with_external_id(std::sync::Arc::downgrade(&topo), type_id.clone(), name).await;
             *ty.description.write().await = description.unwrap_or_default();
             *ty.icon.write().await = icon.unwrap_or_default();
             *ty.image.write().await = image.unwrap_or_default();
             *ty.unit.write().await = unit.unwrap_or_default();
             self.type_weak_by_id.write().await.insert(type_id.clone(), Arc::downgrade(&ty));
-            self.types.write().await.push(ty);
+            topo.types.write().await.push(ty);
             Ok(())
         }
 
@@ -4484,7 +6142,7 @@ pub mod kit {
 
         /// @emoji 🔎 Locate a representation by id across all kit types.
         pub async fn find_representation(&self, id: &Id) -> Option<Arc<r#type::Representation>> {
-            let tys = self.types.read().await;
+            let tys = self.types_flat().await;
             for t in tys.iter() {
                 let reps = t.representations.read().await;
                 for r in reps.iter() {
@@ -4496,11 +6154,210 @@ pub mod kit {
             None
         }
 
+        /// @emoji 🪢 Pieces in this kit whose blueprint is the given kind.
+        pub async fn pieces_with_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::piece::Piece>> {
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                for piece in design.has_pieces().await {
+                    if piece.is_type().await.is_some_and(|t| t.id == target) {
+                        out.push(piece);
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🪢 Pieces in this kit whose blueprint is the given design.
+        pub async fn pieces_with_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::piece::Piece>> {
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                for piece in design.has_pieces().await {
+                    if piece.is_design().await.is_some_and(|d| d.id == target) {
+                        out.push(piece);
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting the given kind.
+        pub async fn designs_with_direct_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                if design.references_types().await.iter().any(|t| t.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given kind transitively through nested design blueprints.
+        pub async fn designs_referencing_type_transitive(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                if design.references_types_transitive().await.iter().any(|t| t.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting the given design.
+        pub async fn designs_with_direct_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                if design.references_designs().await.iter().any(|d| d.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given design transitively through nested design blueprints.
+        pub async fn designs_referencing_design_transitive(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                if design.references_designs_transitive().await.iter().any(|d| d.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 💾 Representations on kit kinds that reference the given file.
+        pub async fn representations_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Representation>> {
+            let target = file_id.clone();
+            let mut out = Vec::new();
+            for ty in self.has_types().await.iter() {
+                for rep in ty.representations.read().await.iter() {
+                    if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
+                        out.push(rep.clone());
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🧰 Kinds that own a representation referencing the given file.
+        pub async fn types_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Type>> {
+            use std::collections::HashSet;
+            let target = file_id.clone();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for ty in self.has_types().await.iter() {
+                for rep in ty.representations.read().await.iter() {
+                    if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
+                        if seen.insert(ty.id.clone()) {
+                            out.push(ty.clone());
+                        }
+                        break;
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references the given file.
+        pub async fn designs_with_direct_file_reference(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
+            use std::collections::HashSet;
+            let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.has_designs().await.iter() {
+                if design.references_types().await.iter().any(|t| type_ids.contains(&t.id)) && seen.insert(design.id.clone()) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given file transitively through kinds and nested designs.
+        pub async fn designs_referencing_file_transitive(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
+            let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
+            let mut out = Vec::new();
+            for design in self.has_designs().await.iter() {
+                if design
+                    .references_types_transitive()
+                    .await
+                    .iter()
+                    .any(|t| type_ids.contains(&t.id))
+                {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🪢 All pieces across every design, expanding nested design blueprints.
+        pub async fn has_pieces_transitive(&self) -> Vec<Arc<design::piece::Piece>> {
+            use std::collections::HashSet;
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.has_designs().await.iter() {
+                for piece in design.has_pieces_transitive().await {
+                    if seen.insert(piece.id.clone()) {
+                        out.push(piece);
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🔗 All connections across every design, expanding nested design blueprints.
+        pub async fn has_connections_transitive(&self) -> Vec<Arc<design::connection::Connection>> {
+            use std::collections::HashSet;
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.has_designs().await.iter() {
+                for connection in design.has_connections_transitive().await {
+                    if seen.insert(connection.id.clone()) {
+                        out.push(connection);
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🧰 All kinds referenced by any design piece, expanding nested design blueprints.
+        pub async fn has_types_transitive(&self) -> Vec<Arc<r#type::Type>> {
+            use std::collections::HashSet;
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.has_designs().await.iter() {
+                for ty in design.references_types_transitive().await {
+                    if seen.insert(ty.id.clone()) {
+                        out.push(ty);
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 All designs referenced by any design piece, expanding nested design blueprints.
+        pub async fn has_designs_transitive(&self) -> Vec<Arc<design::Design>> {
+            use std::collections::HashSet;
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.has_designs().await.iter() {
+                for nested in design.references_designs_transitive().await {
+                    if seen.insert(nested.id.clone()) {
+                        out.push(nested);
+                    }
+                }
+            }
+            out
+        }
+
         /// @emoji 🔎 Locate a connector by id across all kit types.
         pub async fn find_connector(&self, id: &Id) -> Option<Arc<r#type::Connector>> {
-            let tys = self.types.read().await;
-            for t in tys.iter() {
-                let conns = t.connectors.read().await;
+            for t in self.has_types().await.iter() {
+                let conns = t.has_connectors().await;
                 for c in conns.iter() {
                     if &c.id == id {
                         return Some(c.clone());
@@ -4797,16 +6654,16 @@ pub mod kit {
                     }
                 }
             }
-            let mut designs = self.designs.write().await;
+            let topo = self.ensure_default_typology().await;
             let mut map = self.design_weak_by_id.write().await;
             if let Some(w) = map.get(design_id) {
                 if let Some(d) = w.upgrade() {
                     return d;
                 }
             }
-            let d = design::Design::with_id(Arc::downgrade(self), design_id.clone(), format!("design-{}", design_id.as_str())).await;
+            let d = design::Design::with_id(std::sync::Arc::downgrade(&topo), design_id.clone(), format!("design-{}", design_id.as_str())).await;
             map.insert(design_id.clone(), Arc::downgrade(&d));
-            designs.push(d.clone());
+            topo.designs.write().await.push(d.clone());
             d
         }
 
@@ -4814,7 +6671,7 @@ pub mod kit {
         pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignSlot, Arc<design::Design>) {
             let design = self.ensure_design(design_id).await;
             let slot = {
-                let designs = self.designs.read().await;
+                let designs = self.designs_flat().await;
                 designs.iter().position(|d| &d.id == design_id).expect("design slot after ensure_design") as u32
             };
             (crate::kit_graph_engine::DesignSlot(slot), design)
@@ -4822,7 +6679,7 @@ pub mod kit {
 
         /// @emoji 🔁 Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
         pub async fn clear_piece_projections_for_backbone_replay(self: &Arc<Self>) {
-            let designs = self.designs.read().await;
+            let designs = self.designs_flat().await;
             for design in designs.iter() {
                 design.pieces.write().await.clear();
                 design.piece_weak_by_external_id.write().await.clear();
@@ -4888,24 +6745,62 @@ pub mod kit {
         pub async fn design(&self, id: Id) -> Option<Arc<design::Design>> {
             self.design_by_external_id(&id).await
         }
-        pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
-            crate::gql_relay::DesignConnection::from_designs(self.designs.read().await.clone()).await
+        /// @emoji 🏘 Designs contained in this kit.
+        #[graphql(name = "hasDesigns")]
+        pub async fn has_designs_field(&self) -> crate::gql_relay::DesignConnection {
+            crate::gql_relay::DesignConnection::from_designs(self.has_designs().await).await
         }
         #[graphql(name = "type")]
         pub async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
             self.type_by_external_id(&id).await
         }
-        pub async fn types(&self) -> crate::gql_relay::TypeConnection {
-            crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone()).await
+        /// @emoji 🧰 Kinds contained in this kit.
+        #[graphql(name = "hasTypes")]
+        pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
+            crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
         }
-        pub async fn files(&self) -> crate::gql_relay::FileConnection {
+        /// @emoji 📄 Files contained in this kit.
+        #[graphql(name = "hasFiles")]
+        pub async fn has_files(&self) -> crate::gql_relay::FileConnection {
             crate::gql_relay::FileConnection::from_entities(self.files.read().await.clone())
         }
-        pub async fn folders(&self) -> crate::gql_relay::FolderConnection {
+        /// @emoji 📁 Folders contained in this kit.
+        #[graphql(name = "hasFolders")]
+        pub async fn has_folders(&self) -> crate::gql_relay::FolderConnection {
             crate::gql_relay::FolderConnection::from_entities(self.folders.read().await.clone())
         }
-        pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
-            crate::gql_relay::FamilyConnection::from_entities(Vec::new())
+        /// @emoji 👪 Families contained in this kit.
+        #[graphql(name = "hasFamilies")]
+        pub async fn has_families(&self) -> crate::gql_relay::FamilyConnection {
+            crate::gql_relay::FamilyConnection::from_entities(self.families.read().await.clone())
+        }
+        /// @emoji 🏛️ Typologies contained in this kit.
+        #[graphql(name = "hasTypologies")]
+        pub async fn has_typologies(&self) -> crate::gql_relay::TypologyConnection {
+            crate::gql_relay::TypologyConnection::from_typologies(self.typologies.read().await.clone()).await
+        }
+        /// @emoji 🪢 All pieces across designs, expanding nested design blueprints.
+        #[graphql(name = "hasPiecesTransitive")]
+        pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
+            crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
+        }
+        /// @emoji 🔗 All connections across designs, expanding nested design blueprints.
+        #[graphql(name = "hasConnectionsTransitive")]
+        pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
+            crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
+        }
+        /// @emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
+        #[graphql(name = "hasTypesTransitive")]
+        pub async fn has_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
+            crate::gql_relay::TypeConnection::from_types(self.has_types_transitive().await).await
+        }
+        /// @emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
+        #[graphql(name = "hasDesignsTransitive")]
+        pub async fn has_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
+            crate::gql_relay::DesignConnection::from_designs(self.has_designs_transitive().await).await
+        }
+        pub async fn typology(&self, id: Id) -> Option<Arc<Typology>> {
+            self.typology_by_id(&id).await
         }
         pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
             crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -4938,8 +6833,7 @@ pub mod kit {
         }
 
         pub async fn family(&self, id: Id) -> Option<crate::gql_relay::Family> {
-            let _ = id;
-            None
+            self.families.read().await.iter().find(|f| f.id == id).cloned()
         }
 
         pub async fn author(&self, id: Id) -> Option<Author> {
@@ -4970,6 +6864,8 @@ pub mod kit {
             self.stats.read().await.iter().find(|s| s.id == id).cloned()
         }
     }
+
+    crate::file_system_node_vfs_complex_ctx!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit);
     //#endregion 📦 kit
 }
 
@@ -6489,7 +8385,7 @@ pub mod interface {
             if let Some(q) = kit.find_quality(id).await {
                 return Some(KitGraphNavNode::Quality(q));
             }
-            let designs = kit.designs.read().await;
+            let designs = kit.designs_flat().await;
             for d in designs.iter() {
                 if &d.id == id {
                     return Some(KitGraphNavNode::Design(d.clone()));
@@ -6536,7 +8432,7 @@ pub mod interface {
     /// @emoji 📍 Resolve `alternativePieceKind` from the WIP kit: find the piece in any design and return the GraphQL `Blueprint` union tag (`Type` or `Design`).
     pub async fn alternative_piece_kind(rt: &crate::worker::ParentStore, piece_id: &Id) -> Option<String> {
         let kit = rt.wip_graph.mutable_kit.read().await.clone();
-        let designs = kit.designs.read().await;
+        let designs = kit.designs_flat().await;
         for d in designs.iter() {
             if let Some(p) = d.piece_by_external_id(piece_id).await {
                 let bp = p.blueprint.read().await.clone();
@@ -6905,6 +8801,7 @@ pub mod operation {
         pub icon: Option<String>,
         pub image: Option<String>,
         pub unit: Option<String>,
+        pub folder_id: Option<Option<Id>>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -6945,6 +8842,7 @@ pub mod operation {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
+        pub folder_id: Option<Option<Id>>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -6970,7 +8868,75 @@ pub mod operation {
 
     //#endregion 🔖canonical_kit_types_designs_mod
 
-    /// @emoji 📦 `files` / `folders` / `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
+    /// @emoji 📁 One `folders.added[]` entry.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FolderAdded {
+        pub id: Id,
+        pub name: String,
+        pub path: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub parent_folder_id: Option<Id>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FolderPatch {
+        pub parent_folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FolderModified {
+        pub folder: IdRef,
+        pub patch: FolderPatch,
+    }
+
+    /// @emoji 📦 Sparse `folders` triple.
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FoldersCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FolderModified>,
+        pub added: Vec<FolderAdded>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FilePatch {
+        pub folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FileModified {
+        pub file: IdRef,
+        pub patch: FilePatch,
+    }
+
+    /// @emoji 📦 Sparse `files` triple (kit-level file folder membership).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FilesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FileModified>,
+        pub added: Vec<IdRef>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FamilyPatch {
+        pub folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FamilyModified {
+        pub family: IdRef,
+        pub patch: FamilyPatch,
+    }
+
+    /// @emoji 📦 Sparse `families` triple (kit-level family folder membership).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FamiliesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FamilyModified>,
+        pub added: Vec<IdRef>,
+    }
+
+    /// @emoji 📦 `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
     pub type KitAuxSubtree = Option<bool>;
 
     /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees use tri-state `KitAuxSubtree` flags).
@@ -6990,8 +8956,9 @@ pub mod operation {
         pub tags: Option<TagsCollectionDiff>,
         pub concepts: Option<ConceptsCollectionDiff>,
         pub qualities: Option<QualitiesCollectionDiff>,
-        pub files: KitAuxSubtree,
-        pub folders: KitAuxSubtree,
+        pub files: Option<FilesCollectionDiff>,
+        pub folders: Option<FoldersCollectionDiff>,
+        pub families: Option<FamiliesCollectionDiff>,
         pub authors: KitAuxSubtree,
     }
 
@@ -7026,6 +8993,7 @@ pub mod operation {
             opt!(qualities);
             opt!(files);
             opt!(folders);
+            opt!(families);
             opt!(authors);
         }
     }
@@ -7190,6 +9158,7 @@ pub mod operation {
         CreateQuality { owner_id: Id, quality_id: Id, attribute_ids: Vec<Id>, benchmark_ids: Vec<Id> },
         CreateDesign { owner_id: Id, design_id: Id },
         CreateType { owner_id: Id, type_id: Id },
+        CreateFolder { owner_id: Id, folder_id: Id },
         Design { design_id: Id },
         Type { type_id: Id },
         CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, attribute_ids: Vec<Id> },
@@ -7212,6 +9181,8 @@ pub mod operation {
         EntityScalars { name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String> },
         FixedPiece { position: PositionInput, name: Option<String>, description: Option<String> },
         Offset { offset: OffsetInput },
+        CreateFolder { name: String, path: String, description: Option<String>, icon: Option<String>, parent_folder_id: Option<Id> },
+        MoveToFolder { folder_id: Option<Id> },
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
@@ -7239,6 +9210,9 @@ pub mod operation {
         DragPieceInDesign { scope: Scope, input: Input },
         DragPiecesInDesign { scope: Scope, input: Input },
         FixPieceInDesign { scope: Scope, input: Input },
+        CreateFolder { scope: Scope, input: Input },
+        DeleteFolder { scope: Scope, input: Input },
+        MoveToFolder { scope: Scope, input: Input },
     }
 
     impl Operation {
@@ -7266,6 +9240,9 @@ pub mod operation {
                 Operation::DragPieceInDesign { .. } => "dragPieceInDesign",
                 Operation::DragPiecesInDesign { .. } => "dragPiecesInDesign",
                 Operation::FixPieceInDesign { .. } => "fixPieceInDesign",
+                Operation::CreateFolder { .. } => "createFolder",
+                Operation::DeleteFolder { .. } => "deleteFolder",
+                Operation::MoveToFolder { .. } => "moveToFolder",
             }
         }
 
@@ -7762,6 +9739,104 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
+                Operation::CreateFolder { scope, input } => {
+                    let Scope::CreateFolder { folder_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFolder expects Scope::CreateFolder"));
+                    };
+                    let Input::CreateFolder { name, path, description, icon, parent_folder_id } = input else {
+                        return Err(SemioError::invalid("createFolder expects Input::CreateFolder"));
+                    };
+                    if let Some(parent_id) = parent_folder_id {
+                        if !kit.folders.read().await.iter().any(|f| f.id == *parent_id) {
+                            return Err(SemioError::not_found("Folder", parent_id.as_str()));
+                        }
+                    }
+                    if kit.folders.read().await.iter().any(|f| f.id == *folder_id) {
+                        return Err(SemioError::invalid(format!("Folder already exists: {}", folder_id.as_str())));
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        folders: Some(FoldersCollectionDiff {
+                            added: vec![FolderAdded { id: folder_id.clone(), name: name.clone(), path: path.clone(), description: description.clone(), icon: icon.clone(), parent_folder_id: parent_folder_id.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
+                }
+                Operation::MoveToFolder { scope, input } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("moveToFolder expects Scope::Entity"));
+                    };
+                    let Input::MoveToFolder { folder_id: new_folder_id } = input else {
+                        return Err(SemioError::invalid("moveToFolder expects Input::MoveToFolder"));
+                    };
+                    if let Some(folder_id) = &new_folder_id {
+                        if !kit.folders.read().await.iter().any(|f| f.id == *folder_id) {
+                            return Err(SemioError::not_found("Folder", folder_id.as_str()));
+                        }
+                    }
+                    let folder_placement: Option<Option<Id>> = Some(new_folder_id.clone());
+                    if kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            folders: Some(FoldersCollectionDiff {
+                                modified: vec![FolderModified { folder: IdRef { id: entity_id.clone() }, patch: FolderPatch { parent_folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.files.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            files: Some(FilesCollectionDiff {
+                                modified: vec![FileModified { file: IdRef { id: entity_id.clone() }, patch: FilePatch { folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.families.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            families: Some(FamiliesCollectionDiff {
+                                modified: vec![FamilyModified { family: IdRef { id: entity_id.clone() }, patch: FamilyPatch { folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.design_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModified {
+                                    design: IdRef { id: entity_id.clone() },
+                                    diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.type_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            types: Some(TypesCollectionDiff {
+                                modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { folder_id: folder_placement, ..Default::default() } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    Err(SemioError::not_found("FileSystemNode", entity_id.as_str()))
+                }
+                Operation::DeleteFolder { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("deleteFolder expects Scope::Entity"));
+                    };
+                    if !kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Err(SemioError::not_found("Folder", entity_id.as_str()));
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        folders: Some(FoldersCollectionDiff { removed: vec![IdRef { id: entity_id.clone() }], ..Default::default() }),
+                        ..Default::default()
+                    }))
+                }
             }
         }
 
@@ -7987,8 +10062,54 @@ pub mod operation {
                         input: entity_scalars_from_type(&ty).await,
                     }])
                 }
+                Operation::CreateFolder { scope, .. } => {
+                    let Scope::CreateFolder { folder_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFolder expects Scope::CreateFolder"));
+                    };
+                    Ok(vec![Operation::DeleteFolder { scope: Scope::Entity { entity_id: folder_id.clone() }, input: Input::None }])
+                }
+                Operation::MoveToFolder { scope, input } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("moveToFolder expects Scope::Entity"));
+                    };
+                    let Input::MoveToFolder { folder_id: _ } = input else {
+                        return Err(SemioError::invalid("moveToFolder expects Input::MoveToFolder"));
+                    };
+                    let previous = vfs_node_folder_placement(kit, entity_id).await?;
+                    Ok(vec![Operation::MoveToFolder { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::MoveToFolder { folder_id: previous } }])
+                }
+                Operation::DeleteFolder { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("deleteFolder expects Scope::Entity"));
+                    };
+                    let folder = kit.folders.read().await.iter().find(|f| f.id == *entity_id).cloned().ok_or_else(|| SemioError::not_found("Folder", entity_id.as_str()))?;
+                    let owner_id = kit.workspace_kit_id().await;
+                    Ok(vec![Operation::CreateFolder {
+                        scope: Scope::CreateFolder { owner_id, folder_id: entity_id.clone() },
+                        input: Input::CreateFolder { name: folder.name.clone(), path: folder.path.clone(), description: folder.description.clone(), icon: folder.icon.clone(), parent_folder_id: folder.parent_folder_id.clone() },
+                    }])
+                }
             }
         }
+    }
+
+    async fn vfs_node_folder_placement(kit: &Arc<crate::kit::Kit>, node_id: &Id) -> Result<Option<Id>, SemioError> {
+        if let Some(folder) = kit.folders.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(folder.parent_folder_id.clone());
+        }
+        if let Some(file) = kit.files.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(file.folder_id.clone());
+        }
+        if let Some(family) = kit.families.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(family.folder_id.clone());
+        }
+        if let Some(design) = kit.design_by_external_id(node_id).await {
+            return Ok(design.folder_id.read().await.clone());
+        }
+        if let Some(ty) = kit.type_by_external_id(node_id).await {
+            return Ok(ty.folder_id.read().await.clone());
+        }
+        Err(SemioError::not_found("FileSystemNode", node_id.as_str()))
     }
 
     fn validate_attribute_ids(expected: usize, actual: &[Id]) -> Result<(), SemioError> {
@@ -8873,7 +10994,7 @@ pub mod kit_graph_engine {
     //#region 🔖 projection_fingerprint
     /// @emoji 🔢 Stable `projectionFingerprint`: [`h`] over sorted piece centers keyed by design id (matches golden `kit-store.golden.expected`).
     pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
-        let designs = kit.designs.read().await;
+        let designs = kit.designs_flat().await;
         let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
         for d in designs.iter() {
             let mut pts: Vec<(f64, f64)> = Vec::new();
@@ -8991,6 +11112,15 @@ pub mod kit_backbone {
         }
     }
 
+    /// @emoji 🆔 Reads an entity id from a plain string or `{ "id": "…" }` bundle ref.
+    pub(crate) fn json_entity_id_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&str> {
+        match v {
+            crate::external_adapters::serde_json::Value::String(s) => Some(s.as_str()),
+            crate::external_adapters::serde_json::Value::Object(o) => o.get("id").and_then(|x| x.as_str()),
+            _ => None,
+        }
+    }
+
     //#region 🔖 dev_backbone_kit_operation_json
     fn position_input_to_json(p: &crate::geom::PositionInput) -> crate::external_adapters::serde_json::Value {
         crate::external_adapters::serde_json::json!({
@@ -9037,11 +11167,14 @@ pub mod kit_backbone {
         if let Some(q) = &d.qualities {
             root.insert("qualities".to_string(), qualities_collection_diff_wire(q));
         }
-        if let Some(v) = d.files {
-            root.insert("files".to_string(), Value::Bool(v));
+        if let Some(_f) = &d.files {
+            root.insert("files".to_string(), Value::Object(Map::new()));
         }
-        if let Some(v) = d.folders {
-            root.insert("folders".to_string(), Value::Bool(v));
+        if let Some(_f) = &d.folders {
+            root.insert("folders".to_string(), Value::Object(Map::new()));
+        }
+        if let Some(_f) = &d.families {
+            root.insert("families".to_string(), Value::Object(Map::new()));
         }
         if let Some(v) = d.authors {
             root.insert("authors".to_string(), Value::Bool(v));
@@ -9384,6 +11517,9 @@ pub mod kit_backbone {
             Scope::CreateType { owner_id, type_id } => crate::external_adapters::serde_json::json!({
                 "CreateType": { "owner_id": owner_id.as_str(), "type_id": type_id.as_str() }
             }),
+            Scope::CreateFolder { owner_id, folder_id } => crate::external_adapters::serde_json::json!({
+                "CreateFolder": { "owner_id": owner_id.as_str(), "folder_id": folder_id.as_str() }
+            }),
             Scope::Design { design_id } => crate::external_adapters::serde_json::json!({ "Design": { "design_id": design_id.as_str() } }),
             Scope::Type { type_id } => crate::external_adapters::serde_json::json!({ "Type": { "type_id": type_id.as_str() } }),
         }
@@ -9462,6 +11598,12 @@ pub mod kit_backbone {
             Input::EntityScalars { name, description, icon, image, unit } => crate::external_adapters::serde_json::json!({
                 "EntityScalars": { "name": name, "description": description, "icon": icon, "image": image, "unit": unit }
             }),
+            Input::CreateFolder { name, path, description, icon, parent_folder_id } => crate::external_adapters::serde_json::json!({
+                "CreateFolder": { "name": name, "path": path, "description": description, "icon": icon, "parent_folder_id": parent_folder_id.as_ref().map(|id| id.as_str()) }
+            }),
+            Input::MoveToFolder { folder_id } => crate::external_adapters::serde_json::json!({
+                "MoveToFolder": { "folder_id": folder_id.as_ref().map(|id| id.as_str()) }
+            }),
         }
     }
 
@@ -9491,6 +11633,9 @@ pub mod kit_backbone {
             Operation::CreateType { scope, input } => crate::external_adapters::serde_json::json!({ "CreateType": pair(scope, input) }),
             Operation::DeleteDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteDesign": pair(scope, input) }),
             Operation::DeleteType { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteType": pair(scope, input) }),
+            Operation::CreateFolder { scope, input } => crate::external_adapters::serde_json::json!({ "CreateFolder": pair(scope, input) }),
+            Operation::DeleteFolder { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteFolder": pair(scope, input) }),
+            Operation::MoveToFolder { scope, input } => crate::external_adapters::serde_json::json!({ "MoveToFolder": pair(scope, input) }),
         }
     }
 
@@ -9612,6 +11757,10 @@ pub mod kit_backbone {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
                 type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("type_id"))?),
             },
+            "CreateFolder" => Scope::CreateFolder {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                folder_id: id_from_str(m.get("folder_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("folder_id"))?),
+            },
             "Design" => Scope::Design { design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?) },
             "Type" => Scope::Type { type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("type_id"))?) },
             other => return Err(SemioError::invalid(format!("unknown scope `{other}`"))),
@@ -9729,6 +11878,20 @@ pub mod kit_backbone {
                     unit: m.get("unit").and_then(|x| x.as_str()).map(|s| s.to_string()),
                 }
             }
+            "CreateFolder" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("CreateFolder"))?;
+                Input::CreateFolder {
+                    name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                    path: m.get("path").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                    description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    parent_folder_id: m.get("parent_folder_id").and_then(|x| x.as_str()).map(id_from_str),
+                }
+            }
+            "MoveToFolder" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("MoveToFolder"))?;
+                Input::MoveToFolder { folder_id: m.get("folder_id").and_then(|x| x.as_str()).map(id_from_str) }
+            }
             other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
         })
     }
@@ -9763,6 +11926,9 @@ pub mod kit_backbone {
             "CreateType" => Operation::CreateType { scope, input },
             "DeleteDesign" => Operation::DeleteDesign { scope, input },
             "DeleteType" => Operation::DeleteType { scope, input },
+            "CreateFolder" => Operation::CreateFolder { scope, input },
+            "DeleteFolder" => Operation::DeleteFolder { scope, input },
+            "MoveToFolder" => Operation::MoveToFolder { scope, input },
             other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
@@ -9793,18 +11959,123 @@ pub mod kit_backbone {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
         let name = kit.name.read().await.clone();
+        let files_items: Vec<crate::external_adapters::serde_json::Value> = {
+            kit.files
+                .read()
+                .await
+                .iter()
+                .map(|f| {
+                    let mut file_obj = crate::external_adapters::serde_json::json!({
+                        "id": f.id.as_str(),
+                        "name": f.name.as_str(),
+                        "hash": f.hash.as_str(),
+                    });
+                    if !f.url.is_empty() {
+                        if f.url.starts_with("data:") || f.url.starts_with("blob:") {
+                            file_obj["blob"] = crate::external_adapters::serde_json::Value::String(f.url.clone());
+                        } else {
+                            file_obj["url"] = crate::external_adapters::serde_json::Value::String(f.url.clone());
+                        }
+                    }
+                    if let Some(folder_id) = &f.folder_id {
+                        file_obj["folder"] = crate::external_adapters::serde_json::json!({ "id": folder_id.as_str() });
+                    }
+                    if let Some(mime) = &f.mime {
+                        file_obj["mime"] = crate::external_adapters::serde_json::Value::String(mime.clone());
+                    }
+                    if let Some(desc) = &f.description {
+                        file_obj["description"] = crate::external_adapters::serde_json::Value::String(desc.clone());
+                    }
+                    if let Some(icon) = &f.icon {
+                        file_obj["icon"] = crate::external_adapters::serde_json::Value::String(icon.clone());
+                    }
+                    file_obj
+                })
+                .collect()
+        };
         let types_items: Vec<crate::external_adapters::serde_json::Value> = {
-            let tys = kit.types.read().await;
+            let tys = kit.types_flat().await;
             let mut out = Vec::with_capacity(tys.len());
             for t in tys.iter() {
                 let tid = t.id.as_str();
                 let nm = t.name.read().await.clone();
-                out.push(crate::external_adapters::serde_json::json!({"id": tid, "name": nm, "connectors": []}));
+                let ports: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut pj = Vec::new();
+                    for port in t.ports.read().await.iter() {
+                        let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
+                            .compatible_with
+                            .read()
+                            .await
+                            .iter()
+                            .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
+                            .collect();
+                        pj.push(crate::external_adapters::serde_json::json!({
+                            "id": port.id.as_str(),
+                            "label": port.label.read().await.clone(),
+                            "code": port.code.read().await.clone(),
+                            "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
+                        }));
+                    }
+                    pj
+                };
+                let connectors: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut cj = Vec::new();
+                    for c in t.connectors.read().await.iter() {
+                        let cid = c.id.as_str();
+                        let cnm = c.name.read().await.clone();
+                        let port_json = if let Some(port) = c.port.read().await.clone() {
+                            let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
+                                .compatible_with
+                                .read()
+                                .await
+                                .iter()
+                                .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
+                                .collect();
+                            crate::external_adapters::serde_json::json!({
+                                "id": port.id.as_str(),
+                                "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
+                            })
+                        } else {
+                            continue;
+                        };
+                        cj.push(crate::external_adapters::serde_json::json!({
+                            "id": cid,
+                            "name": cnm,
+                            "port": port_json,
+                        }));
+                    }
+                    cj
+                };
+                let representations: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut rj = Vec::new();
+                    for rep in t.representations.read().await.iter() {
+                        let mut row = crate::external_adapters::serde_json::json!({
+                            "id": rep.id.as_str(),
+                            "name": rep.name.read().await.clone(),
+                        });
+                        if let Some(file) = rep.file.read().await.clone() {
+                            row["file"] = crate::external_adapters::serde_json::json!({ "id": file.id.as_str() });
+                        }
+                        let url = rep.url.read().await.clone();
+                        if !url.is_empty() {
+                            row["url"] = crate::external_adapters::serde_json::Value::String(url);
+                        }
+                        rj.push(row);
+                    }
+                    rj
+                };
+                out.push(crate::external_adapters::serde_json::json!({
+                    "id": tid,
+                    "name": nm,
+                    "ports": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": ports },
+                    "connectors": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": connectors },
+                    "representations": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": representations },
+                }));
             }
             out
         };
         let design_items: Vec<crate::external_adapters::serde_json::Value> = {
-            let des = kit.designs.read().await;
+            let des = kit.designs_flat().await;
             let mut out = Vec::with_capacity(des.len());
             for d in des.iter() {
                 let did = d.id.as_str();
@@ -9880,15 +12151,385 @@ pub mod kit_backbone {
         if let Some(ts) = kit.updated.read().await.clone() {
             root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
         }
+        let folders_items: Vec<crate::external_adapters::serde_json::Value> = {
+            kit.folders
+                .read()
+                .await
+                .iter()
+                .map(|folder| {
+                    let mut folder_obj = crate::external_adapters::serde_json::json!({
+                        "id": folder.id.as_str(),
+                        "name": folder.name.as_str(),
+                        "path": folder.path.as_str(),
+                    });
+                    if let Some(desc) = &folder.description {
+                        folder_obj["description"] = crate::external_adapters::serde_json::Value::String(desc.clone());
+                    }
+                    if let Some(icon) = &folder.icon {
+                        folder_obj["icon"] = crate::external_adapters::serde_json::Value::String(icon.clone());
+                    }
+                    if let Some(parent_id) = &folder.parent_folder_id {
+                        folder_obj["parent"] = crate::external_adapters::serde_json::json!({ "id": parent_id.as_str() });
+                    }
+                    folder_obj
+                })
+                .collect()
+        };
+        if !folders_items.is_empty() {
+            root.insert(
+                "folders".into(),
+                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": folders_items }),
+            );
+        }
+        if !files_items.is_empty() {
+            root.insert(
+                "files".into(),
+                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }),
+            );
+        }
+        let typologies_items: Vec<crate::external_adapters::serde_json::Value> = {
+            let mut out = Vec::new();
+            for topo in kit.typologies.read().await.iter() {
+                let topo_type_ids: std::collections::HashSet<String> = topo.types.read().await.iter().map(|t| t.id.as_str().to_string()).collect();
+                let topo_types: Vec<_> = types_items.iter().filter(|v| v.get("id").and_then(|x| x.as_str()).map(|s| topo_type_ids.contains(s)).unwrap_or(false)).cloned().collect();
+                let topo_design_ids: std::collections::HashSet<String> = topo.designs.read().await.iter().map(|d| d.id.as_str().to_string()).collect();
+                let topo_designs: Vec<_> = design_items.iter().filter(|v| v.get("id").and_then(|x| x.as_str()).map(|s| topo_design_ids.contains(s)).unwrap_or(false)).cloned().collect();
+                let mut row = crate::external_adapters::serde_json::json!({
+                    "id": topo.id.as_str(),
+                    "name": topo.name.read().await.clone(),
+                    "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": topo_types },
+                    "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": topo_designs },
+                });
+                if let Some(desc) = topo.description.read().await.clone() {
+                    row["description"] = crate::external_adapters::serde_json::Value::String(desc);
+                }
+                if let Some(icon) = topo.icon.read().await.clone() {
+                    row["icon"] = crate::external_adapters::serde_json::Value::String(icon);
+                }
+                out.push(row);
+            }
+            out
+        };
         root.insert(
-            "types".into(),
-            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items }),
+            "typologies".into(),
+            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": typologies_items }),
         );
-        root.insert(
-            "designs".into(),
-            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
-        );
+        if let Some(families) = kit.snapshot_families_projection.read().await.clone() {
+            root.insert("families".into(), families);
+        }
         crate::external_adapters::serde_json::Value::Object(root)
+    }
+
+    async fn hydrate_port_fields_from_json(port: &std::sync::Arc<crate::kit::r#type::Port>, p_json: &crate::external_adapters::serde_json::Value) {
+        if let Some(code) = p_json.get("code").and_then(|v| v.as_str()) {
+            *port.code.write().await = Some(code.to_string());
+        }
+        let label = p_json
+            .get("label")
+            .and_then(|v| v.as_str())
+            .or_else(|| p_json.get("name").and_then(|v| v.as_str()));
+        if let Some(label) = label {
+            *port.label.write().await = Some(label.to_string());
+        }
+        if let Some(order) = p_json.get("order").and_then(|v| v.as_i64()) {
+            *port.order.write().await = Some(order as i32);
+        }
+    }
+
+    /// @emoji 🧬 Hydrates kit-level family ports (metabolism) into a shared registry for type connector resolution.
+    pub(crate) async fn hydrate_kit_scope_ports_from_snapshot_value(
+        json: &crate::external_adapters::serde_json::Value,
+    ) -> std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> {
+        use std::collections::HashMap;
+        use std::sync::Arc;
+        let mut ports_by_id: HashMap<String, Arc<crate::kit::r#type::Port>> = HashMap::new();
+        let owner = std::sync::Weak::<crate::kit::r#type::Type>::new();
+        let families: Vec<crate::external_adapters::serde_json::Value> = json
+            .get("families")
+            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .map(|rows| rows.to_vec())
+            .unwrap_or_default();
+        for fam in &families {
+            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
+                continue;
+            };
+            for p_json in ports_list {
+                let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
+                if ports_by_id.contains_key(pid) {
+                    continue;
+                }
+                let port = crate::kit::r#type::Port::new_with_external_id(owner.clone(), pid.into()).await;
+                hydrate_port_fields_from_json(&port, p_json).await;
+                ports_by_id.insert(pid.to_string(), port);
+            }
+        }
+        for fam in families {
+            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
+                continue;
+            };
+            for p_json in ports_list {
+                let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
+                let Some(port) = ports_by_id.get(pid) else { continue };
+                let mut compat = Vec::new();
+                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+                    for cref in compat_list {
+                        if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
+                            if let Some(target) = ports_by_id.get(cid) {
+                                compat.push(target.clone());
+                            }
+                        }
+                    }
+                }
+                *port.compatible_with.write().await = compat;
+            }
+        }
+        ports_by_id
+    }
+
+    /// @emoji 📁 Hydrates kit-level folder rows from projection JSON (`name`, `path`, nested `parent`).
+    pub(crate) async fn hydrate_kit_folders_from_snapshot_value(
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        let mut folders_slot = kit.folders.write().await;
+        folders_slot.clear();
+        let folders_list = json
+            .get("folders")
+            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .cloned()
+            .unwrap_or_default();
+        for folder_json in &folders_list {
+            let Some(fid) = crate::kit_backbone::json_entity_id_ref(folder_json) else {
+                continue;
+            };
+            let name = folder_json
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or(&fid)
+                .to_string();
+            let path = folder_json
+                .get("path")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| name.clone());
+            folders_slot.push(crate::meta::Folder {
+                id: fid.into(),
+                name,
+                path,
+                description: folder_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                icon: folder_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                parent_folder_id: folder_json
+                    .get("parentFolderId")
+                    .or_else(|| folder_json.get("parent_folder_id"))
+                    .and_then(|v| v.as_str())
+                    .or_else(|| folder_json.get("parent").and_then(crate::kit_backbone::json_entity_id_ref))
+                    .map(|s| s.into()),
+                owner_kit: std::sync::Arc::downgrade(kit),
+            });
+        }
+        Ok(())
+    }
+
+    /// @emoji 📎 Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
+    pub(crate) async fn hydrate_kit_files_from_snapshot_value(
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        let mut files_slot = kit.files.write().await;
+        files_slot.clear();
+        let files_list = json
+            .get("files")
+            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .cloned()
+            .unwrap_or_default();
+        for f_json in &files_list {
+            let Some(fid) = crate::kit_backbone::json_entity_id_ref(f_json) else {
+                continue;
+            };
+            let url = f_json
+                .get("blob")
+                .and_then(|v| v.as_str())
+                .or_else(|| f_json.get("url").and_then(|v| v.as_str()))
+                .or_else(|| f_json.get("uri").and_then(|v| v.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let hash = f_json
+                .get("blobHash")
+                .and_then(|v| v.as_str())
+                .or_else(|| f_json.get("hash").and_then(|v| v.as_str()))
+                .unwrap_or("")
+                .to_string();
+            files_slot.push(crate::meta::File {
+                id: fid.into(),
+                name: f_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string(),
+                url,
+                mime: f_json.get("mime").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                size: f_json.get("size").and_then(|v| v.as_i64()).map(|n| n as i32),
+                hash,
+                description: f_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                icon: f_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                folder_id: f_json
+                    .get("folderId")
+                    .or_else(|| f_json.get("folder_id"))
+                    .and_then(|v| v.as_str())
+                    .or_else(|| f_json.get("folder").and_then(crate::kit_backbone::json_entity_id_ref))
+                    .map(|s| s.into()),
+                owner_kit: std::sync::Arc::downgrade(kit),
+                created: None,
+                updated: None,
+            });
+        }
+        Ok(())
+    }
+
+    /// @emoji 🔌 Hydrates one kit kind's ports, connectors, representations, and port compatibility from projection JSON.
+    pub(crate) async fn hydrate_type_from_snapshot_value(
+        ty: &std::sync::Arc<crate::kit::r#type::Type>,
+        t_json: &crate::external_adapters::serde_json::Value,
+        kit_scope_ports: &std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+    ) -> Result<(), crate::error::SemioError> {
+        use std::collections::HashMap;
+        let owner = std::sync::Arc::downgrade(ty);
+        let mut ports_by_id: HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> = HashMap::new();
+
+        async fn remember_port_json(
+            owner: std::sync::Weak<crate::kit::r#type::Type>,
+            ports_by_id: &mut std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+            kit_scope_ports: &std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+            p_json: &crate::external_adapters::serde_json::Value,
+        ) -> Result<(), crate::error::SemioError> {
+            let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else {
+                return Ok(());
+            };
+            if ports_by_id.contains_key(pid) {
+                return Ok(());
+            }
+            if let Some(existing) = kit_scope_ports.get(pid) {
+                ports_by_id.insert(pid.to_string(), existing.clone());
+                return Ok(());
+            }
+            let port = crate::kit::r#type::Port::new_with_external_id(owner, pid.into()).await;
+            hydrate_port_fields_from_json(&port, p_json).await;
+            ports_by_id.insert(pid.to_string(), port);
+            Ok(())
+        }
+
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for p_json in ports_list {
+                remember_port_json(owner.clone(), &mut ports_by_id, kit_scope_ports, p_json).await?;
+            }
+        }
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for c_json in connectors_list {
+                if let Some(port_json) = c_json.get("port") {
+                    remember_port_json(owner.clone(), &mut ports_by_id, kit_scope_ports, port_json).await?;
+                }
+            }
+        }
+
+        let lookup_port = |pid: &str| {
+            ports_by_id
+                .get(pid)
+                .cloned()
+                .or_else(|| kit_scope_ports.get(pid).cloned())
+        };
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for p_json in ports_list {
+                let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
+                let Some(port) = ports_by_id.get(pid) else { continue };
+                let mut compat = Vec::new();
+                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+                    for cref in compat_list {
+                        if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
+                            if let Some(target) = lookup_port(cid) {
+                                compat.push(target);
+                            }
+                        }
+                    }
+                }
+                *port.compatible_with.write().await = compat;
+            }
+        }
+
+        {
+            let mut ports_slot = ty.ports.write().await;
+            ports_slot.clear();
+            for port in ports_by_id.values() {
+                ports_slot.push(port.clone());
+            }
+        }
+
+        let mut connectors = Vec::new();
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for c_json in connectors_list {
+                let Some(cid) = crate::kit_backbone::json_entity_id_ref(c_json) else { continue };
+                let code = c_json
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| c_json.get("code").and_then(|v| v.as_str()))
+                    .unwrap_or(cid);
+                let connector = crate::kit::r#type::Connector::new_with_external_id(owner.clone(), cid.into(), code.to_string()).await;
+                if let Some(desc) = c_json.get("description").and_then(|v| v.as_str()) {
+                    *connector.description.write().await = desc.to_string();
+                }
+                if let Some(port_json) = c_json.get("port") {
+                    if let Some(pid) = crate::kit_backbone::json_entity_id_ref(port_json) {
+                        if let Some(port) = lookup_port(pid) {
+                            *connector.port.write().await = Some(port);
+                        }
+                    }
+                }
+                connectors.push(connector);
+            }
+        }
+        *ty.connectors.write().await = connectors;
+
+        let mut representations = Vec::new();
+        if let Some(reps_list) = t_json.get("representations").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for r_json in reps_list {
+                let Some(rid) = crate::kit_backbone::json_entity_id_ref(r_json) else {
+                    continue;
+                };
+                let rname = r_json
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| r_json.get("code").and_then(|v| v.as_str()))
+                    .unwrap_or(rid);
+                let url = r_json
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| r_json.get("uri").and_then(|v| v.as_str()))
+                    .unwrap_or("")
+                    .to_string();
+                let rep = crate::kit::r#type::Representation::new_with_external_id(owner.clone(), rid.into(), url).await;
+                *rep.name.write().await = rname.to_string();
+                if let Some(desc) = r_json.get("description").and_then(|v| v.as_str()) {
+                    *rep.description.write().await = desc.to_string();
+                }
+                if let Some(icon) = r_json.get("icon").and_then(|v| v.as_str()) {
+                    *rep.icon.write().await = icon.to_string();
+                }
+                if let Some(file_json) = r_json.get("file") {
+                    if let Some(fid) = crate::kit_backbone::json_entity_id_ref(file_json) {
+                        if let Some(kit_arc) = owner
+                            .upgrade()
+                            .and_then(|ty_arc| ty_arc.owner_typology.upgrade())
+                            .and_then(|topo| topo.owner_kit.upgrade())
+                        {
+                            let files = kit_arc.files.read().await;
+                            if let Some(file) = files.iter().find(|f| f.id.as_str() == fid) {
+                                *rep.file.write().await = Some(file.clone());
+                            }
+                        }
+                    }
+                }
+                representations.push(rep);
+            }
+        }
+        *ty.representations.write().await = representations;
+        ty.refresh_connector_child_weak_maps().await;
+        Ok(())
     }
 
     pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
@@ -9927,43 +12568,105 @@ pub mod kit_backbone {
         if let Some(s) = json.get("version").and_then(|v| v.as_str()) {
             *kit.version.write().await = Some(s.to_string());
         }
+        *kit.snapshot_families_projection.write().await = json.get("families").cloned();
 
-        {
-            let mut tys = kit.types.write().await;
-            let mut tw = kit.type_weak_by_id.write().await;
-            tys.clear();
-            tw.clear();
-            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-            let owner = std::sync::Arc::downgrade(kit);
-            for t in &types_arr {
+        crate::kit_backbone::hydrate_kit_folders_from_snapshot_value(kit, json).await?;
+        crate::kit_backbone::hydrate_kit_files_from_snapshot_value(kit, json).await?;
+
+        kit.typologies.write().await.clear();
+        kit.type_weak_by_id.write().await.clear();
+        kit.design_weak_by_id.write().await.clear();
+
+        let kit_scope_ports = crate::kit_backbone::hydrate_kit_scope_ports_from_snapshot_value(json).await;
+        let kit_owner = std::sync::Arc::downgrade(kit);
+
+        async fn resolve_typology_for_entity_json(
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            entity_json: &crate::external_adapters::serde_json::Value,
+        ) -> std::sync::Arc<crate::gql_relay::Typology> {
+            if let Some(tid) = entity_json
+                .get("typology")
+                .and_then(crate::kit_backbone::json_entity_id_ref)
+            {
+                if let Some(found) = kit.typology_by_id(&tid.into()).await {
+                    return found;
+                }
+            }
+            nested_topo.clone()
+        }
+
+        async fn hydrate_types_block(
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            types_arr: &[crate::external_adapters::serde_json::Value],
+            kit_scope_ports: &std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+        ) -> Result<(), crate::error::SemioError> {
+            for t in types_arr {
                 let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
+                let owner_topo = resolve_typology_for_entity_json(kit, nested_topo, t).await;
+                let topo_owner = std::sync::Arc::downgrade(&owner_topo);
                 let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
-                let entity = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
-                tw.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
-                tys.push(entity);
+                let entity = crate::kit::r#type::Type::new_with_external_id(topo_owner, ts.into(), nm.to_string()).await;
+                crate::kit_backbone::hydrate_type_from_snapshot_value(&entity, t, kit_scope_ports).await?;
+                kit.type_weak_by_id.write().await.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
+                owner_topo.types.write().await.push(entity);
             }
+            Ok(())
         }
 
-        let owner = std::sync::Arc::downgrade(kit);
-        let design_arr_owned = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-        let mut appended: Vec<std::sync::Arc<crate::kit::design::Design>> = Vec::new();
-        for d in &design_arr_owned {
-            let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
-            let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
-            let des = crate::kit::design::Design::with_id(owner.clone(), ds.into(), dn.to_string()).await;
-            hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
-            appended.push(des);
-        }
-        {
-            let mut designs_slot = kit.designs.write().await;
-            let mut weak_map = kit.design_weak_by_id.write().await;
-            designs_slot.clear();
-            weak_map.clear();
-            for des in appended {
-                let did = des.id.clone();
-                weak_map.insert(did, std::sync::Arc::downgrade(&des));
-                designs_slot.push(des);
+        async fn hydrate_designs_block(
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            design_arr: &[crate::external_adapters::serde_json::Value],
+        ) -> Result<(), crate::error::SemioError> {
+            for d in design_arr {
+                let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
+                let owner_topo = resolve_typology_for_entity_json(kit, nested_topo, d).await;
+                let topo_owner = std::sync::Arc::downgrade(&owner_topo);
+                let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
+                let des = crate::kit::design::Design::with_id(topo_owner, ds.into(), dn.to_string()).await;
+                hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
+                kit.design_weak_by_id.write().await.insert(des.id.clone(), std::sync::Arc::downgrade(&des));
+                owner_topo.designs.write().await.push(des);
             }
+            Ok(())
+        }
+
+        let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
+        if let Some(topos) = typologies_arr {
+            let mut topo_entries: Vec<(
+                crate::external_adapters::serde_json::Value,
+                std::sync::Arc<crate::gql_relay::Typology>,
+            )> = Vec::new();
+            for topo_json in &topos {
+                let tid = topo_json.get("id").and_then(|x| x.as_str()).unwrap_or("default-typology");
+                let tnm = topo_json.get("name").and_then(|x| x.as_str()).unwrap_or("Default");
+                let topo = crate::gql_relay::Typology::new_with_external_id(kit_owner.clone(), tid.into(), tnm.to_string()).await;
+                if let Some(desc) = topo_json.get("description").and_then(|x| x.as_str()) {
+                    *topo.description.write().await = Some(desc.to_string());
+                }
+                if let Some(icon) = topo_json.get("icon").and_then(|x| x.as_str()) {
+                    *topo.icon.write().await = Some(icon.to_string());
+                }
+                kit.typologies.write().await.push(topo.clone());
+                topo_entries.push((topo_json.clone(), topo));
+            }
+            for (topo_json, topo) in &topo_entries {
+                let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                hydrate_types_block(topo, kit, &types_arr, &kit_scope_ports).await?;
+            }
+            for (topo_json, topo) in &topo_entries {
+                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                hydrate_designs_block(topo, kit, &designs_arr).await?;
+            }
+        } else {
+            let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;
+            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            hydrate_types_block(&default_topo, kit, &types_arr, &kit_scope_ports).await?;
+            hydrate_designs_block(&default_topo, kit, &designs_arr).await?;
+            kit.typologies.write().await.push(default_topo);
         }
 
         Ok(())
@@ -9988,7 +12691,11 @@ pub mod kit_backbone {
                     return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
                 }
             };
-            let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+            let type_id = type_id_raw.into();
+            let ty = kit
+                .type_by_external_id(&type_id)
+                .await
+                .ok_or_else(|| crate::error::SemioError::not_found("Type", type_id.as_str()))?;
             let pose = pj.get("pose");
             let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
@@ -11315,7 +14022,17 @@ pub mod gql {
         out
     }
 
+    const COLLECT_LA_PATHS_MAX_DEPTH: usize = 64;
+
     fn collect_la_paths(prefix: &str, look: &Lookahead<'_>, acc: &mut Vec<String>) {
+        collect_la_paths_depth(prefix, look, acc, 0);
+    }
+
+    fn collect_la_paths_depth(prefix: &str, look: &Lookahead<'_>, acc: &mut Vec<String>, depth: usize) {
+        if depth > COLLECT_LA_PATHS_MAX_DEPTH {
+            acc.push(prefix.to_string());
+            return;
+        }
         let fields = look.selection_fields();
         if fields.is_empty() {
             acc.push(prefix.to_string());
@@ -11328,7 +14045,7 @@ pub mod gql {
             if nested.selection_fields().is_empty() {
                 acc.push(path);
             } else {
-                collect_la_paths(&path, &nested, acc);
+                collect_la_paths_depth(&path, &nested, acc, depth + 1);
             }
         }
     }
@@ -11434,6 +14151,664 @@ pub mod gql {
             Plane(Arc<Plane>),
             Position(Arc<Position>),
             Location(Arc<Location>),
+            Folder(crate::meta::Folder),
+            File(crate::meta::File),
+            Family(crate::gql_relay::Family),
+            Typology(std::sync::Arc<crate::gql_relay::Typology>),
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
+        #[derive(Clone, Copy, Debug, Eq, PartialEq, crate::external_adapters::async_graphql::Enum)]
+        #[graphql(name = "FileSystemNodeKind")]
+        pub enum FileSystemNodeKind {
+            #[graphql(name = "KIT")]
+            Kit,
+            #[graphql(name = "FOLDER")]
+            Folder,
+            #[graphql(name = "FILE")]
+            File,
+            #[graphql(name = "DESIGN")]
+            Design,
+            #[graphql(name = "TYPE")]
+            Type,
+            #[graphql(name = "FAMILY")]
+            Family,
+            #[graphql(name = "TYPOLOGY")]
+            Typology,
+            #[graphql(name = "PIECE")]
+            Piece,
+            #[graphql(name = "CONNECTION")]
+            Connection,
+            #[graphql(name = "REPRESENTATION")]
+            Representation,
+            #[graphql(name = "PORT")]
+            Port,
+            #[graphql(name = "CONNECTOR")]
+            Connector,
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeEdge` — relay edge for constrained VFS children.
+        #[derive(Clone)]
+        pub struct FileSystemNodeEdge {
+            pub cursor: String,
+            pub node: FileSystemNodeInterface,
+        }
+
+        #[Object(name = "FileSystemNodeEdge")]
+        impl FileSystemNodeEdge {
+            async fn cursor(&self) -> String {
+                self.cursor.clone()
+            }
+            async fn node(&self) -> FileSystemNodeInterface {
+                self.node.clone()
+            }
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeConnection` — relay connection for constrained VFS children.
+        #[derive(Clone)]
+        pub struct FileSystemNodeConnection {
+            pub edges: Vec<FileSystemNodeEdge>,
+            pub page_info: crate::gql_relay::PageInfo,
+            pub hash: String,
+        }
+
+        #[Object(name = "FileSystemNodeConnection")]
+        impl FileSystemNodeConnection {
+            async fn edges(&self) -> &Vec<FileSystemNodeEdge> {
+                &self.edges
+            }
+            async fn page_info(&self) -> &crate::gql_relay::PageInfo {
+                &self.page_info
+            }
+            async fn hash(&self) -> String {
+                self.hash.clone()
+            }
+        }
+
+        /// @emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "FileSystemNode",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<EntityInterface>"),
+            field(name = "owns", ty = "Option<EntityConnectionInterface>"),
+            field(name = "fileSystemParent", method = "file_system_parent", ty = "Option<FileSystemNodeInterface>"),
+            field(name = "fileSystemChildren", method = "file_system_children", ty = "FileSystemNodeConnection"),
+            field(
+                name = "fileSystemChild",
+                method = "file_system_child",
+                arg(name = "id", ty = "crate::id::Id"),
+                ty = "Option<FileSystemNodeInterface>"
+            ),
+            field(name = "fileSystemPath", method = "file_system_path", ty = "String"),
+            field(name = "fileSystemName", method = "file_system_name", ty = "String"),
+            field(name = "isFileSystemRoot", method = "is_file_system_root", ty = "bool"),
+            field(name = "fileSystemKind", method = "file_system_kind", ty = "FileSystemNodeKind"),
+            field(name = "fileSystemHasChildren", method = "file_system_has_children", ty = "bool")
+        )]
+        pub enum FileSystemNodeInterface {
+            Kit(Arc<crate::kit::Kit>),
+            Folder(crate::meta::Folder),
+            File(crate::meta::File),
+            Design(Arc<crate::kit::design::Design>),
+            Type(Arc<crate::kit::r#type::Type>),
+            Family(crate::gql_relay::Family),
+            Typology(Arc<crate::gql_relay::Typology>),
+            Piece(Arc<crate::kit::design::piece::Piece>),
+            Connection(Arc<crate::kit::design::connection::Connection>),
+            Representation(Arc<crate::kit::r#type::Representation>),
+            Port(Arc<crate::kit::r#type::Port>),
+            Connector(Arc<crate::kit::r#type::Connector>),
+        }
+
+        impl FileSystemNodeInterface {
+            /// @emoji 🆔 Whether this VFS node matches the given id.
+            pub fn matches_id(&self, id: &crate::id::Id) -> bool {
+                match self {
+                    Self::Kit(k) => k.id == *id,
+                    Self::Folder(f) => f.id == *id,
+                    Self::File(f) => f.id == *id,
+                    Self::Design(d) => d.id == *id,
+                    Self::Type(t) => t.id == *id,
+                    Self::Family(f) => f.id == *id,
+                    Self::Typology(t) => t.id == *id,
+                    Self::Piece(p) => p.id == *id,
+                    Self::Connection(c) => c.id == *id,
+                    Self::Representation(r) => r.id == *id,
+                    Self::Port(p) => p.id == *id,
+                    Self::Connector(c) => c.id == *id,
+                }
+            }
+        }
+
+        pub mod file_system_vfs {
+            use std::sync::Arc;
+
+            use super::{FileSystemNodeConnection, FileSystemNodeEdge, FileSystemNodeInterface};
+            use crate::external_adapters::async_graphql::Context;
+            use crate::gql_relay::PageInfo;
+            use crate::id::Id;
+            use crate::kit::Kit;
+            use crate::meta::Folder;
+            use crate::worker::ParentStore;
+
+            /// @emoji 📁 Empty VFS child connection when the backing node cannot be resolved.
+            pub fn empty_connection() -> FileSystemNodeConnection {
+                FileSystemNodeConnection {
+                    edges: Vec::new(),
+                    page_info: PageInfo::default(),
+                    hash: String::new(),
+                }
+            }
+
+            /// @emoji 📁 Resolve the active kit as a VFS node (ignores the `#[Object]` receiver).
+            pub async fn node_for_kit(
+                _kit: &Kit,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                Some(FileSystemNodeInterface::Kit(
+                    rt.wip_graph.mutable_kit.read().await.clone(),
+                ))
+            }
+
+            /// @emoji 📁 Resolve a typology as a VFS node from the live kit graph.
+            pub async fn node_for_typology(
+                topo: &crate::gql_relay::Typology,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let kit = topo.owner_kit.upgrade()?;
+                let tops = kit.typologies.read().await;
+                tops.iter().find(|t| t.id == topo.id).cloned().map(FileSystemNodeInterface::Typology)
+            }
+
+            /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
+            pub async fn node_for_type(
+                ty: &crate::kit::r#type::Type,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let kit = ty.owner_kit().await?;
+                let types = kit.types_flat().await;
+                types
+                    .iter()
+                    .find(|t| t.id == ty.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Type)
+            }
+
+            /// @emoji 📁 Resolve a design as a VFS node from its owning kit graph.
+            pub async fn node_for_design(
+                design: &crate::kit::design::Design,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let kit = design.owner_kit().await?;
+                let designs = kit.designs_flat().await;
+                designs
+                    .iter()
+                    .find(|d| d.id == design.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Design)
+            }
+
+            /// @emoji 📁 Resolve a piece as a VFS node from its owning design.
+            pub async fn node_for_piece(
+                piece: &crate::kit::design::piece::Piece,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let design = piece.owner_design.upgrade()?;
+                let designs = kit.designs_flat().await;
+                let design = designs.iter().find(|d| d.id == design.id)?;
+                let pieces = design.pieces.read().await;
+                pieces
+                    .iter()
+                    .find(|p| p.id == piece.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Piece)
+            }
+
+            /// @emoji 📁 Resolve a connection as a VFS node from its owning design.
+            pub async fn node_for_connection(
+                connection: &crate::kit::design::connection::Connection,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let design = connection.owner_design.upgrade()?;
+                let designs = kit.designs_flat().await;
+                let design = designs.iter().find(|d| d.id == design.id)?;
+                let connections = design.connections.read().await;
+                connections
+                    .iter()
+                    .find(|c| c.id == connection.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Connection)
+            }
+
+            /// @emoji 📁 Resolve a representation as a VFS node from its owning kind.
+            pub async fn node_for_representation(
+                representation: &crate::kit::r#type::Representation,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let owner = representation.owner_type.upgrade()?;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let reps = ty.representations.read().await;
+                reps.iter()
+                    .find(|r| r.id == representation.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Representation)
+            }
+
+            /// @emoji 📁 Resolve a port as a VFS node from its owning kind.
+            pub async fn node_for_port(port: &crate::kit::r#type::Port, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
+                let owner = port.owner_type.upgrade()?;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let ports = ty.ports.read().await;
+                ports.iter().find(|p| p.id == port.id).cloned().map(FileSystemNodeInterface::Port)
+            }
+
+            /// @emoji 📁 Resolve a connector as a VFS node from its owning kind.
+            pub async fn node_for_connector(
+                connector: &crate::kit::r#type::Connector,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let owner = connector.owner_type.upgrade()?;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let connectors = ty.connectors.read().await;
+                connectors
+                    .iter()
+                    .find(|c| c.id == connector.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Connector)
+            }
+
+            /// @emoji 📁 Maps a VFS node to its SDL kind discriminant.
+            pub fn kind(node: &FileSystemNodeInterface) -> super::FileSystemNodeKind {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => super::FileSystemNodeKind::Kit,
+                    FileSystemNodeInterface::Folder(_) => super::FileSystemNodeKind::Folder,
+                    FileSystemNodeInterface::File(_) => super::FileSystemNodeKind::File,
+                    FileSystemNodeInterface::Design(_) => super::FileSystemNodeKind::Design,
+                    FileSystemNodeInterface::Type(_) => super::FileSystemNodeKind::Type,
+                    FileSystemNodeInterface::Family(_) => super::FileSystemNodeKind::Family,
+                    FileSystemNodeInterface::Typology(_) => super::FileSystemNodeKind::Typology,
+                    FileSystemNodeInterface::Piece(_) => super::FileSystemNodeKind::Piece,
+                    FileSystemNodeInterface::Connection(_) => super::FileSystemNodeKind::Connection,
+                    FileSystemNodeInterface::Representation(_) => super::FileSystemNodeKind::Representation,
+                    FileSystemNodeInterface::Port(_) => super::FileSystemNodeKind::Port,
+                    FileSystemNodeInterface::Connector(_) => super::FileSystemNodeKind::Connector,
+                }
+            }
+
+            fn join_path(parent: &str, segment: &str) -> String {
+                if parent.is_empty() {
+                    if segment.starts_with('/') {
+                        segment.to_string()
+                    } else {
+                        format!("/{segment}")
+                    }
+                } else {
+                    format!("{parent}/{segment}")
+                }
+            }
+
+            async fn folder_path(kit: &Arc<Kit>, folder: &Folder) -> String {
+                if !folder.path.is_empty() {
+                    return folder.path.clone();
+                }
+                let mut segments = vec![folder.name.clone()];
+                let mut current_parent = folder.parent_folder_id.clone();
+                let folders = kit.folders.read().await;
+                while let Some(parent_id) = current_parent {
+                    let Some(parent) = folders.iter().find(|f| f.id == parent_id) else {
+                        break;
+                    };
+                    segments.insert(0, parent.name.clone());
+                    current_parent = parent.parent_folder_id.clone();
+                }
+                join_path("", &segments.join("/"))
+            }
+
+            pub async fn parent(node: &FileSystemNodeInterface) -> Option<FileSystemNodeInterface> {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => None,
+                    FileSystemNodeInterface::Folder(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(parent_id) = &f.parent_folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == parent_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::File(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(folder_id) = &f.folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        if let Some(folder_id) = d.folder_id.read().await.clone() {
+                            let kit = d.owner_kit().await?;
+                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            Some(FileSystemNodeInterface::Folder(folder))
+                        } else {
+                            d.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
+                        }
+                    }
+                    FileSystemNodeInterface::Type(t) => {
+                        if let Some(folder_id) = t.folder_id.read().await.clone() {
+                            let kit = t.owner_kit().await?;
+                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            Some(FileSystemNodeInterface::Folder(folder))
+                        } else {
+                            t.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
+                        }
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let kit = topo.owner_kit.upgrade()?;
+                        if let Some(folder_id) = topo.folder_id.read().await.clone() {
+                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Family(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(folder_id) = &f.folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Piece(p) => p.owner_design.upgrade().map(FileSystemNodeInterface::Design),
+                    FileSystemNodeInterface::Connection(c) => c.owner_design.upgrade().map(FileSystemNodeInterface::Design),
+                    FileSystemNodeInterface::Representation(r) => {
+                        r.owner_type.upgrade().map(FileSystemNodeInterface::Type)
+                    }
+                    FileSystemNodeInterface::Port(p) => p.owner_type.upgrade().map(FileSystemNodeInterface::Type),
+                    FileSystemNodeInterface::Connector(c) => {
+                        c.owner_type.upgrade().map(FileSystemNodeInterface::Type)
+                    }
+                }
+            }
+
+            async fn children_nodes(node: &FileSystemNodeInterface) -> Vec<FileSystemNodeInterface> {
+                match node {
+                    FileSystemNodeInterface::Kit(k) => {
+                        let mut out = Vec::new();
+                        for folder in k.folders.read().await.iter().filter(|f| f.parent_folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::Folder(folder.clone()));
+                        }
+                        for file in k.files.read().await.iter().filter(|f| f.folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::File(file.clone()));
+                        }
+                        for topo in k.typologies.read().await.iter() {
+                            if topo.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Typology(topo.clone()));
+                            }
+                        }
+                        for family in k.families.read().await.iter().filter(|f| f.folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::Family(family.clone()));
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Folder(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return Vec::new();
+                        };
+                        let fid = &f.id;
+                        let mut out = Vec::new();
+                        for sub in kit.folders.read().await.iter().filter(|x| x.parent_folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::Folder(sub.clone()));
+                        }
+                        for file in kit.files.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::File(file.clone()));
+                        }
+                        for design in kit.designs_flat().await.iter() {
+                            if design.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Design(design.clone()));
+                            }
+                        }
+                        for ty in kit.types_flat().await.iter() {
+                            if ty.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                            }
+                        }
+                        for family in kit.families.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::Family(family.clone()));
+                        }
+                        for topo in kit.typologies.read().await.iter() {
+                            if topo.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Typology(topo.clone()));
+                            }
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let mut out = Vec::new();
+                        for ty in topo.types.read().await.iter() {
+                            if ty.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                            }
+                        }
+                        for design in topo.designs.read().await.iter() {
+                            if design.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Design(design.clone()));
+                            }
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        let mut out = Vec::new();
+                        for piece in d.pieces.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Piece(piece.clone()));
+                        }
+                        for conn in d.connections.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Connection(conn.clone()));
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Type(t) => {
+                        let mut out = Vec::new();
+                        for rep in t.representations.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Representation(rep.clone()));
+                        }
+                        for port in t.ports.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Port(port.clone()));
+                        }
+                        for connector in t.connectors.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Connector(connector.clone()));
+                        }
+                        out
+                    }
+                    _ => Vec::new(),
+                }
+            }
+
+            /// @emoji 📁 Whether the node has at least one VFS child.
+            pub async fn has_children(node: &FileSystemNodeInterface) -> bool {
+                !children_nodes(node).await.is_empty()
+            }
+
+            pub async fn children(node: &FileSystemNodeInterface) -> FileSystemNodeConnection {
+                let nodes = children_nodes(node).await;
+                let edges: Vec<_> = nodes.into_iter().enumerate().map(|(i, n)| FileSystemNodeEdge { cursor: format!("{i}"), node: n }).collect();
+                let hash = crate::hash::merkle_node_str(&["FileSystemNodeConnection"], Vec::<String>::new());
+                FileSystemNodeConnection {
+                    edges,
+                    page_info: PageInfo { has_next_page: false, has_previous_page: false, start_cursor: None, end_cursor: None },
+                    hash,
+                }
+            }
+
+            pub async fn child(node: &FileSystemNodeInterface, id: &Id) -> Option<FileSystemNodeInterface> {
+                children_nodes(node).await.into_iter().find(|n| FileSystemNodeInterface::matches_id(n, id))
+            }
+
+            pub async fn path(node: &FileSystemNodeInterface) -> String {
+                Box::pin(path_inner(node)).await
+            }
+
+            async fn path_inner(node: &FileSystemNodeInterface) -> String {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => String::new(),
+                    FileSystemNodeInterface::Folder(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return String::new();
+                        };
+                        folder_path(&kit, f).await
+                    }
+                    FileSystemNodeInterface::File(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return String::new();
+                        };
+                        let segment = f.name.as_str();
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => join_path(&folder_path(&kit, &folder).await, segment),
+                            _ => join_path("", segment),
+                        }
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        let segment = d.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = d.owner_kit().await {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Type(t) => {
+                        let segment = t.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = t.owner_kit().await {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let segment = topo.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = topo.owner_kit.upgrade() {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Family(f) => {
+                        let segment = f.name.as_str();
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = f.owner_kit.upgrade() {
+                                    join_path(&folder_path(&kit, &folder).await, segment)
+                                } else {
+                                    join_path("", segment)
+                                }
+                            }
+                            _ => join_path("", segment),
+                        }
+                    }
+                    FileSystemNodeInterface::Piece(p) => {
+                        if let Some(design) = p.owner_design.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Design(design))).await;
+                            let segment = p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string());
+                            join_path(&base, &segment)
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Connection(c) => {
+                        if let Some(design) = c.owner_design.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Design(design))).await;
+                            let segment = c.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Representation(r) => {
+                        if let Some(ty) = r.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let segment = r.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Port(p) => {
+                        if let Some(ty) = p.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let label = p.label.read().await.clone();
+                            let code = p.code.read().await.clone();
+                            let segment = label
+                                .filter(|s| !s.is_empty())
+                                .or(code)
+                                .unwrap_or_else(|| p.id.as_str().to_string());
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Connector(c) => {
+                        if let Some(ty) = c.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let segment = c.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                }
+            }
+
+            pub async fn name(node: &FileSystemNodeInterface) -> String {
+                match node {
+                    FileSystemNodeInterface::Kit(k) => k.name.read().await.clone(),
+                    FileSystemNodeInterface::Folder(f) => f.name.clone(),
+                    FileSystemNodeInterface::File(f) => f.name.clone(),
+                    FileSystemNodeInterface::Design(d) => d.name.read().await.clone(),
+                    FileSystemNodeInterface::Type(t) => t.name.read().await.clone(),
+                    FileSystemNodeInterface::Family(f) => f.name.clone(),
+                    FileSystemNodeInterface::Typology(t) => t.name.read().await.clone(),
+                    FileSystemNodeInterface::Piece(p) => p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string()),
+                    FileSystemNodeInterface::Connection(c) => c.name.read().await.clone(),
+                    FileSystemNodeInterface::Representation(r) => r.name.read().await.clone(),
+                    FileSystemNodeInterface::Port(p) => {
+                        let label = p.label.read().await.clone();
+                        let code = p.code.read().await.clone();
+                        label
+                            .filter(|s| !s.is_empty())
+                            .or(code)
+                            .unwrap_or_else(|| p.id.as_str().to_string())
+                    }
+                    FileSystemNodeInterface::Connector(c) => c.name.read().await.clone(),
+                }
+            }
         }
 
         impl KitGraphParentWeak {
@@ -13988,6 +17363,56 @@ pub mod gql {
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
+        #[graphql(name = "createFolder")]
+        async fn create_folder(
+            &self,
+            ctx: &Context<'_>,
+            name: String,
+            path: String,
+            description: Option<String>,
+            icon: Option<String>,
+            #[graphql(name = "parentFolderId")] parent_folder_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
+            if transaction_id != self.change_id {
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
+            }
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let owner_id = kit.workspace_kit_id().await;
+            let folder_id = Id::new().await;
+            let request_id = Id::new().await;
+            let cmd = Command::ApplyOperation {
+                request_id: request_id.clone(),
+                workspace_id,
+                transaction_id,
+                operation: crate::operation::Operation::CreateFolder {
+                    scope: Scope::CreateFolder { owner_id, folder_id },
+                    input: Input::CreateFolder { name, path, description, icon, parent_folder_id },
+                },
+            };
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
+        }
+
+        #[graphql(name = "moveToFolder")]
+        async fn move_to_folder(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "nodeId")] node_id: Id,
+            #[graphql(name = "folderId")] folder_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_unsaved_kit_operation(
+                rt,
+                &self.change_id,
+                crate::operation::Operation::MoveToFolder { scope: Scope::Entity { entity_id: node_id }, input: Input::MoveToFolder { folder_id } },
+            )
+            .await
+            .into())
+        }
+
         async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationInput {
             DesignOperationInput { change_id: self.change_id.clone(), design_id: id }
         }
@@ -14652,6 +18077,10 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::EntityEdgeInterface>()
             .register_output_type::<crate::gql::interfaces::EntityConnectionInterface>()
             .register_output_type::<crate::gql::interfaces::EntityInterface>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeKind>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeEdge>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeConnection>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeInterface>()
             .register_output_type::<crate::gql::interfaces::WorkspaceInterface>()
             .register_output_type::<crate::gql::BackboneStatus>()
             .register_output_type::<crate::gql::BackboneInterface>()
@@ -15179,7 +18608,7 @@ pub mod kit_store_comprehensive_e2e {
         let inv = &exp["invariants"];
         let workspace_id = g.id.clone();
         let kit = g.materialized_kit_for_workspace(&workspace_id).await;
-        let ds = kit.designs.read().await;
+        let ds = kit.designs_flat().await;
         assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
         let mut total = 0usize;
         let mut centers: Vec<[f64; 2]> = Vec::new();
@@ -15251,8 +18680,8 @@ pub mod kit_store_comprehensive_e2e {
             }
         }
         if step.get("expectAuthoritativeDesignsHaveNoPieces").and_then(|v| v.as_bool()) == Some(true) {
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
-            let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
+            let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
+            let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative must not mirror wip pieces");
         }
         if let Some(relay_contains) = step.get("expectRelayContains").and_then(|o| o.as_object()) {
@@ -15616,11 +19045,11 @@ mod tests {
     "#;
 
     fn relay_wip_designs_have_piece() -> &'static str {
-        "{ store { wip { theKit { kit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } } }"
+        "{ store { wip { theKit { kit { hasDesigns { edges { node { id hasPieces { edges { node { id position { center { u v } } } } } } } } } } } } }"
     }
 
     fn relay_auth_designs_piece_ids() -> &'static str {
-        "{ store { authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } } }"
+        "{ store { authoritative { theKit { kit { hasDesigns { edges { node { hasPieces { edges { node { id } } } } } } } } } } }"
     }
 
     /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
@@ -15986,6 +19415,228 @@ mod tests {
     }
 
     #[test]
+    fn derived_reference_computed_properties_resolve() {
+        block_on(async {
+            use std::sync::Arc;
+
+            use crate::geom::PositionInput;
+            use crate::kit::design::{piece::Piece, Design};
+            use crate::kit::r#type::{Blueprint, Representation, Type};
+            use crate::meta::File;
+
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.mutable_kit.read().await.clone();
+            let owner = Arc::downgrade(&kit);
+
+            let file = File {
+                id: "file-1".into(),
+                name: "file-1".to_string(),
+                url: "kit://file-1".to_string(),
+                mime: None,
+                size: None,
+                hash: "blob-1".to_string(),
+                description: None,
+                icon: None,
+                folder_id: None,
+                owner_kit: owner.clone(),
+                created: None,
+                updated: None,
+            };
+            kit.files.write().await.push(file.clone());
+
+            let topo = kit.ensure_default_typology().await;
+            let topo_owner = Arc::downgrade(&topo);
+            let ty = Type::new_with_external_id(topo_owner.clone(), "type-1".into(), "Type One".to_string()).await;
+            let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-1".into(), "rep://a".to_string()).await;
+            *rep.file.write().await = Some(file);
+            ty.representations.write().await.push(rep.clone());
+
+            let d1 = Design::with_id(topo_owner.clone(), "design-1".into(), "D1".to_string()).await;
+            let d2 = Design::with_id(topo_owner.clone(), "design-2".into(), "D2".to_string()).await;
+            let d3 = Design::with_id(topo_owner.clone(), "design-3".into(), "D3".to_string()).await;
+
+            let pos = PositionInput::default();
+            let od1 = Arc::downgrade(&d1);
+            let od2 = Arc::downgrade(&d2);
+            let od3 = Arc::downgrade(&d3);
+
+            d1.insert_piece(Piece::new_fixed_with_external_id("p1".into(), od1.clone(), Blueprint::Type(ty.clone()), pos).await).await;
+            d2.insert_piece(Piece::new_fixed_with_external_id("p2".into(), od2.clone(), Blueprint::Design(d3.clone()), pos).await).await;
+            d3.insert_piece(Piece::new_fixed_with_external_id("p3".into(), od3.clone(), Blueprint::Design(d1.clone()), pos).await).await;
+            d3.insert_piece(Piece::new_fixed_with_external_id("p4".into(), od3, Blueprint::Type(ty.clone()), pos).await).await;
+            d1.insert_piece(Piece::new_fixed_with_external_id("p-ref".into(), od1, Blueprint::Design(d2.clone()), pos).await).await;
+
+            {
+                topo.types.write().await.push(ty.clone());
+                kit.type_weak_by_id.write().await.insert(ty.id.clone(), Arc::downgrade(&ty));
+            }
+            {
+                let mut des = topo.designs.write().await;
+                let mut weak = kit.design_weak_by_id.write().await;
+                for d in [&d1, &d2, &d3] {
+                    weak.insert(d.id.clone(), Arc::downgrade(d));
+                    des.push(d.clone());
+                }
+            }
+            *graph.mutable_kit.write().await = kit.clone();
+
+            assert_eq!(ty.files_from_representations().await.len(), 1);
+            assert_eq!(ty.files_from_representations().await[0].id.as_str(), "file-1");
+            assert_eq!(d2.references_designs().await.len(), 1);
+            assert_eq!(d2.references_designs().await[0].id.as_str(), "design-3");
+            assert!(d2.references_types().await.is_empty());
+            assert_eq!(d2.references_files().await.len(), 0);
+
+            let (all_types, all_designs, all_files) = d2.transitive_reference_closure().await;
+            assert_eq!(all_types.len(), 1);
+            assert_eq!(all_types[0].id.as_str(), "type-1");
+            assert_eq!(all_designs.len(), 2);
+            let design_ids: Vec<_> = all_designs.iter().map(|d| d.id.as_str()).collect();
+            assert!(design_ids.contains(&"design-3"));
+            assert!(design_ids.contains(&"design-1"));
+            assert_eq!(all_files.len(), 1);
+
+            let refs = d2.referenced_by_pieces().await;
+            assert_eq!(refs.len(), 1);
+            assert_eq!(refs[0].id.as_str(), "p-ref");
+
+            let ty_refs = ty.referenced_by_pieces().await;
+            assert_eq!(ty_refs.len(), 2);
+            let ty_ref_designs = ty.referenced_by_designs_direct().await;
+            assert_eq!(ty_ref_designs.len(), 2);
+            assert!(ty.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(d3.referenced_by_designs_direct().await.len(), 1);
+            assert_eq!(d3.referenced_by_designs_direct().await[0].id.as_str(), "design-2");
+            assert!(d1.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(kit.representations_for_file(&"file-1".into()).await.len(), 1);
+            assert_eq!(kit.types_for_file(&"file-1".into()).await.len(), 1);
+            assert!(kit.designs_with_direct_file_reference(&"file-1".into()).await.iter().any(|d| d.id.as_str() == "design-1"));
+            assert!(kit.designs_referencing_file_transitive(&"file-1".into()).await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(d1.references_representations().await.len(), 1);
+            assert_eq!(d1.references_representations().await[0].id.as_str(), "rep-1");
+            assert_eq!(d2.references_representations().await.len(), 0);
+            assert_eq!(d2.references_representations_transitive().await.len(), 1);
+            let rep_ref_designs = rep.referenced_by_designs_direct().await;
+            assert_eq!(rep_ref_designs.len(), 2);
+            assert!(rep.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+            assert_eq!(rep.referenced_by_pieces().await.len(), 2);
+            assert_eq!(rep.owner_types().await.len(), 1);
+            assert_eq!(rep.owner_types().await[0].id.as_str(), "type-1");
+            assert_eq!(rep.linked_files().await.len(), 1);
+            assert_eq!(rep.linked_files().await[0].id.as_str(), "file-1");
+
+            let rt = crate::worker::ParentStore::spawn().await;
+            *rt.wip_graph.mutable_kit.write().await = kit.clone();
+            *rt.wip_graph.initial_kit.write().await = kit;
+            let schema = crate::gql::build_schema_for(rt);
+            let q = r#"
+                query {
+                    store {
+                        wip {
+                            initialKit {
+                                type(id: "type-1") {
+                                    referencesFiles { edges { node { id } } }
+                                    referencedBy { edges { node { id } } }
+                                    referencedByDesigns { edges { node { id } } }
+                                    referencedByDesignsTransitive { edges { node { id } } }
+                                }
+                                designD1: design(id: "design-1") {
+                                    hasPieces { edges { node { id isType { id } isDesign { id } } } }
+                                    hasLayers { edges { node { id } } }
+                                    hasGroups { edges { node { id } } }
+                                    referencesRepresentations { edges { node { id } } }
+                                    referencesRepresentationsTransitive { edges { node { id } } }
+                                }
+                                designD2: design(id: "design-2") {
+                                    referencesTypes { edges { node { id } } }
+                                    referencesDesigns { edges { node { id } } }
+                                    referencesTypesTransitive { edges { node { id } } }
+                                    referencesDesignsTransitive { edges { node { id } } }
+                                    referencesFilesTransitive { edges { node { id } } }
+                                    referencesRepresentations { edges { node { id } } }
+                                    referencesRepresentationsTransitive { edges { node { id } } }
+                                    referencedBy { edges { node { id } } }
+                                    referencedByDesigns { edges { node { id } } }
+                                    referencedByDesignsTransitive { edges { node { id } } }
+                                }
+                                type(id: "type-1") {
+                                    representation(id: "rep-1") {
+                                        referencedBy { edges { node { id } } }
+                                        hasTypes { edges { node { id } } }
+                                        referencesFiles { edges { node { id } } }
+                                        referencedByDesigns { edges { node { id } } }
+                                        referencedByDesignsTransitive { edges { node { id } } }
+                                    }
+                                }
+                                designD3: design(id: "design-3") {
+                                    referencedByDesigns { edges { node { id } } }
+                                }
+                                fileF1: file(id: "file-1") {
+                                    hasRepresentations { edges { node { id } } }
+                                    referencesTypes { edges { node { id } } }
+                                    referencesDesigns { edges { node { id } } }
+                                    referencesDesignsTransitive { edges { node { id } } }
+                                }
+                            }
+                        }
+                    }
+                }"#;
+            let res = schema.execute(Request::new(q)).await;
+            assert!(res.errors.is_empty(), "derived refs query: {:?}", res.errors);
+            let json = res.data.into_json().unwrap();
+            let kit_json = &json["store"]["wip"]["initialKit"];
+            let type_files = kit_json["type"]["referencesFiles"]["edges"].as_array().expect("type files");
+            assert_eq!(type_files[0]["node"]["id"], "file-1");
+            let design_d2 = &kit_json["designD2"];
+            assert!(design_d2["referencesTypes"]["edges"].as_array().unwrap().is_empty());
+            assert_eq!(design_d2["referencesDesigns"]["edges"][0]["node"]["id"], "design-3");
+            assert_eq!(design_d2["referencesTypesTransitive"]["edges"][0]["node"]["id"], "type-1");
+            let all_design_ids: Vec<_> = design_d2["referencesDesignsTransitive"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|e| e["node"]["id"].as_str().unwrap())
+                .collect();
+            assert!(all_design_ids.contains(&"design-3"));
+            assert!(all_design_ids.contains(&"design-1"));
+            assert_eq!(design_d2["referencesFilesTransitive"]["edges"][0]["node"]["id"], "file-1");
+            assert_eq!(design_d2["referencedBy"]["edges"][0]["node"]["id"], "p-ref");
+            assert_eq!(design_d2["referencedByDesigns"]["edges"][0]["node"]["id"], "design-1");
+            assert_eq!(kit_json["designD1"]["referencesRepresentations"]["edges"][0]["node"]["id"], "rep-1");
+            let d1_pieces = kit_json["designD1"]["hasPieces"]["edges"].as_array().unwrap();
+            assert!(d1_pieces.iter().any(|e| e["node"]["id"] == "p1" && e["node"]["isType"]["id"] == "type-1"));
+            assert!(d1_pieces.iter().any(|e| e["node"]["id"] == "p-ref" && e["node"]["isDesign"]["id"] == "design-2"));
+            assert_eq!(kit_json["designD2"]["referencesRepresentations"]["edges"].as_array().unwrap().len(), 0);
+            assert_eq!(kit_json["designD2"]["referencesRepresentationsTransitive"]["edges"][0]["node"]["id"], "rep-1");
+            assert_eq!(kit_json["type"]["representation"]["referencedBy"]["edges"].as_array().unwrap().len(), 2);
+            assert_eq!(kit_json["type"]["representation"]["hasTypes"]["edges"][0]["node"]["id"], "type-1");
+            assert_eq!(kit_json["type"]["representation"]["referencesFiles"]["edges"][0]["node"]["id"], "file-1");
+            assert_eq!(kit_json["type"]["representation"]["referencedByDesigns"]["edges"].as_array().unwrap().len(), 2);
+            assert!(kit_json["type"]["representation"]["referencedByDesignsTransitive"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
+            assert_eq!(kit_json["type"]["referencedBy"]["edges"].as_array().unwrap().len(), 2);
+            assert!(kit_json["type"]["referencedByDesignsTransitive"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
+            assert_eq!(kit_json["designD3"]["referencedByDesigns"]["edges"][0]["node"]["id"], "design-2");
+            assert_eq!(kit_json["fileF1"]["referencesTypes"]["edges"][0]["node"]["id"], "type-1");
+            assert!(kit_json["fileF1"]["referencesDesignsTransitive"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
+        });
+    }
+
+    #[test]
     fn install_projection_graphql_hydrates_kit_types() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
@@ -16004,14 +19655,309 @@ mod tests {
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let payload = res.data.into_json().unwrap()["session"]["store"]["installProjection"].clone();
             assert_eq!(payload["ok"], true);
-            let q = r#"query { session { stores { edges { node { wip { theKit { kit { types { edges { node { name } } } } } } } } } } }"#;
+            let q = r#"query { session { stores { edges { node { wip { theKit { kit { hasTypes { edges { node { name } } } } } } } } } } }"#;
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read types: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["types"]["edges"]
+            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"]
                 .as_array()
                 .expect("type edges");
             assert_eq!(names[0]["node"]["name"], "Type-IP");
+        });
+    }
+
+    #[test]
+    fn install_projection_hydrates_type_representations_and_files() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-rep",
+                "name": "Rep Kit",
+                "files": {
+                    "items": [{
+                        "id": "f1",
+                        "blob": "data:model/gltf-binary;base64,AAAA"
+                    }]
+                },
+                "types": {
+                    "items": [{
+                        "id": "t1",
+                        "name": "Chair",
+                        "representations": {
+                            "items": [{
+                                "id": "r1",
+                                "name": "chair",
+                                "file": { "id": "f1" }
+                            }]
+                        }
+                    }]
+                },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            hasFiles { edges { node { id url } } }
+                                            hasTypes {
+                                                edges {
+                                                    node {
+                                                        id
+                                                        hasRepresentations { edges { node { id name file { id } } } }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
+            let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+            let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
+            assert_eq!(file_edges.len(), 1);
+            assert_eq!(file_edges[0]["node"]["id"], "f1");
+            assert!(file_edges[0]["node"]["url"].as_str().unwrap_or("").starts_with("data:"));
+            let rep_edges = kit_json["hasTypes"]["edges"][0]["node"]["hasRepresentations"]["edges"]
+                .as_array()
+                .expect("representation edges");
+            assert_eq!(rep_edges.len(), 1);
+            assert_eq!(rep_edges[0]["node"]["id"], "r1");
+            assert_eq!(rep_edges[0]["node"]["name"], "chair");
+            assert_eq!(rep_edges[0]["node"]["file"]["id"], "f1");
+        });
+    }
+
+    #[test]
+    fn install_projection_deep_clone_preserves_file_and_folder_names() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-files",
+                "name": "Files Kit",
+                "folders": {
+                    "items": [{
+                        "id": "folder-1",
+                        "name": "assets"
+                    }]
+                },
+                "files": {
+                    "items": [{
+                        "id": "f1",
+                        "name": "chair.glb",
+                        "folder": { "id": "folder-1" }
+                    }]
+                },
+                "types": { "items": [] },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            hasFolders { edges { node { id name } } }
+                                            hasFiles { edges { node { id name } } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
+            let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+            let folder_edges = kit_json["hasFolders"]["edges"].as_array().expect("folder edges");
+            assert_eq!(folder_edges.len(), 1);
+            assert_eq!(folder_edges[0]["node"]["name"], "assets");
+            let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
+            assert_eq!(file_edges.len(), 1);
+            assert_eq!(file_edges[0]["node"]["name"], "chair.glb");
+        });
+    }
+
+    fn hydrate_kit_family_ports_wire_connector_copatible_with_in_graphql() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-fam",
+                "name": "Fam Kit",
+                "families": {
+                    "items": [{
+                        "id": "fam1",
+                        "name": "Tower",
+                        "ports": {
+                            "items": [
+                                { "id": "p1", "name": "bottom", "compatiblePorts": { "items": [{ "id": "p2" }] } },
+                                { "id": "p2", "name": "top", "compatiblePorts": { "items": [{ "id": "p1" }] } }
+                            ]
+                        }
+                    }]
+                },
+                "types": {
+                    "items": [{
+                        "id": "t1",
+                        "name": "T1",
+                        "connectors": { "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }] }
+                    }]
+                },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            hasTypes {
+                                                edges {
+                                                    node {
+                                                        hasConnectors {
+                                                            edges {
+                                                                node {
+                                                                    port {
+                                                                        id
+                                                                        copatibleWith { edges { node { id } } }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read connector port: {:?}", read.errors);
+            let read_json = read.data.into_json().unwrap();
+            let connector_port = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"][0]["node"]
+                ["hasConnectors"]["edges"][0]["node"]["port"];
+            assert_eq!(connector_port["id"], "p1");
+            let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");
+            assert_eq!(compat.len(), 1);
+            assert_eq!(compat[0]["node"]["id"], "p2");
+        });
+    }
+
+    #[test]
+    fn hydrate_type_from_snapshot_wires_ports_and_copatible_with() {
+        block_on(async {
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.mutable_kit.read().await.clone();
+            let t_json = crate::external_adapters::serde_json::json!({
+                "id": "t1",
+                "name": "T1",
+                "ports": {
+                    "items": [
+                        { "id": "p1", "label": "A", "compatiblePorts": { "items": [{ "id": "p2" }] } },
+                        { "id": "p2", "label": "B", "compatiblePorts": { "items": [{ "id": "p1" }] } }
+                    ]
+                },
+                "connectors": {
+                    "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
+                }
+            });
+            let topo = crate::gql_relay::Typology::new_with_external_id(
+                std::sync::Arc::downgrade(&kit),
+                "topo-hydrate".into(),
+                "Default".to_string(),
+            )
+            .await;
+            kit.typologies.write().await.push(topo.clone());
+            let ty = crate::kit::r#type::Type::new_with_external_id(
+                std::sync::Arc::downgrade(&topo),
+                "t1".into(),
+                "T1".to_string(),
+            )
+            .await;
+            crate::kit_backbone::hydrate_type_from_snapshot_value(&ty, &t_json, &std::collections::HashMap::new())
+                .await
+                .expect("hydrate type");
+            let ports = ty.ports.read().await;
+            assert_eq!(ports.len(), 2);
+            let p1 = ports.iter().find(|p| p.id.as_str() == "p1").expect("p1");
+            let compat = p1.compatible_with.read().await;
+            assert_eq!(compat.len(), 1);
+            assert_eq!(compat[0].id.as_str(), "p2");
+            let connectors = ty.connectors.read().await;
+            assert_eq!(connectors.len(), 1);
+            let connector_port = connectors[0].port.read().await.clone().expect("connector port");
+            assert_eq!(connector_port.id.as_str(), "p1");
+            let connector_compat = connector_port.compatible_with.read().await;
+            assert_eq!(connector_compat.len(), 1);
+            assert_eq!(connector_compat[0].id.as_str(), "p2");
         });
     }
 
@@ -16141,12 +20087,170 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ store { wip { theKit { kit { designs { edges { node { name } } } } } } } }";
+            let q = "{ store { wip { theKit { kit { hasDesigns { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "layout-alpha"), "designs missing new name: {:?}", names);
+        });
+    }
+
+    #[test]
+    fn kit_virtual_file_system_create_folder_and_move_design() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+
+            const CREATE_FOLDER: &str = r#"
+                mutation($tx: ID!) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        createFolder(name: "inbox", path: "/inbox") { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id.clone() });
+            let res = schema.execute(Request::new(CREATE_FOLDER).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createFolder errors: {:?}", res.errors);
+
+            const CREATE_DESIGN: &str = r#"
+                mutation($tx: ID!, $name: String!) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        createDesign(name: $name) { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id.clone(), "name": "nested-layout" });
+            let res = schema.execute(Request::new(CREATE_DESIGN).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createDesign errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let folder_q = r#"
+                query {
+                    store {
+                        wip {
+                            theKit {
+                                kit {
+                                    hasFolders {
+                                        edges {
+                                            node {
+                                                id
+                                                name
+                                                ... on FileSystemNode { fileSystemPath }
+                                                hasDesigns { edges { node { id name } } }
+                                            }
+                                        }
+                                    }
+                                    hasDesigns {
+                                        edges {
+                                            node {
+                                                id
+                                                name
+                                                ... on FileSystemNode {
+                                                    fileSystemPath
+                                                    fileSystemParent { fileSystemKind }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let res = schema.execute(folder_q).await;
+            assert!(res.errors.is_empty(), "vfs query errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let folders = &data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"];
+            let folder_id = folders.as_array().unwrap().iter().find_map(|e| {
+                (e["node"]["name"].as_str() == Some("inbox")).then(|| e["node"]["id"].as_str().unwrap().to_string())
+            }).expect("inbox folder");
+            let design_id = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find_map(|e| (e["node"]["name"].as_str() == Some("nested-layout")).then(|| e["node"]["id"].as_str().unwrap().to_string()))
+                .expect("nested-layout design");
+            let inbox = folders
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
+                .expect("inbox folder edge");
+            assert!(
+                !inbox["node"]["hasDesigns"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|e| e["node"]["name"].as_str() == Some("nested-layout")),
+                "design must not be in inbox before move: {:?}",
+                inbox["node"]["hasDesigns"]
+            );
+
+            const MOVE: &str = r#"
+                mutation($tx: ID!, $nodeId: ID!, $folderId: ID) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        moveToFolder(nodeId: $nodeId, folderId: $folderId) { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "nodeId": design_id, "folderId": folder_id });
+            let res = schema.execute(Request::new(MOVE).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "moveToFolder errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let res = schema.execute(folder_q).await;
+            assert!(res.errors.is_empty(), "vfs query after move errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let _design = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("nested-layout"))
+                .unwrap();
+            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
+                .expect("inbox after move");
+            assert!(
+                inbox_after["node"]["hasDesigns"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|e| e["node"]["id"].as_str() == Some(design_id.as_str())),
+                "design not in inbox after move: {:?}",
+                inbox_after["node"]["hasDesigns"]
+            );
+            assert_eq!(inbox_after["node"]["name"].as_str(), Some("inbox"));
         });
     }
 
@@ -16182,12 +20286,52 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ store { wip { theKit { kit { types { edges { node { name } } } } } } } }";
+            let q = "{ store { wip { theKit { kit { hasTypes { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["types"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "kind-beta"), "types missing new name: {:?}", names);
+        });
+    }
+
+    #[test]
+    fn type_virtual_file_system_exposes_representation_port_connector_children() {
+        block_on(async {
+            use std::sync::Arc;
+
+            use crate::gql::interfaces::file_system_vfs;
+            use crate::gql::interfaces::FileSystemNodeInterface;
+            use crate::gql::interfaces::FileSystemNodeKind;
+            use crate::kit::r#type::{Connector, Port, Representation, Type};
+
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.mutable_kit.read().await.clone();
+            let topo = crate::gql_relay::Typology::new_with_external_id(Arc::downgrade(&kit), "topo-vfs".into(), "Default".to_string()).await;
+            kit.typologies.write().await.push(topo.clone());
+            let ty = Type::new_with_external_id(Arc::downgrade(&topo), "type-vfs".into(), "Vfs Type".to_string()).await;
+            let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-vfs".into(), "rep://mesh".to_string()).await;
+            let port = Port::new_with_external_id(Arc::downgrade(&ty), "port-vfs".into()).await;
+            let connector = Connector::new_with_external_id(Arc::downgrade(&ty), "conn-vfs".into(), "frame".to_string()).await;
+            ty.representations.write().await.push(rep.clone());
+            ty.ports.write().await.push(port.clone());
+            ty.connectors.write().await.push(connector.clone());
+            topo.types.write().await.push(ty.clone());
+            kit.type_weak_by_id.write().await.insert(ty.id.clone(), Arc::downgrade(&ty));
+
+            let type_node = FileSystemNodeInterface::Type(ty);
+            assert!(file_system_vfs::has_children(&type_node).await);
+            let children = file_system_vfs::children(&type_node).await;
+            let kinds: Vec<FileSystemNodeKind> = children.edges.iter().map(|e| file_system_vfs::kind(&e.node)).collect();
+            assert!(kinds.contains(&FileSystemNodeKind::Representation));
+            assert!(kinds.contains(&FileSystemNodeKind::Port));
+            assert!(kinds.contains(&FileSystemNodeKind::Connector));
+
+            let rep_node = FileSystemNodeInterface::Representation(rep);
+            let parent = file_system_vfs::parent(&rep_node).await;
+            assert!(matches!(parent, Some(FileSystemNodeInterface::Type(t)) if t.id.as_str() == "type-vfs"));
+            assert!(!file_system_vfs::has_children(&rep_node).await);
+            assert!(file_system_vfs::path(&rep_node).await.contains("Vfs Type"));
         });
     }
 
@@ -16211,8 +20355,8 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
-            let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
+            let edges = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("design edges");
+            let any_piece = edges.iter().any(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
@@ -16228,8 +20372,8 @@ mod tests {
             let q = relay_auth_designs_piece_ids();
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
-            let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
+            let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
+            let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative leaked pieces: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
@@ -16269,10 +20413,10 @@ mod tests {
     }
 
     fn relay_piece_count_wip(data: &crate::external_adapters::serde_json::Value) -> usize {
-        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
+        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array() else {
             return 0;
         };
-        edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
+        edges.iter().map(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
     }
 
     /// 🛡️ Mutation visibility without re-snapshotting: read wip, mutate, read wip again, second
@@ -16336,7 +20480,7 @@ mod tests {
 
             let inv = &exp["invariants"];
             let kit = g.materialized_kit_for_workspace(&workspace_id).await;
-            let ds = kit.designs.read().await;
+            let ds = kit.designs_flat().await;
             assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
             let mut total = 0usize;
             let mut centers: Vec<[f64; 2]> = Vec::new();
@@ -16529,12 +20673,12 @@ mod tests {
                 .expect("hydrate harness");
             let mat = rt.wip_graph.materialized_head_kit().await;
             let mut design_names = Vec::new();
-            for d in mat.designs.read().await.iter() {
+            for d in mat.designs_flat().await.iter() {
                 design_names.push((*d.name.read().await).clone());
             }
             assert!(design_names.iter().any(|n| n == "Nakagin Capsule Tower"));
             assert!(design_names.iter().any(|n| n == "Other Pavilion"));
-            assert_eq!(mat.types.read().await.len(), 3);
+            assert_eq!(mat.types_flat().await.len(), 3);
         });
     }
 
@@ -16545,9 +20689,18 @@ mod tests {
         let v: crate::external_adapters::serde_json::Value =
             crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
-        let types_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("types").expect("types")).expect("types list");
+        let typologies = crate::kit_backbone::json_array_or_block_items_ref(kit.get("typologies").expect("typologies")).expect("typologies list");
+        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies
+            .iter()
+            .flat_map(|topo| {
+                topo.get("types")
+                    .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+                    .into_iter()
+                    .flatten()
+            })
+            .collect();
         assert!(!types_arr.is_empty(), "expected seeded types");
-        for t in types_arr {
+        for t in &types_arr {
             let id = t["id"].as_str().expect("type id");
             let nk = t["nodeKind"].as_str().expect("type.nodeKind");
             let exp = format!("semio.metabolism.light.node.{id}");
@@ -16570,7 +20723,7 @@ mod tests {
             }
         }
         assert!(port_rows >= 1, "expected at least one family port in fixture");
-        for t in types_arr {
+        for t in &types_arr {
             if let Some(connectors) = t
                 .get("connectors")
                 .and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c))
@@ -16935,8 +21088,16 @@ mod tests {
         const FIXTURE: &str = include_str!("../../../fixtures/metabolism.kit.diff.semio.json");
         let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
-        assert!(raw.get("types").is_some(), "fixture must include types collection");
-        assert!(raw.get("designs").is_some(), "fixture must include designs collection");
+        assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");
+        let topo_items = crate::kit_backbone::json_array_or_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
+        assert!(
+            topo_items.iter().any(|t| t.get("types").is_some()),
+            "fixture typologies must include types"
+        );
+        assert!(
+            topo_items.iter().any(|t| t.get("designs").is_some()),
+            "fixture typologies must include designs"
+        );
     }
 
     //#region 🪪 merkle hashing
@@ -16963,7 +21124,20 @@ mod tests {
 
     #[test]
     fn file_blob_digest_field_is_exposed_on_entity() {
-        let f = crate::meta::File { id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"), url: "https://example.com/f".to_string(), mime: None, size: None, hash: "sha256:abc".to_string(), description: None, created: None, updated: None };
+        let f = crate::meta::File {
+            id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"),
+            name: "f".to_string(),
+            url: "https://example.com/f".to_string(),
+            mime: None,
+            size: None,
+            hash: "sha256:abc".to_string(),
+            description: None,
+            icon: None,
+            folder_id: None,
+            owner_kit: std::sync::Weak::new(),
+            created: None,
+            updated: None,
+        };
         assert_eq!(f.hash, "sha256:abc");
     }
 

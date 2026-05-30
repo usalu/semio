@@ -1,0 +1,12 @@
+{
+  "title": "Mode Dock Tab Drag Preview",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Remove inconsistent tab drag feedback (dashed insert slots, thick insert line, body highlight) when dragging Mode dock tabs; keep only a clean cursor-following tab preview.",
+  "summary": "Tab-bar drop preview: when dropZone is tab, insert a ghost tab (border-2 border-accent bg-accent/20) at the target index via modeDockTabsWithInsertPreview so remaining tabs shift to match the post-drop order. Multi-tab chrome grid recomputes columns including the ghost. Cursor tab chip hides over tab-bar drops; split drops still use the floating chip and half-panel overlay.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪ad12212982e84704ae7d45b30e0259a3",
+    "⚪d6d444bb75b8441484f81c74a1096f43"
+  ]
+}

@@ -3,6 +3,27 @@
   "id": "curve.interpolateCurve",
   "version": "1.0.0",
   "label": "InterpCrv",
+  "guards": [
+    {
+      "name": "hasTwoCurvePoints",
+      "expr": {
+        "kind": "exists",
+        "target": {
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "index",
+              "index": 1
+            }
+          ]
+        }
+      }
+    }
+  ],
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [
@@ -233,6 +254,7 @@
             "transitions": [
               {
                 "target": "committed",
+                "guard": "hasTwoCurvePoints",
                 "key": "Enter",
                 "label": "Finish"
               }
@@ -243,6 +265,7 @@
             "transitions": [
               {
                 "target": "committed",
+                "guard": "hasTwoCurvePoints",
                 "key": "RightClick",
                 "label": "Finish"
               }
@@ -475,6 +498,7 @@
     ]
   },
   "commit": {
+    "when": "hasTwoCurvePoints",
     "fromStates": [
       "committed"
     ],

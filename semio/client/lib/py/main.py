@@ -3095,6 +3095,58 @@ class TypeFamiliesField(RealField, abc.ABC):
     families: list[str] = pydantic.Field(default_factory=list)
 
 
+class TypeTypologyField(RealField, abc.ABC):
+    """🏛️Field mixin for the owning typology of a type."""
+
+    typology: str = pydantic.Field(default="", max_length=ID_LENGTH_LIMIT)
+
+
+# #region 🏛️Typology
+
+
+class TypologyNameField(RealField, abc.ABC):
+    """🏛️Field mixin for typology name."""
+
+    name: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class TypologyDescriptionField(RealField, abc.ABC):
+    """🏛️Field mixin for typology description."""
+
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class TypologyIconField(RealField, abc.ABC):
+    """🏛️Field mixin for typology icon."""
+
+    icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class TypologyFolderField(RealField, abc.ABC):
+    """🏛️Field mixin for typology folder."""
+
+    folder: typing.Optional[str] = pydantic.Field(
+        default=None, max_length=ID_LENGTH_LIMIT
+    )
+
+
+class Typology(
+    TypologyNameField,
+    TypologyDescriptionField,
+    TypologyIconField,
+    TypologyFolderField,
+    TableEntity,
+):
+    """🏛️Typology partitions types and designs; families stay at kit root."""
+
+    PLURAL = "typologies"
+    types: list["Type"] = pydantic.Field(default_factory=list)
+    designs: list["Design"] = pydantic.Field(default_factory=list)
+
+
+# #endregion 🏛️Typology
+
+
 class TypeIsAbstractField(RealField, abc.ABC):
     """🔖Field mixin for the is abstract of a type."""
 
@@ -3275,6 +3327,7 @@ class Type(
     TypeIsAbstractField,
     TypeParentField,
     TypeFamiliesField,
+    TypeTypologyField,
     TableEntity,
 ):
     """Type entity defining a reusable parametric building block."""
@@ -3386,6 +3439,7 @@ class Type(
             unit=obj.get("unit", ""),
             parent=parent_id,
             families=[_ref_id(f) for f in (obj.get("families") or [])],
+            typology=_ref_id(obj.get("typology")),
             folder=folder_id,
         )
         try:
@@ -4607,6 +4661,12 @@ class DesignFamiliesField(RealField, abc.ABC):
     families: list[str] = pydantic.Field(default_factory=list)
 
 
+class DesignTypologyField(RealField, abc.ABC):
+    """🏛️Field mixin for the owning typology of a design."""
+
+    typology: str = pydantic.Field(default="", max_length=ID_LENGTH_LIMIT)
+
+
 class DesignIsAbstractField(RealField, abc.ABC):
     """🔖Field mixin for the is abstract of a design."""
 
@@ -4783,6 +4843,7 @@ class Design(
     DesignIsAbstractField,
     DesignParentField,
     DesignFamiliesField,
+    DesignTypologyField,
     TableEntity,
 ):
     """Design entity composing pieces and connections into an assembly."""
@@ -5192,6 +5253,7 @@ class Kit(
     files_: list[File] = pydantic.Field(default_factory=list)
     folders_: list[Folder] = pydantic.Field(default_factory=list)
     ports: list[Port] = pydantic.Field(default_factory=list)
+    typologies_: list[Typology] = pydantic.Field(default_factory=list)
     types: list[Type] = pydantic.Field(default_factory=list)
     designs: list[Design] = pydantic.Field(default_factory=list)
     qualities: list[Quality] = pydantic.Field(default_factory=list)
@@ -5263,15 +5325,21 @@ class Kit(
             uri=uri,
         )
         try:
-            types = [Type.parse(t) for t in obj["types"]]
-            entity.types = types
+            topos = [Typology.model_validate(t) for t in obj["typologies"]]
+            entity.typologies_ = topos
+            entity._sync_flat_from_typologies()
         except KeyError, AttributeError, Exception:
-            pass
-        try:
-            designs = [Design.parse(d, types) for d in obj["designs"]]
-            entity.designs = designs
-        except KeyError, AttributeError, Exception:
-            pass
+            try:
+                types = [Type.parse(t) for t in obj["types"]]
+                entity.types = types
+            except KeyError, AttributeError, Exception:
+                pass
+            try:
+                designs = [Design.parse(d, entity.types) for d in obj["designs"]]
+                entity.designs = designs
+            except KeyError, AttributeError, Exception:
+                pass
+            entity._pack_typologies_from_flat()
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
@@ -5284,10 +5352,55 @@ class Kit(
             pass
         return entity
 
+    def _sync_flat_from_typologies(self) -> None:
+        """🏛️Rebuild flat types and designs from typologies."""
+        self.types = []
+        self.designs = []
+        for topo in self.typologies_ or []:
+            for t in topo.types or []:
+                if not getattr(t, "typology", None):
+                    t.typology = topo.id
+                self.types.append(t)
+            for d in topo.designs or []:
+                if not getattr(d, "typology", None):
+                    d.typology = topo.id
+                self.designs.append(d)
+
+    def _pack_typologies_from_flat(self) -> None:
+        """🏛️Move flat types and designs into a default typology when typologies are absent."""
+        if self.typologies_:
+            return
+        if not self.types and not self.designs:
+            return
+        topo_id = (
+            (self.types[0].typology if self.types else None)
+            or (self.designs[0].typology if self.designs else None)
+            or str(uuid.uuid4())
+        )
+        for t in self.types:
+            t.typology = topo_id
+        for d in self.designs:
+            d.typology = topo_id
+        self.typologies_ = [
+            Typology(id=topo_id, name="Default", types=list(self.types), designs=list(self.designs))
+        ]
+        self._sync_flat_from_typologies()
+
     def dump(self) -> "KitOutput":
+        self._pack_typologies_from_flat()
         entity = {**KitProps.representation_validate(self).representation_dump()}
-        entity["types"] = [t.dump() for t in (self.types or [])]
-        entity["designs"] = [d.dump() for d in (self.designs or [])]
+        entity["typologies"] = [
+            {
+                "id": topo.id,
+                "name": topo.name,
+                "description": topo.description,
+                "icon": topo.icon,
+                "folder": topo.folder,
+                "types": [t.dump() for t in (topo.types or [])],
+                "designs": [d.dump() for d in (topo.designs or [])],
+            }
+            for topo in (self.typologies_ or [])
+        ]
         entity["files"] = [f.dump() for f in (self.files_ or [])]
         entity["folders"] = [f.dump() for f in (self.folders_ or [])]
         entity["attributes"] = [q.dump() for q in (self.attributes or [])]

@@ -1,0 +1,12 @@
+{
+  "title": "Puzzle Bundle Terminology Cleanup",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Clean puzzle bundle terminology across 2d/3d/5d: NodeKind/ObjectKind/PartKind, KindCatalogBundle, no Board/Scene/Topology/Kit/Line prefixes in bundles.",
+  "summary": "Completed second-pass puzzle bundle terminology cleanup: removed volume/board/scene/topology naming from puzzle 5d layer. Renamed play exports (Puzzle5dPlay*, fixture2d/fixture3d, camera2d/camera3d, set2d*/set3d* commands, puzzle.5d.play.2d/3d surface ids). Updated framework playground Puzzle5dPlayHost to match FiveD puzzle2d/puzzle3d props. Renamed FIVE_D_3D_CHROME_DEFAULTS, chrome3dDefaults. Fixed project2d aspect2d regression. Migrated nakagin 5d fixture bonds→ties. Tests: @puzzle/5d/react 26/26, @puzzle/5d/play vitest 6/6.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪7164be318aa547399b4da0cee81007ad",
+    "⚪71ae5a2b18564c89a89798207c4b8462"
+  ]
+}

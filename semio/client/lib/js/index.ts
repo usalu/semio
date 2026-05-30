@@ -1377,6 +1377,490 @@ function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: stri
   return out;
 }
 
+//#region 📁FileSystem
+type FileSystemNodeRef = { readonly id: string; readonly kind: string };
+
+function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystemNodeRef | null {
+  if (node == null) return null;
+  const id = String(node["id"] ?? "");
+  if (id === "") return null;
+  return { id, kind: String(node["fileSystemKind"] ?? "") };
+}
+
+function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string, typeId?: string): Entity {
+  switch (ref.kind) {
+    case "KIT":
+      return new Kit(session, ref.id, storeId);
+    case "FOLDER":
+      return new Folder(session, ref.id, storeId);
+    case "FILE":
+      return new File(session, ref.id, storeId);
+    case "DESIGN":
+      return new Design(session, ref.id, storeId);
+    case "TYPE":
+      return new Type(session, ref.id, storeId);
+    case "FAMILY":
+      return new Family(session, ref.id, storeId);
+    case "PIECE":
+      return new Piece(session, designId ?? "", ref.id, storeId);
+    case "CONNECTION":
+      return new Connection(session, designId ?? "", ref.id, storeId);
+    case "REPRESENTATION":
+      return new Representation(session, typeId ?? "", ref.id, storeId);
+    case "PORT":
+      return new Port(session, typeId ?? "", ref.id, storeId);
+    case "CONNECTOR":
+      return new Connector(session, typeId ?? "", ref.id, storeId);
+    default:
+      return new Entity(session, ref.id, storeId);
+  }
+}
+
+const VFS_CHILD_NODE_SELECTION =
+  "id fileSystemKind fileSystemName fileSystemPath fileSystemHasChildren owner { __typename ... on Type { id } ... on Design { id } }";
+
+function resolveFileSystemNodeFromGraphql(
+  session: Session,
+  storeId: string | undefined,
+  node: JsonObject | null | undefined,
+  designId?: string,
+): Entity {
+  const ref = parseFileSystemNodeRef(node);
+  if (!ref) return new Entity(session, "", storeId);
+  const owner = node?.["owner"] as JsonObject | undefined;
+  const ownerTypename = String(owner?.["__typename"] ?? "");
+  const ownerId = String(owner?.["id"] ?? "");
+  const typeId = ownerTypename === "Type" ? ownerId : undefined;
+  const pieceDesignId = ownerTypename === "Design" ? ownerId : designId;
+  return resolveFileSystemNode(session, storeId, ref, pieceDesignId, typeId);
+}
+
+function parseFileSystemChildrenRefs(frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  const edges = (frag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
+  if (!Array.isArray(edges)) return Object.freeze([]);
+  return Object.freeze(
+    edges.map((edge) => {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      const owner = node?.["owner"] as JsonObject | undefined;
+      const ownerTypename = String(owner?.["__typename"] ?? "");
+      const ownerId = String(owner?.["id"] ?? "");
+      return {
+        id: String(node?.["id"] ?? ""),
+        kind: String(node?.["fileSystemKind"] ?? ""),
+        name: String(node?.["fileSystemName"] ?? ""),
+        path: String(node?.["fileSystemPath"] ?? ""),
+        hasChildren: Boolean(node?.["fileSystemHasChildren"]),
+        ...(ownerTypename === "Type" && ownerId ? { typeId: ownerId } : {}),
+        ...(ownerTypename === "Design" && ownerId ? { designId: ownerId } : {}),
+      } satisfies SemioFileSystemChildRef;
+    }),
+  );
+}
+
+function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObject | null {
+  if (branch == null) return frag;
+  const b = frag?.[branch];
+  return isJsonObjectNode(b) ? b : null;
+}
+
+function vfsKitFields(branch: string | null, designId?: string) {
+  const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
+  const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
+  return [
+    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
+    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
+    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
+    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
+    {
+      method: "fileSystemParent",
+      selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
+      parse: () => null,
+      parseEntity: (entity, frag) => {
+        const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
+        return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : null;
+      },
+    },
+    {
+      method: "fileSystemChildren",
+      selection: vfsChildrenSelection,
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => {
+        const nodeFrag = b(frag as JsonObject | null);
+        return Object.freeze(
+          ((nodeFrag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined ?? []).map((e) =>
+            resolveFileSystemNodeFromGraphql(entity.session, entity.storeId, (e as JsonObject)?.["node"] as JsonObject | undefined, designId),
+          ),
+        );
+      },
+    },
+  ] as const;
+}
+
+function vfsEntityPathFields(path: readonly string[], designId?: string) {
+  const nodeAt = (frag: JsonObject | null) => readKitPathNode(frag, path);
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
+  return [
+    {
+      method: "fileSystemPath",
+      selection: "... on FileSystemNode { fileSystemPath }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+    },
+    {
+      method: "fileSystemName",
+      selection: "... on FileSystemNode { fileSystemName }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+    },
+    {
+      method: "isFileSystemRoot",
+      selection: "... on FileSystemNode { isFileSystemRoot }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+    },
+    {
+      method: "fileSystemKind",
+      selection: "... on FileSystemNode { fileSystemKind }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+    },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
+    {
+      method: "fileSystemChildren",
+      selection: vfsChildrenSelection,
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) =>
+        Object.freeze(
+          (parseFileSystemChildrenRefs(nodeAt(frag as JsonObject | null)) as readonly SemioFileSystemChildRef[]).map((child) =>
+            resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId, child.typeId),
+          ),
+        ),
+    },
+  ] as const;
+}
+
+/** @emoji 📁 One lazy VFS child row from {@link fetchSemioFileSystemChildren}. */
+export interface SemioFileSystemChildRef {
+  readonly id: string;
+  readonly kind: string;
+  readonly name: string;
+  readonly path: string;
+  readonly hasChildren: boolean;
+  readonly typeId?: string;
+  readonly designId?: string;
+}
+
+/** @emoji 📁 Parent node scope for {@link fetchSemioFileSystemChildren}. */
+export type SemioFileSystemParentRef =
+  | { readonly kind: "KIT"; readonly id: string }
+  | { readonly kind: "FOLDER"; readonly id: string }
+  | { readonly kind: "FILE"; readonly id: string }
+  | { readonly kind: "DESIGN"; readonly id: string }
+  | { readonly kind: "TYPE"; readonly id: string }
+  | { readonly kind: "FAMILY"; readonly id: string }
+  | { readonly kind: "TYPOLOGY"; readonly id: string }
+  | { readonly kind: "PIECE"; readonly id: string; readonly designId: string }
+  | { readonly kind: "CONNECTION"; readonly id: string; readonly designId: string };
+
+type SemioRelayVfsBranchSpec = {
+  readonly connectionKey: string;
+  readonly kind: string;
+  readonly nameFrom: (node: JsonObject) => string;
+  readonly hasChildren?: (node: JsonObject) => boolean;
+  readonly mapChild?: (child: SemioFileSystemChildRef, node: JsonObject) => SemioFileSystemChildRef;
+};
+
+function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
+  const out: SemioFileSystemChildRef[] = [];
+  for (const branch of branches) {
+    const edges = (frag?.[branch.connectionKey] as JsonObject | undefined)?.["edges"];
+    if (!Array.isArray(edges)) continue;
+    for (const edge of edges) {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      if (!node) continue;
+      const id = String(node["id"] ?? "");
+      if (!id) continue;
+      const name = branch.nameFrom(node);
+      let child: SemioFileSystemChildRef = {
+        id,
+        kind: branch.kind,
+        name,
+        path: `/${name}`,
+        hasChildren: branch.hasChildren ? branch.hasChildren(node) : true,
+      };
+      if (branch.mapChild) child = branch.mapChild(child, node);
+      out.push(child);
+    }
+  }
+  return Object.freeze(out);
+}
+
+function semioRelayEdgesNonEmpty(node: JsonObject, key: string): boolean {
+  const edges = (node[key] as JsonObject | undefined)?.["edges"];
+  return Array.isArray(edges) && edges.length > 0;
+}
+
+function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string {
+  switch (parent.kind) {
+    case "KIT":
+      return `
+        hasTypologies { edges { node { id name hasTypes { edges { node { id } } } hasDesigns { edges { node { id } } } } } }
+        hasFamilies { edges { node { id name } } }
+        hasFolders { edges { node { id path name } } }
+        hasFiles { edges { node { id name description } } }
+      `;
+    case "TYPOLOGY":
+      return `
+        typology(id: ${gqlString(parent.id)}) {
+          hasTypes { edges { node { id name hasRepresentations { edges { node { id } } } hasPorts { edges { node { id } } } hasConnectors { edges { node { id } } } } } }
+          hasDesigns { edges { node { id name hasPieces { edges { node { id } } } hasConnections { edges { node { id } } } } } }
+        }
+      `;
+    case "FOLDER":
+      return `
+        folder(id: ${gqlString(parent.id)}) {
+          subFolders { edges { node { id path name } } }
+          files { edges { node { id name description } } }
+          hasDesigns { edges { node { id name } } }
+          hasTypes { edges { node { id name } } }
+          families { edges { node { id name } } }
+        }
+      `;
+    case "FILE":
+      return `file(id: ${gqlString(parent.id)}) { id name description }`;
+    case "DESIGN":
+      return `
+        design(id: ${gqlString(parent.id)}) {
+          hasPieces { edges { node { id name } } }
+          hasConnections { edges { node { id description } } }
+        }
+      `;
+    case "TYPE":
+      return `
+        type(id: ${gqlString(parent.id)}) {
+          hasRepresentations { edges { node { id name } } }
+          hasPorts { edges { node { id label code } } }
+          hasConnectors { edges { node { id name } } }
+        }
+      `;
+    case "FAMILY":
+      return `family(id: ${gqlString(parent.id)}) { id name }`;
+    case "PIECE":
+      return `design(id: ${gqlString(parent.designId)}) { piece(id: ${gqlString(parent.id)}) { id name } }`;
+    case "CONNECTION":
+      return `design(id: ${gqlString(parent.designId)}) { connection(id: ${gqlString(parent.id)}) { id description } }`;
+    default:
+      return `id`;
+  }
+}
+
+function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  switch (parent.kind) {
+    case "KIT":
+      return semioRelayVfsChildrenFromFrag(frag, [
+        {
+          connectionKey: "hasTypologies",
+          kind: "TYPOLOGY",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "hasTypes") || semioRelayEdgesNonEmpty(node, "hasDesigns"),
+        },
+        { connectionKey: "hasFamilies", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+        {
+          connectionKey: "hasFolders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "hasFiles",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+      ]);
+    case "TYPOLOGY": {
+      const topo = readKitPathNode(frag, ["typology"]);
+      return semioRelayVfsChildrenFromFrag(topo, [
+        {
+          connectionKey: "hasTypes",
+          kind: "TYPE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) =>
+            semioRelayEdgesNonEmpty(node, "hasRepresentations") || semioRelayEdgesNonEmpty(node, "hasPorts") || semioRelayEdgesNonEmpty(node, "hasConnectors"),
+          mapChild: (child) => ({ ...child, typeId: child.id }),
+        },
+        {
+          connectionKey: "hasDesigns",
+          kind: "DESIGN",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "hasPieces") || semioRelayEdgesNonEmpty(node, "hasConnections"),
+          mapChild: (child) => ({ ...child, designId: child.id }),
+        },
+      ]);
+    }
+    case "FOLDER": {
+      const folder = readKitPathNode(frag, ["folder"]);
+      return semioRelayVfsChildrenFromFrag(folder, [
+        {
+          connectionKey: "subFolders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "files",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+        { connectionKey: "hasDesigns", kind: "DESIGN", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, designId: child.id }) },
+        { connectionKey: "hasTypes", kind: "TYPE", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, typeId: child.id }) },
+        { connectionKey: "families", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+      ]);
+    }
+    case "FILE":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FILE",
+              name: String(frag["name"] ?? frag["description"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "DESIGN": {
+      const designId = parent.id;
+      const design = readKitPathNode(frag, ["design"]);
+      return semioRelayVfsChildrenFromFrag(design, [
+        {
+          connectionKey: "hasPieces",
+          kind: "PIECE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+        {
+          connectionKey: "hasConnections",
+          kind: "CONNECTION",
+          nameFrom: (node) => String(node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+      ]);
+    }
+    case "TYPE": {
+      const typeId = parent.id;
+      const type = readKitPathNode(frag, ["type"]);
+      return semioRelayVfsChildrenFromFrag(type, [
+        {
+          connectionKey: "hasRepresentations",
+          kind: "REPRESENTATION",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "hasPorts",
+          kind: "PORT",
+          nameFrom: (node) => String(node["label"] ?? node["code"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "hasConnectors",
+          kind: "CONNECTOR",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+      ]);
+    }
+    case "FAMILY":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FAMILY",
+              name: String(frag["name"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "PIECE": {
+      const piece = readKitPathNode(frag, ["design", "piece"]);
+      return piece
+        ? Object.freeze([
+            {
+              id: String(piece["id"] ?? ""),
+              kind: "PIECE",
+              name: String(piece["name"] ?? piece["id"] ?? ""),
+              path: `/${String(piece["name"] ?? piece["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    case "CONNECTION": {
+      const connection = readKitPathNode(frag, ["design", "connection"]);
+      return connection
+        ? Object.freeze([
+            {
+              id: String(connection["id"] ?? ""),
+              kind: "CONNECTION",
+              name: String(connection["description"] ?? connection["id"] ?? ""),
+              path: `/${String(connection["description"] ?? connection["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    default:
+      return Object.freeze([]);
+  }
+}
+
+/** @emoji 📁 Loads VFS children for a kit-graph parent via kit entity GraphQL (not {@link FileSystemNode} interface). */
+export async function fetchSemioFileSystemChildren(store: Store, parent: SemioFileSystemParentRef): Promise<readonly SemioFileSystemChildRef[]> {
+  const inner = semioFileSystemChildrenInner(parent);
+  const frag = await store.readKitInner(inner);
+  return semioParseRelayVfsChildren(parent, frag);
+}
+
+/** @emoji 📁 Loads kit-root VFS children (alias for {@link fetchSemioFileSystemChildren} on the kit node). */
+export async function fetchSemioFileSystemRootChildren(store: Store, kitId: string): Promise<readonly SemioFileSystemChildRef[]> {
+  return fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId });
+}
+//#endregion 📁FileSystem
+
 /** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
 function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const arr = frag?.[key] as readonly JsonValue[] | undefined;
@@ -1796,8 +2280,12 @@ export class Kit extends Entity {
   declare homepage: () => Promise<string>;
   declare license: () => Promise<string>;
   declare uri: () => Promise<string>;
-  declare designs: () => Promise<readonly Design[]>;
-  declare types: () => Promise<readonly Type[]>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
+  declare hasTypesTransitive: () => Promise<readonly Type[]>;
+  declare hasDesignsTransitive: () => Promise<readonly Design[]>;
   declare authors: () => Promise<readonly Author[]>;
   declare qualities: () => Promise<readonly Quality[]>;
   declare tags: () => Promise<readonly Tag[]>;
@@ -1834,6 +2322,20 @@ export class Kit extends Entity {
   declare createDesign: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
   declare deleteDesign: (id: string) => Promise<SetResult>;
   declare deleteDesigns: (ids: readonly string[]) => Promise<SetResult>;
+  declare hasFolders: () => Promise<readonly Folder[]>;
+  declare hasFiles: () => Promise<readonly File[]>;
+  declare hasFamilies: () => Promise<readonly Family[]>;
+  declare hasTypologies: () => Promise<readonly Typology[]>;
+  declare typology: (id: string) => Typology;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null) => Promise<SetResult>;
+  declare moveToFolder: (nodeId: string, folderId?: string | null) => Promise<SetResult>;
 }
 
 const KIT_FIELDS = defineBoundKitFields([
@@ -1847,16 +2349,16 @@ const KIT_FIELDS = defineBoundKitFields([
   { selection: "license", parse: (frag) => String((frag as JsonObject | null)?.["license"] ?? "") },
   { selection: "uri", parse: (frag) => String((frag as JsonObject | null)?.["uri"] ?? "") },
   {
-    selection: "designs { edges { node { id } } }",
+    selection: "hasDesigns { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "designs").map((id) => new Design(entity.session, id, entity.storeId))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
   },
   {
-    selection: "types { edges { node { id } } }",
+    selection: "hasTypes { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "types").map((id) => new Type(entity.session, id, entity.storeId))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
   },
   {
     selection: "authors { edges { node { id } } }",
@@ -1882,6 +2384,79 @@ const KIT_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "concepts").map((id) => new Concept(entity.session, id, entity.storeId))),
   },
+  {
+    selection: "hasFolders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFolders").map((id) => new Folder(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasFamilies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFamilies").map((id) => new Family(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasTypologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypologies").map((id) => new Typology(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = ((frag as JsonObject | null)?.["hasPiecesTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = ((frag as JsonObject | null)?.["hasConnectionsTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectionId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Connection(entity.session, designId, connectionId, entity.storeId);
+        }),
+      );
+    },
+  },
+  ...vfsKitFields(null),
 ] as const);
 
 const KIT_OPERATIONS = defineBoundKitOperations([
@@ -1922,6 +2497,16 @@ const KIT_OPERATIONS = defineBoundKitOperations([
   },
   { method: "deleteDesign", buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteDesigns", buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createFolder",
+    buildInner: (_e, name, path, description, icon, parentFolderId) =>
+      `cF: createFolder(name: ${gqlString(String(name ?? ""))}, path: ${gqlString(String(path ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, parentFolderId: ${parentFolderId == null ? "null" : gqlString(String(parentFolderId))})`,
+  },
+  {
+    method: "moveToFolder",
+    buildInner: (_e, nodeId, folderId) =>
+      `mF: moveToFolder(nodeId: ${gqlString(String(nodeId ?? ""))}, folderId: ${folderId == null ? "null" : gqlString(String(folderId))})`,
+  },
 ] as const);
 
 installEntityKitMethods(Kit, KIT_FIELDS as readonly BoundKitFieldSpec<unknown, Kit>[], KIT_OPERATIONS);
@@ -1965,6 +2550,14 @@ export class Store extends Entity {
 
   file(id: string): File {
     return this.entity(File, id, this.id);
+  }
+
+  folder(id: string): Folder {
+    return this.entity(Folder, id, this.id);
+  }
+
+  family(id: string): Family {
+    return this.entity(Family, id, this.id);
   }
 
   tag(id: string): Tag {
@@ -2561,7 +3154,23 @@ export class Design extends Entity {
   declare image: () => Promise<string>;
   declare unit: () => Promise<string>;
   declare qualitySum: () => Promise<number>;
-  declare connections: () => Promise<readonly Connection[]>;
+  declare hasPieces: () => Promise<readonly Piece[]>;
+  declare hasConnections: () => Promise<readonly Connection[]>;
+  declare hasLayers: () => Promise<readonly Layer[]>;
+  declare hasGroups: () => Promise<readonly Group[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
+  declare referencesTypes: () => Promise<readonly Type[]>;
+  declare referencesDesigns: () => Promise<readonly Design[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencesTypesTransitive: () => Promise<readonly Type[]>;
+  declare referencesDesignsTransitive: () => Promise<readonly Design[]>;
+  declare referencesFilesTransitive: () => Promise<readonly File[]>;
+  declare referencesRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesRepresentationsTransitive: () => Promise<readonly Representation[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
   declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
@@ -2616,8 +3225,8 @@ function parseTypeBranchConnection(frag: JsonObject | null, key: string): readon
   return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
 }
 
-/** @emoji 🧭 Scalar on a nested {@code design.layers|groups} edge node matched by id. */
-function readDesignListNodeField(frag: JsonObject | null, listKey: "layers" | "groups", nodeId: string, field: string): string {
+/** @emoji 🧭 Scalar on a nested {@code design.hasLayers|hasGroups} edge node matched by id. */
+function readDesignListNodeField(frag: JsonObject | null, listKey: "hasLayers" | "hasGroups", nodeId: string, field: string): string {
   const edges = (((frag?.["design"] as JsonObject | undefined)?.[listKey] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
     const n = e["node"] as JsonObject | undefined;
@@ -2626,9 +3235,9 @@ function readDesignListNodeField(frag: JsonObject | null, listKey: "layers" | "g
   return "";
 }
 
-/** @emoji 🧭 Nullable number on a nested {@code design.layers} edge node. */
+/** @emoji 🧭 Nullable number on a nested {@code design.hasLayers} edge node. */
 function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string, field: string): number | null {
-  const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
     const n = e["node"] as JsonObject | undefined;
     if (n && String(n["id"] ?? "") === nodeId) {
@@ -2639,9 +3248,9 @@ function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string,
   return null;
 }
 
-/** @emoji 🧭 Nullable boolean on a nested {@code design.layers} edge node. */
+/** @emoji 🧭 Nullable boolean on a nested {@code design.hasLayers} edge node. */
 function readDesignListNodeBooleanOrNull(frag: JsonObject | null, nodeId: string, field: string): boolean | null {
-  const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
     const n = e["node"] as JsonObject | undefined;
     if (n && String(n["id"] ?? "") === nodeId) {
@@ -2682,18 +3291,46 @@ const DESIGN_FIELDS = defineBoundKitFields([
   { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "unit") },
   { selection: "qualitySum", parse: (frag) => readKitBranchNumber(frag as JsonObject | null, "design", "qualitySum") },
   {
-    selection: "pieces { edges { node { id } } }",
+    selection: "hasPieces { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "pieces").map((pid) => (entity as Design).piece(pid))),
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasPieces").map((pid) => (entity as Design).piece(pid))),
   },
   {
-    selection: "connections { edges { node { id } } }",
+    selection: "hasConnections { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "connections").map((cid) => (entity as Design).connection(cid))),
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasConnections").map((cid) => (entity as Design).connection(cid))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasPiecesTransitive").map((pid) => (entity as Design).piece(pid))),
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasConnectionsTransitive").map((cid) => (entity as Design).connection(cid))),
+  },
+  {
+    selection: "hasLayers { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasLayers").map((lid) => (entity as Design).layer(lid))),
+  },
+  {
+    selection: "hasGroups { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasGroups").map((gid) => (entity as Design).group(gid))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -2701,6 +3338,108 @@ const DESIGN_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["design"] as JsonObject | undefined),
   },
+  {
+    selection: "referencesTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesFilesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesFilesTransitive").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesRepresentations { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.referencesRepresentations as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencesRepresentationsTransitive { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.referencesRepresentationsTransitive as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencedBy { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedBy").map((id) => (entity as Design).piece(id))),
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("design"),
 ] as const);
 
 const DESIGN_OPERATIONS = defineBoundKitOperations([
@@ -2742,7 +3481,7 @@ const DESIGN_OPERATIONS = defineBoundKitOperations([
 installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unknown, Design>[], DESIGN_OPERATIONS);
 
 {
-  const readPieces = Design.prototype.pieces as unknown as (this: Design) => Promise<readonly Piece[]>;
+  const readPieces = Design.prototype.hasPieces as unknown as (this: Design) => Promise<readonly Piece[]>;
   Object.defineProperty(Design.prototype, "pieces", {
     configurable: true,
     writable: true,
@@ -2786,9 +3525,13 @@ export class Type extends Entity {
   declare icon: () => Promise<string>;
   declare image: () => Promise<string>;
   declare unit: () => Promise<string>;
-  declare ports: () => Promise<readonly Port[]>;
-  declare connectors: () => Promise<readonly Connector[]>;
-  declare representations: () => Promise<readonly Representation[]>;
+  declare hasPorts: () => Promise<readonly Port[]>;
+  declare hasConnectors: () => Promise<readonly Connector[]>;
+  declare hasRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare authors: () => Promise<readonly Author[]>;
   declare rename: (newName: string) => Promise<SetResult>;
@@ -2812,22 +3555,61 @@ const TYPE_FIELDS = defineBoundKitFields([
   { selection: "image", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "image") },
   { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "unit") },
   {
-    selection: "ports { edges { node { id } } }",
+    selection: "hasPorts { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "ports").map((id) => (entity as Type).port(id))),
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasPorts").map((id) => (entity as Type).port(id))),
   },
   {
-    selection: "connectors { edges { node { id } } }",
+    selection: "hasConnectors { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "connectors").map((id) => (entity as Type).connector(id))),
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasConnectors").map((id) => (entity as Type).connector(id))),
   },
   {
-    selection: "representations { edges { node { id } } }",
+    selection: "hasRepresentations { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "representations").map((id) => (entity as Type).representation(id))),
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasRepresentations").map((id) => (entity as Type).representation(id))),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const branch = ((frag as JsonObject | null)?.["type"] as JsonObject | undefined) ?? (frag as JsonObject | null);
+      const edges = ((branch?.["referencedBy"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -2841,6 +3623,7 @@ const TYPE_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
   },
+  ...vfsKitFields("type"),
 ] as const);
 
 const TYPE_OPERATIONS = defineBoundKitOperations([
@@ -2906,6 +3689,11 @@ export class Port extends Entity {
   declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
   declare removeAttribute: (id: string) => Promise<SetResult>;
   declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -2923,6 +3711,7 @@ installEntityKitMethods(
       coarseEvent: true,
       parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_PORT)),
     },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_PORT),
   ] as const) as readonly BoundKitFieldSpec<unknown, Port>[],
   defineBoundKitOperations([
     { method: "rename", buildInner: (_e, newCode, newLabel) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))}, newLabel: ${newLabel == null ? "null" : gqlString(String(newLabel))})` },
@@ -2961,6 +3750,11 @@ export class Connector extends Entity {
   declare rename: (newCode: string) => Promise<SetResult>;
   declare changeDescription: (newDescription: string) => Promise<SetResult>;
   declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -2984,6 +3778,7 @@ installEntityKitMethods(
       coarseEvent: true,
       parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)),
     },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_CONNECTOR),
   ] as const) as readonly BoundKitFieldSpec<unknown, Connector>[],
   defineBoundKitOperations([
     { method: "rename", buildInner: (_e, newCode) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))})` },
@@ -3275,8 +4070,14 @@ export class Piece extends Entity {
   declare depth: () => Promise<number | null>;
   declare parentPiece: () => Promise<Piece | null>;
   declare parentConnection: () => Promise<Connection | null>;
-  declare childPieces: () => Promise<readonly Piece[]>;
-  declare childConnections: () => Promise<readonly Connection[]>;
+  declare isType: () => Promise<Type | null>;
+  declare isDesign: () => Promise<Design | null>;
+  declare isTypesTransitive: () => Promise<readonly Type[]>;
+  declare isDesignsTransitive: () => Promise<readonly Design[]>;
+  declare hasPieces: () => Promise<readonly Piece[]>;
+  declare hasConnections: () => Promise<readonly Connection[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
   declare pathPieces: () => Promise<readonly string[]>;
   declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
   declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
@@ -3358,18 +4159,64 @@ const PIECE_FIELDS = defineBoundKitFields([
     coarseEvent: true,
   },
   {
-    selection: "childPieces { edges { node { id } } }",
+    selection: "hasPieces { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "childPieces").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasPieces").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
   },
   {
-    selection: "childConnections { edges { node { id } } }",
+    selection: "hasConnections { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "childConnections").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasConnections").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
+  },
+  {
+    selection: "isType { id }",
+    parse: () => null,
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["isType"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Type(entity.session, id, entity.storeId);
+    },
+  },
+  {
+    selection: "isDesign { id }",
+    parse: () => null,
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["isDesign"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, id, entity.storeId);
+    },
+  },
+  {
+    selection: "isTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "isTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "isDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "isDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasPiecesTransitive").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasConnectionsTransitive").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
   },
   {
     method: "pathPieces",
@@ -3493,7 +4340,7 @@ export class Side {
   }
 }
 
-const CONNECTION_SIDE_SELECTION = "piece { id } port { id } designPiece { id } connector { id }";
+const CONNECTION_SIDE_SELECTION = "referencesPiece { id } referencesPort { id } referencesDesignPiece { id } referencesConnector { id }";
 
 function connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
   const d = frag?.["design"] as JsonObject | undefined;
@@ -3510,16 +4357,16 @@ function parseSideFromJson(
   storeId?: string,
 ): Side | null {
   if (node == null || typeof node !== "object") return null;
-  const piece = node["piece"] as JsonObject | undefined;
+  const piece = node["referencesPiece"] as JsonObject | undefined;
   const pieceId = piece == null ? "" : String(piece["id"] ?? "");
   if (pieceId === "") return null;
-  const port = node["port"] as JsonObject | undefined;
+  const port = node["referencesPort"] as JsonObject | undefined;
   const portRaw = port == null ? "" : String(port["id"] ?? "");
   const portId = portRaw === "" ? null : portRaw;
-  const dp = node["designPiece"] as JsonObject | undefined;
+  const dp = node["referencesDesignPiece"] as JsonObject | undefined;
   const dpRaw = dp == null ? "" : String(dp["id"] ?? "");
   const designPieceId = dpRaw === "" ? null : dpRaw;
-  const conn = node["connector"] as JsonObject | undefined;
+  const conn = node["referencesConnector"] as JsonObject | undefined;
   const cxRaw = conn == null ? "" : String(conn["id"] ?? "");
   const connectorId = cxRaw === "" ? null : cxRaw;
   return new Side(session, designId, connectionId, role, pieceId, portId, connectorId, designPieceId, storeId);
@@ -3550,7 +4397,16 @@ export class Connection extends Entity {
   declare v: () => Promise<number | null>;
   declare parent: () => Promise<Side | null>;
   declare child: () => Promise<Side | null>;
+  declare hasSides: () => Promise<readonly Side[]>;
+  declare referencesPieces: () => Promise<readonly Piece[]>;
+  declare referencesConnectors: () => Promise<readonly Connector[]>;
+  declare referencesPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare referencesConnectorsTransitive: () => Promise<readonly Connector[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
+}
+
+function parseConnectionBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  return parseEntityConnectionIds(connectionKit(frag), key);
 }
 
 const CONNECTION_FIELDS = defineBoundKitFields([
@@ -3578,6 +4434,79 @@ const CONNECTION_FIELDS = defineBoundKitFields([
     parseEntity: (entity, frag) =>
       parseSideFromJson(entity.session, (entity as Connection).designId, entity.id, "child", connectionKit(frag as JsonObject | null)?.["child"] as JsonObject | undefined, entity.storeId),
     coarseEvent: true,
+  },
+  {
+    selection: `hasSides { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const sides = connectionKit(frag as JsonObject | null)?.["hasSides"];
+      if (!Array.isArray(sides)) return Object.freeze([]);
+      const designId = (entity as Connection).designId;
+      return Object.freeze(
+        sides
+          .map((node) => parseSideFromJson(entity.session, designId, entity.id, "parent", node as JsonObject | undefined, entity.storeId))
+          .filter((s): s is Side => s != null),
+      );
+    },
+  },
+  {
+    selection: "referencesPieces { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseConnectionBranchConnection(frag as JsonObject | null, "referencesPieces").map((id) =>
+          new Design(entity.session, (entity as Connection).designId, entity.storeId).piece(id),
+        ),
+      ),
+  },
+  {
+    selection: "referencesConnectors { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = (connectionKit(frag as JsonObject | null)?.["referencesConnectors"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectorId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const typeId = String(owner?.["id"] ?? "");
+          return new Connector(entity.session, typeId, connectorId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencesPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseConnectionBranchConnection(frag as JsonObject | null, "referencesPiecesTransitive").map((id) =>
+          new Design(entity.session, (entity as Connection).designId, entity.storeId).piece(id),
+        ),
+      ),
+  },
+  {
+    selection: "referencesConnectorsTransitive { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = (connectionKit(frag as JsonObject | null)?.["referencesConnectorsTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectorId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const typeId = String(owner?.["id"] ?? "");
+          return new Connector(entity.session, typeId, connectorId, entity.storeId);
+        }),
+      );
+    },
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -3796,6 +4725,21 @@ export class Representation extends Entity {
   declare tags: () => Promise<readonly Tag[]>;
   declare qualities: () => Promise<readonly Quality[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+}
+
+function parseRepresentationBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const node = readKitPathNode(frag, KIT_PATH_TYPE_REPRESENTATION);
+  return parseEntityConnectionIds(node, key);
 }
 
 installEntityKitMethods(Representation, defineBoundKitFields([
@@ -3826,6 +4770,67 @@ installEntityKitMethods(Representation, defineBoundKitFields([
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)),
   },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges =
+        ((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)?.["referencedBy"] as JsonObject | undefined)?.[
+          "edges"
+        ] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencedByDesigns").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
+  ...vfsEntityPathFields(KIT_PATH_TYPE_REPRESENTATION),
 ]) as readonly BoundKitFieldSpec<unknown, Representation>[]);
 //#endregion 🎨Representation
 
@@ -3836,49 +4841,273 @@ export class Family extends Entity {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `family(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
   declare name: () => Promise<string>;
   declare description: () => Promise<string>;
   declare icon: () => Promise<string>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
-installEntityNodeMethods(Family, "Family", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
-] as const));
+const FAMILY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "icon") },
+  ...vfsKitFields("family"),
+] as const);
+
+installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unknown, Family>[], []);
 //#endregion 👨‍👩‍👦Family
 
+//#region 🏛️Typology
+/** @emoji 🏛️ Typology artifact: owns kit types and designs. */
+export class Typology extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `typology(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+}
+
+function parseTypologyBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const t = frag?.["typology"] as JsonObject | undefined;
+  return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const TYPOLOGY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "icon") },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasDesigns { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("typology"),
+] as const);
+
+installEntityKitMethods(Typology, TYPOLOGY_FIELDS as readonly BoundKitFieldSpec<unknown, Typology>[], []);
+//#endregion 🏛️Typology
+
 //#region 📄File
+/** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
 export class File extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `file(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  representation(representationId: string): Representation {
+    return new Representation(this.session, "", representationId, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
   declare name: () => Promise<string>;
+  declare hasRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesTypes: () => Promise<readonly Type[]>;
+  declare referencesDesigns: () => Promise<readonly Design[]>;
+  declare referencesTypesTransitive: () => Promise<readonly Type[]>;
+  declare referencesDesignsTransitive: () => Promise<readonly Design[]>;
 }
 
-installEntityNodeMethods(File, "File", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-] as const));
+function parseFileBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["file"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FILE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "file", "name") },
+  {
+    selection: "hasRepresentations { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseFileBranchConnection(frag as JsonObject | null, "hasRepresentations").map((id) => (entity as File).representation(id)),
+      ),
+  },
+  {
+    selection: "referencesTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesTypes").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "referencesDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesDesigns").map((id) => (entity as File).design(id))),
+  },
+  {
+    selection: "referencesTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesTypesTransitive").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "referencesDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesDesignsTransitive").map((id) => (entity as File).design(id))),
+  },
+  ...vfsKitFields("file"),
+] as const);
+
+installEntityKitMethods(File, FILE_FIELDS as readonly BoundKitFieldSpec<unknown, File>[], []);
 //#endregion 📄File
 
 //#region 📁Folder
-/** @emoji 📁 Folder artifact: read-only in current kit API. */
+/** @emoji 📁 Folder artifact with constrained virtual file system navigation. */
 export class Folder extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `folder(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  subFolder(id: string): Folder {
+    return new Folder(this.session, id, this.storeId);
+  }
+
+  file(id: string): File {
+    return new File(this.session, id, this.storeId);
+  }
+
+  family(id: string): Family {
+    return new Family(this.session, id, this.storeId);
+  }
+
+  typology(id: string): Typology {
+    return new Typology(this.session, id, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
   declare name: () => Promise<string>;
   declare description: () => Promise<string>;
   declare path: () => Promise<string>;
+  declare subFolders: () => Promise<readonly Folder[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare families: () => Promise<readonly Family[]>;
+  declare typologies: () => Promise<readonly Typology[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
-installEntityNodeMethods(Folder, "Folder", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { selection: "path", parse: (node) => String(node?.["path"] ?? "") },
-] as const));
+function parseFolderBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["folder"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FOLDER_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "description") },
+  { selection: "path", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "path") },
+  {
+    selection: "subFolders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "subFolders").map((id) => (entity as Folder).subFolder(id))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "files").map((id) => (entity as Folder).file(id))),
+  },
+  {
+    selection: "families { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "families").map((id) => (entity as Folder).family(id))),
+  },
+  {
+    selection: "typologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "typologies").map((id) => (entity as Folder).typology(id))),
+  },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => (entity as Folder).type(id))),
+  },
+  {
+    selection: "hasDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "hasDesigns").map((id) => (entity as Folder).design(id))),
+  },
+  ...vfsKitFields("folder"),
+] as const);
+
+installEntityKitMethods(Folder, FOLDER_FIELDS as readonly BoundKitFieldSpec<unknown, Folder>[], []);
 //#endregion 📁Folder
 
 //#region 🪟Layer
@@ -3891,7 +5120,7 @@ export class Layer extends Entity {
   }
 
   kitInnerPath(inner: string): string {
-    return `design(id: ${gqlString(this.designId)}) { layers { edges { node { id ${inner} } } } }`;
+    return `design(id: ${gqlString(this.designId)}) { hasLayers { edges { node { id ${inner} } } } }`;
   }
 
   declare name: () => Promise<string>;
@@ -3906,10 +5135,10 @@ export class Layer extends Entity {
 installEntityKitMethods(
   Layer,
   defineBoundKitFields([
-    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "name") },
-    { selection: "description", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "description"), eventKind: "changedDescription" },
-    { selection: "icon", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "icon") },
-    { selection: "color", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "color") },
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "name") },
+    { selection: "description", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "icon") },
+    { selection: "color", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "color") },
     { selection: "order", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeNumberOrNull(frag as JsonObject | null, entity.id, "order") },
     { selection: "visible", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "visible") },
     { selection: "locked", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "locked") },
@@ -3927,7 +5156,7 @@ export class Group extends Entity {
   }
 
   kitInnerPath(inner: string): string {
-    return `design(id: ${gqlString(this.designId)}) { groups { edges { node { id ${inner} } } } }`;
+    return `design(id: ${gqlString(this.designId)}) { hasGroups { edges { node { id ${inner} } } } }`;
   }
 
   declare name: () => Promise<string>;
@@ -3936,7 +5165,7 @@ export class Group extends Entity {
 installEntityKitMethods(
   Group,
   defineBoundKitFields([
-    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "groups", entity.id, "name") },
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasGroups", entity.id, "name") },
   ] as const) as readonly BoundKitFieldSpec<unknown, Group>[],
 );
 //#endregion 👥Group
@@ -4052,11 +5281,239 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(fixed).toContain("ok errors");
       expect(fixed).not.toMatch(/xAxis:\s*\{\s*\{\s*ok/);
     });
+    it("resolveFileSystemNode maps representation port and connector kinds", () => {
+      const session = { } as Session;
+      const rep = resolveFileSystemNode(session, "store-1", { id: "r1", kind: "REPRESENTATION" }, undefined, "type-1");
+      expect(rep).toBeInstanceOf(Representation);
+      const port = resolveFileSystemNode(session, "store-1", { id: "p1", kind: "PORT" }, undefined, "type-1");
+      expect(port).toBeInstanceOf(Port);
+      const connector = resolveFileSystemNode(session, "store-1", { id: "c1", kind: "CONNECTOR" }, undefined, "type-1");
+      expect(connector).toBeInstanceOf(Connector);
+    });
+
+    it("fetchSemioFileSystemChildren selects kit relay fields at kit root", () => {
+      const inner = semioFileSystemChildrenInner({ kind: "KIT", id: "kit-1" });
+      expect(inner).toContain("hasTypologies");
+      expect(inner).not.toContain("fileSystemChildren");
+      const topoInner = semioFileSystemChildrenInner({ kind: "TYPOLOGY", id: "topo-1" });
+      expect(topoInner).toContain("typology(id:");
+      expect(topoInner).toContain("hasTypes");
+    });
+
+    it("fetchSemioFileSystemChildren returns typologies at kit root after installProjection", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const kitId = kit.id;
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId }),
+          (rows) => rows.some((row) => row.kind === "TYPOLOGY"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPOLOGY")).toBe(true);
+        expect(children.length).toBeGreaterThan(0);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("fetchSemioFileSystemChildren lists capsule kinds under typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const capsuleTypologyId = "typology-capsule";
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "TYPOLOGY", id: capsuleTypologyId }),
+          (rows) => rows.some((row) => row.kind === "TYPE" && row.name === "KindAlpha"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindAlpha")).toBe(true);
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindBeta")).toBe(true);
+        const topo = new Typology(session, capsuleTypologyId, store.id);
+        const hasTypes = await eventually(() => topo.hasTypes(), (rows) => rows.length >= 2, 10_000);
+        expect(hasTypes.map((row) => row.id)).toEqual(
+          expect.arrayContaining(["b2000000-0000-4000-8000-000000000001", "b2000000-0000-4000-8000-000000000002"]),
+        );
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection preserves metabolism file names for vfs", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kit.id }),
+          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "base.glb"),
+          30_000,
+        );
+        const baseGlb = children.find((row) => row.kind === "FILE" && row.name === "base.glb");
+        expect(baseGlb).toBeDefined();
+        expect(baseGlb!.id).toBe("457d2061-ac4b-4317-8563-ba41afffd149");
+        expect(children.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection has no typology-default on metabolism shallow kit", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const typologies = await eventually(() => kit.hasTypologies(), (rows) => rows.length >= 6, 30_000);
+        expect(typologies.some((t) => t.id === "typology-default")).toBe(false);
+        const tower = typologies.find((t) => t.id === "typology-tower");
+        expect(tower).toBeDefined();
+        const towerDesigns = await tower!.hasDesigns();
+        const towerDesignNames = await Promise.all(towerDesigns.map((d) => d.name()));
+        expect(towerDesignNames).toEqual(
+          expect.arrayContaining(["Nakagin Capsule Tower", "Slanted", "Twisted", "Dancing"]),
+        );
+        const tambour = typologies.find((t) => t.id === "typology-tambour");
+        expect(tambour).toBeDefined();
+        const tambourKindNames = await Promise.all((await tambour!.hasTypes()).map((k) => k.name()));
+        expect(tambourKindNames).toEqual(
+          expect.arrayContaining([
+            "Cylindric First Storey Tambour",
+            "Cylindric Last Storey Tambour",
+            "First Storey Tambour",
+            "Last Storey Tambour",
+          ]),
+        );
+        expect(tambourKindNames.some((name) => name === "First Storey" || name === "Last Storey")).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection places Nakagin Capsule Tower under typology-tower not typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const nakaginDesignId = "c3000000-0000-4000-8000-000000000001";
+        const towerTopo = new Typology(session, "typology-tower", store.id);
+        const capsuleTopo = new Typology(session, "typology-capsule", store.id);
+        const towerDesigns = await eventually(
+          () => towerTopo.hasDesigns(),
+          (rows) => rows.some((d) => d.id === nakaginDesignId),
+          30_000,
+        );
+        expect(towerDesigns.map((d) => d.id)).toContain(nakaginDesignId);
+        const capsuleDesigns = await capsuleTopo.hasDesigns();
+        expect(capsuleDesigns.map((d) => d.id)).not.toContain(nakaginDesignId);
+      } finally {
+        await session.dispose();
+      }
+    });
+
     it("Piece installs pathPieces and weak-geometry change subscriptions", () => {
       expect(typeof Piece.prototype.pathPieces).toBe("function");
       expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");
       expect(typeof Piece.prototype.onPositionChanged).toBe("function");
       expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
+    });
+    it("entities install is, has, references, and referencedBy projection accessors", () => {
+      const expectFn = (proto: object, name: string) => expect(typeof (proto as Record<string, unknown>)[name]).toBe("function");
+      expectFn(Kit.prototype, "hasDesigns");
+      expectFn(Kit.prototype, "hasTypes");
+      expectFn(Kit.prototype, "hasFiles");
+      expectFn(Kit.prototype, "hasFolders");
+      expectFn(Kit.prototype, "hasFamilies");
+      expectFn(Kit.prototype, "hasTypologies");
+      expectFn(Kit.prototype, "hasPiecesTransitive");
+      expectFn(Kit.prototype, "hasConnectionsTransitive");
+      expectFn(Kit.prototype, "hasTypesTransitive");
+      expectFn(Kit.prototype, "hasDesignsTransitive");
+      expectFn(Typology.prototype, "hasTypes");
+      expectFn(Typology.prototype, "hasDesigns");
+      expectFn(Folder.prototype, "hasTypes");
+      expectFn(Folder.prototype, "hasDesigns");
+      expectFn(Type.prototype, "hasPorts");
+      expectFn(Type.prototype, "hasConnectors");
+      expectFn(Type.prototype, "hasRepresentations");
+      expectFn(Type.prototype, "referencesFiles");
+      expectFn(Type.prototype, "referencedBy");
+      expectFn(Type.prototype, "referencedByDesigns");
+      expectFn(Type.prototype, "referencedByDesignsTransitive");
+      expectFn(Design.prototype, "hasPieces");
+      expectFn(Design.prototype, "hasConnections");
+      expectFn(Design.prototype, "hasLayers");
+      expectFn(Design.prototype, "hasGroups");
+      expectFn(Design.prototype, "hasPiecesTransitive");
+      expectFn(Design.prototype, "hasConnectionsTransitive");
+      expectFn(Design.prototype, "referencesTypes");
+      expectFn(Design.prototype, "referencesDesigns");
+      expectFn(Design.prototype, "referencesFiles");
+      expectFn(Design.prototype, "referencesRepresentations");
+      expectFn(Design.prototype, "referencesTypesTransitive");
+      expectFn(Design.prototype, "referencesDesignsTransitive");
+      expectFn(Design.prototype, "referencesFilesTransitive");
+      expectFn(Design.prototype, "referencesRepresentationsTransitive");
+      expectFn(Design.prototype, "referencedBy");
+      expectFn(Design.prototype, "referencedByDesigns");
+      expectFn(Design.prototype, "referencedByDesignsTransitive");
+      expectFn(Piece.prototype, "isType");
+      expectFn(Piece.prototype, "isDesign");
+      expectFn(Piece.prototype, "isTypesTransitive");
+      expectFn(Piece.prototype, "isDesignsTransitive");
+      expectFn(Piece.prototype, "hasPieces");
+      expectFn(Piece.prototype, "hasConnections");
+      expectFn(Piece.prototype, "hasPiecesTransitive");
+      expectFn(Piece.prototype, "hasConnectionsTransitive");
+      expectFn(Connection.prototype, "hasSides");
+      expectFn(Connection.prototype, "referencesPieces");
+      expectFn(Connection.prototype, "referencesConnectors");
+      expectFn(Connection.prototype, "referencesPiecesTransitive");
+      expectFn(Connection.prototype, "referencesConnectorsTransitive");
+      expectFn(Representation.prototype, "referencedBy");
+      expectFn(Representation.prototype, "hasTypes");
+      expectFn(Representation.prototype, "referencesFiles");
+      expectFn(Representation.prototype, "referencedByDesigns");
+      expectFn(Representation.prototype, "referencedByDesignsTransitive");
+      expectFn(File.prototype, "hasRepresentations");
+      expectFn(File.prototype, "referencesTypes");
+      expectFn(File.prototype, "referencesDesigns");
+      expectFn(File.prototype, "referencesTypesTransitive");
+      expectFn(File.prototype, "referencesDesignsTransitive");
     });
     it("Kit and Graph install field change subscriptions", () => {
       expect(typeof Kit.prototype.onNameChanged).toBe("function");
@@ -4105,13 +5562,13 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
 
         const createDesign = await kit.createDesign("layout-alpha");
         expect(createDesign).toEqual({ ok: true });
-        const designs = await eventually(() => kit.designs(), (value) => value.length === 1, 10_000);
+        const designs = await eventually(() => kit.hasDesigns(), (value) => value.length === 1, 10_000);
         expect(designs).toHaveLength(1);
         expect(await designs[0]!.name()).toBe("layout-alpha");
 
         const createType = await kit.createType("kind-beta");
         expect(createType).toEqual({ ok: true });
-        const types = await eventually(() => kit.types(), (value) => value.length === 1, 10_000);
+        const types = await eventually(() => kit.hasTypes(), (value) => value.length === 1, 10_000);
         expect(types).toHaveLength(1);
         expect(await types[0]!.name()).toBe("kind-beta");
 
@@ -4172,6 +5629,57 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       }
     });
 
+    it("kit virtual file system createFolder and moveToFolder", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.createFolder("inbox", "/inbox")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const folders = await eventually(() => kit.hasFolders(), (rows) => rows.length >= 1, 15_000);
+        const inbox = folders.find((f) => (f as Folder) && true);
+        const inboxFolder = folders.find(async (f) => (await f.name()) === "inbox");
+        let inboxId = "";
+        for (const f of folders) {
+          if ((await f.name()) === "inbox") {
+            inboxId = f.id;
+            break;
+          }
+        }
+        expect(inboxId).not.toBe("");
+        expect(await kit.createDesign("vfs-design")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const designs = await eventually(() => kit.hasDesigns(), (rows) => rows.length >= 1, 15_000);
+        const design = designs.find((d) => d.id);
+        let designId = "";
+        for (const d of designs) {
+          if ((await d.name()) === "vfs-design") {
+            designId = d.id;
+            break;
+          }
+        }
+        expect(designId).not.toBe("");
+        const designEntity = new Design(session, designId, (await session.stores())[0]!.id);
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
+        expect(await kit.moveToFolder(designId, inboxId)).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        await eventually(
+          async () => {
+            for (const f of await kit.hasFolders()) {
+              if ((await f.name()) !== "inbox") continue;
+              const nested = await f.hasDesigns();
+              if (nested.some((d) => d.id === designId)) return true;
+            }
+            return false;
+          },
+          (ok) => ok,
+          15_000,
+        );
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
     it("installProjection hydrates kit from projection JSON", async () => {
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
@@ -4187,7 +5695,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect(installed.ok).toBe(true);
         session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
         const kit = await store.wip().theKit().kit();
-        const types = await eventually(() => kit.types(), (rows) => rows.length >= 1, 30_000);
+        const types = await eventually(() => kit.hasTypes(), (rows) => rows.length >= 1, 30_000);
         expect(await types[0]!.name()).toBe("Kind-A");
       } finally {
         await session.dispose();
@@ -4226,11 +5734,11 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       try {
         const kit = await (await session.stores())[0]!.wip().theKit().kit();
         expect(await kit.createType("Blueprint")).toEqual({ ok: true });
-        const blueprintId = (await eventually(() => kit.types(), (rows) => rows.length >= 1, 10_000))[0]!.id;
+        const blueprintId = (await eventually(() => kit.hasTypes(), (rows) => rows.length >= 1, 10_000))[0]!.id;
         expect(await kit.createDesign("E2E Design")).toEqual({ ok: true });
-        const design = (await eventually(() => kit.designs(), (rows) => rows.length >= 1, 10_000))[0]!;
+        const design = (await eventually(() => kit.hasDesigns(), (rows) => rows.length >= 1, 10_000))[0]!;
         expect(await design.addFixedPiece(blueprintId, { center: { u: 0, v: 0 }, plane: originPlane }, "piece-e2e")).toEqual({ ok: true });
-        const piece = (await eventually(() => design.pieces(), (rows) => rows.length >= 1, 10_000))[0]!;
+        const piece = (await eventually(() => design.hasPieces(), (rows) => rows.length >= 1, 10_000))[0]!;
         const pathIds = await piece.pathPieces();
         expect(Array.isArray(pathIds)).toBe(true);
         let positionEvents = 0;

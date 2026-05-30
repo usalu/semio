@@ -23,6 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
+import { playgroundIframeEmbedHeadersPlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌Adapters
@@ -70,6 +71,7 @@ export default defineConfig(async () => {
         enforce: "pre",
       },
       react(),
+      playgroundIframeEmbedHeadersPlugin(),
       wasm(),
       topLevelAwait(), // needed for older browsers to run wasm
       {

@@ -1,0 +1,7 @@
+{
+  "id": "26/05/30/PLAYGROUND-SYSTEM-THEME-ONLY",
+  "title": "Playground System Theme Only",
+  "goal": "ui/playground",
+  "status": "closed",
+  "summary": "Added PlaygroundShell (system theme + window chrome) via mountPlaygroundApp; playgroundPanelSection + enforcePlaygroundTreePanel reject React item descriptions; removed 2d theme footer; CAD spatial play uses design-system Select and panel sections."
+}

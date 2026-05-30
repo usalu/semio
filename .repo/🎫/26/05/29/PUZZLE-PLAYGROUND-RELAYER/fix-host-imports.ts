@@ -23,7 +23,7 @@ import {
 	type ElementsSurfaceTheme,
 	type TreeDataSection,
 } from "@ui/react";
-import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground";
+import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -31,7 +31,7 @@ import {
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import React, {
 	createContext,
@@ -100,7 +100,7 @@ h2 = h2.replace(/^\/\*\* @emoji 🛝 Board play[\s\S]*?\/\/ #region 🛝PlayHost
 writeFileSync(path2d, boardHostHeader + h2);
 
 const sceneHostHeader = `/** @emoji 🛝 Scene play React host — entry-only via play/main.ts. */
-import { Expertise, type FooterItem } from "@framework/playground";
+import { Expertise, type FooterItem } from "@framework/playground/core";
 import {
 	Button,
 	Input,
@@ -124,7 +124,7 @@ import {
 	registerWindowBody,
 	useApp,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground-renderer-react";
+} from "@framework/playground/core-renderer-react";
 import { ClipboardList, ListTree, Settings, Tags } from "lucide-react";
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {

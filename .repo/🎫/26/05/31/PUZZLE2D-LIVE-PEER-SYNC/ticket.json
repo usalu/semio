@@ -1,0 +1,17 @@
+{
+  "title": "Puzzle2d Live Peer Sync",
+  "emoji": "⚡",
+  "status": "closed",
+  "description": "Restore commit-93 canvas speed while keeping commit-94 live cross-pane node-move/delete sync, by replacing per-frame full-scene WASM re-push on peer panes with lightweight incremental per-node position update in Rust/WASM BoardSession.",
+  "summary": "Zoom perf: removed per-frame world-clip tile rebuild (always use world content cache); WASM wheel_zoom_active skips grid; coalesced wheel per RAF; setWheelZoomActive sync; cameras split from shell context; LOD UI updates deferred during zoom. Wasm rebuilt, 97 tests pass.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪887338089ca7486f83371483c95c03de",
+    "⚪cc65e234f8234210b6fccd0a95cbf41d",
+    "⚪15f38168cdd347a7b02b10c57b340e49",
+    "⚪9d765a844bea45b3b6f2a4bff24b3352",
+    "⚪ab610ae806c547a6ada26f5ee1d0c198",
+    "⚪9d3d0e903f5146b9ae823f6a54f54910",
+    "⚪3225f69b09454399a5d36ffdc4ffdb37"
+  ]
+}

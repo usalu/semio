@@ -10,8 +10,10 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
+import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import { uiAssetsVitePlugin } from "../ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -26,15 +28,18 @@ const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
 
 const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
-const frameworkPlaygroundDir = resolve(repoRootPath, "framework/playground/core");
-const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/playground/renderer/react");
+const frameworkPlaygroundDir = resolve(repoRootPath, "framework/product/playground/core");
+const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/playground/renderer/react");
 const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
 const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
+const semioFixturesDir = resolve(repoRootPath, "semio/fixtures");
+const puzzleAssetsDir = resolve(repoRootPath, "puzzle/assets");
 const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
+const uiAssetsRootPath = resolve(repoRootPath, "ui/assets");
 
 function toVitePath(value: string): string {
 	return value.replaceAll("\\", "/");
@@ -61,9 +66,10 @@ const loadSemioStack = storybookScopeMatches("semio");
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
 	if (loadUiStack || loadPuzzleStack) {
+		alias["@puzzle/assets"] = toVitePath(puzzleAssetsDir);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
-		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
+		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
 		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
 		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
@@ -77,6 +83,7 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio/js"] = toVitePath(semioJsDir);
 		alias["@semio/rs-wasm"] = toVitePath(semioRsWasmEntryPath);
 		alias["@semio/assets"] = toVitePath(semioAssetsDir);
+		alias["@semio/fixtures"] = toVitePath(semioFixturesDir);
 		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
@@ -153,6 +160,18 @@ const config: StorybookConfig = {
 		};
 
 		config.plugins = config.plugins || [];
+		const hasTailwindPlugin = config.plugins.some(
+			(plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite",
+		);
+		if (!hasTailwindPlugin) {
+			config.plugins.push(...tailwindcss());
+		}
+		const hasUiAssetsPlugin = config.plugins.some(
+			(plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve",
+		);
+		if (!hasUiAssetsPlugin) {
+			config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
+		}
 		const indicesToRemove: number[] = [];
 		for (let i = 0; i < config.plugins.length; i++) {
 			const plugin: any = config.plugins[i];
@@ -186,7 +205,7 @@ const config: StorybookConfig = {
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
 			"@ui/react",
-			"@framework/playground",
+			"@framework/playground/core",
 			"@framework/playground/renderer/react",
 			"@puzzle/2d/react",
 		]);

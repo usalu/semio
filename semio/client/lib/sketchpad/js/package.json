@@ -6,21 +6,22 @@
   "type": "module",
   "description": "semio ⋅ sketchpad",
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.ts",
+    "./boot": "./boot.ts"
   },
   "dependencies": {
-    "@puzzle/2d/react": "workspace:*",
-    "@puzzle/3d/react": "workspace:*",
-    "@puzzle/5d/react": "workspace:*",
-    "@ui/react": "workspace:*",
-    "@framework/platform": "workspace:*",
-    "fflate": "^0.8.2",
+    "@framework/core": "workspace:*",
+    "@framework/platform/core": "workspace:*",
+    "@mdx-js/react": "^3.1.1",
     "@semio/js": "*",
-    "@semio/react": "*",
-    "@semio/ui": "*",
-    "three": "^0.182.0"
+    "@semio/react": "workspace:*",
+    "@ui/react": "workspace:*",
+    "fflate": "^0.8.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@framework/platform/renderer/react": "workspace:*",
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.57.0",
     "@semio/assets": "^1.0.0",
