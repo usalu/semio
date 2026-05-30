@@ -4,27 +4,21 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Entry point for the documentation site React app.
+// Docs site entry: generic platform shell for sketchpad.
 
 // #endregion 🧲Header
 
 // #region 🛎️Entrypoint
-// Docs entrypoint that mounts the Sketchpad React component with StrictMode.
-// Entrypoint MUST render into the root element defined in the docs index.html.
 
 // #region 🔌Adapters
-import { Sketchpad } from "../js/shell.tsx";
-import React from "react";
-import { createRoot } from "react-dom/client";
+import { mountPlatform } from "@framework/platform/renderer/react";
+import { ensureSketchpadPlatform } from "@semio/sketchpad";
 // #endregion 🔌Adapters
+
 import "./globals.css";
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <div className="h-screen w-screen">
-      <Sketchpad />
-    </div>
-  </React.StrictMode>,
-);
+void mountPlatform(ensureSketchpadPlatform).catch((err) => {
+  console.error("[semio.sketchpad.docs]", err);
+});
 
 // #endregion 🛎️Entrypoint

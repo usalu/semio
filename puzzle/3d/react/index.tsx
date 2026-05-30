@@ -25,7 +25,6 @@ import React, { Children, isValidElement, type CSSProperties, type ChangeEvent, 
 const Canvas = sceneHostPort.fiber.canvas;
 const createPortal = sceneHostPort.fiber.createPortal;
 const useFrame = sceneHostPort.fiber.useFrame;
-const useStore = sceneHostPort.fiber.useStore;
 const useThree = sceneHostPort.fiber.useThree;
 const Clone = sceneHostPort.drei.Clone;
 const Line = sceneHostPort.drei.Line;
@@ -2153,12 +2152,29 @@ function probeCssComputed(property: "color" | "backgroundColor", value: string):
   return out;
 }
 
+function cssColorForThree(css: string): string {
+  if (!css || typeof document === "undefined") {
+    return css;
+  }
+  if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
+    return css;
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return css;
+  }
+  ctx.fillStyle = "#000000";
+  ctx.fillStyle = css;
+  return ctx.fillStyle;
+}
+
 function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
   const raw = probeCssComputed(property, expr);
   if (!raw || raw === "rgba(0, 0, 0, 0)") {
     return fallback;
   }
-  return raw;
+  return cssColorForThree(raw);
 }
 
 /** @emoji ­ƒÄ¿ Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
@@ -2564,20 +2580,22 @@ function raycastHitTargetsPuzzle3dPick(hitObject: Object3D): boolean {
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
 function Puzzle3dSelectionMissBridge(): null {
   const { clearPuzzle3dSelection } = useRegistryInteraction();
-  const store = useStore();
-  const attractionBusy = useRegistryDrag().attractionDragActive || useRegistryDrag().attractionIndirectPickAwait !== null;
+  const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
+  const setState = useThree((state) => state.set);
+  const getState = useThree((state) => state.get);
+  const attractionBusy = attractionDragActive || attractionIndirectPickAwait !== null;
   const clearPuzzle3dSelectionRef = reactHostPort.useRef(clearPuzzle3dSelection);
   clearPuzzle3dSelectionRef.current = clearPuzzle3dSelection;
   const attractionBusyRef = reactHostPort.useRef(attractionBusy);
   attractionBusyRef.current = attractionBusy;
   reactHostPort.useEffect(() => {
-    const previous = store.getState().onPointerMissed;
+    const previous = getState().onPointerMissed;
     const onMiss = (event: MouseEvent) => {
       if (event.button !== 0 || attractionBusyRef.current) {
         previous?.(event);
         return;
       }
-      const hits = store.getState().internal.initialHits;
+      const hits = getState().internal.initialHits;
       if (hits.some((hit) => raycastHitTargetsPuzzle3dPick(hit.object))) {
         previous?.(event);
         return;
@@ -2585,9 +2603,9 @@ function Puzzle3dSelectionMissBridge(): null {
       clearPuzzle3dSelectionRef.current();
       previous?.(event);
     };
-    store.setState({ onPointerMissed: onMiss });
-    return () => store.setState({ onPointerMissed: previous });
-  }, [store]);
+    setState({ onPointerMissed: onMiss });
+    return () => setState({ onPointerMissed: previous });
+  }, [getState, setState]);
   return null;
 }
 //#endregion ­ƒÄ»Registry
@@ -4951,6 +4969,14 @@ if (import.meta.vitest) {
       expect(highlighted?.lineColor).toMatch(/secondary|#34d1bf/i);
       expect(hovered?.lineColor).not.toMatch(/primary/i);
       expect(highlighted?.lineColor).not.toMatch(/primary/i);
+    });
+    it("returns srgb-compatible colors for Three.js", () => {
+      for (const kind of ["neutral", "hovered", "selected", "highlighted", "disabled"] as const) {
+        const colors = meshStyleColors(kind);
+        expect(colors?.meshColor).not.toMatch(/^oklab\(/iu);
+        expect(colors?.lineColor).not.toMatch(/^oklab\(/iu);
+        expect(colors?.emissiveColor).not.toMatch(/^oklab\(/iu);
+      }
     });
   });
   describe("styledMeshPoolAcquire", () => {

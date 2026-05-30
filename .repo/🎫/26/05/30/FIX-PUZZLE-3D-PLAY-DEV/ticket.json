@@ -2,14 +2,9 @@
   "title": "Fix Puzzle 3d Play Dev",
   "status": "closed",
   "description": "puzzle 3d play dev server fails with Babel duplicate declaration BoardStructuralDeleteReporter in framework playground react renderer.",
-  "summary": "Removed premature @puzzle/2d/react imports of BoardStructuralDeleteReporter, BoardPlayRedrawProgressReset, and BoardPaneChrome that duplicated local playground definitions and broke Vite/Babel for puzzle 3d play dev. Added @framework/playground/core vitest alias in @puzzle/3d/react so cameraStateNearEqual tests resolve play/index.ts. Dev server serves HTTP 200; all 84 @puzzle/3d/react tests pass.",
+  "summary": "Fixed puzzle 3d play runtime errors: imported registerWindowBody into playground renderer module scope (re-export alone did not bind locally). Normalized oklab computed colors via canvas for Three.js. Fixed Puzzle3dSelectionMissBridge hooks (single useRegistryDrag, useThree get/set instead of useStore). Made kinds tree item ids unique with index suffix. Removed ineffective frame-ancestors CSP meta from puzzle 2d/3d/5d play index.html (vite dev server still sets CSP header). Extended vitest aliases for playground renderer boot import. Tests: @puzzle/3d/react 86/86, @puzzle/3d/play vitest 14/14, playground renderer 13/13; e2e skipped (Playwright browser not installed).",
   "goal": "🎯r2602🎯runningsketchpad",
-  "files": {
-    "created": [".repo/🎫/26/05/30/FIX-PUZZLE-3D-PLAY-DEV/ticket.json"],
-    "updated": [
-      "framework/playground/renderer/react/index.tsx",
-      "puzzle/3d/react/vitest.config.ts"
-    ],
-    "removed": []
-  }
+  "sessions": [
+    "⚪80276a7fbc27489ab72bd53969bc3776"
+  ]
 }

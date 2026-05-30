@@ -158,7 +158,6 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
         { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
-        { find: "@semio/sketchpad/shell", replacement: path.resolve(__dirname, "shell.tsx") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },

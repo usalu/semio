@@ -47,6 +47,7 @@ import {
   WindowKindRuntime,
   getSidePanelBodyFactory,
   getWindowBodyFactory,
+  registerWindowBody,
   buildCadWindowBody,
   type AppToolCategory,
   type AppTools,

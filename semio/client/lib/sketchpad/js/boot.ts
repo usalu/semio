@@ -1,9 +1,9 @@
 // #region 🧲Header
-/** @emoji 🚀 Vite entry: boots the sketchpad React shell (domain is `@semio/sketchpad`). */
+/** @emoji 🚀 Vite entry: generic {@link PlatformView} via {@link mountPlatform}. */
 // #endregion 🧲Header
 
-import { bootSketchpadShell } from "./shell.tsx";
+import "./globals.css";
+import { mountPlatform } from "@framework/platform/renderer/react";
+import { ensureSketchpadPlatform } from "./index.ts";
 
-void bootSketchpadShell().catch((err) => {
-	console.error("[semio.sketchpad boot]", err);
-});
+void mountPlatform(ensureSketchpadPlatform);

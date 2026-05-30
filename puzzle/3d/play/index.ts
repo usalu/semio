@@ -435,8 +435,8 @@ function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entrie
   }
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle3dPlayKindCatalogEntryLabel(a).localeCompare(puzzle3dPlayKindCatalogEntryLabel(b)))
-    .map((entry) => ({
-      id: `${sectionId}.${entry.id}`,
+    .map((entry, index) => ({
+      id: `${sectionId}.${index}.${entry.id}`,
       label: puzzle3dPlayKindCatalogEntryLabel(entry),
       description: entry.id,
     }));
@@ -1549,6 +1549,21 @@ if (import.meta.vitest) {
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
       expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
       expect(tree.sections[0]?.items?.[0]?.label).toBe("Capsule");
+    });
+
+    it("buildPuzzle3dPlayKindsTree assigns unique item ids when catalog ids repeat", () => {
+      const catalogs = parseKindCatalogs({
+        kindCatalogs: {
+          nodes: [
+            { id: "dup", label: "Alpha", name: "Alpha" },
+            { id: "dup", label: "Beta", name: "Beta" },
+          ],
+        },
+      });
+      const tree = buildPuzzle3dPlayKindsTree(catalogs);
+      const ids = tree.sections[0]?.items?.map((item) => item.id) ?? [];
+      expect(ids).toHaveLength(2);
+      expect(new Set(ids).size).toBe(2);
     });
 
     it("declarative window body is a lone puzzle3d viewport surface", () => {

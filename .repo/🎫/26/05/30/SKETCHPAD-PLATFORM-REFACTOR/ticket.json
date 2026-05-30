@@ -1,30 +1,8 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Renamed ProductRuntime→Platform and ProductDefinition→PlatformDefinition in @framework/platform/core; added ComponentKind vocabulary (table, puzzle2d, puzzle3d, puzzle5d, cad, panel) and window-body builders; PlatformSpec constructor on Platform. React renderer: PlatformView (platform prop), registerSurfaceBinding seam, UiRenderer dispatches by component kind. Sketchpad: buildSketchpadPlatform/ensureSketchpadPlatform, declarative window bodies for all apps, surface bindings for home table (table), kit table (table), kit diagram (puzzle2d), design (puzzle5d), type (cad), docs/feedback (panel). Updated playground core aliases, play sites, cad play, desktop (dropped missing qualityConfig). Framework vitest: 9 core + 8 renderer tests passing.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": [],
-  "files": [
-    "framework/platform/core/index.ts",
-    "framework/platform/renderer/react/index.tsx",
-    "framework/platform/renderer/react/package.json",
-    "framework/platform/renderer/react/vitest.config.ts",
-    "framework/playground/core/core.ts",
-    "framework/playground/core/package.json",
-    "framework/playground/renderer/react/index.tsx",
-    "framework/playground/renderer/react/package.json",
-    "semio/client/lib/sketchpad/js/index.ts",
-    "semio/client/lib/sketchpad/js/package.json",
-    "semio/client/lib/sketchpad/js/project.json",
-    "semio/client/lib/sketchpad/js/index.html",
-    "semio/client/lib/sketchpad/js/playwright.config.ts",
-    "semio/client/lib/sketchpad/js/vite.config.ts",
-    "semio/client/ui/desktop/renderer.tsx",
-    "puzzle/2d/play/index.ts",
-    "puzzle/3d/play/index.ts",
-    "puzzle/5d/play/index.ts",
-    "cad/js/renderer/play/main.tsx"
-  ]
+  "summary": "Clean rewrite: deleted 53k-line shell.tsx. @semio/sketchpad index.ts is ~600 lines of pure Platform product (Component subclasses, window bodies, kit registry bridge, browser navigation). Boot is boot.ts calling mountPlatform(ensureSketchpadPlatform) only. Desktop, docs, vscode use generic platform renderer. Legacy sync/xstate/GoldenLayout removed; kit open/commands return via future platform contributions.",
+  "goal": "🎯r2602/🎯runningsketchpad"
 }
