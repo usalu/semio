@@ -52,7 +52,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f4_b_c1"
+        "label": "J \u00b7 cs_sl1_d0_t_f4_b_c1"
       }
     },
     {
@@ -105,7 +105,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f3_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f3_b_c1"
       }
     },
     {
@@ -158,7 +158,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f9_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f9_b_c1"
       }
     },
     {
@@ -211,7 +211,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f6_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f6_b_c1"
       }
     },
     {
@@ -264,7 +264,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f8_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f8_b_c0"
       }
     },
     {
@@ -317,7 +317,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f0_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f0_b_c1"
       }
     },
     {
@@ -370,7 +370,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f3_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f3_b_c1"
       }
     },
     {
@@ -423,7 +423,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f2_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f2_b_c0"
       }
     },
     {
@@ -476,7 +476,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f1_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f1_b_c0"
       }
     },
     {
@@ -529,7 +529,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f10_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f10_b_c1"
       }
     },
     {
@@ -582,7 +582,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f1_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f1_b_c1"
       }
     },
     {
@@ -635,7 +635,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f6_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f6_b_c1"
       }
     },
     {
@@ -688,7 +688,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f1_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f1_b_c0"
       }
     },
     {
@@ -741,7 +741,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl1_d1_t_f3_b_c1"
+        "label": "L \u00b7 cs_sl1_d1_t_f3_b_c1"
       }
     },
     {
@@ -794,7 +794,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f10_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f10_b_c1"
       }
     },
     {
@@ -847,7 +847,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "s · cs_sl1_d0_t_f7_b_c0"
+        "label": "s \u00b7 cs_sl1_d0_t_f7_b_c0"
       }
     },
     {
@@ -900,7 +900,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "\\ · cs_sl2_d0_t_f1_b_c0"
+        "label": "\\ \u00b7 cs_sl2_d0_t_f1_b_c0"
       }
     },
     {
@@ -953,7 +953,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f0_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f0_b_c1"
       }
     },
     {
@@ -1006,7 +1006,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f4_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f4_b_c0"
       }
     },
     {
@@ -1059,7 +1059,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f3_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f3_b_c1"
       }
     },
     {
@@ -1318,7 +1318,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "First Storey · t_f0_b_c1"
+        "label": "First Storey \u00b7 t_f0_b_c1"
       }
     },
     {
@@ -1371,7 +1371,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f2_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f2_b_c0"
       }
     },
     {
@@ -1424,7 +1424,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f10_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f10_b_c1"
       }
     },
     {
@@ -1477,7 +1477,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f4_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f4_b_c1"
       }
     },
     {
@@ -1736,7 +1736,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f7_b_c0"
+        "label": "Tambour \u00b7 t_f7_b_c0"
       }
     },
     {
@@ -1789,7 +1789,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f9_b_c1"
+        "label": "J \u00b7 cs_sl1_d0_t_f9_b_c1"
       }
     },
     {
@@ -1842,7 +1842,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f9_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f9_b_c1"
       }
     },
     {
@@ -1895,7 +1895,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f0_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f0_b_c0"
       }
     },
     {
@@ -1948,7 +1948,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f5_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f5_b_c1"
       }
     },
     {
@@ -2001,7 +2001,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f5_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f5_b_c0"
       }
     },
     {
@@ -2054,7 +2054,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f1_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f1_b_c1"
       }
     },
     {
@@ -2107,7 +2107,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f4_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f4_b_c1"
       }
     },
     {
@@ -2160,7 +2160,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f7_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f7_b_c1"
       }
     },
     {
@@ -2396,7 +2396,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f5_b_c1"
+        "label": "Tambour \u00b7 t_f5_b_c1"
       }
     },
     {
@@ -2447,7 +2447,7 @@
           0,
           1
         ],
-        "label": "Bridge · br_sl0_d2_t_f2_b_c0"
+        "label": "Bridge \u00b7 br_sl0_d2_t_f2_b_c0"
       }
     },
     {
@@ -2706,7 +2706,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f1_b_c1"
+        "label": "Tambour \u00b7 t_f1_b_c1"
       }
     },
     {
@@ -2759,7 +2759,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f7_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f7_b_c0"
       }
     },
     {
@@ -2812,7 +2812,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f1_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f1_b_c1"
       }
     },
     {
@@ -2865,7 +2865,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f9_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f9_b_c1"
       }
     },
     {
@@ -3124,7 +3124,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f9_b_c1"
+        "label": "Tambour \u00b7 t_f9_b_c1"
       }
     },
     {
@@ -3177,7 +3177,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f2_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f2_b_c1"
       }
     },
     {
@@ -3230,7 +3230,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl1_d1_t_f6_b_c1"
+        "label": "L \u00b7 cs_sl1_d1_t_f6_b_c1"
       }
     },
     {
@@ -3283,7 +3283,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f3_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f3_b_c0"
       }
     },
     {
@@ -3336,7 +3336,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f5_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f5_b_c1"
       }
     },
     {
@@ -3389,7 +3389,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f7_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f7_b_c1"
       }
     },
     {
@@ -3442,7 +3442,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f6_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f6_b_c0"
       }
     },
     {
@@ -3495,7 +3495,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl2_d0_t_f3_b_c0"
+        "label": "J \u00b7 cs_sl2_d0_t_f3_b_c0"
       }
     },
     {
@@ -3548,7 +3548,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f0_b_c1"
+        "label": "J \u00b7 cs_sl1_d0_t_f0_b_c1"
       }
     },
     {
@@ -3601,7 +3601,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f8_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f8_b_c0"
       }
     },
     {
@@ -3654,7 +3654,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f3_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f3_b_c0"
       }
     },
     {
@@ -3707,7 +3707,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f5_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f5_b_c0"
       }
     },
     {
@@ -3760,7 +3760,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f0_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f0_b_c0"
       }
     },
     {
@@ -3813,7 +3813,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f5_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f5_b_c0"
       }
     },
     {
@@ -3866,7 +3866,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f2_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f2_b_c1"
       }
     },
     {
@@ -3919,7 +3919,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl2_d1_t_f6_b_c0"
+        "label": "/ \u00b7 cs_sl2_d1_t_f6_b_c0"
       }
     },
     {
@@ -3972,7 +3972,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f0_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f0_b_c1"
       }
     },
     {
@@ -4025,7 +4025,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f9_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f9_b_c1"
       }
     },
     {
@@ -4078,7 +4078,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl2_d1_t_f7_b_c0"
+        "label": "/ \u00b7 cs_sl2_d1_t_f7_b_c0"
       }
     },
     {
@@ -4131,7 +4131,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f7_b_c1"
+        "label": "J \u00b7 cs_sl1_d0_t_f7_b_c1"
       }
     },
     {
@@ -4390,7 +4390,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f1_b_c0"
+        "label": "Tambour \u00b7 t_f1_b_c0"
       }
     },
     {
@@ -4443,7 +4443,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f2_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f2_b_c0"
       }
     },
     {
@@ -4496,7 +4496,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f2_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f2_b_c1"
       }
     },
     {
@@ -4549,7 +4549,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f7_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f7_b_c1"
       }
     },
     {
@@ -4602,7 +4602,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f3_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f3_b_c1"
       }
     },
     {
@@ -4861,7 +4861,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "First Storey · t_f0_b_c0"
+        "label": "First Storey \u00b7 t_f0_b_c0"
       }
     },
     {
@@ -4914,7 +4914,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f8_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f8_b_c1"
       }
     },
     {
@@ -4965,7 +4965,7 @@
           0,
           1
         ],
-        "label": "Bridge · br_sl0_d2_t_f5_b_c0"
+        "label": "Bridge \u00b7 br_sl0_d2_t_f5_b_c0"
       }
     },
     {
@@ -5018,7 +5018,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f4_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f4_b_c0"
       }
     },
     {
@@ -5071,7 +5071,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f1_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f1_b_c0"
       }
     },
     {
@@ -5124,7 +5124,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f1_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f1_b_c0"
       }
     },
     {
@@ -5383,7 +5383,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f3_b_c0"
+        "label": "Tambour \u00b7 t_f3_b_c0"
       }
     },
     {
@@ -5642,7 +5642,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f6_b_c0"
+        "label": "Tambour \u00b7 t_f6_b_c0"
       }
     },
     {
@@ -5695,7 +5695,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f5_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f5_b_c1"
       }
     },
     {
@@ -5748,7 +5748,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f5_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f5_b_c1"
       }
     },
     {
@@ -5800,7 +5800,7 @@
           0,
           1
         ],
-        "label": "Capital · ci_t_f8_b_c0"
+        "label": "Capital \u00b7 ci_t_f8_b_c0"
       }
     },
     {
@@ -5853,7 +5853,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f8_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f8_b_c1"
       }
     },
     {
@@ -5906,7 +5906,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f2_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f2_b_c0"
       }
     },
     {
@@ -5959,7 +5959,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f3_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f3_b_c0"
       }
     },
     {
@@ -6012,7 +6012,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f3_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f3_b_c0"
       }
     },
     {
@@ -6065,7 +6065,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f6_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f6_b_c0"
       }
     },
     {
@@ -6118,7 +6118,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl2_d0_t_f6_b_c0"
+        "label": "J \u00b7 cs_sl2_d0_t_f6_b_c0"
       }
     },
     {
@@ -6377,7 +6377,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Last Storey · t_f10_b_c1"
+        "label": "Last Storey \u00b7 t_f10_b_c1"
       }
     },
     {
@@ -6430,7 +6430,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f0_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f0_b_c0"
       }
     },
     {
@@ -6483,7 +6483,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f8_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f8_b_c0"
       }
     },
     {
@@ -6536,7 +6536,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f8_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f8_b_c1"
       }
     },
     {
@@ -6589,7 +6589,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f0_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f0_b_c1"
       }
     },
     {
@@ -6825,7 +6825,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f8_b_c1"
+        "label": "Tambour \u00b7 t_f8_b_c1"
       }
     },
     {
@@ -6876,7 +6876,7 @@
           0,
           1
         ],
-        "label": "Bridge · br_sl0_d2_t_f8_b_c0"
+        "label": "Bridge \u00b7 br_sl0_d2_t_f8_b_c0"
       }
     },
     {
@@ -7135,7 +7135,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f7_b_c1"
+        "label": "Tambour \u00b7 t_f7_b_c1"
       }
     },
     {
@@ -7210,7 +7210,7 @@
           0,
           1
         ],
-        "label": "Base · b"
+        "label": "Base \u00b7 b"
       }
     },
     {
@@ -7263,7 +7263,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f2_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f2_b_c1"
       }
     },
     {
@@ -7316,7 +7316,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f7_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f7_b_c1"
       }
     },
     {
@@ -7369,7 +7369,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f0_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f0_b_c1"
       }
     },
     {
@@ -7422,7 +7422,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f3_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f3_b_c1"
       }
     },
     {
@@ -7475,7 +7475,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl2_d1_t_f3_b_c0"
+        "label": "/ \u00b7 cs_sl2_d1_t_f3_b_c0"
       }
     },
     {
@@ -7528,7 +7528,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "\\ · cs_sl2_d0_t_f2_b_c0"
+        "label": "\\ \u00b7 cs_sl2_d0_t_f2_b_c0"
       }
     },
     {
@@ -7581,7 +7581,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f3_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f3_b_c0"
       }
     },
     {
@@ -7634,7 +7634,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f3_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f3_b_c1"
       }
     },
     {
@@ -7687,7 +7687,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f6_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f6_b_c0"
       }
     },
     {
@@ -7946,7 +7946,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f2_b_c0"
+        "label": "Tambour \u00b7 t_f2_b_c0"
       }
     },
     {
@@ -7999,7 +7999,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f5_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f5_b_c1"
       }
     },
     {
@@ -8052,7 +8052,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f3_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f3_b_c1"
       }
     },
     {
@@ -8105,7 +8105,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f2_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f2_b_c1"
       }
     },
     {
@@ -8158,7 +8158,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "\\ · cs_sl2_d0_t_f4_b_c0"
+        "label": "\\ \u00b7 cs_sl2_d0_t_f4_b_c0"
       }
     },
     {
@@ -8211,7 +8211,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f2_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f2_b_c0"
       }
     },
     {
@@ -8264,7 +8264,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f9_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f9_b_c1"
       }
     },
     {
@@ -8317,7 +8317,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl2_d1_t_f0_b_c0"
+        "label": "/ \u00b7 cs_sl2_d1_t_f0_b_c0"
       }
     },
     {
@@ -8576,7 +8576,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f4_b_c0"
+        "label": "Tambour \u00b7 t_f4_b_c0"
       }
     },
     {
@@ -8835,7 +8835,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f6_b_c1"
+        "label": "Tambour \u00b7 t_f6_b_c1"
       }
     },
     {
@@ -8888,7 +8888,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f3_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f3_b_c0"
       }
     },
     {
@@ -8941,7 +8941,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f5_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f5_b_c0"
       }
     },
     {
@@ -8994,7 +8994,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f1_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f1_b_c1"
       }
     },
     {
@@ -9047,7 +9047,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f1_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f1_b_c0"
       }
     },
     {
@@ -9100,7 +9100,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f10_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f10_b_c1"
       }
     },
     {
@@ -9153,7 +9153,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "\\ · cs_sl2_d0_t_f8_b_c0"
+        "label": "\\ \u00b7 cs_sl2_d0_t_f8_b_c0"
       }
     },
     {
@@ -9206,7 +9206,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "L · cs_sl2_d1_t_f4_b_c0"
+        "label": "L \u00b7 cs_sl2_d1_t_f4_b_c0"
       }
     },
     {
@@ -9465,7 +9465,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Tambour · t_f5_b_c0"
+        "label": "Tambour \u00b7 t_f5_b_c0"
       }
     },
     {
@@ -9701,7 +9701,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f2_b_c1"
+        "label": "Tambour \u00b7 t_f2_b_c1"
       }
     },
     {
@@ -9754,7 +9754,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f7_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f7_b_c0"
       }
     },
     {
@@ -9807,7 +9807,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "\\ · cs_sl2_d0_t_f5_b_c0"
+        "label": "\\ \u00b7 cs_sl2_d0_t_f5_b_c0"
       }
     },
     {
@@ -9859,7 +9859,7 @@
           0,
           1
         ],
-        "label": "Capital · ci_t_f10_b_c1"
+        "label": "Capital \u00b7 ci_t_f10_b_c1"
       }
     },
     {
@@ -9912,7 +9912,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f10_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f10_b_c1"
       }
     },
     {
@@ -9965,7 +9965,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f4_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f4_b_c1"
       }
     },
     {
@@ -10018,7 +10018,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f4_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f4_b_c0"
       }
     },
     {
@@ -10071,7 +10071,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl2_d1_t_f5_b_c0"
+        "label": "/ \u00b7 cs_sl2_d1_t_f5_b_c0"
       }
     },
     {
@@ -10124,7 +10124,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f7_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f7_b_c1"
       }
     },
     {
@@ -10177,7 +10177,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f9_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f9_b_c1"
       }
     },
     {
@@ -10230,7 +10230,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f4_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f4_b_c0"
       }
     },
     {
@@ -10283,7 +10283,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f7_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f7_b_c0"
       }
     },
     {
@@ -10336,7 +10336,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f7_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f7_b_c0"
       }
     },
     {
@@ -10595,7 +10595,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f3_b_c1"
+        "label": "Tambour \u00b7 t_f3_b_c1"
       }
     },
     {
@@ -10648,7 +10648,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl1_d1_t_f8_b_c1"
+        "label": "L \u00b7 cs_sl1_d1_t_f8_b_c1"
       }
     },
     {
@@ -10701,7 +10701,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f5_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f5_b_c1"
       }
     },
     {
@@ -10754,7 +10754,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl2_d0_t_f0_b_c0"
+        "label": "J \u00b7 cs_sl2_d0_t_f0_b_c0"
       }
     },
     {
@@ -10807,7 +10807,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f0_b_c1"
+        "label": "/ \u00b7 cs_sl1_d1_t_f0_b_c1"
       }
     },
     {
@@ -10860,7 +10860,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f1_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f1_b_c1"
       }
     },
     {
@@ -10913,7 +10913,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f10_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f10_b_c1"
       }
     },
     {
@@ -10966,7 +10966,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f4_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f4_b_c1"
       }
     },
     {
@@ -11019,7 +11019,7 @@
           1,
           0
         ],
-        "label": "J · cs_sl0_d2_t_f6_b_c0"
+        "label": "J \u00b7 cs_sl0_d2_t_f6_b_c0"
       }
     },
     {
@@ -11072,7 +11072,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f10_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f10_b_c1"
       }
     },
     {
@@ -11125,7 +11125,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f0_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f0_b_c0"
       }
     },
     {
@@ -11178,7 +11178,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f0_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f0_b_c0"
       }
     },
     {
@@ -11231,7 +11231,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f10_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f10_b_c1"
       }
     },
     {
@@ -11284,7 +11284,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f8_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f8_b_c1"
       }
     },
     {
@@ -11337,7 +11337,7 @@
           1,
           0
         ],
-        "label": "p · cs_sl2_d1_t_f6_b_c1"
+        "label": "p \u00b7 cs_sl2_d1_t_f6_b_c1"
       }
     },
     {
@@ -11390,7 +11390,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f1_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f1_b_c0"
       }
     },
     {
@@ -11443,7 +11443,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f6_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f6_b_c1"
       }
     },
     {
@@ -11496,7 +11496,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f4_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f4_b_c1"
       }
     },
     {
@@ -11549,7 +11549,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f2_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f2_b_c1"
       }
     },
     {
@@ -11602,7 +11602,7 @@
           1,
           0
         ],
-        "label": "L · cs_sl0_d1_t_f6_b_c1"
+        "label": "L \u00b7 cs_sl0_d1_t_f6_b_c1"
       }
     },
     {
@@ -11655,7 +11655,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f6_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f6_b_c0"
       }
     },
     {
@@ -11708,7 +11708,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f5_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f5_b_c0"
       }
     },
     {
@@ -11761,7 +11761,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl1_d1_t_f1_b_c1"
+        "label": "L \u00b7 cs_sl1_d1_t_f1_b_c1"
       }
     },
     {
@@ -11814,7 +11814,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f6_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f6_b_c1"
       }
     },
     {
@@ -11867,7 +11867,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f6_b_c0"
+        "label": "J \u00b7 cs_sl1_d0_t_f6_b_c0"
       }
     },
     {
@@ -11920,7 +11920,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "L · cs_sl2_d1_t_f2_b_c0"
+        "label": "L \u00b7 cs_sl2_d1_t_f2_b_c0"
       }
     },
     {
@@ -11973,7 +11973,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl1_d1_t_f2_b_c1"
+        "label": "L \u00b7 cs_sl1_d1_t_f2_b_c1"
       }
     },
     {
@@ -12026,7 +12026,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f7_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f7_b_c1"
       }
     },
     {
@@ -12079,7 +12079,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f8_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f8_b_c1"
       }
     },
     {
@@ -12132,7 +12132,7 @@
           1,
           0
         ],
-        "label": "s · cs_sl2_d0_t_f8_b_c1"
+        "label": "s \u00b7 cs_sl2_d0_t_f8_b_c1"
       }
     },
     {
@@ -12185,7 +12185,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "s · cs_sl1_d0_t_f8_b_c0"
+        "label": "s \u00b7 cs_sl1_d0_t_f8_b_c0"
       }
     },
     {
@@ -12238,7 +12238,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f7_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f7_b_c0"
       }
     },
     {
@@ -12291,7 +12291,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "L · cs_sl2_d1_t_f8_b_c0"
+        "label": "L \u00b7 cs_sl2_d1_t_f8_b_c0"
       }
     },
     {
@@ -12344,7 +12344,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "L · cs_sl2_d1_t_f1_b_c0"
+        "label": "L \u00b7 cs_sl2_d1_t_f1_b_c0"
       }
     },
     {
@@ -12397,7 +12397,7 @@
           1,
           0
         ],
-        "label": "/ · cs_sl0_d3_t_f4_b_c0"
+        "label": "/ \u00b7 cs_sl0_d3_t_f4_b_c0"
       }
     },
     {
@@ -12450,7 +12450,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f0_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f0_b_c1"
       }
     },
     {
@@ -12503,7 +12503,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f4_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f4_b_c1"
       }
     },
     {
@@ -12762,7 +12762,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Tambour · t_f4_b_c1"
+        "label": "Tambour \u00b7 t_f4_b_c1"
       }
     },
     {
@@ -13021,7 +13021,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Last Storey · t_f8_b_c0"
+        "label": "Last Storey \u00b7 t_f8_b_c0"
       }
     },
     {
@@ -13074,7 +13074,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl1_d0_t_f6_b_c1"
+        "label": "\\ \u00b7 cs_sl1_d0_t_f6_b_c1"
       }
     },
     {
@@ -13127,7 +13127,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "J · cs_sl1_d0_t_f5_b_c1"
+        "label": "J \u00b7 cs_sl1_d0_t_f5_b_c1"
       }
     },
     {
@@ -13180,7 +13180,7 @@
           1,
           0
         ],
-        "label": "\\ · cs_sl0_d0_t_f1_b_c1"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f1_b_c1"
       }
     },
     {
@@ -13233,7 +13233,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f7_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f7_b_c1"
       }
     },
     {
@@ -13286,7 +13286,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "/ · cs_sl1_d1_t_f0_b_c0"
+        "label": "/ \u00b7 cs_sl1_d1_t_f0_b_c0"
       }
     },
     {
@@ -13339,7 +13339,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f9_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f9_b_c1"
       }
     },
     {
@@ -13392,7 +13392,7 @@
           0,
           1
         ],
-        "label": "L · cs_sl0_d1_t_f8_b_c0"
+        "label": "L \u00b7 cs_sl0_d1_t_f8_b_c0"
       }
     },
     {
@@ -13445,7 +13445,7 @@
           0,
           1
         ],
-        "label": "\\ · cs_sl0_d0_t_f4_b_c0"
+        "label": "\\ \u00b7 cs_sl0_d0_t_f4_b_c0"
       }
     },
     {
@@ -13498,7 +13498,7 @@
           0,
           1
         ],
-        "label": "J · cs_sl2_d0_t_f7_b_c0"
+        "label": "J \u00b7 cs_sl2_d0_t_f7_b_c0"
       }
     },
     {
@@ -13551,7 +13551,7 @@
           0,
           1
         ],
-        "label": "/ · cs_sl0_d3_t_f1_b_c1"
+        "label": "/ \u00b7 cs_sl0_d3_t_f1_b_c1"
       }
     },
     {
@@ -13604,11 +13604,501 @@
           0,
           1
         ],
-        "label": "J · cs_sl0_d2_t_f4_b_c1"
+        "label": "J \u00b7 cs_sl0_d2_t_f4_b_c1"
       }
     }
   ],
-  "bonds": [
+  "meta": {
+    "description": "Unified puzzle 5d source for Nakagin play; 2d and 3d views project from this model."
+  },
+  "kindCatalogs": {
+    "grips": [
+      {
+        "color": "hsl(206 52% 48%)",
+        "id": "core circular bottom",
+        "label": "core circular bottom",
+        "name": "core circular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(290 52% 48%)",
+        "id": "core circular top",
+        "label": "core circular top",
+        "name": "core circular top",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(55 52% 48%)",
+        "id": "core rectangular bottom",
+        "label": "core rectangular bottom",
+        "name": "core rectangular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(37 52% 48%)",
+        "id": "core rectangular top",
+        "label": "core rectangular top",
+        "name": "core rectangular top",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(124 52% 48%)",
+        "id": "door capsule east",
+        "label": "door capsule east",
+        "name": "door capsule east",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(239 52% 48%)",
+        "id": "door capsule west",
+        "label": "door capsule west",
+        "name": "door capsule west",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(344 52% 48%)",
+        "id": "door tambour east",
+        "label": "door tambour east",
+        "name": "door tambour east",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(91 52% 48%)",
+        "id": "door tambour west",
+        "label": "door tambour west",
+        "name": "door tambour west",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(169 52% 48%)",
+        "id": "platform east",
+        "label": "platform east",
+        "name": "platform east",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(215 52% 48%)",
+        "id": "platform west",
+        "label": "platform west",
+        "name": "platform west",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(277 52% 48%)",
+        "id": "roof circular bottom",
+        "label": "roof circular bottom",
+        "name": "roof circular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(215 52% 48%)",
+        "id": "roof circular top",
+        "label": "roof circular top",
+        "name": "roof circular top",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(108 52% 48%)",
+        "id": "roof rectangular bottom",
+        "label": "roof rectangular bottom",
+        "name": "roof rectangular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(100 52% 48%)",
+        "id": "roof rectangular top",
+        "label": "roof rectangular top",
+        "name": "roof rectangular top",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(231 52% 48%)",
+        "id": "tambour circular bottom",
+        "label": "tambour circular bottom",
+        "name": "tambour circular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(156 52% 48%)",
+        "id": "tambour circular top",
+        "label": "tambour circular top",
+        "name": "tambour circular top",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(223 52% 48%)",
+        "id": "tambour rectangular bottom",
+        "label": "tambour rectangular bottom",
+        "name": "tambour rectangular bottom",
+        "defaultRopeKind": "wire.link"
+      },
+      {
+        "color": "hsl(108 52% 48%)",
+        "id": "tambour rectangular top",
+        "label": "tambour rectangular top",
+        "name": "tambour rectangular top",
+        "defaultRopeKind": "wire.link"
+      }
+    ],
+    "parts": [
+      {
+        "id": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
+        "label": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
+        "name": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939"
+      },
+      {
+        "id": "Last Storey",
+        "label": "Last Storey",
+        "name": "Last Storey"
+      },
+      {
+        "id": "Balcony",
+        "label": "Balcony",
+        "name": "Balcony"
+      },
+      {
+        "id": "Bridge",
+        "label": "Bridge",
+        "name": "Bridge"
+      },
+      {
+        "id": "Single Storey",
+        "label": "Single Storey",
+        "name": "Single Storey"
+      },
+      {
+        "id": "s",
+        "label": "s",
+        "name": "s"
+      },
+      {
+        "id": "Base",
+        "label": "Base",
+        "name": "Base"
+      },
+      {
+        "id": "Single Storey",
+        "label": "Single Storey",
+        "name": "Single Storey"
+      },
+      {
+        "id": "First Storey",
+        "label": "First Storey",
+        "name": "First Storey"
+      },
+      {
+        "id": "Tambour",
+        "label": "Tambour",
+        "name": "Tambour"
+      },
+      {
+        "id": "/",
+        "label": "/",
+        "name": "/"
+      },
+      {
+        "id": "q",
+        "label": "q",
+        "name": "q"
+      },
+      {
+        "id": "p",
+        "label": "p",
+        "name": "p"
+      },
+      {
+        "id": "/",
+        "label": "/",
+        "name": "/"
+      },
+      {
+        "id": "Blob",
+        "label": "Blob",
+        "name": "Blob"
+      },
+      {
+        "id": "Last Storey",
+        "label": "Last Storey",
+        "name": "Last Storey"
+      },
+      {
+        "id": "Capital",
+        "label": "Capital",
+        "name": "Capital"
+      },
+      {
+        "id": "p",
+        "label": "p",
+        "name": "p"
+      },
+      {
+        "id": "Ellipsoid",
+        "label": "Ellipsoid",
+        "name": "Ellipsoid"
+      },
+      {
+        "id": "L",
+        "label": "L",
+        "name": "L"
+      },
+      {
+        "id": "s",
+        "label": "s",
+        "name": "s"
+      },
+      {
+        "id": "J",
+        "label": "J",
+        "name": "J"
+      },
+      {
+        "id": "First Storey",
+        "label": "First Storey",
+        "name": "First Storey"
+      },
+      {
+        "id": "/",
+        "label": "/",
+        "name": "/"
+      },
+      {
+        "id": "s",
+        "label": "s",
+        "name": "s"
+      },
+      {
+        "id": "p",
+        "label": "p",
+        "name": "p"
+      },
+      {
+        "id": "L",
+        "label": "L",
+        "name": "L"
+      },
+      {
+        "id": "Capsule",
+        "label": "Capsule",
+        "name": "Capsule"
+      },
+      {
+        "id": "q",
+        "label": "q",
+        "name": "q"
+      },
+      {
+        "id": "J",
+        "label": "J",
+        "name": "J"
+      },
+      {
+        "id": "J",
+        "label": "J",
+        "name": "J"
+      },
+      {
+        "id": "L",
+        "label": "L",
+        "name": "L"
+      },
+      {
+        "id": "\\",
+        "label": "\\",
+        "name": "\\"
+      },
+      {
+        "id": "z",
+        "label": "z",
+        "name": "z"
+      },
+      {
+        "id": "L",
+        "label": "L",
+        "name": "L"
+      },
+      {
+        "id": "s",
+        "label": "s",
+        "name": "s"
+      },
+      {
+        "id": "J",
+        "label": "J",
+        "name": "J"
+      },
+      {
+        "id": "Trapezoid",
+        "label": "Trapezoid",
+        "name": "Trapezoid"
+      },
+      {
+        "id": "z",
+        "label": "z",
+        "name": "z"
+      },
+      {
+        "id": "\\",
+        "label": "\\",
+        "name": "\\"
+      },
+      {
+        "id": "\\",
+        "label": "\\",
+        "name": "\\"
+      },
+      {
+        "id": "Cylindric Tambour",
+        "label": "Cylindric Tambour",
+        "name": "Cylindric Tambour"
+      },
+      {
+        "id": "z",
+        "label": "z",
+        "name": "z"
+      },
+      {
+        "id": "q",
+        "label": "q",
+        "name": "q"
+      },
+      {
+        "id": "Cylindric Capital",
+        "label": "Cylindric Capital",
+        "name": "Cylindric Capital"
+      },
+      {
+        "id": "q",
+        "label": "q",
+        "name": "q"
+      },
+      {
+        "id": "p",
+        "label": "p",
+        "name": "p"
+      },
+      {
+        "id": "/",
+        "label": "/",
+        "name": "/"
+      },
+      {
+        "id": "\\",
+        "label": "\\",
+        "name": "\\"
+      },
+      {
+        "id": "z",
+        "label": "z",
+        "name": "z"
+      }
+    ]
+  },
+  "kindCompatibility": [
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
+      "target": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+      "bidirectional": true,
+      "specificity": "handle"
+    }
+  ],
+  "label": "Nakagin capsule tower",
+  "camera2d": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.2407
+  },
+  "camera3d": {
+    "position": [
+      420,
+      -420,
+      320
+    ],
+    "target": [
+      0,
+      2.4492935982947065e-15,
+      40
+    ],
+    "zoom": 1
+  },
+  "ties": [
     {
       "id": "015032e9-67ed-4736-adab-a6e10351079b",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d1",
@@ -14504,495 +14994,5 @@
       "source": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d3",
       "target": "549de7e4-6d98-4f86-b068-6461b88de67d:link"
     }
-  ],
-  "meta": {
-    "description": "Unified puzzle 5d source for Nakagin play; 2d and 3d views project from this model."
-  },
-  "kindCatalogs": {
-    "grips": [
-      {
-        "color": "hsl(206 52% 48%)",
-        "id": "core circular bottom",
-        "label": "core circular bottom",
-        "name": "core circular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(290 52% 48%)",
-        "id": "core circular top",
-        "label": "core circular top",
-        "name": "core circular top",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(55 52% 48%)",
-        "id": "core rectangular bottom",
-        "label": "core rectangular bottom",
-        "name": "core rectangular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(37 52% 48%)",
-        "id": "core rectangular top",
-        "label": "core rectangular top",
-        "name": "core rectangular top",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(124 52% 48%)",
-        "id": "door capsule east",
-        "label": "door capsule east",
-        "name": "door capsule east",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(239 52% 48%)",
-        "id": "door capsule west",
-        "label": "door capsule west",
-        "name": "door capsule west",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(344 52% 48%)",
-        "id": "door tambour east",
-        "label": "door tambour east",
-        "name": "door tambour east",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(91 52% 48%)",
-        "id": "door tambour west",
-        "label": "door tambour west",
-        "name": "door tambour west",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(169 52% 48%)",
-        "id": "platform east",
-        "label": "platform east",
-        "name": "platform east",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(215 52% 48%)",
-        "id": "platform west",
-        "label": "platform west",
-        "name": "platform west",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(277 52% 48%)",
-        "id": "roof circular bottom",
-        "label": "roof circular bottom",
-        "name": "roof circular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(215 52% 48%)",
-        "id": "roof circular top",
-        "label": "roof circular top",
-        "name": "roof circular top",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(108 52% 48%)",
-        "id": "roof rectangular bottom",
-        "label": "roof rectangular bottom",
-        "name": "roof rectangular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(100 52% 48%)",
-        "id": "roof rectangular top",
-        "label": "roof rectangular top",
-        "name": "roof rectangular top",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(231 52% 48%)",
-        "id": "tambour circular bottom",
-        "label": "tambour circular bottom",
-        "name": "tambour circular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(156 52% 48%)",
-        "id": "tambour circular top",
-        "label": "tambour circular top",
-        "name": "tambour circular top",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(223 52% 48%)",
-        "id": "tambour rectangular bottom",
-        "label": "tambour rectangular bottom",
-        "name": "tambour rectangular bottom",
-        "defaultRopeKind": "wire.link"
-      },
-      {
-        "color": "hsl(108 52% 48%)",
-        "id": "tambour rectangular top",
-        "label": "tambour rectangular top",
-        "name": "tambour rectangular top",
-        "defaultRopeKind": "wire.link"
-      }
-    ],
-    "parts": [
-      {
-        "id": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
-        "label": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
-        "name": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939"
-      },
-      {
-        "id": "Last Storey",
-        "label": "Last Storey",
-        "name": "Last Storey"
-      },
-      {
-        "id": "Balcony",
-        "label": "Balcony",
-        "name": "Balcony"
-      },
-      {
-        "id": "Bridge",
-        "label": "Bridge",
-        "name": "Bridge"
-      },
-      {
-        "id": "Single Storey",
-        "label": "Single Storey",
-        "name": "Single Storey"
-      },
-      {
-        "id": "s",
-        "label": "s",
-        "name": "s"
-      },
-      {
-        "id": "Base",
-        "label": "Base",
-        "name": "Base"
-      },
-      {
-        "id": "Single Storey",
-        "label": "Single Storey",
-        "name": "Single Storey"
-      },
-      {
-        "id": "First Storey",
-        "label": "First Storey",
-        "name": "First Storey"
-      },
-      {
-        "id": "Tambour",
-        "label": "Tambour",
-        "name": "Tambour"
-      },
-      {
-        "id": "/",
-        "label": "/",
-        "name": "/"
-      },
-      {
-        "id": "q",
-        "label": "q",
-        "name": "q"
-      },
-      {
-        "id": "p",
-        "label": "p",
-        "name": "p"
-      },
-      {
-        "id": "/",
-        "label": "/",
-        "name": "/"
-      },
-      {
-        "id": "Blob",
-        "label": "Blob",
-        "name": "Blob"
-      },
-      {
-        "id": "Last Storey",
-        "label": "Last Storey",
-        "name": "Last Storey"
-      },
-      {
-        "id": "Capital",
-        "label": "Capital",
-        "name": "Capital"
-      },
-      {
-        "id": "p",
-        "label": "p",
-        "name": "p"
-      },
-      {
-        "id": "Ellipsoid",
-        "label": "Ellipsoid",
-        "name": "Ellipsoid"
-      },
-      {
-        "id": "L",
-        "label": "L",
-        "name": "L"
-      },
-      {
-        "id": "s",
-        "label": "s",
-        "name": "s"
-      },
-      {
-        "id": "J",
-        "label": "J",
-        "name": "J"
-      },
-      {
-        "id": "First Storey",
-        "label": "First Storey",
-        "name": "First Storey"
-      },
-      {
-        "id": "/",
-        "label": "/",
-        "name": "/"
-      },
-      {
-        "id": "s",
-        "label": "s",
-        "name": "s"
-      },
-      {
-        "id": "p",
-        "label": "p",
-        "name": "p"
-      },
-      {
-        "id": "L",
-        "label": "L",
-        "name": "L"
-      },
-      {
-        "id": "Capsule",
-        "label": "Capsule",
-        "name": "Capsule"
-      },
-      {
-        "id": "q",
-        "label": "q",
-        "name": "q"
-      },
-      {
-        "id": "J",
-        "label": "J",
-        "name": "J"
-      },
-      {
-        "id": "J",
-        "label": "J",
-        "name": "J"
-      },
-      {
-        "id": "L",
-        "label": "L",
-        "name": "L"
-      },
-      {
-        "id": "\\",
-        "label": "\\",
-        "name": "\\"
-      },
-      {
-        "id": "z",
-        "label": "z",
-        "name": "z"
-      },
-      {
-        "id": "L",
-        "label": "L",
-        "name": "L"
-      },
-      {
-        "id": "s",
-        "label": "s",
-        "name": "s"
-      },
-      {
-        "id": "J",
-        "label": "J",
-        "name": "J"
-      },
-      {
-        "id": "Trapezoid",
-        "label": "Trapezoid",
-        "name": "Trapezoid"
-      },
-      {
-        "id": "z",
-        "label": "z",
-        "name": "z"
-      },
-      {
-        "id": "\\",
-        "label": "\\",
-        "name": "\\"
-      },
-      {
-        "id": "\\",
-        "label": "\\",
-        "name": "\\"
-      },
-      {
-        "id": "Cylindric Tambour",
-        "label": "Cylindric Tambour",
-        "name": "Cylindric Tambour"
-      },
-      {
-        "id": "z",
-        "label": "z",
-        "name": "z"
-      },
-      {
-        "id": "q",
-        "label": "q",
-        "name": "q"
-      },
-      {
-        "id": "Cylindric Capital",
-        "label": "Cylindric Capital",
-        "name": "Cylindric Capital"
-      },
-      {
-        "id": "q",
-        "label": "q",
-        "name": "q"
-      },
-      {
-        "id": "p",
-        "label": "p",
-        "name": "p"
-      },
-      {
-        "id": "/",
-        "label": "/",
-        "name": "/"
-      },
-      {
-        "id": "\\",
-        "label": "\\",
-        "name": "\\"
-      },
-      {
-        "id": "z",
-        "label": "z",
-        "name": "z"
-      }
-    ]
-  },
-  "kindCompatibility": [
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
-      "target": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
-      "bidirectional": true,
-      "specificity": "handle"
-    }
-  ],
-  "label": "Nakagin capsule tower",
-  "camera2d": {
-    "x": 0,
-    "y": 0,
-    "zoom": 0.2407
-  },
-  "camera3d": {
-    "position": [
-      420,
-      -420,
-      320
-    ],
-    "target": [
-      0,
-      2.4492935982947065e-15,
-      40
-    ],
-    "zoom": 1
-  }
+  ]
 }

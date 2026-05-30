@@ -25,6 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+import { uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -112,7 +113,7 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
-const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations"]);
+const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations", "semio"]);
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
@@ -135,6 +136,9 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
       }
       const filePath = path.join(assetsPath, requestedAssetPath);
       if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
+        if (requestedAssetPath.endsWith(".woff2")) {
+          res.setHeader("Content-Type", "font/woff2");
+        }
         fsMod.createReadStream(filePath).pipe(res);
         return;
       }
@@ -201,6 +205,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
+      ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
       stripSketchpadEmbeddedE2ePlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),

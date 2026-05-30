@@ -353,8 +353,8 @@ export function buildCadPlayHierarchySections(
 export interface CadPlayToolbarState {
   readonly activeModelDefinitionId: string;
   readonly selectionCount: number;
-  readonly transformsTo: readonly TransformationSpec[];
-  readonly transformsFrom: readonly TransformationSpec[];
+  readonly transfersTo: readonly TransformationSpec[];
+  readonly transfersFrom: readonly TransformationSpec[];
 }
 
 /** @emoji 🔗 React host bridge for CAD play toolbar commands. */
@@ -363,7 +363,7 @@ export interface CadPlayHostBridge {
   runHostCommand(command: string, args?: unknown): void;
 }
 
-/** @emoji 🧰 Playground {@link AppTools} for CAD play (view, save, transform). */
+/** @emoji 🧰 Playground {@link AppTools} for CAD play (view, save, transfer). */
 export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerId: string): AppTools {
   const viewTools: ToolItem[] = listModelDefinitionManifests().map((row, index) => ({
     id: `cad.play.view.${row.id}`,
@@ -411,9 +411,9 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       command: "loadRawRequest",
     },
   ];
-  const transformTools: ToolItem[] = [
-    ...state.transformsTo.map((spec, index) => ({
-      id: `cad.play.transform.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+  const transferTools: ToolItem[] = [
+    ...state.transfersTo.map((spec, index) => ({
+      id: `cad.play.transfer.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
       label: `→ ${spec.label}`,
       title: spec.target.modelDefinition,
@@ -422,13 +422,13 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       command: "applyTransformation",
       args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
     })),
-    ...(state.transformsTo.length > 0 && state.transformsFrom.length > 0 ? [{ id: "cad.play.transform.separator", kind: "separator" as const, order: state.transformsTo.length }] : []),
-    ...state.transformsFrom.map((spec, index) => ({
-      id: `cad.play.transform.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+    ...(state.transfersTo.length > 0 && state.transfersFrom.length > 0 ? [{ id: "cad.play.transfer.separator", kind: "separator" as const, order: state.transfersTo.length }] : []),
+    ...state.transfersFrom.map((spec, index) => ({
+      id: `cad.play.transfer.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
       label: `← ${spec.label}`,
       title: spec.source.modelDefinition,
-      order: state.transformsTo.length + (state.transformsTo.length > 0 && state.transformsFrom.length > 0 ? 1 : 0) + index,
+      order: state.transfersTo.length + (state.transfersTo.length > 0 && state.transfersFrom.length > 0 ? 1 : 0) + index,
       controllerId,
       command: "applyTransformation",
       args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
@@ -437,7 +437,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
   return {
     view: viewTools,
     save: saveTools,
-    ...(transformTools.length > 0 ? { transform: transformTools } : {}),
+    ...(transferTools.length > 0 ? { transfer: transferTools } : {}),
   };
 }
 
@@ -1511,15 +1511,15 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     (spec: TransformationSpec) => {
       const space = modelSpaceFromRecord(flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel));
       try {
-        space.transform(spec.source.modelDefinition, spec.target.modelDefinition, spec, brepjsKernel);
+        space.transfer(spec.source.modelDefinition, spec.target.modelDefinition, spec, brepjsKernel);
       } catch (error) {
-        setFileStatus(`Transform failed: ${String(error)}`);
+        setFileStatus(`Transfer failed: ${String(error)}`);
         return;
       }
       setModelsByDefinitionId(ensureCadPlayQuadModels(recordFromModelSpace(space)));
       setActiveModelDefinitionId(spec.target.modelDefinition);
       setModelDefinitionRevision((r) => r + 1);
-      setFileStatus(`Transformed ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
+      setFileStatus(`Transferred ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
     },
     [activeModelDefinitionId, brepjsKernel, liveModel, modelsByDefinitionId],
   );
@@ -1584,8 +1584,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       getToolbarState: () => ({
         activeModelDefinitionId,
         selectionCount: selectionInScope.length,
-        transformsTo: listTransformationsFromModelDefinition(activeModelDefinitionId),
-        transformsFrom: listTransformationsIntoModelDefinition(activeModelDefinitionId),
+        transfersTo: listTransformationsFromModelDefinition(activeModelDefinitionId),
+        transfersFrom: listTransformationsIntoModelDefinition(activeModelDefinitionId),
       }),
       runHostCommand: (command: string, args?: unknown) => {
         switch (command) {
@@ -2140,7 +2140,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
@@ -2166,7 +2166,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       const app = buildCadPlayAppRuntime(controller);
@@ -2190,13 +2190,13 @@ if (import.meta.vitest) {
   });
 
   describe("buildCadPlayToolbarTools", () => {
-    it("registers view, save, and transform categories", () => {
+    it("registers view, save, and transfer categories", () => {
       const tools = buildCadPlayToolbarTools(
         {
           activeModelDefinitionId: defaultModelDefinitionId(),
           selectionCount: 0,
-          transformsTo: [],
-          transformsFrom: [],
+          transfersTo: [],
+          transfersFrom: [],
         },
         CAD_PLAY_CONTROLLER_ID,
       );

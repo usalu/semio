@@ -7,6 +7,9 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+	define: {
+		__SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+	},
 	root,
 	resolve: {
 		alias: {

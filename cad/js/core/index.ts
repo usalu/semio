@@ -1420,8 +1420,8 @@ export class ModelSpace {
     return out;
   }
 
-  /** @emoji 🔄 Applies a transformation from a linked source model into a new linked target model. */
-  transform(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec, preview: SpatialPreviewKernel): Model {
+  /** @emoji 🔄 Transfers a transformation from a linked source model into a new linked target model. */
+  transfer(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec, preview: SpatialPreviewKernel): Model {
     const source = this.models[linkedSourceId];
     if (!source) throw new Error(`ModelSpace: unknown source model ${linkedSourceId}`);
     const target = applyTransformation(spec, source, preview);
@@ -6079,7 +6079,7 @@ if (import.meta.vitest) {
       expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-box-face-bottom");
       const space = new ModelSpace();
       space.link("geometry", source);
-      space.transform("geometry", "energy", spec!, M);
+      space.transfer("geometry", "energy", spec!, M);
       expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
     });
     it("from_geometry fuses touching shape solids and drops internal faces", () => {

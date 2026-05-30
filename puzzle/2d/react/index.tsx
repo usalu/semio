@@ -5430,6 +5430,33 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   clearSuspenseBoundaryFromContainer: () => {},
 };
 
+function reportBoardHostUncaughtError(error: unknown, errorInfo: { componentStack?: string | null }): void {
+  const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
+  if (report) {
+    report(error);
+    return;
+  }
+  console.error(error, errorInfo.componentStack ?? "");
+}
+
+function reportBoardHostCaughtError(error: unknown, errorInfo: { componentStack?: string | null; errorBoundary?: unknown }): void {
+  const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
+  if (report) {
+    report(error);
+    return;
+  }
+  console.error(error, errorInfo.componentStack ?? "", errorInfo.errorBoundary ?? "");
+}
+
+function reportBoardHostRecoverableError(error: unknown): void {
+  const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
+  if (report) {
+    report(error);
+    return;
+  }
+  console.error(error);
+}
+
 //#region 🔖HostKinds
 export const BOARD_HOST_NODE = "puzzle.2d/node";
 export const BOARD_HOST_HANDLE = "puzzle.2d/handle";
@@ -6063,7 +6090,18 @@ export type BoardHostMount = ReturnType<typeof boardSceneHost.createContainer>;
 
 /** @emoji 🌱 Creates a legacy-mode host mount bound to {@link BoardRenderer} for synchronous subtree commits with DOM `act()`. */
 export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
-  return boardSceneHost.createContainer(renderer, LegacyRoot, null, false, null, "board:", undefined, undefined, undefined, undefined);
+  return boardSceneHost.createContainer(
+    renderer,
+    LegacyRoot,
+    null,
+    false,
+    null,
+    "board:",
+    reportBoardHostUncaughtError,
+    reportBoardHostCaughtError,
+    reportBoardHostRecoverableError,
+    undefined,
+  );
 }
 
 /** @emoji 🔄 Schedules host work and ties post-commit to {@link BoardRenderer.invalidate}. */
@@ -7380,6 +7418,16 @@ if (boardReactVitest) {
   }
 
   describe("board react helpers", () => {
+    it("createBoardHostMount registers React 19 error reporters on the host root", () => {
+      const canvas = document.createElement("canvas");
+      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const mount = createBoardHostMount(renderer);
+      expect(typeof mount.onUncaughtError).toBe("function");
+      expect(typeof mount.onCaughtError).toBe("function");
+      expect(typeof mount.onRecoverableError).toBe("function");
+      renderer.dispose();
+    });
+
     it("builds a flat scene descriptor from declarative markers", () => {
       const descriptor = buildBoardSceneDescriptor(
         <>

@@ -91,6 +91,8 @@ import {
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
 	type UiTextNode,
+	getPlatformControllerById,
+	platformTopologyStoreId,
 } from "@framework/platform/core";
 import {
 	ArrowLeft,
@@ -1110,7 +1112,7 @@ function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode 
       return <FolderOpenIcon className="size-tiny" aria-hidden />;
     case "save":
       return <SaveIcon className="size-tiny" aria-hidden />;
-    case "transform":
+    case "transfer":
       return <ArrowRightLeftIcon className="size-tiny" aria-hidden />;
     case "create":
       return <PlusIcon className="size-tiny" aria-hidden />;

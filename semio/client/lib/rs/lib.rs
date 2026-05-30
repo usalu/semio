@@ -11315,7 +11315,17 @@ pub mod gql {
         out
     }
 
+    const COLLECT_LA_PATHS_MAX_DEPTH: usize = 64;
+
     fn collect_la_paths(prefix: &str, look: &Lookahead<'_>, acc: &mut Vec<String>) {
+        collect_la_paths_depth(prefix, look, acc, 0);
+    }
+
+    fn collect_la_paths_depth(prefix: &str, look: &Lookahead<'_>, acc: &mut Vec<String>, depth: usize) {
+        if depth > COLLECT_LA_PATHS_MAX_DEPTH {
+            acc.push(prefix.to_string());
+            return;
+        }
         let fields = look.selection_fields();
         if fields.is_empty() {
             acc.push(prefix.to_string());
@@ -11328,7 +11338,7 @@ pub mod gql {
             if nested.selection_fields().is_empty() {
                 acc.push(path);
             } else {
-                collect_la_paths(&path, &nested, acc);
+                collect_la_paths_depth(&path, &nested, acc, depth + 1);
             }
         }
     }

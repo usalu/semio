@@ -3459,8 +3459,8 @@ export function InteractionRepl({
   const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
   const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(modelDefinitionRevisionProp, onModelDefinitionRevisionChange, () => chromeDefaults.modelDefinitionRevision);
   const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
-  const transformsFrom = reactHostPort.useMemo(() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
-  const transformsTo = reactHostPort.useMemo(() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const transfersFrom = reactHostPort.useMemo(() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const transfersTo = reactHostPort.useMemo(() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
   const modelDefinitionScope = reactHostPort.useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
   const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId, modelDefinitionRevision]);
   const kernel = rt.kernel();
@@ -4680,22 +4680,22 @@ export function InteractionRepl({
                   {" · "}
                   {modelDefinitionScope.propertyDefinitions.length} propert{modelDefinitionScope.propertyDefinitions.length === 1 ? "y" : "ies"}
                 </span>
-                {transformsFrom.length ? (
+                {transfersFrom.length ? (
                   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <span>Transform from</span>
+                    <span>Transfer from</span>
                     <select
                       defaultValue=""
                       onChange={(e) => {
                         const qid = e.target.value;
                         if (!qid) return;
-                        const spec = transformsFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+                        const spec = transfersFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
                       style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
                     >
                       <option value="">Select incoming transformation…</option>
-                      {transformsFrom.map((row) => (
+                      {transfersFrom.map((row) => (
                         <option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
                           {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
                         </option>
@@ -4703,22 +4703,22 @@ export function InteractionRepl({
                     </select>
                   </label>
                 ) : null}
-                {transformsTo.length ? (
+                {transfersTo.length ? (
                   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <span>Transform to</span>
+                    <span>Transfer to</span>
                     <select
                       defaultValue=""
                       onChange={(e) => {
                         const qid = e.target.value;
                         if (!qid) return;
-                        const spec = transformsTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
+                        const spec = transfersTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
                       style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
                     >
                       <option value="">Select outgoing transformation…</option>
-                      {transformsTo.map((row) => (
+                      {transfersTo.map((row) => (
                         <option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
                           {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
                         </option>

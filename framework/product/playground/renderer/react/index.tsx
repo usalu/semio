@@ -1964,6 +1964,8 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
   );
   return (
     <BoardPaneChrome paneId={paneId}>
+      <BoardStructuralDeleteReporter />
+      <BoardPlayRedrawProgressReset />
       <BoardCanvas
         {...lodProps}
         onLodChange={onLodChange}
@@ -1986,8 +1988,6 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         selectionMode={boardSelectionMode}
         selectionTargets={boardSelectionTargets}
       >
-        <BoardStructuralDeleteReporter />
-        <BoardPlayRedrawProgressReset />
         {boardFixtureMarkers(fixture)}
       </BoardCanvas>
     </BoardPaneChrome>

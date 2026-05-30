@@ -181,7 +181,7 @@ export type AppToolCategory =
 	| "filter"
 	| "open"
 	| "save"
-	| "transform"
+	| "transfer"
 	| "create"
 	| "view"
 	| "actions"
@@ -196,7 +196,7 @@ export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = [
 	"filter",
 	"open",
 	"save",
-	"transform",
+	"transfer",
 	"create",
 	"view",
 	"actions",
