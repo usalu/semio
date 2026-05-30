@@ -30,7 +30,7 @@ dev = [
 test = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
-    "deepdiff>=8.0.0",
+    "deepdiff>=9.1.0",
 ]
 
 [tool.pytest.ini_options]
