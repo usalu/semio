@@ -666,20 +666,30 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
   const markers = reactHostPort.useMemo(() => topologyFlatMarkersFromFixture({ fixture: flatFixture, lockedIds: locked, selectedIds }), [flatFixture, locked, selectedIds]);
   const camera = store.getFlatCamera(props.instanceId);
   const flatExtra = props.flat ?? {};
+  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, onLodChange: onLodChangeHost, ...flatRest } = flatExtra;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-mode="flat" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="flat" data-five-d-instance={props.instanceId}>
       <BoardCanvas
-        camera={flatExtra.camera ?? camera}
-        className={["min-h-0 flex-1", props.className, flatExtra.className].filter(Boolean).join(" ") || undefined}
+        camera={flatRest.camera ?? camera}
+        className={["min-h-0 flex-1", props.className, flatRest.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_LOD_GRID_DEFAULTS}
         kindCatalogs={snap.model.kindCatalogs}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
         onCamera={(c) => store.setFlatCamera(props.instanceId, c)}
-        onConnect={(p) => store.applyBond(p.source, p.target)}
-        onDrag={(p) => store.applyFlatPartMove(p.id, p.x, p.y)}
-        onIndirectConnect={(p) => store.applyBond(p.source, p.target)}
+        onConnect={(p) => {
+          store.applyBond(p.source, p.target);
+          onConnectHost?.(p);
+        }}
+        onDrag={(p) => {
+          store.applyFlatPartMove(p.id, p.x, p.y);
+          onDragHost?.(p);
+        }}
+        onIndirectConnect={(p) => {
+          store.applyBond(p.source, p.target);
+          onIndirectConnectHost?.(p);
+        }}
         onLinkCompatibleNodes={(p) => {
           if (!p.source) {
             store.setConnectSession(null);
@@ -714,9 +724,15 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
             ringAnchorIds: [...p.handleIds],
           });
         }}
-        onProximityConnect={(p) => store.applyBond(p.source, p.target)}
-        onSelect={(s) => store.setSelection({ partIds: s.ids, anchorIds: [] })}
-        {...flatExtra}
+        onProximityConnect={(p) => {
+          store.applyBond(p.source, p.target);
+          onProximityConnectHost?.(p);
+        }}
+        onSelect={(s) => {
+          store.setSelection({ partIds: s.ids, anchorIds: [] });
+          onSelectHost?.(s);
+        }}
+        {...flatRest}
       >
         {markers}
       </BoardCanvas>
@@ -729,6 +745,16 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
   const snap = useTopologySnapshot();
   const spatialFixture = reactHostPort.useMemo(() => projectSpatial(snap.model), [snap.model]);
   const spatialExtra = props.spatial ?? {};
+  const {
+    onSelect: onSelectHost,
+    onConnect: onConnectHost,
+    onIndirectConnect: onIndirectConnectHost,
+    onProximityConnect: onProximityConnectHost,
+    onRelocate: onRelocateHost,
+    onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
+    onAttractionTargetRing: onAttractionTargetRingHost,
+    ...spatialRest
+  } = spatialExtra;
   const camera = store.getSpatialCamera(props.instanceId);
   const selectedObjectId = snap.selection.partIds[0] ?? null;
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
@@ -736,8 +762,8 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
   const onConnect = useSceneObjectConnect();
   return (
     <Scene
-      camera={spatialExtra.camera ?? camera}
-      className={["min-h-0 flex-1", props.className, spatialExtra.className].filter(Boolean).join(" ") || undefined}
+      camera={spatialRest.camera ?? camera}
+      className={["min-h-0 flex-1", props.className, spatialRest.className].filter(Boolean).join(" ") || undefined}
       {...FIVE_D_SPATIAL_CHROME_DEFAULTS}
       attractionSession={attractionSession}
       blockedVortexFullIds={blockedVortexFullIdsFromAttractions(spatialFixture.attractions)}
@@ -747,11 +773,18 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
       kindCompatibility={snap.model.kindCompatibility as SceneKindCompatEntry[] | undefined}
       relocateMode={props.relocateMode ?? "translate"}
       onCamera={(c) => store.setSpatialCamera(props.instanceId, c)}
-      onConnect={onConnect}
-      onRelocate={onRelocate}
+      onConnect={(p) => {
+        onConnect?.(p);
+        onConnectHost?.(p);
+      }}
+      onRelocate={(p) => {
+        onRelocate?.(p);
+        onRelocateHost?.(p);
+      }}
       onAttractionCompatibleObjects={(p) => {
         if (!p.attracting) {
           store.setConnectSession(null);
+          onAttractionCompatibleObjectsHost?.(p);
           return;
         }
         const prev = store.getSnapshot().connectSession;
@@ -765,11 +798,13 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
           ringPartId: prev?.ringPartId ?? null,
           ringAnchorIds: prev?.ringAnchorIds ?? [],
         });
+        onAttractionCompatibleObjectsHost?.(p);
       }}
       onAttractionTargetRing={(p) => {
         const prev = store.getSnapshot().connectSession;
         if (!p.attracting) {
           store.setConnectSession(null);
+          onAttractionTargetRingHost?.(p);
           return;
         }
         store.setConnectSession({
@@ -782,14 +817,22 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
           ringPartId: p.objectId,
           ringAnchorIds: [...p.vortexFullIds],
         });
+        onAttractionTargetRingHost?.(p);
       }}
       onIndirectConnect={(p) => {
         store.applyBond(p.attracting, p.attracted);
+        onIndirectConnectHost?.(p);
         onConnect?.(p);
       }}
-      onProximityConnect={(p) => store.applyBond(p.attracting, p.attracted)}
-      onSelect={(s: SceneSelectionSnapshot) => store.setSelection({ partIds: [...s.objectIds], anchorIds: [...s.vortexIds] })}
-      {...spatialExtra}
+      onProximityConnect={(p) => {
+        store.applyBond(p.attracting, p.attracted);
+        onProximityConnectHost?.(p);
+      }}
+      onSelect={(s: SceneSelectionSnapshot) => {
+        store.setSelection({ partIds: [...s.objectIds], anchorIds: [...s.vortexIds] });
+        onSelectHost?.(s);
+      }}
+      {...spatialRest}
     >
       <SceneObjects selectedObjectId={selectedObjectId} relocate={props.relocateMode ?? "translate"} />
       <SceneAttractions />
@@ -801,7 +844,7 @@ const FiveDSpatial = reactHostPort.memo(function FiveDSpatial(props: FiveDProps)
   const snap = useTopologySnapshot();
   const spatialFixture = reactHostPort.useMemo(() => projectSpatial(snap.model), [snap.model]);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-mode="spatial" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="spatial" data-five-d-instance={props.instanceId}>
       <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
         <SceneObjectStateProvider fixture={spatialFixture} onConnect={props.spatial?.onConnect} onRelocate={props.spatial?.onRelocate}>
           <FiveDSpatialInner {...props} />
@@ -1152,6 +1195,41 @@ if (import.meta.vitest) {
       expect(t.parts.some((p) => p.id === "p1" && p.flat && p.spatial)).toBe(true);
     });
   });
+  describe("nakagin topology fixture", () => {
+    it("writes nakagin-capsule-tower.topology.json when PUZZLE_5D_WRITE_NAKAGIN_TOPOLOGY=1", async () => {
+      if (process.env.PUZZLE_5D_WRITE_NAKAGIN_TOPOLOGY !== "1") return;
+      const boardMod = await import("../../2d/play/fixtures/nakagin-capsule-tower.board.json");
+      const sceneMod = await import("../../3d/play/fixtures/nakagin-capsule-tower.scene.json");
+      const board = parseBoardFixtureV1(boardMod.default as unknown);
+      const scene = parseFixtureV1(sceneMod.default as unknown);
+      expect(board).toBeTruthy();
+      expect(scene).toBeTruthy();
+      const model = topologyFromLegacyPair(board!, scene!);
+      const payload = {
+        ...model,
+        label: "Nakagin capsule tower",
+        meta: {
+          description: "Unified topology source for Nakagin play; flat and spatial views project from this model.",
+        },
+      };
+      const path = new URL("../play/fixtures/nakagin-capsule-tower.topology.json", import.meta.url);
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(path, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+      expect(payload.parts.length).toBeGreaterThan(0);
+    });
+
+    it("loads nakagin topology v1 and projects non-empty flat and spatial fixtures", async () => {
+      const mod = await import("../play/fixtures/nakagin-capsule-tower.topology.json");
+      const model = parseTopologyV1(mod.default as unknown);
+      if (!model) return;
+      const flat = projectFlat(model);
+      const spatial = projectSpatial(model);
+      expect(flat.nodes.length).toBeGreaterThan(0);
+      expect(spatial.objects.length).toBeGreaterThan(0);
+      expect(model.parts.length).toBeGreaterThan(0);
+    });
+  });
+
   describe("projectFlat", () => {
     it("round-trips part centers", () => {
       const model = topologyFromLegacyPair(

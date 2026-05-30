@@ -39,8 +39,8 @@ import {
   type FixtureV1 as SceneFixtureV1,
   type RelocateMode as SceneRelocateMode,
 } from "../../3d/react/index.tsx";
-import { createTopologyStore, topologyFromLegacyPair, topologySharedKindsFromPairedMetas, parseTopologyFixtureV1, type TopologyStore } from "../react/index.tsx";
-import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
+import { createTopologyStore, parseTopologyV1, projectFlat, projectSpatial, topologyFromLegacyPair, topologySharedKindsFromPairedMetas, type TopologyStore, type TopologyV1 } from "../react/index.tsx";
+import nakaginTopologyJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
@@ -136,18 +136,24 @@ export interface TopologyPlaySnapshot {
   readonly proximityScene: number;
 }
 
+function loadNakaginTopologyModel(): TopologyV1 {
+  const unified = parseTopologyV1(nakaginTopologyJson as unknown);
+  if (unified) return unified;
+  const board = parseBoardFixtureV1(nakaginBoardJson as unknown);
+  const scene = parseFixtureV1(nakaginSceneJson as unknown);
+  return topologyFromLegacyPair(board!, scene!);
+}
+
 /** @emoji 🎛 Topology play shell controller shared by declarative board and scene windows. */
 export class TopologyPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Topology", undefined);
-  readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
-  readonly boardFixture = parseBoardFixtureV1(nakaginBoardJson as unknown);
-  readonly sceneFixture = parseFixtureV1(nakaginSceneJson as unknown);
-  readonly topologyStore: TopologyStore = createTopologyStore(topologyFromLegacyPair(this.boardFixture!, this.sceneFixture!));
+  readonly topologyStore: TopologyStore = createTopologyStore(loadNakaginTopologyModel());
+  private storeGeneration = 0;
   private relocateMode: SceneRelocateMode = "translate";
   private boardSelected: ReadonlySet<string> = new Set();
   private sceneSelected: string | null = null;
-  private boardCamera: CameraState | null = this.boardFixture ? { ...this.boardFixture.camera } : null;
-  private sceneCamera: CameraState | null = this.sceneFixture ? { ...this.sceneFixture.camera } : null;
+  private boardCamera: CameraState | null = { ...this.topologyStore.getModel().flatCamera };
+  private sceneCamera: CameraState | null = { ...this.topologyStore.getModel().spatialCamera };
   private sceneLodTag = DEFAULT_MANUAL_LOD;
   private sceneAutomaticLod = true;
   private sceneDepthVariableLod = false;
@@ -162,6 +168,10 @@ export class TopologyPlayShellController extends Controller {
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    this.topologyStore.subscribe(() => {
+      this.storeGeneration += 1;
+      this.emit();
+    });
     this.rebuildShellMode();
   }
 
@@ -324,10 +334,13 @@ export class TopologyPlayShellController extends Controller {
   }
 
   getSnapshot(): TopologyPlaySnapshot {
+    const model = this.topologyStore.getModel();
+    const boardFixture = projectFlat(model);
+    const sceneFixture = projectSpatial(model);
     return {
-      manifestLabel: this.manifest?.label,
-      boardFixture: this.boardFixture,
-      sceneFixture: this.sceneFixture,
+      manifestLabel: model.label,
+      boardFixture,
+      sceneFixture,
       boardSelected: this.boardSelected,
       boardCamera: this.boardCamera,
       sceneCamera: this.sceneCamera,
@@ -344,7 +357,7 @@ export class TopologyPlayShellController extends Controller {
       sceneAutomaticLod: this.sceneAutomaticLod,
       sceneDepthVariableLod: this.sceneDepthVariableLod,
       sceneLodSlider: this.sceneLodSlider,
-      sharedKinds: topologySharedKindsFromPairedMetas({ boardMeta: this.boardFixture?.meta, sceneMeta: this.sceneFixture?.meta }),
+      sharedKinds: topologySharedKindsFromPairedMetas({ boardMeta: boardFixture.meta, sceneMeta: sceneFixture.meta }),
       connectBoard: this.connectBoard,
       connectScene: this.connectScene,
       proximityBoard: this.proximityBoard,
@@ -438,9 +451,16 @@ if (import.meta.vitest) {
       expect(b?.nodes.length).toBeGreaterThan(0);
       expect(s?.objects.length).toBeGreaterThan(0);
     });
-    it("parses topology manifest", () => {
-      const t = parseTopologyFixtureV1(topologyManifestJson as unknown);
-      expect(t?.schema).toBe("puzzle.5d.fixture/v1");
+    it("parses nakagin unified topology v1 or legacy pair", () => {
+      const unified = parseTopologyV1(nakaginTopologyJson as unknown);
+      if (unified) {
+        expect(unified.schema).toBe("puzzle.5d.topology/v1");
+        expect(unified.parts.length).toBeGreaterThan(0);
+        return;
+      }
+      const b = parseBoardFixtureV1(nakaginBoardJson as unknown);
+      const s = parseFixtureV1(nakaginSceneJson as unknown);
+      expect(topologyFromLegacyPair(b!, s!).parts.length).toBeGreaterThan(0);
     });
     it("shared kinds merge metas like the play harness", () => {
       const sk = topologySharedKindsFromPairedMetas({

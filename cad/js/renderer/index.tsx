@@ -5109,6 +5109,70 @@ if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath: M } = __spatialR3fTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
 
+  describe("buildInteractionReplEngagement", () => {
+    const baseInputs: InteractionReplEngagementInputs = {
+      showEngagement: true,
+      boundInteractionSession: true,
+      interactionId: "primitive.box",
+      state: "first_corner",
+      lastResponseOk: null,
+      lastResponseErrorCount: 0,
+      selectionCount: 0,
+      cmdLine: "",
+      transitions: [{ eventKind: "confirm", key: "c", label: "Confirm" }],
+      onOption: () => {},
+      onInputChange: () => {},
+      onInputSubmit: () => {},
+    };
+
+    it("returns null when engagement is disabled", () => {
+      expect(buildInteractionReplEngagement({ ...baseInputs, showEngagement: false })).toBeNull();
+    });
+
+    it("builds transition options, command input, and status from interaction state", () => {
+      const optionRuns: string[] = [];
+      const spec = buildInteractionReplEngagement({
+        ...baseInputs,
+        selectionCount: 2,
+        lastResponseOk: true,
+        onOption: (row) => optionRuns.push(row.key),
+      });
+      expect(spec?.options?.[0]?.label).toBe("C Confirm");
+      expect(spec?.input?.placeholder).toBe("Type an interaction or transition");
+      expect(spec?.status?.map((row) => row.content)).toEqual(["State: first_corner", "Selected: 2", "OK"]);
+      spec?.options?.[0]?.onPress?.();
+      expect(optionRuns).toEqual(["c"]);
+    });
+
+    it("hides options and input when no interaction session is bound but keeps selection status", () => {
+      const spec = buildInteractionReplEngagement({
+        ...baseInputs,
+        boundInteractionSession: false,
+        interactionId: "",
+        selectionCount: 3,
+      });
+      expect(spec?.options).toBeUndefined();
+      expect(spec?.input).toBeUndefined();
+      expect(spec?.status?.map((row) => row.content)).toEqual(["Selected: 3"]);
+    });
+
+    it("returns null when nothing is engageable", () => {
+      expect(
+        buildInteractionReplEngagement({
+          ...baseInputs,
+          boundInteractionSession: false,
+          interactionId: "",
+          selectionCount: 0,
+        }),
+      ).toBeNull();
+    });
+
+    it("summarizes failed responses with error counts", () => {
+      const spec = buildInteractionReplEngagement({ ...baseInputs, lastResponseOk: false, lastResponseErrorCount: 2 });
+      expect(spec?.status?.some((row) => row.content === "Error (2)")).toBe(true);
+    });
+  });
+
   describe("@cad/js/renderer interaction adapter", () => {
     it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
       const spec = loadSpatialInteraction("primitive.box");
