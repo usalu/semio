@@ -2426,17 +2426,29 @@ pub mod kit {
             pub code: RwLock<Option<String>>,
             pub label: RwLock<Option<String>>,
             pub order: RwLock<Option<i32>>,
+            pub compatible_with: RwLock<Vec<Arc<Port>>>,
         }
 
         impl Default for Port {
             fn default() -> Self {
-                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) }
+                Self {
+                    id: Id::default(),
+                    owner_type: Weak::new(),
+                    code: RwLock::new(None),
+                    label: RwLock::new(None),
+                    order: RwLock::new(None),
+                    compatible_with: RwLock::new(Vec::new()),
+                }
             }
         }
 
         impl Port {
             pub async fn new(owner_type: Weak<Type>) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) })
+                Arc::new(Self { id: Id::new().await, owner_type, ..Default::default() })
+            }
+
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id) -> Arc<Self> {
+                Arc::new(Self { id, owner_type, ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -2469,6 +2481,11 @@ pub mod kit {
             }
             pub async fn order(&self) -> Option<i32> {
                 *self.order.read().await
+            }
+
+            #[graphql(name = "copatibleWith")]
+            pub async fn copatible_with(&self) -> crate::gql_relay::PortConnection {
+                crate::gql_relay::PortConnection::from_entities(self.compatible_with.read().await.clone()).await
             }
 
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::meta::Attribute> {
@@ -2515,6 +2532,20 @@ pub mod kit {
                     id: Id::new().await,
                     owner_type,
                     name: RwLock::new(String::new()),
+                    code: RwLock::new(code),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    port: RwLock::new(None),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                })
+            }
+
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, code: String) -> Arc<Self> {
+                Arc::new(Self {
+                    id,
+                    owner_type,
+                    name: RwLock::new(code.clone()),
                     code: RwLock::new(code),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
@@ -8991,6 +9022,15 @@ pub mod kit_backbone {
         }
     }
 
+    /// @emoji 🆔 Reads an entity id from a plain string or `{ "id": "…" }` bundle ref.
+    pub(crate) fn json_entity_id_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&str> {
+        match v {
+            crate::external_adapters::serde_json::Value::String(s) => Some(s.as_str()),
+            crate::external_adapters::serde_json::Value::Object(o) => o.get("id").and_then(|x| x.as_str()),
+            _ => None,
+        }
+    }
+
     //#region 🔖 dev_backbone_kit_operation_json
     fn position_input_to_json(p: &crate::geom::PositionInput) -> crate::external_adapters::serde_json::Value {
         crate::external_adapters::serde_json::json!({
@@ -9891,6 +9931,115 @@ pub mod kit_backbone {
         crate::external_adapters::serde_json::Value::Object(root)
     }
 
+    async fn hydrate_port_fields_from_json(port: &std::sync::Arc<crate::kit::r#type::Port>, p_json: &crate::external_adapters::serde_json::Value) {
+        if let Some(code) = p_json.get("code").and_then(|v| v.as_str()) {
+            *port.code.write().await = Some(code.to_string());
+        }
+        let label = p_json
+            .get("label")
+            .and_then(|v| v.as_str())
+            .or_else(|| p_json.get("name").and_then(|v| v.as_str()));
+        if let Some(label) = label {
+            *port.label.write().await = Some(label.to_string());
+        }
+        if let Some(order) = p_json.get("order").and_then(|v| v.as_i64()) {
+            *port.order.write().await = Some(order as i32);
+        }
+    }
+
+    /// @emoji 🔌 Hydrates one kit kind's ports, connectors, and port compatibility from projection JSON.
+    pub(crate) async fn hydrate_type_from_snapshot_value(
+        ty: &std::sync::Arc<crate::kit::r#type::Type>,
+        t_json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        use std::collections::HashMap;
+        let owner = std::sync::Arc::downgrade(ty);
+        let mut ports_by_id: HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> = HashMap::new();
+
+        async fn remember_port_json(
+            owner: std::sync::Weak<crate::kit::r#type::Type>,
+            ports_by_id: &mut std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+            p_json: &crate::external_adapters::serde_json::Value,
+        ) -> Result<(), crate::error::SemioError> {
+            let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else {
+                return Ok(());
+            };
+            if ports_by_id.contains_key(pid) {
+                return Ok(());
+            }
+            let port = crate::kit::r#type::Port::new_with_external_id(owner, pid.into()).await;
+            hydrate_port_fields_from_json(&port, p_json).await;
+            ports_by_id.insert(pid.to_string(), port);
+            Ok(())
+        }
+
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for p_json in ports_list {
+                remember_port_json(owner.clone(), &mut ports_by_id, p_json).await?;
+            }
+        }
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for c_json in connectors_list {
+                if let Some(port_json) = c_json.get("port") {
+                    remember_port_json(owner.clone(), &mut ports_by_id, port_json).await?;
+                }
+            }
+        }
+
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for p_json in ports_list {
+                let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
+                let Some(port) = ports_by_id.get(pid) else { continue };
+                let mut compat = Vec::new();
+                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+                    for cref in compat_list {
+                        if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
+                            if let Some(target) = ports_by_id.get(cid) {
+                                compat.push(target.clone());
+                            }
+                        }
+                    }
+                }
+                *port.compatible_with.write().await = compat;
+            }
+        }
+
+        {
+            let mut ports_slot = ty.ports.write().await;
+            ports_slot.clear();
+            for port in ports_by_id.values() {
+                ports_slot.push(port.clone());
+            }
+        }
+
+        let mut connectors = Vec::new();
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for c_json in connectors_list {
+                let Some(cid) = crate::kit_backbone::json_entity_id_ref(c_json) else { continue };
+                let code = c_json
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| c_json.get("code").and_then(|v| v.as_str()))
+                    .unwrap_or(cid);
+                let connector = crate::kit::r#type::Connector::new_with_external_id(owner.clone(), cid.into(), code.to_string()).await;
+                if let Some(desc) = c_json.get("description").and_then(|v| v.as_str()) {
+                    *connector.description.write().await = desc.to_string();
+                }
+                if let Some(port_json) = c_json.get("port") {
+                    if let Some(pid) = crate::kit_backbone::json_entity_id_ref(port_json) {
+                        if let Some(port) = ports_by_id.get(pid) {
+                            *connector.port.write().await = Some(port.clone());
+                        }
+                    }
+                }
+                connectors.push(connector);
+            }
+        }
+        *ty.connectors.write().await = connectors;
+        ty.refresh_connector_child_weak_maps().await;
+        Ok(())
+    }
+
     pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         if let Some(n) = json.get("name").and_then(|v| v.as_str()) {
             *kit.name.write().await = n.to_string();
@@ -9939,6 +10088,7 @@ pub mod kit_backbone {
                 let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
                 let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
                 let entity = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
+                crate::kit_backbone::hydrate_type_from_snapshot_value(&entity, t).await?;
                 tw.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
                 tys.push(entity);
             }
@@ -16022,6 +16172,72 @@ mod tests {
                 .as_array()
                 .expect("type edges");
             assert_eq!(names[0]["node"]["name"], "Type-IP");
+        });
+    }
+
+    #[test]
+    fn install_projection_graphql_hydrates_ports_and_copatible_with() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-ports",
+                "name": "Ports Kit",
+                "types": {
+                    "items": [{
+                        "id": "t1",
+                        "name": "T1",
+                        "ports": {
+                            "items": [
+                                { "id": "p1", "label": "A", "compatiblePorts": { "items": [{ "id": "p2" }] } },
+                                { "id": "p2", "label": "B", "compatiblePorts": { "items": [{ "id": "p1" }] } }
+                            ]
+                        },
+                        "connectors": {
+                            "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
+                        }
+                    }]
+                },
+                "designs": { "items": [] }
+            });
+            let install_m = format!(
+                r#"mutation {{ session {{ store(id: "test-store") {{ installProjection(json: {}) {{ ok errors {{ message }} }} }} }} }}"#,
+                crate::external_adapters::serde_json::to_string(&projection).expect("projection json")
+            );
+            let res = schema.execute(Request::new(&install_m)).await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            types {
+                                                edges {
+                                                    node {
+                                                        connectors { edges { node { id port { id copatibleWith { edges { node { id } } } } } } }
+                                                        ports { edges { node { id copatibleWith { edges { node { id } } } } } }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read ports: {:?}", read.errors);
+            let read_json = read.data.into_json().unwrap();
+            let type_node = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["types"]["edges"][0]["node"];
+            let connector_port = &type_node["connectors"]["edges"][0]["node"]["port"];
+            assert_eq!(connector_port["id"], "p1");
+            let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");
+            assert_eq!(compat.len(), 1);
+            assert_eq!(compat[0]["node"]["id"], "p2");
         });
     }
 

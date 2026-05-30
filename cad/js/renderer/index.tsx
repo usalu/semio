@@ -2207,12 +2207,14 @@ export function resolveSpatialPickTargetsToRender(viewTargets: readonly SpatialP
 /** @emoji 👁️ Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
 function SpatialPickTargetNode({
   target,
+  geometry = null,
   geometryPreviewTransform = null,
   hoveredTargetKey,
   selectedTargetKey,
   selectedTargetKeys,
 }: {
   readonly target: SpatialPickTarget;
+  readonly geometry?: SpatialPickGeometry | null;
   readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
   readonly hoveredTargetKey?: string | null;
   readonly selectedTargetKey?: string | null;
@@ -2234,15 +2236,39 @@ function SpatialPickTargetNode({
       </mesh>
     );
   }
+  const wireKind = target.geometryKind ?? (target.kind === "edge" ? "edge" : null);
+  const wireSegments = reactHostPort.useMemo(() => {
+    if (!geometry || !wireKind) return [] as readonly (readonly [Vec3, Vec3])[];
+    return geometryEntityWireSegments(geometryBuckets(geometry), wireKind, target.id);
+  }, [geometry, wireKind, target.id]);
+  if (wireSegments.length > 0) {
+    return (
+      <group userData={userData}>
+        {wireSegments.map(([a, b], i) => (
+          <Line
+            key={`${i}-${a.join(",")}-${b.join(",")}`}
+            raycast={raycastNone}
+            points={[
+              [mapPt(a)[0], mapPt(a)[1], mapPt(a)[2]],
+              [mapPt(b)[0], mapPt(b)[1], mapPt(b)[2]],
+            ]}
+            color={style.color}
+            lineWidth={style.lineWidth}
+            transparent
+            opacity={style.opacity}
+          />
+        ))}
+      </group>
+    );
+  }
   if (displayPoints && displayPoints.length >= 2 && target.kind === "edge") {
     return <Line userData={userData} raycast={raycastNone} points={displayPoints.map((p) => [p[0], p[1], p[2]])} color={style.color} lineWidth={style.lineWidth} />;
   }
-  const bounds = displayPoints ? targetBounds(displayPoints) : null;
-  if (!bounds) return null;
+  if (!hovered && !selected) return null;
   return (
-    <mesh position={bounds.center} scale={bounds.size} userData={userData} raycast={raycastNone} renderOrder={1}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={style.color} emissive={style.emissive} emissiveIntensity={hovered || selected ? 0.35 : 0.08} transparent opacity={style.opacity} depthWrite={false} side={THREE.DoubleSide} />
+    <mesh position={displayPoint} userData={userData} raycast={raycastNone} renderOrder={8}>
+      <sphereGeometry args={[0.07, 12, 12]} />
+      <meshStandardMaterial color={style.color} emissive={style.emissive} emissiveIntensity={0.35} depthTest={false} transparent opacity={style.opacity} />
     </mesh>
   );
 }
@@ -2342,6 +2368,7 @@ export function SpatialPickGeometryLayer({
         <SpatialPickTargetNode
           key={`${target.kind}:${target.id}`}
           target={target}
+          geometry={geometry}
           geometryPreviewTransform={geometryPreviewTransform}
           hoveredTargetKey={hoveredTargetKey}
           selectedTargetKey={selectedTargetKey}

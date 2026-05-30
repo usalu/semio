@@ -901,8 +901,8 @@ types {
   edges {
     node {
       id name description
-      connectors { edges { node { id name port { id label code } } } }
-      ports { edges { node { id label code } } }
+      connectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
+      ports { edges { node { id label code copatibleWith { edges { node { id } } } } } }
       representations { edges { node { id name file { id } } } }
     }
   }
@@ -917,6 +917,18 @@ function sketchpadFormatKitTimestamp(value: unknown): string {
 	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
 	if (!date || Number.isNaN(date.getTime())) return "";
 	return date.toLocaleString();
+}
+
+/** @emoji 🔌 Maps GraphQL {@code copatibleWith} relay edges onto {@code compatiblePorts} DTO refs. */
+export function sketchpadPortDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
+	const compatEdges =
+		(node["copatibleWith"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+	const compatiblePorts = compatEdges
+		.map((edge) => edge.node)
+		.filter((port): port is Record<string, unknown> => port != null)
+		.map((port) => ({ id: port["id"] }));
+	if (compatiblePorts.length === 0) return node;
+	return { ...node, compatiblePorts };
 }
 
 /** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
@@ -948,9 +960,21 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 			.map((node) => {
 				const repEdges = (node["representations"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const representations = repEdges.map((re) => re.node).filter((n): n is Record<string, unknown> => n != null);
+				const portEdges = (node["ports"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const ports = portEdges
+					.map((pe) => pe.node)
+					.filter((n): n is Record<string, unknown> => n != null)
+					.map((port) => sketchpadPortDtoFromGraphqlNode(port));
 				const conEdges = (node["connectors"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const connectors = conEdges.map((ce) => ce.node).filter((n): n is Record<string, unknown> => n != null);
-				return { ...node, representations, connectors } as Type;
+				const connectors = conEdges
+					.map((ce) => ce.node)
+					.filter((n): n is Record<string, unknown> => n != null)
+					.map((connector) => {
+						const port = connector["port"];
+						if (port == null || typeof port !== "object") return connector;
+						return { ...connector, port: sketchpadPortDtoFromGraphqlNode(port as Record<string, unknown>) };
+					});
+				return { ...node, representations, ports, connectors } as Type;
 			});
 	};
 	return {
@@ -1813,7 +1837,7 @@ export function sketchpadApplyPuzzle2dSelection(
 	if (scope.pane === "diagram" || scope.pane === "scene") {
 		const pieceIds = puzzle2dIds.filter((id) => id.length > 0 && !id.includes(":"));
 		const connectionIds = puzzle2dIds.filter((id) => id.includes("semio.connection") || id.startsWith("connection:"));
-		ctrl.setRouteSelection({ pieceIds, connectionIds });
+		ctrl.setRouteSelection({ pieceIds, connectionIds, kitDiagramNodeIds: [] });
 	}
 }
 
@@ -2381,6 +2405,25 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 			}
 			const open = ctrl?.listOpenKitIds() ?? [];
 			const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+			const importStatus = shell?.importStatus ?? sketchpadEmptyImportStatus();
+			if (importStatus.phase === "importing") {
+				return sketchpadPanelTextStack([
+					{ text: "Importing kit", emphasize: true },
+					{ text: importStatus.label ?? "…" },
+				]);
+			}
+			if (importStatus.phase === "error") {
+				return sketchpadPanelTextStack([
+					{ text: "Import failed", emphasize: true },
+					{ text: importStatus.error ?? "Unknown error" },
+				]);
+			}
+			if (importStatus.phase === "success") {
+				return sketchpadPanelTextStack([
+					{ text: "Import complete", emphasize: true },
+					{ text: importStatus.label ?? "Kit ready" },
+				]);
+			}
 			const selected = shell?.home.selectedKitIds ?? [];
 			if (selected.length > 0) {
 				const lines: { text: string; emphasize?: boolean }[] = [
@@ -2577,6 +2620,7 @@ export class SketchpadShellController extends Controller {
 			openKitIds: [],
 			routeSelection: sketchpadEmptyRouteSelection(),
 			home: sketchpadEmptyHomeUiState(),
+			importStatus: sketchpadEmptyImportStatus(),
 		});
 		this.provideStore(SKETCHPAD_SHELL_STORE_SHELL, this.shellStore);
 	}
@@ -2593,9 +2637,26 @@ export class SketchpadShellController extends Controller {
 		return this.shellStore.get().routeSelection;
 	}
 
-	/** @emoji 🎯 Updates diagram/scene selection for the active route. */
+	/** @emoji 📥 Updates home kit import status for workbench feedback. */
+	setImportStatus(status: SketchpadImportStatus): void {
+		this.shellStore.set({ ...this.shellStore.get(), importStatus: status });
+		this.emit();
+	}
+
+	/** @emoji 🎯 Updates diagram/scene selection and syncs `/kits/...` query params when applicable. */
 	setRouteSelection(selection: SketchpadRouteSelection): void {
-		this.shellStore.set({ ...this.shellStore.get(), routeSelection: selection });
+		const shell = this.shellStore.get();
+		const pathOnly = shell.navigationPath.split("?")[0] ?? "/";
+		if (!sketchpadPathSupportsRouteSelectionQuery(pathOnly)) {
+			this.shellStore.set({ ...shell, routeSelection: selection });
+			this.emit();
+			return;
+		}
+		const navigationPath = `${pathOnly}${sketchpadRouteSelectionUriFilters(selection)}`;
+		this.shellStore.set({ ...shell, routeSelection: selection, navigationPath });
+		const platform = getSketchpadPlatform();
+		if (platform?.onNavigate) platform.onNavigate(navigationPath);
+		else if (platform) applySketchpadUri(platform, navigationPath);
 		this.emit();
 	}
 
@@ -2751,7 +2812,10 @@ export class SketchpadShellController extends Controller {
 		const pathOnly = path.split("?")[0] ?? "/";
 		const shell = this.shellStore.get();
 		const home = pathOnly === "/" ? parseSketchpadHomeQuery(path) : shell.home;
-		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection: sketchpadEmptyRouteSelection(), home });
+		const routeSelection = sketchpadPathSupportsRouteSelectionQuery(pathOnly)
+			? parseSketchpadRouteSelectionQuery(path)
+			: sketchpadEmptyRouteSelection();
+		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection, home });
 		const platform = getSketchpadPlatform();
 		if (!platform) return;
 		if (platform.onNavigate) {
@@ -2768,7 +2832,13 @@ export class SketchpadShellController extends Controller {
 				const path = (args as { path: string }).path;
 				const pathOnly = path.split("?")[0] ?? "/";
 				const home = pathOnly === "/" ? parseSketchpadHomeQuery(path) : shell.home;
-				this.shellStore.set({ ...shell, navigationPath: path, home });
+				const routeSelection =
+					pathOnly === "/"
+						? sketchpadEmptyRouteSelection()
+						: sketchpadPathSupportsRouteSelectionQuery(pathOnly)
+							? parseSketchpadRouteSelectionQuery(path)
+							: sketchpadEmptyRouteSelection();
+				this.shellStore.set({ ...shell, navigationPath: path, home, routeSelection });
 				break;
 			}
 			case "toggleHomeRowExpand": {
@@ -2845,6 +2915,7 @@ export class SketchpadShellController extends Controller {
 			case "importKitFromDrop": {
 				const file = (args as { file?: File }).file;
 				if (!file) break;
+				this.setImportStatus({ phase: "importing", label: file.name });
 				void (async () => {
 					const { kit, session, portCompatSource } = await importKit(file);
 					const jsStore = (await session.stores())[0];
@@ -2855,9 +2926,12 @@ export class SketchpadShellController extends Controller {
 					});
 					const kitId = kit.id;
 					this.registerKitStore(kitId, store, { kind: "file" });
+					this.setImportStatus({ phase: "success", label: kit.name ?? kitId });
 					this.navigateTo(`/kits/${kitId}`);
 				})().catch((error) => {
+					const message = error instanceof Error ? error.message : String(error);
 					console.error("[semio/sketchpad] importKitFromDrop failed:", error);
+					this.setImportStatus({ phase: "error", error: message });
 				});
 				break;
 			}
@@ -3354,6 +3428,16 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadPortDtoFromGraphqlNode", () => {
+		it("maps copatibleWith edges to compatiblePorts", () => {
+			const port = sketchpadPortDtoFromGraphqlNode({
+				id: "p1",
+				copatibleWith: { edges: [{ node: { id: "p2" } }] },
+			});
+			expect(sketchpadReadCompatiblePortIds(port)).toEqual(["p2"]);
+		});
+	});
+
 	describe("sketchpadApplyPortCompatById", () => {
 		it("restores compatiblePorts stripped by GraphQL-shaped reads", () => {
 			const bundle = {
@@ -3395,6 +3479,41 @@ if (import.meta.vitest) {
 			expect(overlay?.classList.contains("hidden")).toBe(false);
 			sketchpadSetHomeDropzoneOverlayVisible(false);
 			expect(overlay?.classList.contains("hidden")).toBe(true);
+		});
+	});
+
+	describe("parseSketchpadRouteSelectionQuery", () => {
+		it("reads piece connection and diagram ids from query params", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			const selection = parseSketchpadRouteSelectionQuery(
+				`/kits/${kitId}/designs/${designId}?piece=p1&piece=p2&conn=c1&diag=type:t1`,
+			);
+			expect(selection.pieceIds).toEqual(["p1", "p2"]);
+			expect(selection.connectionIds).toEqual(["c1"]);
+			expect(selection.kitDiagramNodeIds).toEqual(["type:t1"]);
+		});
+	});
+
+	describe("sketchpadRouteSelectionUriFilters", () => {
+		it("round-trips selection through query serialization", () => {
+			const selection = { pieceIds: ["a"], connectionIds: ["b"], kitDiagramNodeIds: ["type:x"] };
+			const uri = `/kits/k/designs/d${sketchpadRouteSelectionUriFilters(selection)}`;
+			expect(parseSketchpadRouteSelectionQuery(uri)).toEqual(selection);
+		});
+	});
+
+	describe("SketchpadShellController route selection URL", () => {
+		it("syncs navigation path when selection changes on a design route", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
+			ctrl.setRouteSelection({ pieceIds: ["piece-a"], connectionIds: [], kitDiagramNodeIds: [] });
+			expect(ctrl.navigationPath).toBe(`/kits/${kitId}/designs/${designId}?piece=piece-a`);
+			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a"]);
+			ctrl.dispose();
 		});
 	});
 
@@ -3601,7 +3720,9 @@ if (import.meta.vitest) {
 			ctrl.navigateTo(`/kits/${kitId}`);
 			sketchpadApplyPuzzle2dSelection(sketchpadKitDiagramInstanceId(kitId), ["type:a", "design:b"], ctrl);
 			expect(ctrl.routeSelection.kitDiagramNodeIds).toEqual(["type:a", "design:b"]);
-			expect(ctrl.navigationPath).toBe(`/kits/${kitId}`);
+			expect(ctrl.navigationPath).toBe(
+				`/kits/${kitId}${sketchpadRouteSelectionUriFilters({ pieceIds: [], connectionIds: [], kitDiagramNodeIds: ["type:a", "design:b"] })}`,
+			);
 			ctrl.dispose();
 		});
 	});

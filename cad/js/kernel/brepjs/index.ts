@@ -44,7 +44,6 @@ import {
 	fuseAll,
 	sewShells,
 	shape,
-	solid,
 	solidFromShell,
 	sphere,
 	threePointArc,
@@ -1877,8 +1876,7 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
 			return isOk(healed) ? healed.value : fromShell.value;
 		}
 	}
-	const welded = solid(brepFaces);
-	return isOk(welded) ? welded.value : null;
+	return null;
 }
 
 /** @emoji 🧊 Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
@@ -2037,11 +2035,20 @@ class BrepjsWasmEngine {
 		await this.ensureInit();
 		const modelKey = this.modelDerivedKey(model);
 		if (this.solidsModelKey === modelKey && this.solids.size > 0) return;
+		const kernelBreps = new Map<SolidRef, ValidSolid>();
+		for (const cell of Object.values(geom(model).solids)) {
+			if (cell.shellIds.length > 0) continue;
+			const cached = this.solids.get(cell.id);
+			if (cached) kernelBreps.set(cell.id, cached);
+		}
 		this.solids.clear();
 		this.meshCache.clear();
 		for (const cell of Object.values(geom(model).solids)) {
-			const solid = this.solidForSolidRecord(model, cell);
-			if (solid) this.solids.set(cell.id, solid);
+			const brep = this.solidForSolidRecord(model, cell);
+			if (brep) this.solids.set(cell.id, brep);
+		}
+		for (const [id, brep] of kernelBreps) {
+			if (!this.solids.has(id)) this.solids.set(id, brep);
 		}
 		this.solidsModelKey = modelKey;
 	}
@@ -2248,9 +2255,7 @@ class BrepjsWasmEngine {
 		model: Model;
 	}): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
 		const solid = await this.extrudeWire(input);
-		const preview = await this.tessellate(solid, 1e-3, input.model);
-		const diff = meshFaceModelDiff(preview, `brepjs-${solid}`);
-		return { diff, solid };
+		return { diff: { solids: { added: [{ id: solid, shellIds: [] }] } }, solid };
 	}
 
 	async offsetFacesDiff(input: {
@@ -2272,8 +2277,7 @@ class BrepjsWasmEngine {
 		if (!isSolid(offsetSolid) || !isValidSolid(offsetSolid)) return { diff: {} };
 		const ref = kernelGeometry.solidRef(`brepjs-offset-${++this.seq}`);
 		this.solids.set(ref, offsetSolid);
-		const preview = await this.tessellate(ref, 1e-3, input.model);
-		return { diff: meshFaceModelDiff(preview, `brepjs-offset-${fid}`) };
+		return { diff: { solids: { added: [{ id: ref, shellIds: [] }] } } };
 	}
 
 	async vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number> {
@@ -2855,6 +2859,30 @@ if (import.meta.vitest) {
 			expect(await kernel.volume(solid)).toBeCloseTo(2, 2);
 			const mesh = await kernel.tessellate(solid, 1e-3, g);
 			expect(mesh.index.length).toBeGreaterThan(0);
+		});
+
+		it("extrudeWireDiff registers kernel brep for tessellation without meshFaceModelDiff shell", async () => {
+			const g = new Model();
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const e0 = "e0" as EdgeRef;
+			const w0 = "w0" as WireRef;
+			applyModelDiff(g, {
+				vertices: {
+					added: [
+						{ id: v0, position: [0, 0, 0] },
+						{ id: v1, position: [1, 0, 0] },
+					],
+				},
+				edges: { added: [{ id: e0, vertexIds: [v0, v1] }] },
+				wires: { added: [{ id: w0, edgeIds: [e0] }] },
+			});
+			const { diff, solid } = await kernel.extrudeWireDiff({ wireId: w0, distance: 2, direction: [0, 0, 1], model: g });
+			applyModelDiff(g, diff);
+			g.bump();
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+			expect(Object.keys(g.faces).some((id) => id.startsWith("cm-"))).toBe(false);
 		});
 
 		it("syncSolidsFromModel follows sheared box shell (not axis-aligned primitive proxy)", async () => {

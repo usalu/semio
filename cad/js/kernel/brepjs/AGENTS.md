@@ -21,6 +21,10 @@ Surfaces: derived faces from exposure and stance (external/internal, horizontal/
 Parts: derived closed shells from overlap semantics (none, difference, intersection).
 Volumes: boolean union of closed shells in a cell group.
 
+## Display mesh (kernel)
+
+Committed shading comes only from `mesh(ValidSolid)` via `meshTransferFromBrep` after `syncSolidsFromModel`. Shell graphs with faces rebuild brep through `sewShells` → `solidFromShell` → `healSolid`. Kernel-authored solids (extrude, offset, `createBoxFromCorners`) register a `SolidRef` with empty `shellIds` and keep the WASM brep across sync. Do not use `meshFaceModelDiff` or axis-aligned proxies for solid display.
+
 ## Construct query (kernel)
 
 Raw brepjs entities are matched only inside kernel query adapters. Public construct queries use `MATCH (Object …)` and `CALL view.<viewId>.<derivedObjectId>({})`.

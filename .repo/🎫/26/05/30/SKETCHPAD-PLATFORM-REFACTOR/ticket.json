@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Home: hidden zip file input + importKitFromFile opens picker; workbench buttons (import, create kit, fixture). Port compatibility: extract from bundle on importKit, apply on GraphQL DTO reads and SemioJsKitStore refresh so kit diagram compat edges survive WASM round-trip until rs exposes compatiblePorts. 30/30 tests.",
+  "summary": "Route selection syncs to kit/design URLs (`piece`, `conn`, `diag` query params) on setRouteSelection, navigateTo, and browser back/forward via setNavigation. Shell importStatus (importing/success/error) shown on home workbench during kit drop/file import. 33/33 sketchpad tests. GraphQL Port compatiblePorts in rs still pending (Port model/hydration has no compat field yet).",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -22,6 +22,7 @@
     "⚪d63d75d879354bdc834a07661fd0c3a3",
     "⚪fd954b0e516d448ca6cbaec69e827743",
     "⚪758cf088bce34dc2a88d78a358750dc8",
-    "⚪fc2b6a63f37641ba8c483720a29f3b6a"
+    "⚪fc2b6a63f37641ba8c483720a29f3b6a",
+    "⚪47234f85dd014934a78d380bb10b6299"
   ]
 }
