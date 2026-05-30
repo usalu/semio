@@ -907,109 +907,109 @@
       "handles": [
         {
           "color": "hsl(206 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
           "name": "core circular bottom"
         },
         {
           "color": "hsl(290 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
           "name": "core circular top"
         },
         {
           "color": "hsl(55 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
           "name": "core rectangular bottom"
         },
         {
           "color": "hsl(37 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
           "name": "core rectangular top"
         },
         {
           "color": "hsl(124 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "name": "door capsule east"
         },
         {
           "color": "hsl(239 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "name": "door capsule west"
         },
         {
           "color": "hsl(344 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
           "name": "door tambour east"
         },
         {
           "color": "hsl(91 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
           "name": "door tambour west"
         },
         {
           "color": "hsl(169 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
           "name": "platform east"
         },
         {
           "color": "hsl(215 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
           "name": "platform west"
         },
         {
           "color": "hsl(277 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
           "name": "roof circular bottom"
         },
         {
           "color": "hsl(215 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb",
           "name": "roof circular top"
         },
         {
           "color": "hsl(108 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb",
           "name": "roof rectangular bottom"
         },
         {
           "color": "hsl(100 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
           "name": "roof rectangular top"
         },
         {
           "color": "hsl(231 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
           "name": "tambour circular bottom"
         },
         {
           "color": "hsl(156 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
           "name": "tambour circular top"
         },
         {
           "color": "hsl(223 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "name": "tambour rectangular bottom"
         },
         {
           "color": "hsl(108 52% 48%)",
-          "defaultWireKind": "board.wire.link",
+          "defaultWireKind": "wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "name": "tambour rectangular top"
         }

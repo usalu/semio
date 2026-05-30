@@ -131,7 +131,9 @@ import {
   UIToolbar,
   useControllerStore,
   useStore,
+  windowMeasuresToGolden,
   type UiComponentHostSurfaceNode,
+  type UIWindowMeasure,
 } from "@framework/platform/renderer/react";
 
 export { useControllerStore, useStore } from "@framework/platform/renderer/react";
@@ -566,103 +568,8 @@ export interface UIWindowKindDefinition {
   id: string;
   label?: string;
   component: React.ComponentType;
-  measures?: React.ReactNode;
+  measures?: UIWindowMeasure[];
   engagement?: EngagementSpec;
-}
-
-function windowMeasureShell(measureId: string, label: string | undefined, children: React.ReactNode): React.ReactNode {
-  return (
-    <div data-slot="window-measure-float" data-measure-id={measureId} className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm">
-      {label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
-      <div className="min-w-0 w-full">{children}</div>
-    </div>
-  );
-}
-
-function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): React.ReactNode {
-  if (!measures.length) return undefined;
-  return (
-    <div data-slot="window-measures-stack-inner" className="pointer-events-auto flex flex-col items-end gap-half p-single">
-      {measures.map((measure) => {
-        if (measure.kind === "select") {
-          return (
-            <React.Fragment key={measure.id}>
-              {windowMeasureShell(
-                measure.id,
-                measure.label,
-                <Select
-                  id={measure.id}
-                  value={measure.value}
-                  onValueChange={(value) =>
-                    bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
-                      ...(measure.onChange.args as object | undefined),
-                      value,
-                    })
-                  }
-                >
-                  <SelectTrigger id={measure.id} className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
-                    <SelectValue placeholder={measure.label} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {measure.items.map((item) => (
-                      <SelectItem key={item.id} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>,
-              )}
-            </React.Fragment>
-          );
-        }
-        if (measure.kind === "slider") {
-          return (
-            <React.Fragment key={measure.id}>
-              {windowMeasureShell(
-                measure.id,
-                measure.label,
-                <Slider
-                  id={measure.id}
-                  value={[measure.value]}
-                  min={measure.min}
-                  max={measure.max}
-                  step={measure.step}
-                  onValueChange={(vals) =>
-                    bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
-                      ...(measure.onChange.args as object | undefined),
-                      value: vals[0] ?? measure.min,
-                    })
-                  }
-                />,
-              )}
-            </React.Fragment>
-          );
-        }
-        if (measure.kind === "toggle") {
-          return (
-            <React.Fragment key={measure.id}>
-              {windowMeasureShell(
-                measure.id,
-                measure.label,
-                <Toggle
-                  id={measure.id}
-                  pressed={measure.pressed}
-                  text={measure.text}
-                  onPressedChange={(pressed) =>
-                    bus.dispatch(measure.onChange.controllerId, measure.onChange.command, {
-                      ...(measure.onChange.args as object | undefined),
-                      pressed,
-                    })
-                  }
-                />,
-              )}
-            </React.Fragment>
-          );
-        }
-        return null;
-      })}
-    </div>
-  );
 }
 
 /** @emoji 💬 Converts a React-neutral {@link WindowEngagement} into a ui {@link EngagementSpec} with bus-dispatching callbacks. */

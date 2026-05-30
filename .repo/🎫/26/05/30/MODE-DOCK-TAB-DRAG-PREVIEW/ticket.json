@@ -1,11 +1,12 @@
 {
   "title": "Mode Dock Tab Drag Preview",
   "emoji": "🪟",
-  "status": "closed",
+  "status": "open",
   "description": "Remove inconsistent tab drag feedback (dashed insert slots, thick insert line, body highlight) when dragging Mode dock tabs; keep only a clean cursor-following tab preview.",
   "summary": "Simplified Mode dock tab drag feedback to a single cursor-following tab chip styled like a normal dock tab. Removed dashed insert slots in the tab bar, the accent insert line, and the body outline on tab-bar drops. Split/root-split drop zones still show the half-panel accent overlay. Tab-only drag preview uses modeDockInactiveTabClass and natural width instead of a fixed cap tile.",
   "goal": "🎯r2603",
   "sessions": [
-    "⚪ad12212982e84704ae7d45b30e0259a3"
+    "⚪ad12212982e84704ae7d45b30e0259a3",
+    "⚪d6d444bb75b8441484f81c74a1096f43"
   ]
 }

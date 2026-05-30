@@ -2120,7 +2120,8 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	return component;
 }
 
-function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
+/** @emoji 📐 Maps {@link WindowMeasure} controller rows to {@link UIWindowMeasure} tiles for {@link ShellModeCanvas}. */
+export function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
 	if (!measures.length) return undefined;
 	return measures.map((measure) => {
 		if (measure.kind === "select") {

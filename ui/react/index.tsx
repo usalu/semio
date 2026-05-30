@@ -22553,6 +22553,30 @@ function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): Windo
   return removeWindowFromLayout(committed, windowId) ?? committed;
 }
 
+interface ModeTabInsertPreview {
+  stackPath: ModeLayoutPath;
+  index: number;
+}
+
+type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
+
+/** @emoji 📑 Tab bar row with a ghost tab at the drop index so layout matches the committed drop. */
+function modeDockTabsWithInsertPreview(
+  tabs: readonly { id: string; title: string }[],
+  insertPreview: ModeTabInsertPreview | null,
+  stackPath: ModeLayoutPath,
+  ghost: { id: string; title: string },
+): ModeDockTabDisplayItem[] {
+  if (!insertPreview || insertPreview.stackPath !== stackPath || !ghost.id) return tabs.map((tab) => ({ ...tab }));
+  const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
+  const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
+  row.splice(insertAt, 0, { id: ghost.id, title: ghost.title, preview: "ghost" });
+  return row;
+}
+
+const modeDockTabInsertPreviewClass =
+  "mx-half my-half flex h-[calc(100%-4px)] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+
 //#endregion 🧭ModeDockDrag
 
 //#region 🧭ModeDockDragPreview
@@ -22606,6 +22630,8 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
+  tabInsertPreview: ModeTabInsertPreview | null;
+  draggedTab: { id: string; title: string } | null;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22636,8 +22662,24 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
   const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
   const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
+  const displayTabs = reactHostPort.useMemo(
+    () =>
+      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedTab ?? { id: "", title: "" }),
+    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedTab],
+  );
+  const displayChromeGrid =
+    displayTabs.length > 1 ? modeDockChromeGridPlacement(
+        displayTabs.map(({ id, title }) => ({ id, title })),
+        activeId,
+      ) : undefined;
 
-  const renderTab = (tab: (typeof tabs)[number], index: number) => (
+  const renderGhostTab = (tab: { id: string; title: string }) => (
+    <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
+      <span className="truncate">{tab.title}</span>
+    </div>
+  );
+
+  const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => (
     <div
       key={tab.id}
       data-slot="mode-dock-tab"
@@ -22661,7 +22703,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       }}
       onPointerDownCapture={(event) => {
         if ((event.target as HTMLElement).closest("[data-slot='mode-dock-tab-close']")) return;
-        dock?.startTabDrag(tab.id, stackPath, index, tab.title, event);
+        dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event);
       }}
     >
       <span className="truncate">{tab.title}</span>
@@ -22713,45 +22755,55 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     />
   );
 
-  if (perTabActiveChrome && chromeGrid && chromeBody) {
+  if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
       <div
         data-slot="mode-dock-chrome-column"
         className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]"
-        style={{ gridTemplateColumns: chromeGrid.templateColumns }}
+        style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}
       >
         <div
           ref={ref}
           data-slot="mode-dock-tabbar"
           className="grid min-h-medium min-w-0 items-stretch"
-          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: chromeGrid.templateColumns }}
+          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
         >
-          {tabs.map((tab, index) => (
-            <div
-              key={tab.id}
-              data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
-              className={cn(
-                "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
-                activeId === tab.id && stackGloballyActive ? "z-10" : "z-20",
-              )}
-              style={{ gridColumn: chromeGrid.tabCol(index) }}
-            >
-              {renderTab(tab, index)}
-              {activeId === tab.id && stackGloballyActive ? (
-                <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
-              ) : null}
-            </div>
-          ))}
-          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: chromeGrid.gapCol }}>
+          {displayTabs.map((tab, index) =>
+            tab.preview === "ghost" ? (
+              <div
+                key={`ghost-${tab.id}`}
+                className="relative z-20 flex min-h-medium items-stretch justify-self-start"
+                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
+              >
+                {renderGhostTab(tab)}
+              </div>
+            ) : (
+              <div
+                key={tab.id}
+                data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
+                className={cn(
+                  "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
+                  activeId === tab.id && stackGloballyActive ? "z-10" : "z-20",
+                )}
+                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
+              >
+                {renderTab(tab, tabs.findIndex((row) => row.id === tab.id))}
+                {activeId === tab.id && stackGloballyActive ? (
+                  <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
+                ) : null}
+              </div>
+            ),
+          )}
+          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: displayChromeGrid.gapCol }}>
             {tabGap}
           </div>
-          <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: chromeGrid.controlsCol }}>
+          <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: displayChromeGrid.controlsCol }}>
             {controlsCap}
           </div>
         </div>
         <div
           className="flex min-h-0 min-w-0 flex-col overflow-hidden"
-          style={{ gridColumn: chromeGrid.bodyColumnSpan, gridRow: 2 }}
+          style={{ gridColumn: displayChromeGrid.bodyColumnSpan, gridRow: 2 }}
         >
           {chromeBody}
         </div>
@@ -22769,7 +22821,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         )}
       >
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
-          {tabs.map((tab, index) => renderTab(tab, index))}
+          {displayTabs.map((tab) =>
+            tab.preview === "ghost"
+              ? <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
+              : renderTab(tab, tabs.findIndex((row) => row.id === tab.id)),
+          )}
         </div>
         <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right")} aria-hidden />
       </div>
@@ -23100,9 +23156,16 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
+  const draggedPreviewTitle = dragState ? (windowsById.get(dragState.windowId)?.title ?? dragState.ghostLabel) : "";
+  const tabInsertPreview =
+    dragState && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
+  const draggedTab = dragState ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
+
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
+      tabInsertPreview,
+      draggedTab,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -23111,7 +23174,18 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [
+      dragState,
+      tabInsertPreview,
+      draggedTab,
+      registerStackDropTargets,
+      startTabDrag,
+      clearPendingDrag,
+      closeWindow,
+      activateWindow,
+      maximizedStackPath,
+      toggleMaximize,
+    ],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
@@ -23143,9 +23217,6 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
     ));
 
-  const draggedWindow = dragState ? windowsById.get(dragState.windowId) : undefined;
-  const draggedPreviewTitle = draggedWindow?.title ?? dragState?.ghostLabel ?? "";
-
   return (
     <div
       data-slot="mode"
@@ -23158,16 +23229,18 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           {body}
         {dragState ? (
           <>
-            <ModeDockDragPreview
-              title={draggedPreviewTitle}
-              tabOnly
-              style={{
-                position: "fixed",
-                left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
-                top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
-                zIndex: 70,
-              }}
-            />
+            {dropZone?.kind !== "tab" ? (
+              <ModeDockDragPreview
+                title={draggedPreviewTitle}
+                tabOnly
+                style={{
+                  position: "fixed",
+                  left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
+                  top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
+                  zIndex: 70,
+                }}
+              />
+            ) : null}
             {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
               <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
                 <div
@@ -23218,6 +23291,7 @@ export {
   resolveModeSplitSideInBody,
   computeTabInsertPreview,
   modeDockOutLayout,
+  modeDockTabsWithInsertPreview,
 };
 
 // #endregion 🧭Mode
@@ -23682,6 +23756,20 @@ if (import.meta.vitest) {
       fireEvent.click(soloTab!);
       expect(screen.queryByText("Solo Body")).toBeNull();
       expect(screen.getByText("Peer Body")).toBeTruthy();
+    });
+
+    it("modeDockTabsWithInsertPreview inserts a ghost tab at the drop index for that stack", () => {
+      const tabs = [
+        { id: "a", title: "A" },
+        { id: "b", title: "B" },
+      ];
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", { id: "drag", title: "Drag" });
+      expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
+      expect(row[1]?.preview).toBe("ghost");
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", { id: "drag", title: "Drag" }).map((tab) => tab.id)).toEqual([
+        "a",
+        "b",
+      ]);
     });
 
     it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {

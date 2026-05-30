@@ -421,22 +421,22 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
 //#endregion 🔖Puzzle3dPlayHierarchy
 
 //#region 🔖Puzzle3dPlayKinds
-type Puzzle3dPlayKindCatalogEntry = ObjectKind | VortexKind | CableKind | AttractionKind;
+type Puzzle3dCatalogKind = ObjectKind | VortexKind | CableKind | AttractionKind;
 
-function puzzle3dPlayKindCatalogEntryLabel(entry: Puzzle3dPlayKindCatalogEntry): string {
+function puzzle3dCatalogKindLabel(entry: Puzzle3dCatalogKind): string {
   const display = entry.label?.trim() || entry.name?.trim();
   return display && display.length > 0 ? display : entry.id;
 }
 
-function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entries: readonly Puzzle3dPlayKindCatalogEntry[] | undefined): UiTreeSectionNode | null {
+function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entries: readonly Puzzle3dCatalogKind[] | undefined): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
   }
   const items: UiTreeItemNode[] = [...entries]
-    .sort((a, b) => puzzle3dPlayKindCatalogEntryLabel(a).localeCompare(puzzle3dPlayKindCatalogEntryLabel(b)))
+    .sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)))
     .map((entry, index) => ({
       id: `${sectionId}.${index}.${entry.id}`,
-      label: puzzle3dPlayKindCatalogEntryLabel(entry),
+      label: puzzle3dCatalogKindLabel(entry),
       description: entry.id,
     }));
   return { id: sectionId, label, defaultOpen: true, items };
@@ -483,7 +483,7 @@ export function primaryPuzzle3dPlayObjectId(selection: Puzzle3dPlaySelection): s
 const PUZZLE_3D_PLAY_KINDS = ["object", "vortex", "attraction"] as const;
 type Puzzle3dPlayPickKind = (typeof PUZZLE_3D_PLAY_KINDS)[number];
 
-function puzzle3dPlayKindLabel(kind: Puzzle3dPlayPickKind): string {
+function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
   if (kind === "object") return "Objects";
   if (kind === "vortex") return "Vortices";
   return "Attractions";
@@ -690,8 +690,8 @@ export class Puzzle3dPlayShellController extends Controller {
       args: { mode },
     }));
     this.mainMode.tools = {
-      selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
+      selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
+      filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       actions: relocateTools,
     };
   }
