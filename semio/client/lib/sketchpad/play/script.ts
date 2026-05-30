@@ -1,6 +1,12 @@
 #!/usr/bin/env bun
-/** 🧭 Sketchpad play router: `bun ./script.ts dev [vite args…]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/src/index.ts";
+/** 🧭 Sketchpad play router: `bun ./script.ts dev|build [vite args…]`. */
+import {
+  BundleScript,
+  ScriptRouter,
+  runBundleScriptMain,
+  runViteBunxDevPlain,
+  runViteBuild,
+} from "../../../../../repo/lib/js/src/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
@@ -8,6 +14,12 @@ class DevScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript);
+class BuildScript extends BundleScript {
+  run(segments: string[]): void {
+    runViteBuild(this.root, segments, "vite.config.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

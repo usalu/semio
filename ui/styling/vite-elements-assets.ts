@@ -12,6 +12,46 @@ import { defineConfig, type UserConfig } from "vite";
 // #endregion 🔌Adapters
 
 //#region 🔖ViteElementsAssets
+/** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
+export const PLAYGROUND_SITE_HOSTS = {
+	semio: "play.semio-tech.com",
+	cad: "play.cad.semio-tech.com",
+	"2d": "play.2d.semio-tech.com",
+	"3d": "play.3d.semio-tech.com",
+	"5d": "play.5d.semio-tech.com",
+} as const;
+
+export type PlaygroundSiteKind = keyof typeof PLAYGROUND_SITE_HOSTS;
+
+/** @emoji 📦 Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
+export function playgroundStaticSiteBuildOptions(
+	overrides?: UserConfig["build"],
+): NonNullable<UserConfig["build"]> {
+	return {
+		target: "esnext",
+		outDir: "dist",
+		emptyOutDir: true,
+		...overrides,
+	};
+}
+
+/** @emoji 🖼 Dev/preview CSP so playgrounds can be iframe-embedded locally. */
+export function playgroundIframeEmbedHeadersPlugin(): Plugin {
+	const useHeaders: Connect.NextHandleFunction = (_req, res, next) => {
+		res.setHeader("Content-Security-Policy", "frame-ancestors *");
+		next();
+	};
+	return {
+		name: "playground-iframe-embed-headers",
+		configureServer(server) {
+			server.middlewares.use(useHeaders);
+		},
+		configurePreviewServer(server) {
+			server.middlewares.use(useHeaders);
+		},
+	};
+}
+
 function contentTypeForElementsAsset(filePath: string): string | undefined {
 	if (filePath.endsWith(".woff2")) {
 		return "font/woff2";
@@ -121,8 +161,18 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 	];
 	return defineConfig({
 		root: playDir,
-		plugins: [...elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react(), ...extraPlugins],
-		build: { target: "esnext", ...build },
+		base: "./",
+		publicDir: resolve(playDir, "public"),
+		assetsInclude: ["**/*.wasm"],
+		worker: { format: "es" },
+		plugins: [
+			...elementsAssetsVitePlugin(elementsAssetsRoot),
+			tailwindcss(),
+			react(),
+			playgroundIframeEmbedHeadersPlugin(),
+			...extraPlugins,
+		],
+		build: playgroundStaticSiteBuildOptions(build),
 		server: {
 			fs: { allow: [repoRoot] },
 			...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),

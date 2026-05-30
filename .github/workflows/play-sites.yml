@@ -1,0 +1,48 @@
+name: play sites (static build)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: "@semio/play"
+            dist: semio/client/lib/sketchpad/play/dist
+          - project: "@cad/js/renderer"
+            dist: cad/js/renderer/play/dist
+          - project: "@puzzle/2d/play"
+            dist: puzzle/2d/play/dist
+          - project: "@puzzle/3d/play"
+            dist: puzzle/3d/play/dist
+          - project: "@puzzle/5d/play"
+            dist: puzzle/5d/play/dist
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-play-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ matrix.project }}
+          restore-keys: |
+            nx-play-${{ runner.os }}-
+      - name: Install and build ${{ matrix.project }}
+        run: |
+          bun install --frozen-lockfile
+          bun nx run ${{ matrix.project }}:build
+      - name: Verify static site artifacts
+        run: |
+          test -f "${{ matrix.dist }}/index.html"
+          test -f "${{ matrix.dist }}/.nojekyll"
+          test -f "${{ matrix.dist }}/CNAME"
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.project }}-dist
+          path: ${{ matrix.dist }}

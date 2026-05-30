@@ -397,7 +397,7 @@ Something in the repo is spuriously stashing.
 It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
 This MUST NOT happen.
 
-## 🧩elements
+## 🖱️ui
 
 ###
 
@@ -458,7 +458,9 @@ Refactor everything
 
 ---
 
-### 🏁board
+## 🧩puzzle
+
+### 🏁2d
 
 elements/board:
 
@@ -724,7 +726,7 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
-### 🏙️scene
+### 🏙️3d
 
 ---
 
@@ -796,7 +798,7 @@ Then use the prop for all the features.
 
 ---
 
-### topology
+### 🪄5d
 
 ---
 

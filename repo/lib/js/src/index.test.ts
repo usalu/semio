@@ -16,6 +16,10 @@ import {
   isAdapterBoundaryFile,
   parseTsImportSpecs,
 } from "./dependency-boundary.ts";
+import {
+  PLAYGROUND_SITE_HOSTS,
+  playgroundStaticSiteBuildOptions,
+} from "../../../../ui/styling/vite-elements-assets.ts";
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
@@ -123,5 +127,24 @@ describe("dependency-boundary", () => {
       file,
     );
     expect(breachs).toEqual([]);
+  });
+});
+
+describe("playground static sites", () => {
+  test("PLAYGROUND_SITE_HOSTS maps each play to latest canonical host", () => {
+    expect(PLAYGROUND_SITE_HOSTS.semio).toBe("play.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS.cad).toBe("play.cad.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["2d"]).toBe("play.2d.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["3d"]).toBe("play.3d.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS["5d"]).toBe("play.5d.semio-tech.com");
+  });
+
+  test("playgroundStaticSiteBuildOptions uses relative-base dist output", () => {
+    expect(playgroundStaticSiteBuildOptions()).toEqual({
+      target: "esnext",
+      outDir: "dist",
+      emptyOutDir: true,
+    });
+    expect(playgroundStaticSiteBuildOptions({ sourcemap: true }).sourcemap).toBe(true);
   });
 });

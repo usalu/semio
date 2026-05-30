@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/lib/sketchpad/play",
-        "command": "vite build",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
