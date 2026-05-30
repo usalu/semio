@@ -2583,6 +2583,75 @@ export class Puzzle2dRenderer {
       return;
     }
     this.emit(name, payload);
+    const structural: Puzzle2dStructureDeletePayload =
+      name === "nodeDelete" ? { kind: "node", id: payload.id } : name === "edgeDelete" ? { kind: "edge", id: payload.id } : { kind: "wire", id: payload.id };
+    puzzle2dBroadcastStructuralRemove(this, structural);
+  }
+
+  /** @emoji 🔇 Applies a peer pane node drag without emitting {@link Puzzle2dEventMap.nodeMove}. */
+  applyNodePositionSilent(nodeId: string, x: number, y: number): void {
+    if (this.isDisposed) {
+      return;
+    }
+    const node = this.scene.nodes.get(nodeId);
+    if (!node) {
+      return;
+    }
+    if (nearlyEqual(node.x, x) && nearlyEqual(node.y, y)) {
+      return;
+    }
+    this.suppressSceneToWasmPush = true;
+    try {
+      node.setPosition(x, y);
+      this.lastNodeAuthoringPositionById.set(nodeId, { x, y });
+    } finally {
+      this.suppressSceneToWasmPush = false;
+    }
+    this.lastPushedDescriptorJson = null;
+    this.invalidate();
+  }
+
+  /** @emoji 🔇 Applies a peer pane structural removal without emitting delete events. */
+  applyStructuralRemoveSilent(payload: Puzzle2dStructureDeletePayload): void {
+    if (this.isDisposed) {
+      return;
+    }
+    let graphMutated = false;
+    this.runWithoutSceneDeleteEvents(() => {
+      if (payload.kind === "wire") {
+        const wire = this.scene.wires.get(payload.id);
+        if (wire) {
+          this.scene.remove(wire);
+          graphMutated = true;
+        }
+        return;
+      }
+      if (payload.kind === "edge") {
+        const edge = this.scene.edges.get(payload.id);
+        this.clearWasmHostAuthorshipForEdge(payload.id);
+        if (edge) {
+          this.scene.remove(edge);
+          graphMutated = true;
+        }
+        return;
+      }
+      const node = this.scene.nodes.get(payload.id);
+      if (node) {
+        this.scene.remove(node);
+        graphMutated = true;
+      }
+    });
+    if (!graphMutated) {
+      return;
+    }
+    this.bumpWasmHostSceneMergeResyncEpoch();
+    this.lastPushedDescriptorJson = null;
+    this.invalidate();
+  }
+
+  /** @emoji 🧹 Clears {@link Puzzle2dRenderer.applyNodePositionFromProps} caches so declarative fixture commits always win on every pane. */
+  clearNodeAuthoringPositionCache(): void {
+    this.lastNodeAuthoringPositionById.clear();
   }
   /** @emoji 💾 Last `gpuReady` snapshot; used while {@link Puzzle2dRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
   private cachedWasmGpuReady = false;
@@ -2698,6 +2767,7 @@ export class Puzzle2dRenderer {
       this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
     }
     this.lastGraphObservation = computePuzzle2dGraphObservationSnapshot(this.scene);
+    puzzle2dRegisterAuthoringPeer(this);
   }
 
   readonly renderMode: RenderMode;
@@ -3664,8 +3734,10 @@ export class Puzzle2dRenderer {
                 break;
               }
               node.setPosition(x, y);
+              this.lastNodeAuthoringPositionById.set(id, { x, y });
             }
             this.emitter.emit("nodeMove", { id, x, y });
+            puzzle2dBroadcastNodeMove(this, { id, x, y });
             break;
           }
           case "edgeDelete": {
@@ -3924,6 +3996,7 @@ export class Puzzle2dRenderer {
 
   dispose(): void {
     this.isDisposed = true;
+    puzzle2dUnregisterAuthoringPeer(this);
     this.detachCanvasListeners();
     this.textOverlayCanvas = null;
     this.wasmHostAuthoredEdgeIds.clear();

@@ -2466,6 +2466,7 @@ export interface RegistryValue {
   unregisterVortexBinding(fullId: string): void;
   registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
   collectObjectGroups(): readonly Group[];
+  collectVortexTargets(): VortexScreenTarget[];
   getObjectGroup(id: string): Group | null;
   getObjectKind(id: string): string | undefined;
   kindCatalogs: KindCatalogBundle | undefined;
@@ -2615,6 +2616,24 @@ function SelectionInvalidateBridge(): null {
   return null;
 }
 
+/** @emoji 🌀 Screen-space pick descriptor for a vortex: world center, world radius, owning object. */
+interface VortexScreenTarget {
+  readonly fullId: string;
+  readonly world: Vector3;
+  readonly radiusWorld: number;
+  readonly objectId: string;
+}
+
+/** @emoji 👁️ True when an object and its whole parent chain are visible (so toggled-off vortices are not pickable). */
+function objectChainVisible(obj: Object3D): boolean {
+  let node: Object3D | null = obj;
+  while (node) {
+    if (node.visible === false) return false;
+    node = node.parent;
+  }
+  return true;
+}
+
 /** @emoji 🎯 True when a raycast hit belongs to a selectable scene object or vortex mesh. */
 function raycastHitTargetsPick(hitObject: Object3D): boolean {
   let node: Object3D | null = hitObject;
@@ -2659,6 +2678,126 @@ function SelectionMissBridge(): null {
   }, [getState, setState]);
   return null;
 }
+
+//#region 🔖VortexScreenPick
+/** @emoji 🌀 Screen-space pixel radius around a vortex center that counts as a hover/click on that vortex. */
+const VORTEX_SCREEN_PICK_RADIUS_PX = 18;
+
+/** @emoji 🌀 World depth a vortex may sit behind the clicked surface and still be pickable (covers vortices embedded in their own object), beyond which it is treated as occluded by foreground geometry. */
+const VORTEX_PICK_DEPTH_TOLERANCE = 6;
+
+/**
+ * 🌀 Centralized screen-space hover/selection for vortices.
+ *
+ * Vortex markers sit on/inside dense object meshes, so the depth raycaster always hits the
+ * object first and never the vortex. This bridge projects every visible vortex to screen space
+ * and, when the pointer is within {@link VORTEX_SCREEN_PICK_RADIUS_PX} of a vortex that is not
+ * occluded by foreground geometry (within {@link VORTEX_PICK_DEPTH_TOLERANCE}), hovers/selects
+ * that vortex and suppresses the object pick underneath.
+ */
+function VortexScreenPick(): null {
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const invalidate = useThree((s) => s.invalidate);
+  const { collectVortexTargets, collectObjectGroups, blockedVortexFullIds } = useRegistryCore();
+  const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
+  const { setHover, clearHoverAll } = useRegistryHover();
+  const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
+
+  const stateRef = reactHostPort.useRef({
+    collectVortexTargets,
+    collectObjectGroups,
+    blockedVortexFullIds,
+    commitSelection,
+    setActiveRelocateObjectId,
+    setHover,
+    clearHoverAll,
+    invalidate,
+    camera,
+    busy: false,
+  });
+  stateRef.current.collectVortexTargets = collectVortexTargets;
+  stateRef.current.collectObjectGroups = collectObjectGroups;
+  stateRef.current.blockedVortexFullIds = blockedVortexFullIds;
+  stateRef.current.commitSelection = commitSelection;
+  stateRef.current.setActiveRelocateObjectId = setActiveRelocateObjectId;
+  stateRef.current.setHover = setHover;
+  stateRef.current.clearHoverAll = clearHoverAll;
+  stateRef.current.invalidate = invalidate;
+  stateRef.current.camera = camera;
+  stateRef.current.busy = attractionDragActive || attractionIndirectPickAwait !== null;
+
+  reactHostPort.useEffect(() => {
+    const dom = gl.domElement;
+    const raycaster = new Raycaster();
+    const ndc = new Vector2();
+    const projected = new Vector3();
+
+    const pickAt = (clientX: number, clientY: number): VortexScreenTarget | null => {
+      const st = stateRef.current;
+      if (st.busy) return null;
+      const rect = dom.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      const cursorX = clientX - rect.left;
+      const cursorY = clientY - rect.top;
+      const camPos = (st.camera as unknown as { position: Vector3 }).position;
+      const candidates: { target: VortexScreenTarget; dpx: number; dist: number }[] = [];
+      for (const target of st.collectVortexTargets()) {
+        if (st.blockedVortexFullIds.has(target.fullId)) continue;
+        projected.copy(target.world).project(st.camera as never);
+        if (projected.z > 1) continue;
+        const sx = ((projected.x + 1) / 2) * rect.width;
+        const sy = ((1 - projected.y) / 2) * rect.height;
+        const dpx = Math.hypot(sx - cursorX, sy - cursorY);
+        if (dpx > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
+        candidates.push({ target, dpx, dist: camPos.distanceTo(target.world) });
+      }
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => a.dpx - b.dpx);
+      ndc.x = (cursorX / rect.width) * 2 - 1;
+      ndc.y = -(cursorY / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, st.camera);
+      const objHits = raycaster.intersectObjects(st.collectObjectGroups(), true);
+      const surfaceDist = objHits.length > 0 ? objHits[0]!.distance : Infinity;
+      for (const c of candidates) {
+        if (c.dist <= surfaceDist + VORTEX_PICK_DEPTH_TOLERANCE) return c.target;
+      }
+      return null;
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      const st = stateRef.current;
+      const hit = pickAt(e.clientX, e.clientY);
+      if (hit) {
+        st.clearHoverAll();
+        st.setHover({ kind: "vortex", fullId: hit.fullId });
+        st.invalidate();
+      }
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      const st = stateRef.current;
+      const hit = pickAt(e.clientX, e.clientY);
+      if (!hit) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      st.commitSelection({ kind: "vortex", fullId: hit.fullId });
+      st.setActiveRelocateObjectId(hit.objectId);
+      st.invalidate();
+    };
+
+    dom.addEventListener("pointermove", onPointerMove);
+    dom.addEventListener("click", onClickCapture, true);
+    return () => {
+      dom.removeEventListener("pointermove", onPointerMove);
+      dom.removeEventListener("click", onClickCapture, true);
+    };
+  }, [gl]);
+
+  return null;
+}
+//#endregion
 //#endregion ­ƒÄ»Registry
 
 //#region ­ƒº▒Chunking
@@ -3261,21 +3400,6 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 //#region ­ƒîÇVortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
-//#region 🔖VortexPickPriority
-/** @emoji 🎯 World-space depth bias (units) so a vortex pick wins over the object surface it sits on, without hijacking clicks on distant geometry. */
-const VORTEX_PICK_DEPTH_BIAS = 1.5;
-
-/** @emoji 🎯 Mesh raycast biasing vortex hits closer so occluding object meshes do not swallow vortex hover/selection ({@link VORTEX_PICK_DEPTH_BIAS}). */
-function vortexPickRaycast(this: import("three").Mesh, raycaster: Raycaster, intersects: import("three").Intersection[]): void {
-  const local: import("three").Intersection[] = [];
-  Mesh.prototype.raycast.call(this, raycaster, local);
-  for (const hit of local) {
-    hit.distance = Math.max(hit.distance - VORTEX_PICK_DEPTH_BIAS, hit.distance * 0.01);
-    intersects.push(hit);
-  }
-}
-//#endregion
-
 function VortexMeshGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
   const scale = (props.radius / 0.35) * 0.9;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
@@ -3426,16 +3550,6 @@ export const Vortex = reactHostPort.memo(function Vortex(
     setActiveRelocateObjectId(props.objectId);
   }, [commitSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
 
-  const onVortexClick = reactHostPort.useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      if (e.nativeEvent.button !== 0) {
-        return;
-      }
-      e.stopPropagation();
-    },
-    [],
-  );
-
   const onPointerDown = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       const pe = e.nativeEvent;
@@ -3514,6 +3628,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
   const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
+  const pickProxy = (drawVortexBody ? false : trackVortexLod ? lodVisual.pickProxy : lodVortexPickProxy(lodCtx.lod)) && !linger;
   const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
@@ -3540,7 +3655,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
   const vis = props.visible !== false;
   const showDirection = vis && isVec3(props.direction);
   return (
-    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onVortexClick}>
+    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
       {showDirection ? (
         <VortexDirectionArrow directionCad={props.direction!} objectOrigin={props.objectOrigin} objectOrientation={props.objectOrientation} radius={r} selected={vortexSelected || highlight !== "none"} />
       ) : null}
@@ -3553,10 +3668,12 @@ export const Vortex = reactHostPort.memo(function Vortex(
       ) : drawVortexBody ? (
         <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} {...vortexPointerHoverHandlers} />
       ) : null}
-      <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
-        <sphereGeometry args={[r * 1.15, 12, 12]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
-      </mesh>
+      {pickProxy ? (
+        <mesh userData={{ puzzle3dVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>
+          <sphereGeometry args={[r, 12, 12]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      ) : null}
     </group>
   );
 });
@@ -4089,6 +4206,19 @@ function RegistryProvider({
     return out;
   }, []);
 
+  const collectVortexTargets = reactHostPort.useCallback((): VortexScreenTarget[] => {
+    const out: VortexScreenTarget[] = [];
+    for (const [fullId, getter] of vortexGettersRef.current) {
+      const pickRoot = vortexPickRef.current.get(fullId);
+      if (pickRoot && !objectChainVisible(pickRoot)) continue;
+      const world = getter();
+      if (!world) continue;
+      const meta = vortexMetaRef.current.get(fullId);
+      out.push({ fullId, world, radiusWorld: meta?.radiusWorld ?? 0.35, objectId: meta?.objectId ?? fullId.split(":")[0]! });
+    }
+    return out;
+  }, []);
+
   const getObjectGroup = reactHostPort.useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
 
   const getObjectKind = reactHostPort.useCallback((id: string) => objectKindsRef.current.get(id), []);
@@ -4426,6 +4556,7 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
+      collectVortexTargets,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4462,6 +4593,7 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
+      collectVortexTargets,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4532,6 +4664,7 @@ function RegistryProvider({
               <HoverInvalidateBridge />
               <SelectionInvalidateBridge />
               <SelectionMissBridge />
+              <VortexScreenPick />
             </RegistryDragContext.Provider>
           </RegistryHoverContext.Provider>
         </RegistryInteractionContext.Provider>

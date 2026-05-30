@@ -1892,8 +1892,24 @@ export function sketchpadApplyPuzzle2dSelection(
 		return;
 	}
 	if (scope.pane === "diagram" || scope.pane === "scene") {
-		const pieceIds = puzzle2dIds.filter((id) => id.length > 0 && !id.includes(":"));
-		const connectionIds = puzzle2dIds.filter((id) => id.includes("semio.connection") || id.startsWith("connection:"));
+		const kit = ctrl.getKitStore(scope.kitId)?.getSnapshot().kit;
+		const design = scope.designId && kit ? findDesignInKit(kit, scope.designId) : undefined;
+		const pieceIdSet = new Set((design?.pieces ?? []).map((piece) => piece.id).filter((id): id is string => Boolean(id)));
+		const connectionIdSet = new Set(
+			(((design as { connections?: readonly SketchpadKitConnection[] } | undefined)?.connections ?? []) as readonly SketchpadKitConnection[])
+				.map((connection) => connection.id)
+				.filter((id): id is string => Boolean(id)),
+		);
+		const pieceIds: string[] = [];
+		const connectionIds: string[] = [];
+		for (const id of puzzle2dIds) {
+			if (!id || id.includes(":")) continue;
+			if (id.includes("semio.connection") || id.startsWith("connection:") || connectionIdSet.has(id)) {
+				connectionIds.push(id);
+			} else if (pieceIdSet.has(id) || !design) {
+				pieceIds.push(id);
+			}
+		}
 		ctrl.setRouteSelection({ pieceIds, connectionIds, kitDiagramNodeIds: [] });
 	}
 }
@@ -3387,6 +3403,39 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadKitFromDecodedBundle", () => {
+		it("reads metabolism-shaped wip.initialKit bundle", () => {
+			const raw = {
+				schema: "test",
+				wip: {
+					initialKit: {
+						id: "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+						name: "Metabolism",
+						types: { items: [{ id: "t1", name: "Base" }] },
+						designs: { items: [] },
+						families: {
+							items: [
+								{
+									id: "fam-nakagin",
+									name: "Nakagin Capsule Tower",
+									ports: {
+										items: [
+											{ id: "p1", name: "bottom", compatiblePorts: { items: [{ id: "p2" }] } },
+											{ id: "p2", name: "top", compatiblePorts: { items: [{ id: "p1" }] } },
+										],
+									},
+								},
+							],
+						},
+					},
+				},
+			};
+			const kit = sketchpadKitFromDecodedBundle(raw);
+			expect(kit?.name).toBe("Metabolism");
+			expect(sketchpadExtractPortCompatById(kit!).size).toBe(2);
+		});
+	});
+
 	describe("sketchpadAppIdFromPath", () => {
 		it("resolves design app from kit route", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
@@ -3820,6 +3869,31 @@ if (import.meta.vitest) {
 			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}/scene`);
 			sketchpadApplyPuzzle2dSelection(sketchpadDesignSceneInstanceId(kitId, designId), ["piece-x"], ctrl);
 			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-x"]);
+			ctrl.dispose();
+		});
+
+		it("maps volume attraction ids to connection selection", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			const kit = {
+				id: kitId,
+				name: "K",
+				designs: [
+					{
+						id: designId,
+						name: "D",
+						pieces: [{ id: "piece-a", name: "A" }],
+						connections: [{ id: "conn-1", parent: { piece: { id: "piece-a" }, connector: { id: "c1" } }, child: { piece: { id: "piece-a" }, connector: { id: "c2" } } }],
+					},
+				],
+			} as Kit;
+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
+			sketchpadApplyPuzzle2dSelection(sketchpadDesignSceneInstanceId(kitId, designId), ["piece-a", "conn-1"], ctrl);
+			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a"]);
+			expect(ctrl.routeSelection.connectionIds).toEqual(["conn-1"]);
 			ctrl.dispose();
 		});
 
