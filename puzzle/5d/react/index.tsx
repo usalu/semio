@@ -6,48 +6,49 @@
 import { reactHostPort, type ContextMenuItem } from "@ui/react";
 import type { ReactElement } from "react";
 
-/** @emoji 🔗 Unified topology model with flat WASM + volume R3F projections and a shared {@link TopologyStore}. */
+/** @emoji 🔗 Unified topology model with flat WASM + volume R3F projections and a shared {@link Store}. */
 
 import {
-  boardFixtureMetaKindCatalogBundle,
-  parseBoardFixtureV1,
+  BoardCanvas,
   DEFAULT_BOARD_GRID_FACTOR,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  Edge, Handle, Node, Wire,
+  boardFixtureMetaKindCatalogBundle,
+  parseBoardFixtureV1,
+  type CameraState as BoardCameraState,
   type BoardCanvasProps,
   type BoardFixtureV1,
   type BoardForceGraphLayoutOptions,
   type BoardKindCatalogBundle,
   type BoardKindCompatEntry,
-  type CameraState as BoardCameraState,
   type BoardLinkSessionSnapshot,
 } from "@puzzle/2d/react";
-import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/2d/react";
 import {
+  ObjectStateProvider as VolumePartStateProvider,
+  Objects as VolumeParts,
+  Attractions as VolumeTies,
   Canvas3D as VolumeView,
-  Puzzle3dAttractions as VolumeBonds,
-  Puzzle3dObjectStateProvider as VolumePartStateProvider,
-  Puzzle3dObjects as VolumeParts,
-  parseFixtureV1,
   blockedVortexFullIdsFromAttractions,
-  usePuzzle3dObjectConnect as useVolumePartConnect,
-  usePuzzle3dObjectRelocate as useVolumePartRelocate,
-  type CanvasProps as VolumeViewProps,
+  parseFixtureV1,
+  useObjectConnect as useVolumePartConnect,
+  useObjectRelocate as useVolumePartRelocate,
+  type AttractionSessionSnapshot,
+  type DomainKind,
   type FixtureV1 as VolumeFixtureV1,
   type KindCatalogBundle as VolumeKindCatalogBundle,
   type KindCompatEntry as VolumeKindCompatEntry,
   type RelocateMode as VolumeRelocateMode,
-  type AttractionSessionSnapshot,
   type SelectionSnapshot as VolumeSelectionSnapshot,
-  type DomainKind,
+  type CanvasProps as VolumeViewProps,
 } from "../../3d/react/index.tsx";
 // #endregion 🔌Adapters
 
-//#region 🔖TopologyPairedPolicy
-/** @emoji 🔗 How a bond is committed: direct handle pick, indirect ring finish, or proximity snap. */
-export type TopologyConnectGestureKind = "direct" | "indirect" | "proximity";
+//#region 🔖PairedPolicy
+/** @emoji 🔗 How a tie is committed: direct handle pick, indirect ring finish, or proximity snap. */
+export type ConnectGestureKind = "direct" | "indirect" | "proximity";
 
-/** @emoji ↔️ True only for {@link TopologyConnectGestureKind.indirect} — the gesture mirrored in {@link TopologyConnectSession}. */
-export function topologyConnectGestureCrossSurface(kind: TopologyConnectGestureKind): boolean {
+/** @emoji ↔️ True only for {@link ConnectGestureKind.indirect} — the gesture mirrored in {@link ConnectSession}. */
+export function topologyConnectGestureCrossSurface(kind: ConnectGestureKind): boolean {
   return kind === "indirect";
 }
 
@@ -55,22 +56,22 @@ export function topologyConnectGestureCrossSurface(kind: TopologyConnectGestureK
 export const TOPOLOGY_FLAT_LOD_TIER_COUNT = 6 as const;
 
 /** @emoji 📶 Volume (@puzzle/3d) uses continuous / camera-driven LOD (`automaticLod`, depth-variable, manual slider). */
-export type TopologyVolumeLodPolicy = "continuous";
+export type VolumeLodPolicy = "continuous";
 
 /** @emoji 🧲 Flat proximity: overlapping compatible handles while **dragging** a node (pointer-up snap). */
-export const TOPOLOGY_FLAT_PROXIMITY_GESTURE: TopologyConnectGestureKind = "proximity";
+export const TOPOLOGY_FLAT_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
 
 /** @emoji 🧲 Volume proximity: compatible anchor within radius while **relocating** a part (gumball release). */
-export const TOPOLOGY_VOLUME_PROXIMITY_GESTURE: TopologyConnectGestureKind = "proximity";
+export const TOPOLOGY_VOLUME_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
 
 /** @emoji 🎯 Indirect link/attraction: start on one surface, finish on a compatible ring on either surface. */
-export const TOPOLOGY_INDIRECT_CONNECT_GESTURE: TopologyConnectGestureKind = "indirect";
-//#endregion 🔖TopologyPairedPolicy
+export const TOPOLOGY_INDIRECT_CONNECT_GESTURE: ConnectGestureKind = "indirect";
+//#endregion 🔖PairedPolicy
 
-//#region 🔖TopologyModel
-export type TopologyPresentationMode = "2d" | "3d";
+//#region 🔖Model
+export type PresentationMode = "2d" | "3d";
 
-export interface TopologyFlatAnchorAspect {
+export interface FlatAnchorAspect {
   readonly angle: number;
   readonly anchorKind: string;
   readonly color?: string;
@@ -78,7 +79,7 @@ export interface TopologyFlatAnchorAspect {
   readonly radius?: number;
 }
 
-export interface TopologyVolumeAnchorAspect {
+export interface VolumeAnchorAspect {
   readonly position: readonly [number, number, number];
   readonly direction?: readonly [number, number, number];
   readonly radius?: number;
@@ -86,14 +87,14 @@ export interface TopologyVolumeAnchorAspect {
   readonly handleMeshUrl?: string;
 }
 
-export interface TopologyAnchorV1 {
+export interface AnchorV1 {
   readonly id: string;
   readonly anchorKind: string;
-  readonly flat?: TopologyFlatAnchorAspect;
-  readonly volume?: TopologyVolumeAnchorAspect;
+  readonly flat?: FlatAnchorAspect;
+  readonly volume?: VolumeAnchorAspect;
 }
 
-export interface TopologyFlatPartAspect {
+export interface NodeAspect {
   readonly x: number;
   readonly y: number;
   readonly shape: "circle" | "rectangle";
@@ -109,7 +110,7 @@ export interface TopologyFlatPartAspect {
   readonly hidden?: boolean;
 }
 
-export interface TopologyVolumePartAspect {
+export interface VolumePartAspect {
   readonly origin: readonly [number, number, number];
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: number | readonly [number, number, number];
@@ -118,24 +119,24 @@ export interface TopologyVolumePartAspect {
   readonly wormhole?: boolean;
 }
 
-export interface TopologyPartV1 {
+export interface PartV1 {
   readonly id: string;
   readonly partKind?: string;
-  readonly flat?: TopologyFlatPartAspect;
-  readonly volume?: TopologyVolumePartAspect;
-  readonly anchors: readonly TopologyAnchorV1[];
+  readonly flat?: NodeAspect;
+  readonly volume?: VolumePartAspect;
+  readonly anchors: readonly AnchorV1[];
 }
 
-export interface TopologyBondV1 {
+export interface TieV1 {
   readonly id: string;
   readonly source: string;
   readonly target: string;
-  readonly bondKind?: string;
+  readonly tieKind?: string;
 }
 
 /** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across flat {@link BoardLinkSessionSnapshot} and volume {@link AttractionSessionSnapshot}. */
-export interface TopologyConnectSession {
-  readonly origin: TopologyPresentationMode;
+export interface ConnectSession {
+  readonly origin: PresentationMode;
   readonly sourceAnchor: string;
   readonly endX: number;
   readonly endY: number;
@@ -145,12 +146,12 @@ export interface TopologyConnectSession {
   readonly ringAnchorIds: readonly string[];
 }
 
-export interface TopologySelectionSnapshot {
+export interface SelectionSnapshot {
   readonly partIds: readonly string[];
   readonly anchorIds: readonly string[];
 }
 
-export interface TopologyV1 {
+export interface V1 {
   readonly schema: "puzzle.5d.topology/v1";
   readonly label?: string;
   readonly domain: DomainKind;
@@ -159,8 +160,8 @@ export interface TopologyV1 {
   readonly kindCompatibility?: readonly BoardKindCompatEntry[];
   readonly flatCamera: BoardCameraState;
   readonly volumeCamera: VolumeFixtureV1["camera"];
-  readonly parts: readonly TopologyPartV1[];
-  readonly bonds: readonly TopologyBondV1[];
+  readonly parts: readonly PartV1[];
+  readonly ties: readonly TieV1[];
 }
 
 export const TOPOLOGY_ANCHOR_ID_SEPARATOR = ":";
@@ -178,11 +179,11 @@ export function topologyParseAnchorFullId(fullId: string): { partId: string; anc
 }
 
 /** @emoji ✅ Validates unified topology JSON. */
-export function parseTopologyV1(raw: unknown): TopologyV1 | null {
+export function parseV1(raw: unknown): V1 | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (r.schema !== "puzzle.5d.topology/v1") return null;
-  if (!Array.isArray(r.parts) || !Array.isArray(r.bonds)) return null;
+  if (!Array.isArray(r.parts) || !Array.isArray(r.ties)) return null;
   const domain = typeof r.domain === "string" ? (r.domain as DomainKind) : "architecture";
   const flatCam = r.flatCamera as BoardCameraState | undefined;
   const volumeCam = r.volumeCamera as VolumeFixtureV1["camera"] | undefined;
@@ -192,8 +193,8 @@ export function parseTopologyV1(raw: unknown): TopologyV1 | null {
     domain,
     flatCamera: flatCam,
     volumeCamera: volumeCam,
-    parts: r.parts as TopologyPartV1[],
-    bonds: r.bonds as TopologyBondV1[],
+    parts: r.parts as PartV1[],
+    ties: r.ties as TieV1[],
     ...(typeof r.label === "string" ? { label: r.label } : {}),
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
     ...(r.kindCatalogs && typeof r.kindCatalogs === "object" ? { kindCatalogs: r.kindCatalogs as BoardKindCatalogBundle } : {}),
@@ -201,11 +202,11 @@ export function parseTopologyV1(raw: unknown): TopologyV1 | null {
   };
 }
 
-/** @emoji 🔀 Builds {@link TopologyV1} by merging flat and volume fixtures (same part ids unite). */
-export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): TopologyV1 {
-  const partsMap = new Map<string, TopologyPartV1>();
+/** @emoji 🔀 Builds {@link V1} by merging flat and volume fixtures (same part ids unite). */
+export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): V1 {
+  const partsMap = new Map<string, PartV1>();
   for (const node of flat.nodes) {
-    const anchors: TopologyAnchorV1[] = node.handles.map((h) => {
+    const anchors: AnchorV1[] = node.handles.map((h) => {
       const parsed = topologyParseAnchorFullId(h.id);
       const localId = parsed?.anchorId ?? h.id;
       return {
@@ -220,7 +221,7 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
         },
       };
     });
-    const flatAspect: TopologyFlatPartAspect =
+    const flatAspect: NodeAspect =
       node.shape === "rectangle"
         ? {
             x: node.x,
@@ -255,7 +256,7 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
     });
   }
   for (const obj of volume.objects) {
-    const volumeAspect: TopologyVolumePartAspect = {
+    const volumeAspect: VolumePartAspect = {
       origin: obj.origin,
       meshUrl: obj.meshUrl,
       ...(obj.orientation !== undefined ? { orientation: obj.orientation } : {}),
@@ -263,7 +264,7 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
       ...(obj.label !== undefined ? { label: obj.label } : {}),
       ...(obj.wormhole === true ? { wormhole: true } : {}),
     };
-    const volumeAnchors: TopologyAnchorV1[] = obj.vortices.map((v) => {
+    const volumeAnchors: AnchorV1[] = obj.vortices.map((v) => {
       const parsed = topologyParseAnchorFullId(v.id.includes(":") ? v.id : topologyAnchorFullId(obj.id, v.id));
       const localId = parsed?.anchorId ?? v.id;
       return {
@@ -300,21 +301,21 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
       });
     }
   }
-  const bonds: TopologyBondV1[] = [];
-  const bondIds = new Set<string>();
+  const ties: TieV1[] = [];
+  const tieIds = new Set<string>();
   for (const edge of flat.edges) {
-    if (bondIds.has(edge.id)) continue;
-    bondIds.add(edge.id);
-    bonds.push({ id: edge.id, source: edge.source, target: edge.target });
+    if (tieIds.has(edge.id)) continue;
+    tieIds.add(edge.id);
+    ties.push({ id: edge.id, source: edge.source, target: edge.target });
   }
   for (const att of volume.attractions) {
-    if (bondIds.has(att.id)) continue;
-    bondIds.add(att.id);
-    bonds.push({
+    if (tieIds.has(att.id)) continue;
+    tieIds.add(att.id);
+    ties.push({
       id: att.id,
       source: att.attracting,
       target: att.attracted,
-      ...(att.attractionKind !== undefined ? { bondKind: att.attractionKind } : {}),
+      ...(att.attractionKind !== undefined ? { tieKind: att.attractionKind } : {}),
     });
   }
   const meta = {
@@ -329,15 +330,15 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
     flatCamera: { ...flat.camera },
     volumeCamera: { ...volume.camera },
     parts: [...partsMap.values()],
-    bonds,
+    ties,
     ...(Object.keys(meta).length > 0 ? { meta } : {}),
     ...(kindCatalogs ? { kindCatalogs } : {}),
     ...(kindCompatibility.length > 0 ? { kindCompatibility } : {}),
   };
 }
 
-/** @emoji 📐 Projects {@link TopologyV1} to a board fixture for flat rendering. */
-export function projectFlat(model: TopologyV1): BoardFixtureV1 {
+/** @emoji 📐 Projects {@link V1} to a board fixture for flat rendering. */
+export function projectFlat(model: V1): BoardFixtureV1 {
   const nodes = model.parts
     .filter((p) => p.flat)
     .map((p) => {
@@ -390,13 +391,13 @@ export function projectFlat(model: TopologyV1): BoardFixtureV1 {
     schema: "puzzle.2d.fixture/v1",
     camera: { ...model.flatCamera },
     nodes,
-    edges: model.bonds.map((b) => ({ id: b.id, source: b.source, target: b.target })),
+    edges: model.ties.map((b) => ({ id: b.id, source: b.source, target: b.target })),
     ...(model.meta ? { meta: model.meta } : {}),
   };
 }
 
-/** @emoji 📐 Projects {@link TopologyV1} to a @puzzle/3d fixture for volume rendering. */
-export function projectVolume(model: TopologyV1): VolumeFixtureV1 {
+/** @emoji 📐 Projects {@link V1} to a @puzzle/3d fixture for volume rendering. */
+export function projectVolume(model: V1): VolumeFixtureV1 {
   const objects = model.parts
     .filter((p) => p.volume)
     .map((p) => {
@@ -428,30 +429,30 @@ export function projectVolume(model: TopologyV1): VolumeFixtureV1 {
     domain: model.domain,
     camera: { ...model.volumeCamera },
     objects,
-    attractions: model.bonds.map((b) => ({
+    attractions: model.ties.map((b) => ({
       id: b.id,
       attracting: b.source as `${string}:${string}`,
       attracted: b.target as `${string}:${string}`,
-      ...(b.bondKind !== undefined ? { attractionKind: b.bondKind } : {}),
+      ...(b.tieKind !== undefined ? { attractionKind: b.tieKind } : {}),
     })),
     ...(model.meta ? { meta: model.meta } : {}),
   };
 }
-//#endregion 🔖TopologyModel
+//#endregion 🔖Model
 
-//#region 🔖TopologyStore
-export interface TopologyStoreSnapshot {
-  readonly model: TopologyV1;
-  readonly selection: TopologySelectionSnapshot;
-  readonly connectSession: TopologyConnectSession | null;
+//#region 🔖Store
+export interface StoreSnapshot {
+  readonly model: V1;
+  readonly selection: SelectionSnapshot;
+  readonly connectSession: ConnectSession | null;
   readonly cameras: Readonly<Record<string, { flat: BoardCameraState; volume: VolumeFixtureV1["camera"] }>>;
 }
 
-class TopologyStore {
+export class Store {
   private listeners = new Set<() => void>();
-  private snapshot: TopologyStoreSnapshot;
+  private snapshot: StoreSnapshot;
 
-  constructor(model: TopologyV1) {
+  constructor(model: V1) {
     this.snapshot = {
       model,
       selection: { partIds: [], anchorIds: [] },
@@ -460,7 +461,7 @@ class TopologyStore {
     };
   }
 
-  getSnapshot = (): TopologyStoreSnapshot => this.snapshot;
+  getSnapshot = (): StoreSnapshot => this.snapshot;
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -471,13 +472,13 @@ class TopologyStore {
     for (const l of this.listeners) l();
   }
 
-  private setSnapshot(next: TopologyStoreSnapshot): void {
+  private setSnapshot(next: StoreSnapshot): void {
     this.snapshot = next;
     this.emit();
   }
 
-  /** @emoji 🧬 Topology document from the current store snapshot. */
-  readTopology(): TopologyV1 {
+  /** @emoji 🧬  document from the current store snapshot. */
+  read(): V1 {
     return this.snapshot.model;
   }
 
@@ -513,16 +514,16 @@ class TopologyStore {
     });
   }
 
-  setSelection(selection: TopologySelectionSnapshot): void {
+  setSelection(selection: SelectionSnapshot): void {
     this.setSnapshot({ ...this.snapshot, selection });
   }
 
   /** @emoji 🔗 Sets cross-surface indirect preview state; callers must not use this for proximity snaps. */
-  setConnectSession(session: TopologyConnectSession | null): void {
+  setConnectSession(session: ConnectSession | null): void {
     this.setSnapshot({ ...this.snapshot, connectSession: session });
   }
 
-  applyFlatPartMove(partId: string, x: number, y: number): void {
+  applyNodeMove(partId: string, x: number, y: number): void {
     const parts = this.snapshot.model.parts.map((p) => {
       if (p.id !== partId || !p.flat) return p;
       return { ...p, flat: { ...p.flat, x, y } };
@@ -538,17 +539,17 @@ class TopologyStore {
     this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
 
-  applyBond(source: string, target: string, bondKind?: string): void {
+  applyTie(source: string, target: string, tieKind?: string): void {
     const id = crypto.randomUUID();
-    const bonds: TopologyBondV1[] = [...this.snapshot.model.bonds, { id, source, target, ...(bondKind ? { bondKind } : {}) }];
+    const ties: TieV1[] = [...this.snapshot.model.ties, { id, source, target, ...(tieKind ? { tieKind } : {}) }];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, bonds },
+      model: { ...this.snapshot.model, ties },
       connectSession: null,
     });
   }
 
-  replaceModel(model: TopologyV1): void {
+  replaceModel(model: V1): void {
     this.setSnapshot({
       ...this.snapshot,
       model,
@@ -557,27 +558,27 @@ class TopologyStore {
   }
 }
 
-export function createTopologyStore(model: TopologyV1): TopologyStore {
-  return new TopologyStore(model);
+export function createStore(model: V1): Store {
+  return new Store(model);
 }
 
-const TopologyStoreContext = reactHostPort.createContext<TopologyStore | null>(null);
+const StoreContext = reactHostPort.createContext<Store | null>(null);
 
-export function TopologyStoreProvider(props: { readonly store: TopologyStore; readonly children: React.ReactNode }): ReactElement {
-  return <TopologyStoreContext.Provider value={props.store}>{props.children}</TopologyStoreContext.Provider>;
+export function StoreProvider(props: { readonly store: Store; readonly children: React.ReactNode }): ReactElement {
+  return <StoreContext.Provider value={props.store}>{props.children}</StoreContext.Provider>;
 }
 
-export function useTopologyStore(): TopologyStore {
-  const store = reactHostPort.useContext(TopologyStoreContext);
-  if (!store) throw new Error("useTopologyStore requires TopologyStoreProvider");
+export function useStore(): Store {
+  const store = reactHostPort.useContext(StoreContext);
+  if (!store) throw new Error("useStore requires StoreProvider");
   return store;
 }
 
-export function useTopologySnapshot(): TopologyStoreSnapshot {
-  const store = useTopologyStore();
+export function useSnapshot(): StoreSnapshot {
+  const store = useStore();
   return reactHostPort.useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
-//#endregion 🔖TopologyStore
+//#endregion 🔖Store
 
 //#region 🔖FiveD
 export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
@@ -597,9 +598,9 @@ export const FIVE_D_VOLUME_CHROME_DEFAULTS: Pick<VolumeViewProps, "showLodGrid" 
   gridSnapEnabled: true,
 };
 
-/** @emoji 🖼️ Single topology editor (`2d` = @puzzle/2d board, `3d` = @puzzle/3d); pair via {@link TopologyStoreProvider}. */
+/** @emoji 🖼️ Single topology editor (`2d` = @puzzle/2d board, `3d` = @puzzle/3d); pair via {@link StoreProvider}. */
 export interface FiveDProps {
-  readonly mode: TopologyPresentationMode;
+  readonly mode: PresentationMode;
   readonly instanceId: string;
   readonly className?: string;
   readonly lockedPartIds?: ReadonlySet<string>;
@@ -610,7 +611,7 @@ export interface FiveDProps {
   readonly volume?: Omit<VolumeViewProps, "children">;
 }
 
-function fiveDLinkSessionFromStore(session: TopologyConnectSession | null): BoardLinkSessionSnapshot | null {
+function fiveDLinkSessionFromStore(session: ConnectSession | null): BoardLinkSessionSnapshot | null {
   if (!session) return null;
   return {
     source: session.sourceAnchor,
@@ -622,7 +623,7 @@ function fiveDLinkSessionFromStore(session: TopologyConnectSession | null): Boar
   };
 }
 
-function fiveDAttractionSessionFromStore(session: TopologyConnectSession | null): AttractionSessionSnapshot | null {
+function fiveDAttractionSessionFromStore(session: ConnectSession | null): AttractionSessionSnapshot | null {
   if (!session) return null;
   return {
     attracting: session.sourceAnchor,
@@ -692,8 +693,8 @@ function topologyFlatMarkersFromFixture(props: { readonly fixture: BoardFixtureV
 }
 
 const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
-  const store = useTopologyStore();
-  const snap = useTopologySnapshot();
+  const store = useStore();
+  const snap = useSnapshot();
   const flatFixture = reactHostPort.useMemo(() => projectFlat(snap.model), [snap.model]);
   const locked = props.lockedPartIds ?? new Set<string>();
   const selectedIds = reactHostPort.useMemo(() => new Set([...snap.selection.partIds, ...snap.selection.anchorIds]), [snap.selection]);
@@ -713,15 +714,15 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
         linkSession={linkSession}
         onCamera={(c) => store.setFlatCamera(props.instanceId, c)}
         onConnect={(p) => {
-          store.applyBond(p.source, p.target);
+          store.applyTie(p.source, p.target);
           onConnectHost?.(p);
         }}
         onDrag={(p) => {
-          store.applyFlatPartMove(p.id, p.x, p.y);
+          store.applyNodeMove(p.id, p.x, p.y);
           onDragHost?.(p);
         }}
         onIndirectConnect={(p) => {
-          store.applyBond(p.source, p.target);
+          store.applyTie(p.source, p.target);
           onIndirectConnectHost?.(p);
         }}
         onLinkCompatibleNodes={(p) => {
@@ -759,7 +760,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
           });
         }}
         onProximityConnect={(p) => {
-          store.applyBond(p.source, p.target);
+          store.applyTie(p.source, p.target);
           onProximityConnectHost?.(p);
         }}
         onSelect={(s) => {
@@ -775,8 +776,8 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
 });
 
 const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: FiveDProps) {
-  const store = useTopologyStore();
-  const snap = useTopologySnapshot();
+  const store = useStore();
+  const snap = useSnapshot();
   const volumeFixture = reactHostPort.useMemo(() => projectVolume(snap.model), [snap.model]);
   const volumeExtra = props.volume ?? {};
   const {
@@ -854,12 +855,12 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
         onAttractionTargetRingHost?.(p);
       }}
       onIndirectConnect={(p) => {
-        store.applyBond(p.attracting, p.attracted);
+        store.applyTie(p.attracting, p.attracted);
         onIndirectConnectHost?.(p);
         onConnect?.(p);
       }}
       onProximityConnect={(p) => {
-        store.applyBond(p.attracting, p.attracted);
+        store.applyTie(p.attracting, p.attracted);
         onProximityConnectHost?.(p);
       }}
       onSelect={(s: VolumeSelectionSnapshot) => {
@@ -869,13 +870,13 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
       {...volumeRest}
     >
       <VolumeParts selectedObjectId={selectedObjectId} relocate={props.relocateMode ?? "translate"} />
-      <VolumeBonds />
+      <VolumeTies />
     </VolumeView>
   );
 });
 
 const FiveDVolume = reactHostPort.memo(function FiveDVolume(props: FiveDProps) {
-  const snap = useTopologySnapshot();
+  const snap = useSnapshot();
   const volumeFixture = reactHostPort.useMemo(() => projectVolume(snap.model), [snap.model]);
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="3d" data-five-d-instance={props.instanceId}>
@@ -888,7 +889,7 @@ const FiveDVolume = reactHostPort.memo(function FiveDVolume(props: FiveDProps) {
   );
 });
 
-/** @emoji 🖼️ Single topology editor surface (`2d` board WASM or `3d` R3F); share state via {@link TopologyStoreProvider}. */
+/** @emoji 🖼️ Single topology editor surface (`2d` board WASM or `3d` R3F); share state via {@link StoreProvider}. */
 export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
   if (props.mode === "2d") return <FiveDFlat {...props} />;
   return <FiveDVolume {...props} />;
@@ -896,18 +897,18 @@ export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
 //#endregion 🔖FiveD
 
 //#region 🔖KindMeta
-function isTopologyMetaRecord(value: unknown): value is Record<string, unknown> {
+function isMetaRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 /** @emoji 📚 Reads `kindCompatibility` rows from fixture meta. */
 export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unknown> | undefined): BoardKindCompatEntry[] {
-  if (!isTopologyMetaRecord(meta)) return [];
+  if (!isMetaRecord(meta)) return [];
   const arr = meta.kindCompatibility;
   if (!Array.isArray(arr)) return [];
   const out: BoardKindCompatEntry[] = [];
   for (const entry of arr) {
-    if (!isTopologyMetaRecord(entry)) continue;
+    if (!isMetaRecord(entry)) continue;
     const source = typeof entry.source === "string" ? entry.source.trim() : "";
     const target = typeof entry.target === "string" ? entry.target.trim() : "";
     if (!source || !target) continue;
@@ -927,7 +928,7 @@ export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unkno
 }
 
 export function topologyKindCatalogBundleFromVolumeFixtureMeta(meta: Record<string, unknown> | undefined): VolumeKindCatalogBundle | undefined {
-  if (!isTopologyMetaRecord(meta)) return undefined;
+  if (!isMetaRecord(meta)) return undefined;
   const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object" || Array.isArray(kc)) return undefined;
   return kc as VolumeKindCatalogBundle;
@@ -1001,19 +1002,19 @@ export function kitFlatHandleAngle(side: KitFlatHandleSide, shape: "circle" | "r
 }
 
 /** @emoji ┬¡ãÆ├┤├¼ Node center from top-left layout position and frame size. */
-export function flatPartCenterFromTopLeft(position: { readonly x: number; readonly y: number }, frame: { readonly width: number; readonly height: number }): { x: number; y: number } {
+export function nodeCenterFromTopLeft(position: { readonly x: number; readonly y: number }, frame: { readonly width: number; readonly height: number }): { x: number; y: number } {
   return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
 }
 
 /** @emoji ┬¡ãÆ├▓┬®┬┤┬®├à Diagram force-slider weights shared by sketchpad kit/design hosts. */
-export interface TopologyDiagramForceWeights {
+export interface DiagramForceWeights {
   readonly centerStrength: number;
   readonly linkDistance: number;
   readonly chargeStrength: number;
 }
 
 /** @emoji ┬¡ãÆ├▓┬®┬┤┬®├à Maps diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
-export function flatDiagramForceGraphOptions(weights: TopologyDiagramForceWeights): BoardForceGraphLayoutOptions {
+export function puzzle2dForceGraphOptions(weights: DiagramForceWeights): BoardForceGraphLayoutOptions {
   return {
     centerX: 0,
     centerY: 0,
@@ -1058,7 +1059,7 @@ export function volumeChromeDefaults(): typeof FIVE_D_VOLUME_CHROME_DEFAULTS {
 }
 
 //#region 🔖BoardMarkers
-export interface TopologyFlatWireRecord {
+export interface FlatWireRecord {
   readonly id: string;
   readonly source: string;
   readonly target?: string;
@@ -1074,7 +1075,7 @@ export function flatMarkersFromFixture(props: {
   readonly lockedIds: ReadonlySet<string>;
   readonly selectedIds: ReadonlySet<string>;
   readonly contextMenuById: (id: string | null) => ContextMenuItem[];
-  readonly wires: readonly TopologyFlatWireRecord[];
+  readonly wires: readonly FlatWireRecord[];
 }): ReactElement {
   const { contextMenuById, fixture, lockedIds, selectedIds, wires } = props;
   return (
@@ -1174,8 +1175,7 @@ export function flatMarkersFromFixture(props: {
 }
 //#endregion 🔖BoardMarkers
 
-export { parseBoardFixtureV1, parseFixtureV1, blockedVortexFullIdsFromAttractions };
-export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR };
+export { DEFAULT_BOARD_GRID_FACTOR, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, blockedVortexFullIdsFromAttractions, parseBoardFixtureV1, parseFixtureV1 };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1187,15 +1187,15 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("parseTopologyV1", () => {
+  describe("parseV1", () => {
     it("accepts unified topology", () => {
-      const t = parseTopologyV1({
+      const t = parseV1({
         schema: "puzzle.5d.topology/v1",
         domain: "architecture",
         flatCamera: { x: 0, y: 0, zoom: 1 },
         volumeCamera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         parts: [],
-        bonds: [],
+        ties: [],
         label: "x",
       });
       expect(t?.schema).toBe("puzzle.5d.topology/v1");
@@ -1299,9 +1299,9 @@ if (import.meta.vitest) {
       expect(kitFlatHandleAngle("right", "rectangle")).toBeCloseTo(Math.PI / 2);
     });
   });
-  describe("flatPartCenterFromTopLeft", () => {
+  describe("nodeCenterFromTopLeft", () => {
     it("offsets by half frame", () => {
-      expect(flatPartCenterFromTopLeft({ x: 10, y: 20 }, { width: 40, height: 60 })).toEqual({ x: 30, y: 50 });
+      expect(nodeCenterFromTopLeft({ x: 10, y: 20 }, { width: 40, height: 60 })).toEqual({ x: 30, y: 50 });
     });
   });
   describe("flatApplyFixtureCentersToTopLeft", () => {
@@ -1316,9 +1316,9 @@ if (import.meta.vitest) {
       expect(next[0]?.position).toEqual({ x: 30, y: 20 });
     });
   });
-  describe("flatDiagramForceGraphOptions", () => {
+  describe("puzzle2dForceGraphOptions", () => {
     it("maps charge strength to repulsion", () => {
-      const o = flatDiagramForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
+      const o = puzzle2dForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
       expect(o.repulsionStrength).toBe(400);
       expect(o.idealEdgeLength).toBe(120);
     });

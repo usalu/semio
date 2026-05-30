@@ -122,7 +122,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
 import { BoardCanvas, parseBoardFixtureV1, type BoardSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1 } from "@puzzle/3d/react";
-import { FiveD, TopologyStoreProvider, createTopologyStore, topologyCompose } from "@puzzle/5d/react";
+import { FiveD, StoreProvider, createStore, topologyCompose } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -1525,9 +1525,9 @@ const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node })
 function usePlatformTopologyStore(
 	controller: Controller | undefined,
 	instanceId: string,
-): ReturnType<typeof createTopologyStore> | null {
+): ReturnType<typeof createStore> | null {
 	const payload = useControllerStore<PlatformTopologyPayload>(controller, platformTopologyStoreId(instanceId));
-	const [topologyStore, setTopologyStore] = React.useState<ReturnType<typeof createTopologyStore> | null>(null);
+	const [topologyStore, setTopologyStore] = React.useState<ReturnType<typeof createStore> | null>(null);
 	React.useEffect(() => {
 		if (!payload) {
 			setTopologyStore(null);
@@ -1539,7 +1539,7 @@ function usePlatformTopologyStore(
 				previous.replaceModel(model);
 				return previous;
 			}
-			return createTopologyStore(model);
+			return createStore(model);
 		});
 	}, [payload]);
 	return topologyStore;
@@ -1590,9 +1590,9 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			data-surface-id={node.surfaceId}
 			data-testid={`platform-five-d-${instanceId}`}
 		>
-			<TopologyStoreProvider store={topologyStore}>
+			<StoreProvider store={topologyStore}>
 				<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={instanceId} flat={flatSelect} />
-			</TopologyStoreProvider>
+			</StoreProvider>
 		</div>
 	);
 };

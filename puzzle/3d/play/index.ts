@@ -33,10 +33,10 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
-  applyRelocateToPuzzle3dFixture,
+  applyRelocateToFixture,
   fixturePoseFingerprint,
   fixtureStateFingerprint,
-  formatPuzzle3dLod,
+  formatLod,
   lodFromSliderValue,
   parseFixtureV1,
   parseVortexFullId,
@@ -628,7 +628,7 @@ export class Puzzle3dPlayShellController extends Controller {
     if (!this.fixture) {
       return;
     }
-    const next = applyRelocateToPuzzle3dFixture(this.fixture, payload, attractingByObjectId);
+    const next = applyRelocateToFixture(this.fixture, payload, attractingByObjectId);
     if (next === this.fixture) {
       return;
     }
@@ -667,7 +667,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "slider",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-lod`,
-        label: formatPuzzle3dLod(this.lodTag),
+        label: formatLod(this.lodTag),
         value: this.lodSlider,
         min: PUZZLE_3D_LOD_SLIDER_MIN,
         max: PUZZLE_3D_LOD_SLIDER_MAX,

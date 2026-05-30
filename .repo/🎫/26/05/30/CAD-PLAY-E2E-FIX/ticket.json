@@ -1,0 +1,10 @@
+{
+  "title": "Cad Play E2E Fix",
+  "emoji": "🎮",
+  "status": "open",
+  "description": "Fix CAD play not running: resolve puzzle/3d/react export mismatches blocking Vite build.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪0fe475e14b2849feac0bdebb06acbb56"
+  ]
+}

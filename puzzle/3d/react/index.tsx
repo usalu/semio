@@ -4881,7 +4881,7 @@ if (import.meta.vitest) {
   });
   describe("cameraStateNearEqual", () => {
     it("detects position and zoom deltas", async () => {
-      const { cameraStateNearEqual, updateCameraInFixture } = await import("../play/index.ts");
+      const { cameraStateNearEqual, updatePuzzle3dCameraInFixture } = await import("../play/index.ts");
       const base = {
         position: [1, 2, 3] as const,
         target: [0, 0, 0] as const,
@@ -4896,9 +4896,9 @@ if (import.meta.vitest) {
         objects: [],
         attractions: [],
       };
-      const moved = updateCameraInFixture(fixture, { position: [2, 2, 3] });
+      const moved = updatePuzzle3dCameraInFixture(fixture, { position: [2, 2, 3] });
       expect(moved).not.toBe(fixture);
-      const same = updateCameraInFixture(fixture, { position: [1.0001, 2, 3] });
+      const same = updatePuzzle3dCameraInFixture(fixture, { position: [1.0001, 2, 3] });
       expect(same).toBe(fixture);
     });
   });
@@ -4953,9 +4953,9 @@ if (import.meta.vitest) {
   });
   describe("objectMatchesSelection", () => {
     it("matches object id and parent of selected vortex", () => {
-      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [] })).toBe(true);
-      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"] })).toBe(true);
-      expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"] })).toBe(false);
+      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe(true);
+      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(true);
+      expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
     });
   });
   describe("createSelectionSnapshotStore", () => {
@@ -4965,10 +4965,10 @@ if (import.meta.vitest) {
       const unsubscribe = store.subscribe(() => {
         count += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(count).toBe(1);
       expect(store.getSnapshot().objectIds).toEqual(["a"]);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(count).toBe(1);
       unsubscribe();
     });

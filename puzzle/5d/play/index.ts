@@ -32,7 +32,7 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
-  formatPuzzle3dLod,
+  formatLod,
   lodFromSliderValue,
   parseFixtureV1,
   puzzle3dLodCanvasProps,
@@ -40,7 +40,7 @@ import {
   type FixtureV1 as VolumeFixtureV1,
   type RelocateMode as VolumeRelocateMode,
 } from "../../3d/react/index.tsx";
-import { createTopologyStore, parseTopologyV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type TopologyStore, type TopologyStoreSnapshot, type TopologyV1 } from "../react/index.tsx";
+import { createStore, parseV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type Store as TopologyStore, type StoreSnapshot as TopologyStoreSnapshot, type V1 as TopologyV1 } from "../react/index.tsx";
 import { NakaginCapsuleTowerTopologyJson as nakaginTopologyJson } from "@puzzle/assets";
 
 //#region 🔖Ids
@@ -138,7 +138,7 @@ export interface TopologyPlaySnapshot {
 }
 
 function loadNakaginTopologyModel(): TopologyV1 {
-  const model = parseTopologyV1(nakaginTopologyJson as unknown);
+  const model = parseV1(nakaginTopologyJson as unknown);
   if (!model) throw new Error("nakagin-capsule-tower.topology.json must use schema puzzle.5d.topology/v1");
   return model;
 }
@@ -167,13 +167,13 @@ export class TopologyStoreBridge extends Store<TopologyStoreSnapshot> {
 /** @emoji 🎛 Topology play shell controller shared by declarative board and volume windows. */
 export class TopologyPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Topology", undefined);
-  readonly topologyStore: TopologyStore = createTopologyStore(loadNakaginTopologyModel());
+  readonly topologyStore: TopologyStore = createStore(loadNakaginTopologyModel());
   readonly topologyStoreBridge: TopologyStoreBridge;
   private relocateMode: VolumeRelocateMode = "translate";
   private boardSelected: ReadonlySet<string> = new Set();
   private volumeSelected: string | null = null;
-  private boardCamera: CameraState | null = { ...this.topologyStore.readTopology().flatCamera };
-  private volumeCamera: CameraState | null = { ...this.topologyStore.readTopology().volumeCamera };
+  private boardCamera: CameraState | null = { ...this.topologyStore.read().flatCamera };
+  private volumeCamera: CameraState | null = { ...this.topologyStore.read().volumeCamera };
   private volumeLodTag = DEFAULT_MANUAL_LOD;
   private volumeAutomaticLod = true;
   private volumeDepthVariableLod = false;
@@ -240,7 +240,7 @@ export class TopologyPlayShellController extends Controller {
       {
         kind: "slider",
         id: `${PUZZLE_5D_PLAY_VOLUME_WINDOW_ID}-lod`,
-        label: formatPuzzle3dLod(this.volumeLodTag),
+        label: formatLod(this.volumeLodTag),
         value: this.volumeLodSlider,
         min: PUZZLE_3D_LOD_SLIDER_MIN,
         max: PUZZLE_3D_LOD_SLIDER_MAX,
@@ -353,7 +353,7 @@ export class TopologyPlayShellController extends Controller {
   }
 
   getSnapshot(): TopologyPlaySnapshot {
-    const model = this.topologyStore.readTopology();
+    const model = this.topologyStore.read();
     const boardFixture = projectFlat(model);
     const volumeFixture = projectVolume(model);
     return {
@@ -471,7 +471,7 @@ if (import.meta.vitest) {
       expect(s?.objects.length).toBeGreaterThan(0);
     });
     it("parses nakagin unified topology v1", () => {
-      const model = parseTopologyV1(nakaginTopologyJson as unknown);
+      const model = parseV1(nakaginTopologyJson as unknown);
       expect(model?.schema).toBe("puzzle.5d.topology/v1");
       expect(model?.parts.length).toBeGreaterThan(0);
     });

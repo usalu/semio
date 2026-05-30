@@ -996,7 +996,7 @@ export const mountReactApp = mountPlaygroundApp;
 // #region 🔌Adapters
 import { sceneHostPort } from "@ui/react";
 import { NakaginCapsuleTowerSceneJson as nakaginPuzzle3dFixtureJson } from "@puzzle/assets";
-import { Puzzle3dPlayCanvas, Puzzle3dObjectStateProvider, parseFixtureV1, applyConnectToPuzzle3dFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
+import { PlayCanvas, ObjectStateProvider, parseFixtureV1, applyConnectToFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,
   PUZZLE_3D_PLAY_CONTROLLER_ID,
@@ -1055,16 +1055,16 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
-      <Puzzle3dObjectStateProvider
+      <ObjectStateProvider
         fixture={snap.fixture}
         fixtureRevision={snap.fixtureRevision}
         onConnect={(payload) => {
-          patchFixture((fixture) => applyConnectToPuzzle3dFixture(fixture, payload));
+          patchFixture((fixture) => applyConnectToFixture(fixture, payload));
           bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteConnect");
         }}
         onRelocate={onRelocatePersist}
       >
-        <Puzzle3dPlayCanvas
+        <PlayCanvas
           fixture={snap.fixture}
           proximityRelocateEnabled={proximityRelocateEnabled}
           kindCatalogs={kindCatalogs}
@@ -1092,7 +1092,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
         />
-      </Puzzle3dObjectStateProvider>
+      </ObjectStateProvider>
     </div>
   );
 }
@@ -1133,7 +1133,7 @@ export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void 
 
 //#region 🔖Puzzle5dPlayHost
 // #region 🔌Adapters
-import { FiveD, TopologyStoreProvider } from "@puzzle/5d/react";
+import { FiveD, StoreProvider } from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground/core";
 import {
   PUZZLE_5D_PLAY_APP_ID,
@@ -1331,7 +1331,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: Platform }): React.
   }
   const topologyBridge = controller.getStore(TOPOLOGY_PLAY_STORE_ID) as TopologyStoreBridge | undefined;
   const topologyStore = topologyBridge?.inner ?? controller.topologyStore;
-  return <TopologyStoreProvider store={topologyStore}>{shell}</TopologyStoreProvider>;
+  return <StoreProvider store={topologyStore}>{shell}</StoreProvider>;
 }
 
 /** @emoji 🚀 Mounts topology play chrome for a {@link Playground}. */
