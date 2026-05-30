@@ -676,6 +676,25 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev📽️projektetage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @mit-bestand/praesentation/projektetage:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PRAESENTATION_PROJEKTETAGE_PORT": "6050"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 190
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6050)",
+        "uriFormat": "%s"
+      }
+    },
     // #endregion
     // #region 📦 Build
     {
@@ -797,6 +816,17 @@
       "presentation": {
         "group": "4_build",
         "order": 110
+      }
+    },
+    {
+      "name": "📦build📽️projektetage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @mit-bestand/praesentation/projektetage:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 120
       }
     },
     // #endregion

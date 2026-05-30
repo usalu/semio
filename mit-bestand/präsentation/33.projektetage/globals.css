@@ -1,0 +1,47 @@
+@import "../../../ui/react/globals.css";
+@source "../../../ui/react";
+@source ".";
+
+:root {
+	--r-background-color: var(--color-dark);
+	--r-main-font: var(--font-sans);
+	--r-main-font-size: 36px;
+	--r-main-color: var(--color-light);
+	--r-heading-font: var(--font-sans);
+	--r-heading-color: var(--color-light);
+	--r-heading-text-transform: none;
+	--r-heading-letter-spacing: normal;
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-secondary);
+	--r-selection-background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+	--r-heading1-size: 2.4em;
+	--r-heading2-size: 1.6em;
+	--r-heading3-size: 1.2em;
+}
+
+.reveal {
+	font-family: var(--font-sans);
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+	font-family: var(--font-sans);
+	font-weight: 400;
+}
+
+.reveal a {
+	color: var(--color-primary);
+}
+
+.reveal .slides section {
+	text-align: left;
+}
+
+.reveal .slides {
+	text-align: left;
+}
+
+.reveal .progress span {
+	background: var(--color-primary);
+}

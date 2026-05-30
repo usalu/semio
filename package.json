@@ -36,7 +36,8 @@
     "semio/client/ui/gh/*",
     "semio/dev/*",
     "semio/server/*",
-    "semio/site/*"
+    "semio/site/*",
+    "mit-bestand/präsentation/*"
   ],
   "engines": {
     "bun": ">=1.2.0"

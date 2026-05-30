@@ -9,20 +9,17 @@ import { cpSync, createReadStream, existsSync, mkdirSync, statSync } from "node:
 import { isAbsolute, relative, resolve } from "node:path";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
+import {
+	PLAYGROUND_SITE_DEV_PORTS,
+	PLAYGROUND_SITE_HOSTS,
+	playgroundEmbedUrl,
+	type PlaygroundSiteKind,
+} from "./playground-embed-url.ts";
 // #endregion 🔌Adapters
 
+export { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind };
+
 //#region 🔖ViteElementsAssets
-/** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
-export const PLAYGROUND_SITE_HOSTS = {
-	semio: "play.semio-tech.com",
-	cad: "play.cad.semio-tech.com",
-	"2d": "play.2d.semio-tech.com",
-	"3d": "play.3d.semio-tech.com",
-	"5d": "play.5d.semio-tech.com",
-} as const;
-
-export type PlaygroundSiteKind = keyof typeof PLAYGROUND_SITE_HOSTS;
-
 /** @emoji 📦 Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
 export function playgroundStaticSiteBuildOptions(
 	overrides?: UserConfig["build"],

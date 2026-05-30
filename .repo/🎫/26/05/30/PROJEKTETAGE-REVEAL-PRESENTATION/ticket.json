@@ -1,0 +1,7 @@
+{
+  "title": "Projektetage Reveal Presentation",
+  "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
+  "client": "cursor-chat",
+  "llm": "composer-2.5",
+  "goal": "mit-bestand"
+}

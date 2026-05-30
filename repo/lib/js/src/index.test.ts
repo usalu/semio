@@ -17,7 +17,9 @@ import {
   parseTsImportSpecs,
 } from "./dependency-boundary.ts";
 import {
+  PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
+  playgroundEmbedUrl,
   playgroundStaticSiteBuildOptions,
 } from "../../../../ui/styling/vite-elements-assets.ts";
 
@@ -137,6 +139,13 @@ describe("playground static sites", () => {
     expect(PLAYGROUND_SITE_HOSTS["2d"]).toBe("play.2d.semio-tech.com");
     expect(PLAYGROUND_SITE_HOSTS["3d"]).toBe("play.3d.semio-tech.com");
     expect(PLAYGROUND_SITE_HOSTS["5d"]).toBe("play.5d.semio-tech.com");
+  });
+
+  test("playgroundEmbedUrl uses localhost in dev and public host in production", () => {
+    expect(playgroundEmbedUrl("cad", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS.cad}`);
+    expect(playgroundEmbedUrl("2d", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS["2d"]}`);
+    expect(playgroundEmbedUrl("cad", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS.cad}`);
+    expect(playgroundEmbedUrl("5d", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS["5d"]}`);
   });
 
   test("playgroundStaticSiteBuildOptions uses relative-base dist output", () => {
