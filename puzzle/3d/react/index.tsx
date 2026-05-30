@@ -2597,6 +2597,7 @@ function HoverInvalidateBridge(): null {
   const { hoverTarget } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
+    (window as unknown as { __p3dHoverTarget?: unknown }).__p3dHoverTarget = hoverTarget;
     invalidate();
   }, [hoverTarget, invalidate]);
   return null;
@@ -2767,9 +2768,10 @@ function VortexScreenPick(): null {
 
     const onPointerMove = (e: PointerEvent) => {
       const st = stateRef.current;
+      const rect = dom.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
       const hit = pickAt(e.clientX, e.clientY);
       if (hit) {
-        st.clearHoverAll();
         st.setHover({ kind: "vortex", fullId: hit.fullId });
         st.invalidate();
       }
@@ -2782,16 +2784,15 @@ function VortexScreenPick(): null {
       if (!hit) return;
       e.stopImmediatePropagation();
       e.preventDefault();
-      (window as unknown as { __p3dLastVortexPick?: string }).__p3dLastVortexPick = hit.fullId;
       st.commitSelection({ kind: "vortex", fullId: hit.fullId });
       st.setActiveRelocateObjectId(hit.objectId);
       st.invalidate();
     };
 
-    dom.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointermove", onPointerMove);
     dom.addEventListener("click", onClickCapture, true);
     return () => {
-      dom.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointermove", onPointerMove);
       dom.removeEventListener("click", onClickCapture, true);
     };
   }, [gl]);
@@ -3456,10 +3457,11 @@ function VortexFallbackMesh(props: {
   fullId: string;
   radius: number;
   highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing";
+  hovered?: boolean;
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: (e: ThreeEvent<PointerEvent>) => void;
 }) {
-  const style = vortexHighlightMeshStyle(props.highlight);
+  const style = props.highlight === "none" && props.hovered ? "hovered" : vortexHighlightMeshStyle(props.highlight);
   const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
   return (
@@ -3667,7 +3669,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
           {props.children}
         </group>
       ) : drawVortexBody ? (
-        <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} {...vortexPointerHoverHandlers} />
+        <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} hovered={vortexPointerHovered} {...vortexPointerHoverHandlers} />
       ) : null}
       {pickProxy ? (
         <mesh userData={{ puzzle3dVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>

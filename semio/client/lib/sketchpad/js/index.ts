@@ -121,9 +121,10 @@ export async function importKit(
 	const store = stores[0]!;
 	const installed = await store.installProjection(payload);
 	if (!installed.ok) throw new Error(`semio/sketchpad: importKit installProjection failed: ${installed.error?.message ?? "unknown"}`);
-	const kitRaw = await store.wip().theKit().kit();
-	const portCompatSource = bundleKit ?? kitRaw;
-	const kit = sketchpadApplyPortCompatById(kitRaw, sketchpadExtractPortCompatById(portCompatSource));
+	const kitDto = await sketchpadKitDtoFromJsStore(store);
+	const portCompatSource = (bundleKit ?? kitDto) as Kit;
+	const compat = sketchpadMergePortCompatMaps(sketchpadExtractPortCompatById(portCompatSource), sketchpadExtractPortCompatById(kitDto));
+	const kit = sketchpadApplyPortCompatById(kitDto, compat);
 	return { kit, session, portCompatSource };
 }
 
@@ -440,6 +441,9 @@ export async function openSketchpadKitFromImport(
 }
 
 const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/assets/semio/metabolism/wip/initialKit/kit.semio.json";
+
+/** @emoji 🧪 Dev-only Nakagin-filtered kit URL (served from `/fixtures/` in sketchpad Vite). */
+export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
 
 /** @emoji 🧪 Loads the metabolism fixture when no kits are open (dev browser only). */
 export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
@@ -2524,6 +2528,7 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 						sketchpadPanelCommandButton("Import kit archive…", "importKitFromFile"),
 						sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
 						sketchpadPanelCommandButton("Open metabolism fixture", "importFixtureKit"),
+						sketchpadPanelCommandButton("Open Nakagin filtered fixture", "importNakaginFilteredKit"),
 						{ type: "text", value: "Drag a .zip onto Home or use the command palette." },
 					],
 				},
@@ -3031,6 +3036,12 @@ export class SketchpadShellController extends Controller {
 				});
 				break;
 			}
+			case "importNakaginFilteredKit": {
+				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL, { kind: "fixture", navigate: true }).catch((error) => {
+					console.warn("[semio.sketchpad] importNakaginFilteredKit failed:", error);
+				});
+				break;
+			}
 			case "importKitFromFile": {
 				sketchpadPromptHomeKitArchiveFile();
 				break;
@@ -3111,6 +3122,7 @@ function sketchpadShellCommand(
 function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 	return [
 		sketchpadShellCommand("semio.sketchpad.home.openFixture", "Open metabolism fixture", "importFixtureKit"),
+		sketchpadShellCommand("semio.sketchpad.home.openNakaginFiltered", "Open Nakagin filtered fixture", "importNakaginFilteredKit"),
 		sketchpadShellCommand("semio.sketchpad.home.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
 		sketchpadShellCommand("semio.sketchpad.home.importFile", "Import kit from file", "importKitFromFile"),
 		sketchpadShellCommand("semio.sketchpad.home.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
@@ -3505,6 +3517,7 @@ if (import.meta.vitest) {
 			const { kit, session } = await importKit(new TextEncoder().encode(payload));
 			try {
 				expect(kit.name).toBe("Import Test");
+				expect(Array.isArray(kit.types)).toBe(true);
 				expect(sketchpadExtractPortCompatById(kit).size).toBe(2);
 				const fixture = sketchpadKitPuzzle2dFixtureFromKit(kit);
 				expect(fixture.edges.some((edge) => edge.id === "compat-type:t1-type:t2")).toBe(true);

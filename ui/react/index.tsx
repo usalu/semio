@@ -11351,6 +11351,36 @@ export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-
 /** @emoji 📏 Maximize cap on the right of the gap when multi-tab chrome uses a split column layout. */
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
+/** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
+export const windowMeasuresRailWidthClass = "w-[min(10rem,calc(100%-0.5rem))]";
+
+/** @emoji 📐 Outer overlay for floating window measures along the right edge. */
+export const windowMeasuresOverlayClass =
+  "pointer-events-none absolute inset-y-0 right-0 z-panel flex flex-col items-stretch p-single";
+
+/** @emoji 📐 Scrollable stack of measure tiles inside the rail. */
+export const windowMeasuresStackClass =
+  "pointer-events-auto flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
+
+/** @emoji 📐 Single measure tile in the window rail. */
+export const windowMeasureTileClass =
+  "border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
+
+/** @emoji 📐 Optional measure caption above a control. */
+export const windowMeasureLabelClass =
+  "text-muted-foreground mb-half block min-w-0 truncate text-[10px] font-medium leading-none";
+
+/** @emoji 📐 Measure section title without a heavy chrome box. */
+export const windowMeasureSectionClass =
+  "text-muted-foreground w-full truncate px-single py-tiny text-center text-[10px] font-medium uppercase tracking-wide";
+
+/** @emoji 📐 Constrains measure controls to the rail width. */
+export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
+
+/** @emoji 📐 Toggle sized to fit inside a measure tile. */
+export const windowMeasureToggleClass =
+  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
+
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
 	switch (level) {
@@ -20114,14 +20144,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
-            <div
-              data-slot="window-measures-overlay"
-              className="pointer-events-none absolute top-0 right-0 bottom-0 left-auto z-panel flex w-max max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end justify-start gap-half overflow-hidden p-single"
-            >
-              <div
-                data-slot="window-measures-stack"
-                className="pointer-events-auto flex max-h-full max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end gap-half overflow-y-auto overscroll-contain"
-              >
+            <div data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
+              <div data-slot="window-measures-stack" className={windowMeasuresStackClass}>
                 {measures}
               </div>
             </div>
@@ -24007,6 +24031,18 @@ if (import.meta.vitest) {
       );
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
+    });
+
+    it("Window measures overlay uses a fixed right rail without clipping overflow", () => {
+      const { container } = render(
+        <Window id="measures-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]');
+      expect(overlay?.className).toContain("min(10rem");
+      expect(overlay?.className).not.toContain("overflow-hidden");
+      expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

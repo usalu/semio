@@ -407,6 +407,17 @@
       }
     },
     {
+      "name": "🛠️dev👤semio🧪fixtures🔄metabolism-light",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/fixtures:regenerate-metabolism-light",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69.9
+      }
+    },
+    {
       "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",

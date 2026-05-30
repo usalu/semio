@@ -187,6 +187,11 @@ import {
 	Expertise,
 	useElementsSurfaceChrome,
 	reactHostPort,
+	windowMeasureControlClass,
+	windowMeasureLabelClass,
+	windowMeasureSectionClass,
+	windowMeasureTileClass,
+	windowMeasureToggleClass,
 } from "@ui/react";
 // #endregion 🔌Adapters
 
@@ -543,13 +548,9 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
 // #region 🪟WindowMeasuresOverlay
 
 const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; children: React.ReactNode }> = ({ measureId, label, children }) => (
-  <div
-    data-slot="window-measure-float"
-    data-measure-id={measureId}
-    className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm"
-  >
-    {label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
-    <div className="min-w-0 w-full">{children}</div>
+  <div data-slot="window-measure-float" data-measure-id={measureId} className={windowMeasureTileClass}>
+    {label ? <span className={windowMeasureLabelClass}>{label}</span> : null}
+    <div className={windowMeasureControlClass}>{children}</div>
   </div>
 );
 
@@ -557,7 +558,7 @@ const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; childr
  * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
  **/
 export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
-  <div data-slot="window-measures-stack-inner" className="flex flex-col items-end gap-half">
+  <div data-slot="window-measures-stack-inner" className="flex w-full min-w-0 flex-col gap-half">
     {measures.map((measure) => {
       switch (measure.kind) {
         case "display":
@@ -574,27 +575,31 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
           );
         case "section":
           return (
-            <div
-              key={measure.id}
-              data-slot="window-measure-heading"
-              className="border-element/60 bg-window/85 max-w-[11rem] rounded-md border px-single py-tiny text-center shadow-sm backdrop-blur-sm"
-            >
-              <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{measure.title}</span>
-            </div>
+            <span key={measure.id} data-slot="window-measure-heading" className={windowMeasureSectionClass}>
+              {measure.title}
+            </span>
           );
         case "separator":
           return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
         case "toggle":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Toggle id={measure.id} pressed={measure.pressed} defaultPressed={measure.defaultPressed} onPressedChange={measure.onPressedChange} icon={measure.icon ?? <CheckIcon className="size-small" />} text={measure.text} />
+              <Toggle
+                id={measure.id}
+                className={windowMeasureToggleClass}
+                pressed={measure.pressed}
+                defaultPressed={measure.defaultPressed}
+                onPressedChange={measure.onPressedChange}
+                icon={measure.icon ?? <CheckIcon className="size-small" />}
+                text={measure.text}
+              />
             </UIWindowMeasureFloat>
           );
         case "select":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
               <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
-                <SelectTrigger id={measure.id} className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
+                <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -610,7 +615,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
         case "combobox":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className="w-full min-w-0 max-w-[9.5rem]" />
+              <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
             </UIWindowMeasureFloat>
           );
         case "button":
@@ -628,13 +633,13 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
         case "input":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} lazy className="h-medium w-full min-w-0 max-w-[9.5rem]" value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
+              <Input id={measure.id} lazy className={cn("h-medium", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
             </UIWindowMeasureFloat>
           );
         case "textarea":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Textarea id={measure.id} lazy className="min-h-[4rem] w-full min-w-0 max-w-[9.5rem]" value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
+              <Textarea id={measure.id} lazy className={cn("min-h-[4rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
             </UIWindowMeasureFloat>
           );
         case "checkbox":
@@ -666,7 +671,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
                     type="button"
                     data-slot="window-measure-radio-item"
                     className={cn(
-                      "border-element/80 hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
+                      "border-element/80 hover:bg-hover-window w-full rounded border px-single py-half text-left text-xs transition-colors",
                       measure.value === item.value && "bg-active-base text-active-foreground",
                     )}
                     onClick={() => measure.onChange?.(item.value)}
@@ -696,7 +701,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
         case "color":
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} type="color" className="h-medium w-full min-w-0 max-w-[9.5rem] cursor-pointer" value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
+              <Input id={measure.id} type="color" className={cn("h-medium cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
             </UIWindowMeasureFloat>
           );
         default: {
@@ -1622,6 +1627,19 @@ function usePlatformTopologyStore(
 	return topologyStore;
 }
 
+/** @emoji 🎯 Maps FiveD flat/volume selection to sketchpad `applyPuzzle2dSelection` command args. */
+export function platformPuzzle5dSelectionToApplyArgs(
+	instanceId: string,
+	presentation: Puzzle5dModel["presentation"],
+	snapshot: Puzzle2dSelectionSnapshot | Puzzle3dSelectionSnapshot,
+): { readonly instanceId: string; readonly puzzle2dIds: readonly string[] } {
+	if (presentation === "flat") {
+		return { instanceId, puzzle2dIds: (snapshot as Puzzle2dSelectionSnapshot).ids };
+	}
+	const volume = snapshot as Puzzle3dSelectionSnapshot;
+	return { instanceId, puzzle2dIds: [...volume.objectIds, ...volume.vortexIds, ...volume.attractionIds] };
+}
+
 const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, commandBus, platform }) => {
 	const model = useStore(component as Puzzle5d);
 	const instanceId = model.instanceId || node.surfaceId;
@@ -1632,10 +1650,11 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "flat"
 				? {
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "applyPuzzle2dSelection", {
-								instanceId,
-								puzzle2dIds: snapshot.ids,
-							});
+							commandBus.dispatch(
+								component.controllerId,
+								"applyPuzzle2dSelection",
+								platformPuzzle5dSelectionToApplyArgs(instanceId, "flat", snapshot),
+							);
 						},
 					}
 				: undefined,
@@ -1646,10 +1665,11 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "volume"
 				? {
 						onSelect: (snapshot: Puzzle3dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "applyPuzzle2dSelection", {
-								instanceId,
-								puzzle2dIds: [...snapshot.objectIds, ...snapshot.vortexIds, ...snapshot.attractionIds],
-							});
+							commandBus.dispatch(
+								component.controllerId,
+								"applyPuzzle2dSelection",
+								platformPuzzle5dSelectionToApplyArgs(instanceId, "volume", snapshot),
+							);
 						},
 					}
 				: undefined,
@@ -2033,6 +2053,23 @@ if (import.meta.vitest) {
 				),
 			);
 			expect(markup).toContain("kit-a");
+		});
+
+		it("maps puzzle5d flat and volume selections to applyPuzzle2dSelection args", () => {
+			expect(platformPuzzle5dSelectionToApplyArgs("inst-1", "flat", { ids: ["a", "b"] })).toEqual({
+				instanceId: "inst-1",
+				puzzle2dIds: ["a", "b"],
+			});
+			expect(
+				platformPuzzle5dSelectionToApplyArgs("inst-2", "volume", {
+					objectIds: ["o1"],
+					vortexIds: ["v1"],
+					attractionIds: ["c1"],
+				}),
+			).toEqual({
+				instanceId: "inst-2",
+				puzzle2dIds: ["o1", "v1", "c1"],
+			});
 		});
 
 		it("renders registerSurfaceBinding hosts with PascalCase dynamic components", () => {
@@ -3198,6 +3235,37 @@ if (import.meta.vitest) {
 		registerSidePanelBody("test.platform.panel.workbench", () => <div data-testid="test-panel.workbench" />);
 		registerSidePanelBody("test.platform.panel.details", () => <div data-testid="test-panel.details" />);
 	}
+
+	describe("UIWindowMeasures", () => {
+		it("renders compact measure tiles that fill the rail width", () => {
+			const markup = renderToStaticMarkup(
+				<UIWindowMeasures
+					measures={[
+						{
+							id: "lod",
+							kind: "select",
+							label: "LOD",
+							value: "automatic",
+							items: [{ id: "automatic", value: "automatic", label: "Auto (LOD 2)" }],
+							onValueChange: () => {},
+						},
+						{
+							id: "auto",
+							kind: "toggle",
+							label: "LOD",
+							text: "Auto zoom",
+							pressed: true,
+							onPressedChange: () => {},
+						},
+					]}
+				/>,
+			);
+			expect(markup).toContain('data-slot="window-measure-float"');
+			expect(markup).toContain('data-slot="window-measures-stack-inner"');
+			expect(markup).toContain("w-full");
+			expect(markup).not.toContain("shadow-md");
+		});
+	});
 
 	describe("PlatformView", () => {
 		it("opens side panels when PlatformSpec initialPanelVisibility is set", () => {
