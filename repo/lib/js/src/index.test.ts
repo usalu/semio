@@ -11,6 +11,7 @@ import {
 import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
+  dependencyBoundaryBreachesForBundleDir,
   dependencyBoundaryBreachesForFile,
   isAdapterBoundaryFile,
   parseTsImportSpecs,
@@ -103,6 +104,13 @@ describe("dependency-boundary", () => {
     );
     expect(breachs.length).toBeGreaterThan(0);
     expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
+  });
+
+  test("dependencyBoundaryBreachesForBundleDir walks nested tsx", () => {
+    const repoRoot = new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+    const dir = "framework/playground/renderer/react/puzzle";
+    const breachs = dependencyBoundaryBreachesForBundleDir(repoRoot, dir);
+    expect(breachs.every((b) => b.scope.startsWith("framework/playground/renderer/react/puzzle"))).toBe(true);
   });
 
   test("allows third-party import inside adapter region", () => {

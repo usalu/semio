@@ -8,4 +8,5 @@ export {
   loadThirdPartyDeps,
   parseTsImportSpecs,
   dependencyBoundaryBreachesForFile,
+  dependencyBoundaryBreachesForBundleDir,
 } from "./index.ts";

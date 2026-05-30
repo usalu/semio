@@ -14133,7 +14133,7 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
 
 const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
 
-/** @emoji ðŸ—ºï¸ Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
+/** @emoji ðŸ—ºï¸ Maps kit diagram layout nodes/edges into an `puzzle.2d.fixture/v1` payload for {@link TopologyBoardPane}. */
 const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], edges: readonly KitDiagramEdge[]): BoardFixtureV1 => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const boardNodes = nodes.map((node) => {
@@ -14195,7 +14195,7 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     })
     .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
   return {
-    schema: "elements.board.fixture/v1",
+    schema: "puzzle.2d.fixture/v1",
     camera: topologyBoardCameraFromCenters(
       nodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
     ),
@@ -34427,7 +34427,7 @@ const sketchpadTopologyBuildBoardFixture = (args: {
     : [];
 
   return {
-    schema: "elements.board.fixture/v1",
+    schema: "puzzle.2d.fixture/v1",
     camera: sketchpadTopologyBoardCameraFromPieces(args.pieces, args.placementByPiece),
     nodes,
     edges,
@@ -34514,7 +34514,7 @@ const sketchpadTopologyBuildSceneFixture = (args: {
       : [];
 
   return {
-    schema: "elements.scene.fixture/v1",
+    schema: "puzzle.3d.fixture/v1",
     domain: DEFAULT_DOMAIN,
     camera: sketchpadTopologySceneCameraFromPieces(args.pieces, args.placementByPiece),
     attractions,

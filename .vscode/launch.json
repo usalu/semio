@@ -601,7 +601,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "dev:cad",
+      "name": "🛠️dev🧭cad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:cad",
@@ -620,7 +620,7 @@
       }
     },
     {
-      "name": "dev:puzzle:2d",
+      "name": "🛠️dev🧩puzzle2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -639,7 +639,7 @@
       }
     },
     {
-      "name": "dev:puzzle:3d",
+      "name": "🛠️dev🧩puzzle3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -658,7 +658,7 @@
       }
     },
     {
-      "name": "dev:puzzle:5d",
+      "name": "🛠️dev🧩puzzle5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",

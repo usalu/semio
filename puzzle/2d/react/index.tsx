@@ -42,13 +42,13 @@ import initBoardWasm, {
 	boardRedrawLayoutFixtureJson,
 	BoardSession,
 	initSync,
-} from "../rs/pkg/elements_board.js";
+} from "../rs/pkg/puzzle_board.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
-	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/elements_board_bg.wasm");
+	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_board_bg.wasm");
 	initSync({ module: readFileSync(wasmPath) });
 } else {
 	await initBoardWasm();
@@ -1595,7 +1595,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 }
 
 /** @emoji 📌 MIME for in-app board fixture drags (not host filesystem file drops). */
-export const BOARD_FIXTURE_DRAG_V1_MIME = "application/x-elements-board-fixture-v1";
+export const BOARD_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v1";
 
 /** @emoji 🧩 `BoardFixtureV1.meta.boardFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
 export const BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
@@ -5278,7 +5278,7 @@ if (boardVitest) {
 		});
 	});
 
-	describe("board force graph layout", () => {
+	describe("puzzle 2d force graph layout", () => {
 		it("spreads linked nodes using wasm+nalgebra layout", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },

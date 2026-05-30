@@ -27,10 +27,10 @@ const wasmScript = join(import.meta.dir, "../rs/script.ts");
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    const wasmJs = join(this.root, "../rs/pkg/elements_board.js");
+    const wasmJs = join(this.root, "../rs/pkg/puzzle_board.js");
     const wasmEnv = {
       ...devToolingEnv(),
-      ELEMENTS_BOARD_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0",
+      PUZZLE_2D_RS_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0",
     };
     runBun([wasmScript, "wasm"], this.root, wasmEnv);
     runVitest(this.root, segments);

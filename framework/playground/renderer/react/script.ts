@@ -1,17 +1,14 @@
 #!/usr/bin/env bun
 /** 🧭 `@framework/playground/renderer/react` task router: `bun ./script.ts test|policy`. */
-import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
+import type { BundleLinter } from "../../../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
-export const policyFile = "index.tsx";
-
-export const policy = defineLint("@framework/playground/renderer/react-index", (l: FileLinter) => {
+export const policy = defineLint("@framework/playground/renderer/react-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
-  const file = l.path();
-  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+  return dependencyBoundaryBreachesForBundleDir(repoRoot, l.root());
 });
 
 class TestScript extends BundleScript {

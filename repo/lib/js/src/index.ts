@@ -5,7 +5,7 @@
 
 //#region 🔌Adapters
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 //#endregion 🔌Adapters
@@ -583,6 +583,28 @@ export function dependencyBoundaryBreachesForFile(
   }
   return breachs;
 }
+
+/** 🔌Aggregates dependency-boundary breaches for every TS/TSX file under a bundle root (repo-relative). */
+export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleRootRel: string): BreachRecord[] {
+  const rootAbs = join(repoRoot, bundleRootRel);
+  if (!existsSync(rootAbs)) return [];
+  const breachs: BreachRecord[] = [];
+  const walk = (dir: string): void => {
+    for (const ent of readdirSync(dir, { withFileTypes: true })) {
+      if (ent.name === "node_modules" || ent.name === "dist" || ent.name === ".repo") continue;
+      const abs = join(dir, ent.name);
+      if (ent.isDirectory()) {
+        walk(abs);
+        continue;
+      }
+      if (!/\.tsx?$/i.test(ent.name)) continue;
+      const rel = relative(repoRoot, abs).replaceAll("\\", "/");
+      breachs.push(...dependencyBoundaryBreachesForFile(repoRoot, rel, readFileSync(abs, "utf8"), rel));
+    }
+  };
+  walk(rootAbs);
+  return breachs;
+}
 //#endregion 🔖dependency-boundary
 
 //#region 🔖policy-runner
@@ -719,11 +741,7 @@ export async function runPolicyExit(scriptPath: string): Promise<void> {
 //#endregion 🔖policy-runner
 
 //#region 🔖runner
-export {
-  type ResolvedLintEntity,
-  resolvePolicyScriptEntity as resolveLintScriptEntity,
-  runPolicyScript as runLintScript,
-};
+export { resolvePolicyScriptEntity as resolveLintScriptEntity, runPolicyScript as runLintScript };
 //#endregion 🔖runner
 
 //#region 🔖policy-cli

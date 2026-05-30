@@ -844,8 +844,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
     ...(extraFooterItems ?? []),
   ].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const workbenchIcon = workbenchTabs[0]?.icon ? React.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />;
-  const detailsIcon = detailsTabs[0]?.icon ? React.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />;
+  const workbenchIcon = workbenchTabs[0]?.icon ? reactHostPort.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />;
+  const detailsIcon = detailsTabs[0]?.icon ? reactHostPort.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />;
 
   const navbarItems: NavbarItem[] = [
     {

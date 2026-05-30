@@ -6,7 +6,7 @@ class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
       rsDir: this.root,
-      skipEnvVar: "ELEMENTS_BOARD_SKIP_WASM_BUILD",
+      skipEnvVar: "PUZZLE_2D_RS_SKIP_WASM_BUILD",
       logPrefix: "puzzle/2d/rs",
       wasmBaseName: "puzzle_board",
       pkg: {
