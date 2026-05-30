@@ -3263,6 +3263,13 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly tessellationTolerance?: number;
 }
 
+/** @emoji 💬 One interaction a window can start from the floating panel while idle. */
+export interface InteractionReplEngagementInteraction {
+  readonly id: string;
+  readonly key: string;
+  readonly label: string;
+}
+
 /** @emoji 💬 Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating panel). */
 export interface InteractionReplEngagementInputs {
   readonly showEngagement: boolean;
@@ -3274,21 +3281,27 @@ export interface InteractionReplEngagementInputs {
   readonly selectionCount: number;
   readonly cmdLine: string;
   readonly transitions: readonly InteractionKeybindRow[];
-  readonly onOption: (row: InteractionKeybindRow) => void;
+  readonly interactions: readonly InteractionReplEngagementInteraction[];
+  readonly onTransition: (row: InteractionKeybindRow) => void;
+  readonly onInteraction: (id: string) => void;
   readonly onInputChange: (value: string) => void;
   readonly onInputSubmit: (value: string) => void;
 }
 
-/** @emoji 💬 Builds the floating {@link EngagementSpec} (transition options, command input, state/selection/response status) from interaction state. */
+/** @emoji 💬 Builds the floating {@link EngagementSpec} for a renderer window: idle lists startable interactions, an active session lists its transitions, plus a command input and state/selection/response status. */
 export function buildInteractionReplEngagement(inputs: InteractionReplEngagementInputs): EngagementSpec | null {
   if (!inputs.showEngagement) return null;
   const options = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
-        id: `engagement-option-${row.eventKind}-${row.key}`,
+        id: `engagement-transition-${row.eventKind}-${row.key}`,
         label: `${row.key.toUpperCase()} ${row.label}`,
-        onPress: () => inputs.onOption(row),
+        onPress: () => inputs.onTransition(row),
       }))
-    : [];
+    : inputs.interactions.map((interaction) => ({
+        id: `engagement-interaction-${interaction.id}`,
+        label: `${interaction.key.toUpperCase()} ${interaction.label}`,
+        onPress: () => inputs.onInteraction(interaction.id),
+      }));
   const status: { id: string; content: ReactNode }[] = [];
   if (inputs.interactionId) status.push({ id: "engagement-state", content: `State: ${inputs.state}` });
   if (inputs.selectionCount > 0) status.push({ id: "engagement-selection", content: `Selected: ${inputs.selectionCount}` });
@@ -3298,15 +3311,16 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       content: inputs.lastResponseOk ? "OK" : `Error${inputs.lastResponseErrorCount > 0 ? ` (${inputs.lastResponseErrorCount})` : ""}`,
     });
   }
-  const input = inputs.boundInteractionSession
-    ? {
-        id: "engagement-input",
-        value: inputs.cmdLine,
-        placeholder: "Type an interaction or transition",
-        onChange: inputs.onInputChange,
-        onSubmit: inputs.onInputSubmit,
-      }
-    : undefined;
+  const input =
+    options.length > 0 || inputs.boundInteractionSession
+      ? {
+          id: "engagement-input",
+          value: inputs.cmdLine,
+          placeholder: inputs.boundInteractionSession ? "Type a transition or value" : "Type an interaction",
+          onChange: inputs.onInputChange,
+          onSubmit: inputs.onInputSubmit,
+        }
+      : undefined;
   if (options.length === 0 && !input && status.length === 0) return null;
   return { options: options.length ? options : undefined, input, status: status.length ? status : undefined };
 }
@@ -4118,11 +4132,13 @@ export function InteractionRepl({
         selectionCount: displayedSelectionTargets.length,
         cmdLine,
         transitions: transitionRows,
-        onOption: runTransitionRow,
+        interactions: scopedInteractions,
+        onTransition: runTransitionRow,
+        onInteraction: onInteractionId,
         onInputChange: (value: string) => setCmdLine(replCommandTextWithoutSpaces(value)),
         onInputSubmit: () => submitEngagementLine(),
       }),
-    [showEngagement, boundInteractionSession, transitionRows, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
+    [showEngagement, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, onInteractionId, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
   );
 
   reactHostPort.useEffect(() => {
@@ -5120,7 +5136,9 @@ if (import.meta.vitest) {
       selectionCount: 0,
       cmdLine: "",
       transitions: [{ eventKind: "confirm", key: "c", label: "Confirm" }],
-      onOption: () => {},
+      interactions: [{ id: "primitive.box", key: "b", label: "Box" }],
+      onTransition: () => {},
+      onInteraction: () => {},
       onInputChange: () => {},
       onInputSubmit: () => {},
     };
@@ -5129,42 +5147,58 @@ if (import.meta.vitest) {
       expect(buildInteractionReplEngagement({ ...baseInputs, showEngagement: false })).toBeNull();
     });
 
-    it("builds transition options, command input, and status from interaction state", () => {
-      const optionRuns: string[] = [];
+    it("lists active session transitions, command input, and status", () => {
+      const transitionRuns: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
         selectionCount: 2,
         lastResponseOk: true,
-        onOption: (row) => optionRuns.push(row.key),
+        onTransition: (row) => transitionRuns.push(row.key),
       });
       expect(spec?.options?.[0]?.label).toBe("C Confirm");
-      expect(spec?.input?.placeholder).toBe("Type an interaction or transition");
+      expect(spec?.input?.placeholder).toBe("Type a transition or value");
       expect(spec?.status?.map((row) => row.content)).toEqual(["State: first_corner", "Selected: 2", "OK"]);
       spec?.options?.[0]?.onPress?.();
-      expect(optionRuns).toEqual(["c"]);
+      expect(transitionRuns).toEqual(["c"]);
     });
 
-    it("hides options and input when no interaction session is bound but keeps selection status", () => {
+    it("lists startable interactions while idle so a window can begin one", () => {
+      const started: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
         boundInteractionSession: false,
         interactionId: "",
-        selectionCount: 3,
+        onInteraction: (id) => started.push(id),
       });
-      expect(spec?.options).toBeUndefined();
-      expect(spec?.input).toBeUndefined();
-      expect(spec?.status?.map((row) => row.content)).toEqual(["Selected: 3"]);
+      expect(spec?.options?.[0]?.label).toBe("B Box");
+      expect(spec?.input?.placeholder).toBe("Type an interaction");
+      spec?.options?.[0]?.onPress?.();
+      expect(started).toEqual(["primitive.box"]);
     });
 
-    it("returns null when nothing is engageable", () => {
+    it("returns null when idle with no startable interactions and nothing selected", () => {
       expect(
         buildInteractionReplEngagement({
           ...baseInputs,
           boundInteractionSession: false,
           interactionId: "",
+          interactions: [],
           selectionCount: 0,
         }),
       ).toBeNull();
+    });
+
+    it("keeps selection status visible when idle with no interactions", () => {
+      const spec = buildInteractionReplEngagement({
+        ...baseInputs,
+        boundInteractionSession: false,
+        interactionId: "",
+        interactions: [],
+        selectionCount: 3,
+      });
+      expect(spec?.options).toBeUndefined();
+      expect(spec?.input).toBeUndefined();
+      expect(spec?.status?.map((row) => row.content)).toEqual(["Selected: 3"]);
     });
 
     it("summarizes failed responses with error counts", () => {
