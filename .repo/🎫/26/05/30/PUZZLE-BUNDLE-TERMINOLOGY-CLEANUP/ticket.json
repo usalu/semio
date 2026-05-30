@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle Bundle Terminology Cleanup",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Clean puzzle bundle terminology across 2d/3d/5d: NodeKind/ObjectKind/PartKind, KindCatalogBundle, no Board/Scene/Topology/Kit/Line prefixes in bundles.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪7164be318aa547399b4da0cee81007ad"
+  ]
+}

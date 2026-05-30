@@ -45,18 +45,18 @@ import {
   sliderValueFromLod,
   type AttractionProps,
   type CameraState,
-  type AttractionKindCatalogEntry,
-  type CableKindCatalogEntry,
+  type AttractionKind,
+  type CableKind,
   type FixtureObjectV1,
   type FixtureV1,
   type KindCatalogBundle,
   type KindCompatEntry,
-  type ObjectKindCatalogEntry,
+  type ObjectKind,
   type RelocateMode,
   type RelocatePayload,
   type SelectionMode,
   type SelectionSnapshot,
-  type VortexKindCatalogEntry,
+  type VortexKind,
   type VortexProps,
 } from "../react/index.tsx";
 import { NakaginCapsuleTowerSceneJson as nakaginPuzzle3dFixtureJson } from "@puzzle/assets";
@@ -421,7 +421,7 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
 //#endregion 🔖Puzzle3dPlayHierarchy
 
 //#region 🔖Puzzle3dPlayKinds
-type Puzzle3dPlayKindCatalogEntry = ObjectKindCatalogEntry | VortexKindCatalogEntry | CableKindCatalogEntry | AttractionKindCatalogEntry;
+type Puzzle3dPlayKindCatalogEntry = ObjectKind | VortexKind | CableKind | AttractionKind;
 
 function puzzle3dPlayKindCatalogEntryLabel(entry: Puzzle3dPlayKindCatalogEntry): string {
   const display = entry.label?.trim() || entry.name?.trim();
@@ -1612,7 +1612,7 @@ if (import.meta.vitest) {
         kindCatalogs: {
           objects: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
           vortices: [{ id: "core circular top", label: "Core circular top", name: "Core circular top" }],
-          cables: [{ id: "board.cable.link", label: "Link", name: "Link" }],
+          cables: [{ id: "cable.link", label: "Link", name: "Link" }],
           attractions: [{ id: "board.attraction.link", label: "Link", name: "Link" }],
         },
       });

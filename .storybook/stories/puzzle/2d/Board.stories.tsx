@@ -16,11 +16,11 @@ import {
 	useBoardEvent,
 } from "../../../../puzzle/2d/index.tsx";
 import {
-	BOARD_BUILTIN_PORT_HANDLE_KIND,
-	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-	boardFixtureMetaKindCatalogBundle,
+	BUILTIN_PORT_HANDLE_KIND,
+	DEFAULT_KIND_CATALOG_BUNDLE,
+	fixtureMetaKindCatalogBundle,
 	boardFixtureMetaKindCompatibility,
-	mergeBoardKindCatalogBundleByRowId,
+	mergeKindCatalogBundleByRowId,
 } from "../../../../puzzle/2d/index";
 import { NakaginCapsuleTowerBoardJson as nakaginCapsuleTowerBoardFixture } from "@puzzle/assets";
 
@@ -77,9 +77,9 @@ interface BoardFixtureV1 {
 
 const nakaginCapsuleTowerBoard = nakaginCapsuleTowerBoardFixture as BoardFixtureV1;
 
-const nakaginStoryKindCatalogs = mergeBoardKindCatalogBundleByRowId(
-	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
-	boardFixtureMetaKindCatalogBundle(nakaginCapsuleTowerBoardFixture) ?? {},
+const nakaginStoryKindCatalogs = mergeKindCatalogBundleByRowId(
+	{ ...DEFAULT_KIND_CATALOG_BUNDLE },
+	fixtureMetaKindCatalogBundle(nakaginCapsuleTowerBoardFixture) ?? {},
 );
 
 const nakaginStoryKindCompatibility = boardFixtureMetaKindCompatibility(nakaginCapsuleTowerBoardFixture) ?? [];
@@ -99,8 +99,8 @@ type DefaultBoardGraph = { edges: DefaultBoardGraphEdge[]; nodes: DefaultBoardGr
 const defaultBoardGraph: DefaultBoardGraph = {
 	edges: [{ id: "link-1", source: "alpha.out", target: "beta.in" }],
 	nodes: [
-		{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
-		{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
+		{ handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
+		{ handles: [{ angle: Math.PI, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
 	],
 };
 
@@ -167,7 +167,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 						<Handle
 							angle={handle.angle}
 							color={handle.color}
-							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND}
 							id={handle.id}
 							key={handle.id}
 							radius={handle.radius}
@@ -189,7 +189,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 						<Handle
 							angle={handle.angle}
 							color={handle.color}
-							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND}
 							id={handle.id}
 							key={handle.id}
 							radius={handle.radius}
@@ -212,7 +212,7 @@ export const Default: Story = {
 	),
 	args: {
 		camera: { x: 0, y: 0, zoom: 1 },
-		kindCatalogs: { ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+		kindCatalogs: { ...DEFAULT_KIND_CATALOG_BUNDLE },
 		height: 520,
 		width: 720,
 		worldRasterTiling: "none",

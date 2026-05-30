@@ -629,7 +629,7 @@ if (import.meta.vitest) {
 						x: 0,
 						y: 0,
 						radius: 10,
-						handles: [{ id: "h-root", angle: 0, handleKind: "board.port" }],
+						handles: [{ id: "h-root", angle: 0, handleKind: "port" }],
 					},
 					{
 						id: "child",
@@ -637,7 +637,7 @@ if (import.meta.vitest) {
 						x: 10,
 						y: 0,
 						radius: 10,
-						handles: [{ id: "h-child", angle: 0, handleKind: "board.port" }],
+						handles: [{ id: "h-child", angle: 0, handleKind: "port" }],
 					},
 				],
 				edges: [{ id: "e1", source: "h-root", target: "h-child" }],

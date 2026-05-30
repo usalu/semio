@@ -13,15 +13,20 @@ import {
   DEFAULT_BOARD_GRID_FACTOR,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
   Edge, Handle, Node, Wire,
-  boardFixtureMetaKindCatalogBundle,
+  BUILTIN_PORT_HANDLE_KIND,
+  fixtureMetaKindCatalogBundle,
   parseBoardFixtureV1,
   type CameraState as BoardCameraState,
   type BoardCanvasProps,
   type BoardFixtureV1,
   type BoardForceGraphLayoutOptions,
-  type BoardKindCatalogBundle,
-  type BoardKindCompatEntry,
+  type KindCatalogBundle as FlatKindCatalogBundle,
+  type KindCompatEntry as FlatKindCompatEntry,
   type BoardLinkSessionSnapshot,
+  type EdgeKind as FlatEdgeKind,
+  type HandleKind as FlatHandleKind,
+  type NodeKind as FlatNodeKind,
+  type WireKind as FlatWireKind,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as VolumePartStateProvider,
@@ -32,13 +37,17 @@ import {
   parseFixtureV1,
   useObjectConnect as useVolumePartConnect,
   useObjectRelocate as useVolumePartRelocate,
+  type AttractionKind as VolumeFastenerKind,
   type AttractionSessionSnapshot,
+  type CableKind as VolumeRopeKind,
   type DomainKind,
   type FixtureV1 as VolumeFixtureV1,
   type KindCatalogBundle as VolumeKindCatalogBundle,
   type KindCompatEntry as VolumeKindCompatEntry,
+  type ObjectKind as VolumePartKind,
   type RelocateMode as VolumeRelocateMode,
   type SelectionSnapshot as VolumeSelectionSnapshot,
+  type VortexKind as VolumeGripKind,
   type CanvasProps as VolumeViewProps,
 } from "../../3d/react/index.tsx";
 // #endregion 🔌Adapters
@@ -156,8 +165,8 @@ export interface V1 {
   readonly label?: string;
   readonly domain: DomainKind;
   readonly meta?: Record<string, unknown>;
-  readonly kindCatalogs?: BoardKindCatalogBundle;
-  readonly kindCompatibility?: readonly BoardKindCompatEntry[];
+  readonly kindCatalogs?: KindCatalogBundle;
+  readonly kindCompatibility?: readonly KindCompatEntry[];
   readonly flatCamera: BoardCameraState;
   readonly volumeCamera: VolumeFixtureV1["camera"];
   readonly parts: readonly PartV1[];
@@ -197,8 +206,8 @@ export function parseV1(raw: unknown): V1 | null {
     ties: r.ties as TieV1[],
     ...(typeof r.label === "string" ? { label: r.label } : {}),
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
-    ...(r.kindCatalogs && typeof r.kindCatalogs === "object" ? { kindCatalogs: r.kindCatalogs as BoardKindCatalogBundle } : {}),
-    ...(Array.isArray(r.kindCompatibility) ? { kindCompatibility: r.kindCompatibility as BoardKindCompatEntry[] } : {}),
+    ...(r.kindCatalogs && typeof r.kindCatalogs === "object" ? { kindCatalogs: normalizeKindCatalogBundle(r.kindCatalogs) } : {}),
+    ...(Array.isArray(r.kindCompatibility) ? { kindCompatibility: r.kindCompatibility as KindCompatEntry[] } : {}),
   };
 }
 
@@ -269,7 +278,7 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
       const localId = parsed?.anchorId ?? v.id;
       return {
         id: localId,
-        anchorKind: v.vortexKind ?? "board.port",
+        anchorKind: v.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
         volume: {
           position: v.position,
           ...(v.direction !== undefined ? { direction: v.direction } : {}),
@@ -322,8 +331,8 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
     ...(flat.meta ?? {}),
     ...(volume.meta ?? {}),
   };
-  const kindCatalogs = topologyKindCatalogsFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
-  const kindCompatibility = topologyKindCompatibilityFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
+  const kindCatalogs = kindCatalogsFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
+  const kindCompatibility = kindCompatibilityFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
   return {
     schema: "puzzle.5d.topology/v1",
     domain: volume.domain,
@@ -709,7 +718,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
         camera={flatRest.camera ?? camera}
         className={["min-h-0 flex-1", props.className, flatRest.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_FLAT_LOD_DEFAULTS}
-        kindCatalogs={snap.model.kindCatalogs}
+        kindCatalogs={projectFlatKindCatalogs(snap.model.kindCatalogs)}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
         onCamera={(c) => store.setFlatCamera(props.instanceId, c)}
@@ -804,7 +813,7 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
       blockedVortexFullIds={blockedVortexFullIdsFromAttractions(volumeFixture.attractions)}
       gridFactor={FIVE_D_FLAT_LOD_DEFAULTS.gridFactor}
       gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
-      kindCatalogs={snap.model.kindCatalogs as VolumeKindCatalogBundle | undefined}
+      kindCatalogs={projectVolumeKindCatalogs(snap.model.kindCatalogs)}
       kindCompatibility={snap.model.kindCompatibility as VolumeKindCompatEntry[] | undefined}
       relocateMode={props.relocateMode ?? "translate"}
       onCamera={(c) => store.setVolumeCamera(props.instanceId, c)}
@@ -897,23 +906,277 @@ export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
 //#endregion 🔖FiveD
 
 //#region 🔖KindMeta
+/** @emoji 🟠 Part-kind catalog row for unified puzzle 5d fixtures. */
+export interface PartKind {
+  color?: string;
+  defaultGripKind?: string;
+  defaultShapeProps?: Record<string, unknown>;
+  icon?: string;
+  id: string;
+  label?: string;
+  name: string;
+  shape?: "circle" | "rectangle";
+  stroke?: string;
+}
+
+/** @emoji 🎨 Grip-kind catalog row for unified puzzle 5d fixtures. */
+export interface GripKind {
+  color: string;
+  defaultRopeKind?: string;
+  id: string;
+  label?: string;
+  name: string;
+}
+
+/** @emoji 🪢 Fastener-kind catalog row for unified puzzle 5d fixtures. */
+export interface FastenerKind {
+  color?: string;
+  defaultShapeProps?: Record<string, unknown>;
+  id: string;
+  label?: string;
+  name: string;
+  pattern?: string;
+  shape?: "bezier" | "line";
+  stroke?: string;
+}
+
+/** @emoji 🧵 Rope-kind catalog row for unified puzzle 5d fixtures. */
+export interface RopeKind {
+  defaultFastenerKind?: string;
+  id: string;
+  label?: string;
+  name: string;
+}
+
+/** @emoji 📚 Unified puzzle 5d kind registries (`parts`, `grips`, `fasteners`, `ropes`). */
+export interface KindCatalogBundle {
+  fasteners?: readonly FastenerKind[];
+  grips?: readonly GripKind[];
+  parts?: readonly PartKind[];
+  ropes?: readonly RopeKind[];
+}
+
+/** @emoji 🔗 One allowed directed pair between semantic kind ids in puzzle 5d fixtures. */
+export interface KindCompatEntry {
+  source: string;
+  target: string;
+  bidirectional?: boolean;
+  important?: boolean;
+  specificity?: "edge" | "general" | "handle" | "node" | "wire" | "object" | "attraction" | "part" | "grip" | "fastener" | "rope" | "vortex" | "cable";
+}
+
 function isMetaRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function flatKindCatalogFromMeta(meta: Record<string, unknown> | undefined): FlatKindCatalogBundle | undefined {
+  return fixtureMetaKindCatalogBundle(meta);
+}
+
+function volumeKindCatalogFromMeta(meta: Record<string, unknown> | undefined): VolumeKindCatalogBundle | undefined {
+  if (!isMetaRecord(meta)) return undefined;
+  const kc = meta.kindCatalogs;
+  if (!kc || typeof kc !== "object" || Array.isArray(kc)) return undefined;
+  return kc as VolumeKindCatalogBundle;
+}
+
+function flatPartKindFromNode(row: FlatNodeKind): PartKind {
+  return {
+    id: row.id,
+    name: row.name,
+    ...(row.color !== undefined ? { color: row.color } : {}),
+    ...(row.defaultHandleKind !== undefined ? { defaultGripKind: row.defaultHandleKind } : {}),
+    ...(row.defaultShapeProps !== undefined ? { defaultShapeProps: row.defaultShapeProps } : {}),
+    ...(row.icon !== undefined ? { icon: row.icon } : {}),
+    ...(row.shape !== undefined ? { shape: row.shape } : {}),
+    ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
+  };
+}
+
+function flatGripKindFromHandle(row: FlatHandleKind): GripKind {
+  return {
+    id: row.id,
+    name: row.name,
+    color: row.color,
+    ...(row.defaultWireKind !== undefined ? { defaultRopeKind: row.defaultWireKind } : {}),
+  };
+}
+
+function flatFastenerKindFromEdge(row: FlatEdgeKind): FastenerKind {
+  return {
+    id: row.id,
+    name: row.name,
+    ...(row.color !== undefined ? { color: row.color } : {}),
+    ...(row.defaultShapeProps !== undefined ? { defaultShapeProps: row.defaultShapeProps } : {}),
+    ...(row.pattern !== undefined ? { pattern: row.pattern } : {}),
+    ...(row.shape !== undefined ? { shape: row.shape } : {}),
+    ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
+  };
+}
+
+function flatRopeKindFromWire(row: FlatWireKind): RopeKind {
+  return {
+    id: row.id,
+    name: row.name,
+    ...(row.defaultEdgeKind !== undefined ? { defaultFastenerKind: row.defaultEdgeKind } : {}),
+  };
+}
+
+function volumePartKindFromObject(row: VolumePartKind): PartKind {
+  return {
+    id: row.id,
+    name: row.name ?? row.id,
+    ...(row.label !== undefined ? { label: row.label } : {}),
+    ...(row.color !== undefined ? { color: row.color } : {}),
+    ...(row.shape !== undefined ? { shape: row.shape as PartKind["shape"] } : {}),
+  };
+}
+
+function volumeGripKindFromVortex(row: VolumeGripKind): GripKind {
+  return {
+    id: row.id,
+    name: row.name ?? row.id,
+    color: row.color ?? "#94a3b8",
+    ...(row.label !== undefined ? { label: row.label } : {}),
+    ...(row.defaultCableKind !== undefined ? { defaultRopeKind: row.defaultCableKind } : {}),
+  };
+}
+
+function volumeFastenerKindFromAttraction(row: VolumeFastenerKind): FastenerKind {
+  return {
+    id: row.id,
+    name: row.name ?? row.id,
+    ...(row.label !== undefined ? { label: row.label } : {}),
+  };
+}
+
+function volumeRopeKindFromCable(row: VolumeRopeKind): RopeKind {
+  return {
+    id: row.id,
+    name: row.name ?? row.id,
+    ...(row.label !== undefined ? { label: row.label } : {}),
+    ...(row.defaultAttractionKind !== undefined ? { defaultFastenerKind: row.defaultAttractionKind } : {}),
+  };
+}
+
+/** @emoji 🔀 Normalizes raw `kindCatalogs` JSON into puzzle 5d bundle keys. */
+export function normalizeKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const box = raw as Record<string, unknown>;
+  if (box.parts || box.grips || box.fasteners || box.ropes) {
+    return box as KindCatalogBundle;
+  }
+  const out: KindCatalogBundle = {};
+  if (Array.isArray(box.nodes)) out.parts = (box.nodes as FlatNodeKind[]).map(flatPartKindFromNode);
+  if (Array.isArray(box.handles)) out.grips = (box.handles as FlatHandleKind[]).map(flatGripKindFromHandle);
+  if (Array.isArray(box.edges)) out.fasteners = (box.edges as FlatEdgeKind[]).map(flatFastenerKindFromEdge);
+  if (Array.isArray(box.wires)) out.ropes = (box.wires as FlatWireKind[]).map(flatRopeKindFromWire);
+  if (Array.isArray(box.objects)) out.parts = (box.objects as VolumePartKind[]).map(volumePartKindFromObject);
+  if (Array.isArray(box.vortices)) out.grips = (box.vortices as VolumeGripKind[]).map(volumeGripKindFromVortex);
+  if (Array.isArray(box.attractions)) out.fasteners = (box.attractions as VolumeFastenerKind[]).map(volumeFastenerKindFromAttraction);
+  if (Array.isArray(box.cables)) out.ropes = (box.cables as VolumeRopeKind[]).map(volumeRopeKindFromCable);
+  if (!out.parts && !out.grips && !out.fasteners && !out.ropes) return undefined;
+  return out;
+}
+
+/** @emoji 📐 Projects puzzle 5d kind catalogs onto puzzle 2d bundle keys. */
+export function projectFlatKindCatalogs(bundle: KindCatalogBundle | undefined): FlatKindCatalogBundle | undefined {
+  if (!bundle) return undefined;
+  const out: FlatKindCatalogBundle = {};
+  if (bundle.parts?.length) {
+    out.nodes = bundle.parts.map((part) => ({
+      id: part.id,
+      name: part.name,
+      ...(part.color !== undefined ? { color: part.color } : {}),
+      ...(part.defaultGripKind !== undefined ? { defaultHandleKind: part.defaultGripKind } : {}),
+      ...(part.defaultShapeProps !== undefined ? { defaultShapeProps: part.defaultShapeProps } : {}),
+      ...(part.icon !== undefined ? { icon: part.icon } : {}),
+      ...(part.shape !== undefined ? { shape: part.shape } : {}),
+      ...(part.stroke !== undefined ? { stroke: part.stroke } : {}),
+    }));
+  }
+  if (bundle.grips?.length) {
+    out.handles = bundle.grips.map((grip) => ({
+      id: grip.id,
+      name: grip.name,
+      color: grip.color,
+      ...(grip.defaultRopeKind !== undefined ? { defaultWireKind: grip.defaultRopeKind } : {}),
+    }));
+  }
+  if (bundle.fasteners?.length) {
+    out.edges = bundle.fasteners.map((fastener) => ({
+      id: fastener.id,
+      name: fastener.name,
+      ...(fastener.color !== undefined ? { color: fastener.color } : {}),
+      ...(fastener.defaultShapeProps !== undefined ? { defaultShapeProps: fastener.defaultShapeProps } : {}),
+      ...(fastener.pattern !== undefined ? { pattern: fastener.pattern } : {}),
+      ...(fastener.shape !== undefined ? { shape: fastener.shape } : {}),
+      ...(fastener.stroke !== undefined ? { stroke: fastener.stroke } : {}),
+    }));
+  }
+  if (bundle.ropes?.length) {
+    out.wires = bundle.ropes.map((rope) => ({
+      id: rope.id,
+      name: rope.name,
+      ...(rope.defaultFastenerKind !== undefined ? { defaultEdgeKind: rope.defaultFastenerKind } : {}),
+    }));
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/** @emoji 📐 Projects puzzle 5d kind catalogs onto puzzle 3d bundle keys. */
+export function projectVolumeKindCatalogs(bundle: KindCatalogBundle | undefined): VolumeKindCatalogBundle | undefined {
+  if (!bundle) return undefined;
+  const out: VolumeKindCatalogBundle = {};
+  if (bundle.parts?.length) {
+    out.objects = bundle.parts.map((part) => ({
+      id: part.id,
+      name: part.name,
+      ...(part.label !== undefined ? { label: part.label } : {}),
+      ...(part.color !== undefined ? { color: part.color } : {}),
+      ...(part.shape !== undefined ? { shape: part.shape } : {}),
+    }));
+  }
+  if (bundle.grips?.length) {
+    out.vortices = bundle.grips.map((grip) => ({
+      id: grip.id,
+      name: grip.name,
+      color: grip.color,
+      ...(grip.label !== undefined ? { label: grip.label } : {}),
+      ...(grip.defaultRopeKind !== undefined ? { defaultCableKind: grip.defaultRopeKind } : {}),
+    }));
+  }
+  if (bundle.fasteners?.length) {
+    out.attractions = bundle.fasteners.map((fastener) => ({
+      id: fastener.id,
+      name: fastener.name,
+      ...(fastener.label !== undefined ? { label: fastener.label } : {}),
+    }));
+  }
+  if (bundle.ropes?.length) {
+    out.cables = bundle.ropes.map((rope) => ({
+      id: rope.id,
+      name: rope.name,
+      ...(rope.label !== undefined ? { label: rope.label } : {}),
+      ...(rope.defaultFastenerKind !== undefined ? { defaultAttractionKind: rope.defaultFastenerKind } : {}),
+    }));
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** @emoji 📚 Reads `kindCompatibility` rows from fixture meta. */
-export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unknown> | undefined): BoardKindCompatEntry[] {
+export function kindCompatibilityRowsFromMeta(meta: Record<string, unknown> | undefined): KindCompatEntry[] {
   if (!isMetaRecord(meta)) return [];
   const arr = meta.kindCompatibility;
   if (!Array.isArray(arr)) return [];
-  const out: BoardKindCompatEntry[] = [];
+  const out: KindCompatEntry[] = [];
   for (const entry of arr) {
     if (!isMetaRecord(entry)) continue;
     const source = typeof entry.source === "string" ? entry.source.trim() : "";
     const target = typeof entry.target === "string" ? entry.target.trim() : "";
     if (!source || !target) continue;
     const specificity =
-      entry.specificity === "general" || entry.specificity === "node" || entry.specificity === "edge" || entry.specificity === "handle" || entry.specificity === "wire" || entry.specificity === "object" || entry.specificity === "attraction"
+      entry.specificity === "general" || entry.specificity === "node" || entry.specificity === "edge" || entry.specificity === "handle" || entry.specificity === "wire" || entry.specificity === "object" || entry.specificity === "attraction" || entry.specificity === "part" || entry.specificity === "grip" || entry.specificity === "fastener" || entry.specificity === "rope" || entry.specificity === "vortex" || entry.specificity === "cable"
         ? entry.specificity
         : undefined;
     out.push({
@@ -927,36 +1190,31 @@ export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unkno
   return out;
 }
 
-export function topologyKindCatalogBundleFromVolumeFixtureMeta(meta: Record<string, unknown> | undefined): VolumeKindCatalogBundle | undefined {
-  if (!isMetaRecord(meta)) return undefined;
-  const kc = meta.kindCatalogs;
-  if (!kc || typeof kc !== "object" || Array.isArray(kc)) return undefined;
-  return kc as VolumeKindCatalogBundle;
+export function kindCatalogsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): KindCatalogBundle | undefined {
+  const fromFlat = flatKindCatalogFromMeta(inp.flatMeta);
+  if (fromFlat) return normalizeKindCatalogBundle(fromFlat);
+  const fromVolume = volumeKindCatalogFromMeta(inp.volumeMeta);
+  if (fromVolume) return normalizeKindCatalogBundle(fromVolume);
+  return undefined;
 }
 
-export function topologyKindCatalogsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): BoardKindCatalogBundle | undefined {
-  const fromFlat = boardFixtureMetaKindCatalogBundle(inp.flatMeta);
-  if (fromFlat) return fromFlat;
-  return topologyKindCatalogBundleFromVolumeFixtureMeta(inp.volumeMeta) as BoardKindCatalogBundle | undefined;
-}
-
-export function topologyKindCompatibilityFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): readonly BoardKindCompatEntry[] {
-  const fromFlat = topologyKindCompatibilityRowsFromMeta(inp.flatMeta);
+export function kindCompatibilityFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): readonly KindCompatEntry[] {
+  const fromFlat = kindCompatibilityRowsFromMeta(inp.flatMeta);
   if (fromFlat.length > 0) return fromFlat;
-  return topologyKindCompatibilityRowsFromMeta(inp.volumeMeta);
+  return kindCompatibilityRowsFromMeta(inp.volumeMeta);
 }
 
-export function topologySharedKindsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): Pick<
+export function sharedKindsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): Pick<
   typeof FIVE_D_FLAT_LOD_DEFAULTS,
   "lodZoomThresholds" | "gridFactor" | "gridSnapEnabled"
 > & {
-  kindCatalogs?: BoardKindCatalogBundle;
-  kindCompatibility?: readonly BoardKindCompatEntry[];
+  kindCatalogs?: KindCatalogBundle;
+  kindCompatibility?: readonly KindCompatEntry[];
 } {
   return {
     ...FIVE_D_FLAT_LOD_DEFAULTS,
-    kindCatalogs: topologyKindCatalogsFromMetas(inp),
-    kindCompatibility: topologyKindCompatibilityFromMetas(inp),
+    kindCatalogs: kindCatalogsFromMetas(inp),
+    kindCompatibility: kindCompatibilityFromMetas(inp),
   };
 }
 //#endregion 🔖KindMeta
@@ -985,10 +1243,10 @@ export function flatHandleConnectorAngle(index: number, total: number): number {
   return -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
 }
 
-export type KitFlatHandleSide = "top" | "right" | "bottom" | "left";
+export type FlatGripSide = "top" | "right" | "bottom" | "left";
 
-/** @emoji ┬¡ãÆ├┤├ë Kit diagram snap side to board handle angle (rectangle vs circle rim). */
-export function kitFlatHandleAngle(side: KitFlatHandleSide, shape: "circle" | "rectangle"): number {
+/** @emoji 📐 Flat grip snap side to handle angle (rectangle vs circle rim). */
+export function flatGripAngle(side: FlatGripSide, shape: "circle" | "rectangle"): number {
   if (shape === "rectangle") {
     if (side === "top") return 0;
     if (side === "right") return Math.PI / 2;
@@ -1207,7 +1465,7 @@ if (import.meta.vitest) {
       const flatFixture: BoardFixtureV1 = {
         schema: "puzzle.2d.fixture/v1",
         camera: { x: 0, y: 0, zoom: 1 },
-        nodes: [{ id: "p1", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "board.port" }] }],
+        nodes: [{ id: "p1", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] }],
         edges: [],
       };
       const volumeFixture: VolumeFixtureV1 = {
@@ -1265,25 +1523,25 @@ if (import.meta.vitest) {
       expect(flat.nodes[0]?.x).toBe(5);
     });
   });
-  describe("topologyKindCompatibilityFromMetas", () => {
+  describe("kindCompatibilityFromMetas", () => {
     it("prefers flat meta rows when present", () => {
-      const rows = topologyKindCompatibilityFromMetas({
+      const rows = kindCompatibilityFromMetas({
         flatMeta: { kindCompatibility: [{ source: "a", target: "b" }] },
         volumeMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
       });
       expect(rows.some((r) => r.source === "a")).toBe(true);
     });
     it("falls back to volume meta when flat has no rows", () => {
-      const rows = topologyKindCompatibilityFromMetas({
+      const rows = kindCompatibilityFromMetas({
         flatMeta: {},
         volumeMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
       });
       expect(rows.some((r) => r.source === "x")).toBe(true);
     });
   });
-  describe("topologySharedKindsFromMetas", () => {
+  describe("sharedKindsFromMetas", () => {
     it("includes lod defaults", () => {
-      const s = topologySharedKindsFromMetas({ flatMeta: undefined, volumeMeta: undefined });
+      const s = sharedKindsFromMetas({ flatMeta: undefined, volumeMeta: undefined });
       expect(s.gridSnapEnabled).toBe(true);
     });
   });
@@ -1293,10 +1551,10 @@ if (import.meta.vitest) {
       expect(flatParseHandleCompoundId(id)).toEqual({ left: "piece-a", right: "conn-b" });
     });
   });
-  describe("kitFlatHandleAngle", () => {
+  describe("flatGripAngle", () => {
     it("maps rectangle sides to axis angles", () => {
-      expect(kitFlatHandleAngle("top", "rectangle")).toBe(0);
-      expect(kitFlatHandleAngle("right", "rectangle")).toBeCloseTo(Math.PI / 2);
+      expect(flatGripAngle("top", "rectangle")).toBe(0);
+      expect(flatGripAngle("right", "rectangle")).toBeCloseTo(Math.PI / 2);
     });
   });
   describe("nodeCenterFromTopLeft", () => {

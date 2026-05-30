@@ -40,7 +40,7 @@ import {
   type FixtureV1 as VolumeFixtureV1,
   type RelocateMode as VolumeRelocateMode,
 } from "../../3d/react/index.tsx";
-import { createStore, parseV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type Store as TopologyStore, type StoreSnapshot as TopologyStoreSnapshot, type V1 as TopologyV1 } from "../react/index.tsx";
+import { createStore, parseV1, projectFlat, projectVolume, topologyCompose, sharedKindsFromMetas, type Store as TopologyStore, type StoreSnapshot as TopologyStoreSnapshot, type V1 as TopologyV1 } from "../react/index.tsx";
 import { NakaginCapsuleTowerTopologyJson as nakaginTopologyJson } from "@puzzle/assets";
 
 //#region 🔖Ids
@@ -130,7 +130,7 @@ export interface TopologyPlaySnapshot {
   readonly volumeAutomaticLod: boolean;
   readonly volumeDepthVariableLod: boolean;
   readonly volumeLodSlider: number;
-  readonly sharedKinds: ReturnType<typeof topologySharedKindsFromMetas>;
+  readonly sharedKinds: ReturnType<typeof sharedKindsFromMetas>;
   readonly connectBoard: number;
   readonly connectVolume: number;
   readonly proximityBoard: number;
@@ -376,7 +376,7 @@ export class TopologyPlayShellController extends Controller {
       volumeAutomaticLod: this.volumeAutomaticLod,
       volumeDepthVariableLod: this.volumeDepthVariableLod,
       volumeLodSlider: this.volumeLodSlider,
-      sharedKinds: topologySharedKindsFromMetas({ flatMeta: boardFixture.meta, volumeMeta: volumeFixture.meta }),
+      sharedKinds: sharedKindsFromMetas({ flatMeta: boardFixture.meta, volumeMeta: volumeFixture.meta }),
       connectBoard: this.connectBoard,
       connectVolume: this.connectVolume,
       proximityBoard: this.proximityBoard,
@@ -495,7 +495,7 @@ if (import.meta.vitest) {
       expect(model.parts.length).toBeGreaterThan(0);
     });
     it("shared kinds merge metas like the play harness", () => {
-      const sk = topologySharedKindsFromMetas({
+      const sk = sharedKindsFromMetas({
         flatMeta: undefined,
         volumeMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
       });

@@ -32,6 +32,7 @@ import {
   type TreePanelSource,
   reactHostPort,
   Button,
+  IconSelector,
   useNativeDragAndDrop,
   type ContextMenuItem,
 } from "@ui/react";
@@ -1376,15 +1377,16 @@ import {
   type Puzzle2dPlayPaneId,
 } from "@puzzle/2d/play";
 import {
-  mergeBoardKindCatalogBundleByRowId,
-  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-  BOARD_BUILTIN_PORT_HANDLE_KIND,
+  mergeKindCatalogBundleByRowId,
+  DEFAULT_KIND_CATALOG_BUNDLE,
+  BUILTIN_PORT_HANDLE_KIND,
   BOARD_CAMERA_ZOOM_MIN,
   BOARD_CAMERA_ZOOM_MAX,
   BOARD_PRESELECT_EMPTY,
   BOARD_SELECTION_TARGETS_DEFAULT,
-  boardFixtureMetaKindCatalogBundle,
+  fixtureMetaKindCatalogBundle,
   boardFixtureNodeCaption,
+  classifyElementsBoardIconSelectorMode,
   parseBoardFixtureV1,
   BoardCanvas,
   Node,
@@ -1420,7 +1422,7 @@ import {
 import type { Playground } from "@framework/playground/core";
 // #endregion 🔌Adapters
 
-const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
+const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeKindCatalogBundleByRowId({ ...DEFAULT_KIND_CATALOG_BUNDLE }, fixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
 
 // #region 🔖Kinds
 export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
@@ -3624,7 +3626,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
             const id = newBoardAuthoringId("node");
             const handleId = `${id}.h0`;
             const node: BoardFixtureCircleNodeV1 = {
-              handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
+              handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               id,
               radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2,
               x: camera.x,
@@ -3640,7 +3642,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
             const handleId = `${id}.h0`;
             const d = PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX;
             const node: BoardFixtureRectangleNodeV1 = {
-              handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
+              handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               height: d,
               id,
               shape: "rectangle",

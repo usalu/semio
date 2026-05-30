@@ -2429,7 +2429,7 @@ mod board_host {
     const BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
     pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
     pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
-    const BOARD_DEFAULT_WIRE_KIND_ID: &str = "board.wire.link";
+    const DEFAULT_WIRE_KIND_ID: &str = "wire.link";
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum BoardDrawLod {
@@ -3517,7 +3517,7 @@ mod board_host {
         }
 
         fn resolve_default_wire_kind_for_handle(&self, h: &HandleData) -> String {
-            self.handle_kinds.get(&h.handle_kind).and_then(|d| d.default_wire_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| BOARD_DEFAULT_WIRE_KIND_ID.to_string())
+            self.handle_kinds.get(&h.handle_kind).and_then(|d| d.default_wire_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string())
         }
 
         fn resolve_default_edge_kind_for_wire_kind(&self, wire_kind: &str) -> String {
@@ -4843,7 +4843,7 @@ mod board_host {
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
                     .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
-                    .unwrap_or_else(|| BOARD_DEFAULT_WIRE_KIND_ID.to_string());
+                    .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
                 self.wires.insert(w.id.clone(), WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), style: w.style.clone(), wire_kind });
             }
             if !self.is_preselect_active() {
@@ -4937,7 +4937,7 @@ mod board_host {
                     if !angle.is_finite() {
                         return false;
                     }
-                    let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from).unwrap_or_else(|| "board.port".into());
+                    let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from).unwrap_or_else(|| "port".into());
                     let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
                     let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                     let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
@@ -6774,7 +6774,7 @@ impl BoardSession {
         Ok(())
     }
 
-    #[wasm_bindgen(js_name = setBoardKindCatalogsJson)]
+    #[wasm_bindgen(js_name = setKindCatalogsJson)]
     pub fn set_board_kind_catalogs_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e))
     }
@@ -8269,14 +8269,14 @@ mod host_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 280.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port", "hidden": true }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port", "hidden": true }]
                 }
             ],
             "edges": []
@@ -8790,14 +8790,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 1.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -8829,14 +8829,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 35.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 40.0,
                     "y": 0.0,
                     "radius": 35.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -8871,14 +8871,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 35.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 40.0,
                     "y": 0.0,
                     "radius": 35.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -8920,7 +8920,7 @@ mod force_graph_tests {
                 "x": (k % 8) as f64 * 12.0,
                 "y": (k / 8) as f64 * 12.0,
                 "radius": 8.0,
-                "handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "board.port" }]
+                "handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "port" }]
             }));
             if k > 0 {
                 let prev = format!("n{}", k - 1);
@@ -8972,7 +8972,7 @@ mod force_graph_tests {
                 "x": (k % 6) as f64 * 9.0,
                 "y": (k / 6) as f64 * 9.0,
                 "radius": 6.5,
-                "handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "board.port" }]
+                "handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "port" }]
             }));
             if k > 0 {
                 let prev = format!("n{}", k - 1);
@@ -9012,9 +9012,9 @@ mod force_graph_tests {
             "schema": "puzzle.2d.fixture/v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
-                { "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
-                { "id": "b", "x": 3.0, "y": 1.0, "radius": 30.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "board.port" }] },
-                { "id": "c", "x": -2.0, "y": 4.0, "radius": 28.0, "handles": [{ "id": "c:h0", "angle": 1.0, "handleKind": "board.port" }] }
+                { "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
+                { "id": "b", "x": 3.0, "y": 1.0, "radius": 30.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "port" }] },
+                { "id": "c", "x": -2.0, "y": 4.0, "radius": 28.0, "handles": [{ "id": "c:h0", "angle": 1.0, "handleKind": "port" }] }
             ],
             "edges": [
                 { "id": "e1", "source": "a:h0", "target": "b:h0" },
@@ -9043,9 +9043,9 @@ mod force_graph_tests {
             "schema": "puzzle.2d.fixture/v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
-                { "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
-                { "id": "b", "x": 5.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "board.port" }] },
-                { "id": "c", "x": 2.0, "y": 8.0, "radius": 18.0, "handles": [{ "id": "c:h0", "angle": 0.0, "handleKind": "board.port" }] }
+                { "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
+                { "id": "b", "x": 5.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "port" }] },
+                { "id": "c", "x": 2.0, "y": 8.0, "radius": 18.0, "handles": [{ "id": "c:h0", "angle": 0.0, "handleKind": "port" }] }
             ],
             "edges": [
                 { "id": "e1", "source": "a:h0", "target": "b:h0" },
@@ -9081,14 +9081,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 1.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -9123,14 +9123,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 200.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -9155,14 +9155,14 @@ mod force_graph_tests {
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "x": 200.0,
                     "y": 0.0,
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -9210,12 +9210,12 @@ mod force_graph_tests {
                 {
                     "id": "a",
                     "radius": 40.0,
-                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "b",
                     "radius": 40.0,
-                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+                    "handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
@@ -9245,17 +9245,17 @@ mod force_graph_tests {
                     "id": "r",
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c1",
                     "radius": 18.0,
-                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c2",
                     "radius": 18.0,
-                    "handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [
@@ -9296,21 +9296,21 @@ mod force_graph_tests {
                     "y": -33.0,
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c1",
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 18.0,
-                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c2",
                     "x": 5.0,
                     "y": 0.0,
                     "radius": 18.0,
-                    "handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [
@@ -9352,14 +9352,14 @@ mod force_graph_tests {
                     "y": 12.0,
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c1",
                     "x": 0.0,
                     "y": 0.0,
                     "radius": 18.0,
-                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
@@ -9396,12 +9396,12 @@ mod force_graph_tests {
                     "id": "r",
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c1",
                     "radius": 18.0,
-                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
@@ -9434,12 +9434,12 @@ mod force_graph_tests {
                     "id": "r",
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 },
                 {
                     "id": "c1",
                     "radius": 18.0,
-                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
@@ -9472,7 +9472,7 @@ mod force_graph_tests {
                     "id": "r",
                     "root": true,
                     "radius": 18.0,
-                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+                    "handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "port" }]
                 }
             ],
             "edges": []

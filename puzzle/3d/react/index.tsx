@@ -203,13 +203,13 @@ export interface AttractionProps {
 
 export const PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
-export interface AttractionKindCatalogEntry {
+export interface AttractionKind {
   id: string;
   label?: string;
   name?: string;
 }
 
-export interface VortexKindCatalogEntry {
+export interface VortexKind {
   id: string;
   label?: string;
   name?: string;
@@ -218,7 +218,7 @@ export interface VortexKindCatalogEntry {
   scale?: number;
 }
 
-export interface ObjectKindCatalogEntry {
+export interface ObjectKind {
   id: string;
   label?: string;
   name?: string;
@@ -226,7 +226,7 @@ export interface ObjectKindCatalogEntry {
   shape?: string;
 }
 
-export interface CableKindCatalogEntry {
+export interface CableKind {
   id: string;
   label?: string;
   name?: string;
@@ -234,10 +234,10 @@ export interface CableKindCatalogEntry {
 }
 
 export interface KindCatalogBundle {
-  attractions?: readonly AttractionKindCatalogEntry[];
-  cables?: readonly CableKindCatalogEntry[];
-  objects?: readonly ObjectKindCatalogEntry[];
-  vortices?: readonly VortexKindCatalogEntry[];
+  attractions?: readonly AttractionKind[];
+  cables?: readonly CableKind[];
+  objects?: readonly ObjectKind[];
+  vortices?: readonly VortexKind[];
 }
 
 export interface KindCompatEntry {
@@ -2010,7 +2010,7 @@ export function kindsCompatible(aKind: string | undefined, bKind: string | undef
   return table.some((e) => (e.source === aKind && e.target === bKind) || (e.bidirectional === true && e.source === bKind && e.target === aKind));
 }
 
-const DEFAULT_CABLE_KIND_ID = "board.cable.link";
+const DEFAULT_CABLE_KIND_ID = "cable.link";
 
 /** @emoji ­ƒº▓ Attraction endpoint vortex full ids that are already attracting/attracted and cannot start or receive another attraction. */
 export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<AttractionProps, "attracting" | "attracted">[]): ReadonlySet<string> {
@@ -2029,17 +2029,17 @@ export interface AttractionVortexContext {
   readonly vortexKind: string | undefined;
 }
 
-function catalogVortexById(catalogs: KindCatalogBundle | undefined, vortexKind: string | undefined): VortexKindCatalogEntry | undefined {
+function catalogVortexById(catalogs: KindCatalogBundle | undefined, vortexKind: string | undefined): VortexKind | undefined {
   if (!vortexKind || !catalogs?.vortices?.length) return undefined;
   return catalogs.vortices.find((v) => v.id === vortexKind);
 }
 
-function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: string | undefined): CableKindCatalogEntry | undefined {
+function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: string | undefined): CableKind | undefined {
   if (!cableKind || !catalogs?.cables?.length) return undefined;
   return catalogs.cables.find((w) => w.id === cableKind);
 }
 
-/** @emoji 🔌 Resolves default cable kind for a vortex kind via vortex catalog, else `board.cable.link`. */
+/** @emoji 🔌 Resolves default cable kind for a vortex kind via vortex catalog, else `cable.link`. */
 export function resolveCableKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
   const v = catalogVortexById(catalogs, vortexKind);
   const cableKind = v?.defaultCableKind?.trim();
@@ -5157,7 +5157,7 @@ if (import.meta.vitest) {
   });
   describe("resolveCableKindForVortex", () => {
     it("falls back to default cable id", () => {
-      expect(resolveCableKindForVortex("any", undefined)).toBe("board.cable.link");
+      expect(resolveCableKindForVortex("any", undefined)).toBe("cable.link");
     });
   });
   describe("wouldObjectAttractionIntroduceCycle", () => {
