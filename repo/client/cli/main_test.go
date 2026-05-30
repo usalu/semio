@@ -16584,8 +16584,123 @@ func TestBlockedToolPatterns(t *testing.T) {
 	}
 }
 
+func testLoggingConfigFull() LoggingConfig {
+	return LoggingConfig{Session: true, Operations: true, Plan: true, Detail: "full"}
+}
+
+func testLoggingConfigSession() LoggingConfig {
+	return LoggingConfig{Session: true, Operations: true, Plan: true, Detail: "standard"}
+}
+
+func writeRepoLoggingConfig(t *testing.T, root string, lg LoggingConfig) {
+	t.Helper()
+	repoDir := filepath.Join(root, ".repo")
+	if err := os.MkdirAll(repoDir, 0o755); err != nil {
+		t.Fatalf("mkdir .repo: %v", err)
+	}
+	content := fmt.Sprintf("[logging]\nsession = %t\noperations = %t\nplan = %t\ndetail = \"%s\"\n",
+		lg.Session, lg.Operations, lg.Plan, lg.Detail)
+	if err := os.WriteFile(filepath.Join(repoDir, "config.toml"), []byte(content), 0o644); err != nil {
+		t.Fatalf("write config.toml: %v", err)
+	}
+}
+
+func TestRepoConfig(t *testing.T) {
+	t.Run("defaults when file missing", func(t *testing.T) {
+		cfg := LoadRepoConfig(t.TempDir())
+		if cfg.Logging.Session {
+			t.Error("expected session logging off by default")
+		}
+		if !cfg.Logging.Operations || !cfg.Logging.Plan {
+			t.Error("expected operations and plan enabled by default")
+		}
+		if cfg.Logging.Detail != "standard" {
+			t.Errorf("expected detail standard, got %q", cfg.Logging.Detail)
+		}
+	})
+	t.Run("parse logging table", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		writeRepoLoggingConfig(t, tmpDir, LoggingConfig{
+			Session: true, Operations: false, Plan: false, Detail: "minimal",
+		})
+		cfg := LoadRepoConfig(tmpDir)
+		if !cfg.Logging.Session || cfg.Logging.Operations || cfg.Logging.Plan {
+			t.Errorf("unexpected logging config: %+v", cfg.Logging)
+		}
+		if cfg.Logging.Detail != "minimal" {
+			t.Errorf("expected detail minimal, got %q", cfg.Logging.Detail)
+		}
+	})
+	t.Run("session off by default", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		RunHook(HookContext{
+			Event:    HookAgentStarted,
+			Client:   "claude-code",
+			Second:   time.Now().UTC().Format(time.RFC3339),
+			RepoRoot: tmpDir,
+			Input:    json.RawMessage(`{"session_id":"off-by-default"}`),
+		})
+		assertNoHookLogFiles(t, tmpDir)
+	})
+	t.Run("detail levels", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		logDir := filepath.Join(tmpDir, ".repo", "⚡", "🤖", "26", "05", "30", "detail-sess")
+		if err := os.MkdirAll(logDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		hctx := HookContext{Event: HookAgentStarted, Client: "claude-code", Input: json.RawMessage(`{"x":1}`)}
+		result := HookResultBase{Allowed: true}
+		writeRepoLoggingConfig(t, tmpDir, LoggingConfig{Session: true, Detail: "minimal"})
+		writeSessionHookLog(hctx, result, logDir, "detail-sess", LoadRepoConfig(tmpDir).Logging)
+		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+		var meta SessionMeta
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) != 1 {
+			t.Fatalf("expected 1 event, got %d", len(meta.Events))
+		}
+		if meta.Events[0].Native != nil {
+			t.Error("minimal must not include native")
+		}
+		if meta.Events[0].Response != nil {
+			t.Error("minimal must not include response")
+		}
+		writeRepoLoggingConfig(t, tmpDir, LoggingConfig{Session: true, Detail: "full"})
+		writeSessionHookLog(hctx, result, logDir, "detail-sess", LoadRepoConfig(tmpDir).Logging)
+		data, _ = os.ReadFile(filepath.Join(logDir, "session.json"))
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) < 2 {
+			t.Fatalf("expected 2 events after full detail append")
+		}
+		last := meta.Events[len(meta.Events)-1]
+		if last.Native == nil || last.Response == nil {
+			t.Error("full detail must include native and response")
+		}
+	})
+	t.Run("plan off", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		writeRepoLoggingConfig(t, tmpDir, LoggingConfig{Session: true, Plan: false, Detail: "standard"})
+		RunHook(HookContext{
+			Event:    HookAgentToolPlanUpdatingEnded,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+			Input:    json.RawMessage(`{"session_id":"plan-off","tool_input":{"todoList":[{"title":"A","status":"pending"}]}}`),
+		})
+		logFiles := getLogFiles(t, tmpDir)
+		if len(logFiles) != 1 {
+			t.Fatalf("expected session.json, got %v", logFiles)
+		}
+		var meta SessionMeta
+		data, _ := os.ReadFile(logFiles[0])
+		json.Unmarshal(data, &meta)
+		if meta.Plan != nil {
+			t.Error("expected no plan when plan=false")
+		}
+	})
+}
+
 func TestHookLogging(t *testing.T) {
 	tmpDir := t.TempDir()
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
 	logDir := filepath.Join(tmpDir, ".repo", "⚡", "🤖",
 		fmt.Sprintf("%02d", now.Year()%100),
@@ -16702,6 +16817,7 @@ func TestHookLogging(t *testing.T) {
 
 func TestSessionJsonTracksPlan(t *testing.T) {
 	tmpDir := t.TempDir()
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
 	sessionID := "plan-track-session"
 	logDir := filepath.Join(tmpDir, ".repo", "⚡", "🤖",
@@ -17028,6 +17144,7 @@ func TestMergeTicketAgentPlanSteps(t *testing.T) {
 
 func TestHookLoggingToolBlocked(t *testing.T) {
 	tmpDir := t.TempDir()
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
 	now := time.Now().UTC()
 	logDir := filepath.Join(tmpDir, ".repo", "⚡", "🤖",
 		fmt.Sprintf("%02d", now.Year()%100),
@@ -17078,6 +17195,7 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 
 func TestHookLoggingStdinInput(t *testing.T) {
 	tmpDir := t.TempDir()
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
 	logDir := filepath.Join(tmpDir, ".repo", "⚡", "🤖",
 		fmt.Sprintf("%02d", now.Year()%100),
@@ -17244,7 +17362,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 			Input:    json.RawMessage(`{"session_id":"sess1"}`),
 		}
 		before, _ := os.ReadDir(logDir)
-		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		logRepoOperationHook(hctx, result, logDir, now, "sess1", testLoggingConfigSession())
 		after, _ := os.ReadDir(logDir)
 		hasSessionJSON := false
 		for _, e := range after {
@@ -17284,7 +17402,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 			RepoRoot: tmpDir,
 		}
 		before, _ := os.ReadDir(logDir)
-		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		logRepoOperationHook(hctx, result, logDir, now, "sess1", testLoggingConfigSession())
 		after, _ := os.ReadDir(logDir)
 		if len(after) != len(before) {
 			t.Fatalf("expected no extra files beyond session.json, got %d", len(after))
@@ -17316,7 +17434,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 			RepoRoot: tmpDir,
 		}
 		before, _ := os.ReadDir(logDir)
-		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		logRepoOperationHook(hctx, result, logDir, now, "sess1", testLoggingConfigSession())
 		after, _ := os.ReadDir(logDir)
 		if len(after) != len(before) {
 			t.Errorf("expected no new files for Bash tool, got %d new files", len(after)-len(before))
@@ -17350,7 +17468,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 			RepoRoot: tmpDir,
 		}
 		before, _ := os.ReadDir(logDir)
-		logRepoOperationHook(hctx, result, logDir, now, "sess2")
+		logRepoOperationHook(hctx, result, logDir, now, "sess2", testLoggingConfigSession())
 		after, _ := os.ReadDir(logDir)
 		hasSessionJSON := false
 		for _, e := range after {
@@ -17390,7 +17508,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 			RepoRoot: tmpDir,
 		}
 		before, _ := os.ReadDir(logDir)
-		logRepoOperationHook(hctx, result, logDir, now, "sess2")
+		logRepoOperationHook(hctx, result, logDir, now, "sess2", testLoggingConfigSession())
 		after, _ := os.ReadDir(logDir)
 		if len(after) != len(before) {
 			t.Fatalf("expected no extra file beyond session.json, got %d", len(after))
@@ -17412,6 +17530,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 
 func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
 	tmpDir := t.TempDir()
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
 	sessionID := "test-repo-events-session"
 	payload := json.RawMessage(`{"session_id":"test-repo-events-session","tool_name":"mcp__repo__ticket_open","tool_input":{"title":"My Ticket","prompt":"My Prompt","client":"claude-code","llm":"sonnet-4-5","goal":"MY-GOAL"}}`)
 	hctx := HookContext{
@@ -17515,6 +17634,7 @@ func assertNoHookLogFiles(t *testing.T, tmpDir string) {
 
 func TestTrackHookAllEventsLogged(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"test-session-1","llm":"opus-4-6","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := HookContext{
@@ -17614,6 +17734,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 
 func TestTrackHookSearchingPattern(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
 	RunHook(HookContext{
@@ -17666,6 +17787,7 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 
 func TestTrackHookBlockedEvent(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
 	RunHook(HookContext{
@@ -17724,6 +17846,7 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 
 func TestTrackHookTerminalEvents(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
 	RunHook(HookContext{
@@ -17817,6 +17940,7 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 
 func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
 	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
 	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
@@ -20622,6 +20746,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 				t.Errorf("parent: want %q, got %q", tc.expectPar, parent)
 			}
 			tmpDir := t.TempDir()
+			writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 			inputSecond := extractSecondFromInput(string(input))
 			var secondStr string
 			if inputSecond == 0 {
@@ -20752,6 +20877,7 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 		seen[key] = true
 		t.Run(fmt.Sprintf("%s/%s/%s", old.Context.Client, strings.ReplaceAll(old.Context.Event, ".", "-"), old.Context.ToolName), func(t *testing.T) {
 			tmpDir := t.TempDir()
+			writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 			hctx := HookContext{
 				Event:    HookEvent(old.Context.Event),
 				Client:   old.Context.Client,
@@ -20963,6 +21089,7 @@ func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
 
 func TestCheckpointInLoggedEventJSON(t *testing.T) {
 	tmpDir := initTestGitRepo(t, "main")
+	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
 	headCmd.Dir = tmpDir

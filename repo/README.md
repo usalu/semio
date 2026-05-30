@@ -111,6 +111,19 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### 📊 Meaningful stats
 
+## Configuration
+
+Repo-wide settings live in [`.repo/config.toml`](../.repo/config.toml) at the monorepo root.
+
+| Key                  | Default    | Description                                                                 |
+| -------------------- | ---------- | --------------------------------------------------------------------------- |
+| `logging.session`    | `false`    | Write per-session `session.json` under `.repo/⚡/🤖/…` on agent hooks       |
+| `logging.operations` | `true`     | Append derived `agent.<op>.<phase>` events (requires `session = true`)      |
+| `logging.plan`       | `true`     | Track agent plan steps in `session.json` (requires `session = true`)        |
+| `logging.detail`     | `standard` | `minimal` (event only), `standard` (+ response), or `full` (+ native stdin) |
+
+Set `logging.session = true` to enable session-file logging for debugging or coordinator ingestion.
+
 # 📦 Bundles
 
 - [cli](cli/README.md) – Command line tool for monorepo interactions
@@ -119,4 +132,4 @@ No problem, let them write what they know, until the tests are extended and let 
 - [postgres](postgres/README.md) – PostgreSQL schema and configuration
 - [server](server/README.md) – MCP Server and backend services for repo tooling
 - [sqlite](sqlite/README.md) – SQLite schema and helpers
-- [vscode](vscode/README.md) – Visual Studio Code extension for semio 
+- [vscode](vscode/README.md) – Visual Studio Code extension for semio

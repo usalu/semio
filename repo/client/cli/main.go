@@ -16336,6 +16336,113 @@ func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
 
+// #region ⚙️RepoConfig
+
+// 📋LoggingConfig holds hook logging switches and detail for `.repo/config.toml` `[logging]`.
+type LoggingConfig struct {
+	Session    bool
+	Operations bool
+	Plan       bool
+	Detail     string
+}
+
+// ⚙️RepoConfig holds repo-wide settings loaded from `.repo/config.toml`.
+type RepoConfig struct {
+	Logging LoggingConfig
+}
+
+// 🔷DefaultRepoConfig returns defaults when config is missing (`session` off).
+func DefaultRepoConfig() RepoConfig {
+	return RepoConfig{
+		Logging: LoggingConfig{
+			Session:    false,
+			Operations: true,
+			Plan:       true,
+			Detail:     "standard",
+		},
+	}
+}
+
+func parseRepoConfigBool(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "true", "yes", "1", "on":
+		return true
+	default:
+		return false
+	}
+}
+
+func unquoteRepoConfigValue(value string) string {
+	value = strings.TrimSpace(value)
+	if len(value) >= 2 {
+		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+			return value[1 : len(value)-1]
+		}
+	}
+	return value
+}
+
+// 📥LoadRepoConfig reads `.repo/config.toml` under repoRoot; missing file yields defaults.
+func LoadRepoConfig(repoRoot string) RepoConfig {
+	cfg := DefaultRepoConfig()
+	if strings.TrimSpace(repoRoot) == "" {
+		return cfg
+	}
+	path := filepath.Join(repoRoot, ".repo", "config.toml")
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return cfg
+	}
+	section := ""
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if trim == "" || strings.HasPrefix(trim, "#") {
+			continue
+		}
+		if strings.HasPrefix(trim, "[") && strings.HasSuffix(trim, "]") {
+			section = strings.ToLower(strings.Trim(trim, "[]"))
+			continue
+		}
+		if !strings.Contains(trim, "=") {
+			continue
+		}
+		parts := strings.SplitN(trim, "=", 2)
+		key := strings.ToLower(strings.TrimSpace(parts[0]))
+		val := unquoteRepoConfigValue(parts[1])
+		switch section {
+		case "logging":
+			switch key {
+			case "session":
+				cfg.Logging.Session = parseRepoConfigBool(val)
+			case "operations":
+				cfg.Logging.Operations = parseRepoConfigBool(val)
+			case "plan":
+				cfg.Logging.Plan = parseRepoConfigBool(val)
+			case "detail":
+				if val != "" {
+					cfg.Logging.Detail = val
+				}
+			}
+		}
+	}
+	return cfg
+}
+
+func (lg LoggingConfig) includeResponse() bool {
+	switch strings.ToLower(strings.TrimSpace(lg.Detail)) {
+	case "minimal":
+		return false
+	default:
+		return true
+	}
+}
+
+func (lg LoggingConfig) includeNative() bool {
+	return strings.ToLower(strings.TrimSpace(lg.Detail)) == "full"
+}
+
+// #endregion ⚙️RepoConfig
+
 func findRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
 		cwd, err := os.Getwd()
@@ -43636,6 +43743,10 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	}
 	repoRoot = findRepoRoot(repoRoot)
 	SetRootDir(repoRoot)
+	cfg := LoadRepoConfig(repoRoot)
+	if !cfg.Logging.Session {
+		return
+	}
 	now := time.Now().UTC()
 	sessionID := extractSessionIDFromInput(ctx.Input)
 	if sessionID == "" && ctx.Client == "kiro-cli" {
@@ -43653,11 +43764,13 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return
 	}
-	writeSessionHookLog(ctx, result, logDir, sessionID)
-	logRepoOperationHook(ctx, result, logDir, now, sessionID)
+	writeSessionHookLog(ctx, result, logDir, sessionID, cfg.Logging)
+	if cfg.Logging.Operations {
+		logRepoOperationHook(ctx, result, logDir, now, sessionID, cfg.Logging)
+	}
 }
 
-func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string) {
+func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string, lg LoggingConfig) {
 	metaPath := filepath.Join(logDir, "session.json")
 	var meta SessionMeta
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -43702,24 +43815,26 @@ func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sess
 	}
 	eventJSON, _ := json.Marshal(eventMap)
 	entry := EventEntry{Event: eventJSON}
-	if len(ctx.Input) > 0 {
+	if lg.includeNative() && len(ctx.Input) > 0 {
 		entry.Native = &struct {
 			Event json.RawMessage `json:"event"`
 		}{Event: ctx.Input}
 	}
-	entry.Response = &struct {
-		Blocked *bool  `json:"blocked,omitempty"`
-		Message string `json:"message,omitempty"`
-		Reason  string `json:"reason,omitempty"`
-	}{}
-	if !result.IsAllowed() {
-		blocked := true
-		entry.Response.Blocked = &blocked
-		entry.Response.Message = result.GetMessage()
-		entry.Response.Reason = result.GetMessage()
+	if lg.includeResponse() {
+		entry.Response = &struct {
+			Blocked *bool  `json:"blocked,omitempty"`
+			Message string `json:"message,omitempty"`
+			Reason  string `json:"reason,omitempty"`
+		}{}
+		if !result.IsAllowed() {
+			blocked := true
+			entry.Response.Blocked = &blocked
+			entry.Response.Message = result.GetMessage()
+			entry.Response.Reason = result.GetMessage()
+		}
 	}
 	meta.Events = append(meta.Events, entry)
-	if ctx.Event == HookAgentToolPlanUpdatingEnded {
+	if lg.Plan && ctx.Event == HookAgentToolPlanUpdatingEnded {
 		steps := extractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)
 		if len(steps) > 0 {
 			var existing []TicketAgentPlanStep
@@ -44175,7 +44290,10 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 }
 
 // ⬛logRepoOperationHook logs repo operation hook.
-func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string) {
+func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string, lg LoggingConfig) {
+	if !lg.Operations {
+		return
+	}
 	logDir := strings.TrimSpace(operation)
 	sessionID := strings.TrimSpace(msg)
 	if logDir == "" || sessionID == "" {
