@@ -11,7 +11,9 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
+			"@framework/core": resolve(root, "../../../core/index.ts"),
+			"@framework/platform/core": resolve(root, "../../platform/core/index.ts"),
+			"@ui/react": resolve(root, "../../../../ui/react/index.tsx"),
 		},
 	},
 	test: {

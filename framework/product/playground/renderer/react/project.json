@@ -5,7 +5,7 @@
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "framework/playground/renderer/react",
+				"cwd": "framework/product/playground/renderer/react",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

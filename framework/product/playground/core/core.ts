@@ -2,28 +2,29 @@
 /** @emoji 🛝 `@framework/playground/core` — React-neutral playground runtime, one-app shell (selection + filter toolbars, workbench + details), declarative {@link UiNode} bodies, command routing (no DOM). */
 // #endregion 🧲Header
 
-//#region 🔖JsonValue
-export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | readonly JsonValue[] | { readonly [key: string]: JsonValue };
-//#endregion 🔖JsonValue
+export * from "@framework/core";
 
-//#region 🔖Commands
-/** @emoji 🎯 Semantic command routed through the host to {@link CommandBus.dispatch}. */
-export interface CommandDescriptor {
-  readonly controllerId: string;
-  readonly command: string;
-  readonly args?: JsonValue;
-}
-//#endregion 🔖Commands
-
-//#region 🔖Style
-/** @emoji 🎨 Tokenized chrome hints mapped by the renderer. */
-export interface StyleSpec {
-  readonly variant?: "default" | "subtle" | "danger" | "success";
-  readonly size?: "small" | "medium" | "large";
-  readonly density?: "compact" | "normal" | "comfortable";
-}
-//#endregion 🔖Style
+import {
+  BaseAppRuntime,
+  BaseModeRuntime,
+  BaseModeRuntime as ModeRuntime,
+  BaseWindowKindRuntime,
+  mergeAppTools,
+  CommandBus,
+  Controller,
+  createDefaultLayout,
+  createTabStackLayout,
+  mergeById,
+  Platform,
+  resolveMode,
+  type AppTools,
+  type CommandDescriptor,
+  type FooterItem,
+  type SideTabSpec,
+  type ToolItem,
+  type WindowLayout,
+  type WindowMeasure,
+} from "@framework/core";
 
 //#region 🔖UiNode
 export interface UiStackNode {
@@ -33,6 +34,8 @@ export interface UiStackNode {
   readonly padding?: "none" | "standard";
   readonly children: readonly UiNode[];
 }
+
+export type { UiButtonNode, UiSeparatorNode, UiTextNode } from "@framework/core";
 
 export interface UiTextNode {
   readonly type: "text";
@@ -202,7 +205,6 @@ export {
   buildPuzzle5dWindowBody,
   buildCadWindowBody,
   isCanvasOnlyWindowBody,
-  Platform,
 } from "@framework/platform/core";
 
 /** @emoji 📋 Playground alias for {@link buildPuzzle2dWindowBody}. */
@@ -220,39 +222,6 @@ function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
   throw new Error(`Declarative window body "${bodyKey}" must be a single canvas component surface (optional none padding stack wrapper). Found "${node.type}".`);
 }
 //#endregion 🔖UiNode
-
-//#region 🔖WindowMeasure
-export interface WindowMeasureSelect {
-  readonly kind: "select";
-  readonly id: string;
-  readonly label?: string;
-  readonly value: string;
-  readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-  readonly onChange: CommandDescriptor;
-}
-
-export interface WindowMeasureSlider {
-  readonly kind: "slider";
-  readonly id: string;
-  readonly label?: string;
-  readonly value: number;
-  readonly min: number;
-  readonly max: number;
-  readonly step?: number;
-  readonly onChange: CommandDescriptor;
-}
-
-export interface WindowMeasureToggle {
-  readonly kind: "toggle";
-  readonly id: string;
-  readonly label?: string;
-  readonly pressed: boolean;
-  readonly text?: string;
-  readonly onChange: CommandDescriptor;
-}
-
-export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
-//#endregion 🔖WindowMeasure
 
 //#region 🔖WindowEngagement
 /** @emoji 💬 One floating engagement option button; dispatches {@link command} when pressed. */
@@ -289,282 +258,57 @@ export interface WindowEngagement {
 }
 //#endregion 🔖WindowEngagement
 
-//#region 🔖Layout
-export interface WindowLayoutWindowNode {
-  readonly kind: "window";
-  readonly windowKindId: string;
-  readonly title?: string;
-}
-
-export interface WindowLayoutStackNode {
-  readonly kind: "stack";
-  readonly size?: number;
-  readonly children: readonly WindowLayoutWindowNode[];
-}
-
-export interface WindowLayoutAxisNode {
-  readonly kind: "row" | "column";
-  readonly size?: number;
-  readonly children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
-}
-
-export interface WindowLayout {
-  readonly root: WindowLayoutAxisNode | WindowLayoutStackNode;
-}
-
-export function createWindowLayout(windowKindId: string, title?: string): WindowLayoutWindowNode {
-  return { kind: "window", windowKindId, ...(title ? { title } : {}) };
-}
-
-export function createStackLayout(windowKindIds: string[], titles?: string[]): WindowLayout {
-  return {
-    root: {
-      kind: "stack",
-      children: windowKindIds.map((windowKindId, index) => createWindowLayout(windowKindId, titles?.[index])),
-    },
-  };
-}
-
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): WindowLayout {
-  return {
-    root: {
-      kind: direction,
-      children: windowIds.map((id, index) => ({
-        kind: "stack" as const,
-        ...(sizes?.[index] !== undefined ? { size: sizes[index] } : {}),
-        children: [createWindowLayout(id, titles?.[index] ?? id)],
-      })),
-    },
-  };
-}
-//#endregion 🔖Layout
-
-//#region 🔖Expertise
-/** @emoji 🎚 Surface expertise tier for chrome + label resolution. */
-export enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
-}
-//#endregion 🔖Expertise
-
-//#region 🔖Toolbar
-export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transform" | "create" | "view" | "actions" | "settings";
-
-export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transform", "create", "view", "actions", "settings"];
-
-export interface ToolItem {
-  readonly id: string;
-  readonly kind: "button" | "toggle" | "separator";
-  readonly iconId?: string;
-  readonly label?: string;
-  readonly text?: string;
-  readonly title?: string;
-  readonly order?: number;
-  readonly pressed?: boolean;
-  readonly disabled?: boolean;
-  readonly controllerId?: string;
-  readonly command?: string;
-  readonly args?: unknown;
-}
-
-export type AppTools = Partial<Record<AppToolCategory, readonly ToolItem[]>>;
-
-export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
-  if (!base && !extension) return undefined;
-  const merged: AppTools = {};
-  for (const category of APP_TOOL_CATEGORY_ORDER) {
-    const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
-    if (combined.length > 0) (merged as Record<string, readonly ToolItem[]>)[category] = combined;
-  }
-  return Object.keys(merged).length > 0 ? merged : undefined;
-}
-
-export function countAppTools(tools?: AppTools): number {
-  if (!tools) return 0;
-  return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
-}
-
-function hasAppToolCategoryItems(items: readonly ToolItem[] | undefined): boolean {
-  return Boolean(items?.some((item) => item.kind !== "separator"));
-}
-
-/** @emoji 📂 Lists categories that have at least one non-separator tool. */
-export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[] {
-  if (!tools) return [];
-  return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
-}
-//#endregion 🔖Toolbar
-
-//#region 🔖SideTab
-/** @emoji 📑 Side panel tab addressing a declarative `bodyKey` tree host. */
-export interface SideTabSpec {
-  readonly id: string;
-  readonly iconId: string;
-  readonly order?: number;
-  readonly bodyKey: string;
-}
-//#endregion 🔖SideTab
-
-//#region 🔖Footer
-export interface FooterItem {
-  readonly id: string;
-  readonly text?: string;
-  readonly order?: number;
-  readonly iconId?: string;
-  readonly className?: string;
-  readonly disabled?: boolean;
-  readonly controllerId?: string;
-  readonly command?: string;
-  readonly args?: unknown;
-  readonly content?: unknown;
-}
-//#endregion 🔖Footer
-
-//#region 🔖Observable
-export type PlaygroundSubscriber = () => void;
-
-export class ObservableCell<T> {
-  private value: T;
-  private readonly listeners = new Set<PlaygroundSubscriber>();
-
-  constructor(initial: T) {
-    this.value = initial;
-  }
-
-  get(): T {
-    return this.value;
-  }
-
-  set(next: T): void {
-    if (Object.is(this.value, next)) return;
-    this.value = next;
-    for (const listener of this.listeners) listener();
-  }
-
-  subscribe(listener: PlaygroundSubscriber): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-}
-//#endregion 🔖Observable
-
-//#region 🔖CommandBus
-export class CommandBus {
-  private readonly controllers = new Map<string, Controller>();
-
-  register(controller: Controller): void {
-    this.controllers.set(controller.id, controller);
-  }
-
-  unregister(controllerId: string): void {
-    this.controllers.delete(controllerId);
-  }
-
-  dispatch(controllerId: string, command: string, args?: unknown): void {
-    this.controllers.get(controllerId)?.run(command, args);
-  }
-}
-
-export abstract class Controller {
-  readonly id: string;
-  readonly commandBus: CommandBus;
-  private readonly hostNotify: () => void;
-
-  protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
-    this.id = id;
-    this.commandBus = commandBus;
-    this.hostNotify = hostNotify;
-    commandBus.register(this);
-  }
-
-  protected emit(): void {
-    this.hostNotify();
-  }
-
-  dispose(): void {
-    this.commandBus.unregister(this.id);
-  }
-
-  abstract run(command: string, args?: unknown): void;
-}
-//#endregion 🔖CommandBus
-
 //#region 🔖WindowKindRuntime
-export class WindowKindRuntime {
+export class WindowKindRuntime extends BaseWindowKindRuntime {
   /** @emoji 💬 Optional floating engagement (options/input/status); mutable so controllers can rebuild it per snapshot. */
   engagement?: WindowEngagement;
 
   constructor(
-    readonly id: string,
-    readonly label: string,
-    readonly bodyKey: string,
-    readonly iconId?: string,
-    readonly measures: readonly WindowMeasure[] = [],
+    id: string,
+    label: string,
+    bodyKey: string,
+    iconId?: string,
+    measures: readonly WindowMeasure[] = [],
     engagement?: WindowEngagement,
   ) {
+    super(id, label, bodyKey, iconId, measures);
     this.engagement = engagement;
   }
 }
 //#endregion 🔖WindowKindRuntime
 
-//#region 🔖ModeRuntime
-export class ModeRuntime {
-  tools: AppTools = {};
-  windowKinds: WindowKindRuntime[] = [];
-  defaultLayout?: WindowLayout;
-  leftTabs: SideTabSpec[] = [];
-  rightTabs: SideTabSpec[] = [];
-  footerItems: FooterItem[] = [];
+export { ModeRuntime };
+
+//#region 🔖AppRuntime
+/** @emoji 🧩 Playground app runtime (reuses shared {@link BaseAppRuntime} shell). */
+export class AppRuntime extends BaseAppRuntime {
+  declare windowKinds: WindowKindRuntime[];
 
   constructor(
-    readonly id: string,
-    readonly label: string,
-    readonly iconId: string | undefined,
-  ) {}
-}
-//#endregion 🔖ModeRuntime
-
-//#region 🔖Merge
-function mergeById<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
-  if (!base?.length && !extension?.length) return undefined;
-  const merged = new Map<string, T>();
-  base?.forEach((entry) => merged.set(entry.id, entry));
-  extension?.forEach((entry) => merged.set(entry.id, entry));
-  return [...merged.values()];
-}
-
-function resolveMode(app: AppRuntime, requestedModeId: string | null | undefined): ModeRuntime | null {
-  if (!app.modes.length) return null;
-  if (requestedModeId) {
-    const matching = app.modes.find((mode) => mode.id === requestedModeId);
-    if (matching) return matching;
+    id: string,
+    label: string,
+    iconId: string | undefined,
+    controller: import("@framework/core").Controller,
+    layout: WindowLayout,
+    windowKinds: readonly WindowKindRuntime[],
+  ) {
+    super(id, label, iconId, controller, layout, windowKinds);
   }
-  if (app.defaultModeId) {
-    const matching = app.modes.find((mode) => mode.id === app.defaultModeId);
-    if (matching) return matching;
+
+  override resolve(requestedModeId?: string | null): ResolvedAppState {
+    const modeId = requestedModeId ?? this.getActiveModeId();
+    return resolveAppState(this, modeId);
   }
-  return app.modes[0] ?? null;
 }
-//#endregion 🔖Merge
+//#endregion 🔖AppRuntime
 
 //#region 🔖ResolvedState
-export interface ResolvedAppState {
-  readonly id: string;
-  readonly activeModeId: string | null;
-  readonly label: string;
-  readonly iconId: string | undefined;
-  readonly tools: AppTools | undefined;
-  readonly windowKinds: readonly WindowKindRuntime[];
-  readonly defaultLayout: WindowLayout;
-  readonly leftTabs: SideTabSpec[];
-  readonly rightTabs: SideTabSpec[];
-  readonly footerItems: FooterItem[];
-}
+export type { ResolvedAppState } from "@framework/core";
 
+/** @emoji 🧮 Resolves playground app + active mode overlays. */
 export function resolveAppState(app: AppRuntime, requestedModeId?: string | null): ResolvedAppState {
   const mode = resolveMode(app, requestedModeId);
-  const mergedWindowKinds = mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds;
+  const mergedWindowKinds = (mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds) as WindowKindRuntime[];
   const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
   const mergedRight = mergeById(app.rightTabs, mode?.rightTabs) ?? app.rightTabs;
   return {
@@ -581,52 +325,6 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
   };
 }
 //#endregion 🔖ResolvedState
-
-//#region 🔖AppRuntime
-export class AppRuntime {
-  readonly modes: ModeRuntime[] = [];
-  defaultModeId?: string;
-  private activeModeIdOverride: string | null = null;
-  windowKinds: WindowKindRuntime[] = [];
-  defaultLayout!: WindowLayout;
-  tools: AppTools = {};
-  leftTabs: SideTabSpec[] = [];
-  rightTabs: SideTabSpec[] = [];
-  footerItems: FooterItem[] = [];
-  readonly controller: Controller;
-
-  constructor(
-    readonly id: string,
-    readonly label: string,
-    readonly iconId: string | undefined,
-    controller: Controller,
-    layout: WindowLayout,
-    windowKinds: readonly WindowKindRuntime[],
-  ) {
-    this.controller = controller;
-    this.defaultLayout = layout;
-    this.windowKinds = [...windowKinds];
-  }
-
-  addMode(mode: ModeRuntime): void {
-    this.modes.push(mode);
-  }
-
-  getActiveModeId(): string | null {
-    if (this.activeModeIdOverride) return this.activeModeIdOverride;
-    return resolveMode(this, null)?.id ?? null;
-  }
-
-  setActiveModeId(modeId: string | null): void {
-    this.activeModeIdOverride = modeId;
-  }
-
-  resolve(requestedModeId?: string | null): ResolvedAppState {
-    const modeId = requestedModeId ?? this.getActiveModeId();
-    return resolveAppState(this, modeId);
-  }
-}
-//#endregion 🔖AppRuntime
 
 //#region 🔖WindowBodyViewContext
 export interface WindowBodyViewContext {
@@ -1081,7 +779,7 @@ if (import.meta.vitest) {
   describe("canonical window bodies", () => {
     it("buildBoardWindowBody is canvas-only", () => {
       const node = buildBoardWindowBody("puzzle.2d/v1", "board-ctrl", "pane-a");
-      expect(node).toEqual({ type: "board", surfaceId: "puzzle.2d/v1", controllerId: "board-ctrl", paneId: "pane-a" });
+      expect(node).toEqual({ type: "puzzle2d", componentKind: "puzzle2d", surfaceId: "puzzle.2d/v1", controllerId: "board-ctrl", paneId: "pane-a" });
     });
   });
 
@@ -1100,7 +798,7 @@ if (import.meta.vitest) {
         generation: wb.generation,
       };
       const main = getWindowBodyFactory(TEST_IDS.mainBodyKey)?.(ctx);
-      expect(main?.type).toBe("scene3d");
+      expect(main?.type).toBe("puzzle3d");
     });
   });
 }

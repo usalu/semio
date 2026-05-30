@@ -5,7 +5,7 @@
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "framework/platform/core",
+				"cwd": "framework/product/platform/core",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

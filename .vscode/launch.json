@@ -332,6 +332,39 @@
       }
     },
     {
+      "name": "🛠️dev🧱framework🧪core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.1
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🧪platform",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/platform/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.2
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🧪playground",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/playground/core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.3
+      }
+    },
+    {
       "name": "🛠️dev👤semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",

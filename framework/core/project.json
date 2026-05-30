@@ -1,11 +1,11 @@
 {
-	"name": "@framework/playground/core",
-	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@framework/core",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "framework/product/playground/core",
+				"cwd": "framework/core",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

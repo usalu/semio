@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "semio",
@@ -151,14 +152,24 @@
         "vite": "^6.0.0",
       },
     },
-    "framework/platform/core": {
-      "name": "@framework/platform/core",
+    "framework/core": {
+      "name": "@framework/core",
       "version": "0.1.0",
       "devDependencies": {
         "typescript": "^5.9.3",
       },
     },
-    "framework/platform/renderer/react": {
+    "framework/product/platform/core": {
+      "name": "@framework/platform/core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@framework/core": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "framework/product/platform/renderer/react": {
       "name": "@framework/platform/renderer/react",
       "version": "0.1.0",
       "dependencies": {
@@ -181,25 +192,18 @@
         "typescript": "^5.9.3",
       },
     },
-    "framework/playground/core": {
+    "framework/product/playground/core": {
       "name": "@framework/playground/core",
       "version": "0.1.0",
       "dependencies": {
+        "@framework/core": "workspace:*",
         "@framework/platform/core": "workspace:*",
-        "@ui/react": "workspace:*",
-        "clsx": "^2.1.1",
-        "lucide-react": "^0.536.0",
-        "react": "^19.2.3",
-        "react-dom": "^19.2.3",
-        "tailwind-merge": "^3.3.1",
       },
       "devDependencies": {
-        "@types/react": "^19.2.8",
-        "@types/react-dom": "^19.2.3",
         "typescript": "^5.9.3",
       },
     },
-    "framework/playground/renderer/react": {
+    "framework/product/playground/renderer/react": {
       "name": "@framework/playground/renderer/react",
       "version": "0.1.0",
       "dependencies": {
@@ -811,9 +815,9 @@
   },
   "overrides": {
     "@semio/assets": "workspace:*",
-    "tmp": "^0.2.5",
-    "diff": "^8.0.3",
     "@semio/js": "workspace:*",
+    "diff": "^8.0.3",
+    "tmp": "^0.2.5",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
@@ -1272,13 +1276,15 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
-    "@framework/platform/core": ["@framework/platform/core@workspace:framework/platform/core"],
+    "@framework/core": ["@framework/core@workspace:framework/core"],
 
-    "@framework/platform/renderer/react": ["@framework/platform/renderer/react@workspace:framework/platform/renderer/react"],
+    "@framework/platform/core": ["@framework/platform/core@workspace:framework/product/platform/core"],
 
-    "@framework/playground/core": ["@framework/playground/core@workspace:framework/playground/core"],
+    "@framework/platform/renderer/react": ["@framework/platform/renderer/react@workspace:framework/product/platform/renderer/react"],
 
-    "@framework/playground/renderer/react": ["@framework/playground/renderer/react@workspace:framework/playground/renderer/react"],
+    "@framework/playground/core": ["@framework/playground/core@workspace:framework/product/playground/core"],
+
+    "@framework/playground/renderer/react": ["@framework/playground/renderer/react@workspace:framework/product/playground/renderer/react"],
 
     "@gar/promisify": ["@gar/promisify@1.1.3", "", {}, "sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw=="],
 

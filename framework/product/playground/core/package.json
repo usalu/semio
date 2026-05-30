@@ -9,17 +9,10 @@
 		".": "./core.ts"
 	},
 	"dependencies": {
-		"@framework/platform/core": "workspace:*",
-		"@ui/react": "workspace:*",
-		"clsx": "^2.1.1",
-		"lucide-react": "^0.536.0",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-		"tailwind-merge": "^3.3.1"
+		"@framework/core": "workspace:*",
+		"@framework/platform/core": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/react": "^19.2.8",
-		"@types/react-dom": "^19.2.3",
 		"typescript": "^5.9.3"
 	},
 	"license": "LGPL-3.0-or-later",

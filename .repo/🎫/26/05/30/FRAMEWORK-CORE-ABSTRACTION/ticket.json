@@ -1,0 +1,32 @@
+{
+  "title": "Framework Core Abstraction",
+  "status": "closed",
+  "description": "Extract render-independent shared primitives and runtime shell into @framework/core; platform and playground product cores specialize it; fix framework/product workspace wiring.",
+  "summary": "Created @framework/core with JsonValue, declarative primitives, layout/toolbar/command routing, BaseWindowKindRuntime/BaseModeRuntime/BaseAppRuntime, Platform shell, createBodyRegistry, and vitest coverage. Refactored @framework/platform/core to re-export core and extend runtime for capabilities/surfaces/plugins. Refactored @framework/playground/core to re-export core, extend WindowKindRuntime with engagement, and import canvas builders from platform. Fixed root workspaces, package paths, script.ts repo imports, vitest aliases, removed React deps from playground core, regenerated @framework symlinks. All three core test suites pass.",
+  "files": [
+    "framework/core/index.ts",
+    "framework/core/package.json",
+    "framework/core/project.json",
+    "framework/core/script.ts",
+    "framework/core/vitest.config.ts",
+    "framework/product/platform/core/index.ts",
+    "framework/product/platform/core/package.json",
+    "framework/product/platform/core/project.json",
+    "framework/product/platform/core/script.ts",
+    "framework/product/platform/core/vitest.config.ts",
+    "framework/product/playground/core/core.ts",
+    "framework/product/playground/core/package.json",
+    "framework/product/playground/core/project.json",
+    "framework/product/playground/core/script.ts",
+    "framework/product/playground/core/vitest.config.ts",
+    "framework/product/platform/renderer/react/script.ts",
+    "framework/product/platform/renderer/react/vitest.config.ts",
+    "framework/product/platform/renderer/react/package.json",
+    "framework/product/platform/renderer/react/project.json",
+    "framework/product/playground/renderer/react/script.ts",
+    "framework/product/playground/renderer/react/project.json",
+    "package.json",
+    ".vscode/launch.json"
+  ],
+  "goal": "🎯AI-OPTIMIZED-REPO"
+}

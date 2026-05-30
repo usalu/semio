@@ -4,31 +4,31 @@ overview: Extract the shared, render-independent primitives and runtime shell du
 todos:
   - id: ticket
     content: Open ticket .repo/🎫/26/05/30/FRAMEWORK-CORE-ABSTRACTION (goal AI-OPTIMIZED-REPO) on disk per convention
-    status: in_progress
+    status: completed
   - id: scaffold-core
     content: Create framework/core package.json, project.json, script.ts, vitest.config.ts (name @framework/core, depth-2 relative paths)
-    status: pending
+    status: completed
   - id: write-core
     content: Populate framework/core/index.ts with shared primitives + runtime shell base classes (CommandBus, Controller, ObservableCell, WindowKindRuntime/ModeRuntime/AppRuntime/ResolvedAppState bases, Platform shell, generic body registry) using //#region blocks + emoji docstrings
-    status: pending
+    status: completed
   - id: refactor-platform
     content: Refactor @framework/platform/core to re-export from @framework/core and specialize runtime/UI-node/surface/plugin code; keep platform-specific tests
-    status: pending
+    status: completed
   - id: refactor-playground
     content: Refactor @framework/playground/core to re-export from @framework/core, specialize WindowKindRuntime (engagement) and playground nodes/controllers; keep playground-specific tests
-    status: pending
+    status: completed
   - id: core-tests
     content: Extend the in-source 🧪Tests region in framework/core/index.ts to cover layout factories, toolbar merge, mergeById, CommandBus, ObservableCell
-    status: pending
+    status: completed
   - id: wiring
     content: Fix root workspaces, stale project.json/script.ts/package.json/vitest paths, add @framework/core deps, prune unused playground React deps, register launch.json entries
-    status: pending
+    status: completed
   - id: reinstall
     content: Run bun install to regenerate correct @framework symlinks and remove broken ones
-    status: pending
+    status: completed
   - id: validate
     content: Run vitest for all three cores, typecheck renderers, grep cores for React/DOM imports; close ticket with summary + touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 
