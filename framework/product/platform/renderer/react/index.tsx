@@ -130,7 +130,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
 import { BoardCanvas, parseBoardFixtureV1, type BoardSelectionSnapshot } from "@puzzle/2d/react";
-import { parseFixtureV1 } from "@puzzle/3d/react";
+import { parseFixtureV1, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
@@ -1625,7 +1625,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 	const instanceId = model.instanceId || node.surfaceId;
 	const controller = platform ? getPlatformControllerById(platform, component.controllerId) : undefined;
 	const topologyStore = usePlatformTopologyStore(controller, instanceId);
-	const flatSelect = React.useMemo(
+	const puzzle2dSelect = React.useMemo(
 		() =>
 			model.presentation === "flat"
 				? {
@@ -1639,6 +1639,21 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 				: undefined,
 		[commandBus, component.controllerId, instanceId, model.presentation],
 	);
+	const puzzle3dSelect = React.useMemo(
+		() =>
+			model.presentation === "volume"
+				? {
+						onSelect: (snapshot: Puzzle3dSelectionSnapshot) => {
+							commandBus.dispatch(component.controllerId, "applyBoardSelection", {
+								instanceId,
+								boardIds: [...snapshot.objectIds, ...snapshot.vortexIds, ...snapshot.attractionIds],
+							});
+						},
+					}
+				: undefined,
+		[commandBus, component.controllerId, instanceId, model.presentation],
+	);
+	const fiveDMode = model.presentation === "volume" ? "3d" : "2d";
 	if (model.emptyMessage) {
 		return (
 			<div
@@ -1666,7 +1681,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			data-testid={`platform-five-d-${instanceId}`}
 		>
 			<StoreProvider store={topologyStore}>
-				<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={instanceId} flat={flatSelect} />
+				<FiveD mode={fiveDMode} instanceId={instanceId} puzzle2d={puzzle2dSelect} puzzle3d={puzzle3dSelect} />
 			</StoreProvider>
 		</div>
 	);

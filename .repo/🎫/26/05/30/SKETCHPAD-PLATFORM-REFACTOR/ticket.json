@@ -1,9 +1,9 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Docs app: lazy MDX loading (sketchpadLoadMdxModule, sketchpadResolveMdxModuleKey) in index.ts; boot.ts registers SketchpadDocsMdxHost with MDXProvider + @ui/react components and internal /docs/ link handling. Home table sort via URL (?sort=\u0026dir=) and palette commands. Docs workbench panel shows section context. Exported SKETCHPAD_SURFACE_DOCS_PAGE. 21/21 tests pass.",
+  "summary": "FiveD platform renderer: map flat/volume presentation to 2d/3d mode; wire puzzle2d.onSelect and puzzle3d.onSelect to applyBoardSelection (volume passes objectIds, vortexIds, attractionIds). Kit diagram: port union-find (compatiblePorts + shared code) and type↔type compat edges. Tests: 26/26 sketchpad vitest.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -18,6 +18,7 @@
     "⚪67dcb7fb3a494b1196311e7089596471",
     "⚪f62cebc19b1d4192b204bc377fb71ee1",
     "⚪45cb01f69a6944bdab704d1c83055c10",
-    "⚪502b471a512846c9a0569cc2508a9335"
+    "⚪502b471a512846c9a0569cc2508a9335",
+    "⚪d63d75d879354bdc834a07661fd0c3a3"
   ]
 }

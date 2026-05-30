@@ -228,29 +228,33 @@ export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, to
       setMeshes([]);
       return;
     }
-    const solids = listModelSolidRefs(model);
+    const modelAtStart = model;
+    const revisionAtStart = revision;
+    const solids = listModelSolidRefs(modelAtStart);
     if (solids.length === 0) {
       setMeshes([]);
       return;
     }
+    setMeshes([]);
     let cancelled = false;
     void (async () => {
       const rows = await Promise.all(
         solids.map(async (solid) => {
           try {
-            const mesh = await kernel.tessellate(solid, tolerance, model);
+            const mesh = await kernel.tessellate(solid, tolerance, modelAtStart);
             return isRenderableMeshTransfer(mesh) ? { solid, mesh } : null;
           } catch {
             return null;
           }
         }),
       );
-      if (!cancelled) setMeshes(rows.filter((row): row is { readonly solid: SolidRef; readonly mesh: MeshTransfer } => row !== null));
+      if (cancelled || revisionAtStart !== modelAtStart.revision) return;
+      setMeshes(rows.filter((row): row is { readonly solid: SolidRef; readonly mesh: MeshTransfer } => row !== null));
     })();
     return () => {
       cancelled = true;
     };
-  }, [kernel, revision, tolerance]);
+  }, [kernel, model, revision, tolerance]);
   return meshes;
 }
 
@@ -367,9 +371,20 @@ function mergeDisplayWithArchivedBoxes(base: DisplayModel, archived: readonly Ar
   return { ...base, items: [...extra, ...base.items] };
 }
 
+/** @emoji 📦 True when a history entry should leave a persistent box footprint overlay (not transforms). */
+export function historyEntryArchivesBoxFootprint(interactionId: string): boolean {
+  if (interactionId.startsWith("transform.")) return false;
+  if (interactionId.startsWith("selection.")) return false;
+  if (interactionId.startsWith("measure.")) return false;
+  if (interactionId === "primitive.box") return true;
+  if (interactionId.includes("construct") && /box/i.test(interactionId)) return true;
+  return false;
+}
+
 function archivedBoxesFromHistory(history: DocumentHistory): readonly ArchivedBoxLayout[] {
   return history
     .entries()
+    .filter((mod) => historyEntryArchivesBoxFootprint(mod.interactionId))
     .map((mod) => (mod.result.archiveContext ? tryArchivedBoxFromContext(mod.result.archiveContext) : null))
     .filter((box): box is ArchivedBoxLayout => box !== null);
 }
@@ -1247,47 +1262,6 @@ function GeometryTargetWireframes({
   );
 }
 
-function GeometryTargetPreviewMeshes({
-  geometry,
-  targets,
-  transform,
-  color,
-  opacity,
-}: {
-  readonly geometry: SpatialPickGeometry;
-  readonly targets: readonly { readonly kind: ModelEntityKind; readonly id: string }[];
-  readonly transform: (point: Vec3) => Vec3;
-  readonly color: string;
-  readonly opacity: number;
-}): ReactNode {
-  const buckets = reactHostPort.useMemo(() => geometryBuckets(geometry), [geometry]);
-  const solids = reactHostPort.useMemo(() => {
-    const out: { readonly key: string; readonly center: Vec3; readonly size: Vec3 }[] = [];
-    for (const target of targets) {
-      const pts = geometryEntityPointsForPickTarget(buckets, target).map(transform);
-      if (target.kind === "vertex" && pts[0]) {
-        out.push({ key: `${target.kind}:${target.id}:v`, center: pts[0], size: [0.1, 0.1, 0.1] });
-        continue;
-      }
-      const bounds = targetBounds(pts);
-      if (!bounds) continue;
-      out.push({ key: `${target.kind}:${target.id}`, center: bounds.center, size: bounds.size });
-    }
-    return out;
-  }, [buckets, targets, transform]);
-  if (!solids.length) return null;
-  return (
-    <group>
-      {solids.map((solid) => (
-        <mesh key={solid.key} position={solid.center} scale={solid.size} raycast={raycastNone}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.12} transparent opacity={opacity} depthWrite={false} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly geometry?: SpatialPickGeometry | null }): ReactNode {
   const p = item.params;
   if (!p) return null;
@@ -1308,7 +1282,6 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
     return (
       <group>
         {ghost ? <GeometryTargetWireframes geometry={geometry} targets={targets} transform={(pt) => pt} color="#4a6088" opacity={0.35} /> : null}
-        <GeometryTargetPreviewMeshes geometry={geometry} targets={targets} transform={transform} color={meshColor} opacity={meshOpacity} />
         <GeometryTargetWireframes geometry={geometry} targets={targets} transform={transform} color={wireColor} opacity={wireOpacity} />
         {from ? (
           <mesh position={from} raycast={raycastNone}>
@@ -2374,6 +2347,7 @@ export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces 
 /** @emoji 🧊 Renders all committed document solids tessellated by the active kernel. */
 export function CommittedMeshLayer({
   meshes,
+  modelRevision,
   pickable = false,
   showFaces = true,
   showEdges = true,
@@ -2381,6 +2355,7 @@ export function CommittedMeshLayer({
   onFacePointerDown,
 }: {
   readonly meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
+  readonly modelRevision?: number;
   readonly pickable?: boolean;
   readonly showFaces?: boolean;
   readonly showEdges?: boolean;
@@ -2388,10 +2363,11 @@ export function CommittedMeshLayer({
   readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 }): ReactNode {
   if (meshes.length === 0 || (!showFaces && !showEdges)) return null;
+  const rev = modelRevision ?? 0;
   return (
     <group>
       {meshes.map((row, i) => (
-        <TessellatedCommitMesh key={`${row.solid}:${meshTransferContentKey(row.mesh, i)}`} mesh={row.mesh} pickable={pickable} showFaces={showFaces} showEdges={showEdges} onFacePointerMove={onFacePointerMove} onFacePointerDown={onFacePointerDown} />
+        <TessellatedCommitMesh key={`${row.solid}:r${rev}:${meshTransferContentKey(row.mesh, i)}`} mesh={row.mesh} pickable={pickable} showFaces={showFaces} showEdges={showEdges} onFacePointerMove={onFacePointerMove} onFacePointerDown={onFacePointerDown} />
       ))}
     </group>
   );
@@ -2844,6 +2820,7 @@ export function InteractionSpatialView({
       {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} /> : null}
       <CommittedMeshLayer
         meshes={layerMeshes}
+        modelRevision={geometry?.revision}
         pickable={committedMeshPickable}
         showFaces={sceneVisibility.showCommittedFaces}
         showEdges={sceneVisibility.showCommittedEdges}

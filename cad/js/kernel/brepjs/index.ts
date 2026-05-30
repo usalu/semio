@@ -1849,9 +1849,34 @@ function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
 	return modelFaceIdsForSolid(model, cell).length > 0;
 }
 
+/** @emoji ✅ True when box shell corners still form an axis-aligned box (not sheared). */
+function isBoxShellAxisAligned(model: Model, cell: SolidRecord): boolean {
+	if (cell.solid?.kind !== "box") return false;
+	const pfx = `box-${cell.id}`;
+	const read = (suffix: string) => geom(model).vertices[`${pfx}-${suffix}` as VertexRef]?.position;
+	const bottom = [read("v000"), read("v100"), read("v110"), read("v010")];
+	const top = [read("v001"), read("v101"), read("v111"), read("v011")];
+	if (bottom.some((p) => !p) || top.some((p) => !p)) return false;
+	const tol = 1e-4;
+	const uniq = (vals: readonly number[]) => {
+		const out: number[] = [];
+		for (const v of vals) {
+			if (!out.some((x) => Math.abs(x - v) <= tol)) out.push(v);
+		}
+		return out;
+	};
+	const zBottom = uniq(bottom.map((p) => p![2]));
+	const zTop = uniq(top.map((p) => p![2]));
+	if (zBottom.length !== 1 || zTop.length !== 1) return false;
+	if (uniq(bottom.map((p) => p![0])).length > 2 || uniq(bottom.map((p) => p![1])).length > 2) return false;
+	if (uniq(top.map((p) => p![0])).length > 2 || uniq(top.map((p) => p![1])).length > 2) return false;
+	return true;
+}
+
 /** @emoji 📦 Recomputes a box `SolidPrimitive` from live shell vertices (planar box edits). */
 function boxSolidPrimitiveFromShellVertices(model: Model, cell: SolidRecord): SolidPrimitive | null {
 	if (cell.solid?.kind !== "box") return null;
+	if (!isBoxShellAxisAligned(model, cell)) return null;
 	const pfx = `box-${cell.id}`;
 	const read = (suffix: string) => geom(model).vertices[`${pfx}-${suffix}` as VertexRef]?.position;
 	const p000 = read("v000");
@@ -2073,8 +2098,10 @@ class BrepjsWasmEngine {
 		if (solidRecordHasShellTopology(model, solid)) {
 			const fromTopology = solidFromModelTopology(model, solid);
 			if (fromTopology) return fromTopology;
-			const syncedBox = boxSolidPrimitiveFromShellVertices(model, solid);
-			if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
+			if (isBoxShellAxisAligned(model, solid)) {
+				const syncedBox = boxSolidPrimitiveFromShellVertices(model, solid);
+				if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
+			}
 		}
 		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const points = derivedSolidPoints(model, solid);

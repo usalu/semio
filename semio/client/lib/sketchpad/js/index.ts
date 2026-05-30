@@ -113,6 +113,32 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
 	const kit = await store.wip().theKit().kit();
 	return { kit, session };
 }
+
+/** @emoji 📤 Wraps a kit DTO in the `wip.initialKit` envelope used by {@link importKit}. */
+export function sketchpadKitToSemioEnvelope(kit: Kit): { readonly wip: { readonly initialKit: Kit } } {
+	return { wip: { initialKit: kit } };
+}
+
+/** @emoji 💾 Triggers a browser download of kit JSON (semio envelope). */
+export function sketchpadDownloadKitJson(kit: Kit, filename?: string): void {
+	if (typeof document === "undefined") return;
+	const json = JSON.stringify(sketchpadKitToSemioEnvelope(kit), null, 2);
+	const blob = new Blob([json], { type: "application/json" });
+	const url = URL.createObjectURL(blob);
+	const anchor = document.createElement("a");
+	const safeName = (kit.name ?? kit.id ?? "kit").replace(/[^\w.-]+/g, "-");
+	anchor.href = url;
+	anchor.download = filename ?? `${safeName}.kit.semio.json`;
+	anchor.click();
+	URL.revokeObjectURL(url);
+}
+
+/** @emoji 📋 Copies kit JSON (semio envelope) to the clipboard when available. */
+export async function sketchpadCopyKitJsonToClipboard(kit: Kit): Promise<boolean> {
+	if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return false;
+	await navigator.clipboard.writeText(JSON.stringify(sketchpadKitToSemioEnvelope(kit), null, 2));
+	return true;
+}
 //#endregion 🔖KitImport
 
 //#region 🔖KitHost
@@ -231,6 +257,29 @@ export function sketchpadConfigureBrowserKitFactories(): void {
 		file: sketchpadBrowserFileKitFactory,
 		folder: sketchpadBrowserFolderKitFactory,
 		remote: sketchpadDefaultRemoteKitFactory,
+	});
+}
+
+let sketchpadHomeDropzoneInstalled = false;
+
+/** @emoji 📥 Installs a document-level drop handler on `/` that imports kit archives. */
+export function sketchpadInstallHomeDropzone(): void {
+	if (typeof window === "undefined" || sketchpadHomeDropzoneInstalled) return;
+	sketchpadHomeDropzoneInstalled = true;
+	window.addEventListener("dragover", (event) => {
+		const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
+		if (path !== "/") return;
+		event.preventDefault();
+	});
+	window.addEventListener("drop", (event) => {
+		const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
+		if (path !== "/") return;
+		event.preventDefault();
+		const file = event.dataTransfer?.files?.[0];
+		if (!file) return;
+		const ctrl = getSketchpadShellController();
+		if (!ctrl) return;
+		ctrl.run("importKitFromDrop", { file });
 	});
 }
 
@@ -590,16 +639,19 @@ export function sketchpadBuildHomeTableModel(input: {
 	}
 	return {
 		columns: [
-			{ id: "name", label: "Name" },
-			{ id: "version", label: "Version" },
-			{ id: "kind", label: "Kind" },
-			{ id: "updated", label: "Updated" },
+			{ id: "name", label: "Name", sortable: true },
+			{ id: "version", label: "Version", sortable: true },
+			{ id: "kind", label: "Kind", sortable: true },
+			{ id: "updated", label: "Updated", sortable: true },
 		],
 		rows,
 		selectedRowIds: input.home.selectedKitIds,
 		sortColumnId: input.home.sortColumnId,
 		sortDescending: input.home.sortDescending,
-		emptyMessage: rows.length === 0 ? "No kits open — use Open to add kits" : undefined,
+			emptyMessage:
+				rows.length === 0
+					? "No kits open — drop a .kit.semio.json / .zip here or use Import from the command palette"
+					: undefined,
 	};
 }
 
@@ -1102,6 +1154,148 @@ export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: stri
 	return [...byId.values()];
 }
 
+function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unknown>[] {
+	const byId = new Map<string, Record<string, unknown>>();
+	const remember = (port: unknown) => {
+		if (port == null || typeof port !== "object") return;
+		const row = port as Record<string, unknown>;
+		const id = sketchpadReadEntityId(row);
+		if (!id) return;
+		const prev = byId.get(id);
+		if (!prev) {
+			byId.set(id, { ...row });
+			return;
+		}
+		const mergedCompat = new Set<string>();
+		for (const ref of sketchpadReadCompatiblePortIds(prev)) mergedCompat.add(ref);
+		for (const ref of sketchpadReadCompatiblePortIds(row)) mergedCompat.add(ref);
+		byId.set(id, {
+			...prev,
+			...row,
+			compatiblePorts: [...mergedCompat].map((compatId) => ({ id: compatId })),
+		});
+	};
+	for (const type of kit.types ?? []) {
+		for (const port of (type as { ports?: readonly unknown[] }).ports ?? []) remember(port);
+		for (const connector of type.connectors ?? []) remember((connector as { port?: unknown }).port);
+	}
+	return [...byId.values()];
+}
+
+function sketchpadReadCompatiblePortIds(port: Record<string, unknown>): readonly string[] {
+	const raw = port["compatiblePorts"];
+	if (raw == null) return [];
+	const ids: string[] = [];
+	const visit = (entry: unknown) => {
+		const id = sketchpadReadEntityId(entry);
+		if (id) ids.push(id);
+	};
+	if (Array.isArray(raw)) {
+		for (const entry of raw) visit(entry);
+		return ids;
+	}
+	if (typeof raw === "object" && raw !== null) {
+		const items = (raw as { items?: readonly unknown[] }).items;
+		if (Array.isArray(items)) {
+			for (const entry of items) visit(entry);
+			return ids;
+		}
+	}
+	return ids;
+}
+
+/** @emoji 🔗 Union-find map grouping kit ports by {@code compatiblePorts} and shared {@code code}. */
+export function sketchpadCreatePortGroupMap(
+	ports: readonly { readonly id: string; readonly code?: string | null; readonly compatiblePorts?: readonly unknown[] }[],
+): Map<string, string> {
+	const parent = new Map<string, string>();
+	const register = (id: string) => {
+		if (!parent.has(id)) parent.set(id, id);
+	};
+	for (const port of ports) {
+		const id = sketchpadReadEntityId(port);
+		if (id) register(id);
+	}
+	const find = (id: string): string => {
+		const direct = parent.get(id);
+		if (!direct) return id;
+		if (direct === id) return direct;
+		const root = find(direct);
+		parent.set(id, root);
+		return root;
+	};
+	const union = (left: string, right: string) => {
+		const leftRoot = find(left);
+		const rightRoot = find(right);
+		if (leftRoot === rightRoot) return;
+		parent.set(rightRoot, leftRoot);
+	};
+	for (const port of ports) {
+		const id = sketchpadReadEntityId(port);
+		if (!id) continue;
+		for (const relatedId of sketchpadReadCompatiblePortIds(port as Record<string, unknown>)) {
+			register(relatedId);
+			union(id, relatedId);
+		}
+		const code = typeof port.code === "string" ? port.code.trim() : "";
+		if (code.length > 0) {
+			for (const other of ports) {
+				const otherId = sketchpadReadEntityId(other);
+				const otherCode = typeof other.code === "string" ? other.code.trim() : "";
+				if (otherId && otherId !== id && otherCode === code) union(id, otherId);
+			}
+		}
+	}
+	const groups = new Map<string, string>();
+	for (const id of parent.keys()) groups.set(id, find(id));
+	return groups;
+}
+
+/** @emoji ↔️ Adds dashed type adjacency edges for types that share compatible port groups. */
+export function sketchpadKitDiagramPushTypeCompatEdges(
+	kit: Kit,
+	edges: SketchpadBoardFixtureV1["edges"],
+	edgeIds: Set<string>,
+): void {
+	const ports = sketchpadCollectKitPortRecords(kit);
+	if (ports.length === 0) return;
+	const groups = sketchpadCreatePortGroupMap(
+		ports.map((port) => ({
+			id: String(port["id"] ?? ""),
+			code: typeof port["code"] === "string" ? port["code"] : null,
+			compatiblePorts: sketchpadReadCompatiblePortIds(port).map((compatId) => ({ id: compatId })),
+		})),
+	);
+	const portToTypes = new Map<string, Set<string>>();
+	for (const type of kit.types ?? []) {
+		for (const connector of type.connectors ?? []) {
+			const portId = sketchpadReadEntityId((connector as { port?: unknown }).port);
+			if (!portId) continue;
+			const typeIds = portToTypes.get(portId) ?? new Set<string>();
+			typeIds.add(type.id);
+			portToTypes.set(portId, typeIds);
+		}
+	}
+	const rootToTypes = new Map<string, Set<string>>();
+	for (const [portId, typeIds] of portToTypes) {
+		const root = groups.get(portId) ?? portId;
+		const merged = rootToTypes.get(root) ?? new Set<string>();
+		for (const typeId of typeIds) merged.add(typeId);
+		rootToTypes.set(root, merged);
+	}
+	for (const typeIds of rootToTypes.values()) {
+		if (typeIds.size < 2) continue;
+		const sorted = [...typeIds].sort();
+		for (let i = 0; i < sorted.length; i++) {
+			for (let j = i + 1; j < sorted.length; j++) {
+				const left = sorted[i]!;
+				const right = sorted[j]!;
+				sketchpadKitDiagramPushEdge(edges, edgeIds, `compat-type:${left}-type:${right}`, `type:${left}`, `type:${right}`);
+			}
+		}
+	}
+}
+
 function sketchpadKitDiagramFileLabel(file: Record<string, unknown>): string {
 	const description = file["description"];
 	if (typeof description === "string" && description.length > 0) return description;
@@ -1273,6 +1467,7 @@ export function sketchpadKitBoardFixtureFromKit(kit: Kit): SketchpadBoardFixture
 			);
 		}
 	}
+	sketchpadKitDiagramPushTypeCompatEdges(kit, edges, edgeIds);
 	return {
 		schema: "puzzle.2d.fixture/v1",
 		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
@@ -1371,7 +1566,7 @@ export function sketchpadNavigateFromBoardSelection(instanceId: string, boardIds
 	}
 }
 
-/** @emoji 🎯 Applies FiveD flat board selection (kit navigation or design piece selection). */
+/** @emoji 🎯 Applies FiveD board/volume selection (kit navigation or design piece/connection selection). */
 export function sketchpadApplyBoardSelection(
 	instanceId: string,
 	boardIds: readonly string[],
@@ -1381,7 +1576,14 @@ export function sketchpadApplyBoardSelection(
 	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
 	if (scope.pane === "kit-diagram") {
-		sketchpadNavigateFromBoardSelection(instanceId, boardIds);
+		if (boardIds.length === 1) {
+			const path = sketchpadPathFromBoardNodeId(scope.kitId, boardIds[0]!);
+			if (path) {
+				ctrl.navigateTo(path);
+				return;
+			}
+		}
+		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitDiagramNodeIds: [...boardIds] });
 		return;
 	}
 	if (scope.pane === "diagram" || scope.pane === "scene") {
@@ -1894,18 +2096,29 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 			const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
 			if (path.startsWith("/docs")) {
 				const docsPath = parseSketchpadRouteScopeFromPath(path).docsPath;
-				const lines: { text: string; emphasize?: boolean }[] = [
-					{ text: "Documentation", emphasize: true },
-					{ text: sketchpadTitleFromDocPath(docsPath) },
+				const children: UiNode[] = [
+					{ type: "text", value: "Documentation", emphasize: true },
+					{ type: "text", value: sketchpadTitleFromDocPath(docsPath) },
 				];
 				for (const section of sketchpadBuildDocsRegistry()) {
-					const page = section.pages.find((entry) => entry.path === docsPath);
-					if (page) {
-						lines.push({ text: `Section · ${section.label}` });
-						break;
+					const inSection = section.pages.some((entry) => entry.path === docsPath);
+					if (!inSection) continue;
+					children.push({ type: "text", value: `Section · ${section.label}`, emphasize: true });
+					for (const page of section.pages) {
+						children.push({
+							type: "button",
+							label: page.title,
+							command: {
+								controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+								command: "navigate",
+								args: { path: `/docs/${page.path}` },
+							},
+							style: page.path === docsPath ? { variant: "success" } : { variant: "subtle" },
+						});
 					}
+					break;
 				}
-				return sketchpadPanelTextStack(lines);
+				return { body: { type: "stack", direction: "vertical", padding: "standard", gap: "tight", children } };
 			}
 			const open = ctrl?.listOpenKitIds() ?? [];
 			const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
@@ -1957,6 +2170,18 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				{ text: type?.name ?? typeId },
 				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
 			]);
+		}
+		const diagramSelected = ctrl?.routeSelection.kitDiagramNodeIds ?? [];
+		if (diagramSelected.length > 0 && kit) {
+			const lines: { text: string; emphasize?: boolean }[] = [
+				{ text: "Kit diagram", emphasize: true },
+				{ text: `${diagramSelected.length} node(s) selected` },
+			];
+			for (const boardId of diagramSelected.slice(0, 6)) {
+				lines.push({ text: boardId });
+			}
+			if (diagramSelected.length > 6) lines.push({ text: "…" });
+			return sketchpadPanelTextStack(lines);
 		}
 		if (kit) {
 			const types = kit.types?.length ?? 0;
@@ -2311,6 +2536,51 @@ export class SketchpadShellController extends Controller {
 				});
 				break;
 			}
+			case "cycleTableSort": {
+				const payload = args as { columnId: string; surfaceId: string };
+				if (payload.surfaceId !== SKETCHPAD_SURFACE_HOME_TABLE) break;
+				const home = shell.home;
+				const same = home.sortColumnId === payload.columnId;
+				this.updateHome({
+					...home,
+					sortColumnId: payload.columnId,
+					sortDescending: same ? !home.sortDescending : false,
+				});
+				break;
+			}
+			case "exportActiveKit": {
+				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
+				if (!kitId) break;
+				const kit = this.getKitStore(kitId)?.getSnapshot().kit;
+				if (kit) sketchpadDownloadKitJson(kit);
+				break;
+			}
+			case "copyActiveKitJson": {
+				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
+				if (!kitId) break;
+				const kit = this.getKitStore(kitId)?.getSnapshot().kit;
+				if (!kit) break;
+				void sketchpadCopyKitJsonToClipboard(kit).catch((error) => {
+					console.error("[semio/sketchpad] copyActiveKitJson failed:", error);
+				});
+				break;
+			}
+			case "importKitFromDrop": {
+				const file = (args as { file?: File }).file;
+				if (!file) break;
+				void (async () => {
+					const { kit, session } = await importKit(file);
+					const store = await createSemioKitStoreFromJsStore((await session.stores())[0]!, {
+						onDispose: () => void session.dispose(),
+					});
+					const kitId = kit.id;
+					this.registerKitStore(kitId, store, { kind: "file" });
+					this.navigateTo(`/kits/${kitId}`);
+				})().catch((error) => {
+					console.error("[semio/sketchpad] importKitFromDrop failed:", error);
+				});
+				break;
+			}
 			case "togglePanel": {
 				const panel = (args as { panel: "leftSidePanel" | "rightSidePanel" }).panel;
 				this.shellStore.set({
@@ -2446,6 +2716,8 @@ function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 		sketchpadShellCommand("semio.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
 		sketchpadShellCommand("semio.sketchpad.kit.rename", "Rename kit", "renameActiveKit", { name: "Renamed kit" }),
 		sketchpadShellCommand("semio.sketchpad.kit.createDesign", "Create design", "createDesignInActiveKit", { name: "New design" }),
+		sketchpadShellCommand("semio.sketchpad.kit.export", "Export active kit JSON", "exportActiveKit"),
+		sketchpadShellCommand("semio.sketchpad.kit.copyJson", "Copy active kit JSON", "copyActiveKitJson"),
 	];
 }
 
@@ -2648,6 +2920,9 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	}
 	sketchpadPlatformSingleton = platform;
 	sketchpadPluginHostSingleton = host;
+	if (typeof window !== "undefined") {
+		sketchpadInstallHomeDropzone();
+	}
 	if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
 		void seedSketchpadDevFixtureKitIfEmpty();
 	}
@@ -2793,6 +3068,13 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadKitToSemioEnvelope", () => {
+		it("wraps kit in wip.initialKit", () => {
+			const envelope = sketchpadKitToSemioEnvelope({ id: "k1", name: "Demo" } as Kit);
+			expect((envelope.wip.initialKit as Kit).name).toBe("Demo");
+		});
+	});
+
 	describe("sketchpadResolveMdxModuleKey", () => {
 		it("resolves index and leaf docs paths", () => {
 			expect(sketchpadResolveMdxModuleKey("getting-started/index")).toMatch(/getting-started\/index\.mdx$/);
@@ -2880,6 +3162,32 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadCreatePortGroupMap", () => {
+		it("unions ports linked by compatiblePorts", () => {
+			const groups = sketchpadCreatePortGroupMap([
+				{ id: "p1", compatiblePorts: [{ id: "p2" }] },
+				{ id: "p2", compatiblePorts: [{ id: "p1" }] },
+				{ id: "p3" },
+			]);
+			expect(groups.get("p1")).toBe(groups.get("p2"));
+			expect(groups.get("p3")).toBe("p3");
+		});
+	});
+
+	describe("sketchpadKitBoardFixtureFromKit type compat", () => {
+		it("draws type adjacency edges for compatible ports", () => {
+			const kit = {
+				id: "k",
+				types: [
+					{ id: "t1", connectors: [{ port: { id: "p1", compatiblePorts: [{ id: "p2" }] } }] },
+					{ id: "t2", connectors: [{ port: { id: "p2", compatiblePorts: [{ id: "p1" }] } }] },
+				],
+			} as Kit;
+			const fixture = sketchpadKitBoardFixtureFromKit(kit);
+			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
+		});
+	});
+
 	describe("sketchpadCollectKitPorts", () => {
 		it("deduplicates ports from connectors and type ports", () => {
 			const kit = {
@@ -2929,6 +3237,29 @@ if (import.meta.vitest) {
 			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
 			sketchpadApplyBoardSelection(sketchpadDesignDiagramInstanceId(kitId, designId), ["piece-a", "piece-b"], ctrl);
 			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a", "piece-b"]);
+			ctrl.dispose();
+		});
+
+		it("stores design piece selection from scene volume object ids", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}/scene`);
+			sketchpadApplyBoardSelection(sketchpadDesignSceneInstanceId(kitId, designId), ["piece-x"], ctrl);
+			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-x"]);
+			ctrl.dispose();
+		});
+
+		it("stores multi-select on kit diagram without navigating", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [], designs: [] } as Kit));
+			ctrl.navigateTo(`/kits/${kitId}`);
+			sketchpadApplyBoardSelection(sketchpadKitDiagramInstanceId(kitId), ["type:a", "design:b"], ctrl);
+			expect(ctrl.routeSelection.kitDiagramNodeIds).toEqual(["type:a", "design:b"]);
+			expect(ctrl.navigationPath).toBe(`/kits/${kitId}`);
 			ctrl.dispose();
 		});
 	});
