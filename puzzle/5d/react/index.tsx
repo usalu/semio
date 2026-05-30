@@ -1,12 +1,12 @@
 // #region 🧲Header
-/** @emoji 🔗 `@puzzle/5d/react` — paired flat + volume topology surfaces and play harness (monolith). */
+/** @emoji 🔗 `@puzzle/5d/react` — paired 2d + 3d puzzle 5d surfaces and play harness (monolith). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
 import { reactHostPort, type ContextMenuItem } from "@ui/react";
 import type { ReactElement } from "react";
 
-/** @emoji 🔗 Unified topology model with flat WASM + volume R3F projections and a shared {@link Store}. */
+/** @emoji 🔗 Unified puzzle 5d model with 2d WASM + 3d R3F projections and a shared {@link Store}. */
 
 import {
   BoardCanvas,
@@ -20,35 +20,35 @@ import {
   type BoardCanvasProps,
   type BoardFixtureV1,
   type BoardForceGraphLayoutOptions,
-  type KindCatalogBundle as FlatKindCatalogBundle,
-  type KindCompatEntry as FlatKindCompatEntry,
+  type KindCatalogBundle as Puzzle2dKindCatalogBundle,
+  type KindCompatEntry as Puzzle2dKindCompatEntry,
   type BoardLinkSessionSnapshot,
-  type EdgeKind as FlatEdgeKind,
-  type HandleKind as FlatHandleKind,
-  type NodeKind as FlatNodeKind,
-  type WireKind as FlatWireKind,
+  type EdgeKind as Puzzle2dEdgeKind,
+  type HandleKind as Puzzle2dHandleKind,
+  type NodeKind as Puzzle2dNodeKind,
+  type WireKind as Puzzle2dWireKind,
 } from "@puzzle/2d/react";
 import {
-  ObjectStateProvider as VolumePartStateProvider,
-  Objects as VolumeParts,
-  Attractions as VolumeTies,
-  Canvas3D as VolumeView,
+  ObjectStateProvider as Puzzle3dPartStateProvider,
+  Objects as Puzzle3dParts,
+  Attractions as Puzzle3dTies,
+  Canvas3D as Puzzle3dCanvas,
   blockedVortexFullIdsFromAttractions,
   parseFixtureV1,
-  useObjectConnect as useVolumePartConnect,
-  useObjectRelocate as useVolumePartRelocate,
-  type AttractionKind as VolumeFastenerKind,
+  useObjectConnect as usePuzzle3dPartConnect,
+  useObjectRelocate as usePuzzle3dPartRelocate,
+  type AttractionKind as Puzzle3dFastenerKind,
   type AttractionSessionSnapshot,
-  type CableKind as VolumeRopeKind,
+  type CableKind as Puzzle3dRopeKind,
   type DomainKind,
-  type FixtureV1 as VolumeFixtureV1,
-  type KindCatalogBundle as VolumeKindCatalogBundle,
-  type KindCompatEntry as VolumeKindCompatEntry,
-  type ObjectKind as VolumePartKind,
-  type RelocateMode as VolumeRelocateMode,
-  type SelectionSnapshot as VolumeSelectionSnapshot,
-  type VortexKind as VolumeGripKind,
-  type CanvasProps as VolumeViewProps,
+  type FixtureV1 as Puzzle3dFixtureV1,
+  type KindCatalogBundle as Puzzle3dKindCatalogBundle,
+  type KindCompatEntry as Puzzle3dKindCompatEntry,
+  type ObjectKind as Puzzle3dPartKind,
+  type RelocateMode as Puzzle3dRelocateMode,
+  type SelectionSnapshot as Puzzle3dSelectionSnapshot,
+  type VortexKind as Puzzle3dGripKind,
+  type CanvasProps as Puzzle3dCanvasProps,
 } from "../../3d/react/index.tsx";
 // #endregion 🔌Adapters
 
@@ -57,30 +57,30 @@ import {
 export type ConnectGestureKind = "direct" | "indirect" | "proximity";
 
 /** @emoji ↔️ True only for {@link ConnectGestureKind.indirect} — the gesture mirrored in {@link ConnectSession}. */
-export function topologyConnectGestureCrossSurface(kind: ConnectGestureKind): boolean {
+export function connectGestureCrossSurface(kind: ConnectGestureKind): boolean {
   return kind === "indirect";
 }
 
 /** @emoji 📶 Flat (@puzzle/2d) uses six discrete WASM draw LOD tiers from zoom thresholds. */
-export const TOPOLOGY_FLAT_LOD_TIER_COUNT = 6 as const;
+export const PUZZLE_5D_2D_LOD_TIER_COUNT = 6 as const;
 
 /** @emoji 📶 Volume (@puzzle/3d) uses continuous / camera-driven LOD (`automaticLod`, depth-variable, manual slider). */
-export type VolumeLodPolicy = "continuous";
+export type Puzzle3dLodPolicy = "continuous";
 
 /** @emoji 🧲 Flat proximity: overlapping compatible handles while **dragging** a node (pointer-up snap). */
-export const TOPOLOGY_FLAT_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
+export const PUZZLE_5D_2D_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
 
 /** @emoji 🧲 Volume proximity: compatible anchor within radius while **relocating** a part (gumball release). */
-export const TOPOLOGY_VOLUME_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
+export const PUZZLE_5D_3D_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
 
 /** @emoji 🎯 Indirect link/attraction: start on one surface, finish on a compatible ring on either surface. */
-export const TOPOLOGY_INDIRECT_CONNECT_GESTURE: ConnectGestureKind = "indirect";
+export const PUZZLE_5D_INDIRECT_CONNECT_GESTURE: ConnectGestureKind = "indirect";
 //#endregion 🔖PairedPolicy
 
 //#region 🔖Model
 export type PresentationMode = "2d" | "3d";
 
-export interface FlatAnchorAspect {
+export interface Puzzle2dAnchorAspect {
   readonly angle: number;
   readonly anchorKind: string;
   readonly color?: string;
@@ -88,7 +88,7 @@ export interface FlatAnchorAspect {
   readonly radius?: number;
 }
 
-export interface VolumeAnchorAspect {
+export interface Puzzle3dAnchorAspect {
   readonly position: readonly [number, number, number];
   readonly direction?: readonly [number, number, number];
   readonly radius?: number;
@@ -99,8 +99,8 @@ export interface VolumeAnchorAspect {
 export interface AnchorV1 {
   readonly id: string;
   readonly anchorKind: string;
-  readonly flat?: FlatAnchorAspect;
-  readonly volume?: VolumeAnchorAspect;
+  readonly puzzle2d?: Puzzle2dAnchorAspect;
+  readonly puzzle3d?: Puzzle3dAnchorAspect;
 }
 
 export interface NodeAspect {
@@ -119,7 +119,7 @@ export interface NodeAspect {
   readonly hidden?: boolean;
 }
 
-export interface VolumePartAspect {
+export interface Puzzle3dPartAspect {
   readonly origin: readonly [number, number, number];
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: number | readonly [number, number, number];
@@ -131,8 +131,8 @@ export interface VolumePartAspect {
 export interface PartV1 {
   readonly id: string;
   readonly partKind?: string;
-  readonly flat?: NodeAspect;
-  readonly volume?: VolumePartAspect;
+  readonly puzzle2d?: NodeAspect;
+  readonly puzzle3d?: Puzzle3dPartAspect;
   readonly anchors: readonly AnchorV1[];
 }
 
@@ -143,13 +143,13 @@ export interface TieV1 {
   readonly tieKind?: string;
 }
 
-/** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across flat {@link BoardLinkSessionSnapshot} and volume {@link AttractionSessionSnapshot}. */
+/** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across 2d {@link BoardLinkSessionSnapshot} and 3d {@link AttractionSessionSnapshot}. */
 export interface ConnectSession {
   readonly origin: PresentationMode;
   readonly sourceAnchor: string;
   readonly endX: number;
   readonly endY: number;
-  readonly endVolume: readonly [number, number, number];
+  readonly end3d: readonly [number, number, number];
   readonly compatiblePartIds: readonly string[];
   readonly ringPartId: string | null;
   readonly ringAnchorIds: readonly string[];
@@ -161,47 +161,47 @@ export interface SelectionSnapshot {
 }
 
 export interface V1 {
-  readonly schema: "puzzle.5d.topology/v1";
+  readonly schema: "puzzle.5d/v1";
   readonly label?: string;
   readonly domain: DomainKind;
   readonly meta?: Record<string, unknown>;
   readonly kindCatalogs?: KindCatalogBundle;
   readonly kindCompatibility?: readonly KindCompatEntry[];
-  readonly flatCamera: BoardCameraState;
-  readonly volumeCamera: VolumeFixtureV1["camera"];
+  readonly camera2d: BoardCameraState;
+  readonly camera3d: Puzzle3dFixtureV1["camera"];
   readonly parts: readonly PartV1[];
   readonly ties: readonly TieV1[];
 }
 
-export const TOPOLOGY_ANCHOR_ID_SEPARATOR = ":";
+export const PUZZLE_5D_ANCHOR_ID_SEPARATOR = ":";
 
 /** @emoji 🔗 Builds a full anchor id `partId:anchorId`. */
-export function topologyAnchorFullId(partId: string, anchorId: string): string {
-  return `${partId}${TOPOLOGY_ANCHOR_ID_SEPARATOR}${anchorId}`;
+export function anchorFullId(partId: string, anchorId: string): string {
+  return `${partId}${PUZZLE_5D_ANCHOR_ID_SEPARATOR}${anchorId}`;
 }
 
 /** @emoji 🔍 Splits a full anchor id into part and anchor local ids. */
-export function topologyParseAnchorFullId(fullId: string): { partId: string; anchorId: string } | null {
-  const i = fullId.indexOf(TOPOLOGY_ANCHOR_ID_SEPARATOR);
+export function parseAnchorFullId(fullId: string): { partId: string; anchorId: string } | null {
+  const i = fullId.indexOf(PUZZLE_5D_ANCHOR_ID_SEPARATOR);
   if (i <= 0 || i >= fullId.length - 1) return null;
   return { partId: fullId.slice(0, i), anchorId: fullId.slice(i + 1) };
 }
 
-/** @emoji ✅ Validates unified topology JSON. */
+/** @emoji ✅ Validates unified puzzle 5d JSON. */
 export function parseV1(raw: unknown): V1 | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "puzzle.5d.topology/v1") return null;
+  if (r.schema !== "puzzle.5d/v1") return null;
   if (!Array.isArray(r.parts) || !Array.isArray(r.ties)) return null;
   const domain = typeof r.domain === "string" ? (r.domain as DomainKind) : "architecture";
-  const flatCam = r.flatCamera as BoardCameraState | undefined;
-  const volumeCam = r.volumeCamera as VolumeFixtureV1["camera"] | undefined;
+  const flatCam = r.camera2d as BoardCameraState | undefined;
+  const volumeCam = r.camera3d as Puzzle3dFixtureV1["camera"] | undefined;
   if (!flatCam || !volumeCam) return null;
   return {
-    schema: "puzzle.5d.topology/v1",
+    schema: "puzzle.5d/v1",
     domain,
-    flatCamera: flatCam,
-    volumeCamera: volumeCam,
+    camera2d: flatCam,
+    camera3d: volumeCam,
     parts: r.parts as PartV1[],
     ties: r.ties as TieV1[],
     ...(typeof r.label === "string" ? { label: r.label } : {}),
@@ -211,17 +211,17 @@ export function parseV1(raw: unknown): V1 | null {
   };
 }
 
-/** @emoji 🔀 Builds {@link V1} by merging flat and volume fixtures (same part ids unite). */
-export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): V1 {
+/** @emoji 🔀 Builds {@link V1} by merging 2d and 3d fixtures (same part ids unite). */
+export function compose5d(fixture2d: BoardFixtureV1, fixture3d: Puzzle3dFixtureV1): V1 {
   const partsMap = new Map<string, PartV1>();
-  for (const node of flat.nodes) {
+  for (const node of fixture2d.nodes) {
     const anchors: AnchorV1[] = node.handles.map((h) => {
-      const parsed = topologyParseAnchorFullId(h.id);
+      const parsed = parseAnchorFullId(h.id);
       const localId = parsed?.anchorId ?? h.id;
       return {
         id: localId,
         anchorKind: h.handleKind,
-        flat: {
+        puzzle2d: {
           angle: h.angle,
           anchorKind: h.handleKind,
           ...(h.color !== undefined ? { color: h.color } : {}),
@@ -260,12 +260,12 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
     partsMap.set(node.id, {
       id: node.id,
       ...(node.nodeKind !== undefined ? { partKind: node.nodeKind } : {}),
-      flat: flatAspect,
+      puzzle2d: flatAspect,
       anchors,
     });
   }
-  for (const obj of volume.objects) {
-    const volumeAspect: VolumePartAspect = {
+  for (const obj of fixture3d.objects) {
+    const volumeAspect: Puzzle3dPartAspect = {
       origin: obj.origin,
       meshUrl: obj.meshUrl,
       ...(obj.orientation !== undefined ? { orientation: obj.orientation } : {}),
@@ -274,12 +274,12 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
       ...(obj.wormhole === true ? { wormhole: true } : {}),
     };
     const volumeAnchors: AnchorV1[] = obj.vortices.map((v) => {
-      const parsed = topologyParseAnchorFullId(v.id.includes(":") ? v.id : topologyAnchorFullId(obj.id, v.id));
+      const parsed = parseAnchorFullId(v.id.includes(":") ? v.id : anchorFullId(obj.id, v.id));
       const localId = parsed?.anchorId ?? v.id;
       return {
         id: localId,
         anchorKind: v.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
-        volume: {
+        puzzle3d: {
           position: v.position,
           ...(v.direction !== undefined ? { direction: v.direction } : {}),
           ...(v.radius !== undefined ? { radius: v.radius } : {}),
@@ -293,31 +293,31 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
       const anchorById = new Map(existing.anchors.map((a) => [a.id, a]));
       for (const a of volumeAnchors) {
         const prev = anchorById.get(a.id);
-        anchorById.set(a.id, prev ? { ...prev, volume: a.volume, anchorKind: a.anchorKind } : a);
+        anchorById.set(a.id, prev ? { ...prev, puzzle3d: a.puzzle3d, anchorKind: a.anchorKind } : a);
       }
       partsMap.set(obj.id, {
         ...existing,
         ...(obj.objectKind !== undefined ? { partKind: obj.objectKind } : {}),
-        volume: volumeAspect,
+        puzzle3d: volumeAspect,
         anchors: [...anchorById.values()],
       });
     } else {
       partsMap.set(obj.id, {
         id: obj.id,
         ...(obj.objectKind !== undefined ? { partKind: obj.objectKind } : {}),
-        volume: volumeAspect,
+        puzzle3d: volumeAspect,
         anchors: volumeAnchors,
       });
     }
   }
   const ties: TieV1[] = [];
   const tieIds = new Set<string>();
-  for (const edge of flat.edges) {
+  for (const edge of fixture2d.edges) {
     if (tieIds.has(edge.id)) continue;
     tieIds.add(edge.id);
     ties.push({ id: edge.id, source: edge.source, target: edge.target });
   }
-  for (const att of volume.attractions) {
+  for (const att of fixture3d.attractions) {
     if (tieIds.has(att.id)) continue;
     tieIds.add(att.id);
     ties.push({
@@ -328,16 +328,16 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
     });
   }
   const meta = {
-    ...(flat.meta ?? {}),
-    ...(volume.meta ?? {}),
+    ...(fixture2d.meta ?? {}),
+    ...(fixture3d.meta ?? {}),
   };
-  const kindCatalogs = kindCatalogsFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
-  const kindCompatibility = kindCompatibilityFromMetas({ flatMeta: flat.meta, volumeMeta: volume.meta });
+  const kindCatalogs = kindCatalogsFromMetas({ meta2d: fixture2d.meta, meta3d: fixture3d.meta });
+  const kindCompatibility = kindCompatibilityFromMetas({ meta2d: fixture2d.meta, meta3d: fixture3d.meta });
   return {
-    schema: "puzzle.5d.topology/v1",
-    domain: volume.domain,
-    flatCamera: { ...flat.camera },
-    volumeCamera: { ...volume.camera },
+    schema: "puzzle.5d/v1",
+    domain: fixture3d.domain,
+    camera2d: { ...fixture2d.camera },
+    camera3d: { ...fixture3d.camera },
     parts: [...partsMap.values()],
     ties,
     ...(Object.keys(meta).length > 0 ? { meta } : {}),
@@ -346,71 +346,71 @@ export function topologyCompose(flat: BoardFixtureV1, volume: VolumeFixtureV1): 
   };
 }
 
-/** @emoji 📐 Projects {@link V1} to a board fixture for flat rendering. */
-export function projectFlat(model: V1): BoardFixtureV1 {
+/** @emoji 📐 Projects {@link V1} to a 2d fixture for WASM rendering. */
+export function project2d(model: V1): BoardFixtureV1 {
   const nodes = model.parts
-    .filter((p) => p.flat)
+    .filter((p) => p.puzzle2d)
     .map((p) => {
-      const flat = p.flat!;
+      const aspect2d = p.puzzle2d!;
       const handles = p.anchors
-        .filter((a) => a.flat)
+        .filter((a) => a.puzzle2d)
         .map((a) => ({
-          id: topologyAnchorFullId(p.id, a.id),
-          angle: a.flat!.angle,
-          handleKind: a.flat!.anchorKind,
-          ...(a.flat!.color !== undefined ? { color: a.flat!.color } : {}),
-          ...(a.flat!.iconKind !== undefined ? { iconKind: a.flat!.iconKind } : {}),
-          ...(a.flat!.radius !== undefined ? { radius: a.flat!.radius } : {}),
+          id: anchorFullId(p.id, a.id),
+          angle: a.puzzle2d!.angle,
+          handleKind: a.puzzle2d!.anchorKind,
+          ...(a.puzzle2d!.color !== undefined ? { color: a.puzzle2d!.color } : {}),
+          ...(a.puzzle2d!.iconKind !== undefined ? { iconKind: a.puzzle2d!.iconKind } : {}),
+          ...(a.puzzle2d!.radius !== undefined ? { radius: a.puzzle2d!.radius } : {}),
         }));
-      if (flat.shape === "rectangle") {
+      if (aspect2d.shape === "rectangle") {
         return {
           id: p.id,
           shape: "rectangle" as const,
-          x: flat.x,
-          y: flat.y,
-          width: flat.width ?? 40,
-          height: flat.height ?? 40,
+          x: aspect2d.x,
+          y: aspect2d.y,
+          width: aspect2d.width ?? 40,
+          height: aspect2d.height ?? 40,
           handles,
           ...(p.partKind !== undefined ? { nodeKind: p.partKind } : {}),
-          ...(flat.text !== undefined ? { text: flat.text } : {}),
-          ...(flat.textAlignment !== undefined ? { textAlignment: flat.textAlignment } : {}),
-          ...(flat.textAutofit === true ? { textAutofit: true } : {}),
-          ...(flat.textFontFamily !== undefined ? { textFontFamily: flat.textFontFamily } : {}),
-          ...(flat.textFontSize !== undefined ? { textFontSize: flat.textFontSize } : {}),
-          ...(flat.iconKind !== undefined ? { iconKind: flat.iconKind } : {}),
+          ...(aspect2d.text !== undefined ? { text: aspect2d.text } : {}),
+          ...(aspect2d.textAlignment !== undefined ? { textAlignment: aspect2d.textAlignment } : {}),
+          ...(aspect2d.textAutofit === true ? { textAutofit: true } : {}),
+          ...(aspect2d.textFontFamily !== undefined ? { textFontFamily: aspect2d.textFontFamily } : {}),
+          ...(aspect2d.textFontSize !== undefined ? { textFontSize: aspect2d.textFontSize } : {}),
+          ...(aspect2d.iconKind !== undefined ? { iconKind: aspect2d.iconKind } : {}),
         };
       }
       return {
         id: p.id,
         shape: "circle" as const,
-        x: flat.x,
-        y: flat.y,
-        radius: flat.radius ?? 20,
+        x: aspect2d.x,
+        y: aspect2d.y,
+        radius: aspect2d.radius ?? 20,
         handles,
         ...(p.partKind !== undefined ? { nodeKind: p.partKind } : {}),
-        ...(flat.text !== undefined ? { text: flat.text } : {}),
-        ...(flat.textAlignment !== undefined ? { textAlignment: flat.textAlignment } : {}),
-        ...(flat.textAutofit === true ? { textAutofit: true } : {}),
-        ...(flat.textFontFamily !== undefined ? { textFontFamily: flat.textFontFamily } : {}),
-        ...(flat.textFontSize !== undefined ? { textFontSize: flat.textFontSize } : {}),
-        ...(flat.iconKind !== undefined ? { iconKind: flat.iconKind } : {}),
+        ...(aspect2d.text !== undefined ? { text: aspect2d.text } : {}),
+        ...(aspect2d.textAlignment !== undefined ? { textAlignment: aspect2d.textAlignment } : {}),
+        ...(aspect2d.textAutofit === true ? { textAutofit: true } : {}),
+        ...(aspect2d.textFontFamily !== undefined ? { textFontFamily: aspect2d.textFontFamily } : {}),
+        ...(aspect2d.textFontSize !== undefined ? { textFontSize: aspect2d.textFontSize } : {}),
+        ...(aspect2d.iconKind !== undefined ? { iconKind: aspect2d.iconKind } : {}),
       };
     });
   return {
     schema: "puzzle.2d.fixture/v1",
-    camera: { ...model.flatCamera },
+    camera: { ...model.camera2d },
     nodes,
     edges: model.ties.map((b) => ({ id: b.id, source: b.source, target: b.target })),
     ...(model.meta ? { meta: model.meta } : {}),
   };
 }
 
-/** @emoji 📐 Projects {@link V1} to a @puzzle/3d fixture for volume rendering. */
-export function projectVolume(model: V1): VolumeFixtureV1 {
+/** @emoji 📐 Projects {@link V1} to a @puzzle/3d fixture for 3d rendering. */
+export function project3d(model: V1): Puzzle3dFixtureV1 {
   const objects = model.parts
-    .filter((p) => p.volume)
+    .filter((p) => p.puzzle3d)
     .map((p) => {
-      const s = p.volume!;
+      const s = p.puzzle3d!;
       return {
         id: p.id,
         meshUrl: s.meshUrl,
@@ -421,22 +421,22 @@ export function projectVolume(model: V1): VolumeFixtureV1 {
         ...(s.label !== undefined ? { label: s.label } : {}),
         ...(s.wormhole === true ? { wormhole: true } : {}),
         vortices: p.anchors
-          .filter((a) => a.volume)
+          .filter((a) => a.puzzle3d)
           .map((a) => ({
-            id: topologyAnchorFullId(p.id, a.id),
-            position: a.volume!.position,
+            id: anchorFullId(p.id, a.id),
+            position: a.puzzle3d!.position,
             ...(a.anchorKind ? { vortexKind: a.anchorKind } : {}),
-            ...(a.volume!.direction !== undefined ? { direction: a.volume!.direction } : {}),
-            ...(a.volume!.radius !== undefined ? { radius: a.volume!.radius } : {}),
-            ...(a.volume!.label !== undefined ? { label: a.volume!.label } : {}),
-            ...(a.volume!.handleMeshUrl !== undefined ? { handleMeshUrl: a.volume!.handleMeshUrl } : {}),
+            ...(a.puzzle3d!.direction !== undefined ? { direction: a.puzzle3d!.direction } : {}),
+            ...(a.puzzle3d!.radius !== undefined ? { radius: a.puzzle3d!.radius } : {}),
+            ...(a.puzzle3d!.label !== undefined ? { label: a.puzzle3d!.label } : {}),
+            ...(a.puzzle3d!.handleMeshUrl !== undefined ? { handleMeshUrl: a.puzzle3d!.handleMeshUrl } : {}),
           })),
       };
     });
   return {
     schema: "puzzle.3d.fixture/v1",
     domain: model.domain,
-    camera: { ...model.volumeCamera },
+    camera: { ...model.camera3d },
     objects,
     attractions: model.ties.map((b) => ({
       id: b.id,
@@ -454,7 +454,7 @@ export interface StoreSnapshot {
   readonly model: V1;
   readonly selection: SelectionSnapshot;
   readonly connectSession: ConnectSession | null;
-  readonly cameras: Readonly<Record<string, { flat: BoardCameraState; volume: VolumeFixtureV1["camera"] }>>;
+  readonly cameras: Readonly<Record<string, { readonly "2d": BoardCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
 }
 
 export class Store {
@@ -491,34 +491,34 @@ export class Store {
     return this.snapshot.model;
   }
 
-  getFlatCamera(instanceId: string): BoardCameraState {
-    return this.snapshot.cameras[instanceId]?.flat ?? this.snapshot.model.flatCamera;
+  get2dCamera(instanceId: string): BoardCameraState {
+    return this.snapshot.cameras[instanceId]?.["2d"] ?? this.snapshot.model.camera2d;
   }
 
-  getVolumeCamera(instanceId: string): VolumeFixtureV1["camera"] {
-    return this.snapshot.cameras[instanceId]?.volume ?? this.snapshot.model.volumeCamera;
+  get3dCamera(instanceId: string): Puzzle3dFixtureV1["camera"] {
+    return this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
   }
 
-  setFlatCamera(instanceId: string, camera: BoardCameraState): void {
+  set2dCamera(instanceId: string, camera: BoardCameraState): void {
     const prev = this.snapshot.cameras[instanceId];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, flatCamera: camera },
+      model: { ...this.snapshot.model, camera2d: camera },
       cameras: {
         ...this.snapshot.cameras,
-        [instanceId]: { flat: camera, volume: prev?.volume ?? this.snapshot.model.volumeCamera },
+        [instanceId]: { "2d": camera, "3d": prev?.["3d"] ?? this.snapshot.model.camera3d },
       },
     });
   }
 
-  setVolumeCamera(instanceId: string, camera: VolumeFixtureV1["camera"]): void {
+  set3dCamera(instanceId: string, camera: Puzzle3dFixtureV1["camera"]): void {
     const prev = this.snapshot.cameras[instanceId];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, volumeCamera: camera },
+      model: { ...this.snapshot.model, camera3d: camera },
       cameras: {
         ...this.snapshot.cameras,
-        [instanceId]: { flat: prev?.flat ?? this.snapshot.model.flatCamera, volume: camera },
+        [instanceId]: { "2d": prev?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
       },
     });
   }
@@ -534,16 +534,16 @@ export class Store {
 
   applyNodeMove(partId: string, x: number, y: number): void {
     const parts = this.snapshot.model.parts.map((p) => {
-      if (p.id !== partId || !p.flat) return p;
-      return { ...p, flat: { ...p.flat, x, y } };
+      if (p.id !== partId || !p.puzzle2d) return p;
+      return { ...p, puzzle2d: { ...p.puzzle2d, x, y } };
     });
     this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
 
-  applyVolumeRelocate(partId: string, origin: readonly [number, number, number], orientation: readonly [number, number, number, number]): void {
+  apply3dRelocate(partId: string, origin: readonly [number, number, number], orientation: readonly [number, number, number, number]): void {
     const parts = this.snapshot.model.parts.map((p) => {
-      if (p.id !== partId || !p.volume) return p;
-      return { ...p, volume: { ...p.volume, origin, orientation } };
+      if (p.id !== partId || !p.puzzle3d) return p;
+      return { ...p, puzzle3d: { ...p.puzzle3d, origin, orientation } };
     });
     this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
@@ -592,32 +592,32 @@ export function useSnapshot(): StoreSnapshot {
 //#region 🔖FiveD
 export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
-/** @emoji 📶 Flat-only LOD/grid defaults ({@link TOPOLOGY_FLAT_LOD_TIER_COUNT} discrete tiers); do not pass to volume {@link VolumeView}. */
+/** @emoji 📶 Flat-only LOD/grid defaults ({@link PUZZLE_5D_2D_LOD_TIER_COUNT} discrete tiers); do not pass to 3d {@link Puzzle3dCanvas}. */
 export const FIVE_D_FLAT_LOD_DEFAULTS = {
   lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
   gridFactor: DEFAULT_BOARD_GRID_FACTOR,
   gridSnapEnabled: true,
 } as const;
 
-/** @emoji 🎛 Volume chrome: continuous LOD comes from host `volume` props; proximity applies on relocate only. */
-export const FIVE_D_VOLUME_CHROME_DEFAULTS: Pick<VolumeViewProps, "showLodGrid" | "proximityRadius" | "proximityRelocateEnabled" | "gridSnapEnabled"> = {
+/** @emoji 🎛 3d chrome: continuous LOD comes from host `puzzle3d` props; proximity applies on relocate only. */
+export const FIVE_D_3D_CHROME_DEFAULTS: Pick<Puzzle3dCanvasProps, "showLodGrid" | "proximityRadius" | "proximityRelocateEnabled" | "gridSnapEnabled"> = {
   showLodGrid: true,
   proximityRadius: 24,
   proximityRelocateEnabled: true,
   gridSnapEnabled: true,
 };
 
-/** @emoji 🖼️ Single topology editor (`2d` = @puzzle/2d board, `3d` = @puzzle/3d); pair via {@link StoreProvider}. */
+/** @emoji 🖼️ Single puzzle 5d editor (`2d` = @puzzle/2d, `3d` = @puzzle/3d); pair via {@link StoreProvider}. */
 export interface FiveDProps {
   readonly mode: PresentationMode;
   readonly instanceId: string;
   readonly className?: string;
   readonly lockedPartIds?: ReadonlySet<string>;
-  readonly relocateMode?: VolumeRelocateMode;
-  /** Flat surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
-  readonly flat?: Omit<BoardCanvasProps, "children">;
-  /** Volume surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
-  readonly volume?: Omit<VolumeViewProps, "children">;
+  readonly relocateMode?: Puzzle3dRelocateMode;
+  /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
+  readonly puzzle2d?: Omit<BoardCanvasProps, "children">;
+  /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
+  readonly puzzle3d?: Omit<Puzzle3dCanvasProps, "children">;
 }
 
 function fiveDLinkSessionFromStore(session: ConnectSession | null): BoardLinkSessionSnapshot | null {
@@ -636,14 +636,14 @@ function fiveDAttractionSessionFromStore(session: ConnectSession | null): Attrac
   if (!session) return null;
   return {
     attracting: session.sourceAnchor,
-    end: session.endVolume,
+    end: session.end3d,
     compatibleObjectIds: session.compatiblePartIds,
     ringObjectId: session.ringPartId,
     ringVortexFullIds: session.ringAnchorIds,
   };
 }
 
-function topologyFlatMarkersFromFixture(props: { readonly fixture: BoardFixtureV1; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
+function markers2dFromFixture(props: { readonly fixture: BoardFixtureV1; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
   const { fixture, lockedIds, selectedIds } = props;
   return (
     <>
@@ -701,27 +701,27 @@ function topologyFlatMarkersFromFixture(props: { readonly fixture: BoardFixtureV
   );
 }
 
-const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
+const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const store = useStore();
   const snap = useSnapshot();
-  const flatFixture = reactHostPort.useMemo(() => projectFlat(snap.model), [snap.model]);
+  const fixture2d = reactHostPort.useMemo(() => project2d(snap.model), [snap.model]);
   const locked = props.lockedPartIds ?? new Set<string>();
   const selectedIds = reactHostPort.useMemo(() => new Set([...snap.selection.partIds, ...snap.selection.anchorIds]), [snap.selection]);
-  const markers = reactHostPort.useMemo(() => topologyFlatMarkersFromFixture({ fixture: flatFixture, lockedIds: locked, selectedIds }), [flatFixture, locked, selectedIds]);
-  const camera = store.getFlatCamera(props.instanceId);
-  const flatExtra = props.flat ?? {};
-  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, ...flatRest } = flatExtra;
+  const markers = reactHostPort.useMemo(() => markers2dFromFixture({ fixture: fixture2d, lockedIds: locked, selectedIds }), [fixture2d, locked, selectedIds]);
+  const camera = store.get2dCamera(props.instanceId);
+  const extra2d = props.puzzle2d ?? {};
+  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, ...rest2d } = extra2d;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="2d" data-five-d-instance={props.instanceId}>
       <BoardCanvas
-        camera={flatRest.camera ?? camera}
-        className={["min-h-0 flex-1", props.className, flatRest.className].filter(Boolean).join(" ") || undefined}
+        camera={rest2d.camera ?? camera}
+        className={["min-h-0 flex-1", props.className, rest2d.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_FLAT_LOD_DEFAULTS}
-        kindCatalogs={projectFlatKindCatalogs(snap.model.kindCatalogs)}
+        kindCatalogs={project2dKindCatalogs(snap.model.kindCatalogs)}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
-        onCamera={(c) => store.setFlatCamera(props.instanceId, c)}
+        onCamera={(c) => store.set2dCamera(props.instanceId, c)}
         onConnect={(p) => {
           store.applyTie(p.source, p.target);
           onConnectHost?.(p);
@@ -745,7 +745,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
             sourceAnchor: p.source,
             endX: prev?.endX ?? 0,
             endY: prev?.endY ?? 0,
-            endVolume: prev?.endVolume ?? [0, 0, 0],
+            end3d: prev?.end3d ?? [0, 0, 0],
             compatiblePartIds: [...p.nodeIds],
             ringPartId: prev?.ringPartId ?? null,
             ringAnchorIds: prev?.ringAnchorIds ?? [],
@@ -762,7 +762,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
             sourceAnchor: p.source,
             endX: prev?.endX ?? 0,
             endY: prev?.endY ?? 0,
-            endVolume: prev?.endVolume ?? [0, 0, 0],
+            end3d: prev?.end3d ?? [0, 0, 0],
             compatiblePartIds: prev?.compatiblePartIds ?? [],
             ringPartId: p.nodeId,
             ringAnchorIds: [...p.handleIds],
@@ -776,7 +776,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
           store.setSelection({ partIds: s.ids, anchorIds: [] });
           onSelectHost?.(s);
         }}
-        {...flatRest}
+        {...rest2d}
       >
         {markers}
       </BoardCanvas>
@@ -784,11 +784,11 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
   );
 });
 
-const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: FiveDProps) {
+const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps) {
   const store = useStore();
   const snap = useSnapshot();
-  const volumeFixture = reactHostPort.useMemo(() => projectVolume(snap.model), [snap.model]);
-  const volumeExtra = props.volume ?? {};
+  const fixture3d = reactHostPort.useMemo(() => project3d(snap.model), [snap.model]);
+  const extra3d = props.puzzle3d ?? {};
   const {
     onSelect: onSelectHost,
     onConnect: onConnectHost,
@@ -797,26 +797,26 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
     onRelocate: onRelocateHost,
     onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
     onAttractionTargetRing: onAttractionTargetRingHost,
-    ...volumeRest
-  } = volumeExtra;
-  const camera = store.getVolumeCamera(props.instanceId);
+    ...rest3d
+  } = extra3d;
+  const camera = store.get3dCamera(props.instanceId);
   const selectedObjectId = snap.selection.partIds[0] ?? null;
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
-  const onRelocate = useVolumePartRelocate();
-  const onConnect = useVolumePartConnect();
+  const onRelocate = usePuzzle3dPartRelocate();
+  const onConnect = usePuzzle3dPartConnect();
   return (
-    <VolumeView
-      camera={volumeRest.camera ?? camera}
-      className={["min-h-0 flex-1", props.className, volumeRest.className].filter(Boolean).join(" ") || undefined}
-      {...FIVE_D_VOLUME_CHROME_DEFAULTS}
+    <Puzzle3dCanvas
+      camera={rest3d.camera ?? camera}
+      className={["min-h-0 flex-1", props.className, rest3d.className].filter(Boolean).join(" ") || undefined}
+      {...FIVE_D_3D_CHROME_DEFAULTS}
       attractionSession={attractionSession}
-      blockedVortexFullIds={blockedVortexFullIdsFromAttractions(volumeFixture.attractions)}
+      blockedVortexFullIds={blockedVortexFullIdsFromAttractions(fixture3d.attractions)}
       gridFactor={FIVE_D_FLAT_LOD_DEFAULTS.gridFactor}
       gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
-      kindCatalogs={projectVolumeKindCatalogs(snap.model.kindCatalogs)}
-      kindCompatibility={snap.model.kindCompatibility as VolumeKindCompatEntry[] | undefined}
+      kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
+      kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
       relocateMode={props.relocateMode ?? "translate"}
-      onCamera={(c) => store.setVolumeCamera(props.instanceId, c)}
+      onCamera={(c) => store.set3dCamera(props.instanceId, c)}
       onConnect={(p) => {
         onConnect?.(p);
         onConnectHost?.(p);
@@ -837,7 +837,7 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
           sourceAnchor: p.attracting,
           endX: prev?.endX ?? 0,
           endY: prev?.endY ?? 0,
-          endVolume: prev?.endVolume ?? [0, 0, 0],
+          end3d: prev?.end3d ?? [0, 0, 0],
           compatiblePartIds: [...p.objectIds],
           ringPartId: prev?.ringPartId ?? null,
           ringAnchorIds: prev?.ringAnchorIds ?? [],
@@ -856,7 +856,7 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
           sourceAnchor: p.attracting,
           endX: prev?.endX ?? 0,
           endY: prev?.endY ?? 0,
-          endVolume: prev?.endVolume ?? [0, 0, 0],
+          end3d: prev?.end3d ?? [0, 0, 0],
           compatiblePartIds: prev?.compatiblePartIds ?? [],
           ringPartId: p.objectId,
           ringAnchorIds: [...p.vortexFullIds],
@@ -872,36 +872,36 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
         store.applyTie(p.attracting, p.attracted);
         onProximityConnectHost?.(p);
       }}
-      onSelect={(s: VolumeSelectionSnapshot) => {
+      onSelect={(s: Puzzle3dSelectionSnapshot) => {
         store.setSelection({ partIds: [...s.objectIds], anchorIds: [...s.vortexIds] });
         onSelectHost?.(s);
       }}
-      {...volumeRest}
+      {...rest3d}
     >
-      <VolumeParts selectedObjectId={selectedObjectId} relocate={props.relocateMode ?? "translate"} />
-      <VolumeTies />
-    </VolumeView>
+      <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.relocateMode ?? "translate"} />
+      <Puzzle3dTies />
+    </Puzzle3dCanvas>
   );
 });
 
-const FiveDVolume = reactHostPort.memo(function FiveDVolume(props: FiveDProps) {
+const FiveD3d = reactHostPort.memo(function FiveD3d(props: FiveDProps) {
   const snap = useSnapshot();
-  const volumeFixture = reactHostPort.useMemo(() => projectVolume(snap.model), [snap.model]);
+  const fixture3d = reactHostPort.useMemo(() => project3d(snap.model), [snap.model]);
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="3d" data-five-d-instance={props.instanceId}>
       <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-        <VolumePartStateProvider fixture={volumeFixture} onConnect={props.volume?.onConnect} onRelocate={props.volume?.onRelocate}>
-          <FiveDVolumeInner {...props} />
-        </VolumePartStateProvider>
+        <Puzzle3dPartStateProvider fixture={fixture3d} onConnect={props.puzzle3d?.onConnect} onRelocate={props.puzzle3d?.onRelocate}>
+          <FiveD3dInner {...props} />
+        </Puzzle3dPartStateProvider>
       </reactHostPort.Suspense>
     </div>
   );
 });
 
-/** @emoji 🖼️ Single topology editor surface (`2d` board WASM or `3d` R3F); share state via {@link StoreProvider}. */
+/** @emoji 🖼️ Single puzzle 5d surface (`2d` WASM or `3d` R3F); share state via {@link StoreProvider}. */
 export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
-  if (props.mode === "2d") return <FiveDFlat {...props} />;
-  return <FiveDVolume {...props} />;
+  if (props.mode === "2d") return <FiveD2d {...props} />;
+  return <FiveD3d {...props} />;
 });
 //#endregion 🔖FiveD
 
@@ -969,18 +969,18 @@ function isMetaRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function flatKindCatalogFromMeta(meta: Record<string, unknown> | undefined): FlatKindCatalogBundle | undefined {
+function kindCatalogFrom2dMeta(meta: Record<string, unknown> | undefined): Puzzle2dKindCatalogBundle | undefined {
   return fixtureMetaKindCatalogBundle(meta);
 }
 
-function volumeKindCatalogFromMeta(meta: Record<string, unknown> | undefined): VolumeKindCatalogBundle | undefined {
+function kindCatalogFrom3dMeta(meta: Record<string, unknown> | undefined): Puzzle3dKindCatalogBundle | undefined {
   if (!isMetaRecord(meta)) return undefined;
   const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object" || Array.isArray(kc)) return undefined;
-  return kc as VolumeKindCatalogBundle;
+  return kc as Puzzle3dKindCatalogBundle;
 }
 
-function flatPartKindFromNode(row: FlatNodeKind): PartKind {
+function partKindFrom2dNode(row: Puzzle2dNodeKind): PartKind {
   return {
     id: row.id,
     name: row.name,
@@ -993,7 +993,7 @@ function flatPartKindFromNode(row: FlatNodeKind): PartKind {
   };
 }
 
-function flatGripKindFromHandle(row: FlatHandleKind): GripKind {
+function gripKindFrom2dHandle(row: Puzzle2dHandleKind): GripKind {
   return {
     id: row.id,
     name: row.name,
@@ -1002,7 +1002,7 @@ function flatGripKindFromHandle(row: FlatHandleKind): GripKind {
   };
 }
 
-function flatFastenerKindFromEdge(row: FlatEdgeKind): FastenerKind {
+function fastenerKindFrom2dEdge(row: Puzzle2dEdgeKind): FastenerKind {
   return {
     id: row.id,
     name: row.name,
@@ -1014,7 +1014,7 @@ function flatFastenerKindFromEdge(row: FlatEdgeKind): FastenerKind {
   };
 }
 
-function flatRopeKindFromWire(row: FlatWireKind): RopeKind {
+function ropeKindFrom2dWire(row: Puzzle2dWireKind): RopeKind {
   return {
     id: row.id,
     name: row.name,
@@ -1022,7 +1022,7 @@ function flatRopeKindFromWire(row: FlatWireKind): RopeKind {
   };
 }
 
-function volumePartKindFromObject(row: VolumePartKind): PartKind {
+function partKindFrom3dObject(row: Puzzle3dPartKind): PartKind {
   return {
     id: row.id,
     name: row.name ?? row.id,
@@ -1032,7 +1032,7 @@ function volumePartKindFromObject(row: VolumePartKind): PartKind {
   };
 }
 
-function volumeGripKindFromVortex(row: VolumeGripKind): GripKind {
+function gripKindFrom3dVortex(row: Puzzle3dGripKind): GripKind {
   return {
     id: row.id,
     name: row.name ?? row.id,
@@ -1042,7 +1042,7 @@ function volumeGripKindFromVortex(row: VolumeGripKind): GripKind {
   };
 }
 
-function volumeFastenerKindFromAttraction(row: VolumeFastenerKind): FastenerKind {
+function fastenerKindFrom3dAttraction(row: Puzzle3dFastenerKind): FastenerKind {
   return {
     id: row.id,
     name: row.name ?? row.id,
@@ -1050,7 +1050,7 @@ function volumeFastenerKindFromAttraction(row: VolumeFastenerKind): FastenerKind
   };
 }
 
-function volumeRopeKindFromCable(row: VolumeRopeKind): RopeKind {
+function ropeKindFrom3dCable(row: Puzzle3dRopeKind): RopeKind {
   return {
     id: row.id,
     name: row.name ?? row.id,
@@ -1067,22 +1067,22 @@ export function normalizeKindCatalogBundle(raw: unknown): KindCatalogBundle | un
     return box as KindCatalogBundle;
   }
   const out: KindCatalogBundle = {};
-  if (Array.isArray(box.nodes)) out.parts = (box.nodes as FlatNodeKind[]).map(flatPartKindFromNode);
-  if (Array.isArray(box.handles)) out.grips = (box.handles as FlatHandleKind[]).map(flatGripKindFromHandle);
-  if (Array.isArray(box.edges)) out.fasteners = (box.edges as FlatEdgeKind[]).map(flatFastenerKindFromEdge);
-  if (Array.isArray(box.wires)) out.ropes = (box.wires as FlatWireKind[]).map(flatRopeKindFromWire);
-  if (Array.isArray(box.objects)) out.parts = (box.objects as VolumePartKind[]).map(volumePartKindFromObject);
-  if (Array.isArray(box.vortices)) out.grips = (box.vortices as VolumeGripKind[]).map(volumeGripKindFromVortex);
-  if (Array.isArray(box.attractions)) out.fasteners = (box.attractions as VolumeFastenerKind[]).map(volumeFastenerKindFromAttraction);
-  if (Array.isArray(box.cables)) out.ropes = (box.cables as VolumeRopeKind[]).map(volumeRopeKindFromCable);
+  if (Array.isArray(box.nodes)) out.parts = (box.nodes as Puzzle2dNodeKind[]).map(partKindFrom2dNode);
+  if (Array.isArray(box.handles)) out.grips = (box.handles as Puzzle2dHandleKind[]).map(gripKindFrom2dHandle);
+  if (Array.isArray(box.edges)) out.fasteners = (box.edges as Puzzle2dEdgeKind[]).map(fastenerKindFrom2dEdge);
+  if (Array.isArray(box.wires)) out.ropes = (box.wires as Puzzle2dWireKind[]).map(ropeKindFrom2dWire);
+  if (Array.isArray(box.objects)) out.parts = (box.objects as Puzzle3dPartKind[]).map(partKindFrom3dObject);
+  if (Array.isArray(box.vortices)) out.grips = (box.vortices as Puzzle3dGripKind[]).map(gripKindFrom3dVortex);
+  if (Array.isArray(box.attractions)) out.fasteners = (box.attractions as Puzzle3dFastenerKind[]).map(fastenerKindFrom3dAttraction);
+  if (Array.isArray(box.cables)) out.ropes = (box.cables as Puzzle3dRopeKind[]).map(ropeKindFrom3dCable);
   if (!out.parts && !out.grips && !out.fasteners && !out.ropes) return undefined;
   return out;
 }
 
 /** @emoji 📐 Projects puzzle 5d kind catalogs onto puzzle 2d bundle keys. */
-export function projectFlatKindCatalogs(bundle: KindCatalogBundle | undefined): FlatKindCatalogBundle | undefined {
+export function project2dKindCatalogs(bundle: KindCatalogBundle | undefined): Puzzle2dKindCatalogBundle | undefined {
   if (!bundle) return undefined;
-  const out: FlatKindCatalogBundle = {};
+  const out: Puzzle2dKindCatalogBundle = {};
   if (bundle.parts?.length) {
     out.nodes = bundle.parts.map((part) => ({
       id: part.id,
@@ -1125,9 +1125,9 @@ export function projectFlatKindCatalogs(bundle: KindCatalogBundle | undefined): 
 }
 
 /** @emoji 📐 Projects puzzle 5d kind catalogs onto puzzle 3d bundle keys. */
-export function projectVolumeKindCatalogs(bundle: KindCatalogBundle | undefined): VolumeKindCatalogBundle | undefined {
+export function project3dKindCatalogs(bundle: KindCatalogBundle | undefined): Puzzle3dKindCatalogBundle | undefined {
   if (!bundle) return undefined;
-  const out: VolumeKindCatalogBundle = {};
+  const out: Puzzle3dKindCatalogBundle = {};
   if (bundle.parts?.length) {
     out.objects = bundle.parts.map((part) => ({
       id: part.id,
@@ -1190,21 +1190,21 @@ export function kindCompatibilityRowsFromMeta(meta: Record<string, unknown> | un
   return out;
 }
 
-export function kindCatalogsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): KindCatalogBundle | undefined {
-  const fromFlat = flatKindCatalogFromMeta(inp.flatMeta);
+export function kindCatalogsFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): KindCatalogBundle | undefined {
+  const fromFlat = kindCatalogFrom2dMeta(inp.meta2d);
   if (fromFlat) return normalizeKindCatalogBundle(fromFlat);
-  const fromVolume = volumeKindCatalogFromMeta(inp.volumeMeta);
+  const fromVolume = kindCatalogFrom3dMeta(inp.meta3d);
   if (fromVolume) return normalizeKindCatalogBundle(fromVolume);
   return undefined;
 }
 
-export function kindCompatibilityFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): readonly KindCompatEntry[] {
-  const fromFlat = kindCompatibilityRowsFromMeta(inp.flatMeta);
+export function kindCompatibilityFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): readonly KindCompatEntry[] {
+  const fromFlat = kindCompatibilityRowsFromMeta(inp.meta2d);
   if (fromFlat.length > 0) return fromFlat;
-  return kindCompatibilityRowsFromMeta(inp.volumeMeta);
+  return kindCompatibilityRowsFromMeta(inp.meta3d);
 }
 
-export function sharedKindsFromMetas(inp: { readonly flatMeta: Record<string, unknown> | undefined; readonly volumeMeta: Record<string, unknown> | undefined }): Pick<
+export function sharedKindsFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): Pick<
   typeof FIVE_D_FLAT_LOD_DEFAULTS,
   "lodZoomThresholds" | "gridFactor" | "gridSnapEnabled"
 > & {
@@ -1220,10 +1220,10 @@ export function sharedKindsFromMetas(inp: { readonly flatMeta: Record<string, un
 //#endregion 🔖KindMeta
 
 //#region 🔖BoardLayout
-/** @emoji 🔗 Default separator for flat handle ids (`piece::connector`). */
+/** @emoji 🔗 Default separator for 2d handle ids (`piece::connector`). */
 export const FLAT_HANDLE_COMPOUND_SEPARATOR = "::";
 
-/** @emoji 🔗 Builds a compound flat handle id from two parts. */
+/** @emoji 🔗 Builds a compound 2d handle id from two parts. */
 export function flatHandleCompoundId(left: string, right: string, separator: string = FLAT_HANDLE_COMPOUND_SEPARATOR): string {
   return `${left}${separator}${right}`;
 }
@@ -1285,7 +1285,7 @@ export function puzzle2dForceGraphOptions(weights: DiagramForceWeights): BoardFo
 }
 
 /** @emoji ┬¡ãÆ├┤├Ç Centers the board camera on the average of node centers. */
-export function flatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): BoardCameraState {
+export function camera2dFromPartCenters(centers: readonly { x: number; y: number }[]): BoardCameraState {
   if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
   const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
   const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
@@ -1311,9 +1311,9 @@ export function flatApplyFixtureCentersToTopLeft<T extends { readonly id: string
 }
 //#endregion 🔖BoardLayout
 
-/** @emoji 🎛 Default volume chrome for topology surfaces (alias of {@link FIVE_D_VOLUME_CHROME_DEFAULTS}). */
-export function volumeChromeDefaults(): typeof FIVE_D_VOLUME_CHROME_DEFAULTS {
-  return FIVE_D_VOLUME_CHROME_DEFAULTS;
+/** @emoji 🎛 Default 3d chrome for puzzle 5d surfaces (alias of {@link FIVE_D_3D_CHROME_DEFAULTS}). */
+export function chrome3dDefaults(): typeof FIVE_D_3D_CHROME_DEFAULTS {
+  return FIVE_D_3D_CHROME_DEFAULTS;
 }
 
 //#region 🔖BoardMarkers
@@ -1437,51 +1437,51 @@ export { DEFAULT_BOARD_GRID_FACTOR, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, blockedVo
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  describe("topologyConnectGestureCrossSurface", () => {
-    it("only indirect syncs across flat and volume", () => {
-      expect(topologyConnectGestureCrossSurface("indirect")).toBe(true);
-      expect(topologyConnectGestureCrossSurface("direct")).toBe(false);
-      expect(topologyConnectGestureCrossSurface("proximity")).toBe(false);
+  describe("connectGestureCrossSurface", () => {
+    it("only indirect syncs across 2d and 3d", () => {
+      expect(connectGestureCrossSurface("indirect")).toBe(true);
+      expect(connectGestureCrossSurface("direct")).toBe(false);
+      expect(connectGestureCrossSurface("proximity")).toBe(false);
     });
   });
 
   describe("parseV1", () => {
-    it("accepts unified topology", () => {
+    it("accepts unified puzzle 5d model", () => {
       const t = parseV1({
-        schema: "puzzle.5d.topology/v1",
+        schema: "puzzle.5d/v1",
         domain: "architecture",
-        flatCamera: { x: 0, y: 0, zoom: 1 },
-        volumeCamera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        camera2d: { x: 0, y: 0, zoom: 1 },
+        camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         parts: [],
         ties: [],
         label: "x",
       });
-      expect(t?.schema).toBe("puzzle.5d.topology/v1");
+      expect(t?.schema).toBe("puzzle.5d/v1");
       expect(t?.label).toBe("x");
     });
   });
-  describe("topologyCompose", () => {
-    it("merges flat nodes and volume objects by id", () => {
-      const flatFixture: BoardFixtureV1 = {
+  describe("compose5d", () => {
+    it("merges 2d nodes and 3d objects by id", () => {
+      const fixture2d: BoardFixtureV1 = {
         schema: "puzzle.2d.fixture/v1",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "p1", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] }],
         edges: [],
       };
-      const volumeFixture: VolumeFixtureV1 = {
+      const fixture3d: Puzzle3dFixtureV1 = {
         schema: "puzzle.3d.fixture/v1",
         domain: "architecture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         objects: [{ id: "p1", meshUrl: "m.glb", origin: [0, 0, 0], vortices: [{ id: "p1:h", position: [0, 0, 0] }] }],
         attractions: [],
       };
-      const t = topologyCompose(flatFixture, volumeFixture);
-      expect(t.parts.some((p) => p.id === "p1" && p.flat && p.volume)).toBe(true);
+      const t = compose5d(fixture2d, fixture3d);
+      expect(t.parts.some((p) => p.id === "p1" && p.puzzle2d && p.puzzle3d)).toBe(true);
     });
   });
-  describe("topology volume projection", () => {
-    it("projects parts with volume aspects to a 3d fixture", () => {
-      const model = topologyCompose(
+  describe("puzzle 3d projection", () => {
+    it("projects parts with puzzle3d aspects to a 3d fixture", () => {
+      const model = compose5d(
         {
           schema: "puzzle.2d.fixture/v1",
           camera: { x: 0, y: 0, zoom: 1 },
@@ -1496,15 +1496,15 @@ if (import.meta.vitest) {
           attractions: [],
         },
       );
-      const volume = projectVolume(model);
-      expect(volume.objects).toHaveLength(1);
-      expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
+      const fixture3d = project3d(model);
+      expect(fixture3d.objects).toHaveLength(1);
+      expect(fixture3d.objects[0]?.origin).toEqual([1, 2, 3]);
     });
   });
 
-  describe("projectFlat", () => {
+  describe("project2d", () => {
     it("round-trips part centers", () => {
-      const model = topologyCompose(
+      const model = compose5d(
         {
           schema: "puzzle.2d.fixture/v1",
           camera: { x: 0, y: 0, zoom: 1 },
@@ -1519,29 +1519,29 @@ if (import.meta.vitest) {
           attractions: [],
         },
       );
-      const flat = projectFlat(model);
-      expect(flat.nodes[0]?.x).toBe(5);
+      const fixture2d = project2d(model);
+      expect(fixture2d.nodes[0]?.x).toBe(5);
     });
   });
   describe("kindCompatibilityFromMetas", () => {
-    it("prefers flat meta rows when present", () => {
+    it("prefers 2d meta rows when present", () => {
       const rows = kindCompatibilityFromMetas({
-        flatMeta: { kindCompatibility: [{ source: "a", target: "b" }] },
-        volumeMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
+        meta2d: { kindCompatibility: [{ source: "a", target: "b" }] },
+        meta3d: { kindCompatibility: [{ source: "x", target: "y" }] },
       });
       expect(rows.some((r) => r.source === "a")).toBe(true);
     });
-    it("falls back to volume meta when flat has no rows", () => {
+    it("falls back to 3d meta when 2d has no rows", () => {
       const rows = kindCompatibilityFromMetas({
-        flatMeta: {},
-        volumeMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
+        meta2d: {},
+        meta3d: { kindCompatibility: [{ source: "x", target: "y" }] },
       });
       expect(rows.some((r) => r.source === "x")).toBe(true);
     });
   });
   describe("sharedKindsFromMetas", () => {
     it("includes lod defaults", () => {
-      const s = sharedKindsFromMetas({ flatMeta: undefined, volumeMeta: undefined });
+      const s = sharedKindsFromMetas({ meta2d: undefined, meta3d: undefined });
       expect(s.gridSnapEnabled).toBe(true);
     });
   });

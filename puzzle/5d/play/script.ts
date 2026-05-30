@@ -21,17 +21,17 @@ class TestScript extends BundleScript {
   }
 }
 
-class RegenerateTopologyFixtureScript extends BundleScript {
+class Regenerate5dFixtureScript extends BundleScript {
   run(): void {
-    process.env.REGENERATE_NAKAGIN_TOPOLOGY = "1";
+    process.env.REGENERATE_NAKAGIN_5D = "1";
     try {
-      runVitest(this.root, ["-t", "regenerates nakagin topology fixture"]);
+      runVitest(this.root, ["-t", "regenerates nakagin 5d fixture"]);
     } finally {
-      delete process.env.REGENERATE_NAKAGIN_TOPOLOGY;
+      delete process.env.REGENERATE_NAKAGIN_5D;
     }
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript).register("regenerate-fixture", RegenerateTopologyFixtureScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript).register("regenerate-fixture", Regenerate5dFixtureScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -67,6 +67,21 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
+/** @emoji ✂️ Drops embedded Playwright tests from the browser bundle (Node e2e keeps them via pw-loader). */
+function stripSketchpadEmbeddedE2ePlugin(): Plugin {
+  const region = /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/;
+  return {
+    name: "semio-sketchpad-strip-embedded-e2e",
+    enforce: "pre",
+    transform(code, id) {
+      if (process.env.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1") return;
+      if (!id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts")) return;
+      if (!region.test(code)) return;
+      return { code: code.replace(region, ""), map: null };
+    },
+  };
+}
+
 function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
   return {
     name: "semio-react-cjs-facades",
@@ -149,7 +164,7 @@ export default defineConfig(async ({ mode }) => {
       __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
         { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
@@ -186,6 +201,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
+      stripSketchpadEmbeddedE2ePlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),

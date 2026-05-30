@@ -2050,7 +2050,7 @@ if (import.meta.vitest) {
 //#endregion 🧪Tests
 
 //#region 🧪E2E
-if (!import.meta.vitest) {
+if (__SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__) {
 	const { test, expect } = await import("@playwright/test");
 	test.describe("sketchpad platform", () => {
 		test("home table mounts on root", async ({ page }) => {

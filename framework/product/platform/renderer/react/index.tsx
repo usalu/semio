@@ -122,7 +122,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
 import { BoardCanvas, parseBoardFixtureV1, type BoardSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1 } from "@puzzle/3d/react";
-import { FiveD, StoreProvider, createStore, topologyCompose } from "@puzzle/5d/react";
+import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -1533,7 +1533,7 @@ function usePlatformTopologyStore(
 			setTopologyStore(null);
 			return;
 		}
-		const model = topologyCompose(parseBoardFixtureV1(payload.flat), parseFixtureV1(payload.volume));
+		const model = compose5d(parseBoardFixtureV1(payload.flat)!, parseFixtureV1(payload.volume)!);
 		setTopologyStore((previous) => {
 			if (previous) {
 				previous.replaceModel(model);

@@ -1045,42 +1045,42 @@ import { FiveD, StoreProvider } from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground/core";
 import {
   PUZZLE_5D_PLAY_APP_ID,
-  PUZZLE_5D_PLAY_BOARD_BODY_KEY,
-  PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
-  PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
+  PUZZLE_5D_PLAY_2D_BODY_KEY,
+  PUZZLE_5D_PLAY_2D_SURFACE_ID,
+  PUZZLE_5D_PLAY_2D_WINDOW_ID,
   PUZZLE_5D_PLAY_CONTROLLER_ID,
-  TOPOLOGY_PLAY_STORE_ID,
-  PUZZLE_5D_PLAY_VOLUME_BODY_KEY,
-  PUZZLE_5D_PLAY_VOLUME_SURFACE_ID,
+  PUZZLE_5D_PLAY_STORE_ID,
+  PUZZLE_5D_PLAY_3D_BODY_KEY,
+  PUZZLE_5D_PLAY_3D_SURFACE_ID,
   PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-  TopologyPlayShellController,
-  TopologyStoreBridge,
-  buildTopologyFlatDeclarativeBody,
-  buildTopologyPlayHierarchySections,
-  buildTopologyPlayRuntime,
-  buildTopologyVolumeDeclarativeBody,
-  type TopologyPlaySnapshot,
+  Puzzle5dPlayShellController,
+  Puzzle5dStoreBridge,
+  buildPuzzle5d2dDeclarativeBody,
+  buildPuzzle5dPlayHierarchySections,
+  buildPuzzle5dPlayRuntime,
+  buildPuzzle5d3dDeclarativeBody,
+  type Puzzle5dPlaySnapshot,
 } from "@puzzle/5d/play";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
-function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {
+function usePuzzle5dPlaySnapshot(): { readonly controller: Puzzle5dPlayShellController | undefined; readonly snapshot: Puzzle5dPlaySnapshot | null } {
   const { runtime } = useApp();
   reactHostPort.useSyncExternalStore(
     (listener) => runtime.subscribe(listener),
     () => runtime.generation,
     () => 0,
   );
-  const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+  const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
   return { controller, snapshot: controller?.getSnapshot() ?? null };
 }
 //#endregion 🔖Snapshot
 
 //#region 🔖DetailsPanel
-function TopologyPlayStatusPanel(): React.ReactElement {
-  const { snapshot } = useTopologyPlaySnapshot();
+function Puzzle5dPlayStatusPanel(): React.ReactElement {
+  const { snapshot } = usePuzzle5dPlaySnapshot();
   if (!snapshot) {
-    return <p className="text-muted-foreground p-2 text-xs">No topology snapshot</p>;
+    return <p className="text-muted-foreground p-2 text-xs">No puzzle 5d snapshot</p>;
   }
   return (
     <dl className="grid gap-2 p-2 text-xs">
@@ -1089,12 +1089,12 @@ function TopologyPlayStatusPanel(): React.ReactElement {
         <dd>{snapshot.manifestLabel ?? "—"}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground font-medium">Board selection</dt>
-        <dd>{snapshot.boardSelected.size} id(s)</dd>
+        <dt className="text-muted-foreground font-medium">2d selection</dt>
+        <dd>{snapshot.selected2d.size} id(s)</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground font-medium">Volume selection</dt>
-        <dd>{snapshot.volumeSelected ?? "—"}</dd>
+        <dt className="text-muted-foreground font-medium">3d selection</dt>
+        <dd>{snapshot.selected3d ?? "—"}</dd>
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Relocate</dt>
@@ -1103,20 +1103,20 @@ function TopologyPlayStatusPanel(): React.ReactElement {
       <div>
         <dt className="text-muted-foreground font-medium">Connect events</dt>
         <dd>
-          board {snapshot.connectBoard} · volume {snapshot.connectVolume}
+          2d {snapshot.connect2d} · 3d {snapshot.connect3d}
         </dd>
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Proximity events</dt>
         <dd>
-          board {snapshot.proximityBoard} · volume {snapshot.proximityVolume}
+          2d {snapshot.proximity2d} · 3d {snapshot.proximity3d}
         </dd>
       </div>
     </dl>
   );
 }
 
-class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   constructor(private readonly buildTree: () => import("@framework/playground/core").UiTreeNode) {
     super();
   }
@@ -1131,14 +1131,14 @@ class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
       id: "puzzle-5d-play-status",
       icon: ClipboardList,
       order: 0,
       tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <TopologyPlayStatusPanel />)],
+        sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <Puzzle5dPlayStatusPanel />)],
       }),
     };
   }
@@ -1146,46 +1146,46 @@ class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
 //#endregion 🔖DetailsPanel
 
 //#region 🔖Surfaces
-function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
-  const { controller, snapshot } = useTopologyPlaySnapshot();
-  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_BOARD_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid topology board binding</div>;
+function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
+  const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_2D_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_2D_WINDOW_ID || !controller || !snapshot?.fixture2d || !snapshot.camera2d) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
   }
   return (
     <FiveD
       mode="2d"
-      instanceId="play-board"
-      flat={{
-        camera: snapshot.boardCamera,
-        onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardLodTag", { lod }),
-        onSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
-        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteBoardConnect"),
-        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteBoardProximity"),
-        ...snapshot.boardLodProps,
+      instanceId="play-2d"
+      puzzle2d={{
+        camera: snapshot.camera2d,
+        onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dLodTag", { lod }),
+        onSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: snap.ids }),
+        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dConnect"),
+        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dProximity"),
+        ...snapshot.lod2dProps,
       }}
     />
   );
 }
 
-function TopologyVolumeSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
-  const { controller, snapshot } = useTopologyPlaySnapshot();
-  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_VOLUME_SURFACE_ID || !controller || !snapshot?.volumeFixture || !snapshot.volumeCamera || !snapshot.boardFixture) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid topology volume binding</div>;
+function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
+  const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_3D_SURFACE_ID || !controller || !snapshot?.fixture3d || !snapshot.camera3d || !snapshot.fixture2d) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 3d binding</div>;
   }
-  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.volumeFixture.objects.map((object) => object.meshUrl))], [snapshot.volumeFixture]);
+  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.fixture3d.objects.map((object) => object.meshUrl))], [snapshot.fixture3d]);
   reactHostPort.useEffect(() => {
     for (const url of meshUrls) sceneHostPort.drei.useGLTF.preload(url);
   }, [meshUrls]);
   return (
     <FiveD
       mode="3d"
-      instanceId="play-volume"
+      instanceId="play-3d"
       relocateMode={snapshot.relocateMode}
-      volume={{
-        ...snapshot.volumeLodProps,
-        camera: snapshot.volumeCamera ?? snapshot.volumeFixture.camera,
-        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteVolumeConnect"),
-        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteVolumeProximity"),
+      puzzle3d={{
+        ...snapshot.lod3dProps,
+        camera: snapshot.camera3d ?? snapshot.fixture3d.camera,
+        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dConnect"),
+        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dProximity"),
       }}
     />
   );
@@ -1196,63 +1196,63 @@ function TopologyVolumeSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurf
 let topologyPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers topology play flat+volume surface hosts (called from `@framework/playground/renderer/react`). */
-export function registerTopologyPlaySurfaceHosts(): void {
+export function registerPuzzle5dPlaySurfaceHosts(): void {
   if (topologyPlayChromeRegistered) return;
   topologyPlayChromeRegistered = true;
-  registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
-  registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, TopologyVolumeSurfaceHost);
-  registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyFlatDeclarativeBody);
-  registerWindowBody(PUZZLE_5D_PLAY_VOLUME_BODY_KEY, buildTopologyVolumeDeclarativeBody);
+  registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
+  registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_3D_SURFACE_ID, Puzzle5d3dSurfaceHost);
+  registerWindowBody(PUZZLE_5D_PLAY_2D_BODY_KEY, buildPuzzle5d2dDeclarativeBody);
+  registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
 }
 
-function TopologyPlayChrome({ runtime }: { readonly runtime: Platform }): React.ReactElement {
+function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.ReactElement {
   const generation = reactHostPort.useSyncExternalStore(
     (listener) => runtime.subscribe(listener),
     () => runtime.generation,
     () => 0,
   );
   void generation;
-  const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+  const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
   const snapshot = controller?.getSnapshot() ?? null;
   const bus = runtime.commandBus;
-  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.volumeSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}` : "";
+  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.selected3d ?? ""}\u0001${[...snapshot.selected2d].sort().join(",")}` : "";
   const workbenchTabs = reactHostPort.useMemo(
     () =>
       snapshot && controller
         ? [
-            new TopologyPlayHierarchyPanelDefinition(() =>
-              buildTopologyPlayHierarchySections(snapshot, {
-                onSelectBoard: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
-                onSelectVolumeObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setVolumeSelection", { objectIds: [objectId] }),
-                onSelectVolumeVortex: () => {},
-                onSelectVolumeAttraction: () => {},
+            new Puzzle5dPlayHierarchyPanelDefinition(() =>
+              buildPuzzle5dPlayHierarchySections(snapshot, {
+                onSelect2d: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [id] }),
+                onSelect3dObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [objectId] }),
+                onSelect3dVortex: () => {},
+                onSelect3dAttraction: () => {},
               }),
             ).resolveTab(),
           ]
         : [],
     [snapshot, snapshotKey, controller, bus],
   );
-  const detailTabs = reactHostPort.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
+  const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition().resolveTab()], []);
   const shell = <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
   if (!controller) {
     return shell;
   }
-  const topologyBridge = controller.getStore(TOPOLOGY_PLAY_STORE_ID) as TopologyStoreBridge | undefined;
-  const topologyStore = topologyBridge?.inner ?? controller.topologyStore;
-  return <StoreProvider store={topologyStore}>{shell}</StoreProvider>;
+  const puzzle5dBridge = controller.getStore(PUZZLE_5D_PLAY_STORE_ID) as Puzzle5dStoreBridge | undefined;
+  const puzzle5dStore = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
+  return <StoreProvider store={puzzle5dStore}>{shell}</StoreProvider>;
 }
 
-/** @emoji 🚀 Mounts topology play chrome for a {@link Playground}. */
-export function mountTopologyPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<TopologyPlayChrome runtime={playground.runtime} />, rootId);
+/** @emoji 🚀 Mounts puzzle 5d play chrome for a {@link Playground}. */
+export function mountPuzzle5dPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<Puzzle5dPlayChrome runtime={playground.runtime} />, rootId);
 }
 
 const topologyPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerTopologyPlaySurfaceHosts,
-  mount: mountTopologyPlayChrome,
+  registerHosts: registerPuzzle5dPlaySurfaceHosts,
+  mount: mountPuzzle5dPlayChrome,
 };
 
-/** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/index.ts`). */
+/** @emoji 🛝 Puzzle 5d play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/index.ts`). */
 export function boot5dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, topologyPlayChromeBoot, rootId);
 }

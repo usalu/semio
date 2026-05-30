@@ -51,11 +51,4 @@ function migrate5dJson(path: string): void {
   console.log(`[DEBUG] migrated ${path}`);
 }
 
-migrate5dJson("puzzle/assets/nakagin-capsule-tower.5d.json");
-const fixture5d = join(root, "puzzle/5d/fixture/nakagin-capsule-tower.5d.json");
-try {
-  readFileSync(fixture5d);
-  migrate5dJson("puzzle/5d/fixture/nakagin-capsule-tower.5d.json");
-} catch {
-  /* optional */
-}
+migrate5dJson("puzzle/5d/fixture/nakagin-capsule-tower.5d.json");
