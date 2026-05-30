@@ -1,24 +1,10 @@
 // #region 🔌Adapters
 import {
-  Button,
-  Input,
-  Label,
-  LevelProvider,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  applyElementsSurfaceChrome,
-  getLevelBgClass,
   reactHostPort,
   sceneHostPort,
-  type ElementsSurfaceDevice,
-  type ElementsSurfaceTheme,
-  type ThreeEvent,
+  type ThreeEvent
 } from "@ui/react";
-import { Trash2 } from "lucide-react";
-import React, { Children, isValidElement, type CSSProperties, type ChangeEvent, type MutableRefObject, type ReactNode } from "react";
+import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
@@ -67,7 +53,7 @@ type WebGLRenderer = import("three").WebGLRenderer;
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-class Puzzle3dEventBindingController {
+class EventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
   listen(target: SceneListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
@@ -133,7 +119,7 @@ export interface CameraState {
 }
 
 /** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */
-export type Puzzle3dLod = number;
+export type Lod = number;
 
 /** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.handleMeshByLod}. */
 export interface LodMeshEntry {
@@ -236,7 +222,7 @@ export interface HandleKindCatalogEntry {
   label?: string;
   name?: string;
   color?: string;
-  defaultWireKind?: string;
+  defaultCableKind?: string;
   scale?: number;
 }
 
@@ -248,7 +234,7 @@ export interface NodeKindCatalogEntry {
   shape?: string;
 }
 
-export interface WireKindCatalogEntry {
+export interface CableKindCatalogEntry {
   id: string;
   label?: string;
   name?: string;
@@ -259,7 +245,7 @@ export interface KindCatalogBundle {
   edges?: readonly EdgeKindCatalogEntry[];
   handles?: readonly HandleKindCatalogEntry[];
   nodes?: readonly NodeKindCatalogEntry[];
-  wires?: readonly WireKindCatalogEntry[];
+  cables?: readonly CableKindCatalogEntry[];
 }
 
 export interface KindCompatEntry {
@@ -267,7 +253,7 @@ export interface KindCompatEntry {
   target: string;
   bidirectional?: boolean;
   important?: boolean;
-  specificity?: "general" | "object" | "attraction" | "handle" | "wire" | "node" | "edge";
+  specificity?: "general" | "object" | "attraction" | "handle" | "cable" | "node" | "edge";
 }
 
 export interface SelectionSnapshot {
@@ -304,10 +290,10 @@ const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: 
 /** @emoji 🖱️ Pointer movement before a vortex press becomes an attraction drag (px). */
 export const PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX = 6;
 
-export type Puzzle3dSelectionPick = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+export type SelectionPick = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
 
 /** @emoji 🎯 Single-kind selection slice for one pick target. */
-export function puzzle3dSelectionFromPick(pick: Puzzle3dSelectionPick): SelectionSnapshot {
+export function puzzle3dSelectionFromPick(pick: SelectionPick): SelectionSnapshot {
   switch (pick.kind) {
     case "object":
       return { objectIds: [pick.id], vortexIds: [], attractionIds: [] };
@@ -350,7 +336,7 @@ function mergeIdList(mode: SelectionMode, current: readonly string[], incoming: 
 }
 
 /** @emoji 🎯 Applies selection mode when committing a canvas pick. */
-export function mergePuzzle3dSelection(mode: SelectionMode, current: SelectionSnapshot, pick: Puzzle3dSelectionPick): SelectionSnapshot {
+export function mergeSelection(mode: SelectionMode, current: SelectionSnapshot, pick: SelectionPick): SelectionSnapshot {
   const piece = puzzle3dSelectionFromPick(pick);
   if (mode === "single") {
     return piece;
@@ -393,11 +379,11 @@ export function primarySelectionObjectId(selection: SelectionSnapshot): string |
   return selection.objectIds[0] ?? (selection.vortexIds[0] ? parseVortexFullId(selection.vortexIds[0]).objectId : null);
 }
 
-const Puzzle3dSelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
+const SelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
 
 /** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
-export function useLivePuzzle3dSelection(): SelectionSnapshot {
-  const store = reactHostPort.useContext(Puzzle3dSelectionStoreContext);
+export function useLiveSelection(): SelectionSnapshot {
+  const store = reactHostPort.useContext(SelectionStoreContext);
   if (!store) {
     throw new Error("Puzzle 3D selection store missing");
   }
@@ -405,10 +391,10 @@ export function useLivePuzzle3dSelection(): SelectionSnapshot {
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
-export type Puzzle3dHoverTarget = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+export type HoverTarget = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
 
 /** @emoji 🖱️ Compares two hover targets for equality. */
-export function puzzle3dHoverTargetsEqual(a: Puzzle3dHoverTarget | null, b: Puzzle3dHoverTarget | null): boolean {
+export function puzzle3dHoverTargetsEqual(a: HoverTarget | null, b: HoverTarget | null): boolean {
   if (a === b) {
     return true;
   }
@@ -569,7 +555,7 @@ export function pickClosestMeshUrl(entries: readonly LodMeshEntry[] | undefined,
 }
 
 /** @emoji 📶 Formats puzzle 3D LOD for `data-puzzle3d-lod` and play readouts. */
-export function formatPuzzle3dLod(lod: number): string {
+export function formatLod(lod: number): string {
   return Number.isFinite(lod) ? lod.toFixed(2) : "—";
 }
 
@@ -648,7 +634,7 @@ function resolveMeshUrlForLod(meshByLod: readonly LodMeshEntry[] | undefined, fa
 }
 
 /** @emoji 🎨 Resolves per-object mesh URL; useFrame only when depth-variable or per-LOD meshes exist, and setState only when URL changes. */
-function useResolvedPuzzle3dMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: readonly LodMeshEntry[]; readonly fallbackMeshUrl: string }): string {
+function useResolvedMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: readonly LodMeshEntry[]; readonly fallbackMeshUrl: string }): string {
   const lodCtx = useLod();
   const trackLod = lodCtx.depthVariable || (opts.meshByLod?.length ?? 0) > 0;
   const meshByLodRef = reactHostPort.useRef(opts.meshByLod);
@@ -715,7 +701,7 @@ function LodFrameRunner(props: {
   readonly automaticLod: boolean;
   readonly depthVariableLod: boolean;
   readonly manualLod: number;
-  readonly onPuzzle3dLod: (patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => void;
+  readonly onLod: (patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => void;
   readonly onLodChange?: (lod: number) => void;
 }) {
   const cam = useThree((s) => s.camera);
@@ -738,7 +724,7 @@ function LodFrameRunner(props: {
     const sig = `${puzzle3dLod}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
     if (ctxSig.current !== sig) {
       ctxSig.current = sig;
-      props.onPuzzle3dLod({ puzzle3dLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
+      props.onLod({ puzzle3dLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
     }
     if (prevLod.current === null || Math.abs(prevLod.current - puzzle3dLod) > PUZZLE_3D_LOD_EPSILON) {
       prevLod.current = puzzle3dLod;
@@ -774,11 +760,11 @@ function LodBridge(props: {
     r.tmpWorld.set(position[0], position[1], position[2]);
     return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);
   }, []);
-  const [puzzle3dLod, setPuzzle3dLod] = reactHostPort.useState(DEFAULT_MANUAL_LOD);
+  const [puzzle3dLod, setLod] = reactHostPort.useState(DEFAULT_MANUAL_LOD);
   const [depthVariable, setDepthVariable] = reactHostPort.useState(false);
   const [gridStepWorld, setGridStepWorld] = reactHostPort.useState<number | null>(() => lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor));
-  const onPuzzle3dLod = reactHostPort.useCallback((patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
-    setPuzzle3dLod((prev) => (Math.abs(prev - patch.puzzle3dLod) > PUZZLE_3D_LOD_EPSILON ? patch.puzzle3dLod : prev));
+  const onLod = reactHostPort.useCallback((patch: { readonly puzzle3dLod: number; readonly depthVariable: boolean; readonly gridStepWorld: number | null }) => {
+    setLod((prev) => (Math.abs(prev - patch.puzzle3dLod) > PUZZLE_3D_LOD_EPSILON ? patch.puzzle3dLod : prev));
     setDepthVariable((prev) => (prev === patch.depthVariable ? prev : patch.depthVariable));
     setGridStepWorld((prev) => (prev === patch.gridStepWorld ? prev : patch.gridStepWorld));
   }, []);
@@ -804,7 +790,7 @@ function LodBridge(props: {
         automaticLod={props.automaticLod}
         depthVariableLod={props.depthVariableLod}
         manualLod={props.manualLod}
-        onPuzzle3dLod={onPuzzle3dLod}
+        onLod={onLod}
         onLodChange={props.onLodChange}
       />
       {props.showLodGrid ? <LodGridHelper /> : null}
@@ -937,7 +923,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
   };
 }
 
-export function encodePuzzle3dFixtureForDragV1(fixture: FixtureV1): string {
+export function encodeFixtureForDragV1(fixture: FixtureV1): string {
   return JSON.stringify(fixture);
 }
 //#endregion ­ƒº¥Fixture
@@ -990,7 +976,7 @@ export function attractionEdgesFromAttractions(attractions: readonly AttractionP
   return out;
 }
 
-export interface Puzzle3dAttractionTree {
+export interface AttractionTree {
   readonly parentByObjectId: ReadonlyMap<string, string | null>;
   readonly attractingByObjectId: ReadonlyMap<string, readonly string[]>;
   readonly wormholeDistanceByObjectId: ReadonlyMap<string, number>;
@@ -1088,7 +1074,7 @@ function parentOwnershipCycleMemberIds(parentByObjectId: ReadonlyMap<string, str
   return null;
 }
 
-/** @emoji Ô£é´©Å Clears one parent link per ownership cycle so {@link Puzzle3dAttractionTree} stays a forest. */
+/** @emoji Ô£é´©Å Clears one parent link per ownership cycle so {@link AttractionTree} stays a forest. */
 function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>): void {
   for (;;) {
     let cycle: readonly string[] | null = null;
@@ -1107,7 +1093,7 @@ function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>
 }
 
 /** @emoji ­ƒò©´©Å Resolves a forest from attraction edges: wormhole roots, closest-to-wormhole parent when multiply attracted. */
-export function resolvePuzzle3dAttractionTree(args: { readonly objectIds: readonly string[]; readonly edges: readonly AttractionEdge[]; readonly explicitWormholeIds?: ReadonlySet<string> }): Puzzle3dAttractionTree {
+export function resolveAttractionTree(args: { readonly objectIds: readonly string[]; readonly edges: readonly AttractionEdge[]; readonly explicitWormholeIds?: ReadonlySet<string> }): AttractionTree {
   const explicit = args.explicitWormholeIds ?? new Set<string>();
   const incoming = new Map<string, AttractionEdge[]>();
   const outgoing = new Map<string, string[]>();
@@ -1258,7 +1244,7 @@ export interface ObjectRecord {
 interface ObjectStateSnapshot {
   readonly records: ReadonlyMap<string, ObjectRecord>;
   readonly attractions: readonly AttractionProps[];
-  readonly tree: Puzzle3dAttractionTree;
+  readonly tree: AttractionTree;
   readonly version: number;
 }
 
@@ -1313,7 +1299,7 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
       }
     }
   }
-  const tree = resolvePuzzle3dAttractionTree({
+  const tree = resolveAttractionTree({
     objectIds,
     edges,
     explicitWormholeIds: new Set([...explicitWormholes, ...inferred]),
@@ -1458,7 +1444,7 @@ export function relocateAffectedObjectIds(payload: RelocatePayload, attractingBy
 }
 
 /** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
-export function applyRelocateToPuzzle3dFixture(fixture: FixtureV1, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): FixtureV1 {
+export function applyRelocateToFixture(fixture: FixtureV1, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): FixtureV1 {
   const tree = attractingByObjectId ?? buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0).tree.attractingByObjectId;
   const ids = relocateAffectedObjectIds(payload, tree);
   if (!ids.length) {
@@ -1520,7 +1506,7 @@ export function applyRelocateToPuzzle3dFixture(fixture: FixtureV1, payload: Relo
 const ATTRACTING_CHILDREN_EMPTY: readonly string[] = [];
 
 /** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
-function schedulePuzzle3dRelocateCommit(run: () => void): void {
+function scheduleRelocateCommit(run: () => void): void {
   if (typeof requestIdleCallback === "function") {
     requestIdleCallback(run, { timeout: 120 });
     return;
@@ -1528,13 +1514,13 @@ function schedulePuzzle3dRelocateCommit(run: () => void): void {
   queueMicrotask(run);
 }
 
-type Puzzle3dObjectStoreListener = () => void;
+type ObjectStoreListener = () => void;
 
 /** @emoji 🗄️ Puzzle 3D object records with per-id subscriptions so gumball commit does not re-render every mesh. */
-export class Puzzle3dObjectStore {
+export class ObjectStore {
   private records = new Map<string, ObjectRecord>();
   private attractions: readonly AttractionProps[] = [];
-  private tree: Puzzle3dAttractionTree = {
+  private tree: AttractionTree = {
     parentByObjectId: new Map(),
     attractingByObjectId: new Map(),
     wormholeDistanceByObjectId: new Map(),
@@ -1543,22 +1529,22 @@ export class Puzzle3dObjectStore {
   private structureEpoch = 0;
   private sortedObjectIdsCache: readonly string[] = [];
   private blockedVortexFullIdsCache: ReadonlySet<string> = new Set();
-  private readonly objectListeners = new Map<string, Set<Puzzle3dObjectStoreListener>>();
-  private readonly structureListeners = new Set<Puzzle3dObjectStoreListener>();
+  private readonly objectListeners = new Map<string, Set<ObjectStoreListener>>();
+  private readonly structureListeners = new Set<ObjectStoreListener>();
 
   private refreshStructureCaches(): void {
     this.sortedObjectIdsCache = [...this.records.keys()].sort();
     this.blockedVortexFullIdsCache = blockedVortexFullIdsFromAttractions(this.attractions);
   }
 
-  subscribeStructure(listener: Puzzle3dObjectStoreListener): () => void {
+  subscribeStructure(listener: ObjectStoreListener): () => void {
     this.structureListeners.add(listener);
     return () => {
       this.structureListeners.delete(listener);
     };
   }
 
-  subscribeObject(objectId: string, listener: Puzzle3dObjectStoreListener): () => void {
+  subscribeObject(objectId: string, listener: ObjectStoreListener): () => void {
     let listeners = this.objectListeners.get(objectId);
     if (!listeners) {
       listeners = new Set();
@@ -1593,7 +1579,7 @@ export class Puzzle3dObjectStore {
     return this.attractions;
   }
 
-  getTree(): Puzzle3dAttractionTree {
+  getTree(): AttractionTree {
     return this.tree;
   }
 
@@ -1733,7 +1719,7 @@ export class Puzzle3dObjectStore {
 }
 
 /** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
-export function applyConnectToPuzzle3dFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
+export function applyConnectToFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
   const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
   const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
   const next = objectStateReducer(snap, {
@@ -1750,25 +1736,25 @@ export function applyConnectToPuzzle3dFixture(fixture: FixtureV1, payload: Attra
   return { ...fixture, attractions: [...next.attractions] };
 }
 
-export interface Puzzle3dObjectStateContextValue {
-  readonly store: Puzzle3dObjectStore;
+export interface ObjectStateContextValue {
+  readonly store: ObjectStore;
   readonly handleRelocate: (payload: RelocatePayload) => void;
   readonly handleConnect: (payload: AttractionPayload) => void;
 }
 
-export const Puzzle3dObjectStateContext = reactHostPort.createContext<Puzzle3dObjectStateContextValue | null>(null);
+export const ObjectStateContext = reactHostPort.createContext<ObjectStateContextValue | null>(null);
 
 /** @emoji ­ƒùä´©Å Central scene object records, attractions, and resolved attraction ownership. */
-export function Puzzle3dObjectStateProvider(props: {
+export function ObjectStateProvider(props: {
   readonly fixture: FixtureV1;
   readonly fixtureRevision?: number;
   readonly children: ReactNode;
   readonly onRelocate?: (payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => void;
   readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
-  const storeRef = reactHostPort.useRef<Puzzle3dObjectStore | null>(null);
+  const storeRef = reactHostPort.useRef<ObjectStore | null>(null);
   if (!storeRef.current) {
-    const store = new Puzzle3dObjectStore();
+    const store = new ObjectStore();
     store.initFromFixture(props.fixture);
     storeRef.current = store;
   }
@@ -1829,7 +1815,7 @@ export function Puzzle3dObjectStateProvider(props: {
       const puzzle3dStore = storeRef.current!;
       skipExternalPoseSyncRef.current = true;
       puzzle3dStore.applyRelocate(payload, false);
-      schedulePuzzle3dRelocateCommit(() => {
+      scheduleRelocateCommit(() => {
         props.onRelocate?.(payload, puzzle3dStore.getTree().attractingByObjectId);
       });
     },
@@ -1850,20 +1836,20 @@ export function Puzzle3dObjectStateProvider(props: {
     },
     [props.onConnect],
   );
-  const value = reactHostPort.useMemo<Puzzle3dObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
-  return <Puzzle3dObjectStateContext.Provider value={value}>{props.children}</Puzzle3dObjectStateContext.Provider>;
+  const value = reactHostPort.useMemo<ObjectStateContextValue>(() => ({ store, handleRelocate, handleConnect }), [store, handleRelocate, handleConnect]);
+  return <ObjectStateContext.Provider value={value}>{props.children}</ObjectStateContext.Provider>;
 }
 
-function usePuzzle3dObjectState(): Puzzle3dObjectStateContextValue {
-  const v = reactHostPort.useContext(Puzzle3dObjectStateContext);
+function useObjectState(): ObjectStateContextValue {
+  const v = reactHostPort.useContext(ObjectStateContext);
   if (!v) {
-    throw new Error("Puzzle3dObjectStateProvider missing");
+    throw new Error("ObjectStateProvider missing");
   }
   return v;
 }
 
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
-  const state = reactHostPort.useContext(Puzzle3dObjectStateContext);
+  const state = reactHostPort.useContext(ObjectStateContext);
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => (state ? state.store.subscribeStructure(onStoreChange) : () => {}),
     () => (state ? state.store.getBlockedVortexFullIds() : fallback),
@@ -1872,17 +1858,17 @@ function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet
 }
 
 /** @emoji ­ƒ¬Ø Relocate handler that updates central object state and cascades to attracted descendants. */
-export function usePuzzle3dObjectRelocate(): (payload: RelocatePayload) => void {
-  return usePuzzle3dObjectState().handleRelocate;
+export function useObjectRelocate(): (payload: RelocatePayload) => void {
+  return useObjectState().handleRelocate;
 }
 
 /** @emoji ­ƒ¬Ø Connect handler that appends an attraction and recomputes attraction ownership. */
-export function usePuzzle3dObjectConnect(): (payload: AttractionPayload) => void {
-  return usePuzzle3dObjectState().handleConnect;
+export function useObjectConnect(): (payload: AttractionPayload) => void {
+  return useObjectState().handleConnect;
 }
 
 function useObjectRecord(objectId: string): ObjectRecord | undefined {
-  const { store } = usePuzzle3dObjectState();
+  const { store } = useObjectState();
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeObject(objectId, onStoreChange),
     () => store.getRecord(objectId),
@@ -1891,7 +1877,7 @@ function useObjectRecord(objectId: string): ObjectRecord | undefined {
 }
 
 function useAttractingChildIds(objectId: string): readonly string[] {
-  const { store } = usePuzzle3dObjectState();
+  const { store } = useObjectState();
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractingChildIds(objectId),
@@ -1934,7 +1920,7 @@ const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
   );
 });
 
-/** @emoji ­ƒî▓ Declares attraction tree structure; meshes mount flat via {@link Puzzle3dObjects} so ids stay stable on reparent. */
+/** @emoji ­ƒî▓ Declares attraction tree structure; meshes mount flat via {@link Objects} so ids stay stable on reparent. */
 export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: { readonly objectId: string; readonly visitedIds?: readonly string[] }) {
   const attracting = useAttractingChildIds(props.objectId);
   const visited = props.visitedIds ?? [];
@@ -1952,7 +1938,7 @@ export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: 
 });
 
 /** @emoji 🎯 True when an object is part of the current selection (directly or via a selected vortex). */
-export function objectMatchesPuzzle3dSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
+export function objectMatchesSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
   if (!selection) {
     return false;
   }
@@ -1967,7 +1953,7 @@ export function objectMatchesPuzzle3dSelection(objectId: string, selection: Sele
   return false;
 }
 
-export interface Puzzle3dObjectsProps {
+export interface ObjectsProps {
   readonly selection?: SelectionSnapshot;
   readonly selectedObjectId?: string | null;
   readonly selectedVortexFullIds?: ReadonlySet<string>;
@@ -1975,8 +1961,8 @@ export interface Puzzle3dObjectsProps {
 }
 
 /** @emoji ­ƒºè Renders all scene objects from central state (id-keyed; survives ownership changes). */
-export const Puzzle3dObjects = reactHostPort.memo(function Puzzle3dObjects(props: Puzzle3dObjectsProps) {
-  const { store } = usePuzzle3dObjectState();
+export const Objects = reactHostPort.memo(function Objects(props: ObjectsProps) {
+  const { store } = useObjectState();
   const ids = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getSortedObjectIds(),
@@ -1988,7 +1974,7 @@ export const Puzzle3dObjects = reactHostPort.memo(function Puzzle3dObjects(props
         <ObjectItemById
           key={id}
           objectId={id}
-          selected={objectMatchesPuzzle3dSelection(id, props.selection) || props.selectedObjectId === id}
+          selected={objectMatchesSelection(id, props.selection) || props.selectedObjectId === id}
           relocateActive={props.selectedObjectId === id}
           selectedVortexFullIds={props.selectedVortexFullIds}
           relocate={props.relocate}
@@ -1999,8 +1985,8 @@ export const Puzzle3dObjects = reactHostPort.memo(function Puzzle3dObjects(props
 });
 
 /** @emoji ­ƒî▓ Logical attraction tree roots (wormholes) for structure-only composition. */
-export const Puzzle3dAttractionTreeRoots = reactHostPort.memo(function Puzzle3dAttractionTreeRoots() {
-  const { store } = usePuzzle3dObjectState();
+export const AttractionTreeRoots = reactHostPort.memo(function AttractionTreeRoots() {
+  const { store } = useObjectState();
   const wormholeIds = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getTree().wormholeIds,
@@ -2016,14 +2002,14 @@ export const Puzzle3dAttractionTreeRoots = reactHostPort.memo(function Puzzle3dA
 });
 
 /** @emoji ­ƒº▓ Renders all attraction endpoint lines in one frame loop (avoids N├ùuseFrame churn). */
-export const Puzzle3dAttractions = reactHostPort.memo(function Puzzle3dAttractions() {
-  const { store } = usePuzzle3dObjectState();
+export const Attractions = reactHostPort.memo(function Attractions() {
+  const { store } = useObjectState();
   const attractions = reactHostPort.useSyncExternalStore(
     (onStoreChange) => store.subscribeStructure(onStoreChange),
     () => store.getAttractions(),
     () => store.getAttractions(),
   );
-  return <Puzzle3dAttractionLineBatch attractions={attractions} />;
+  return <CableBatch attractions={attractions} />;
 });
 //#endregion ­ƒò©´©ÅAttractionGraph
 
@@ -2033,7 +2019,7 @@ export function kindsCompatible(aKind: string | undefined, bKind: string | undef
   return table.some((e) => (e.source === aKind && e.target === bKind) || (e.bidirectional === true && e.source === bKind && e.target === aKind));
 }
 
-const DEFAULT_WIRE_KIND_ID = "board.wire.link";
+const DEFAULT_WIRE_KIND_ID = "board.cable.link";
 
 /** @emoji ­ƒº▓ Attraction endpoint vortex full ids that are already attracting/attracted and cannot start or receive another attraction. */
 export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<AttractionProps, "attracting" | "attracted">[]): ReadonlySet<string> {
@@ -2057,21 +2043,21 @@ function catalogHandleById(catalogs: KindCatalogBundle | undefined, handleKind: 
   return catalogs.handles.find((h) => h.id === handleKind);
 }
 
-function catalogWireById(catalogs: KindCatalogBundle | undefined, wireKind: string | undefined): WireKindCatalogEntry | undefined {
-  if (!wireKind || !catalogs?.wires?.length) return undefined;
-  return catalogs.wires.find((w) => w.id === wireKind);
+function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: string | undefined): CableKindCatalogEntry | undefined {
+  if (!cableKind || !catalogs?.cables?.length) return undefined;
+  return catalogs.cables.find((w) => w.id === cableKind);
 }
 
-/** @emoji ­ƒöî Resolves default wire kind for a vortex kind via handle catalog, else `board.wire.link`. */
-export function resolveWireKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
+/** @emoji ­ƒöî Resolves default cable kind for a vortex kind via handle catalog, else `board.cable.link`. */
+export function resolveCableKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
   const h = catalogHandleById(catalogs, vortexKind);
-  const w = h?.defaultWireKind?.trim();
+  const w = h?.defaultCableKind?.trim();
   return w && w.length > 0 ? w : DEFAULT_WIRE_KIND_ID;
 }
 
-/** @emoji ­ƒ¬ó Resolves default edge kind for a wire kind via wire catalog, else empty string. */
-export function resolveEdgeKindForWire(wireKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
-  const w = catalogWireById(catalogs, wireKind);
+/** @emoji ­ƒ¬ó Resolves default edge kind for a cable kind via cable catalog, else empty string. */
+export function resolveEdgeKindForCable(cableKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
+  const w = catalogCableById(catalogs, cableKind);
   const e = w?.defaultEdgeKind?.trim();
   return e && e.length > 0 ? e : "";
 }
@@ -2083,10 +2069,10 @@ function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean
 }
 
 function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: AttractionHandleContext, attracted: AttractionHandleContext, catalogs: KindCatalogBundle | undefined): boolean {
-  const wSrc = resolveWireKindForVortex(attracting.vortexKind, catalogs);
-  const wTgt = resolveWireKindForVortex(attracted.vortexKind, catalogs);
-  const eSrc = resolveEdgeKindForWire(wSrc, catalogs);
-  const eTgt = resolveEdgeKindForWire(wTgt, catalogs);
+  const wSrc = resolveCableKindForVortex(attracting.vortexKind, catalogs);
+  const wTgt = resolveCableKindForVortex(attracted.vortexKind, catalogs);
+  const eSrc = resolveEdgeKindForCable(wSrc, catalogs);
+  const eTgt = resolveEdgeKindForCable(wTgt, catalogs);
   const sn = attracting.objectKind ?? "";
   const tn = attracted.objectKind ?? "";
   const sh = attracting.vortexKind ?? "";
@@ -2103,7 +2089,7 @@ function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: Attract
       return compatPairMatches(rule, eSrc, eTgt);
     case "handle":
       return compatPairMatches(rule, sh, th);
-    case "wire":
+    case "cable":
       return compatPairMatches(rule, wSrc, th);
     default:
       return compatPairMatches(rule, sh, th);
@@ -2127,7 +2113,7 @@ export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleC
         case "edge":
         case "attraction":
           return 2;
-        case "wire":
+        case "cable":
           return 3;
         case "handle":
           return 4;
@@ -2520,12 +2506,12 @@ export interface RegistryValue {
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
   onRelocate?: (p: RelocatePayload) => void;
-  readonly hoverTarget: Puzzle3dHoverTarget | null;
-  setPuzzle3dHover: (target: Puzzle3dHoverTarget) => void;
-  clearPuzzle3dHover: (target: Puzzle3dHoverTarget) => void;
-  clearPuzzle3dHoverAll: () => void;
-  isPuzzle3dHovered: (target: Puzzle3dHoverTarget) => boolean;
-  clearPuzzle3dSelection: () => void;
+  readonly hoverTarget: HoverTarget | null;
+  setHover: (target: HoverTarget) => void;
+  clearHover: (target: HoverTarget) => void;
+  clearHoverAll: () => void;
+  isHovered: (target: HoverTarget) => boolean;
+  clearSelection: () => void;
 }
 
 /** @emoji ­ƒÄ» Attraction-drag UI state isolated so orbit idle frames do not re-render every object. */
@@ -2540,19 +2526,19 @@ export interface RegistryDragState {
 /** @emoji 🎯 Selection + relocate actions with stable identity (object meshes do not re-subscribe). */
 export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
-  commitPuzzle3dSelection(pick: Puzzle3dSelectionPick): void;
+  commitSelection(pick: SelectionPick): void;
   setSelectedObjectIds(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])): void;
   setActiveRelocateObjectId(id: string | null): void;
-  clearPuzzle3dSelection(): void;
+  clearSelection(): void;
 }
 
 /** @emoji 🖱️ Exclusive hover state isolated from selection updates. */
 export interface RegistryHoverValue {
-  readonly hoverTarget: Puzzle3dHoverTarget | null;
-  setPuzzle3dHover(target: Puzzle3dHoverTarget): void;
-  clearPuzzle3dHover(target: Puzzle3dHoverTarget): void;
-  clearPuzzle3dHoverAll(): void;
-  isPuzzle3dHovered(target: Puzzle3dHoverTarget): boolean;
+  readonly hoverTarget: HoverTarget | null;
+  setHover(target: HoverTarget): void;
+  clearHover(target: HoverTarget): void;
+  clearHoverAll(): void;
+  isHovered(target: HoverTarget): boolean;
 }
 
 type RegistryCoreValue = Omit<RegistryValue, keyof RegistryDragState | keyof RegistryInteractionValue | keyof RegistryHoverValue>;
@@ -2596,23 +2582,23 @@ function useRegistry(): RegistryValue {
 }
 
 /** @emoji 🖱️ Clears exclusive hover when the pointer leaves the canvas. */
-function Puzzle3dHoverMissBridge(): null {
-  const { clearPuzzle3dHoverAll } = useRegistryHover();
+function HoverMissBridge(): null {
+  const { clearHoverAll } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
   reactHostPort.useEffect(() => {
     const onLeave = () => {
-      clearPuzzle3dHoverAll();
+      clearHoverAll();
       invalidate();
     };
     gl.domElement.addEventListener("pointerleave", onLeave);
     return () => gl.domElement.removeEventListener("pointerleave", onLeave);
-  }, [clearPuzzle3dHoverAll, gl, invalidate]);
+  }, [clearHoverAll, gl, invalidate]);
   return null;
 }
 
 /** @emoji 🖱️ Redraws the canvas when exclusive hover changes. */
-function Puzzle3dHoverInvalidateBridge(): null {
+function HoverInvalidateBridge(): null {
   const { hoverTarget } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
@@ -2622,8 +2608,8 @@ function Puzzle3dHoverInvalidateBridge(): null {
 }
 
 /** @emoji 🎯 Redraws the canvas when host-controlled selection changes. */
-function Puzzle3dSelectionInvalidateBridge(): null {
-  const selection = useLivePuzzle3dSelection();
+function SelectionInvalidateBridge(): null {
+  const selection = useLiveSelection();
   const invalidate = useThree((state) => state.invalidate);
   const selectionKey = reactHostPort.useMemo(
     () => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}|${selection.attractionIds.join("\0")}`,
@@ -2636,7 +2622,7 @@ function Puzzle3dSelectionInvalidateBridge(): null {
 }
 
 /** @emoji 🎯 True when a raycast hit belongs to a selectable scene object or vortex mesh. */
-function raycastHitTargetsPuzzle3dPick(hitObject: Object3D): boolean {
+function raycastHitTargetsPick(hitObject: Object3D): boolean {
   let node: Object3D | null = hitObject;
   while (node) {
     const data = node.userData as Record<string, unknown> | undefined;
@@ -2649,14 +2635,14 @@ function raycastHitTargetsPuzzle3dPick(hitObject: Object3D): boolean {
 }
 
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
-function Puzzle3dSelectionMissBridge(): null {
-  const { clearPuzzle3dSelection } = useRegistryInteraction();
+function SelectionMissBridge(): null {
+  const { clearSelection } = useRegistryInteraction();
   const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
   const setState = useThree((state) => state.set);
   const getState = useThree((state) => state.get);
   const attractionBusy = attractionDragActive || attractionIndirectPickAwait !== null;
-  const clearPuzzle3dSelectionRef = reactHostPort.useRef(clearPuzzle3dSelection);
-  clearPuzzle3dSelectionRef.current = clearPuzzle3dSelection;
+  const clearSelectionRef = reactHostPort.useRef(clearSelection);
+  clearSelectionRef.current = clearSelection;
   const attractionBusyRef = reactHostPort.useRef(attractionBusy);
   attractionBusyRef.current = attractionBusy;
   reactHostPort.useEffect(() => {
@@ -2667,11 +2653,11 @@ function Puzzle3dSelectionMissBridge(): null {
         return;
       }
       const hits = getState().internal.initialHits;
-      if (hits.some((hit) => raycastHitTargetsPuzzle3dPick(hit.object))) {
+      if (hits.some((hit) => raycastHitTargetsPick(hit.object))) {
         previous?.(event);
         return;
       }
-      clearPuzzle3dSelectionRef.current();
+      clearSelectionRef.current();
       previous?.(event);
     };
     setState({ onPointerMissed: onMiss });
@@ -2869,9 +2855,9 @@ export function updateWorldMatrixChain(leaf: Object3D): void {
   }
 }
 
-export type Puzzle3dAutoFitBehavior = "initial" | "changes";
+export type AutoFitBehavior = "initial" | "changes";
 
-export function puzzle3dAutoFitShouldRun(behavior: Puzzle3dAutoFitBehavior, key: string, lastKey: string, hasApplied: boolean): boolean {
+export function puzzle3dAutoFitShouldRun(behavior: AutoFitBehavior, key: string, lastKey: string, hasApplied: boolean): boolean {
   if (!key || key === lastKey) return false;
   return behavior === "changes" || !hasApplied;
 }
@@ -2905,7 +2891,7 @@ export function boundsFromObjectGroups(groups: readonly Group[]): { readonly cen
 }
 
 /** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
-export function applyPuzzle3dAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
+export function applyAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
   const centerThree = cadVec3ToThree(bounds.center);
   const dist = Math.max(bounds.radius * padding, 2);
   camera.position.set(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85);
@@ -3016,14 +3002,14 @@ function nearestAttractionSnapFullId(args: {
 
 //#region ­ƒºèMesh
 /** @emoji 🖱️ R3F pointer handlers for scene mesh pick targets. */
-export interface Puzzle3dMeshPointerHandlers {
+export interface MeshPointerHandlers {
   readonly onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
   readonly onClick?: (event: ThreeEvent<MouseEvent>) => void;
   readonly onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
   readonly onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
 }
 
-export interface MeshProps extends Puzzle3dMeshPointerHandlers {
+export interface MeshProps extends MeshPointerHandlers {
   readonly meshUrl: string;
   readonly style?: MeshStyleKind;
   readonly showOutline?: boolean;
@@ -3066,7 +3052,7 @@ export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
   );
 });
 
-const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: Puzzle3dMeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
+const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: MeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
   const colors = meshStyleColors(props.style);
   const meshColor = colors?.meshColor ?? "#cbd5e1";
   const opacity = colors?.opacity ?? 1;
@@ -3130,7 +3116,7 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
         if (!proximityRelocateEnabled) {
           return;
         }
-        schedulePuzzle3dRelocateCommit(() => {
+        scheduleRelocateCommit(() => {
           const cand = findNearestProximityRelocate(g.position, props.objectId);
           if (cand) onProximityConnect?.(cand);
         });
@@ -3142,15 +3128,15 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
 
 export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
   const group = reactHostPort.useRef<Group>(null);
-  const liveSelection = useLivePuzzle3dSelection();
+  const liveSelection = useLiveSelection();
   const { registerObject, relocateMode } = useRegistryCore();
-  const { commitPuzzle3dSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const { setPuzzle3dHover, clearPuzzle3dHover, isPuzzle3dHovered } = useRegistryHover();
+  const { selectionMode, commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
+  const { setHover, clearHover, isHovered } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
   const beforeRef = reactHostPort.useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
-  const objectPointerHovered = isPuzzle3dHovered({ kind: "object", id: props.id });
-  const registrySelected = objectMatchesPuzzle3dSelection(props.id, liveSelection);
+  const objectPointerHovered = isHovered({ kind: "object", id: props.id });
+  const registrySelected = objectMatchesSelection(props.id, liveSelection);
   const selected = props.selected === true || registrySelected;
   const relocateActive = props.relocateActive === true || primarySelectionObjectId(liveSelection) === props.id;
 
@@ -3201,9 +3187,9 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
     if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
       return;
     }
-    commitPuzzle3dSelection({ kind: "object", id: props.id });
+    commitSelection({ kind: "object", id: props.id });
     setActiveRelocateObjectId(props.id);
-  }, [attractionDragActive, attractionIndirectPickAwait, commitPuzzle3dSelection, props.disabled, props.id, setActiveRelocateObjectId]);
+  }, [attractionDragActive, attractionIndirectPickAwait, commitSelection, props.disabled, props.id, setActiveRelocateObjectId]);
 
   const meshPointerHandlers = reactHostPort.useMemo(
     () => ({
@@ -3223,15 +3209,15 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
       onPointerOver: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         if (!props.disabled && !attractionDragActive && !attractionIndirectPickAwait) {
-          setPuzzle3dHover({ kind: "object", id: props.id });
+          setHover({ kind: "object", id: props.id });
         }
       },
       onPointerOut: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        clearPuzzle3dHover({ kind: "object", id: props.id });
+        clearHover({ kind: "object", id: props.id });
       },
     }),
-    [clearPuzzle3dHover, props.disabled, props.id, selectObject, setPuzzle3dHover],
+    [clearHover, props.disabled, props.id, selectObject, setHover],
   );
 
   const poseKey = reactHostPort.useMemo(() => objectPoseKey(props.id, props.origin, props.orientation, props.scale), [props.id, props.origin, props.orientation, props.scale]);
@@ -3243,7 +3229,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
     applyObjectPose(g, props.origin, props.orientation, props.scale);
   }, [poseKey, props.origin, props.orientation, props.scale]);
   const lodCtx = useLod();
-  const resolvedMeshUrl = useResolvedPuzzle3dMeshUrl({
+  const resolvedMeshUrl = useResolvedMeshUrl({
     origin: props.origin,
     meshByLod: props.meshByLod,
     fallbackMeshUrl: props.meshUrl,
@@ -3361,8 +3347,8 @@ export const Vortex = reactHostPort.memo(function Vortex(
 ) {
   const root = reactHostPort.useRef<Group | null>(null);
   const reg = useRegistry();
-  const { commitPuzzle3dSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const liveSelection = useLivePuzzle3dSelection();
+  const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
+  const liveSelection = useLiveSelection();
   const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
   const r = props.radius ?? 0.35;
   const vortexPointerGestureRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number; dragStarted: boolean } | null>(null);
@@ -3427,9 +3413,9 @@ export const Vortex = reactHostPort.memo(function Vortex(
     if (reg.attractionDragActive || reg.attractionIndirectPickAwait || reg.blockedVortexFullIds.has(fullId)) {
       return;
     }
-    commitPuzzle3dSelection({ kind: "vortex", fullId });
+    commitSelection({ kind: "vortex", fullId });
     setActiveRelocateObjectId(props.objectId);
-  }, [commitPuzzle3dSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
+  }, [commitSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
 
   const onPointerDown = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
@@ -3514,7 +3500,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
 
-  const vortexPointerHovered = reg.isPuzzle3dHovered({ kind: "vortex", fullId });
+  const vortexPointerHovered = reg.isHovered({ kind: "vortex", fullId });
   const handleMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
 
   const vortexPointerHoverHandlers = reactHostPort.useMemo(
@@ -3522,12 +3508,12 @@ export const Vortex = reactHostPort.memo(function Vortex(
       onPointerOver: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         if (!reg.attractionDragActive && !reg.attractionIndirectPickAwait) {
-          reg.setPuzzle3dHover({ kind: "vortex", fullId });
+          reg.setHover({ kind: "vortex", fullId });
         }
       },
       onPointerOut: (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        reg.clearPuzzle3dHover({ kind: "vortex", fullId });
+        reg.clearHover({ kind: "vortex", fullId });
       },
     }),
     [fullId, reg],
@@ -3566,13 +3552,13 @@ export const Magnet = reactHostPort.memo(function Magnet(props: MagnetProps & { 
   return (
     <mesh position={positionThree} userData={{ puzzle3dMagnetId: props.id }}>
       <boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
-      <meshStandardMaterial color="#a78bfa" wireframe />
+      <meshStandardMaterial color="#a78bfa" cableframe />
     </mesh>
   );
 });
 //#endregion ­ƒº▓Magnet
 
-//#region ­ƒº▓Puzzle3dAttraction
+//#region ­ƒº▓Attraction
 function puzzle3dAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): number {
   if (e.index != null) {
     return Math.floor(e.index / 2);
@@ -3583,10 +3569,10 @@ function puzzle3dAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): n
   return 0;
 }
 
-const Puzzle3dAttractionLineBatch = reactHostPort.memo(function Puzzle3dAttractionLineBatch(props: { readonly attractions: readonly AttractionProps[] }) {
+const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attractions: readonly AttractionProps[] }) {
   const reg = useRegistry();
-  const { commitPuzzle3dSelection } = useRegistryInteraction();
-  const liveSelection = useLivePuzzle3dSelection();
+  const { commitSelection } = useRegistryInteraction();
+  const liveSelection = useLiveSelection();
   const selectedAttractionIds = reactHostPort.useMemo(() => new Set(liveSelection.attractionIds), [liveSelection.attractionIds]);
   const mat = reactHostPort.useMemo(() => {
     const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
@@ -3633,7 +3619,7 @@ const Puzzle3dAttractionLineBatch = reactHostPort.memo(function Puzzle3dAttracti
       const idx = puzzle3dAttractionIndexFromPointerEvent(e);
       const attraction = props.attractions[idx];
       if (attraction) {
-        reg.setPuzzle3dHover({ kind: "attraction", id: attraction.id });
+        reg.setHover({ kind: "attraction", id: attraction.id });
       }
     },
     [props.attractions, reg],
@@ -3644,7 +3630,7 @@ const Puzzle3dAttractionLineBatch = reactHostPort.memo(function Puzzle3dAttracti
       const idx = puzzle3dAttractionIndexFromPointerEvent(e);
       const attraction = props.attractions[idx];
       if (attraction) {
-        reg.clearPuzzle3dHover({ kind: "attraction", id: attraction.id });
+        reg.clearHover({ kind: "attraction", id: attraction.id });
       }
     },
     [props.attractions, reg],
@@ -3661,10 +3647,10 @@ const Puzzle3dAttractionLineBatch = reactHostPort.memo(function Puzzle3dAttracti
       const idx = puzzle3dAttractionIndexFromPointerEvent(e);
       const attraction = props.attractions[idx];
       if (attraction) {
-        commitPuzzle3dSelection({ kind: "attraction", id: attraction.id });
+        commitSelection({ kind: "attraction", id: attraction.id });
       }
     },
-    [commitPuzzle3dSelection, props.attractions, reg],
+    [commitSelection, props.attractions, reg],
   );
   reactHostPort.useEffect(
     () => () => {
@@ -3679,10 +3665,10 @@ const Puzzle3dAttractionLineBatch = reactHostPort.memo(function Puzzle3dAttracti
   return <lineSegments geometry={geo} material={mat} userData={{ puzzle3dAttractionPick: true }} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onClick={onClick} />;
 });
 
-export const Puzzle3dAttraction = reactHostPort.memo(function Puzzle3dAttraction(props: AttractionProps) {
-  return <Puzzle3dAttractionLineBatch attractions={[props]} />;
+export const Attraction = reactHostPort.memo(function Attraction(props: AttractionProps) {
+  return <CableBatch attractions={[props]} />;
 });
-//#endregion ­ƒº▓Puzzle3dAttraction
+//#endregion ­ƒº▓Attraction
 
 //#region ­ƒº▓Attraction
 export const Attraction = reactHostPort.memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
@@ -3693,7 +3679,7 @@ export const Attraction = reactHostPort.memo(function Attraction(props: { attrac
 //#endregion ­ƒº▓Attraction
 
 //#region Ô£ïRelocate
-export function usePuzzle3dRelocate(objectId: string) {
+export function useRelocate(objectId: string) {
   const reg = useRegistry();
   return {
     mode: reg.relocateMode,
@@ -3705,7 +3691,7 @@ export function usePuzzle3dRelocate(objectId: string) {
 
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
-//#region 🎬Puzzle3dViewport
+//#region 🎬Viewport
 function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; readonly zoom: number; readonly onCamera?: (state: CameraState) => void }) {
   const reg = useRegistry();
   const { camera } = useThree();
@@ -3750,7 +3736,7 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
 }
 
 /** @emoji 🛰️ Frames orbit camera to loaded object bounds once meshes are measurable (initial load fit). */
-function Puzzle3dAutoFit(props: { readonly behavior?: Puzzle3dAutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
+function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
   const reg = useRegistry();
   const { camera, controls, invalidate } = useThree();
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -3776,7 +3762,7 @@ function Puzzle3dAutoFit(props: { readonly behavior?: Puzzle3dAutoFitBehavior; r
     hasApplied.current = true;
     if (!(camera instanceof ThreePerspectiveCamera)) return;
     const orbit = controls as { target: Vector3; update?: () => void } | null;
-    applyPuzzle3dAutoFitCamera(camera, bounds, padding, orbit);
+    applyAutoFitCamera(camera, bounds, padding, orbit);
     invalidate();
     const tgt = orbit?.target ?? targetScratch.set(...cadVec3ToThree(bounds.center));
     props.onCamera?.({
@@ -3789,7 +3775,7 @@ function Puzzle3dAutoFit(props: { readonly behavior?: Puzzle3dAutoFitBehavior; r
 }
 
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
-function Puzzle3dCameraSeed(props: { readonly camera: ThreePerspectiveCamera | null; readonly position: Vec3; readonly target: Vec3 }) {
+function CameraSeed(props: { readonly camera: ThreePerspectiveCamera | null; readonly position: Vec3; readonly target: Vec3 }) {
   const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
   const seededPositionFor = reactHostPort.useRef("");
   const seededTargetFor = reactHostPort.useRef("");
@@ -3846,7 +3832,7 @@ function AttractionWindowBridge() {
       if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
       invalidate();
     };
-    const bindings = new Puzzle3dEventBindingController();
+    const bindings = new EventBindingController();
     bindings.listen(window, "pointermove", onMove);
     bindings.listen(window, "pointerup", onUp, { capture: true });
     bindings.listen(window, "pointerdown", onDown, true);
@@ -3865,8 +3851,8 @@ function AttractionRubberBand() {
   const mat = reactHostPort.useMemo(() => new LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.92, depthTest: false }), []);
   useFrame(() => {
     const pos = geo.attributes.position as Float32BufferAttribute;
-    const attractionLine = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
-    if (!attractionLine) {
+    const cable = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
+    if (!cable) {
       pos.setXYZ(0, 0, 0, 0);
       pos.setXYZ(1, 0, 0, 0);
       pos.needsUpdate = true;
@@ -3966,10 +3952,10 @@ function RegistryProvider({
     [selectionStore],
   );
 
-  const commitPuzzle3dSelection = reactHostPort.useCallback(
-    (pick: Puzzle3dSelectionPick) => {
+  const commitSelection = reactHostPort.useCallback(
+    (pick: SelectionPick) => {
       const current = selectionStore.getSnapshot();
-      const snap = mergePuzzle3dSelection(selectionModeRef.current, current, pick);
+      const snap = mergeSelection(selectionModeRef.current, current, pick);
       publishSelection(snap);
     },
     [publishSelection, selectionStore],
@@ -4013,24 +3999,24 @@ function RegistryProvider({
   const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = reactHostPort.useState<ReadonlySet<string>>(new Set());
   const [attractionHoverRingFullId, setAttractionHoverRingFullId] = reactHostPort.useState<string | null>(null);
   const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = reactHostPort.useState<AttractionIndirectPickAwait | null>(null);
-  const [hoverTarget, setHoverTarget] = reactHostPort.useState<Puzzle3dHoverTarget | null>(null);
+  const [hoverTarget, setHoverTarget] = reactHostPort.useState<HoverTarget | null>(null);
 
-  const setPuzzle3dHover = reactHostPort.useCallback((target: Puzzle3dHoverTarget) => {
+  const setHover = reactHostPort.useCallback((target: HoverTarget) => {
     setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? prev : target));
   }, []);
 
-  const clearPuzzle3dHover = reactHostPort.useCallback((target: Puzzle3dHoverTarget) => {
+  const clearHover = reactHostPort.useCallback((target: HoverTarget) => {
     setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? null : prev));
   }, []);
 
-  const clearPuzzle3dHoverAll = reactHostPort.useCallback(() => {
+  const clearHoverAll = reactHostPort.useCallback(() => {
     setHoverTarget((prev) => (prev === null ? prev : null));
   }, []);
 
-  const isPuzzle3dHovered = reactHostPort.useCallback((target: Puzzle3dHoverTarget) => puzzle3dHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
+  const isHovered = reactHostPort.useCallback((target: HoverTarget) => puzzle3dHoverTargetsEqual(hoverTarget, target), [hoverTarget]);
 
-  const clearPuzzle3dSelection = reactHostPort.useCallback(() => {
-    clearPuzzle3dHoverAll();
+  const clearSelection = reactHostPort.useCallback(() => {
+    clearHoverAll();
     setActiveRelocateObjectId(null);
     const empty = EMPTY_SELECTION_SNAPSHOT;
     selectionStore.setSnapshot(empty);
@@ -4043,7 +4029,7 @@ function RegistryProvider({
       return;
     }
     onSelectRef.current?.(empty);
-  }, [clearPuzzle3dHoverAll, selectionStore, setActiveRelocateObjectId]);
+  }, [clearHoverAll, selectionStore, setActiveRelocateObjectId]);
 
   const vortexGettersRef = reactHostPort.useRef(new Map<string, VortexGetter>());
   const vortexMetaRef = reactHostPort.useRef(new Map<string, VortexBindingMeta>());
@@ -4511,22 +4497,22 @@ function RegistryProvider({
   const interactionValue = reactHostPort.useMemo<RegistryInteractionValue>(
     () => ({
       selectionMode,
-      commitPuzzle3dSelection,
+      commitSelection,
       setSelectedObjectIds,
       setActiveRelocateObjectId,
-      clearPuzzle3dSelection,
+      clearSelection,
     }),
-    [clearPuzzle3dSelection, commitPuzzle3dSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
+    [clearSelection, commitSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
   );
   const hoverValue = reactHostPort.useMemo<RegistryHoverValue>(
     () => ({
       hoverTarget,
-      setPuzzle3dHover,
-      clearPuzzle3dHover,
-      clearPuzzle3dHoverAll,
-      isPuzzle3dHovered,
+      setHover,
+      clearHover,
+      clearHoverAll,
+      isHovered,
     }),
-    [hoverTarget, setPuzzle3dHover, clearPuzzle3dHover, clearPuzzle3dHoverAll, isPuzzle3dHovered],
+    [hoverTarget, setHover, clearHover, clearHoverAll, isHovered],
   );
   const dragValue = reactHostPort.useMemo<RegistryDragState>(
     () => ({
@@ -4540,21 +4526,21 @@ function RegistryProvider({
   );
 
   return (
-    <Puzzle3dSelectionStoreContext.Provider value={selectionStore}>
+    <SelectionStoreContext.Provider value={selectionStore}>
       <RegistryCoreContext.Provider value={coreValue}>
         <RegistryInteractionContext.Provider value={interactionValue}>
           <RegistryHoverContext.Provider value={hoverValue}>
             <RegistryDragContext.Provider value={dragValue}>
               {children}
-              <Puzzle3dHoverMissBridge />
-              <Puzzle3dHoverInvalidateBridge />
-              <Puzzle3dSelectionInvalidateBridge />
-              <Puzzle3dSelectionMissBridge />
+              <HoverMissBridge />
+              <HoverInvalidateBridge />
+              <SelectionInvalidateBridge />
+              <SelectionMissBridge />
             </RegistryDragContext.Provider>
           </RegistryHoverContext.Provider>
         </RegistryInteractionContext.Provider>
       </RegistryCoreContext.Provider>
-    </Puzzle3dSelectionStoreContext.Provider>
+    </SelectionStoreContext.Provider>
   );
 }
 
@@ -4607,7 +4593,7 @@ function DemandFrameloopKick(): null {
 function Inner(props: CanvasProps) {
   const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
-  const [puzzle3dCamera, setPuzzle3dCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
+  const [puzzle3dCamera, setCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
@@ -4656,10 +4642,10 @@ function Inner(props: CanvasProps) {
         manualLod={manualLod}
         onLodChange={props.onLodChange}
       >
-        <PerspectiveCamera ref={setPuzzle3dCamera} makeDefault near={0.2} far={500_000} fov={50} />
-        <Puzzle3dCameraSeed camera={puzzle3dCamera} position={pos} target={tgt} />
+        <PerspectiveCamera ref={setCamera} makeDefault near={0.2} far={500_000} fov={50} />
+        <CameraSeed camera={puzzle3dCamera} position={pos} target={tgt} />
         <OrbitGated camera={puzzle3dCamera} onCamera={props.onCamera} zoom={zoom} />
-        {autoFitCamera ? <Puzzle3dAutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <AttractionRubberBand />
@@ -4674,7 +4660,7 @@ function Inner(props: CanvasProps) {
   );
 }
 
-export interface Puzzle3dPlayCanvasProps {
+export interface PlayCanvasProps {
   readonly fixture: FixtureV1;
   readonly proximityRelocateEnabled?: boolean;
   readonly kindCatalogs?: KindCatalogBundle;
@@ -4703,10 +4689,10 @@ export interface Puzzle3dPlayCanvasProps {
   readonly onAttractionTargetRing?: () => void;
 }
 
-/** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} wired to {@link Puzzle3dObjectStateProvider} and {@link Puzzle3dObjects}. */
-export function Puzzle3dPlayCanvas(props: Puzzle3dPlayCanvasProps): React.ReactElement {
-  const handleRelocate = usePuzzle3dObjectRelocate();
-  const handleConnect = usePuzzle3dObjectConnect();
+/** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
+export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
+  const handleRelocate = useObjectRelocate();
+  const handleConnect = useObjectConnect();
   const onIndirectConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
@@ -4761,20 +4747,19 @@ export function Puzzle3dPlayCanvas(props: Puzzle3dPlayCanvasProps): React.ReactE
       onAttractionTargetRing={onAttractionTargetRing}
       {...props.lodProps}
     >
-      <Puzzle3dObjects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
-      <Puzzle3dAttractions />
-      <Puzzle3dAttractionTreeRoots />
-      <Puzzle3dPlayTestBridge setSelectedId={props.setSelectedId} />
+      <Objects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
+      <AttractionTreeRoots />
+      <PlayTestBridge setSelectedId={props.setSelectedId} />
     </Canvas3D>
   );
 }
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
   const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
-  const [shellLod, setShellLod] = reactHostPort.useState(() => formatPuzzle3dLod(DEFAULT_MANUAL_LOD));
+  const [shellLod, setShellLod] = reactHostPort.useState(() => formatLod(DEFAULT_MANUAL_LOD));
   const handleLod = reactHostPort.useCallback(
     (l: number) => {
-      const label = formatPuzzle3dLod(l);
+      const label = formatLod(l);
       setShellLod(label);
       onLodChange?.(l);
     },
@@ -4800,8 +4785,8 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 }
 
 /** @emoji ­ƒº¬ Registers `window.__puzzle3dPlay*` hooks for Playwright (play harness only). */
-export function Puzzle3dPlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
-  const { setActiveRelocateObjectId, clearPuzzle3dSelection } = useRegistryInteraction();
+export function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
+  const { setActiveRelocateObjectId, clearSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
   reactHostPort.useEffect(() => {
     const w = window as unknown as {
@@ -4822,7 +4807,7 @@ export function Puzzle3dPlayTestBridge(props: { readonly setSelectedId: (id: str
       setActiveRelocateObjectId(null);
     };
     w.__puzzle3dPlayPointerMiss = () => {
-      clearPuzzle3dSelection();
+      clearSelection();
     };
     return () => {
       delete w.__puzzle3dPlaySelect;
@@ -4830,11 +4815,11 @@ export function Puzzle3dPlayTestBridge(props: { readonly setSelectedId: (id: str
       delete w.__puzzle3dPlayClearSelection;
       delete w.__puzzle3dPlayPointerMiss;
     };
-  }, [setSelectedId, setActiveRelocateObjectId, clearPuzzle3dSelection]);
+  }, [setSelectedId, setActiveRelocateObjectId, clearSelection]);
   return null;
 }
 
-//#endregion 🎬Puzzle3dViewport
+//#endregion 🎬Viewport
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -4929,7 +4914,7 @@ if (import.meta.vitest) {
   });
   describe("cameraStateNearEqual", () => {
     it("detects position and zoom deltas", async () => {
-      const { cameraStateNearEqual, updatePuzzle3dCameraInFixture } = await import("../play/index.ts");
+      const { cameraStateNearEqual, updateCameraInFixture } = await import("../play/index.ts");
       const base = {
         position: [1, 2, 3] as const,
         target: [0, 0, 0] as const,
@@ -4944,16 +4929,16 @@ if (import.meta.vitest) {
         objects: [],
         attractions: [],
       };
-      const moved = updatePuzzle3dCameraInFixture(fixture, { position: [2, 2, 3] });
+      const moved = updateCameraInFixture(fixture, { position: [2, 2, 3] });
       expect(moved).not.toBe(fixture);
-      const same = updatePuzzle3dCameraInFixture(fixture, { position: [1.0001, 2, 3] });
+      const same = updateCameraInFixture(fixture, { position: [1.0001, 2, 3] });
       expect(same).toBe(fixture);
     });
   });
-  describe("applyPuzzle3dAutoFitCamera", () => {
+  describe("applyAutoFitCamera", () => {
     it("offsets camera from bounds center", () => {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 10_000);
-      applyPuzzle3dAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
+      applyAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
       expect(camera.position.length()).toBeGreaterThan(10);
     });
   });
@@ -4999,25 +4984,11 @@ if (import.meta.vitest) {
       expect(dir[0]).toBeLessThan(0);
     });
   });
-  describe("objectMatchesPuzzle3dSelection", () => {
+  describe("objectMatchesSelection", () => {
     it("matches object id and parent of selected vortex", () => {
-      expect(objectMatchesPuzzle3dSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe(true);
-      expect(objectMatchesPuzzle3dSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(true);
-      expect(objectMatchesPuzzle3dSelection("c", { objectIds: ["a"], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
-    });
-  });
-  describe("mergePuzzle3dSelection", () => {
-    it("replaces selection in single mode", () => {
-      const current = { objectIds: ["a"], vortexIds: ["a:v1"], attractionIds: ["t1"] };
-      expect(mergePuzzle3dSelection("single", current, { kind: "vortex", fullId: "b:v2" })).toEqual({
-        objectIds: [],
-        vortexIds: ["b:v2"],
-        attractionIds: [],
-      });
-    });
-    it("adds ids in additive mode", () => {
-      const current = { objectIds: ["a"], vortexIds: [], attractionIds: [] };
-      expect(mergePuzzle3dSelection("additive", current, { kind: "object", id: "b" }).objectIds.sort()).toEqual(["a", "b"]);
+      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [] })).toBe(true);
+      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"] })).toBe(true);
+      expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"] })).toBe(false);
     });
   });
   describe("createSelectionSnapshotStore", () => {
@@ -5027,10 +4998,10 @@ if (import.meta.vitest) {
       const unsubscribe = store.subscribe(() => {
         count += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
       expect(count).toBe(1);
       expect(store.getSnapshot().objectIds).toEqual(["a"]);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [] });
       expect(count).toBe(1);
       unsubscribe();
     });
@@ -5217,9 +5188,9 @@ if (import.meta.vitest) {
       expect(ok).toBe(true);
     });
   });
-  describe("resolveWireKindForVortex", () => {
-    it("falls back to default wire id", () => {
-      expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
+  describe("resolveCableKindForVortex", () => {
+    it("falls back to default cable id", () => {
+      expect(resolveCableKindForVortex("any", undefined)).toBe("board.cable.link");
     });
   });
   describe("wouldAttractionEdgeIntroduceCycle", () => {
@@ -5232,9 +5203,9 @@ if (import.meta.vitest) {
       expect(wouldAttractionEdgeIntroduceCycle(edges, "a", "d")).toBe(false);
     });
   });
-  describe("resolvePuzzle3dAttractionTree", () => {
+  describe("resolveAttractionTree", () => {
     it("breaks ownership cycles in cyclic attraction components", () => {
-      const tree = resolvePuzzle3dAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["a", "b", "c"],
         edges: [
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
@@ -5247,7 +5218,7 @@ if (import.meta.vitest) {
       }
     });
     it("picks parent closer to wormhole when multiply attracted", () => {
-      const tree = resolvePuzzle3dAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b", "c"],
         explicitWormholeIds: new Set(["w"]),
         edges: [
@@ -5261,7 +5232,7 @@ if (import.meta.vitest) {
       expect(tree.attractingByObjectId.get("a")).toEqual(["b"]);
     });
     it("lists attracted children per owner", () => {
-      const tree = resolvePuzzle3dAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b"],
         explicitWormholeIds: new Set(["w"]),
         edges: [
@@ -5279,7 +5250,7 @@ if (import.meta.vitest) {
       expect(edges[0]?.attractedObjectId).toBe("objB");
     });
   });
-  describe("applyRelocateToPuzzle3dFixture", () => {
+  describe("applyRelocateToFixture", () => {
     it("translates attracted descendants when adjacency is passed", () => {
       const fixture: FixtureV1 = {
         objects: [
@@ -5288,11 +5259,11 @@ if (import.meta.vitest) {
         ],
         attractions: [{ id: "t1", attracting: "a:h1", attracted: "b:h2" }],
       };
-      const tree = resolvePuzzle3dAttractionTree({
+      const tree = resolveAttractionTree({
         objectIds: ["a", "b"],
         edges: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
       });
-      const next = applyRelocateToPuzzle3dFixture(
+      const next = applyRelocateToFixture(
         fixture,
         {
           objectId: "a",
