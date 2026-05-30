@@ -4,8 +4,6 @@
 /** @emoji 🧭 `@cad/js/kernel/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
-import "../../core/assets.ts";
-
 // #region 🔌Adapters
 import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
 import {

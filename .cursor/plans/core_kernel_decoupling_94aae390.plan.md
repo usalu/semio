@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: tests
     content: Extend core and kernel Tests regions for registry loading, kernel geometry primitives, and data-driven energy transformation; run vitest for core/kernel/query and confirm green.
-    status: in_progress
+    status: completed
   - id: close-ticket
     content: Close the ticket with a summary and all touched files.
-    status: pending
+    status: completed
 isProject: false
 ---
 

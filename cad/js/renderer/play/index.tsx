@@ -57,7 +57,6 @@ import {
   type SpatialComputeMode,
   type TransformationSpec,
 } from "@cad/js/core";
-import "../../core/assets.ts";
 
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
 export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];

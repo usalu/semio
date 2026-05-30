@@ -1,8 +1,9 @@
 {
   "title": "Core Kernel Decoupling",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Strip model-definition assets and geometry/transformation logic from cad/js/core. Core provides interfaces + registry; assets.ts loads via registerModelDefinitionAssets; kernel implements geometry; transformations are pure data.",
+  "summary": "Decoupled cad/js/core from model-definition assets and geometry: registry + assets.ts + model-definition-registry.ts load catalogs via registerModelDefinitionAssets; core imports assets at startup. SpatialPreviewKernel extended with topology preview primitives implemented in brepjs. Transformations use declarative derive block (energy from_geometry in JSON); applyTransformation(spec, source, preview) and ModelSpace.transform require preview kernel. defaultModelDefinitionId() and kernelTopologyTypologies from manifest replace hardcoded spatial.shape constants in core logic. All @cad/js/core, @cad/js/kernel/brepjs, and @cad/js/query tests pass.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪016dae687ead4eb68fa330aa73c84121"

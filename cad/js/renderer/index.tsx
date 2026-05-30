@@ -98,7 +98,6 @@ import {
   type Vec3,
   type SpatialComputeMode,
 } from "@cad/js/core";
-import "../core/assets.ts";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
 type AnchorRef = kernelGeometry.AnchorRef;

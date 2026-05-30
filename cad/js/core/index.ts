@@ -2,22 +2,33 @@
 /** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/assets/modelDefinition`. */
 // #endregion 🧲Header
 
-import "./assets.ts";
-import {
-  modelDefinitionActionCatalog,
-  modelDefinitionAssetModulesSnapshot,
-  modelDefinitionAttributeCatalog,
-  modelDefinitionInteractionCatalog,
-  modelDefinitionManifestCatalog,
-  modelDefinitionPropertyCatalog,
-  modelDefinitionTransformationModules,
-  modelDefinitionTypologyCatalog,
-  registerModelDefinitionAssets,
-  setModelDefinitionAssetsRegisteredHook,
-  type ModelDefinitionAssetModules,
-} from "./model-definition-registry.ts";
+// #region 📥ModelDefinitionRegistry
+/** @emoji 📥 Registered model-definition asset modules (populated by `ModelDefinitionAssets` region). */
+export interface ModelDefinitionAssetModules {
+  readonly typologies: Readonly<Record<string, unknown>>;
+  readonly actions: Readonly<Record<string, unknown>>;
+  readonly interactions: Readonly<Record<string, unknown>>;
+  readonly manifests: Readonly<Record<string, unknown>>;
+  readonly extensions: Readonly<Record<string, unknown>>;
+  readonly attributes: Readonly<Record<string, unknown>>;
+  readonly propertyDefinitions: Readonly<Record<string, unknown>>;
+  readonly properties: Readonly<Record<string, unknown>>;
+  readonly transformations: Readonly<Record<string, unknown>>;
+}
 
-export { registerModelDefinitionAssets, type ModelDefinitionAssetModules };
+const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
+  typologies: {},
+  actions: {},
+  interactions: {},
+  manifests: {},
+  extensions: {},
+  attributes: {},
+  propertyDefinitions: {},
+  properties: {},
+  transformations: {},
+});
+
+let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
 
 let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
 let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
@@ -37,7 +48,99 @@ function resetModelDefinitionCaches(): void {
   defaultModelDefinitionIdCache = null;
 }
 
-setModelDefinitionAssetsRegisteredHook(resetModelDefinitionCaches);
+/** @emoji 📥 Replaces shipped model-definition catalogs (tests or host injection). */
+export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
+  modelDefinitionAssetModules = modules;
+  resetModelDefinitionCaches();
+}
+
+function modelDefinitionTypologyCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.typologies);
+}
+
+function modelDefinitionActionCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.actions);
+}
+
+function modelDefinitionInteractionCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.interactions);
+}
+
+function modelDefinitionManifestCatalog(): readonly unknown[] {
+  return [...Object.values(modelDefinitionAssetModules.manifests), ...Object.values(modelDefinitionAssetModules.extensions)];
+}
+
+function modelDefinitionAttributeCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.attributes);
+}
+
+function modelDefinitionPropertyCatalog(): readonly unknown[] {
+  return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
+}
+
+function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
+  return modelDefinitionAssetModules.transformations;
+}
+// #endregion 📥ModelDefinitionRegistry
+
+// #region 📥ModelDefinitionAssets
+const __modelDefinitionTypologyModules = import.meta.glob(
+  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
+  { eager: true, import: "default" },
+) as Record<string, unknown>;
+
+const __modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionPropertyDefinitionModules = import.meta.glob(
+  ["../../assets/modelDefinition/**/propertyDefinition/*.json", "../../assets/modelDefinition/**/propertyKind/*.json"],
+  { eager: true, import: "default" },
+) as Record<string, unknown>;
+
+const __modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const __modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+registerModelDefinitionAssets({
+  typologies: __modelDefinitionTypologyModules,
+  actions: __modelDefinitionActionModules,
+  interactions: __modelDefinitionInteractionModules,
+  manifests: __modelDefinitionManifestModules,
+  extensions: __modelDefinitionExtensionManifestModules,
+  attributes: __modelDefinitionAttributeModules,
+  propertyDefinitions: __modelDefinitionPropertyDefinitionModules,
+  properties: __modelDefinitionPropertyModules,
+  transformations: __modelDefinitionTransformationModules,
+});
+// #endregion 📥ModelDefinitionAssets
 
 // #region 🧮Vec
 /** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
@@ -2389,10 +2492,9 @@ function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
 function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
   const modules = {
-    ...snapshot.manifests,
-    ...snapshot.extensions,
+    ...modelDefinitionAssetModules.manifests,
+    ...modelDefinitionAssetModules.extensions,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -2414,8 +2516,7 @@ export function modelDefinitionIdFromAssetPath(assetPath: string): string | null
 function typologyOwnerById(): ReadonlyMap<string, string> {
   if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
-  for (const [path, raw] of Object.entries(snapshot.typologies)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.typologies)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseTypologySpec(raw);
     if (!owner || !spec) continue;
@@ -2434,8 +2535,7 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
 function actionOwnerById(): ReadonlyMap<string, string> {
   if (actionOwnerByIdCache) return actionOwnerByIdCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
-  for (const [path, raw] of Object.entries(snapshot.actions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseActionSpec(raw);
     if (!owner || !spec) continue;
@@ -2466,8 +2566,7 @@ export interface SpatialInteraction {
 function interactionOwnerById(): ReadonlyMap<string, string> {
   if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
-  for (const [path, raw] of Object.entries(snapshot.interactions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.interactions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseInteractionSpec(raw);
     if (!owner || !spec) continue;
@@ -2509,8 +2608,7 @@ export function listSpatialInteractionsForModelDefinition(
 function attributeOwnerById(): ReadonlyMap<string, string> {
   if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
-  for (const [path, raw] of Object.entries(snapshot.attributes)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.attributes)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseAttributeDefinitionSpec(raw);
     if (!owner || !spec) continue;
@@ -2529,10 +2627,9 @@ export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: st
 function propertyOwnerById(): ReadonlyMap<string, string> {
   if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
   const map = new Map<string, string>();
-  const snapshot = modelDefinitionAssetModulesSnapshot();
   for (const [path, raw] of Object.entries({
-    ...snapshot.propertyDefinitions,
-    ...snapshot.properties,
+    ...modelDefinitionAssetModules.propertyDefinitions,
+    ...modelDefinitionAssetModules.properties,
   })) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parsePropertyDefinitionSpec(raw);
@@ -2611,8 +2708,7 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
       if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
     }
   }
-  const snapshot = modelDefinitionAssetModulesSnapshot();
-  for (const [path, raw] of Object.entries(snapshot.actions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
