@@ -124,12 +124,14 @@
     --text-9xl: 7.2rem;
     --text-9xl--line-height: 1;
     --base: var(--color-light);
+    --canvas: var(--color-light-8-9);
     --window: var(--color-light-6-7);
     --panel: var(--color-light-5-7);
     --overlay: transparent;
     --temporary: var(--color-light-4-7);
     --foreground: var(--color-dark);
     --z-base: 0;
+    --z-canvas: 3;
     --z-window: 5;
     --z-panel: 10;
     --z-overlay: 20;
@@ -144,6 +146,7 @@
     --accent-tertiary: var(--color-tertiary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
+    --hover-canvas: var(--color-light-7-9);
     --hover-window: var(--color-light-gray);
     --hover-panel: var(--color-gray-600);
     --hover-overlay: var(--color-gray-600);
@@ -495,6 +498,7 @@
 
 .dark {
   --base: var(--color-dark);
+  --canvas: var(--color-dark-6-7);
   --window: var(--color-dark-8-9);
   --panel: var(--color-dark-7-9);
   --overlay: transparent;
@@ -509,6 +513,7 @@
   --accent-tertiary: var(--color-tertiary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
+  --hover-canvas: var(--color-dark-5-7);
   --hover-window: var(--color-dark-gray);
   --hover-panel: var(--color-gray-400);
   --hover-overlay: var(--color-gray-400);
@@ -637,6 +642,7 @@
 
 @theme inline {
   --color-base: var(--base);
+  --color-canvas: var(--canvas);
   --color-window: var(--window);
   --color-panel: var(--panel);
   --color-overlay: var(--overlay);
@@ -647,6 +653,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-hover-base: var(--hover-base);
+  --color-hover-canvas: var(--hover-canvas);
   --color-hover-window: var(--hover-window);
   --color-hover-panel: var(--hover-panel);
   --color-hover-overlay: var(--hover-overlay);
@@ -936,6 +943,10 @@
 
 @utility z-base {
   z-index: var(--z-base);
+}
+
+@utility z-canvas {
+  z-index: var(--z-canvas);
 }
 
 @utility z-window {

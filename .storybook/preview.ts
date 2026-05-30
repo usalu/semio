@@ -27,6 +27,7 @@ enum Theme {
 
 enum Level {
 	BASE = "base",
+	CANVAS = "canvas",
 	WINDOW = "window",
 	PANEL = "panel",
 	OVERLAY = "overlay",
@@ -69,6 +70,7 @@ const preview: Preview = {
 				icon: "component",
 				items: [
 					{ value: Level.BASE, title: "Base" },
+					{ value: Level.CANVAS, title: "Canvas" },
 					{ value: Level.WINDOW, title: "Window" },
 					{ value: Level.PANEL, title: "Panel" },
 					{ value: Level.OVERLAY, title: "Overlay" },

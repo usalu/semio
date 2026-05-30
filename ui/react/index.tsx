@@ -11175,7 +11175,7 @@ const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionCon
 
 // #region 🎈Level Context
 /** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
-export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
+export type Level = "base" | "canvas" | "window" | "panel" | "overlay" | "temporary";
 
 const LevelContext = reactHostPort.createContext<Level>("base");
 
@@ -11193,6 +11193,8 @@ export function useLevel(): Level {
 /** @emoji 🎨 Tailwind background class for a {@link Level}. */
 export function getLevelBgClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "bg-canvas";
 		case "window":
 			return "bg-window";
 		case "panel":
@@ -11209,6 +11211,8 @@ export function getLevelBgClass(level: Level): string {
 /** @emoji 🎨 Tailwind hover background class for a {@link Level}. */
 export function getLevelHoverClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "hover:bg-hover-canvas";
 		case "window":
 			return "hover:bg-hover-window";
 		case "panel":
@@ -11225,6 +11229,8 @@ export function getLevelHoverClass(level: Level): string {
 /** @emoji 🎨 Tailwind active-hover class for a {@link Level}. */
 export function getLevelActiveHoverClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "data-[state=active]:bg-hover-canvas";
 		case "window":
 			return "data-[state=active]:bg-hover-window";
 		case "panel":
@@ -11241,6 +11247,8 @@ export function getLevelActiveHoverClass(level: Level): string {
 /** @emoji 🎨 Tailwind z-index class for a {@link Level}. */
 export function getLevelZClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "z-canvas";
 		case "window":
 			return "z-window";
 		case "panel":
@@ -11257,6 +11265,8 @@ export function getLevelZClass(level: Level): string {
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "border-hover-canvas";
 		case "window":
 			return "border-hover-window";
 		case "panel":
@@ -11273,6 +11283,8 @@ export function getLevelBorderElementClass(level: Level): string {
 /** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
 export function getLevelDivideElementClass(level: Level): string {
 	switch (level) {
+		case "canvas":
+			return "divide-hover-canvas";
 		case "window":
 			return "divide-hover-window";
 		case "panel":
@@ -12674,6 +12686,7 @@ const actionGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -12918,6 +12931,7 @@ const buttonGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -14560,6 +14574,7 @@ const toggleVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        canvas: "hover:bg-hover-canvas",
         window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
         overlay: "hover:bg-hover-overlay",
@@ -19849,7 +19864,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, active && "ring-2 ring-inset ring-active-base", className)}
+        className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-sm ${bgClass}`, active && "ring-2 ring-inset ring-active-base", className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -21627,6 +21642,7 @@ const Table = <T,>({
   const level = useLevel();
   const headerBgClass = {
     base: "bg-base",
+    canvas: "bg-canvas",
     window: "bg-window",
     panel: "bg-panel",
     overlay: "bg-overlay",
@@ -21894,9 +21910,11 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
   return (
-    <div id={id} className="h-full w-full box-border p-single">
-      {children}
-    </div>
+    <LevelProvider level="canvas">
+      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-single">
+        {children}
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -21929,6 +21947,8 @@ export interface ModeProps {
   layout?: WindowLayoutNode;
   children?: React.ReactNode;
   className?: string;
+  /** @emoji 🖼 Label shown in each tab stack between tabs and maximize (defaults to `Canvas`). */
+  canvasLabel?: string;
 }
 
 //#region 🧭ModeLayoutUtils
@@ -22324,6 +22344,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
   dropZone: ModeDropZone | null;
+  canvasLabel: string;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22359,7 +22380,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   );
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-base">
+    <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-window">
       <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
         {tabs.flatMap((tab, index) => {
           const nodes: React.ReactNode[] = [];
@@ -22407,6 +22428,13 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           return nodes;
         })}
         {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
+      </div>
+      <div
+        data-slot="mode-dock-canvas-label"
+        className="flex shrink-0 items-center border-l border-element px-single text-xs text-muted-foreground select-none"
+        aria-hidden
+      >
+        {dock?.canvasLabel ?? "Canvas"}
       </div>
       <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
         <button
@@ -22456,10 +22484,10 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
       data-slot="mode-dock-stack"
       data-stack-path={stackPath}
       data-active={stackGloballyActive ? "true" : undefined}
-      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden"
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border border-element bg-window shadow-sm"
     >
       <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
-      <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas p-single">
         {activeDescriptor ? (
           (() => {
             const { children, engagement, ...windowProps } = activeDescriptor;
@@ -22495,7 +22523,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
     const childPath = modeJoinPath(path, index);
     if (index > 0) panels.push(<ResizableHandle key={`sep-${childPath}`} />);
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8}>
+      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border p-single">
         {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
       </ResizablePanel>,
     );
@@ -22516,7 +22544,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 //#endregion 🧭ModeRender
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "" }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "", canvasLabel = "Canvas" }) => {
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -22704,6 +22732,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     () => ({
       dragState,
       dropZone,
+      canvasLabel,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -22712,7 +22741,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, dropZone, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [dragState, dropZone, canvasLabel, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
@@ -22754,8 +22783,9 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       data-maximized-path={maximizedStackPath ?? undefined}
       className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
     >
-      <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {body}
+      <LevelProvider level="canvas">
+        <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+          {body}
         {dragState ? (
           <>
             <ModeDockDragPreview
@@ -22833,7 +22863,8 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
             ) : null}
           </>
         ) : null}
-      </div>
+        </div>
+      </LevelProvider>
     </div>
   );
 };
@@ -23040,10 +23071,13 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelectorAll('[data-slot="mode-dock-canvas-label"]')).toHaveLength(2);
+      expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')?.textContent).toBe("Canvas");
     });
 
     it("Mode tab stack shows only the active window body", () => {
-      render(
+      const { container } = render(
         <div className="h-[400px] w-[600px]">
           <Mode
             windows={[
@@ -23056,6 +23090,8 @@ if (import.meta.vitest) {
           />
         </div>,
       );
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-single");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
       fireEvent.click(screen.getByText("Beta"));
