@@ -2,7 +2,7 @@
 /** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
-export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@framework/platform/core";
+export { Platform, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory, type ComponentKind } from "@framework/platform/core";
 
 export type { Level } from "@ui/react";
 export {
@@ -22,7 +22,7 @@ import {
 	countAppTools,
 	CommandBus,
 	Controller,
-	ProductRuntime,
+	Platform,
 	AppRuntime,
 	ModeRuntime,
 	resolveCommandPaletteItems,
@@ -39,11 +39,15 @@ import {
 	type ToolItem,
 	type WindowBodyViewContext,
 	type WindowMeasure,
-	type UiBoardHostSurfaceNode,
+	type ComponentKind,
 	type UiButtonNode,
+	type UiCadHostSurfaceNode,
+	type UiComponentHostSurfaceNode,
 	type UiNode,
 	type UiPanelHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
+	type UiPuzzle2dHostSurfaceNode,
+	type UiPuzzle3dHostSurfaceNode,
+	type UiPuzzle5dHostSurfaceNode,
 	type UiSeparatorNode,
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
@@ -77,6 +81,8 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
+import { BoardCanvas } from "@puzzle/2d/react";
+import { FiveD } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -150,7 +156,7 @@ export interface ChromeTreePanelConfig {
 	readonly sections: readonly { readonly id: string; readonly content: React.ReactNode }[];
 }
 
-/** @emoji 📑 Side panel tab registration consumed by {@link ProductView}. */
+/** @emoji 📑 Side panel tab registration consumed by {@link PlatformView}. */
 export interface SidePanelTabConfig {
 	readonly id: string;
 	readonly icon: React.ComponentType<{ readonly size?: number }>;
@@ -265,7 +271,7 @@ export interface WindowLayoutAxisNode {
 }
 
 /**
- * Root layout wrapper owned by an app instead of the Golden Layout runtime.
+ * Root layout wrapper owned by an app instead of the Golden Layout platform.
  **/
 export interface WindowLayout {
   root: WindowLayoutAxisNode | WindowLayoutStackNode;
@@ -1212,9 +1218,9 @@ if (import.meta.vitest) {
 //#endregion 📦shell-canvas.tsx
 
 //#region 📦product-app-context.tsx
-/** @emoji 🧭 Props for {@link ProductView} (navbar, panels, golden-layout canvas). */
-export interface ProductViewProps {
-	runtime: ProductRuntime;
+/** @emoji 🧭 Props for {@link PlatformView} (navbar, panels, golden-layout canvas). */
+export interface PlatformViewProps {
+	readonly platform: Platform;
 	defaultAppId?: string;
 	uri?: string;
 	onNavigate?: (uri: string) => void;
@@ -1234,8 +1240,8 @@ export interface ProductViewProps {
 	initialPanelVisibility?: UIPanelVisibility;
 }
 
-/** @emoji 🧭 @deprecated Use {@link ProductViewProps}. */
-export type AppProps = ProductViewProps;
+/** @emoji 🧭 @deprecated Use {@link PlatformViewProps}. */
+export type AppProps = PlatformViewProps;
 
 export interface UIPanelVisibility {
 	leftSidePanel: boolean;
@@ -1243,7 +1249,7 @@ export interface UIPanelVisibility {
 }
 
 export interface AppContextValue {
-	runtime: ProductRuntime;
+	platform: Platform;
 	activeAppId: string;
 	setActiveAppId: (id: string) => void;
 	activeApp: ResolvedAppState;
@@ -1264,10 +1270,10 @@ export interface AppContextValue {
 
 export const AppContext = reactHostPort.createContext<AppContextValue | undefined>(undefined);
 
-/** @emoji 🪝 Returns the active {@link ProductRuntime} shell context from the nearest {@link AppContext}. */
+/** @emoji 🪝 Returns the active {@link Platform} shell context from the nearest {@link AppContext}. */
 export function useApp(): AppContextValue {
 	const ctx = reactHostPort.useContext(AppContext);
-	if (!ctx) throw new Error("useApp must be used within a ProductView");
+	if (!ctx) throw new Error("useApp must be used within a PlatformView");
 	return ctx;
 }
 
@@ -1350,69 +1356,80 @@ if (import.meta.vitest) {
 
 //#region ­ƒôªui-declarative-renderer.tsx
 
-//#region ­ƒöûScene3DRegistry
-type Scene3DSurfaceHost = React.ComponentType<{ readonly node: UiScene3DHostSurfaceNode }>;
+//#region 🔖SurfaceBinding
+type SurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
 
-const scene3dSurfaceHosts = new Map<string, Scene3DSurfaceHost>();
+const surfaceBindingHosts = new Map<string, SurfaceBindingHost>();
 
-/** @emoji ­ƒº¡ Binds a `surfaceId` from {@link UiScene3DHostSurfaceNode} to a host React canvas implementation. */
-export function registerUiScene3DSurfaceHost(surfaceId: string, Component: Scene3DSurfaceHost): void {
-	scene3dSurfaceHosts.set(surfaceId, Component);
+/** @emoji 🔗 Binds `surfaceId` to a host React implementation for any {@link ComponentKind} surface node. */
+export function registerSurfaceBinding(surfaceId: string, Component: SurfaceBindingHost): void {
+	surfaceBindingHosts.set(surfaceId, Component);
 }
 
-/** @emoji ­ƒº╣ Drops a surface binding (tests). */
-export function unregisterUiScene3DSurfaceHost(surfaceId: string): void {
-	scene3dSurfaceHosts.delete(surfaceId);
-}
-//#endregion ­ƒöûScene3DRegistry
-
-//#region ­ƒöûBoardRegistry
-type BoardSurfaceHost = React.ComponentType<{ readonly node: UiBoardHostSurfaceNode }>;
-
-const boardSurfaceHosts = new Map<string, BoardSurfaceHost>();
-
-/** @emoji ­ƒôï Binds `surfaceId` from {@link UiBoardHostSurfaceNode} to a host board canvas. */
-export function registerUiBoardSurfaceHost(surfaceId: string, Component: BoardSurfaceHost): void {
-	boardSurfaceHosts.set(surfaceId, Component);
+/** @emoji 🧹 Drops a surface binding (tests / hot reload). */
+export function unregisterSurfaceBinding(surfaceId: string): void {
+	surfaceBindingHosts.delete(surfaceId);
 }
 
-/** @emoji ­ƒº╣ Drops a board surface binding (tests). */
-export function unregisterUiBoardSurfaceHost(surfaceId: string): void {
-	boardSurfaceHosts.delete(surfaceId);
+const PlatformComponentPlaceholder: React.FC<{ readonly kind: ComponentKind; readonly surfaceId: string }> = ({ kind, surfaceId }) => (
+	<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
+		Register a surface binding for <span className="mx-1 font-mono">{kind}</span> · <span className="font-mono">{surfaceId}</span>
+	</div>
+);
+
+const BuiltinPuzzle2dCanvas: React.FC<{ readonly node: UiPuzzle2dHostSurfaceNode }> = ({ node }) => (
+	<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
+		<BoardCanvas className="h-full w-full" />
+	</div>
+);
+
+const BuiltinPuzzle5dCanvas: React.FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => (
+	<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
+		<FiveD mode="flat" instanceId={node.surfaceId} />
+	</div>
+);
+
+const defaultComponentHosts: Partial<Record<ComponentKind, SurfaceBindingHost>> = {
+	puzzle2d: BuiltinPuzzle2dCanvas as SurfaceBindingHost,
+	puzzle5d: BuiltinPuzzle5dCanvas as SurfaceBindingHost,
+};
+
+function renderBoundComponent(node: UiComponentHostSurfaceNode, layout: "canvas" | "panel"): React.ReactElement {
+	const Host = surfaceBindingHosts.get(node.surfaceId) ?? defaultComponentHosts[node.componentKind];
+	const wrapperClass =
+		layout === "canvas" ? "absolute inset-0 min-h-0 min-w-0" : "relative min-h-0 min-w-0 flex-1 overflow-auto";
+	if (!Host) {
+		return (
+			<div className={wrapperClass}>
+				<PlatformComponentPlaceholder kind={node.componentKind} surfaceId={node.surfaceId} />
+			</div>
+		);
+	}
+	return (
+		<div className={wrapperClass}>
+			<Host node={node} />
+		</div>
+	);
 }
-//#endregion ­ƒöûBoardRegistry
 
-//#region ­ƒöûTableRegistry
-type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
-
-const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
-
-/** @emoji ­ƒôæ Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
-export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
-	tableSurfaceHosts.set(surfaceId, Component);
+/** @emoji 📑 Binds a table `surfaceId` (alias for {@link registerSurfaceBinding}). */
+export function registerUiTableSurfaceHost(surfaceId: string, Component: React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>): void {
+	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
 }
 
-/** @emoji ­ƒº╣ Drops a table surface binding (tests). */
 export function unregisterUiTableSurfaceHost(surfaceId: string): void {
-	tableSurfaceHosts.delete(surfaceId);
-}
-//#endregion ­ƒöûTableRegistry
-
-//#region ­ƒöûPanelRegistry
-type PanelSurfaceHost = React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>;
-
-const panelSurfaceHosts = new Map<string, PanelSurfaceHost>();
-
-/** @emoji ­ƒº® Binds `surfaceId` from {@link UiPanelHostSurfaceNode} to a host side-panel body. */
-export function registerUiPanelSurfaceHost(surfaceId: string, Component: PanelSurfaceHost): void {
-	panelSurfaceHosts.set(surfaceId, Component);
+	unregisterSurfaceBinding(surfaceId);
 }
 
-/** @emoji ­ƒº╣ Drops a panel surface binding (tests). */
+/** @emoji 🧩 Binds a panel `surfaceId` (alias for {@link registerSurfaceBinding}). */
+export function registerUiPanelSurfaceHost(surfaceId: string, Component: React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>): void {
+	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
+}
+
 export function unregisterUiPanelSurfaceHost(surfaceId: string): void {
-	panelSurfaceHosts.delete(surfaceId);
+	unregisterSurfaceBinding(surfaceId);
 }
-//#endregion ­ƒöûPanelRegistry
+//#endregion 🔖SurfaceBinding
 
 //#region ­ƒöûStackLayout
 function stackClass(spec: UiStackNode): string {
@@ -1486,75 +1503,42 @@ function renderSeparator(_node: UiSeparatorNode, horizontalParent: boolean): Rea
 	);
 }
 
-function renderScene3d(node: UiScene3DHostSurfaceNode): React.ReactElement {
-	const Host = scene3dSurfaceHosts.get(node.surfaceId);
-	if (!Host) {
-		return (
-			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
-				Unsupported scene3d surface &quot;{node.surfaceId}&quot;
-			</div>
-		);
-	}
-	return (
-		<div className="absolute inset-0 min-h-0 min-w-0">
-			<Host node={node} />
-		</div>
-	);
-}
-
-function renderBoard(node: UiBoardHostSurfaceNode): React.ReactElement {
-	const Host = boardSurfaceHosts.get(node.surfaceId);
-	if (!Host) {
-		return (
-			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
-				Unsupported board surface &quot;{node.surfaceId}&quot;
-			</div>
-		);
-	}
-	return (
-		<div className="absolute inset-0 min-h-0 min-w-0">
-			<Host node={node} />
-		</div>
-	);
-}
-
 function renderTable(node: UiTableHostSurfaceNode): React.ReactElement {
-	const Host = tableSurfaceHosts.get(node.surfaceId);
-	if (!Host) {
-		return (
-			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
-				Unsupported table surface &quot;{node.surfaceId}&quot;
-			</div>
-		);
-	}
-	return (
-		<div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
-			<Host node={node} />
-		</div>
-	);
+	return renderBoundComponent(node, "panel");
 }
 
 function renderPanel(node: UiPanelHostSurfaceNode): React.ReactElement {
-	const Host = panelSurfaceHosts.get(node.surfaceId);
-	if (!Host) {
-		return (
-			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
-				Unsupported panel surface &quot;{node.surfaceId}&quot;
-			</div>
-		);
-	}
-	return (
-		<div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
-			<Host node={node} />
-		</div>
-	);
+	return renderBoundComponent(node, "panel");
+}
+
+function renderPuzzle2d(node: UiPuzzle2dHostSurfaceNode): React.ReactElement {
+	return renderBoundComponent(node, "canvas");
+}
+
+function renderPuzzle3d(node: UiPuzzle3dHostSurfaceNode): React.ReactElement {
+	return renderBoundComponent(node, "canvas");
+}
+
+function renderPuzzle5d(node: UiPuzzle5dHostSurfaceNode): React.ReactElement {
+	return renderBoundComponent(node, "canvas");
+}
+
+function renderCad(node: UiCadHostSurfaceNode): React.ReactElement {
+	return renderBoundComponent(node, "canvas");
 }
 
 function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: boolean): React.ReactElement {
 	switch (node.type) {
 		case "stack":
 			return (
-				<div className={cn(stackClass(node), node.direction === "vertical" && node.children.some((c) => c.type === "scene3d" || c.type === "board") && "relative min-h-0 flex-1")}>
+				<div
+					className={cn(
+						stackClass(node),
+						node.direction === "vertical" &&
+							node.children.some((c) => c.type === "puzzle2d" || c.type === "puzzle3d" || c.type === "puzzle5d" || c.type === "cad") &&
+							"relative min-h-0 flex-1",
+					)}
+				>
 					{node.children.map((child, index) => (
 						<React.Fragment key={index}>{renderNode(child, commandBus, node.direction === "horizontal")}</React.Fragment>
 					))}
@@ -1566,14 +1550,18 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderButton(node, commandBus);
 		case "separator":
 			return renderSeparator(node, horizontalParent);
-		case "scene3d":
-			return renderScene3d(node);
-		case "board":
-			return renderBoard(node);
 		case "table":
 			return renderTable(node);
 		case "panel":
 			return renderPanel(node);
+		case "puzzle2d":
+			return renderPuzzle2d(node);
+		case "puzzle3d":
+			return renderPuzzle3d(node);
+		case "puzzle5d":
+			return renderPuzzle5d(node);
+		case "cad":
+			return renderCad(node);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">
@@ -1697,14 +1685,14 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 	let component = declarativeWindowBodyComponents.get(cacheKey);
 	if (!component) {
 		component = function ShellDeclarativeWindowBody() {
-			const { runtime, activeModeId } = useApp();
+			const { platform, activeModeId } = useApp();
 			const generation = reactHostPort.useSyncExternalStore(
-				(listener) => runtime.subscribe(listener),
-				() => runtime.generation,
+				(listener) => platform.subscribe(listener),
+				() => platform.generation,
 				() => 0,
 			);
 			const ctx: WindowBodyViewContext = {
-				runtime,
+				platform,
 				windowKindId,
 				bodyKey,
 				activeModeId: activeModeId ?? null,
@@ -1712,7 +1700,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 			};
 			const factory = getWindowBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={runtime.commandBus} />;
+			return <UiRenderer node={node} commandBus={platform.commandBus} />;
 		};
 		declarativeWindowBodyComponents.set(cacheKey, component);
 	}
@@ -1726,14 +1714,14 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	let component = declarativeSidePanelBodyComponents.get(cacheKey);
 	if (!component) {
 		component = function ShellDeclarativeSidePanelBody() {
-			const { runtime, activeModeId } = useApp();
+			const { platform, activeModeId } = useApp();
 			const generation = reactHostPort.useSyncExternalStore(
-				(listener) => runtime.subscribe(listener),
-				() => runtime.generation,
+				(listener) => platform.subscribe(listener),
+				() => platform.generation,
 				() => 0,
 			);
 			const ctx: SidePanelBodyViewContext = {
-				runtime,
+				platform,
 				windowKindId: tabId,
 				bodyKey,
 				activeModeId: activeModeId ?? null,
@@ -1741,7 +1729,7 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 			};
 			const factory = getSidePanelBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={runtime.commandBus} />;
+			return <UiRenderer node={node} commandBus={platform.commandBus} />;
 		};
 		declarativeSidePanelBodyComponents.set(cacheKey, component);
 	}
@@ -2075,8 +2063,8 @@ const UIPanelToggleGroup: React.FC<{
  * Every panel has: tree.
  * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
-export const ProductView: React.FC<ProductViewProps> = ({
-	runtime,
+export const PlatformView: React.FC<PlatformViewProps> = ({
+	platform,
 	defaultAppId,
 	uri: uriProp = "/",
 	onNavigate,
@@ -2096,32 +2084,32 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	augmentPanelTabs,
 }) => {
 	const shellGen = reactHostPort.useSyncExternalStore(
-		(onStoreChange) => runtime.subscribe(onStoreChange),
-		() => runtime.generation,
+		(onStoreChange) => platform.subscribe(onStoreChange),
+		() => platform.generation,
 		() => 0,
 	);
 	void shellGen;
 
 	reactHostPort.useEffect(() => {
 		if (defaultAppId) {
-			runtime.setActiveAppId(defaultAppId);
+			platform.setActiveAppId(defaultAppId);
 		}
-	}, [defaultAppId, runtime]);
+	}, [defaultAppId, platform]);
 
 	reactHostPort.useEffect(() => {
-		runtime.uri = uriProp;
-		runtime.onNavigate = onNavigate;
-		runtime.onGoBack = onGoBack;
-		runtime.onGoForward = onGoForward;
-		runtime.onGoUp = onGoUp;
-		runtime.canGoBack = canGoBackProp;
-		runtime.canGoForward = canGoForwardProp;
-		runtime.canGoUp = canGoUpProp;
-		runtime.mobile = mobile;
-		runtime.mobileQuery = mobileQuery;
-		runtime.className = className ?? "";
-		runtime.notify();
-	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, runtime]);
+		platform.uri = uriProp;
+		platform.onNavigate = onNavigate;
+		platform.onGoBack = onGoBack;
+		platform.onGoForward = onGoForward;
+		platform.onGoUp = onGoUp;
+		platform.canGoBack = canGoBackProp;
+		platform.canGoForward = canGoForwardProp;
+		platform.canGoUp = canGoUpProp;
+		platform.mobile = mobile;
+		platform.mobileQuery = mobileQuery;
+		platform.className = className ?? "";
+		platform.notify();
+	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, platform]);
 
 	const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
 	const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
@@ -2136,7 +2124,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	const [searchOpen, setSearchOpen] = reactHostPort.useState(false);
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const detectedMobile = useMediaQuery(mobileQuery);
-	const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
+	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
 
 	useCommandHotkey(
 		"ctrl+p,meta+p",
@@ -2163,22 +2151,22 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
 	}, []);
 
-	const resolvedApps = runtime.apps;
-	const activeAppId = runtime.activeAppId;
+	const resolvedApps = platform.apps;
+	const activeAppId = platform.activeAppId;
 	const setActiveAppId = reactHostPort.useCallback(
 		(id: string) => {
-			runtime.setActiveAppId(id);
+			platform.setActiveAppId(id);
 		},
-		[runtime],
+		[platform],
 	);
 
-	const activeAppBase = runtime.getActiveApp();
+	const activeAppBase = platform.getActiveApp();
 	if (!activeAppBase) return null;
 
 	const activeModeId = activeAppBase.getActiveModeId();
 	const activeApp = activeAppBase.resolve(activeModeId);
 	const activeModeLabel = activeAppBase.modes.find((mode) => mode.id === activeModeId)?.label ?? null;
-	const panelTabsBase = withDefaultAppPanelTabs(activeApp, runtime.commandBus, activeModeLabel);
+	const panelTabsBase = withDefaultAppPanelTabs(activeApp, platform.commandBus, activeModeLabel);
 	const panelTabs = {
 		...panelTabsBase,
 		workbench: mergeConfigEntries(panelTabsBase.workbench, augmentPanelTabs?.workbench) ?? panelTabsBase.workbench,
@@ -2194,7 +2182,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	const hasModeNav = activeAppBase.modes.length > 1;
 	const setActiveModeId = (id: string) => {
 		activeAppBase.setActiveModeId(id);
-		runtime.notify();
+		platform.notify();
 	};
 	const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 
@@ -2214,8 +2202,8 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	);
 
 	const mergedTools = reactHostPort.useMemo(
-		() => mergeToolbarViewTools(declareToolsToViewTools(runtime.globalTools, runtime.commandBus), declareToolsToViewTools(activeApp.tools, runtime.commandBus)),
-		[activeApp.tools, runtime, shellGen],
+		() => mergeToolbarViewTools(declareToolsToViewTools(platform.globalTools, platform.commandBus), declareToolsToViewTools(activeApp.tools, platform.commandBus)),
+		[activeApp.tools, platform, shellGen],
 	);
 	const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
@@ -2365,27 +2353,27 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	});
 
 	const mergedFooterItems = [
-		...declarativeFooterToChromeRows(runtime.globalFooterItems, runtime.commandBus),
-		...declarativeFooterToChromeRows(activeApp.footerItems, runtime.commandBus),
+		...declarativeFooterToChromeRows(platform.globalFooterItems, platform.commandBus),
+		...declarativeFooterToChromeRows(activeApp.footerItems, platform.commandBus),
 		...(extraFooterItems ?? []),
 	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
 	const searchItemsResolved = reactHostPort.useMemo(
 		() =>
-			resolveCommandPaletteItems(runtime, activeApp, activeWindowKindId).map((row) => ({
+			resolveCommandPaletteItems(platform, activeApp, activeWindowKindId).map((row) => ({
 				id: row.id,
 				label: row.label,
 				description: row.description,
 				category: row.category,
 				icon: row.iconId ? resolveElementIcon(row.iconId) : undefined,
-				onSelect: () => runtime.commandBus.dispatch(row.controllerId, row.command, row.args),
+				onSelect: () => platform.commandBus.dispatch(row.controllerId, row.command, row.args),
 			})),
-		[runtime, activeApp, activeWindowKindId, shellGen],
+		[platform, activeApp, activeWindowKindId, shellGen],
 	);
 
 	const goldenWindowKinds = reactHostPort.useMemo(
-		() => resolvedWindowKindsOverride ?? windowKindsToGolden(activeApp.windowKinds, runtime.commandBus),
-		[activeApp.windowKinds, resolvedWindowKindsOverride, runtime.commandBus],
+		() => resolvedWindowKindsOverride ?? windowKindsToGolden(activeApp.windowKinds, platform.commandBus),
+		[activeApp.windowKinds, resolvedWindowKindsOverride, platform.commandBus],
 	);
 
 	const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
@@ -2393,7 +2381,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 	return (
 		<AppContext.Provider
 			value={{
-				runtime,
+				platform,
 				activeAppId,
 				setActiveAppId,
 				activeApp,
@@ -2497,9 +2485,9 @@ export const ProductView: React.FC<ProductViewProps> = ({
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
-	describe("ProductView", () => {
+	describe("PlatformView", () => {
 		it("synthesizes default panel toggles for a single-app workbench", () => {
-			const wb = new ProductRuntime();
+			const wb = new Platform();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
@@ -2511,7 +2499,7 @@ if (import.meta.vitest) {
 			]);
 			registerWindowBody("test.workbench-view.main", () => <div>Main</div>);
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<ProductView runtime={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
 			expect(markup).toContain('data-panel="leftSidePanel"');
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
@@ -2519,7 +2507,7 @@ if (import.meta.vitest) {
 		});
 
 		it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
-			const wb = new ProductRuntime();
+			const wb = new Platform();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
@@ -2550,7 +2538,7 @@ if (import.meta.vitest) {
 		});
 
 		it("renders a leading mode dropdown when an app has multiple modes", () => {
-			const wb = new ProductRuntime();
+			const wb = new Platform();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
@@ -2564,7 +2552,7 @@ if (import.meta.vitest) {
 			app.addMode(new ModeRuntime("inspect", "Inspect", undefined));
 			app.addMode(new ModeRuntime("edit", "Edit", undefined));
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<ProductView runtime={wb} />);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
 
 			expect(markup).toContain('id="ui.mode.select.app.trigger"');
 			expect(markup).not.toContain("ui.modeNav.app");
@@ -2586,8 +2574,8 @@ function getElementById<T extends HTMLElement = HTMLElement>(id: string): T | nu
 export class ReactUI {
 	private static mountedRoot: Root | null = null;
 
-	/** @emoji 🖥️ Mounts a {@link ProductRuntime} shell into `#root` (or `rootId`) with {@link ProductView}. */
-	static mount(runtime: ProductRuntime, rootId = "root"): void {
+	/** @emoji 🖥️ Mounts a {@link Platform} shell into `#root` (or `rootId`) with {@link PlatformView}. */
+	static mount(platform: Platform, rootId = "root"): void {
 		if (typeof document === "undefined") return;
 		const rootElement = getElementById<ElementsDomRoot>(rootId);
 		if (!rootElement) {
@@ -2595,7 +2583,7 @@ export class ReactUI {
 		}
 		rootElement.__elementsReactRoot ??= createRoot(rootElement);
 		ReactUI.mountedRoot = rootElement.__elementsReactRoot;
-		rootElement.__elementsReactRoot.render(<ProductView runtime={runtime} />);
+		rootElement.__elementsReactRoot.render(<PlatformView platform={platform} />);
 	}
 
 	static unmount(rootId = "root"): void {
@@ -2619,8 +2607,8 @@ export function mountReactApp(element: React.ReactElement, rootId = "root"): voi
 	rootElement.__elementsReactRoot.render(element);
 }
 
-/** @emoji 🖥️ Loads a {@link ProductRuntime} asynchronously then mounts {@link ProductView}. */
-export async function mountAsyncReactApp(loadRuntime: () => Promise<ProductRuntime>, rootId = "root"): Promise<void> {
+/** @emoji 🖥️ Loads a {@link Platform} asynchronously then mounts {@link PlatformView}. */
+export async function mountAsyncReactApp(loadRuntime: () => Promise<Platform>, rootId = "root"): Promise<void> {
 	ReactUI.mount(await loadRuntime(), rootId);
 }
 

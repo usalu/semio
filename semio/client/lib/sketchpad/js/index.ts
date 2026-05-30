@@ -438,25 +438,31 @@ import {
 	CommandBus,
 	Controller,
 	PluginHost,
-	ProductRuntime,
+	Platform,
+	buildPuzzle2dWindowBody,
+	buildPuzzle5dWindowBody,
+	buildCadWindowBody,
+	buildPanelWindowBody,
+	buildTableWindowBody,
 	createDefaultLayout,
 	createTabStackLayout,
 	registerSidePanelBody,
 	registerWindowBody,
 	type PluginManifest,
 	type PluginModule,
+	type PlatformSpec,
 	type WindowBodyViewContext,
-	type UiBoardHostSurfaceNode,
 	type UiNode,
+	type UiCadHostSurfaceNode,
+	type UiPuzzle2dHostSurfaceNode,
+	type UiPuzzle5dHostSurfaceNode,
 	type UiPanelHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
+	type UiTableHostSurfaceNode,
 } from "@framework/platform/core";
 import {
-	ProductView,
+	PlatformView,
 	getLevelBgClass,
-	registerUiBoardSurfaceHost,
-	registerUiPanelSurfaceHost,
-	registerUiScene3DSurfaceHost,
+	registerSurfaceBinding,
 	type SidePanelTabConfig,
 } from "@framework/platform/renderer/react";
 
@@ -22156,9 +22162,9 @@ export class SketchpadShellController extends Controller {
 	}
 }
 
-let sketchpadProductRuntimeSingleton: ProductRuntime | null = null;
+let sketchpadPlatformSingleton: Platform | null = null;
 let sketchpadPluginHostSingleton: PluginHost | null = null;
-let sketchpadShellReady: Promise<ProductRuntime> | null = null;
+let sketchpadShellReady: Promise<Platform> | null = null;
 let sketchpadChromeRegistered = false;
 let renderDesignSceneSurface: () => React.ReactNode = () => (
 	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Design scene loading…</div>
@@ -22259,53 +22265,28 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 }
 
 function declarativePanelMain(_ctx: WindowBodyViewContext): UiNode {
-	return { type: "panel", surfaceId: SKETCHPAD_SURFACE_PANEL_MAIN, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID };
-}
-
-function declarativeHomeTableBody(_ctx: WindowBodyViewContext): UiNode {
-	return { type: "panel", surfaceId: SKETCHPAD_SURFACE_HOME_TABLE, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID };
+	return buildPanelWindowBody(SKETCHPAD_SURFACE_PANEL_MAIN, SKETCHPAD_SHELL_CONTROLLER_ID);
 }
 
 function registerSketchpadDeclarativeBodies(): void {
-	registerWindowBody(SKETCHPAD_BODY_HOME, declarativeHomeTableBody);
-	registerWindowBody(SKETCHPAD_BODY_KIT_TABLE, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_KIT_TABLE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "table",
-	}));
-	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_KIT_DIAGRAM,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "diagram",
-	}));
-	registerWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () => ({
-		type: "scene3d",
-		surfaceId: SKETCHPAD_SURFACE_DESIGN_SCENE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-	}));
-	registerWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "diagram",
-	}));
-	registerWindowBody(SKETCHPAD_BODY_TYPE, () => ({
-		type: "scene3d",
-		surfaceId: SKETCHPAD_SURFACE_TYPE_SCENE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-	}));
-	registerWindowBody(SKETCHPAD_BODY_DOCS, () => ({
-		type: "panel",
-		surfaceId: SKETCHPAD_SURFACE_DOCS_PAGE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-	}));
-	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => ({
-		type: "panel",
-		surfaceId: SKETCHPAD_SURFACE_FEEDBACK_FORM,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-	}));
+	registerWindowBody(SKETCHPAD_BODY_HOME, () =>
+		buildTableWindowBody(SKETCHPAD_SURFACE_HOME_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID, "home-main"),
+	);
+	registerWindowBody(SKETCHPAD_BODY_KIT_TABLE, () =>
+		buildTableWindowBody(SKETCHPAD_SURFACE_KIT_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID, "table"),
+	);
+	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () =>
+		buildPuzzle2dWindowBody(SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
+	);
+	registerWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () =>
+		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
+	);
+	registerWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () =>
+		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
+	);
+	registerWindowBody(SKETCHPAD_BODY_TYPE, () => buildCadWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID));
+	registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
+	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, declarativePanelMain);
 	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, declarativePanelMain);
 }
@@ -22317,33 +22298,49 @@ function registerSketchpadSurfaceHosts(): void {
 	registerSketchpadUiSurfaceHosts();
 }
 
-/** @emoji 🚀 Builds the declarative sketchpad {@link ProductRuntime} (apps, modes, window kinds). */
-export async function ensureSketchpadDeclarativeShell(): Promise<ProductRuntime> {
-	if (sketchpadProductRuntimeSingleton) return sketchpadProductRuntimeSingleton;
+const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
+	id: "semio.sketchpad",
+	name: "Semio Sketchpad",
+	defaultActiveAppId: SKETCHPAD_HOME_APP_ID,
+};
+
+/** @emoji 🧱 Builds the declarative sketchpad {@link Platform} instance (apps, window kinds, surface bindings). */
+export async function buildSketchpadPlatform(): Promise<Platform> {
+	registerSketchpadSurfaceHosts();
+	const platform = new Platform(SKETCHPAD_PLATFORM_SPEC);
+	const controller = new SketchpadShellController(platform.commandBus, () => platform.notify());
+	const host = new PluginHost(platform);
+	host.register(buildSketchpadExtensionManifest(), {
+		id: SKETCHPAD_EXTENSION_ID,
+		activate() {},
+	} satisfies PluginModule);
+	await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
+	platform.activeAppId = SKETCHPAD_HOME_APP_ID;
+	platform.notify();
+	sketchpadPlatformSingleton = platform;
+	sketchpadPluginHostSingleton = host;
+	console.log("[DEBUG] buildSketchpadPlatform ready", platform.id, platform.apps.map((a) => a.id));
+	return platform;
+}
+
+/** @emoji 🚀 Ensures the sketchpad {@link Platform} shell is initialized once per session. */
+export async function ensureSketchpadPlatform(): Promise<Platform> {
+	if (sketchpadPlatformSingleton) return sketchpadPlatformSingleton;
 	if (!sketchpadShellReady) {
-		sketchpadShellReady = (async () => {
-			registerSketchpadSurfaceHosts();
-			const runtime = new ProductRuntime();
-			const controller = new SketchpadShellController(runtime.commandBus, () => runtime.notify());
-			const host = new PluginHost(runtime);
-			host.register(buildSketchpadExtensionManifest(), {
-				id: SKETCHPAD_EXTENSION_ID,
-				activate() {},
-			} satisfies PluginModule);
-			await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
-			runtime.activeAppId = SKETCHPAD_HOME_APP_ID;
-			runtime.notify();
-			sketchpadProductRuntimeSingleton = runtime;
-			sketchpadPluginHostSingleton = host;
-			return runtime;
-		})();
+		sketchpadShellReady = buildSketchpadPlatform();
 	}
 	return sketchpadShellReady;
 }
 
-export function getSketchpadProductRuntime(): ProductRuntime | null {
-	return sketchpadProductRuntimeSingleton;
+/** @emoji 🚀 @deprecated Use {@link ensureSketchpadPlatform}. */
+export const ensureSketchpadDeclarativeShell = ensureSketchpadPlatform;
+
+export function getSketchpadPlatform(): Platform | null {
+	return sketchpadPlatformSingleton;
 }
+
+/** @emoji 🔍 @deprecated Use {@link getSketchpadPlatform}. */
+export const getSketchpadProductRuntime = getSketchpadPlatform;
 
 type SketchpadDeclarativeProductHostProps = {
 	readonly toolbarSlot: React.ReactNode;
@@ -22372,11 +22369,11 @@ const SketchpadDeclarativeProductHost: FC<SketchpadDeclarativeProductHostProps> 
 	onGoUp,
 	augmentPanelTabs,
 }) => {
-	const [productRuntime, setProductRuntime] = useState<ProductRuntime | null>(sketchpadProductRuntimeSingleton);
+	const [platform, setPlatform] = useState<Platform | null>(sketchpadPlatformSingleton);
 	useEffect(() => {
 		let cancelled = false;
-		void ensureSketchpadDeclarativeShell().then((wb) => {
-			if (!cancelled) setProductRuntime(wb);
+		void ensureSketchpadPlatform().then((wb) => {
+			if (!cancelled) setPlatform(wb);
 		});
 		return () => {
 			cancelled = true;
@@ -22384,25 +22381,25 @@ const SketchpadDeclarativeProductHost: FC<SketchpadDeclarativeProductHostProps> 
 	}, []);
 	const appType = useAppType();
 	useEffect(() => {
-		if (!productRuntime) return;
+		if (!platform) return;
 		const nextAppId = sketchpadAppIdFromPath(navigationUri.split("?")[0] ?? "/");
-		if (productRuntime.activeAppId !== nextAppId) productRuntime.setActiveAppId(nextAppId);
-		productRuntime.uri = navigationUri;
-		productRuntime.canGoBack = canGoBack;
-		productRuntime.canGoForward = canGoForward;
-		productRuntime.canGoUp = canGoUp;
-		productRuntime.onNavigate = onNavigate;
-		productRuntime.onGoBack = onGoBack;
-		productRuntime.onGoForward = onGoForward;
-		productRuntime.onGoUp = onGoUp;
-		productRuntime.notify();
-	}, [productRuntime, navigationUri, canGoBack, canGoForward, canGoUp, onNavigate, onGoBack, onGoForward, onGoUp, appType]);
-	if (!productRuntime) {
+		if (platform.activeAppId !== nextAppId) platform.setActiveAppId(nextAppId);
+		platform.uri = navigationUri;
+		platform.canGoBack = canGoBack;
+		platform.canGoForward = canGoForward;
+		platform.canGoUp = canGoUp;
+		platform.onNavigate = onNavigate;
+		platform.onGoBack = onGoBack;
+		platform.onGoForward = onGoForward;
+		platform.onGoUp = onGoUp;
+		platform.notify();
+	}, [platform, navigationUri, canGoBack, canGoForward, canGoUp, onNavigate, onGoBack, onGoForward, onGoUp, appType]);
+	if (!platform) {
 		return <SketchpadStartupFallback />;
 	}
 	return (
-		<ProductView
-			runtime={productRuntime}
+		<PlatformView
+			platform={platform}
 			defaultAppId={appType}
 			uri={navigationUri}
 			onNavigate={onNavigate}
@@ -22517,7 +22514,7 @@ const UtilityFallbackSettingsContent: FC<{ appType: string }> = ({ appType }) =>
   );
 };
 
-const SketchpadKitTableSurfaceHost: FC<{ readonly node: UiBoardHostSurfaceNode }> = ({ node }) => {
+const SketchpadKitTableSurfaceHost: FC<{ readonly node: UiTableHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid kit table surface</div>;
 	const kitId = useActiveKitTab()?.id ?? "";
 	if (!kitId) return <div className="p-2 text-xs text-muted-foreground">No active kit</div>;
@@ -22528,7 +22525,7 @@ const SketchpadKitTableSurfaceHost: FC<{ readonly node: UiBoardHostSurfaceNode }
 	);
 };
 
-const SketchpadKitDiagramSurfaceHost: FC<{ readonly node: UiBoardHostSurfaceNode }> = ({ node }) => {
+const SketchpadKitDiagramSurfaceHost: FC<{ readonly node: UiPuzzle2dHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid kit diagram surface</div>;
 	const kitId = useActiveKitTab()?.id ?? "";
 	if (!kitId) return <div className="p-2 text-xs text-muted-foreground">No active kit</div>;
@@ -22539,22 +22536,22 @@ const SketchpadKitDiagramSurfaceHost: FC<{ readonly node: UiBoardHostSurfaceNode
 	);
 };
 
-const SketchpadDesignSceneSurfaceHost: FC<{ readonly node: UiScene3DHostSurfaceNode }> = ({ node }) => {
+const SketchpadDesignSceneSurfaceHost: FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid design scene surface</div>;
 	return <div className="h-full min-h-0 w-full">{renderDesignSceneSurface()}</div>;
 };
 
-const SketchpadDesignDiagramSurfaceHost: FC<{ readonly node: UiBoardHostSurfaceNode }> = ({ node }) => {
+const SketchpadDesignDiagramSurfaceHost: FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid design diagram surface</div>;
 	return <div className="h-full min-h-0 w-full">{renderDesignDiagramSurface()}</div>;
 };
 
-const SketchpadHomeTableSurfaceHost: FC<{ readonly node: UiPanelHostSurfaceNode }> = ({ node }) => {
+const SketchpadHomeTableSurfaceHost: FC<{ readonly node: UiTableHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid home table surface</div>;
 	return <div className="h-full min-h-0 w-full">{renderHomeTableSurface()}</div>;
 };
 
-const SketchpadTypeSceneSurfaceHost: FC<{ readonly node: UiScene3DHostSurfaceNode }> = ({ node }) => {
+const SketchpadTypeSceneSurfaceHost: FC<{ readonly node: UiCadHostSurfaceNode }> = ({ node }) => {
 	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid type scene surface</div>;
 	return <div className="h-full min-h-0 w-full">{renderTypeSceneSurface()}</div>;
 };
@@ -22597,15 +22594,15 @@ const SketchpadDeclarativeAppChrome: FC = () => {
 };
 
 function registerSketchpadUiSurfaceHosts(): void {
-	registerUiBoardSurfaceHost(SKETCHPAD_SURFACE_KIT_TABLE, SketchpadKitTableSurfaceHost);
-	registerUiBoardSurfaceHost(SKETCHPAD_SURFACE_KIT_DIAGRAM, SketchpadKitDiagramSurfaceHost);
-	registerUiBoardSurfaceHost(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SketchpadDesignDiagramSurfaceHost);
-	registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_PANEL_MAIN, SketchpadPanelMainSurfaceHost);
-	registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_HOME_TABLE, SketchpadHomeTableSurfaceHost);
-	registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsPageSurfaceHost);
-	registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormSurfaceHost);
-	registerUiScene3DSurfaceHost(SKETCHPAD_SURFACE_DESIGN_SCENE, SketchpadDesignSceneSurfaceHost);
-	registerUiScene3DSurfaceHost(SKETCHPAD_SURFACE_TYPE_SCENE, SketchpadTypeSceneSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_KIT_TABLE, SketchpadKitTableSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_KIT_DIAGRAM, SketchpadKitDiagramSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SketchpadDesignDiagramSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_DESIGN_SCENE, SketchpadDesignSceneSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_TYPE_SCENE, SketchpadTypeSceneSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_PANEL_MAIN, SketchpadPanelMainSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_HOME_TABLE, SketchpadHomeTableSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsPageSurfaceHost);
+	registerSurfaceBinding(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormSurfaceHost);
 }
 
 const LayoutWrapper: FC = () => {

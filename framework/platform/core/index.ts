@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/platform/core` — Renderer-agnostic product shell: {@link ProductRuntime} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link ProductDefinition} + {@link SurfaceDefinition} for contribution routing. */
+/** 🧱 `@framework/platform/core` — Renderer-agnostic platform shell: {@link Platform} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link PlatformDefinition} + {@link SurfaceDefinition} for contribution routing. */
 // #endregion 🧱Header
 
 //#region 🔖JsonValue
@@ -60,67 +60,147 @@ export interface UiSeparatorNode {
 	readonly type: "separator";
 }
 
-/** @emoji 🧊 Host-bound 3D surface; renderer maps `surfaceId` to the canvas implementation. */
-export interface UiScene3DHostSurfaceNode {
-	readonly type: "scene3d";
-	readonly surfaceId: string;
-	readonly controllerId: string;
-}
+//#region 🔖ComponentKind
+/** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `puzzle2d`, …). */
+export type ComponentKind = "table" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "panel";
 
-/** @emoji 📋 Host-bound 2D board canvas; `paneId` selects the window slot. */
-export interface UiBoardHostSurfaceNode {
-	readonly type: "board";
-	readonly surfaceId: string;
-	readonly controllerId: string;
-	readonly paneId: string;
-}
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "puzzle2d", "puzzle3d", "puzzle5d", "cad"];
+//#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
 	readonly type: "table";
+	readonly componentKind: "table";
 	readonly surfaceId: string;
 	readonly controllerId: string;
 	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 📋 Host-bound 2D puzzle board surface. */
+export interface UiPuzzle2dHostSurfaceNode {
+	readonly type: "puzzle2d";
+	readonly componentKind: "puzzle2d";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 🧊 Host-bound 3D puzzle scene surface. */
+export interface UiPuzzle3dHostSurfaceNode {
+	readonly type: "puzzle3d";
+	readonly componentKind: "puzzle3d";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 🌐 Host-bound unified 2D+3D topology surface (`FiveD`). */
+export interface UiPuzzle5dHostSurfaceNode {
+	readonly type: "puzzle5d";
+	readonly componentKind: "puzzle5d";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 📐 Host-bound CAD spatial surface. */
+export interface UiCadHostSurfaceNode {
+	readonly type: "cad";
+	readonly componentKind: "cad";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly bindingId?: string;
 }
 
 /** @emoji 🧩 Host-bound side-panel surface; renderer maps `surfaceId` to panel body chrome. */
 export interface UiPanelHostSurfaceNode {
 	readonly type: "panel";
+	readonly componentKind: "panel";
 	readonly surfaceId: string;
 	readonly controllerId: string;
+	readonly bindingId?: string;
 }
+
+export type UiComponentHostSurfaceNode =
+	| UiTableHostSurfaceNode
+	| UiPuzzle2dHostSurfaceNode
+	| UiPuzzle3dHostSurfaceNode
+	| UiPuzzle5dHostSurfaceNode
+	| UiCadHostSurfaceNode
+	| UiPanelHostSurfaceNode;
 
 export type UiNode =
 	| UiStackNode
 	| UiTextNode
 	| UiButtonNode
 	| UiSeparatorNode
-	| UiScene3DHostSurfaceNode
-	| UiBoardHostSurfaceNode
-	| UiTableHostSurfaceNode
-	| UiPanelHostSurfaceNode;
-
-/** @emoji 🧊 Canonical fullscreen 3D window body: only the infinite scene canvas. */
-export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
-	return { type: "scene3d", surfaceId, controllerId };
-}
-
-/** @emoji 📋 Canonical fullscreen 2D window body: only the infinite board canvas. */
-export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
-	return { type: "board", surfaceId, controllerId, paneId };
-}
+	| UiComponentHostSurfaceNode;
 
 /** @emoji 📊 Canonical table window body: only the host-bound table surface. */
-export function buildTableWindowBody(surfaceId: string, controllerId: string, paneId?: string): UiTableHostSurfaceNode {
-	return paneId ? { type: "table", surfaceId, controllerId, paneId } : { type: "table", surfaceId, controllerId };
+export function buildTableWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiTableHostSurfaceNode {
+	return {
+		type: "table",
+		componentKind: "table",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
 }
 
-/** @emoji ✅ True when a window body is a lone surface (`table` / `scene3d` / `board`) or a short error `text` node. */
+/** @emoji 📋 Canonical 2D puzzle window body. */
+export function buildPuzzle2dWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiPuzzle2dHostSurfaceNode {
+	return {
+		type: "puzzle2d",
+		componentKind: "puzzle2d",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 🧊 Canonical 3D puzzle window body. */
+export function buildPuzzle3dWindowBody(surfaceId: string, controllerId: string, bindingId?: string): UiPuzzle3dHostSurfaceNode {
+	return { type: "puzzle3d", componentKind: "puzzle3d", surfaceId, controllerId, ...(bindingId ? { bindingId } : {}) };
+}
+
+/** @emoji 🌐 Canonical 5D topology window body. */
+export function buildPuzzle5dWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiPuzzle5dHostSurfaceNode {
+	return {
+		type: "puzzle5d",
+		componentKind: "puzzle5d",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 📐 Canonical CAD window body. */
+export function buildCadWindowBody(surfaceId: string, controllerId: string, bindingId?: string): UiCadHostSurfaceNode {
+	return { type: "cad", componentKind: "cad", surfaceId, controllerId, ...(bindingId ? { bindingId } : {}) };
+}
+
+/** @emoji 🧩 Canonical panel window body. */
+export function buildPanelWindowBody(surfaceId: string, controllerId: string, bindingId?: string): UiPanelHostSurfaceNode {
+	return { type: "panel", componentKind: "panel", surfaceId, controllerId, ...(bindingId ? { bindingId } : {}) };
+}
+
+function isCanvasComponentNode(node: UiNode): boolean {
+	if (node.type === "text") return true;
+	if (node.type === "panel") return false;
+	return CANVAS_COMPONENT_KINDS.includes(node.type as ComponentKind);
+}
+
+/** @emoji ✅ True when a window body is a lone canvas component surface or a short error `text` node. */
 export function isCanvasOnlyWindowBody(node: UiNode): boolean {
-	if (node.type === "text" || node.type === "scene3d" || node.type === "board" || node.type === "table") return true;
+	if (isCanvasComponentNode(node)) return true;
 	if (node.type === "stack" && node.padding === "none" && node.children.length === 1) {
-		const child = node.children[0];
-		return child.type === "scene3d" || child.type === "board" || child.type === "table";
+		return isCanvasComponentNode(node.children[0]);
 	}
 	return false;
 }
@@ -128,7 +208,7 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 	throw new Error(
-		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+		`Declarative window body "${bodyKey}" must be a single table, puzzle2d, puzzle3d, puzzle5d, or cad surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 	);
 }
 //#endregion 🔖UiNode
@@ -374,12 +454,12 @@ export interface FooterItem {
 
 //#region 🔖Observable
 /** @emoji 📡 Minimal listener set for host invalidation without external reactive libs. */
-export type ProductSubscriber = () => void;
+export type PlatformSubscriber = () => void;
 
 /** @emoji 📦 Holds a value and notifies subscribers on `set`. */
 export class ObservableCell<T> {
 	private value: T;
-	private readonly listeners = new Set<ProductSubscriber>();
+	private readonly listeners = new Set<PlatformSubscriber>();
 
 	constructor(initial: T) {
 		this.value = initial;
@@ -399,7 +479,7 @@ export class ObservableCell<T> {
 		this.set(updater(this.value));
 	}
 
-	subscribe(listener: ProductSubscriber): () => void {
+	subscribe(listener: PlatformSubscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
@@ -484,7 +564,7 @@ export interface SurfaceDefinition<TApi = unknown, TContribution = unknown> {
 	applyContribution(contribution: TContribution, ctx: SurfaceContext, api: TApi): Disposable;
 }
 
-/** @emoji 🔗 Typed pair used in {@link ProductDefinition} surface maps. */
+/** @emoji 🔗 Typed pair used in {@link PlatformDefinition} surface maps. */
 export interface SurfaceBinding<TApi, TContribution> {
 	readonly api: TApi;
 	readonly contributions: TContribution;
@@ -663,11 +743,11 @@ export class AppRuntime {
 }
 //#endregion 🔖AppRuntime
 
-//#region 🔖ProductRuntime
+//#region 🔖Platform
 /** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
-export class ProductRuntime {
+export class Platform {
 	readonly commandBus = new CommandBus();
-	private readonly listeners = new Set<ProductSubscriber>();
+	private readonly listeners = new Set<PlatformSubscriber>();
 	readonly apps: AppRuntime[] = [];
 	activeAppId = "";
 	generation = 0;
@@ -688,13 +768,29 @@ export class ProductRuntime {
 	className = "";
 	panelVisibility = { leftSidePanel: false, rightSidePanel: false };
 	initialPanelVisibility?: { leftSidePanel: boolean; rightSidePanel: boolean };
+	readonly id: string;
+	readonly name: string;
+
+	constructor(spec?: PlatformSpec) {
+		this.id = spec?.id ?? "";
+		this.name = spec?.name ?? "";
+		if (spec?.initialPanelVisibility) this.initialPanelVisibility = spec.initialPanelVisibility;
+		if (spec?.className) this.className = spec.className;
+		if (spec?.mobile !== undefined) this.mobile = spec.mobile;
+		if (spec?.mobileQuery) this.mobileQuery = spec.mobileQuery;
+		if (spec?.globalTools) this.globalTools = spec.globalTools;
+		if (spec?.commands?.length) this.commands = [...spec.commands];
+		if (spec?.searchItems?.length) this.searchItems = [...spec.searchItems];
+		if (spec?.globalFooterItems?.length) this.globalFooterItems = [...spec.globalFooterItems];
+		if (spec?.defaultActiveAppId) this.activeAppId = spec.defaultActiveAppId;
+	}
 
 	notify(): void {
 		this.generation++;
 		for (const listener of this.listeners) listener();
 	}
 
-	subscribe(listener: ProductSubscriber): () => void {
+	subscribe(listener: PlatformSubscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
@@ -719,19 +815,19 @@ export class ProductRuntime {
 		this.notify();
 	}
 }
-//#endregion 🔖ProductRuntime
+//#endregion 🔖Platform
 
 /** @emoji 🧭 Resolves the command palette rows visible for the active UI/app/mode/window scope. */
-export function resolveCommandPaletteItems(runtime: ProductRuntime, app: ResolvedAppState, activeWindowKindId?: string | null): SearchItemSpec[] {
-	const uiCommands = mergeSearchItems(runtime.searchItems, runtime.commands) ?? runtime.commands;
+export function resolveCommandPaletteItems(platform: Platform, app: ResolvedAppState, activeWindowKindId?: string | null): SearchItemSpec[] {
+	const uiCommands = mergeSearchItems(platform.searchItems, platform.commands) ?? platform.commands;
 	const windowKind = activeWindowKindId ? app.windowKinds.find((entry) => entry.id === activeWindowKindId) : undefined;
 	return mergeSearchItems(mergeSearchItems(uiCommands, app.commands), windowKind?.commands) ?? [];
 }
 
 //#region 🔖WindowBodyViewContext
-/** @emoji 🪟 View context for declarative window bodies: product snapshot without DOM or React roots. */
+/** @emoji 🪟 View context for declarative window bodies: platform snapshot without DOM or React roots. */
 export interface WindowBodyViewContext {
-	readonly runtime: ProductRuntime;
+	readonly platform: Platform;
 	readonly windowKindId: string;
 	readonly bodyKey: string;
 	readonly activeModeId: string | null;
@@ -782,7 +878,7 @@ export function unregisterSidePanelBody(bodyKey: string): void {
 }
 //#endregion 🔖SidePanelBodyViewContext
 
-//#region 🔖ProductDefinition
+//#region 🔖PlatformDefinition
 /** @emoji 🧭 Static product graph: apps, modes, window kinds, and surfaces (serializable + typed). */
 export interface WindowKindDefinition {
 	readonly id: string;
@@ -817,14 +913,31 @@ export interface AppDefinition {
 	readonly defaultModeId?: string;
 }
 
-export interface ProductDefinition<TProductApi = unknown> {
+export interface PlatformDefinition<TProductApi = unknown> {
 	readonly id: string;
 	readonly name: string;
 	readonly apiVersion: string;
 	readonly apps: readonly AppDefinition[];
-	createProductApi(ctx: PluginContext): TProductApi;
+	createPlatformApi(ctx: PluginContext): TProductApi;
 }
-//#endregion 🔖ProductDefinition
+//#endregion 🔖PlatformDefinition
+
+//#region 🔖PlatformSpec
+/** @emoji 🧾 Declarative platform bootstrap: metadata + optional default chrome (apps register via {@link PluginHost}). */
+export interface PlatformSpec {
+	readonly id: string;
+	readonly name: string;
+	readonly defaultActiveAppId?: string;
+	readonly initialPanelVisibility?: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
+	readonly className?: string;
+	readonly mobile?: boolean;
+	readonly mobileQuery?: string;
+	readonly globalTools?: AppTools;
+	readonly commands?: readonly SearchItemSpec[];
+	readonly searchItems?: readonly SearchItemSpec[];
+	readonly globalFooterItems?: readonly FooterItem[];
+}
+//#endregion 🔖PlatformSpec
 
 //#region 🔖SurfaceContext
 /** @emoji 🧩 Activation context for a single {@link SurfaceDefinition} instance. */
@@ -834,7 +947,7 @@ export interface SurfaceContext<TSurfaceId extends string = string> {
 	readonly appId: string;
 	readonly modeId: string;
 	readonly windowKindId: string;
-	readonly runtime: ProductRuntime;
+	readonly platform: Platform;
 	readonly activeModeId: string | null;
 	readonly generation: number;
 }
@@ -910,7 +1023,7 @@ export class ContributionRegistry {
 //#region 🔖SurfaceRouter
 /** @emoji 🧭 Walks product graph + runtime apps and applies contributions to matching surfaces. */
 export class SurfaceRouter {
-	static flattenFromProductDefinition(product: ProductDefinition, resolveWhen: ContextKeyResolver = matchAllContext): SurfaceRoutingRow[] {
+	static flattenFromPlatformDefinition(product: PlatformDefinition, resolveWhen: ContextKeyResolver = matchAllContext): SurfaceRoutingRow[] {
 		const rows: SurfaceRoutingRow[] = [];
 		for (const app of product.apps) {
 			for (const mode of app.modes) {
@@ -1017,7 +1130,7 @@ export class PluginContext {
 	private readonly disposables: PluginSubscription[] = [];
 
 	constructor(
-		readonly runtime: ProductRuntime,
+		readonly platform: Platform,
 		readonly manifest: PluginManifest,
 	) {}
 
@@ -1066,18 +1179,18 @@ export class PluginContext {
 				if (modeSpec.defaultLayout) mode.defaultLayout = modeSpec.defaultLayout;
 				app.addMode(mode);
 			}
-			this.runtime.addApp(app);
+			this.platform.addApp(app);
 			this.disposables.push({
 				dispose: () => {
-					const index = this.runtime.apps.findIndex((entry) => entry.id === spec.id);
-					if (index >= 0) this.runtime.apps.splice(index, 1);
+					const index = this.platform.apps.findIndex((entry) => entry.id === spec.id);
+					if (index >= 0) this.platform.apps.splice(index, 1);
 				},
 			});
 		}
 	}
 
-	subscribe(listener: ProductSubscriber): PluginSubscription {
-		const unsubscribe = this.runtime.subscribe(listener);
+	subscribe(listener: PlatformSubscriber): PluginSubscription {
+		const unsubscribe = this.platform.subscribe(listener);
 		const sub: PluginSubscription = {
 			dispose: () => unsubscribe(),
 		};
@@ -1158,7 +1271,7 @@ export class PluginHost {
 	private readonly contexts = new Map<string, PluginContext>();
 	private activated = false;
 
-	constructor(readonly runtime: ProductRuntime) {}
+	constructor(readonly platform: Platform) {}
 
 	register(manifest: PluginManifest, module?: PluginModule): void {
 		if (module && module.id !== manifest.id) {
@@ -1168,7 +1281,7 @@ export class PluginHost {
 	}
 
 	getControllerById(controllerId: string): Controller | undefined {
-		for (const app of this.runtime.apps) {
+		for (const app of this.platform.apps) {
 			if (app.controller.id === controllerId) return app.controller;
 		}
 		return undefined;
@@ -1178,7 +1291,7 @@ export class PluginHost {
 		if (this.activated) return;
 		this.activated = true;
 		for (const { manifest, module } of this.plugins.values()) {
-			const context = new PluginContext(this.runtime, manifest);
+			const context = new PluginContext(this.platform, manifest);
 			this.contexts.set(manifest.id, context);
 			context.addContributedApps(getController);
 			if (module) await module.activate(context);
@@ -1196,9 +1309,9 @@ export class PluginHost {
 }
 //#endregion 🔖PluginManifest
 
-//#region 🔖ProductPlugin
+//#region 🔖PlatformPlugin
 /** @emoji 🧩 Typed product plugin: manifest target, optional per-surface activation, and selector-based contributions. */
-export interface ProductPlugin<TProductApi = unknown, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>> = Record<string, SurfaceBinding<unknown, unknown>>> {
+export interface PlatformPlugin<TProductApi = unknown, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>> = Record<string, SurfaceBinding<unknown, unknown>>> {
 	readonly id: string;
 	readonly target: { readonly product: string; readonly api: string };
 	readonly manifest?: PluginManifest;
@@ -1208,34 +1321,34 @@ export interface ProductPlugin<TProductApi = unknown, TSurfaceMap extends Record
 	contributes?: { readonly selectors?: readonly ContributionRoute[] };
 }
 
-/** @emoji ✅ Identity helper for authoring {@link ProductPlugin} definitions. */
-export function defineProductPlugin<TProductApi, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>>>(
-	plugin: ProductPlugin<TProductApi, TSurfaceMap>,
-): ProductPlugin<TProductApi, TSurfaceMap> {
+/** @emoji ✅ Identity helper for authoring {@link PlatformPlugin} definitions. */
+export function definePlatformPlugin<TProductApi, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>>>(
+	plugin: PlatformPlugin<TProductApi, TSurfaceMap>,
+): PlatformPlugin<TProductApi, TSurfaceMap> {
 	return plugin;
 }
-//#endregion 🔖ProductPlugin
+//#endregion 🔖PlatformPlugin
 
-//#region 🔖PluginActivationHost
-/** @emoji 🎛 Activates {@link ProductPlugin} instances: product lifecycle + surface handlers + routed contributions. */
-export class PluginActivationHost<TProductApi = unknown> {
+//#region 🔖PlatformPluginActivationHost
+/** @emoji 🎛 Activates {@link PlatformPlugin} instances: product lifecycle + surface handlers + routed contributions. */
+export class PlatformPluginActivationHost<TProductApi = unknown> {
 	private readonly disposables: Disposable[] = [];
 	private productApi: TProductApi | undefined;
 
 	constructor(
-		readonly runtime: ProductRuntime,
+		readonly platform: Platform,
 		readonly productId: string,
 		readonly createApi: (ctx: PluginContext) => TProductApi,
 	) {}
 
-	async activateAll(plugins: readonly ProductPlugin<TProductApi>[], getController: (controllerId: string) => Controller | undefined): Promise<void> {
+	async activateAll(plugins: readonly PlatformPlugin<TProductApi>[], getController: (controllerId: string) => Controller | undefined): Promise<void> {
 		void getController;
-		const bootstrapCtx = new PluginContext(this.runtime, { id: "__product", contributes: {} });
+		const bootstrapCtx = new PluginContext(this.platform, { id: "__product", contributes: {} });
 		this.productApi ??= this.createApi(bootstrapCtx);
-		const rows = () => SurfaceRouter.flattenFromRuntimeApps(this.productId, this.runtime.apps);
+		const rows = () => SurfaceRouter.flattenFromRuntimeApps(this.productId, this.platform.apps);
 		for (const plugin of plugins) {
 			const manifest: PluginManifest = plugin.manifest ?? { id: plugin.id, contributes: {} };
-			const ctx = new PluginContext(this.runtime, manifest);
+			const ctx = new PluginContext(this.platform, manifest);
 			await plugin.activate?.(ctx, this.productApi!);
 			const flat = rows();
 			for (const row of flat) {
@@ -1247,9 +1360,9 @@ export class PluginActivationHost<TProductApi = unknown> {
 					appId: row.appId,
 					modeId: row.modeId,
 					windowKindId: row.windowKindId,
-					runtime: this.runtime,
-					activeModeId: this.runtime.getActiveApp()?.getActiveModeId() ?? null,
-					generation: this.runtime.generation,
+					platform: this.platform,
+					activeModeId: this.platform.getActiveApp()?.getActiveModeId() ?? null,
+					generation: this.platform.generation,
 				};
 				const result = await handler(sctx as SurfaceContext<string>, {} as never);
 				if (result && typeof (result as Disposable).dispose === "function") {
@@ -1267,9 +1380,9 @@ export class PluginActivationHost<TProductApi = unknown> {
 					appId: row.appId,
 					modeId: row.modeId,
 					windowKindId: row.windowKindId,
-					runtime: this.runtime,
-					activeModeId: this.runtime.getActiveApp()?.getActiveModeId() ?? null,
-					generation: this.runtime.generation,
+					platform: this.platform,
+					activeModeId: this.platform.getActiveApp()?.getActiveModeId() ?? null,
+					generation: this.platform.generation,
 				})),
 			);
 		}
@@ -1279,16 +1392,17 @@ export class PluginActivationHost<TProductApi = unknown> {
 		for (const d of this.disposables.splice(0)) d.dispose();
 	}
 }
-//#endregion 🔖PluginActivationHost
+//#endregion 🔖PlatformPluginActivationHost
 
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("canvas-only declarative window bodies", () => {
-		it("accepts lone scene3d and board nodes", () => {
-			expect(isCanvasOnlyWindowBody(buildScene3dWindowBody("s", "c"))).toBe(true);
-			expect(isCanvasOnlyWindowBody(buildBoardWindowBody("b", "c", "pane"))).toBe(true);
+		it("accepts lone puzzle and table nodes", () => {
+			expect(isCanvasOnlyWindowBody(buildPuzzle3dWindowBody("s", "c"))).toBe(true);
+			expect(isCanvasOnlyWindowBody(buildPuzzle2dWindowBody("b", "c", "pane"))).toBe(true);
+			expect(isCanvasOnlyWindowBody(buildTableWindowBody("t", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody({ type: "text", value: "loading" })).toBe(true);
 		});
 
@@ -1304,10 +1418,19 @@ if (import.meta.vitest) {
 							label: "Nope",
 							command: { controllerId: "c", command: "x" },
 						},
-						buildScene3dWindowBody("s", "c"),
+						buildPuzzle5dWindowBody("s", "c"),
 					],
 				}),
-			).toThrow(/table, scene3d, or board/);
+			).toThrow(/table, puzzle2d, puzzle3d, puzzle5d, or cad/);
+		});
+	});
+
+	describe("Platform", () => {
+		it("constructs from PlatformSpec metadata", () => {
+			const platform = new Platform({ id: "demo", name: "Demo", defaultActiveAppId: "home" });
+			expect(platform.id).toBe("demo");
+			expect(platform.name).toBe("Demo");
+			expect(platform.activeAppId).toBe("home");
 		});
 	});
 
@@ -1317,7 +1440,7 @@ if (import.meta.vitest) {
 				override run(): void {}
 			}
 			const bus = new CommandBus();
-			const rt = new ProductRuntime();
+			const rt = new Platform();
 			const ctrl = new TCtrl("ext-ctrl", bus, () => rt.notify());
 			const host = new PluginHost(rt);
 			host.register(
@@ -1348,7 +1471,7 @@ if (import.meta.vitest) {
 			await host.activateAll((id) => (id === "ext-ctrl" ? ctrl : undefined));
 			expect(rt.apps.some((app) => app.id === "demo-app")).toBe(true);
 			const factory = getWindowBodyFactory("demo.ext.main");
-			expect(factory?.({ runtime: rt, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
+			expect(factory?.({ platform: rt, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
 		});
 	});
 
@@ -1391,7 +1514,7 @@ if (import.meta.vitest) {
 				override run(): void {}
 			}
 			const bus = new CommandBus();
-			const rt = new ProductRuntime();
+			const rt = new Platform();
 			const ctrl = new TCtrl("c", bus, () => rt.notify());
 			const wk = new WindowKindRuntime("main", "Main", "demo.body", undefined, [], ["foo.overlay"]);
 			rt.addApp(new AppRuntime("app", "App", undefined, ctrl, createTabStackLayout(["main"]), [wk]));
@@ -1407,7 +1530,7 @@ if (import.meta.vitest) {
 						appId: row.appId,
 						modeId: row.modeId,
 						windowKindId: row.windowKindId,
-						runtime: rt,
+						platform: rt,
 						activeModeId: null,
 						generation: 0,
 					}) as SurfaceContext,
@@ -1420,17 +1543,17 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("defineProductPlugin lifecycle", () => {
+	describe("definePlatformPlugin lifecycle", () => {
 		it("runs activate once and disposes surface contributions", async () => {
 			class TCtrl extends Controller {
 				override run(): void {}
 			}
 			const bus = new CommandBus();
-			const rt = new ProductRuntime();
+			const rt = new Platform();
 			const ctrl = new TCtrl("c", bus, () => rt.notify());
 			rt.addApp(new AppRuntime("app", "App", undefined, ctrl, createTabStackLayout(["w"]), [new WindowKindRuntime("w", "W", "k", undefined, [], ["x"])]));
 			let surfaceActivations = 0;
-			const plugin = defineProductPlugin({
+			const plugin = definePlatformPlugin({
 				id: "pl",
 				target: { product: "p", api: "^1" },
 				surfaces: {
@@ -1440,7 +1563,7 @@ if (import.meta.vitest) {
 					},
 				},
 			});
-			const host = new PluginActivationHost(rt, "p", () => ({}) as Record<string, never>);
+			const host = new PlatformPluginActivationHost(rt, "p", () => ({}) as Record<string, never>);
 			await host.activateAll([plugin], () => ctrl);
 			expect(surfaceActivations).toBe(1);
 			host.disposeAll();
@@ -1449,7 +1572,7 @@ if (import.meta.vitest) {
 
 		describe("resolveCommandPaletteItems", () => {
 			it("merges ui, app, mode, and active window kind commands by active scope", () => {
-				const runtime = new ProductRuntime();
+				const runtime = new Platform();
 				runtime.commands = [{ id: "ui", label: "UI", controllerId: "ctrl", command: "ui" }];
 				runtime.searchItems = [{ id: "legacy", label: "Legacy", controllerId: "ctrl", command: "legacy" }];
 				class TCtrl extends Controller {

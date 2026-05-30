@@ -9,7 +9,11 @@
 		".": "./index.tsx"
 	},
 	"dependencies": {
+		"@cad/js/renderer": "workspace:*",
 		"@framework/platform/core": "workspace:*",
+		"@puzzle/2d/react": "workspace:*",
+		"@puzzle/3d/react": "workspace:*",
+		"@puzzle/5d/react": "workspace:*",
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",
 		"fuse.js": "^7.1.0",

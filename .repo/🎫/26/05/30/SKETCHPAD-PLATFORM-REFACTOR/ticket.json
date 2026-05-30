@@ -1,0 +1,10 @@
+{
+  "title": "Sketchpad Platform Refactor",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
+  "summary": "",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [],
+  "files": []
+}
