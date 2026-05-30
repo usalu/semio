@@ -24,21 +24,19 @@ import {
 	parseFixtureV1,
 	applyConnectToSceneFixture,
 	blockedVortexFullIdsFromAttractions,
-	sceneLodCanvasProps,
-	sliderValueFromLod,
-	DEFAULT_MANUAL_LOD,
 	type FixtureV1,
 	type RelocatePayload,
 } from "@puzzle/3d/react";
 import {
 	PUZZLE_3D_PLAY_BODY_KEY,
 	PUZZLE_3D_PLAY_CONTROLLER_ID,
-	PUZZLE_3D_PLAY_EMPTY_SELECTION,
+	PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
 	PUZZLE_3D_PLAY_ICON_HIERARCHY,
 	PUZZLE_3D_PLAY_ICON_INSPECTOR,
 	PUZZLE_3D_PLAY_ICON_KINDS,
 	PUZZLE_3D_PLAY_ICON_SETTINGS,
 	PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
+	PLAY_APP_ID,
 	Puzzle3dPlayShellController,
 	parseKindCatalogs,
 	parseKindCompatibility,
@@ -55,55 +53,8 @@ function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
 	const ctrl = usePuzzle3dPlayController();
 	return reactHostPort.useSyncExternalStore(
 		(onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
-		() =>
-			ctrl?.getSnapshot() ?? {
-				fixture: null,
-				fixtureRevision: 0,
-				lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
-				lodTag: DEFAULT_MANUAL_LOD,
-				lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
-				automaticLod: true,
-				depthVariableLod: false,
-				relocateMode: "translate",
-				selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
-				selectedId: null,
-				selectedLabel: null,
-				selectionMode: "single",
-				proximityRadius: 24,
-				chunkSize: 256,
-				gridFactor: 10,
-				showLodGrid: false,
-				gridSnapEnabled: true,
-				proximityCount: 0,
-				connectCount: 0,
-				indirectCount: 0,
-				compatibleObjectsCount: 0,
-				targetRingCount: 0,
-			},
-		() => ({
-			fixture: null,
-			fixtureRevision: 0,
-			lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
-			lodTag: DEFAULT_MANUAL_LOD,
-			lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
-			automaticLod: true,
-			depthVariableLod: false,
-			relocateMode: "translate",
-			selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
-			selectedId: null,
-			selectedLabel: null,
-			selectionMode: "single",
-			proximityRadius: 24,
-			chunkSize: 256,
-			gridFactor: 10,
-			showLodGrid: false,
-			gridSnapEnabled: true,
-			proximityCount: 0,
-			connectCount: 0,
-			indirectCount: 0,
-			compatibleObjectsCount: 0,
-			targetRingCount: 0,
-		}),
+		() => ctrl?.getSnapshot() ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
+		() => PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
 	);
 }
 
@@ -200,7 +151,7 @@ export function registerSceneSurfaceHosts(): void {
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
 	mountPlaygroundApp(
-		<PlaygroundView runtime={playground.runtime} initialPanelVisibility={playground.initialPanelVisibility} />,
+		<PlaygroundView runtime={playground.runtime} defaultAppId={PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />,
 		rootId,
 	);
 }

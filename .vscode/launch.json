@@ -72,7 +72,7 @@
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "dev:storybook",
+      "name": "🛠️dev📖storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook",
@@ -91,7 +91,7 @@
       }
     },
     {
-      "name": "dev:storybook:ui",
+      "name": "🛠️dev📖storybook🎨ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:ui",
@@ -110,7 +110,7 @@
       }
     },
     {
-      "name": "dev:storybook:puzzle:2d",
+      "name": "🛠️dev📖storybook🧩puzzle2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle:2d",
@@ -129,7 +129,7 @@
       }
     },
     {
-      "name": "dev:storybook:puzzle",
+      "name": "🛠️dev📖storybook🧩puzzle",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle",
@@ -148,7 +148,7 @@
       }
     },
     {
-      "name": "dev:storybook:semio",
+      "name": "🛠️dev📖storybook👤semio",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio",
@@ -167,7 +167,7 @@
       }
     },
     {
-      "name": "dev:storybook:semio:algorithms",
+      "name": "🛠️dev📖storybook👤semio🧪algorithms",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio:algorithms",
@@ -186,7 +186,7 @@
       }
     },
     {
-      "name": "dev:storybook:semio:ui",
+      "name": "🛠️dev📖storybook👤semio🎨ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio:ui",
@@ -679,7 +679,7 @@
     // #endregion
     // #region 📦 Build
     {
-      "name": "build:storybook",
+      "name": "📦build📖storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:storybook",

@@ -163,6 +163,32 @@ export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
   attractionIds: [],
 };
 
+/** @emoji 📸 Stable idle snapshot for {@link useSyncExternalStore} when no controller is mounted. */
+export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
+  fixture: null,
+  fixtureRevision: 0,
+  lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
+  lodTag: DEFAULT_MANUAL_LOD,
+  lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
+  automaticLod: true,
+  depthVariableLod: false,
+  relocateMode: "translate",
+  selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
+  selectedId: null,
+  selectedLabel: null,
+  selectionMode: "single",
+  proximityRadius: 24,
+  chunkSize: 256,
+  gridFactor: 10,
+  showLodGrid: false,
+  gridSnapEnabled: true,
+  proximityCount: 0,
+  connectCount: 0,
+  indirectCount: 0,
+  compatibleObjectsCount: 0,
+  targetRingCount: 0,
+};
+
 /** @emoji 🔗 Canonical `objectId:vortexId` for fixture vortex rows. */
 export function sceneVortexFullId(objectId: string, vortexId: string): string {
   return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
@@ -492,6 +518,7 @@ export class Puzzle3dPlayShellController extends Controller {
   private compatibleObjectsCount: number;
   private targetRingCount: number;
   private snapshotListeners = new Set<() => void>();
+  private snapshotCache: Puzzle3dPlaySnapshot | null = null;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -516,6 +543,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.compatibleObjectsCount = 0;
     this.targetRingCount = 0;
     this.rebuildShellMode();
+    this.rebuildSnapshotCache();
   }
 
   /** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */
@@ -524,7 +552,39 @@ export class Puzzle3dPlayShellController extends Controller {
     return () => this.snapshotListeners.delete(listener);
   }
 
+  private rebuildSnapshotCache(): void {
+    this.snapshotCache = {
+      fixture: this.fixture,
+      fixtureRevision: this.fixtureRevision,
+      lodProps: sceneLodCanvasProps({
+        automaticLod: this.automaticLod,
+        depthVariableLod: this.depthVariableLod,
+        manualLod: this.manualLod,
+      }),
+      lodTag: this.lodTag,
+      lodSlider: this.lodSlider,
+      automaticLod: this.automaticLod,
+      depthVariableLod: this.depthVariableLod,
+      relocateMode: this.relocateMode,
+      selection: this.selection,
+      selectedId: primaryPuzzle3dPlayObjectId(this.selection),
+      selectedLabel: scenePlaySelectionLabel(this.fixture, this.selection),
+      selectionMode: this.selectionMode,
+      proximityRadius: this.proximityRadius,
+      chunkSize: this.chunkSize,
+      gridFactor: this.gridFactor,
+      showLodGrid: this.showLodGrid,
+      gridSnapEnabled: this.gridSnapEnabled,
+      proximityCount: this.proximityCount,
+      connectCount: this.connectCount,
+      indirectCount: this.indirectCount,
+      compatibleObjectsCount: this.compatibleObjectsCount,
+      targetRingCount: this.targetRingCount,
+    };
+  }
+
   private notifySnapshot(): void {
+    this.rebuildSnapshotCache();
     for (const listener of this.snapshotListeners) {
       listener();
     }
@@ -532,6 +592,7 @@ export class Puzzle3dPlayShellController extends Controller {
 
   /** @emoji 🐚 Rebuilds mode chrome and bumps shell generation (toolbar, window measures). */
   private syncShell(): void {
+    this.rebuildSnapshotCache();
     this.rebuildShellMode();
     this.emit();
   }
@@ -914,34 +975,10 @@ export class Puzzle3dPlayShellController extends Controller {
   }
 
   getSnapshot(): Puzzle3dPlaySnapshot {
-    return {
-      fixture: this.fixture,
-      fixtureRevision: this.fixtureRevision,
-      lodProps: sceneLodCanvasProps({
-        automaticLod: this.automaticLod,
-        depthVariableLod: this.depthVariableLod,
-        manualLod: this.manualLod,
-      }),
-      lodTag: this.lodTag,
-      lodSlider: this.lodSlider,
-      automaticLod: this.automaticLod,
-      depthVariableLod: this.depthVariableLod,
-      relocateMode: this.relocateMode,
-      selection: this.selection,
-      selectedId: primaryPuzzle3dPlayObjectId(this.selection),
-      selectedLabel: scenePlaySelectionLabel(this.fixture, this.selection),
-      selectionMode: this.selectionMode,
-      proximityRadius: this.proximityRadius,
-      chunkSize: this.chunkSize,
-      gridFactor: this.gridFactor,
-      showLodGrid: this.showLodGrid,
-      gridSnapEnabled: this.gridSnapEnabled,
-      proximityCount: this.proximityCount,
-      connectCount: this.connectCount,
-      indirectCount: this.indirectCount,
-      compatibleObjectsCount: this.compatibleObjectsCount,
-      targetRingCount: this.targetRingCount,
-    };
+    if (!this.snapshotCache) {
+      this.rebuildSnapshotCache();
+    }
+    return this.snapshotCache!;
   }
 }
 

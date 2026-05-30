@@ -484,7 +484,7 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
             items: [{ id: `${tab.id}.body`, label: tab.id, description: <Body /> }],
           },
         ],
-      }).resolveTab().tree,
+      }),
     });
   });
 }
