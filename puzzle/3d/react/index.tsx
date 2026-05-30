@@ -4842,6 +4842,8 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
       let onScreen = 0;
       let visibleUnoccluded = 0;
       const visibleSamples: unknown[] = [];
+      const gaps: number[] = [];
+      let minGapInfo: { gap?: number; sx?: number; sy?: number; nearestDist?: number; ownDist?: number } = {};
       for (const m of meshes) {
         const mm = m as unknown as { getWorldPosition: (v: Vector3) => Vector3; userData: Record<string, unknown> };
         const fid = mm.userData.puzzle3dVortexFullId as string;
@@ -4858,20 +4860,26 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
         (ray2.layers as unknown as { enableAll: () => void }).enableAll();
         ray2.setFromCamera(ndc2, camera);
         const allHits = ray2.intersectObjects(scene.children, true);
-        if (allHits.length) {
-          let node: { userData?: Record<string, unknown>; parent?: unknown } | null = allHits[0].object as never;
-          let nearestFid: string | null = null;
+        const chainFid = (obj: unknown): string | null => {
+          let node = obj as { userData?: Record<string, unknown>; parent?: unknown } | null;
           while (node) {
-            if (node.userData?.puzzle3dVortexFullId) {
-              nearestFid = node.userData.puzzle3dVortexFullId as string;
-              break;
-            }
-            if (node.userData?.puzzle3dObjectId) break;
+            if (node.userData?.puzzle3dVortexFullId) return node.userData.puzzle3dVortexFullId as string;
+            if (node.userData?.puzzle3dObjectId) return null;
             node = node.parent as never;
           }
+          return null;
+        };
+        if (allHits.length) {
+          const nearestFid = chainFid(allHits[0].object);
           if (nearestFid === fid) {
             visibleUnoccluded += 1;
             if (visibleSamples.length < 4) visibleSamples.push({ fullId: fid, sx: Math.round(sx), sy: Math.round(sy) });
+          }
+          const ownHit = allHits.find((h) => chainFid(h.object) === fid);
+          if (ownHit) {
+            const gap = ownHit.distance - allHits[0].distance;
+            (gaps as number[]).push(gap);
+            if (gap < (minGapInfo.gap ?? Infinity)) minGapInfo = { gap: Number(gap.toFixed(2)), sx: Math.round(sx), sy: Math.round(sy), nearestDist: Number(allHits[0].distance.toFixed(2)), ownDist: Number(ownHit.distance.toFixed(2)) };
           }
         }
       }
@@ -4886,6 +4894,14 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
         onScreen,
         visibleUnoccluded,
         visibleSamples,
+        minGapInfo,
+        gapBuckets: {
+          lt1: gaps.filter((g) => g < 1).length,
+          lt3: gaps.filter((g) => g < 3).length,
+          lt6: gaps.filter((g) => g < 6).length,
+          lt12: gaps.filter((g) => g < 12).length,
+          total: gaps.length,
+        },
         screens,
       };
     };

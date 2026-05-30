@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Extended sketchpad kit port compat to kit-level families (metabolism Nakagin ports live on families[].ports, not type.ports): sketchpadReadKitFamilyRows, sketchpadForEachKitPortRecord, family-aware collect/apply/extract and diagram compat edges. Tests 36/36. Prior session: copatibleWith on Port in rs, WASM rebuild, platform FiveD selection.",
+  "summary": "Metabolism family ports end-to-end: rs hydrates kit-scope ports from families JSON, wires type connectors and copatibleWith; preserves families + connectors in initial_kit_projection_value (snapshot_families_projection, connector/port serialization) so installProjection deep_clone keeps compat. Sketchpad merges GraphQL+bundle port compat on refresh (sketchpadMergePortCompatMaps). Tests: rs family GraphQL test, sketchpad 37/37, WASM rebuilt.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -25,6 +25,7 @@
     "⚪fc2b6a63f37641ba8c483720a29f3b6a",
     "⚪47234f85dd014934a78d380bb10b6299",
     "⚪6c766e1ab24b4f47a4a14e26f21235e1",
-    "⚪f15f6be93a5348a1b4dbcddafe163dc3"
+    "⚪f15f6be93a5348a1b4dbcddafe163dc3",
+    "⚪47e927f5ce1a40428c21e9d31b3efae8"
   ]
 }

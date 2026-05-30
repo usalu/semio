@@ -4004,6 +4004,8 @@ pub mod kit {
         pub touch_epoch: RwLock<u64>,
         /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@semio/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
+        /// @emoji 👨‍👩‍👦 Preserved `families` projection subtree (kit-level ports) for `initialKit` round-trips.
+        pub snapshot_families_projection: RwLock<Option<crate::external_adapters::serde_json::Value>>,
     }
 
     impl Default for Kit {
@@ -4041,6 +4043,7 @@ pub mod kit {
                 quality_by_id: RwLock::new(HashMap::new()),
                 touch_epoch: RwLock::new(0),
                 snapshot_external_kit_id: RwLock::new(None),
+                snapshot_families_projection: RwLock::new(None),
             }
         }
     }
@@ -9839,7 +9842,39 @@ pub mod kit_backbone {
             for t in tys.iter() {
                 let tid = t.id.as_str();
                 let nm = t.name.read().await.clone();
-                out.push(crate::external_adapters::serde_json::json!({"id": tid, "name": nm, "connectors": []}));
+                let connectors: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut cj = Vec::new();
+                    for c in t.connectors.read().await.iter() {
+                        let cid = c.id.as_str();
+                        let cnm = c.name.read().await.clone();
+                        let port_json = if let Some(port) = c.port.read().await.clone() {
+                            let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
+                                .compatible_with
+                                .read()
+                                .await
+                                .iter()
+                                .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
+                                .collect();
+                            crate::external_adapters::serde_json::json!({
+                                "id": port.id.as_str(),
+                                "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
+                            })
+                        } else {
+                            continue;
+                        };
+                        cj.push(crate::external_adapters::serde_json::json!({
+                            "id": cid,
+                            "name": cnm,
+                            "port": port_json,
+                        }));
+                    }
+                    cj
+                };
+                out.push(crate::external_adapters::serde_json::json!({
+                    "id": tid,
+                    "name": nm,
+                    "connectors": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": connectors },
+                }));
             }
             out
         };
@@ -9928,6 +9963,9 @@ pub mod kit_backbone {
             "designs".into(),
             crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
         );
+        if let Some(families) = kit.snapshot_families_projection.read().await.clone() {
+            root.insert("families".into(), families);
+        }
         crate::external_adapters::serde_json::Value::Object(root)
     }
 
@@ -10138,6 +10176,7 @@ pub mod kit_backbone {
         if let Some(s) = json.get("version").and_then(|v| v.as_str()) {
             *kit.version.write().await = Some(s.to_string());
         }
+        *kit.snapshot_families_projection.write().await = json.get("families").cloned();
 
         {
             let mut tys = kit.types.write().await;
