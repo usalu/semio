@@ -16,135 +16,135 @@
   },
   "meta": {
     "kindCatalogs": {
-      "handles": [
+      "vortices": [
         {
           "color": "hsl(206 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "core circular bottom",
           "label": "core circular bottom",
-          "name": "core circular bottom"
+          "name": "core circular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(290 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "core circular top",
           "label": "core circular top",
-          "name": "core circular top"
+          "name": "core circular top",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(55 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "core rectangular bottom",
           "label": "core rectangular bottom",
-          "name": "core rectangular bottom"
+          "name": "core rectangular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(37 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "core rectangular top",
           "label": "core rectangular top",
-          "name": "core rectangular top"
+          "name": "core rectangular top",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(124 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "door capsule east",
           "label": "door capsule east",
-          "name": "door capsule east"
+          "name": "door capsule east",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(239 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "door capsule west",
           "label": "door capsule west",
-          "name": "door capsule west"
+          "name": "door capsule west",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(344 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "door tambour east",
           "label": "door tambour east",
-          "name": "door tambour east"
+          "name": "door tambour east",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(91 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "door tambour west",
           "label": "door tambour west",
-          "name": "door tambour west"
+          "name": "door tambour west",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(169 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "platform east",
           "label": "platform east",
-          "name": "platform east"
+          "name": "platform east",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(215 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "platform west",
           "label": "platform west",
-          "name": "platform west"
+          "name": "platform west",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(277 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "roof circular bottom",
           "label": "roof circular bottom",
-          "name": "roof circular bottom"
+          "name": "roof circular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(215 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "roof circular top",
           "label": "roof circular top",
-          "name": "roof circular top"
+          "name": "roof circular top",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(108 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "roof rectangular bottom",
           "label": "roof rectangular bottom",
-          "name": "roof rectangular bottom"
+          "name": "roof rectangular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(100 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "roof rectangular top",
           "label": "roof rectangular top",
-          "name": "roof rectangular top"
+          "name": "roof rectangular top",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(231 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "tambour circular bottom",
           "label": "tambour circular bottom",
-          "name": "tambour circular bottom"
+          "name": "tambour circular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(156 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "tambour circular top",
           "label": "tambour circular top",
-          "name": "tambour circular top"
+          "name": "tambour circular top",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(223 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "tambour rectangular bottom",
           "label": "tambour rectangular bottom",
-          "name": "tambour rectangular bottom"
+          "name": "tambour rectangular bottom",
+          "defaultCableKind": "board.cable.link"
         },
         {
           "color": "hsl(108 52% 48%)",
-          "defaultWireKind": "board.wire.link",
           "id": "tambour rectangular top",
           "label": "tambour rectangular top",
-          "name": "tambour rectangular top"
+          "name": "tambour rectangular top",
+          "defaultCableKind": "board.cable.link"
         }
       ],
-      "nodes": [
+      "objects": [
         {
           "id": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
           "label": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
@@ -395,90 +395,105 @@
           "label": "z",
           "name": "z"
         }
+      ],
+      "cables": [
+        {
+          "id": "board.cable.link",
+          "label": "Link",
+          "name": "Link",
+          "defaultAttractionKind": "board.attraction.link"
+        }
+      ],
+      "attractions": [
+        {
+          "id": "board.attraction.link",
+          "label": "Link",
+          "name": "Link"
+        }
       ]
     },
     "kindCompatibility": [
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "core circular bottom",
         "target": "core circular top"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "core rectangular bottom",
         "target": "core rectangular top"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door capsule east",
         "target": "door tambour east"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door capsule west",
         "target": "door tambour west"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door tambour east",
         "target": "door capsule west"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door tambour east",
         "target": "platform east"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door tambour west",
         "target": "door capsule east"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "door tambour west",
         "target": "platform west"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "platform east",
         "target": "door tambour west"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "platform west",
         "target": "door tambour east"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "roof circular bottom",
         "target": "roof circular top"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "roof rectangular bottom",
         "target": "roof rectangular top"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "tambour circular bottom",
         "target": "tambour circular top"
       },
       {
         "bidirectional": true,
-        "specificity": "handle",
+        "specificity": "vortex",
         "source": "tambour rectangular bottom",
         "target": "tambour rectangular top"
       }

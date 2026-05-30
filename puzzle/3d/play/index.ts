@@ -45,19 +45,19 @@ import {
   sliderValueFromLod,
   type AttractionProps,
   type CameraState,
-  type EdgeKindCatalogEntry,
+  type AttractionKindCatalogEntry,
+  type CableKindCatalogEntry,
   type FixtureObjectV1,
   type FixtureV1,
-  type HandleKindCatalogEntry,
   type KindCatalogBundle,
   type KindCompatEntry,
-  type NodeKindCatalogEntry,
+  type ObjectKindCatalogEntry,
   type RelocateMode,
   type RelocatePayload,
   type SelectionMode,
   type SelectionSnapshot,
+  type VortexKindCatalogEntry,
   type VortexProps,
-  type WireKindCatalogEntry,
 } from "../react/index.tsx";
 import { NakaginCapsuleTowerSceneJson as nakaginPuzzle3dFixtureJson } from "@puzzle/assets";
 
@@ -74,7 +74,7 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
     const target = typeof e.target === "string" ? e.target.trim() : "";
     if (!source || !target) continue;
     const specificity =
-      e.specificity === "general" || e.specificity === "node" || e.specificity === "edge" || e.specificity === "handle" || e.specificity === "wire" || e.specificity === "object" || e.specificity === "attraction" ? e.specificity : undefined;
+      e.specificity === "general" || e.specificity === "object" || e.specificity === "vortex" || e.specificity === "cable" || e.specificity === "attraction" ? e.specificity : undefined;
     out.push({
       source,
       target,
@@ -421,7 +421,7 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
 //#endregion 🔖Puzzle3dPlayHierarchy
 
 //#region 🔖Puzzle3dPlayKinds
-type Puzzle3dPlayKindCatalogEntry = NodeKindCatalogEntry | HandleKindCatalogEntry | WireKindCatalogEntry | EdgeKindCatalogEntry;
+type Puzzle3dPlayKindCatalogEntry = ObjectKindCatalogEntry | VortexKindCatalogEntry | CableKindCatalogEntry | AttractionKindCatalogEntry;
 
 function puzzle3dPlayKindCatalogEntryLabel(entry: Puzzle3dPlayKindCatalogEntry): string {
   const display = entry.label?.trim() || entry.name?.trim();
@@ -442,13 +442,13 @@ function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entrie
   return { id: sectionId, label, defaultOpen: true, items };
 }
 
-/** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Attractions (and Edges when catalogued). */
+/** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Cables, Attractions. */
 export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
   const sections = [
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.nodes),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.handles),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.wires),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.edges", "Edges", catalogs?.edges),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions),
   ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
@@ -1093,9 +1093,9 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
   const selection = snap.selection;
   const hasSelection = selection.objectIds.length > 0 || selection.vortexIds.length > 0 || selection.attractionIds.length > 0;
   const catalogs = parseKindCatalogs(fixture.meta);
-  const nodeKinds = catalogs?.nodes ?? [];
-  const handleKinds = catalogs?.handles ?? [];
-  const wireKinds = catalogs?.wires ?? [];
+  const objectKinds = catalogs?.objects ?? [];
+  const vortexKinds = catalogs?.vortices ?? [];
+  const attractionKinds = catalogs?.attractions ?? [];
   const children: UiNode[] = [
     {
       type: "section",
@@ -1165,7 +1165,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
           id: "puzzle-3d-play-inspector.object.kind.select",
           value: kindUniform ? (kinds[0] ?? "") : "",
           placeholder: kindUniform ? "kind" : "Mixed",
-          items: nodeKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+          items: objectKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
           onChange: puzzle3dPlayCmd("patchPuzzle3dObjects", { objectIds: selection.objectIds, field: "objectKind" }),
         },
       },
@@ -1220,7 +1220,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
           type: "select",
           id: `puzzle-3d-play-inspector.vortex.kind.select.${vortexFullId}`,
           value: vortex.vortexKind ?? "",
-          items: handleKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+          items: vortexKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "vortexKind" }),
         },
       },
@@ -1284,7 +1284,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
             type: "select",
             id: `puzzle-3d-play-inspector.attraction.kind.select.${attractionId}`,
             value: attraction.attractionKind ?? "",
-            items: wireKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
+            items: attractionKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
             onChange: puzzle3dPlayCmd("patchPuzzle3dAttraction", { attractionId, field: "attractionKind" }),
           },
         },
@@ -1607,23 +1607,24 @@ if (import.meta.vitest) {
       expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
     });
 
-    it("buildPuzzle3dPlayKindsSections lists object, vortex, and attraction kind categories", () => {
+    it("buildPuzzle3dPlayKindsSections lists object, vortex, cable, and attraction kind categories", () => {
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
-          nodes: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
-          handles: [{ id: "core circular top", label: "Core circular top", name: "Core circular top" }],
-          wires: [{ id: "board.wire.link", label: "Link", name: "Link" }],
+          objects: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
+          vortices: [{ id: "core circular top", label: "Core circular top", name: "Core circular top" }],
+          cables: [{ id: "board.cable.link", label: "Link", name: "Link" }],
+          attractions: [{ id: "board.attraction.link", label: "Link", name: "Link" }],
         },
       });
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
-      expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
+      expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Cables", "Attractions"]);
       expect(tree.sections[0]?.items?.[0]?.label).toBe("Capsule");
     });
 
     it("buildPuzzle3dPlayKindsTree assigns unique item ids when catalog ids repeat", () => {
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
-          nodes: [
+          objects: [
             { id: "dup", label: "Alpha", name: "Alpha" },
             { id: "dup", label: "Beta", name: "Beta" },
           ],

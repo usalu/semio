@@ -3645,14 +3645,6 @@ export const Attraction = reactHostPort.memo(function Attraction(props: Attracti
 });
 //#endregion ­ƒº▓Attraction
 
-//#region ­ƒº▓Attraction
-export const Attraction = reactHostPort.memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
-  const pts = reactHostPort.useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
-  const color = reactHostPort.useMemo(() => lineCssColor(CSS_ATTRACTION_LINE, "#f472b6"), []);
-  return <Line points={pts} color={color} lineWidth={2} />;
-});
-//#endregion ­ƒº▓Attraction
-
 //#region Ô£ïRelocate
 export function useRelocate(objectId: string) {
   const reg = useRegistry();
@@ -5168,21 +5160,21 @@ if (import.meta.vitest) {
       expect(resolveCableKindForVortex("any", undefined)).toBe("board.cable.link");
     });
   });
-  describe("wouldAttractionEdgeIntroduceCycle", () => {
-    it("detects a closing edge on an existing chain", () => {
-      const edges = [
+  describe("wouldObjectAttractionIntroduceCycle", () => {
+    it("detects a closing link on an existing chain", () => {
+      const objectAttractions = [
         { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
         { attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
       ];
-      expect(wouldAttractionEdgeIntroduceCycle(edges, "c", "a")).toBe(true);
-      expect(wouldAttractionEdgeIntroduceCycle(edges, "a", "d")).toBe(false);
+      expect(wouldObjectAttractionIntroduceCycle(objectAttractions, "c", "a")).toBe(true);
+      expect(wouldObjectAttractionIntroduceCycle(objectAttractions, "a", "d")).toBe(false);
     });
   });
   describe("resolveAttractionTree", () => {
     it("breaks ownership cycles in cyclic attraction components", () => {
       const tree = resolveAttractionTree({
         objectIds: ["a", "b", "c"],
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
           { attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
           { attractingObjectId: "c", attractedObjectId: "a", attractionId: "t3" },
@@ -5196,7 +5188,7 @@ if (import.meta.vitest) {
       const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b", "c"],
         explicitWormholeIds: new Set(["w"]),
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
           { attractingObjectId: "w", attractedObjectId: "c", attractionId: "t3" },
@@ -5210,7 +5202,7 @@ if (import.meta.vitest) {
       const tree = resolveAttractionTree({
         objectIds: ["w", "a", "b"],
         explicitWormholeIds: new Set(["w"]),
-        edges: [
+        objectAttractions: [
           { attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
           { attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
         ],
@@ -5218,11 +5210,11 @@ if (import.meta.vitest) {
       expect(collectAttractedDescendantIds("w", tree.attractingByObjectId)).toEqual(["a", "b"]);
     });
   });
-  describe("attractionEdgesFromAttractions", () => {
+  describe("objectAttractionsFromAttractions", () => {
     it("maps vortex endpoints to object ids", () => {
-      const edges = attractionEdgesFromAttractions([{ id: "x", attracting: "objA:v1", attracted: "objB:link" }]);
-      expect(edges[0]?.attractingObjectId).toBe("objA");
-      expect(edges[0]?.attractedObjectId).toBe("objB");
+      const links = objectAttractionsFromAttractions([{ id: "x", attracting: "objA:v1", attracted: "objB:link" }]);
+      expect(links[0]?.attractingObjectId).toBe("objA");
+      expect(links[0]?.attractedObjectId).toBe("objB");
     });
   });
   describe("applyRelocateToFixture", () => {
@@ -5236,7 +5228,7 @@ if (import.meta.vitest) {
       };
       const tree = resolveAttractionTree({
         objectIds: ["a", "b"],
-        edges: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
+        objectAttractions: [{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" }],
       });
       const next = applyRelocateToFixture(
         fixture,
