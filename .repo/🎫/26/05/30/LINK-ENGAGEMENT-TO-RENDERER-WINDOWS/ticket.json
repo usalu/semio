@@ -1,0 +1,9 @@
+{
+  "title": "Link Engagement to Renderer Windows",
+  "emoji": "💬",
+  "status": "open",
+  "description": "Wire the ui Engagement floating panel (options/input/status) to the playground Window engagement slot and feed it from the cad play interaction mechanism so each renderer window surfaces the active interaction's transitions, command input, and status end-to-end.",
+  "summary": "",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": []
+}

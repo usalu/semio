@@ -4,19 +4,19 @@ overview: Refactor puzzle/5d into a single neutral source-of-truth topology mode
 todos:
   - id: ticket-contract
     content: Read repo://goals, open ticket, and define neutral TopologyV1/Part/Anchor/Bond/ConnectSession + projection/reducer/store contract in puzzle/5d/react/index.tsx regions
-    status: in_progress
+    status: completed
   - id: model-store-component
     content: Implement parseTopologyV1, projectFlat/projectSpatial, reverse reducers, shared TopologyStore + provider, and the <FiveD mode> component
-    status: pending
+    status: completed
   - id: puzzle2d-gestures
     content: "puzzle/2d: drain+props for onLinkCompatibleNodes/onLinkTargetRing; WASM ExternalLinkPreview interaction + linkSession prop + commit-from-elsewhere; extend vitest + Rust tests"
-    status: pending
+    status: completed
   - id: puzzle3d-gestures
     content: "puzzle/3d: add controllable attractionSession preview prop with cross-surface commit; keep neutral boundary; extend inline vitest"
-    status: pending
+    status: completed
   - id: consumers-fixtures-tests
     content: Migrate playground renderer + sketchpad to <FiveD>+shared store, unify the Nakagin fixture as single source of truth, update e2e/unit tests, remove old dual-surface exports, run all suites, close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

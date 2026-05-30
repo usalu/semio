@@ -2714,6 +2714,41 @@ export class BoardRenderer {
     this.markDirty();
   }
 
+  private lastLinkSessionJsonForWasm: string | null = null;
+
+  /** @emoji 🔗 Mirrors a host {@link BoardLinkSessionSnapshot} into WASM for cross-surface link preview. */
+  setLinkSession(snapshot: BoardLinkSessionSnapshot | null): void {
+    const json = snapshot
+      ? JSON.stringify({
+          source: snapshot.source,
+          endX: snapshot.endX,
+          endY: snapshot.endY,
+          compatiblePartIds: snapshot.compatiblePartIds,
+          ringPartId: snapshot.ringPartId,
+          ringAnchorIds: snapshot.ringAnchorIds,
+        })
+      : "";
+    if (json === this.lastLinkSessionJsonForWasm) {
+      return;
+    }
+    this.lastLinkSessionJsonForWasm = json;
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      if (json.length === 0) {
+        this.session.clearLinkSessionJson();
+      } else {
+        this.session.setLinkSessionJson(json);
+      }
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+    } catch (err) {
+      console.error("[DEBUG] setLinkSession failed", err);
+    }
+    this.markDirty();
+  }
+
   /** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link BoardRenderer.setForcedDrawLod} pins the tier. */
   setAutomaticLod(next: boolean): void {
     if (this.automaticLod === next) {
@@ -6116,6 +6151,12 @@ export interface BoardCanvasProps {
   onNodeDelete?: (payload: { id: string }) => void;
   /** @emoji 🧲 Snap commit on pointer-up after a link drag (`proximityConnect` after `edgeCreate`). */
   onProximityConnect?: (payload: BoardEdgeLinkPayload) => void;
+  /** @emoji 🎯 Emits while a link drag highlights compatible target parts ({@link BoardEventMap.linkCompatibleNodes}). */
+  onLinkCompatibleNodes?: (payload: BoardLinkCompatibleNodesPayload) => void;
+  /** @emoji ⭕ Emits while a link drag shows an indirect anchor ring ({@link BoardEventMap.linkTargetRing}). */
+  onLinkTargetRing?: (payload: BoardLinkTargetRingPayload) => void;
+  /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
+  linkSession?: BoardLinkSessionSnapshot | null;
   onSelect?: (snapshot: BoardSelectionSnapshot) => void;
   /** @emoji ✅ Controlled committed selection (`onSelect` should update this). */
   selection?: BoardSelectionSnapshot | readonly string[];
@@ -6566,6 +6607,9 @@ export function BoardCanvas({
   onHover,
   onIndirectConnect,
   onInvalidate,
+  onLinkCompatibleNodes,
+  onLinkTargetRing,
+  linkSession,
   onNodeChange,
   onNodeCreate,
   onNodeDelete,
@@ -6824,6 +6868,24 @@ export function BoardCanvas({
   }, [contextRenderer, onConnect, onIndirectConnect, onProximityConnect]);
 
   reactHostPort.useEffect(() => {
+    if (!contextRenderer) {
+      return () => undefined;
+    }
+    const unsubs: Array<() => void> = [];
+    if (onLinkCompatibleNodes) {
+      unsubs.push(contextRenderer.on("linkCompatibleNodes", onLinkCompatibleNodes));
+    }
+    if (onLinkTargetRing) {
+      unsubs.push(contextRenderer.on("linkTargetRing", onLinkTargetRing));
+    }
+    return () => {
+      for (const u of unsubs) {
+        u();
+      }
+    };
+  }, [contextRenderer, onLinkCompatibleNodes, onLinkTargetRing]);
+
+  reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onCamera && !onViewportChange && !onPan && !onZoom)) {
       return () => undefined;
     }
@@ -7003,6 +7065,14 @@ export function BoardCanvas({
     }
     renderer.setGridSnapEnabled(gridSnapEnabled ?? false);
   }, [gridSnapEnabled]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setLinkSession(linkSession ?? null);
+  }, [linkSession]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;

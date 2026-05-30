@@ -18,14 +18,7 @@ import {
   type ThreeEvent,
 } from "@ui/react";
 import { Trash2 } from "lucide-react";
-import React, {
-  Children,
-  isValidElement,
-  type CSSProperties,
-  type ChangeEvent,
-  type MutableRefObject,
-  type ReactNode,
-} from "react";
+import React, { Children, isValidElement, type CSSProperties, type ChangeEvent, type MutableRefObject, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
@@ -400,6 +393,15 @@ export interface AttractionIndirectPickAwait {
   readonly candidates: readonly string[];
 }
 
+/** @emoji 🔗 Host-driven attraction preview mirrored across spatial surfaces ({@link CanvasProps.attractionSession}). */
+export interface AttractionSessionSnapshot {
+  readonly attracting: string;
+  readonly end: Vec3;
+  readonly compatibleObjectIds: readonly string[];
+  readonly ringObjectId: string | null;
+  readonly ringVortexFullIds: readonly string[];
+}
+
 export interface CanvasProps {
   camera?: Partial<CameraState>;
   domain?: DomainKind;
@@ -441,6 +443,8 @@ export interface CanvasProps {
   onProximityConnect?: (p: AttractionPayload) => void;
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+  /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
+  attractionSession?: AttractionSessionSnapshot | null;
   children?: ReactNode;
 }
 
@@ -3727,6 +3731,7 @@ function RegistryProvider({
   onAttractionCompatibleObjects,
   onAttractionTargetRing,
   onRelocate,
+  attractionSession: externalAttractionSession,
 }: {
   children: ReactNode;
   lodRef: MutableRefObject<number>;
@@ -3745,6 +3750,7 @@ function RegistryProvider({
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
   onRelocate?: (p: RelocatePayload) => void;
+  attractionSession?: AttractionSessionSnapshot | null;
 }) {
   const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
   if (!selectionStoreRef.current) {
@@ -3914,6 +3920,50 @@ function RegistryProvider({
     setHoverTarget(null);
     onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
   }, [onAttractionTargetRing]);
+
+  reactHostPort.useEffect(() => {
+    if (attractionSessionRef.current) {
+      return;
+    }
+    const ext = externalAttractionSession;
+    if (!ext?.attracting) {
+      if (attractionDragAttractingFullId) {
+        setAttractionDragActive(false);
+        setAttractionDragAttractingFullId(null);
+        setAttractionCompatibleAttractedFullIds(new Set());
+        setAttractionHoverRingFullId(null);
+        setAttractionIndirectPickAwait(null);
+        attractionEndWorldRef.current = null;
+      }
+      return;
+    }
+    setAttractionDragActive(true);
+    setAttractionDragAttractingFullId(ext.attracting);
+    const compatVortexIds = new Set<string>();
+    for (const oid of ext.compatibleObjectIds) {
+      for (const [fullId, meta] of vortexMetaRef.current) {
+        if (meta.objectId === oid) {
+          compatVortexIds.add(fullId);
+        }
+      }
+    }
+    setAttractionCompatibleAttractedFullIds(compatVortexIds);
+    attractionEndWorldRef.current = new Vector3(...cadVec3ToThree(ext.end));
+    if (ext.ringObjectId && ext.ringVortexFullIds.length > 1) {
+      setAttractionIndirectPickAwait({
+        attractingFullId: ext.attracting,
+        attractedObjectId: ext.ringObjectId,
+        candidates: ext.ringVortexFullIds,
+      });
+    } else {
+      setAttractionIndirectPickAwait(null);
+    }
+    onAttractionTargetRing?.({
+      attracting: ext.attracting,
+      objectId: ext.ringObjectId,
+      vortexFullIds: ext.ringVortexFullIds,
+    });
+  }, [externalAttractionSession, attractionDragAttractingFullId, onAttractionTargetRing]);
 
   const beginAttractionDragFromVortex = reactHostPort.useCallback(
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
@@ -4390,6 +4440,7 @@ function Inner(props: CanvasProps) {
       onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
       onAttractionTargetRing={props.onAttractionTargetRing}
       onRelocate={props.onRelocate}
+      attractionSession={props.attractionSession}
     >
       <LodBridge
         lodRef={lodRef}
@@ -4507,12 +4558,7 @@ export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement
       onAttractionTargetRing={onAttractionTargetRing}
       {...props.lodProps}
     >
-      <SceneObjects
-        selection={props.selection}
-        selectedObjectId={props.selectedId}
-        selectedVortexFullIds={props.selectedVortexFullIds}
-        relocate={props.relocateMode}
-      />
+      <SceneObjects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
       <SceneAttractionTreeRoots />
       <Puzzle3dPlayTestBridge setSelectedId={props.setSelectedId} />
     </Canvas3D>

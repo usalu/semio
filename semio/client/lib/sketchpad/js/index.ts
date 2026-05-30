@@ -150,9 +150,10 @@ import {
   type SceneAttractionPayload,
 } from "@puzzle/3d/react";
 import {
-  buildTopologyDualSurfaceBindings,
-  TopologyBoardPane,
-  TopologyScenePane,
+  FiveD,
+  TopologyStoreProvider,
+  createTopologyStore,
+  topologyFromLegacyPair,
   topologyApplyBoardFixtureCentersToTopLeft,
   topologyBoardCameraFromCenters,
   topologyBoardCenterFromTopLeft,
@@ -14598,16 +14599,16 @@ const KitDiagramInner: FC = () => {
     [clearHover, setHover],
   );
 
-  const kitBoardBindings = useMemo(
-    () =>
-      buildTopologyDualSurfaceBindings({
-        gridSnapEnabled: false,
-        onBoardCamera: setBoardCamera,
-        onBoardSelect,
-        onBoardHover,
-      }),
-    [onBoardHover, onBoardSelect],
-  );
+  const kitTopologyStore = useMemo(() => {
+    const emptyScene: import("@puzzle/3d/react").FixtureV1 = {
+      schema: "puzzle.3d.fixture/v1",
+      domain: "architecture",
+      camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+      objects: [],
+      attractions: [],
+    };
+    return createTopologyStore(topologyFromLegacyPair(boardFixture, emptyScene));
+  }, [boardFixture]);
 
   const sketchpadCommands = useSketchpadCommands();
 
@@ -14630,13 +14631,22 @@ const KitDiagramInner: FC = () => {
 
   return (
     <div ref={boardWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => boardWrapper.current?.focus()}>
-      <TopologyBoardPane
-        fixture={boardFixture}
-        bindings={kitBoardBindings}
-        selectedIds={selectedBoardIds}
-        lockedIds={lockedBoardNodeIds}
-        board={{ camera: boardCamera, onDrag: onBoardDrag, onNodeChange: onBoardNodeChange }}
-      />
+      <TopologyStoreProvider store={kitTopologyStore}>
+        <FiveD
+          mode="flat"
+          instanceId="kit-flat"
+          lockedPartIds={lockedBoardNodeIds}
+          flat={{
+            camera: boardCamera,
+            onCamera: setBoardCamera,
+            onSelect: onBoardSelect,
+            onHover: onBoardHover,
+            onDrag: onBoardDrag,
+            onNodeChange: onBoardNodeChange,
+            gridSnapEnabled: false,
+          }}
+        />
+      </TopologyStoreProvider>
     </div>
   );
 };
@@ -34561,6 +34571,8 @@ const sketchpadTopologyBuildConnection = (args: {
   } as SemioConnection;
 };
 
+const sketchpadDesignTopologyStores = new Map<string, ReturnType<typeof createTopologyStore>>();
+
 const useDesignTopologyAdapter = () => {
   const [transaction] = useDesignAppChange();
   const [updatePieces] = useDesignAppUpdatePieces();
@@ -34851,37 +34863,28 @@ const useDesignTopologyAdapter = () => {
     setSceneCamera((prev) => (sketchpadTopologySceneCameraEquals(prev, next) ? prev : next));
   }, []);
 
-  const bindings = useMemo(
-    () =>
-      buildTopologyDualSurfaceBindings({
-        gridFactor: 10,
-        gridSnapEnabled: true,
-        onBoardCamera: setBoardCamera,
-        onBoardConnect,
-        onBoardHover,
-        onBoardSelect,
-        onSceneCamera,
-        onSceneConnect,
-        onSceneSelect,
-      }),
-    [onBoardConnect, onBoardHover, onBoardSelect, onSceneCamera, onSceneConnect, onSceneSelect],
-  );
-
-  const scenePaneProps = useMemo(
-    () => ({
-      onRelocate: onSceneRelocate,
-      ...topologySceneChromeDefaults(),
-    }),
-    [onSceneRelocate],
-  );
+  const topologyStore = useMemo(() => {
+    const model = topologyFromLegacyPair(boardFixture, sceneFixture);
+    if (!activeDesignId) {
+      return createTopologyStore(model);
+    }
+    const key = activeDesignId;
+    const existing = sketchpadDesignTopologyStores.get(key);
+    if (existing) {
+      existing.replaceModel(model);
+      return existing;
+    }
+    const store = createTopologyStore(model);
+    sketchpadDesignTopologyStores.set(key, store);
+    return store;
+  }, [activeDesignId, boardFixture, sceneFixture]);
 
   return {
     boardFixture,
     sceneFixture,
-    bindings,
+    topologyStore,
     boardCamera,
     sceneCamera,
-    scenePaneProps,
     relocateMode,
     setRelocateMode,
     selectedPieceIds,
@@ -34889,17 +34892,33 @@ const useDesignTopologyAdapter = () => {
     onBoardDrag,
     onBoardNodeChange,
     onSceneRelocate,
+    onBoardConnect,
+    onBoardHover,
+    onBoardSelect,
+    onSceneCamera,
+    onSceneConnect,
+    onSceneSelect,
+    onSceneRelocate,
   };
 };
 
 const DesignTopologyBoardWindow = memo(() => {
   const topology = useDesignTopologyAdapter();
   return (
-    <TopologyBoardPane
-      fixture={topology.boardFixture}
-      bindings={topology.bindings}
-      selectedIds={new Set([...topology.selectedPieceIds, ...topology.selectedConnectionIds])}
-      board={{ camera: topology.boardCamera, onDrag: topology.onBoardDrag, onNodeChange: topology.onBoardNodeChange }}
+    <FiveD
+      mode="flat"
+      instanceId="design-flat"
+      flat={{
+        camera: topology.boardCamera,
+        onCamera: (c) => topology.topologyStore.setFlatCamera("design-flat", c),
+        onSelect: topology.onBoardSelect,
+        onHover: topology.onBoardHover,
+        onDrag: topology.onBoardDrag,
+        onNodeChange: topology.onBoardNodeChange,
+        onConnect: topology.onBoardConnect,
+        gridSnapEnabled: true,
+        gridFactor: 10,
+      }}
     />
   );
 });
@@ -35022,12 +35041,18 @@ const DesignTopologySceneWindow = memo(() => {
           Scale
         </Button>
       </div>
-      <TopologyScenePane
-        fixture={topology.sceneFixture}
-        bindings={topology.bindings}
+      <FiveD
+        mode="spatial"
+        instanceId="design-spatial"
         relocateMode={topology.relocateMode}
-        selectedObjectId={selectedObjectId}
-        scene={topology.scenePaneProps}
+        spatial={{
+          camera: topology.sceneCamera,
+          onCamera: topology.onSceneCamera,
+          onSelect: topology.onSceneSelect,
+          onConnect: topology.onSceneConnect,
+          onRelocate: topology.onSceneRelocate,
+          ...topologySceneChromeDefaults(),
+        }}
       />
     </div>
   );
@@ -35050,14 +35075,17 @@ export interface AppProps {
  * DesignDiagramWindow holds the data fields for a DesignDiagramWindow record.
  **/
 const DesignDiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(() => {
+  const topology = useDesignTopologyAdapter();
   return (
-    <HoverIntentProvider>
-      <TransactionPiecesProvider>
-        <HoverPiecesProvider>
-          <DesignTopologyBoardWindow />
-        </HoverPiecesProvider>
-      </TransactionPiecesProvider>
-    </HoverIntentProvider>
+    <TopologyStoreProvider store={topology.topologyStore}>
+      <HoverIntentProvider>
+        <TransactionPiecesProvider>
+          <HoverPiecesProvider>
+            <DesignTopologyBoardWindow />
+          </HoverPiecesProvider>
+        </TransactionPiecesProvider>
+      </HoverIntentProvider>
+    </TopologyStoreProvider>
   );
 });
 DesignDiagramWindow.displayName = "DesignDiagramWindow";
@@ -35066,14 +35094,17 @@ DesignDiagramWindow.displayName = "DesignDiagramWindow";
  * SceneWindow holds the data fields for a SceneWindow record.
  **/
 const SceneWindow = memo(() => {
+  const topology = useDesignTopologyAdapter();
   return (
-    <HoverIntentProvider>
-      <TransactionPiecesProvider>
-        <HoverPiecesProvider>
-          <DesignTopologySceneWindow />
-        </HoverPiecesProvider>
-      </TransactionPiecesProvider>
-    </HoverIntentProvider>
+    <TopologyStoreProvider store={topology.topologyStore}>
+      <HoverIntentProvider>
+        <TransactionPiecesProvider>
+          <HoverPiecesProvider>
+            <DesignTopologySceneWindow />
+          </HoverPiecesProvider>
+        </TransactionPiecesProvider>
+      </HoverIntentProvider>
+    </TopologyStoreProvider>
   );
 });
 SceneWindow.displayName = "SceneWindow";

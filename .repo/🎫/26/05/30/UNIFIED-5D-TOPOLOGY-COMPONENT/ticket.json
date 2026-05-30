@@ -1,6 +1,17 @@
 {
   "title": "Unified 5D Topology Component",
-  "status": "open",
+  "status": "closed",
   "description": "Single neutral TopologyV1 model (Part/Anchor/Bond), shared TopologyStore, FiveD mode=flat|spatial component, cross-surface connect gestures, migrate playground and sketchpad.",
+  "summary": "Introduced TopologyV1 (Part/Anchor/Bond), TopologyStore, FiveD flat|spatial component, topologyFromLegacyPair/projectFlat/projectSpatial. Added BoardLinkSessionSnapshot + WASM ExternalLinkPreview and Scene attractionSession for cross-surface connect preview. Migrated 5d play (TopologyStoreProvider on chrome) and sketchpad design windows to FiveD with per-design shared store map. Removed TopologyBoardPane/TopologyScenePane/dual-surface bindings. All @puzzle/2d/3d/5d react tests pass.",
+  "files": [
+    "puzzle/5d/react/index.tsx",
+    "puzzle/2d/react/index.tsx",
+    "puzzle/2d/rs/lib.rs",
+    "puzzle/3d/react/index.tsx",
+    "puzzle/5d/play/index.ts",
+    "framework/playground/renderer/react/index.tsx",
+    "semio/client/lib/sketchpad/js/index.ts",
+    ".repo/🎫/26/05/30/UNIFIED-5D-TOPOLOGY-COMPONENT/ticket.json"
+  ]
   "goal": "🎯puzzle🎯5d"
 }

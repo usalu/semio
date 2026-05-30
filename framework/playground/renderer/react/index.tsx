@@ -61,6 +61,7 @@ import {
   type UiScene3DHostSurfaceNode,
   type UiTableHostSurfaceNode,
   type WindowBodyViewContext,
+  type WindowEngagement,
   type WindowLayout,
   type WindowMeasure,
 } from "@framework/playground";
@@ -456,12 +457,40 @@ function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: Command
   );
 }
 
+/** @emoji 💬 Converts a React-neutral {@link WindowEngagement} into a ui {@link EngagementSpec} with bus-dispatching callbacks. */
+export function windowEngagementToGolden(engagement: WindowEngagement | undefined, bus: CommandBus): EngagementSpec | undefined {
+  if (!engagement) return undefined;
+  const options = engagement.options?.map((option) => ({
+    id: option.id,
+    label: option.label,
+    icon: option.iconId ? shellTabIconComponent(option.iconId)({}) : undefined,
+    pressed: option.pressed,
+    disabled: option.disabled,
+    onPress: option.command ? () => bus.dispatch(option.command!.controllerId, option.command!.command, option.command!.args) : undefined,
+  }));
+  const input = engagement.input
+    ? {
+        id: engagement.input.id,
+        value: engagement.input.value,
+        placeholder: engagement.input.placeholder,
+        disabled: engagement.input.disabled,
+        onChange: engagement.input.onChange ? (value: string) => bus.dispatch(engagement.input!.onChange!.controllerId, engagement.input!.onChange!.command, { ...(engagement.input!.onChange!.args as object | undefined), value }) : undefined,
+        onSubmit: engagement.input.onSubmit ? (value: string) => bus.dispatch(engagement.input!.onSubmit!.controllerId, engagement.input!.onSubmit!.command, { ...(engagement.input!.onSubmit!.args as object | undefined), value }) : undefined,
+      }
+    : undefined;
+  const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
+  const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || (status?.length ?? 0) > 0;
+  if (!hasContent) return undefined;
+  return { options, input, status };
+}
+
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
   return windowKinds.map((wk) => ({
     id: wk.id,
     label: wk.label,
     component: getDeclarativeWindowBodyComponent(wk.id, wk.bodyKey),
     measures: windowMeasuresToGolden(wk.measures, bus),
+    engagement: windowEngagementToGolden(wk.engagement, bus),
   }));
 }
 
@@ -975,331 +1004,299 @@ export const mountReactApp = mountPlaygroundApp;
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
 import nakaginSceneFixtureJson from "../../../../puzzle/3d/play/fixtures/nakagin-capsule-tower.scene.json";
+import { PlaySceneCanvas, SceneObjectStateProvider, parseFixtureV1, applyConnectToSceneFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
-	PlaySceneCanvas,
-	SceneObjectStateProvider,
-	parseFixtureV1,
-	applyConnectToSceneFixture,
-	blockedVortexFullIdsFromAttractions,
-	type FixtureV1,
-	type RelocatePayload,
-} from "@puzzle/3d/react";
-import {
-	PUZZLE_3D_PLAY_BODY_KEY,
-	PUZZLE_3D_PLAY_CONTROLLER_ID,
-	PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-	PUZZLE_3D_PLAY_ICON_HIERARCHY,
-	PUZZLE_3D_PLAY_ICON_INSPECTOR,
-	PUZZLE_3D_PLAY_ICON_KINDS,
-	PUZZLE_3D_PLAY_ICON_SETTINGS,
-	PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
-	PLAY_APP_ID,
-	Puzzle3dPlayShellController,
-	parseKindCatalogs,
-	parseKindCompatibility,
-	type Puzzle3dPlaySnapshot,
+  PUZZLE_3D_PLAY_BODY_KEY,
+  PUZZLE_3D_PLAY_CONTROLLER_ID,
+  PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
+  PUZZLE_3D_PLAY_ICON_HIERARCHY,
+  PUZZLE_3D_PLAY_ICON_INSPECTOR,
+  PUZZLE_3D_PLAY_ICON_KINDS,
+  PUZZLE_3D_PLAY_ICON_SETTINGS,
+  PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
+  PLAY_APP_ID,
+  Puzzle3dPlayShellController,
+  parseKindCatalogs,
+  parseKindCompatibility,
+  type Puzzle3dPlaySnapshot,
 } from "@puzzle/3d/play";
 // #endregion 🔌Adapters
 
 function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
-	const { runtime } = useApp();
-	return runtime.getActiveApp()?.controller as Puzzle3dPlayShellController | undefined;
+  const { runtime } = useApp();
+  return runtime.getActiveApp()?.controller as Puzzle3dPlayShellController | undefined;
 }
 
 function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
-	const ctrl = usePuzzle3dPlayController();
-	return reactHostPort.useSyncExternalStore(
-		(onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
-		() => ctrl?.getSnapshot() ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-		() => PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-	);
+  const ctrl = usePuzzle3dPlayController();
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
+    () => ctrl?.getSnapshot() ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
+    () => PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
+  );
 }
 
 function Puzzle3dPlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
-	const { runtime } = useApp();
-	const bus = runtime.commandBus;
-	const ctrl = usePuzzle3dPlayController();
-	if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
-		return <div className="p-2 text-xs text-muted-foreground">Invalid scene viewport binding</div>;
-	}
-	const snap = usePuzzle3dPlaySnapshot();
-	if (!snap.fixture) {
-		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
-	}
-	const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
-	const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
-	const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
-	const selectedVortexFullIds = reactHostPort.useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
-	const patchFixture = reactHostPort.useCallback(
-		(updater: (prev: FixtureV1) => FixtureV1) => {
-			ctrl?.patchFixture(updater);
-		},
-		[ctrl],
-	);
-	const onRelocatePersist = reactHostPort.useCallback(
-		(payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => {
-			ctrl?.patchRelocate(payload, attractingByObjectId);
-		},
-		[ctrl],
-	);
-	const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
-	return (
-		<div className="absolute inset-0 min-h-0 min-w-0">
-			<SceneObjectStateProvider
-				fixture={snap.fixture}
-				fixtureRevision={snap.fixtureRevision}
-				onConnect={(payload) => {
-					patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
-					bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteConnect");
-				}}
-				onRelocate={onRelocatePersist}
-			>
-				<PlaySceneCanvas
-					fixture={snap.fixture}
-					proximityRelocateEnabled={proximityRelocateEnabled}
-					kindCatalogs={kindCatalogs}
-					kindCompatibility={kindCompatibility}
-					blockedVortexFullIds={blockedVortexFullIds}
-					lodTag={snap.lodTag}
-					lodProps={snap.lodProps}
-					relocateMode={snap.relocateMode}
-					selection={snap.selection}
-					selectedId={snap.selectedId}
-					selectedLabel={snap.selectedLabel}
-					selectionMode={snap.selectionMode}
-					selectedVortexFullIds={selectedVortexFullIds}
-					proximityRadius={snap.proximityRadius}
-					chunkSize={snap.chunkSize}
-					gridFactor={snap.gridFactor}
-					showLodGrid={snap.showLodGrid}
-					gridSnapEnabled={snap.gridSnapEnabled}
-					setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
-					onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
-					onIndirectConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteIndirect")}
-					onProximityConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteProximity")}
-					onLodChange={(lod) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
-					onCamera={(camera) => ctrl?.setCamera(camera)}
-					onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
-					onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
-				/>
-			</SceneObjectStateProvider>
-		</div>
-	);
+  const { runtime } = useApp();
+  const bus = runtime.commandBus;
+  const ctrl = usePuzzle3dPlayController();
+  if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid scene viewport binding</div>;
+  }
+  const snap = usePuzzle3dPlaySnapshot();
+  if (!snap.fixture) {
+    return <div className="p-4 text-destructive">Invalid scene fixture</div>;
+  }
+  const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
+  const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
+  const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
+  const selectedVortexFullIds = reactHostPort.useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
+  const patchFixture = reactHostPort.useCallback(
+    (updater: (prev: FixtureV1) => FixtureV1) => {
+      ctrl?.patchFixture(updater);
+    },
+    [ctrl],
+  );
+  const onRelocatePersist = reactHostPort.useCallback(
+    (payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => {
+      ctrl?.patchRelocate(payload, attractingByObjectId);
+    },
+    [ctrl],
+  );
+  const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
+  return (
+    <div className="absolute inset-0 min-h-0 min-w-0">
+      <SceneObjectStateProvider
+        fixture={snap.fixture}
+        fixtureRevision={snap.fixtureRevision}
+        onConnect={(payload) => {
+          patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
+          bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteConnect");
+        }}
+        onRelocate={onRelocatePersist}
+      >
+        <PlaySceneCanvas
+          fixture={snap.fixture}
+          proximityRelocateEnabled={proximityRelocateEnabled}
+          kindCatalogs={kindCatalogs}
+          kindCompatibility={kindCompatibility}
+          blockedVortexFullIds={blockedVortexFullIds}
+          lodTag={snap.lodTag}
+          lodProps={snap.lodProps}
+          relocateMode={snap.relocateMode}
+          selection={snap.selection}
+          selectedId={snap.selectedId}
+          selectedLabel={snap.selectedLabel}
+          selectionMode={snap.selectionMode}
+          selectedVortexFullIds={selectedVortexFullIds}
+          proximityRadius={snap.proximityRadius}
+          chunkSize={snap.chunkSize}
+          gridFactor={snap.gridFactor}
+          showLodGrid={snap.showLodGrid}
+          gridSnapEnabled={snap.gridSnapEnabled}
+          setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
+          onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
+          onIndirectConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteIndirect")}
+          onProximityConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteProximity")}
+          onLodChange={(lod) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
+          onCamera={(camera) => ctrl?.setCamera(camera)}
+          onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
+          onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
+        />
+      </SceneObjectStateProvider>
+    </div>
+  );
 }
 
 let scenePlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers scene play surface host, tab icons, and mesh preload. */
 export function registerSceneSurfaceHosts(): void {
-	if (scenePlayChromeRegistered) return;
-	scenePlayChromeRegistered = true;
-	registerUiScene3DSurfaceHost(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, Puzzle3dPlaySceneSurfaceHost);
-	registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, ClipboardList);
-	registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, Tags);
-	registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, ListTree);
-	registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, Settings);
-	const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
-	if (fixture) {
-		const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
-		for (const url of urls) useGLTF.preload(url);
-	}
+  if (scenePlayChromeRegistered) return;
+  scenePlayChromeRegistered = true;
+  registerUiScene3DSurfaceHost(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, Puzzle3dPlaySceneSurfaceHost);
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, ClipboardList);
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, Tags);
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, ListTree);
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, Settings);
+  const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
+  if (fixture) {
+    const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
+    for (const url of urls) useGLTF.preload(url);
+  }
 }
 
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
-	mountPlaygroundApp(
-		<PlaygroundView runtime={playground.runtime} defaultAppId={PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />,
-		rootId,
-	);
+  mountPlaygroundApp(<PlaygroundView runtime={playground.runtime} defaultAppId={PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />, rootId);
 }
 
 const scenePlayChromeBoot: PlaygroundChromeBoot = {
-	registerHosts: registerSceneSurfaceHosts,
-	mount: mountPuzzle3dPlayChrome,
+  registerHosts: registerSceneSurfaceHosts,
+  mount: mountPuzzle3dPlayChrome,
 };
 
 /** @emoji 🛝 Scene play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
 export function boot3dPlay(playground: Playground, rootId = "root"): void {
-	bootPlayground(playground, scenePlayChromeBoot, rootId);
+  bootPlayground(playground, scenePlayChromeBoot, rootId);
 }
 //#endregion 🔖Puzzle3dPlayHost
 
 //#region 🔖Puzzle5dPlayHost
 // #region 🔌Adapters
-import {
-	buildTopologyDualSurfaceBindings,
-	topologyMirrorConnectHandlers,
-	topologyMirrorProximityHandlers,
-	TopologyBoardPane,
-	TopologyScenePane,
-	topologySceneChromeDefaults,
-} from "@puzzle/5d/react";
+import { FiveD, TopologyStoreProvider } from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground";
 import {
-	PUZZLE_5D_PLAY_APP_ID,
-	PUZZLE_5D_PLAY_BOARD_BODY_KEY,
-	PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
-	PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
-	PUZZLE_5D_PLAY_CONTROLLER_ID,
-	PUZZLE_5D_PLAY_SCENE_BODY_KEY,
-	PUZZLE_5D_PLAY_SCENE_SURFACE_ID,
-	PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-	TopologyPlayShellController,
-	buildTopologyBoardDeclarativeBody,
-	buildTopologyPlayHierarchySections,
-	buildTopologyPlayRuntime,
-	buildTopologySceneDeclarativeBody,
-	type TopologyPlaySnapshot,
+  PUZZLE_5D_PLAY_APP_ID,
+  PUZZLE_5D_PLAY_BOARD_BODY_KEY,
+  PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
+  PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
+  PUZZLE_5D_PLAY_CONTROLLER_ID,
+  PUZZLE_5D_PLAY_SCENE_BODY_KEY,
+  PUZZLE_5D_PLAY_SCENE_SURFACE_ID,
+  PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
+  TopologyPlayShellController,
+  buildTopologyBoardDeclarativeBody,
+  buildTopologyPlayHierarchySections,
+  buildTopologyPlayRuntime,
+  buildTopologySceneDeclarativeBody,
+  type TopologyPlaySnapshot,
 } from "@puzzle/5d/play";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {
-	const { runtime } = useApp();
-	reactHostPort.useSyncExternalStore(
-		(listener) => runtime.subscribe(listener),
-		() => runtime.generation,
-		() => 0,
-	);
-	const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
-	return { controller, snapshot: controller?.getSnapshot() ?? null };
+  const { runtime } = useApp();
+  reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribe(listener),
+    () => runtime.generation,
+    () => 0,
+  );
+  const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+  return { controller, snapshot: controller?.getSnapshot() ?? null };
 }
 //#endregion 🔖Snapshot
 
 //#region 🔖DetailsPanel
 function TopologyPlayStatusPanel(): React.ReactElement {
-	const { snapshot } = useTopologyPlaySnapshot();
-	if (!snapshot) {
-		return <p className="text-muted-foreground p-2 text-xs">No topology snapshot</p>;
-	}
-	return (
-		<dl className="grid gap-2 p-2 text-xs">
-			<div>
-				<dt className="text-muted-foreground font-medium">Manifest</dt>
-				<dd>{snapshot.manifestLabel ?? "—"}</dd>
-			</div>
-			<div>
-				<dt className="text-muted-foreground font-medium">Board selection</dt>
-				<dd>{snapshot.boardSelected.size} id(s)</dd>
-			</div>
-			<div>
-				<dt className="text-muted-foreground font-medium">Scene selection</dt>
-				<dd>{snapshot.sceneSelected ?? "—"}</dd>
-			</div>
-			<div>
-				<dt className="text-muted-foreground font-medium">Relocate</dt>
-				<dd>{snapshot.relocateMode}</dd>
-			</div>
-			<div>
-				<dt className="text-muted-foreground font-medium">Connect events</dt>
-				<dd>
-					board {snapshot.connectBoard} · scene {snapshot.connectScene}
-				</dd>
-			</div>
-			<div>
-				<dt className="text-muted-foreground font-medium">Proximity events</dt>
-				<dd>
-					board {snapshot.proximityBoard} · scene {snapshot.proximityScene}
-				</dd>
-			</div>
-		</dl>
-	);
+  const { snapshot } = useTopologyPlaySnapshot();
+  if (!snapshot) {
+    return <p className="text-muted-foreground p-2 text-xs">No topology snapshot</p>;
+  }
+  return (
+    <dl className="grid gap-2 p-2 text-xs">
+      <div>
+        <dt className="text-muted-foreground font-medium">Manifest</dt>
+        <dd>{snapshot.manifestLabel ?? "—"}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground font-medium">Board selection</dt>
+        <dd>{snapshot.boardSelected.size} id(s)</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground font-medium">Scene selection</dt>
+        <dd>{snapshot.sceneSelected ?? "—"}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground font-medium">Relocate</dt>
+        <dd>{snapshot.relocateMode}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground font-medium">Connect events</dt>
+        <dd>
+          board {snapshot.connectBoard} · scene {snapshot.connectScene}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground font-medium">Proximity events</dt>
+        <dd>
+          board {snapshot.proximityBoard} · scene {snapshot.proximityScene}
+        </dd>
+      </div>
+    </dl>
+  );
 }
 
 class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-	constructor(private readonly buildTree: () => import("@framework/playground").UiTreeNode) {
-		super();
-	}
+  constructor(private readonly buildTree: () => import("@framework/playground").UiTreeNode) {
+    super();
+  }
 
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-			icon: ListTree,
-			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
+      icon: ListTree,
+      order: 0,
+      tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
+    };
+  }
 }
 
 class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: "puzzle-5d-play-status",
-			icon: ClipboardList,
-			order: 0,
-			tree: new StaticTreePanelDefinition({
-				sections: [
-					{
-						id: "puzzle-5d-play-status.section",
-						label: "Paired play",
-						defaultOpen: true,
-						items: [{ id: "puzzle-5d-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
-					},
-				],
-			}),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: "puzzle-5d-play-status",
+      icon: ClipboardList,
+      order: 0,
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-5d-play-status.section",
+            label: "Paired play",
+            defaultOpen: true,
+            items: [{ id: "puzzle-5d-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
+          },
+        ],
+      }),
+    };
+  }
 }
 //#endregion 🔖DetailsPanel
 
 //#region 🔖Surfaces
 function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
-	const { controller, snapshot } = useTopologyPlaySnapshot();
-	if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_BOARD_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
-		return <div className="p-2 text-xs text-muted-foreground">Invalid topology board binding</div>;
-	}
-	const bindings = buildTopologyDualSurfaceBindings({
-		...snapshot.sharedKinds,
-		onBoardSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
-		onSceneSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
-		onBoardCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
-		onSceneCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
-		onSceneLodChange: undefined,
-		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
-		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
-	});
-	return (
-		<TopologyBoardPane
-			fixture={snapshot.boardFixture}
-			bindings={bindings}
-			selectedIds={snapshot.boardSelected}
-			board={{
-				camera: snapshot.boardCamera,
-				onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardLodTag", { lod }),
-				...snapshot.boardLodProps,
-			}}
-		/>
-	);
+  const { controller, snapshot } = useTopologyPlaySnapshot();
+  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_BOARD_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid topology board binding</div>;
+  }
+  return (
+    <FiveD
+      mode="flat"
+      instanceId="play-board"
+      flat={{
+        camera: snapshot.boardCamera,
+        onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardLodTag", { lod }),
+        onSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
+        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteBoardConnect"),
+        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteBoardProximity"),
+        ...snapshot.boardLodProps,
+      }}
+    />
+  );
 }
 
 function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
-	const { controller, snapshot } = useTopologyPlaySnapshot();
-	if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
-		return <div className="p-2 text-xs text-muted-foreground">Invalid topology scene binding</div>;
-	}
-	const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
-	reactHostPort.useEffect(() => {
-		for (const url of meshUrls) useGLTF.preload(url);
-	}, [meshUrls]);
-	const bindings = buildTopologyDualSurfaceBindings({
-		...snapshot.sharedKinds,
-		onBoardSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
-		onSceneSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
-		onBoardCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
-		onSceneCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
-		onSceneLodChange: undefined,
-		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
-		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
-	});
-	return (
-		<TopologyScenePane
-			fixture={snapshot.sceneFixture}
-			bindings={bindings}
-			relocateMode={snapshot.relocateMode}
-			selectedObjectId={snapshot.sceneSelected}
-			scene={{ ...topologySceneChromeDefaults(), ...snapshot.sceneLodProps, camera: snapshot.sceneCamera ?? snapshot.sceneFixture.camera }}
-		/>
-	);
+  const { controller, snapshot } = useTopologyPlaySnapshot();
+  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid topology scene binding</div>;
+  }
+  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
+  reactHostPort.useEffect(() => {
+    for (const url of meshUrls) useGLTF.preload(url);
+  }, [meshUrls]);
+  return (
+    <FiveD
+      mode="spatial"
+      instanceId="play-spatial"
+      relocateMode={snapshot.relocateMode}
+      spatial={{
+        ...snapshot.sceneLodProps,
+        camera: snapshot.sceneCamera ?? snapshot.sceneFixture.camera,
+        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteSceneConnect"),
+        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteSceneProximity"),
+      }}
+    />
+  );
 }
 //#endregion 🔖Surfaces
 
@@ -1308,72 +1305,68 @@ let topologyPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers topology play board+scene surface hosts (called from `@framework/playground/renderer/react`). */
 export function registerTopologyPlaySurfaceHosts(): void {
-	if (topologyPlayChromeRegistered) return;
-	topologyPlayChromeRegistered = true;
-	registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
-	registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, TopologySceneSurfaceHost);
-	registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyBoardDeclarativeBody);
-	registerWindowBody(PUZZLE_5D_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
+  if (topologyPlayChromeRegistered) return;
+  topologyPlayChromeRegistered = true;
+  registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
+  registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, TopologySceneSurfaceHost);
+  registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyBoardDeclarativeBody);
+  registerWindowBody(PUZZLE_5D_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
 }
 
 function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
-	const generation = reactHostPort.useSyncExternalStore(
-		(listener) => runtime.subscribe(listener),
-		() => runtime.generation,
-		() => 0,
-	);
-	void generation;
-	const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
-	const snapshot = controller?.getSnapshot() ?? null;
-	const bus = runtime.commandBus;
-	const snapshotKey = snapshot
-		? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}`
-		: "";
-	const workbenchTabs = reactHostPort.useMemo(
-		() =>
-			snapshot && controller
-				? [
-						new TopologyPlayHierarchyPanelDefinition(() =>
-							buildTopologyPlayHierarchySections(snapshot, {
-								onSelectBoard: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
-								onSelectSceneObject: (objectId) =>
-									bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
-								onSelectSceneVortex: () => {},
-								onSelectSceneAttraction: () => {},
-							}),
-						).resolveTab(),
-					]
-				: [],
-		[snapshot, snapshotKey, controller, bus],
-	);
-	const detailTabs = reactHostPort.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
-	return (
-		<LevelProvider level="window">
-			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-				<PlaygroundView
-					runtime={runtime}
-					defaultAppId={PUZZLE_5D_PLAY_APP_ID}
-					augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
-					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
-				/>
-			</div>
-		</LevelProvider>
-	);
+  const generation = reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribe(listener),
+    () => runtime.generation,
+    () => 0,
+  );
+  void generation;
+  const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+  const snapshot = controller?.getSnapshot() ?? null;
+  const bus = runtime.commandBus;
+  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}` : "";
+  const workbenchTabs = reactHostPort.useMemo(
+    () =>
+      snapshot && controller
+        ? [
+            new TopologyPlayHierarchyPanelDefinition(() =>
+              buildTopologyPlayHierarchySections(snapshot, {
+                onSelectBoard: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
+                onSelectSceneObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
+                onSelectSceneVortex: () => {},
+                onSelectSceneAttraction: () => {},
+              }),
+            ).resolveTab(),
+          ]
+        : [],
+    [snapshot, snapshotKey, controller, bus],
+  );
+  const detailTabs = reactHostPort.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
+  const shell = (
+    <LevelProvider level="window">
+      <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+        <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
+      </div>
+    </LevelProvider>
+  );
+  if (!controller) {
+    return shell;
+  }
+  return <TopologyStoreProvider store={controller.topologyStore}>{shell}</TopologyStoreProvider>;
 }
 
 /** @emoji 🚀 Mounts topology play chrome for a {@link Playground}. */
 export function mountTopologyPlayChrome(playground: Playground, rootId = "root"): void {
-	mountPlaygroundApp(<TopologyPlayChrome runtime={playground.runtime} />, rootId);
+  mountPlaygroundApp(<TopologyPlayChrome runtime={playground.runtime} />, rootId);
 }
 
 const topologyPlayChromeBoot: PlaygroundChromeBoot = {
-	registerHosts: registerTopologyPlaySurfaceHosts,
-	mount: mountTopologyPlayChrome,
+  registerHosts: registerTopologyPlaySurfaceHosts,
+  mount: mountTopologyPlayChrome,
 };
 
 /** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/main.ts`). */
 export function boot5dPlay(playground: Playground, rootId = "root"): void {
-	bootPlayground(playground, topologyPlayChromeBoot, rootId);
+  bootPlayground(playground, topologyPlayChromeBoot, rootId);
 }
 
 //#endregion 🔖Mount
@@ -1386,60 +1379,57 @@ export function boot5dPlay(playground: Playground, rootId = "root"): void {
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 import {
-	PUZZLE_2D_PLAY_APP_ID,
-	PUZZLE_2D_PLAY_BOARD_SURFACE_ID,
-	PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
-	PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
-	PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
-	PUZZLE_2D_PLAY_CONTROLLER_ID,
-	PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
-	PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
-	BoardPlayShellController,
-	buildBoardPlayHierarchySections,
-	buildBoardPlayOverviewDeclarativeBody,
-	buildBoardPlayDetailDeclarativeBody,
-	buildBoardPlaySelectionDeclarativeBody,
-	buildBoardPlayRuntime,
-	type Puzzle2dPlayPaneId,
+  PUZZLE_2D_PLAY_APP_ID,
+  PUZZLE_2D_PLAY_BOARD_SURFACE_ID,
+  PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
+  PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
+  PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
+  PUZZLE_2D_PLAY_CONTROLLER_ID,
+  PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+  PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
+  BoardPlayShellController,
+  buildBoardPlayHierarchySections,
+  buildBoardPlayOverviewDeclarativeBody,
+  buildBoardPlayDetailDeclarativeBody,
+  buildBoardPlaySelectionDeclarativeBody,
+  buildBoardPlayRuntime,
+  type Puzzle2dPlayPaneId,
 } from "@puzzle/2d/play";
 import {
-	mergeBoardKindCatalogBundleByRowId,
-	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
-	boardFixtureMetaKindCatalogBundle,
-	parseBoardFixtureV1,
-	BoardCanvas,
-	Node,
-	Handle,
-	Edge,
-	Wire,
-	encodeBoardFixtureForDragV1,
-	BOARD_FIXTURE_DRAG_V1_MIME,
-	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
-	BOARD_LOD_MODE_AUTOMATIC,
-	BoardPaneChrome,
-	BoardStructuralDeleteReporter,
-	BoardPlayRedrawProgressReset,
-	nakaginBoardMarkers,
-	type BoardFixtureV1,
-	type BoardFixtureNodeV1,
-	type BoardFixtureRectangleNodeV1,
-	type BoardFixtureHandleV1,
-	type BoardFixtureEdgeV1,
-	type BoardFixtureDropDetail,
-	type BoardDrawLodKind,
-	type BoardLodModeKind,
-	type BoardSelectionMethod,
-	type BoardSelectionMode,
-	type BoardSelectionTargets,
-	type CameraState,
+  mergeBoardKindCatalogBundleByRowId,
+  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+  boardFixtureMetaKindCatalogBundle,
+  parseBoardFixtureV1,
+  BoardCanvas,
+  Node,
+  Handle,
+  Edge,
+  Wire,
+  encodeBoardFixtureForDragV1,
+  BOARD_FIXTURE_DRAG_V1_MIME,
+  BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
+  BOARD_LOD_MODE_AUTOMATIC,
+  BoardPaneChrome,
+  BoardStructuralDeleteReporter,
+  BoardPlayRedrawProgressReset,
+  nakaginBoardMarkers,
+  type BoardFixtureV1,
+  type BoardFixtureNodeV1,
+  type BoardFixtureRectangleNodeV1,
+  type BoardFixtureHandleV1,
+  type BoardFixtureEdgeV1,
+  type BoardFixtureDropDetail,
+  type BoardDrawLodKind,
+  type BoardLodModeKind,
+  type BoardSelectionMethod,
+  type BoardSelectionMode,
+  type BoardSelectionTargets,
+  type CameraState,
 } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground";
 // #endregion 🔌Adapters
 
-const NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
-	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
-	boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {},
-);
+const NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
 
 // #region 🔖Kinds
 export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
@@ -1675,75 +1665,75 @@ interface BoardPlayShellValue {
 }
 
 class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-	constructor(private readonly buildTree: () => UiTreeNode) {
-		super();
-	}
+  constructor(private readonly buildTree: () => UiTreeNode) {
+    super();
+  }
 
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
-			icon: ListTree,
-			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
+      icon: ListTree,
+      order: 0,
+      tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
+    };
+  }
 }
 
 class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: "puzzle-2d-play-library",
-			icon: Library,
-			order: 1,
-			tree: new StaticTreePanelDefinition({
-				sections: [
-					{
-						id: "puzzle-2d-play-library.section",
-						label: "Library",
-						defaultOpen: true,
-						content: <BoardFixtureLibraryPanel />,
-						items: [],
-					},
-				],
-			}),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: "puzzle-2d-play-library",
+      icon: Library,
+      order: 1,
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-2d-play-library.section",
+            label: "Library",
+            defaultOpen: true,
+            content: <BoardFixtureLibraryPanel />,
+            items: [],
+          },
+        ],
+      }),
+    };
+  }
 }
 
 class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
-	constructor(private readonly buildSections: () => TreeDataSection[]) {
-		super();
-	}
+  constructor(private readonly buildSections: () => TreeDataSection[]) {
+    super();
+  }
 
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: "puzzle-2d-play-inspector",
-			icon: ClipboardList,
-			order: 0,
-			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: "puzzle-2d-play-inspector",
+      icon: ClipboardList,
+      order: 0,
+      tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+    };
+  }
 }
 
 class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
-	resolveTab(): SidePanelTabConfig {
-		return {
-			id: "puzzle-2d-play-settings",
-			icon: Settings,
-			order: 1,
-			tree: new StaticTreePanelDefinition({
-				sections: [
-					{
-						id: "puzzle-2d-play-settings.section",
-						label: "Settings",
-						defaultOpen: true,
-						content: <BoardPlaySettingsPanel />,
-						items: [],
-					},
-				],
-			}),
-		};
-	}
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: "puzzle-2d-play-settings",
+      icon: Settings,
+      order: 1,
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-2d-play-settings.section",
+            label: "Settings",
+            defaultOpen: true,
+            content: <BoardPlaySettingsPanel />,
+            items: [],
+          },
+        ],
+      }),
+    };
+  }
 }
 
 const BoardPlayShellContext = reactHostPort.createContext<BoardPlayShellValue | null>(null);
@@ -1761,10 +1751,10 @@ function useBoardPlayShell(): BoardPlayShellValue {
 
 // #region 🔖PlayRedrawHelpers
 function newBoardAuthoringId(prefix: string): string {
-	if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
-		return `${prefix}-${globalThis.crypto.randomUUID()}`;
-	}
-	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
+    return `${prefix}-${globalThis.crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
@@ -2513,9 +2503,7 @@ function InspectorNodeBatch({
   const onText = reactHostPort.useCallback(
     (next: string) => {
       const trimmed = next.trim();
-      patchNodes((n) =>
-        trimmed === "" ? { ...n, text: undefined } : { ...n, text: trimmed },
-      );
+      patchNodes((n) => (trimmed === "" ? { ...n, text: undefined } : { ...n, text: trimmed }));
     },
     [patchNodes],
   );
@@ -2840,126 +2828,118 @@ function InspectorEdgeBatch({
 
 /** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
 function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSection[] {
-	const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = shell;
-	const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
-	const nodeIds: string[] = [];
-	const handleIds: string[] = [];
-	const edgeIds: string[] = [];
-	for (const id of ids) {
-		if (findNode(fixture, id)) {
-			nodeIds.push(id);
-		} else if (findEdge(fixture, id)) {
-			edgeIds.push(id);
-		} else if (findHandleOwner(fixture, id)) {
-			handleIds.push(id);
-		}
-	}
-	if (ids.length === 0) {
-		return [
-			{
-				id: "puzzle-2d-play-inspector.empty",
-				label: "Detail",
-				defaultOpen: true,
-				items: [
-					{
-						id: "puzzle-2d-play-inspector.empty.header",
-						label: `pane: ${activePaneId}`,
-						description: (
-							<p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>
-						),
-					},
-				],
-			},
-		];
-	}
-	const sections: TreeDataSection[] = [
-		{
-			id: "puzzle-2d-play-inspector.header",
-			label: "Detail",
-			defaultOpen: true,
-			items: [
-				{
-					id: "puzzle-2d-play-inspector.header.pane",
-					label: activePaneId,
-					description: (
-						<div className="text-muted-foreground text-[11px] opacity-80">
-							{ids.length} selected id{ids.length === 1 ? "" : "s"}
-						</div>
-					),
-				},
-			],
-		},
-	];
-	if (nodeIds.length > 0) {
-		sections.push({
-			id: "puzzle-2d-play-inspector-nodes",
-			label: `Nodes (${nodeIds.length})`,
-			defaultOpen: true,
-			items: [
-				{
-					id: "puzzle-2d-play-inspector-nodes.fields",
-					label: "Properties",
-					defaultOpen: true,
-					description: (
-						<InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
-					),
-				},
-			],
-		});
-	}
-	if (handleIds.length > 0) {
-		sections.push({
-			id: "puzzle-2d-play-inspector-handles",
-			label: `Handles (${handleIds.length})`,
-			defaultOpen: true,
-			items: [
-				{
-					id: "puzzle-2d-play-inspector-handles.fields",
-					label: "Properties",
-					defaultOpen: true,
-					description: (
-						<InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
-					),
-				},
-			],
-		});
-	}
-	if (edgeIds.length > 0) {
-		sections.push({
-			id: "puzzle-2d-play-inspector-edges",
-			label: `Edges (${edgeIds.length})`,
-			defaultOpen: true,
-			items: [
-				{
-					id: "puzzle-2d-play-inspector-edges.fields",
-					label: "Properties",
-					defaultOpen: true,
-					description: (
-						<InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />
-					),
-				},
-			],
-		});
-	}
-	if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
-		sections.push({
-			id: "puzzle-2d-play-inspector-unknown",
-			label: "Selection",
-			defaultOpen: true,
-			items: [
-				{
-					id: "puzzle-2d-play-inspector-unknown.body",
-					label: "Unknown ids",
-					description: (
-						<div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
-							{ids.join(", ")}
-						</div>
-					),
-				},
-			],
-		});
-	}
-	return sections;
+  const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = shell;
+  const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
+  const nodeIds: string[] = [];
+  const handleIds: string[] = [];
+  const edgeIds: string[] = [];
+  for (const id of ids) {
+    if (findNode(fixture, id)) {
+      nodeIds.push(id);
+    } else if (findEdge(fixture, id)) {
+      edgeIds.push(id);
+    } else if (findHandleOwner(fixture, id)) {
+      handleIds.push(id);
+    }
+  }
+  if (ids.length === 0) {
+    return [
+      {
+        id: "puzzle-2d-play-inspector.empty",
+        label: "Detail",
+        defaultOpen: true,
+        items: [
+          {
+            id: "puzzle-2d-play-inspector.empty.header",
+            label: `pane: ${activePaneId}`,
+            description: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>,
+          },
+        ],
+      },
+    ];
+  }
+  const sections: TreeDataSection[] = [
+    {
+      id: "puzzle-2d-play-inspector.header",
+      label: "Detail",
+      defaultOpen: true,
+      items: [
+        {
+          id: "puzzle-2d-play-inspector.header.pane",
+          label: activePaneId,
+          description: (
+            <div className="text-muted-foreground text-[11px] opacity-80">
+              {ids.length} selected id{ids.length === 1 ? "" : "s"}
+            </div>
+          ),
+        },
+      ],
+    },
+  ];
+  if (nodeIds.length > 0) {
+    sections.push({
+      id: "puzzle-2d-play-inspector-nodes",
+      label: `Nodes (${nodeIds.length})`,
+      defaultOpen: true,
+      items: [
+        {
+          id: "puzzle-2d-play-inspector-nodes.fields",
+          label: "Properties",
+          defaultOpen: true,
+          description: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        },
+      ],
+    });
+  }
+  if (handleIds.length > 0) {
+    sections.push({
+      id: "puzzle-2d-play-inspector-handles",
+      label: `Handles (${handleIds.length})`,
+      defaultOpen: true,
+      items: [
+        {
+          id: "puzzle-2d-play-inspector-handles.fields",
+          label: "Properties",
+          defaultOpen: true,
+          description: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        },
+      ],
+    });
+  }
+  if (edgeIds.length > 0) {
+    sections.push({
+      id: "puzzle-2d-play-inspector-edges",
+      label: `Edges (${edgeIds.length})`,
+      defaultOpen: true,
+      items: [
+        {
+          id: "puzzle-2d-play-inspector-edges.fields",
+          label: "Properties",
+          defaultOpen: true,
+          description: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        },
+      ],
+    });
+  }
+  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
+    sections.push({
+      id: "puzzle-2d-play-inspector-unknown",
+      label: "Selection",
+      defaultOpen: true,
+      items: [
+        {
+          id: "puzzle-2d-play-inspector-unknown.body",
+          label: "Unknown ids",
+          description: (
+            <div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
+              {ids.join(", ")}
+            </div>
+          ),
+        },
+      ],
+    });
+  }
+  return sections;
 }
 // #endregion 🔖SidePanels
 
@@ -3869,40 +3849,20 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     };
     boardShellController.setHostBridge(bridge);
     return () => boardShellController.setHostBridge(null);
-  }, [
-    applyBoardRedrawHandlesOnce,
-    boardGridSnapEnabled,
-    boardRedrawPlaying,
-    boardSelectionMethod,
-    boardSelectionMode,
-    boardSelectionTargets,
-    boardShellController,
-  ]);
+  }, [applyBoardRedrawHandlesOnce, boardGridSnapEnabled, boardRedrawPlaying, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, boardShellController]);
   // #endregion 🔖ToolbarHostBridge
 
   const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
   const boardPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
-  const boardPlayFixtureKey = reactHostPort.useMemo(
-    () =>
-      `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`,
-    [shellValue.fixture],
-  );
+  const boardPlayFixtureKey = reactHostPort.useMemo(() => `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`, [shellValue.fixture]);
   const boardPlayLibraryTab = reactHostPort.useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
   const boardPlayHierarchyTab = reactHostPort.useMemo(
-    () =>
-      new BoardPlayHierarchyPanelDefinition(() =>
-        buildBoardPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) =>
-          shellValueRef.current.setSelectionIds([id]),
-        ),
-      ).resolveTab(),
+    () => new BoardPlayHierarchyPanelDefinition(() => buildBoardPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id]))).resolveTab(),
     [boardPlaySelectionKey, boardPlayFixtureKey],
   );
   const boardPlaySettingsTab = reactHostPort.useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
-  const boardPlayInspectorTab = reactHostPort.useMemo(
-    () => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(),
-    [boardPlaySelectionKey],
-  );
+  const boardPlayInspectorTab = reactHostPort.useMemo(() => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(), [boardPlaySelectionKey]);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [boardPlayHierarchyTab, boardPlayLibraryTab],
@@ -3944,13 +3904,13 @@ export function mountBoardPlayChrome(playground: Playground, rootId = "root"): v
 }
 
 const boardPlayChromeBoot: PlaygroundChromeBoot = {
-	registerHosts: registerBoardPlaySurfaceHosts,
-	mount: mountBoardPlayChrome,
+  registerHosts: registerBoardPlaySurfaceHosts,
+  mount: mountBoardPlayChrome,
 };
 
 /** @emoji 🛝 Board play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
 export function boot2dPlay(playground: Playground, rootId = "root"): void {
-	bootPlayground(playground, boardPlayChromeBoot, rootId);
+  bootPlayground(playground, boardPlayChromeBoot, rootId);
 }
 
 // #endregion 🔖Entrypoint
@@ -3963,16 +3923,16 @@ import type { Playground } from "@framework/playground";
 
 /** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
 export interface PlaygroundChromeBoot {
-	registerHosts(): void;
-	mount(playground: Playground, rootId?: string): void;
+  registerHosts(): void;
+  mount(playground: Playground, rootId?: string): void;
 }
 
 /** @emoji 🛝 Registers hosts, declarative bodies, and mounts play chrome synchronously. */
 export function bootPlayground(playground: Playground, boot: PlaygroundChromeBoot, rootId = "root"): void {
-	boot.registerHosts();
-	playground.registerBodies();
-	playground.registerSurfaceHosts();
-	boot.mount(playground, rootId);
+  boot.registerHosts();
+  playground.registerBodies();
+  playground.registerSurfaceHosts();
+  boot.mount(playground, rootId);
 }
 //#endregion 🔖Boot
 
@@ -3988,6 +3948,50 @@ if (import.meta.vitest) {
           filter: [{ id: "sep", kind: "separator" }],
         }),
       ).toEqual(["save"]);
+    });
+  });
+
+  describe("windowEngagementToGolden", () => {
+    it("returns undefined when there is no engagement", () => {
+      expect(windowEngagementToGolden(undefined, new CommandBus())).toBeUndefined();
+    });
+
+    it("converts neutral engagement and dispatches option/input commands on the bus", () => {
+      const bus = new CommandBus();
+      const dispatched: { controllerId: string; command: string; args?: unknown }[] = [];
+      bus.register({
+        id: "ctrl",
+        commandBus: bus,
+        dispose() {},
+        run(command: string, args?: unknown) {
+          dispatched.push({ controllerId: "ctrl", command, args });
+        },
+      } as never);
+      const spec = windowEngagementToGolden(
+        {
+          options: [{ id: "opt", label: "Confirm", command: { controllerId: "ctrl", command: "confirm" } }],
+          input: { id: "in", value: "x", placeholder: "type", onSubmit: { controllerId: "ctrl", command: "submit" } },
+          status: [{ id: "st", text: "State: idle" }],
+        },
+        bus,
+      );
+      expect(spec?.options?.[0]?.label).toBe("Confirm");
+      expect(spec?.input?.value).toBe("x");
+      expect(spec?.status?.[0]?.content).toBe("State: idle");
+      spec?.options?.[0]?.onPress?.();
+      spec?.input?.onSubmit?.("hello");
+      expect(dispatched).toEqual([
+        { controllerId: "ctrl", command: "confirm", args: undefined },
+        { controllerId: "ctrl", command: "submit", args: { value: "hello" } },
+      ]);
+    });
+
+    it("threads engagement through windowKindsToGolden", () => {
+      const wk = new WindowKindRuntime("w", "W", "body", undefined, [], {
+        status: [{ id: "s", text: "ready" }],
+      });
+      const golden = windowKindsToGolden([wk], new CommandBus());
+      expect(golden[0]?.engagement?.status?.[0]?.content).toBe("ready");
     });
   });
 
