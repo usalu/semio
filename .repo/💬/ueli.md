@@ -9273,6 +9273,23 @@ Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
+## ♻️mit-bestand
+
+### 🟨33.projekttage
+
+mit-bestand/präsentation/33.projektage:
+
+---
+
+We want to create a new presentation with reveal.js in the same style as our repo.
+We once used temp/eg-ice-25 but since then the repo has evolved.
+We want latest infrastructure, latest styling etc.
+It should be perfectly integrated in the repo.
+We want to use ui components, embed iframes such as our playgrounds, etc
+Make sure that in dev setup the dev url is used and when building the public link is used
+
+---
+
 ## 📜history
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
