@@ -17,7 +17,7 @@ const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/mesh/placehol
 const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = path.resolve(repoRoot, "node_modules/three");
 
-const scenePlayMeshes: Plugin = {
+const puzzle3dPlayMeshes: Plugin = {
 	name: "puzzle-3d-play-meshes",
 	configureServer(server) {
 		server.middlewares.use((req, res, next) => {
@@ -47,7 +47,7 @@ const scenePlayMeshes: Plugin = {
 export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
-	extraPlugins: [scenePlayMeshes],
+	extraPlugins: [puzzle3dPlayMeshes],
 	extraAliases: [
 		{ find: "@puzzle/3d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },

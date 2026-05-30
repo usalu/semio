@@ -10,6 +10,7 @@ import {
 	BaseWindowKindRuntime,
 	CommandBus,
 	Controller,
+	ObservableCell,
 	Platform,
 	createTabStackLayout,
 	mergeAppTools,
@@ -20,6 +21,8 @@ import {
 	type Disposable,
 	type FindItem,
 	type FooterItem,
+	type PlatformComponentEntry,
+	type PlatformSubscriber,
 	type SearchItemSpec,
 	type SideTabSpec,
 	type WindowLayout,
@@ -208,6 +211,189 @@ function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	);
 }
 //#endregion 🔖UiNode
+
+//#region 🔖ComponentModels
+/** @emoji 📊 Column descriptor for {@link TableModel}. */
+export interface TableColumnModel {
+	readonly id: string;
+	readonly label: string;
+	readonly width?: number;
+}
+
+/** @emoji 📊 Row descriptor for {@link TableModel}. */
+export interface TableRowModel {
+	readonly id: string;
+	readonly cells: Readonly<Record<string, string | number | boolean | null>>;
+}
+
+/** @emoji 📊 Render-agnostic tabular view-model for {@link Table}. */
+export interface TableModel {
+	readonly columns: readonly TableColumnModel[];
+	readonly rows: readonly TableRowModel[];
+	readonly selectedRowIds?: readonly string[];
+	readonly sortColumnId?: string | null;
+	readonly sortDescending?: boolean;
+	readonly emptyMessage?: string;
+}
+
+/** @emoji 📋 Node descriptor for {@link Puzzle2dModel}. */
+export interface Puzzle2dNodeModel {
+	readonly id: string;
+	readonly label?: string;
+	readonly x?: number;
+	readonly y?: number;
+}
+
+/** @emoji 📋 Edge descriptor for {@link Puzzle2dModel}. */
+export interface Puzzle2dEdgeModel {
+	readonly id: string;
+	readonly sourceId: string;
+	readonly targetId: string;
+}
+
+/** @emoji 📋 Render-agnostic 2D board view-model for {@link Puzzle2d}. */
+export interface Puzzle2dModel {
+	readonly nodes: readonly Puzzle2dNodeModel[];
+	readonly edges: readonly Puzzle2dEdgeModel[];
+	readonly portColors?: Readonly<Record<string, string>>;
+	readonly emptyMessage?: string;
+}
+
+/** @emoji 🧊 Render-agnostic 3D scene view-model for {@link Puzzle3d}. */
+export interface Puzzle3dModel {
+	readonly instanceId?: string;
+	readonly emptyMessage?: string;
+}
+
+/** @emoji 🌐 Render-agnostic unified topology view-model for {@link Puzzle5d}. */
+export interface Puzzle5dModel {
+	readonly presentation: "flat" | "volume";
+	readonly instanceId: string;
+	readonly emptyMessage?: string;
+}
+
+/** @emoji 📐 Render-agnostic CAD view-model for {@link Cad}. */
+export interface CadModel {
+	readonly instanceId?: string;
+	readonly emptyMessage?: string;
+}
+
+/** @emoji 🧩 Render-agnostic panel body for {@link Panel}. */
+export interface PanelModel {
+	readonly body: UiNode;
+}
+//#endregion 🔖ComponentModels
+
+//#region 🔖Component
+/** @emoji 🧩 Render-agnostic platform surface with an observable view-model. */
+export abstract class Component<TModel> implements PlatformComponentEntry {
+	readonly componentKind: ComponentKind;
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	private readonly modelCell: ObservableCell<TModel>;
+
+	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialModel: TModel) {
+		this.componentKind = componentKind;
+		this.surfaceId = surfaceId;
+		this.controllerId = controllerId;
+		this.modelCell = new ObservableCell(initialModel);
+	}
+
+	getModel(): TModel {
+		return this.modelCell.get();
+	}
+
+	protected setModel(next: TModel): void {
+		this.modelCell.set(next);
+	}
+
+	subscribe(listener: PlatformSubscriber): () => void {
+		return this.modelCell.subscribe(listener);
+	}
+
+	abstract buildModel(): TModel;
+
+	refresh(): void {
+		this.setModel(this.buildModel());
+	}
+}
+
+/** @emoji 📊 Table surface component base class. */
+export class Table extends Component<TableModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: TableModel = { columns: [], rows: [] }) {
+		super("table", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): TableModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 📋 2D puzzle board surface component base class. */
+export class Puzzle2d extends Component<Puzzle2dModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle2dModel = { nodes: [], edges: [] }) {
+		super("puzzle2d", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): Puzzle2dModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 🧊 3D puzzle scene surface component base class. */
+export class Puzzle3d extends Component<Puzzle3dModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle3dModel = {}) {
+		super("puzzle3d", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): Puzzle3dModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 🌐 5D topology surface component base class. */
+export class Puzzle5d extends Component<Puzzle5dModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle5dModel) {
+		super("puzzle5d", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): Puzzle5dModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 📐 CAD surface component base class. */
+export class Cad extends Component<CadModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: CadModel = {}) {
+		super("cad", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): CadModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 🧩 Panel surface component base class. */
+export class Panel extends Component<PanelModel> {
+	constructor(surfaceId: string, controllerId: string, initialModel: PanelModel) {
+		super("panel", surfaceId, controllerId, initialModel);
+	}
+
+	buildModel(): PanelModel {
+		return this.getModel();
+	}
+}
+
+/** @emoji 🧩 Registers a {@link Component} on a {@link Platform} instance. */
+export function registerPlatformComponent(platform: Platform, component: Component<unknown>): void {
+	platform.registerComponent(component);
+}
+
+/** @emoji 🔍 Typed lookup of a registered {@link Component} by surface id. */
+export function getPlatformComponent<T extends Component<unknown>>(platform: Platform, surfaceId: string): T | undefined {
+	return platform.getComponent(surfaceId) as T | undefined;
+}
+//#endregion 🔖Component
 
 //#region 🔖ContextKeys
 /** @emoji 🔑 Opaque context bag for `SurfaceSelector.when` resolution (products inject evaluators). */
@@ -974,6 +1160,25 @@ if (import.meta.vitest) {
 			expect(platform.id).toBe("demo");
 			expect(platform.name).toBe("Demo");
 			expect(platform.activeAppId).toBe("home");
+		});
+	});
+
+	describe("Component registry", () => {
+		it("registers components by surface id and refreshes models", () => {
+			class DemoTable extends Table {
+				override buildModel(): TableModel {
+					return {
+						columns: [{ id: "name", label: "Name" }],
+						rows: [{ id: "1", cells: { name: "alpha" } }],
+					};
+				}
+			}
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			const table = new DemoTable("surface/table/v1", "ctrl");
+			registerPlatformComponent(platform, table);
+			table.refresh();
+			const resolved = getPlatformComponent<DemoTable>(platform, "surface/table/v1");
+			expect(resolved?.getModel().rows[0]?.cells.name).toBe("alpha");
 		});
 	});
 

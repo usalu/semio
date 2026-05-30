@@ -10,7 +10,7 @@ import {
   ModeRuntime,
   WindowKindRuntime,
   buildBoardWindowBody,
-  buildScene3dWindowBody,
+  buildPuzzle3dWindowBody,
   createDefaultLayout,
   type ToolItem,
   type WindowBodyViewContext,
@@ -29,9 +29,9 @@ import { NakaginCapsuleTowerSceneJson as nakaginSceneJson } from "@puzzle/assets
 import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
   DEFAULT_MANUAL_LOD,
-  SCENE_LOD_SLIDER_MAX,
-  SCENE_LOD_SLIDER_MIN,
-  formatSceneLod,
+  PUZZLE_3D_LOD_SLIDER_MAX,
+  PUZZLE_3D_LOD_SLIDER_MIN,
+  formatPuzzle3dLod,
   lodFromSliderValue,
   parseFixtureV1,
   sceneLodCanvasProps,
@@ -215,10 +215,10 @@ export class TopologyPlayShellController extends Controller {
       {
         kind: "slider",
         id: `${PUZZLE_5D_PLAY_VOLUME_WINDOW_ID}-lod`,
-        label: formatSceneLod(this.volumeLodTag),
+        label: formatPuzzle3dLod(this.volumeLodTag),
         value: this.volumeLodSlider,
-        min: SCENE_LOD_SLIDER_MIN,
-        max: SCENE_LOD_SLIDER_MAX,
+        min: PUZZLE_3D_LOD_SLIDER_MIN,
+        max: PUZZLE_3D_LOD_SLIDER_MAX,
         step: 1,
         onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setVolumeManualLod" },
       },
@@ -412,7 +412,7 @@ export function buildTopologyVolumeDeclarativeBody(ctx: WindowBodyViewContext): 
   const ctrl = topologyControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   if (!snap?.volumeFixture) return { type: "text", value: "Invalid volume fixture" };
-  return buildScene3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
+  return buildPuzzle3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
 }
 //#endregion 🔖DeclarativeBodies
 
@@ -493,7 +493,7 @@ if (import.meta.vitest) {
         generation: 0,
       });
       expect(board).toEqual(buildBoardWindowBody(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_ID));
-      expect(scene).toEqual(buildScene3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
+      expect(scene).toEqual(buildPuzzle3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
     });
   });
 }

@@ -2,7 +2,26 @@
 /** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: {@link ProductShell}, {@link PlatformView}, declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
-export { Platform, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory, type ComponentKind } from "@framework/platform/core";
+export {
+	Platform,
+	APP_TOOL_CATEGORY_ORDER,
+	Table,
+	Puzzle2d,
+	Puzzle3d,
+	Puzzle5d,
+	Cad,
+	Panel,
+	registerPlatformComponent,
+	type WindowLayout,
+	type AppToolCategory,
+	type ComponentKind,
+	type TableModel,
+	type Puzzle2dModel,
+	type Puzzle3dModel,
+	type Puzzle5dModel,
+	type CadModel,
+	type PanelModel,
+} from "@framework/platform/core";
 
 export type { Level } from "@ui/react";
 export {
@@ -40,7 +59,20 @@ import {
 	type ToolItem,
 	type WindowBodyViewContext,
 	type WindowMeasure,
+	Cad,
+	Panel,
+	Puzzle2d,
+	Puzzle3d,
+	Puzzle5d,
+	Table,
+	type CadModel,
+	type Component,
 	type ComponentKind,
+	type PanelModel,
+	type Puzzle2dModel,
+	type Puzzle3dModel,
+	type Puzzle5dModel,
+	type TableModel,
 	type UiButtonNode,
 	type UiCadHostSurfaceNode,
 	type UiComponentHostSurfaceNode,
@@ -1358,8 +1390,124 @@ if (import.meta.vitest) {
 
 //#region ­ƒôªui-declarative-renderer.tsx
 
+//#region 🔖ComponentKindRenderer
+type ComponentKindRendererProps = {
+	readonly component: Component<unknown>;
+	readonly node: UiComponentHostSurfaceNode;
+	readonly commandBus: CommandBus;
+	readonly layout: "canvas" | "panel";
+};
+
+type ComponentKindRenderer = React.ComponentType<ComponentKindRendererProps>;
+
+const componentKindRenderers = new Map<ComponentKind, ComponentKindRenderer>();
+
+/** @emoji 🧩 Registers a React renderer for a {@link ComponentKind} driven by {@link Component} view-models. */
+export function registerComponentKindRenderer(kind: ComponentKind, Renderer: ComponentKindRenderer): void {
+	componentKindRenderers.set(kind, Renderer);
+}
+
+function useComponentModel<T>(component: Component<T>): T {
+	return React.useSyncExternalStore(component.subscribe.bind(component), () => component.getModel(), () => component.getModel());
+}
+
+const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component }) => {
+	const model = useComponentModel(component as Table);
+	return (
+		<div className="flex h-full min-h-0 w-full flex-col overflow-auto p-2" data-component-kind="table">
+			{model.columns.length === 0 && model.rows.length === 0 ? (
+				<div className="text-xs text-muted-foreground">{model.emptyMessage ?? "No rows"}</div>
+			) : (
+				<table className="w-full border-collapse text-xs">
+					<thead>
+						<tr>
+							{model.columns.map((column) => (
+								<th key={column.id} className="border-b px-2 py-1 text-left font-medium">
+									{column.label}
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{model.rows.map((row) => (
+							<tr key={row.id} className={model.selectedRowIds?.includes(row.id) ? "bg-muted/50" : undefined}>
+								{model.columns.map((column) => (
+									<td key={`${row.id}:${column.id}`} className="border-b px-2 py-1">
+										{String(row.cells[column.id] ?? "")}
+									</td>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			)}
+		</div>
+	);
+};
+
+const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
+	const model = useComponentModel(component as Puzzle2d);
+	if (model.nodes.length === 0 && model.edges.length === 0) {
+		return (
+			<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
+				{model.emptyMessage ?? "Empty board"}
+			</div>
+		);
+	}
+	return (
+		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
+			<BoardCanvas className="h-full w-full" />
+		</div>
+	);
+};
+
+const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
+	const model = useComponentModel(component as Puzzle3d);
+	return (
+		<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
+			{model.emptyMessage ?? `3D scene${model.instanceId ? ` · ${model.instanceId}` : ""}`}
+		</div>
+	);
+};
+
+const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
+	const model = useComponentModel(component as Puzzle5d);
+	return (
+		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
+			<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={model.instanceId || node.surfaceId} />
+		</div>
+	);
+};
+
+const BuiltinCadKindRenderer: ComponentKindRenderer = ({ component, node }) => {
+	const model = useComponentModel(component as Cad);
+	return (
+		<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
+			{model.emptyMessage ?? `CAD${model.instanceId ? ` · ${model.instanceId}` : ""}`}
+		</div>
+	);
+};
+
+const BuiltinPanelKindRenderer: ComponentKindRenderer = ({ component, commandBus }) => {
+	const model = useComponentModel(component as Panel);
+	return <UiRenderer node={model.body} commandBus={commandBus} />;
+};
+
+function ensureBuiltinComponentKindRenderers(): void {
+	if (componentKindRenderers.size > 0) return;
+	registerComponentKindRenderer("table", BuiltinTableKindRenderer);
+	registerComponentKindRenderer("puzzle2d", BuiltinPuzzle2dKindRenderer);
+	registerComponentKindRenderer("puzzle3d", BuiltinPuzzle3dKindRenderer);
+	registerComponentKindRenderer("puzzle5d", BuiltinPuzzle5dKindRenderer);
+	registerComponentKindRenderer("cad", BuiltinCadKindRenderer);
+	registerComponentKindRenderer("panel", BuiltinPanelKindRenderer);
+}
+
+ensureBuiltinComponentKindRenderers();
+//#endregion 🔖ComponentKindRenderer
+
 //#region 🔖SurfaceBinding
-type SurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
+type SurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode; readonly platform?: Platform }>;
 
 const surfaceBindingHosts = new Map<string, SurfaceBindingHost>();
 
@@ -1396,10 +1544,41 @@ const defaultComponentHosts: Partial<Record<ComponentKind, SurfaceBindingHost>> 
 	puzzle5d: BuiltinPuzzle5dCanvas as SurfaceBindingHost,
 };
 
-function renderBoundComponent(node: UiComponentHostSurfaceNode, layout: "canvas" | "panel"): React.ReactElement {
-	const Host = surfaceBindingHosts.get(node.surfaceId) ?? defaultComponentHosts[node.componentKind];
+function renderBoundComponent(
+	node: UiComponentHostSurfaceNode,
+	layout: "canvas" | "panel",
+	platform?: Platform,
+	commandBus?: CommandBus,
+): React.ReactElement {
 	const wrapperClass =
 		layout === "canvas" ? "absolute inset-0 min-h-0 min-w-0" : "relative min-h-0 min-w-0 flex-1 overflow-auto";
+	const explicitHost = surfaceBindingHosts.get(node.surfaceId);
+	if (explicitHost) {
+		return (
+			<div className={wrapperClass}>
+				<explicitHost node={node} platform={platform} />
+			</div>
+		);
+	}
+	if (platform) {
+		const registered = platform.getComponent(node.surfaceId);
+		if (registered && registered.componentKind === node.componentKind) {
+			const KindRenderer = componentKindRenderers.get(node.componentKind);
+			if (KindRenderer) {
+				return (
+					<div className={wrapperClass}>
+						<KindRenderer
+							component={registered as Component<unknown>}
+							node={node}
+							commandBus={commandBus ?? platform.commandBus}
+							layout={layout}
+						/>
+					</div>
+				);
+			}
+		}
+	}
+	const Host = defaultComponentHosts[node.componentKind];
 	if (!Host) {
 		return (
 			<div className={wrapperClass}>
@@ -1409,14 +1588,18 @@ function renderBoundComponent(node: UiComponentHostSurfaceNode, layout: "canvas"
 	}
 	return (
 		<div className={wrapperClass}>
-			<Host node={node} />
+			<Host node={node} platform={platform} />
 		</div>
 	);
 }
 
 /** @emoji 🖼 Renders a {@link UiComponentHostSurfaceNode} using {@link registerSurfaceBinding} (shared with playground shell). */
-export function renderComponentHostSurface(node: UiComponentHostSurfaceNode, layout: "canvas" | "panel" = "canvas"): React.ReactElement {
-	return renderBoundComponent(node, layout);
+export function renderComponentHostSurface(
+	node: UiComponentHostSurfaceNode,
+	layout: "canvas" | "panel" = "canvas",
+	platform?: Platform,
+): React.ReactElement {
+	return renderBoundComponent(node, layout, platform, platform?.commandBus);
 }
 
 /** @emoji 📑 Binds a table `surfaceId` (alias for {@link registerSurfaceBinding}). */
@@ -1458,6 +1641,7 @@ function stackClass(spec: UiStackNode): string {
 export interface UiRendererProps {
 	readonly node: UiNode;
 	readonly commandBus: CommandBus;
+	readonly platform?: Platform;
 }
 
 function renderText(node: UiTextNode): React.ReactElement {
@@ -1510,31 +1694,31 @@ function renderSeparator(_node: UiSeparatorNode, horizontalParent: boolean): Rea
 	);
 }
 
-function renderTable(node: UiTableHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "panel");
+function renderTable(node: UiTableHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "panel", platform, commandBus);
 }
 
-function renderPanel(node: UiPanelHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "panel");
+function renderPanel(node: UiPanelHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "panel", platform, commandBus);
 }
 
-function renderPuzzle2d(node: UiPuzzle2dHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "canvas");
+function renderPuzzle2d(node: UiPuzzle2dHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "canvas", platform, commandBus);
 }
 
-function renderPuzzle3d(node: UiPuzzle3dHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "canvas");
+function renderPuzzle3d(node: UiPuzzle3dHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "canvas", platform, commandBus);
 }
 
-function renderPuzzle5d(node: UiPuzzle5dHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "canvas");
+function renderPuzzle5d(node: UiPuzzle5dHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "canvas", platform, commandBus);
 }
 
-function renderCad(node: UiCadHostSurfaceNode): React.ReactElement {
-	return renderBoundComponent(node, "canvas");
+function renderCad(node: UiCadHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "canvas", platform, commandBus);
 }
 
-function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: boolean): React.ReactElement {
+function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: boolean, platform?: Platform): React.ReactElement {
 	switch (node.type) {
 		case "stack":
 			return (
@@ -1547,7 +1731,7 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 					)}
 				>
 					{node.children.map((child, index) => (
-						<React.Fragment key={index}>{renderNode(child, commandBus, node.direction === "horizontal")}</React.Fragment>
+						<React.Fragment key={index}>{renderNode(child, commandBus, node.direction === "horizontal", platform)}</React.Fragment>
 					))}
 				</div>
 			);
@@ -1558,17 +1742,17 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 		case "separator":
 			return renderSeparator(node, horizontalParent);
 		case "table":
-			return renderTable(node);
+			return renderTable(node, platform, commandBus);
 		case "panel":
-			return renderPanel(node);
+			return renderPanel(node, platform, commandBus);
 		case "puzzle2d":
-			return renderPuzzle2d(node);
+			return renderPuzzle2d(node, platform, commandBus);
 		case "puzzle3d":
-			return renderPuzzle3d(node);
+			return renderPuzzle3d(node, platform, commandBus);
 		case "puzzle5d":
-			return renderPuzzle5d(node);
+			return renderPuzzle5d(node, platform, commandBus);
 		case "cad":
-			return renderCad(node);
+			return renderCad(node, platform, commandBus);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">
@@ -1579,14 +1763,39 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 }
 
 /** @emoji ­ƒº® Host entry: turns declarative {@link UiNode} trees into mounted React structure. */
-export function UiRenderer({ node, commandBus }: UiRendererProps): React.ReactElement {
-	return renderNode(node, commandBus, false);
+export function UiRenderer({ node, commandBus, platform }: UiRendererProps): React.ReactElement {
+	return renderNode(node, commandBus, false, platform);
 }
 //#endregion ­ƒöûRenderer
 
 //#region ­ƒº¬Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("component kind renderers", () => {
+		it("renders registered table components from platform registry", () => {
+			class DemoTable extends Table {
+				override buildModel(): TableModel {
+					return {
+						columns: [{ id: "name", label: "Name" }],
+						rows: [{ id: "1", cells: { name: "kit-a" } }],
+					};
+				}
+			}
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			const table = new DemoTable("surface/demo-table", "ctrl");
+			table.refresh();
+			platform.registerComponent(table);
+			const markup = renderToStaticMarkup(
+				renderComponentHostSurface(
+					{ type: "table", componentKind: "table", surfaceId: "surface/demo-table", controllerId: "ctrl" },
+					"panel",
+					platform,
+				),
+			);
+			expect(markup).toContain("kit-a");
+		});
+	});
 
 	describe("UiRenderer", () => {
 		it("renders text and dispatches button commands", () => {
@@ -1708,7 +1917,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 			};
 			const factory = getWindowBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={platform.commandBus} />;
+			return <UiRenderer node={node} commandBus={platform.commandBus} platform={platform} />;
 		};
 		declarativeWindowBodyComponents.set(cacheKey, component);
 	}
@@ -1737,7 +1946,7 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 			};
 			const factory = getSidePanelBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={platform.commandBus} />;
+			return <UiRenderer node={node} commandBus={platform.commandBus} platform={platform} />;
 		};
 		declarativeSidePanelBodyComponents.set(cacheKey, component);
 	}
@@ -2845,5 +3054,8 @@ export function mountReactApp(element: React.ReactElement, rootId = "root"): voi
 export async function mountAsyncReactApp(loadRuntime: () => Promise<Platform>, rootId = "root"): Promise<void> {
 	ReactUI.mount(await loadRuntime(), rootId);
 }
+
+/** @emoji 🖥️ Alias for {@link mountAsyncReactApp} — mounts a product {@link Platform} shell. */
+export const mountPlatform = mountAsyncReactApp;
 
 //#endregion ­ƒôªworkbench-mount.tsx

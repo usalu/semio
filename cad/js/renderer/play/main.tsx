@@ -441,6 +441,21 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
   };
 }
 
+/** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
+export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
+  if (!engagement) return "";
+  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
+  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
+  const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
+  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
+  return [options, input, status, possibles].join("\u0003");
+}
+
+/** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
+export function windowEngagementsEqual(left: WindowEngagement | undefined, right: WindowEngagement | undefined): boolean {
+  return windowEngagementDigest(left) === windowEngagementDigest(right);
+}
+
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
 export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane: CadPlayPaneId): WindowEngagement | undefined {
   if (!engagement) return undefined;
@@ -516,9 +531,16 @@ export class CadPlayShellController extends Controller {
 
   /** @emoji 💬 Sets one pane's interaction engagement (from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
   setPaneEngagement(pane: CadPlayPaneId, engagement: WindowEngagement | undefined): void {
-    if (this.engagementByPane[pane] === engagement) return;
+    if (windowEngagementsEqual(this.engagementByPane[pane], engagement)) return;
     this.engagementByPane = { ...this.engagementByPane, [pane]: engagement };
-    this.rebuildShellMode();
+    const windowKindId = CAD_PLAY_PANE_SPECS.find((row) => row.pane === pane)?.windowKindId;
+    const existing = windowKindId ? this.mainMode.windowKinds.find((wk) => wk.id === windowKindId) : undefined;
+    if (existing) {
+      existing.engagement = engagement;
+      this.mainMode.windowKinds = [...this.mainMode.windowKinds];
+    } else {
+      this.rebuildShellMode();
+    }
     this.emit();
   }
 
@@ -642,7 +664,6 @@ import {
   StaticTreePanelDefinition,
   mountPlaygroundApp,
   playgroundPanelSection,
-  registerUiScene3DSurfaceHost,
   type SidePanelTabConfig,
 } from "@framework/playground/renderer/react/shell";
 import { registerSurfaceBinding, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
@@ -2032,6 +2053,23 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("windowEngagementsEqual", () => {
+    it("treats engagement snapshots with the same visible fields as equal", () => {
+      const left: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Type an interaction" },
+        status: [{ id: "engagement-state", text: "State: idle" }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+      };
+      const right: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Type an interaction" },
+        status: [{ id: "engagement-state", text: "State: idle" }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }],
+      };
+      expect(windowEngagementsEqual(left, right)).toBe(true);
+      expect(windowEngagementDigest(left)).toBe(windowEngagementDigest(right));
+    });
+  });
+
   describe("cadPlayEngagementMirror", () => {
     it("returns undefined for a null engagement", () => {
       expect(cadPlayEngagementMirror(null, "shape")).toBeUndefined();
@@ -2071,6 +2109,21 @@ if (import.meta.vitest) {
   });
 
   describe("CadPlayShellController engagement", () => {
+    it("skips shell notify when mirrored engagement content is unchanged", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      let generation = runtime.generation;
+      const engagement: WindowEngagement = {
+        input: { id: "engagement-input", value: "", placeholder: "Type an interaction" },
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+      };
+      controller.setPaneEngagement("shape", engagement);
+      const afterFirst = runtime.generation;
+      controller.setPaneEngagement("shape", { ...engagement, possibleEngagements: [{ ...engagement.possibleEngagements![0]!, command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }] });
+      expect(runtime.generation).toBe(afterFirst);
+      expect(afterFirst).toBeGreaterThan(generation);
+    });
+
     it("attaches engagement per pane and routes pane-scoped engagement commands to the host bridge", () => {
       const runtime = new Platform();
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());

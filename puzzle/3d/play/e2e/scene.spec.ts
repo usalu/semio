@@ -1,13 +1,13 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-function collectSceneConsole(page: Page): string[] {
+function collectPuzzle3dPlayConsole(page: Page): string[] {
 	const messages: string[] = [];
 	page.on("console", (message) => messages.push(message.text()));
 	page.on("pageerror", (error) => messages.push(error.message));
 	return messages;
 }
 
-function expectCleanSceneConsole(messages: string[]): void {
+function expectCleanPuzzle3dPlayConsole(messages: string[]): void {
 	const text = messages.join("\n");
 	expect(text).not.toContain("Multiple instances of Three.js");
 	expect(text).not.toContain("indirectCount is not defined");
@@ -25,20 +25,20 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("invalid sfntVersion");
 }
 
-const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
+const PUZZLE_3D_LOD_NUMERIC = /^\d+(\.\d+)?$/;
 
-async function waitScenePlayReady(page: Page): Promise<Locator> {
+async function waitPuzzle3dPlayReady(page: Page): Promise<Locator> {
 	await page.goto("/");
-	const sceneRoot = page.locator("[data-scene-root]");
-	await expect(sceneRoot).toBeVisible({ timeout: 120_000 });
-	await expect(sceneRoot).toHaveAttribute("data-scene-domain", "architecture", { timeout: 120_000 });
-	await expect(sceneRoot.locator("canvas")).toBeVisible({ timeout: 120_000 });
-	return sceneRoot;
+	const puzzle3dRoot = page.locator("[data-puzzle3d-root]");
+	await expect(puzzle3dRoot).toBeVisible({ timeout: 120_000 });
+	await expect(puzzle3dRoot).toHaveAttribute("data-puzzle3d-domain", "architecture", { timeout: 120_000 });
+	await expect(puzzle3dRoot.locator("canvas")).toBeVisible({ timeout: 120_000 });
+	return puzzle3dRoot;
 }
 
-async function waitScenePlayHooks(page: Page): Promise<void> {
+async function waitPuzzle3dPlayHooks(page: Page): Promise<void> {
 	await page.waitForFunction(
-		() => typeof (window as unknown as { __scenePlaySelect?: unknown }).__scenePlaySelect === "function",
+		() => typeof (window as unknown as { __puzzle3dPlaySelect?: unknown }).__puzzle3dPlaySelect === "function",
 		{ timeout: 120_000 },
 	);
 }
@@ -50,21 +50,21 @@ async function ensureDetailsPanelOpen(page: Page): Promise<void> {
 	}
 }
 
-async function expectSceneLodReady(sceneRoot: ReturnType<Page["locator"]>): Promise<void> {
-	await expect(sceneRoot).toHaveAttribute("data-scene-lod", SCENE_LOD_NUMERIC, { timeout: 30_000 });
+async function expectPuzzle3dLodReady(puzzle3dRoot: ReturnType<Page["locator"]>): Promise<void> {
+	await expect(puzzle3dRoot).toHaveAttribute("data-puzzle3d-lod", PUZZLE_3D_LOD_NUMERIC, { timeout: 30_000 });
 }
 
-test("scene play loads canvas and fixture", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	const sceneRoot = await waitScenePlayReady(page);
-	await expectSceneLodReady(sceneRoot);
+test("puzzle 3d play loads canvas and fixture", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	const puzzle3dRoot = await waitPuzzle3dPlayReady(page);
+	await expectPuzzle3dLodReady(puzzle3dRoot);
 	await expect(page.locator('[data-measure-id="puzzle-3d-main-lod"]')).toBeVisible({ timeout: 120_000 });
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
+test("puzzle 3d play LOD measure pins manual lod on canvas", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
 	await ensureDetailsPanelOpen(page);
 	await expect(page.locator('[data-measure-id="puzzle-3d-main-auto"]')).toBeVisible({ timeout: 120_000 });
 	await page.locator("#puzzle-3d-main-auto").click({ timeout: 30_000 });
@@ -76,53 +76,53 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 		await page.keyboard.press("ArrowRight");
 	}
 	await expect
-		.poll(async () => await page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 30_000 })
-		.toMatch(SCENE_LOD_NUMERIC);
-	const pinned = await page.locator("[data-scene-root]").getAttribute("data-scene-lod");
+		.poll(async () => await page.locator("[data-puzzle3d-root]").getAttribute("data-puzzle3d-lod"), { timeout: 30_000 })
+		.toMatch(PUZZLE_3D_LOD_NUMERIC);
+	const pinned = await page.locator("[data-puzzle3d-root]").getAttribute("data-puzzle3d-lod");
 	expect(Number(pinned)).toBeGreaterThan(1);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene play inspector panel is visible", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
+test("puzzle 3d play inspector panel is visible", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
 	await ensureDetailsPanelOpen(page);
 	await page.locator("#puzzle-3d-play-inspector").click({ timeout: 30_000 });
 	await expect(page.getByText("Inspector", { exact: true })).toBeVisible({ timeout: 30_000 });
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene selection hook updates label", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
-	await waitScenePlayHooks(page);
+test("puzzle 3d selection hook updates label", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
+	await waitPuzzle3dPlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
 		({ id, label }) => {
-			const w = window as unknown as { __scenePlaySelect?: (objectId: string) => void };
-			if (typeof w.__scenePlaySelect !== "function") return false;
-			w.__scenePlaySelect(id);
+			const w = window as unknown as { __puzzle3dPlaySelect?: (objectId: string) => void };
+			if (typeof w.__puzzle3dPlaySelect !== "function") return false;
+			w.__puzzle3dPlaySelect(id);
 			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
 			return selected.includes(label);
 		},
 		{ id: objectId, label: objectLabel },
 		{ timeout: 30_000 },
 	);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene pointer miss clears selection", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
-	await waitScenePlayHooks(page);
+test("puzzle 3d pointer miss clears selection", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
+	await waitPuzzle3dPlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
 		({ id, label }) => {
-			const w = window as unknown as { __scenePlaySelect?: (objectId: string) => void };
-			if (typeof w.__scenePlaySelect !== "function") return false;
-			w.__scenePlaySelect(id);
+			const w = window as unknown as { __puzzle3dPlaySelect?: (objectId: string) => void };
+			if (typeof w.__puzzle3dPlaySelect !== "function") return false;
+			w.__puzzle3dPlaySelect(id);
 			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
 			return selected.includes(label);
 		},
@@ -130,27 +130,27 @@ test("scene pointer miss clears selection", async ({ page }) => {
 		{ timeout: 30_000 },
 	);
 	await page.evaluate(() => {
-		const w = window as unknown as { __scenePlayPointerMiss?: () => void };
-		if (typeof w.__scenePlayPointerMiss !== "function") {
-			throw new Error("missing __scenePlayPointerMiss");
+		const w = window as unknown as { __puzzle3dPlayPointerMiss?: () => void };
+		if (typeof w.__puzzle3dPlayPointerMiss !== "function") {
+			throw new Error("missing __puzzle3dPlayPointerMiss");
 		}
-		w.__scenePlayPointerMiss();
+		w.__puzzle3dPlayPointerMiss();
 	});
 	await expect(page.locator("[data-e2e-selected]")).toHaveText("none", { timeout: 15_000 });
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene activate hook shows relocate controls without recursion", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
-	await waitScenePlayHooks(page);
+test("puzzle 3d activate hook shows relocate controls without recursion", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
+	await waitPuzzle3dPlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
 		({ id, label }) => {
-			const w = window as unknown as { __scenePlayActivate?: (objectId: string) => void };
-			if (typeof w.__scenePlayActivate !== "function") return false;
-			w.__scenePlayActivate(id);
+			const w = window as unknown as { __puzzle3dPlayActivate?: (objectId: string) => void };
+			if (typeof w.__puzzle3dPlayActivate !== "function") return false;
+			w.__puzzle3dPlayActivate(id);
 			const selected = document.querySelector("[data-e2e-selected]")?.textContent ?? "";
 			return selected.includes(label);
 		},
@@ -159,34 +159,34 @@ test("scene activate hook shows relocate controls without recursion", async ({ p
 	);
 	await expect(page.locator("canvas")).toBeVisible();
 	await page.waitForTimeout(250);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene does not return to loading meshes after initial load", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	await waitScenePlayReady(page);
+test("puzzle 3d does not return to loading meshes after initial load", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	await waitPuzzle3dPlayReady(page);
 	await expect(page.getByText("Loading meshes…")).toHaveCount(0, { timeout: 120_000 });
 	await page.waitForTimeout(2000);
 	await expect(page.getByText("Loading meshes…")).toHaveCount(0);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene click keeps chunked meshes mounted", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	const sceneRoot = await waitScenePlayReady(page);
-	const canvas = sceneRoot.locator("canvas").first();
+test("puzzle 3d click keeps chunked meshes mounted", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	const puzzle3dRoot = await waitPuzzle3dPlayReady(page);
+	const canvas = puzzle3dRoot.locator("canvas").first();
 	await expect.poll(async () => page.locator("canvas").count()).toBeGreaterThan(0);
 	const before = await page.locator("canvas").count();
 	await canvas.click({ position: { x: 320, y: 240 } });
-	await expect(sceneRoot).toBeVisible();
+	await expect(puzzle3dRoot).toBeVisible();
 	await expect.poll(async () => page.locator("canvas").count()).toBe(before);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene camera motion changes canvas pixels", async ({ page }) => {
-	const messages = collectSceneConsole(page);
-	const sceneRoot = await waitScenePlayReady(page);
-	const canvas = sceneRoot.locator("canvas").first();
+test("puzzle 3d camera motion changes canvas pixels", async ({ page }) => {
+	const messages = collectPuzzle3dPlayConsole(page);
+	const puzzle3dRoot = await waitPuzzle3dPlayReady(page);
+	const canvas = puzzle3dRoot.locator("canvas").first();
 	const box = await canvas.boundingBox();
 	expect(box).not.toBeNull();
 	const cx = box!.x + box!.width * 0.5;
@@ -219,10 +219,10 @@ test("scene camera motion changes canvas pixels", async ({ page }) => {
 			{ timeout: 30_000 },
 		)
 		.toBe(true);
-	expectCleanSceneConsole(messages);
+	expectCleanPuzzle3dPlayConsole(messages);
 });
 
-test("scene play serves placeholder mesh as binary glb", async ({ request }) => {
+test("puzzle 3d play serves placeholder mesh as binary glb", async ({ request }) => {
 	const response = await request.get("/meshes/placeholder.glb");
 	expect(response.ok()).toBe(true);
 	expect(response.headers()["content-type"]).toContain("model/gltf-binary");

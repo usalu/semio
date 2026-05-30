@@ -24,13 +24,13 @@ import {
 import { BoardCanvas, Edge, Handle, Node, Wire } from "@puzzle/2d/react";
 import {
   Canvas3D as VolumeView,
-  SceneAttractions as VolumeBonds,
-  SceneObjectStateProvider as VolumePartStateProvider,
-  SceneObjects as VolumeParts,
+  Puzzle3dAttractions as VolumeBonds,
+  Puzzle3dObjectStateProvider as VolumePartStateProvider,
+  Puzzle3dObjects as VolumeParts,
   parseFixtureV1,
   blockedVortexFullIdsFromAttractions,
-  useSceneObjectConnect as useVolumePartConnect,
-  useSceneObjectRelocate as useVolumePartRelocate,
+  usePuzzle3dObjectConnect as useVolumePartConnect,
+  usePuzzle3dObjectRelocate as useVolumePartRelocate,
   type CanvasProps as VolumeViewProps,
   type FixtureV1 as VolumeFixtureV1,
   type KindCatalogBundle as VolumeKindCatalogBundle,

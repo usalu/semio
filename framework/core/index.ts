@@ -720,8 +720,37 @@ export class Platform {
 		this.panelVisibility = { ...next };
 		this.notify();
 	}
+
+	private readonly componentsBySurfaceId = new Map<string, PlatformComponentEntry>();
+
+	/** @emoji 🧩 Registers a render-agnostic surface component keyed by {@link PlatformComponentEntry.surfaceId}. */
+	registerComponent(component: PlatformComponentEntry): void {
+		this.componentsBySurfaceId.set(component.surfaceId, component);
+		this.notify();
+	}
+
+	/** @emoji 🔍 Resolves a registered surface component by id. */
+	getComponent(surfaceId: string): PlatformComponentEntry | undefined {
+		return this.componentsBySurfaceId.get(surfaceId);
+	}
+
+	/** @emoji 🧹 Removes a surface component (tests / hot reload). */
+	unregisterComponent(surfaceId: string): void {
+		if (!this.componentsBySurfaceId.delete(surfaceId)) return;
+		this.notify();
+	}
 }
 //#endregion 🔖Platform
+
+//#region 🔖PlatformComponentEntry
+/** @emoji 🧩 Minimal handle stored on {@link Platform} for renderer-agnostic surface components. */
+export interface PlatformComponentEntry {
+	readonly surfaceId: string;
+	readonly componentKind: string;
+	readonly subscribe: (listener: PlatformSubscriber) => () => void;
+	readonly getModel: () => unknown;
+}
+//#endregion 🔖PlatformComponentEntry
 
 //#region 🔖BodyViewContext
 /** @emoji 🪟 Shared fields for declarative window and side-panel body builders. */

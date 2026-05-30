@@ -66,9 +66,6 @@ export type {
 /** @emoji 📋 Playground alias for {@link UiPuzzle2dHostSurfaceNode}. */
 export type UiBoardHostSurfaceNode = import("@framework/platform/core").UiPuzzle2dHostSurfaceNode;
 
-/** @emoji 🧊 Playground alias for {@link UiPuzzle3dHostSurfaceNode}. */
-export type UiScene3DHostSurfaceNode = import("@framework/platform/core").UiPuzzle3dHostSurfaceNode;
-
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
   readonly type: "table";
@@ -168,7 +165,7 @@ export type UiNode =
   | UiTextNode
   | UiButtonNode
   | UiSeparatorNode
-  | UiScene3DHostSurfaceNode
+  | UiPuzzle3dHostSurfaceNode
   | UiBoardHostSurfaceNode
   | import("@framework/platform/core").UiPuzzle5dHostSurfaceNode
   | import("@framework/platform/core").UiCadHostSurfaceNode
@@ -210,11 +207,6 @@ export {
 /** @emoji 📋 Playground alias for {@link buildPuzzle2dWindowBody}. */
 export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
   return buildPuzzle2dWindowBody(surfaceId, controllerId, paneId);
-}
-
-/** @emoji 🧊 Playground alias for {@link buildPuzzle3dWindowBody}. */
-export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
-  return buildPuzzle3dWindowBody(surfaceId, controllerId);
 }
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
@@ -454,7 +446,7 @@ export interface PlaygroundIds {
   readonly detailsTabBodyKey: string;
   readonly workbenchIconId: string;
   readonly detailsIconId: string;
-  readonly mainSceneSurfaceId: string;
+  readonly mainPuzzle3dViewportSurfaceId: string;
   readonly workbenchPanelSurfaceId: string;
   readonly detailsPanelSurfaceId: string;
 }
@@ -631,12 +623,12 @@ export function playgroundControllerFromContext(ctx: WindowBodyViewContext | Sid
   return ctx.runtime.getActiveApp()?.controller as PlaygroundController<string> | undefined;
 }
 
-/** @emoji 🪟 Declarative main window: lone scene3d surface. */
+/** @emoji 🪟 Declarative main window: lone puzzle3d viewport surface. */
 export function buildPlaygroundMainWindowBody(ids: PlaygroundIds, ctx: WindowBodyViewContext): UiNode {
   if (!playgroundControllerFromContext(ctx)) {
     return { type: "text", value: "Missing playground controller" };
   }
-  return buildScene3dWindowBody(ids.mainSceneSurfaceId, ids.controllerId);
+  return buildPuzzle3dWindowBody(ids.mainPuzzle3dViewportSurfaceId, ids.controllerId);
 }
 
 /** @emoji 📋 Declarative workbench side tab: host-bound table surface. */
@@ -720,7 +712,7 @@ if (import.meta.vitest) {
     detailsTabBodyKey: "test.playground.details",
     workbenchIconId: "test.playground.icon.workbench",
     detailsIconId: "test.playground.icon.details",
-    mainSceneSurfaceId: "test.playground.scene/v1",
+    mainPuzzle3dViewportSurfaceId: "test.playground.puzzle3d/v1",
     workbenchPanelSurfaceId: "test.playground.panel.workbench/v1",
     detailsPanelSurfaceId: "test.playground.panel.details/v1",
   };
@@ -793,7 +785,7 @@ if (import.meta.vitest) {
   });
 
   describe("registerPlaygroundDeclarativeBodies", () => {
-    it("registers scene3d main window and table side panels", () => {
+    it("registers puzzle3d main window and table side panels", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new DemoPlaygroundController(bus, () => wb.notify());

@@ -67,7 +67,7 @@ import {
   type UiTreeNode,
   type UiTreeSectionNode,
   type UiVec3Node,
-  type UiScene3DHostSurfaceNode,
+  type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   type WindowBodyViewContext,
   type WindowEngagement,
@@ -102,7 +102,7 @@ export {
   PlaygroundController,
   Platform,
   WindowKindRuntime,
-  buildScene3dWindowBody,
+  buildPuzzle3dWindowBody,
   createDefaultLayout,
   createStackLayout,
   createWindowLayout,
@@ -218,24 +218,24 @@ function resolveSidePanelTabSource(tab: SidePanelTabConfig | SidePanelTabDefinit
 }
 
 //#region 🔖UiRenderer
-type Scene3DSurfaceHost = React.ComponentType<{ readonly node: UiScene3DHostSurfaceNode }>;
+type Puzzle3dSurfaceHost = React.ComponentType<{ readonly node: UiPuzzle3dHostSurfaceNode }>;
 type BoardSurfaceHost = React.ComponentType<{ readonly node: UiBoardHostSurfaceNode }>;
 type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
 type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
 
-const scene3dSurfaceHosts = new Map<string, Scene3DSurfaceHost>();
+const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
 const boardSurfaceHosts = new Map<string, BoardSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["scene3d", "board", "puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["board", "puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
 }
 
-/** @emoji 🧭 Binds a `surfaceId` from {@link UiScene3DHostSurfaceNode} to a host React canvas implementation. */
-export function registerUiScene3DSurfaceHost(surfaceId: string, Component: Scene3DSurfaceHost): void {
-  scene3dSurfaceHosts.set(surfaceId, Component);
+/** @emoji 🧭 Binds a `surfaceId` from {@link UiPuzzle3dHostSurfaceNode} to a host React canvas implementation. */
+export function registerUiPuzzle3dSurfaceHost(surfaceId: string, Component: Puzzle3dSurfaceHost): void {
+  puzzle3dSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -256,16 +256,6 @@ export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSu
 function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): React.ReactElement {
   if (node.type === "board") {
     const Host = boardSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "scene3d") {
-    const Host = scene3dSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
@@ -444,7 +434,6 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       );
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
-    case "scene3d":
     case "board":
     case "puzzle2d":
     case "puzzle3d":
@@ -997,8 +986,8 @@ export const mountReactApp = mountPlaygroundApp;
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
 import { sceneHostPort } from "@ui/react";
-import { NakaginCapsuleTowerSceneJson as nakaginSceneFixtureJson } from "@puzzle/assets";
-import { PlaySceneCanvas, SceneObjectStateProvider, parseFixtureV1, applyConnectToSceneFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
+import { NakaginCapsuleTowerSceneJson as nakaginPuzzle3dFixtureJson } from "@puzzle/assets";
+import { Puzzle3dPlayCanvas, Puzzle3dObjectStateProvider, parseFixtureV1, applyConnectToPuzzle3dFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,
   PUZZLE_3D_PLAY_CONTROLLER_ID,
@@ -1007,7 +996,7 @@ import {
   PUZZLE_3D_PLAY_ICON_INSPECTOR,
   PUZZLE_3D_PLAY_ICON_KINDS,
   PUZZLE_3D_PLAY_ICON_SETTINGS,
-  PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
+  PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
   PUZZLE_3D_PLAY_APP_ID,
   Puzzle3dPlayShellController,
   parseKindCatalogs,
@@ -1030,16 +1019,16 @@ function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
   );
 }
 
-function Puzzle3dPlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
+function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
   const { runtime } = useApp();
   const bus = runtime.commandBus;
   const ctrl = usePuzzle3dPlayController();
   if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid scene viewport binding</div>;
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 3D viewport binding</div>;
   }
   const snap = usePuzzle3dPlaySnapshot();
   if (!snap.fixture) {
-    return <div className="p-4 text-destructive">Invalid scene fixture</div>;
+    return <div className="p-4 text-destructive">Invalid puzzle 3D fixture</div>;
   }
   const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
   const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
@@ -1060,16 +1049,16 @@ function Puzzle3dPlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSu
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
-      <SceneObjectStateProvider
+      <Puzzle3dObjectStateProvider
         fixture={snap.fixture}
         fixtureRevision={snap.fixtureRevision}
         onConnect={(payload) => {
-          patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
+          patchFixture((fixture) => applyConnectToPuzzle3dFixture(fixture, payload));
           bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteConnect");
         }}
         onRelocate={onRelocatePersist}
       >
-        <PlaySceneCanvas
+        <Puzzle3dPlayCanvas
           fixture={snap.fixture}
           proximityRelocateEnabled={proximityRelocateEnabled}
           kindCatalogs={kindCatalogs}
@@ -1097,23 +1086,23 @@ function Puzzle3dPlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSu
           onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
         />
-      </SceneObjectStateProvider>
+      </Puzzle3dObjectStateProvider>
     </div>
   );
 }
 
-let scenePlayChromeRegistered = false;
+let puzzle3dPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers scene play surface host, tab icons, and mesh preload. */
-export function registerSceneSurfaceHosts(): void {
-  if (scenePlayChromeRegistered) return;
-  scenePlayChromeRegistered = true;
-  registerUiScene3DSurfaceHost(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, Puzzle3dPlaySceneSurfaceHost);
+/** @emoji 🧊 Registers puzzle 3D play surface host, tab icons, and mesh preload. */
+export function registerPuzzle3dPlaySurfaceHosts(): void {
+  if (puzzle3dPlayChromeRegistered) return;
+  puzzle3dPlayChromeRegistered = true;
+  registerUiPuzzle3dSurfaceHost(PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, Puzzle3dPlayViewportHost);
   registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, ClipboardList);
   registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, Tags);
   registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, ListTree);
   registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, Settings);
-  const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
+  const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
   if (fixture) {
     const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
     for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
@@ -1125,14 +1114,14 @@ export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root")
   mountPlaygroundApp(<PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />, rootId);
 }
 
-const scenePlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerSceneSurfaceHosts,
+const puzzle3dPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerPuzzle3dPlaySurfaceHosts,
   mount: mountPuzzle3dPlayChrome,
 };
 
 /** @emoji 🛝 Puzzle 3D play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
-export function boot3dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, scenePlayChromeBoot, rootId);
+export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, puzzle3dPlayChromeBoot, rootId);
 }
 //#endregion 🔖Puzzle3dPlayHost
 
@@ -1262,7 +1251,7 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
   );
 }
 
-function TopologyVolumeSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
+function TopologyVolumeSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
   const { controller, snapshot } = useTopologyPlaySnapshot();
   if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_VOLUME_SURFACE_ID || !controller || !snapshot?.volumeFixture || !snapshot.volumeCamera || !snapshot.boardFixture) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid topology volume binding</div>;
@@ -1295,7 +1284,7 @@ export function registerTopologyPlaySurfaceHosts(): void {
   if (topologyPlayChromeRegistered) return;
   topologyPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
-  registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, TopologyVolumeSurfaceHost);
+  registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, TopologyVolumeSurfaceHost);
   registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyFlatDeclarativeBody);
   registerWindowBody(PUZZLE_5D_PLAY_VOLUME_BODY_KEY, buildTopologyVolumeDeclarativeBody);
 }

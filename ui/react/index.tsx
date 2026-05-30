@@ -19817,7 +19817,7 @@ export interface EngagementProps extends EngagementSpec {
 /** @emoji 💬 Transparent overlay engagement with options, input, and status rows. */
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
-  const [autocompleteOpen, setAutocompleteOpen] = reactHostPort.useState(false);
+  const [autocompleteDismissed, setAutocompleteDismissed] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
   const filteredPossibles = reactHostPort.useMemo(
@@ -19834,13 +19834,14 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   }, [filteredPossibles.length, draft]);
 
   reactHostPort.useEffect(() => {
-    if (!filteredPossibles.length) setAutocompleteOpen(false);
-  }, [filteredPossibles.length]);
+    setAutocompleteDismissed(false);
+  }, [draft, possibleEngagements]);
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
+  const showAutocomplete = hasPossibles && filteredPossibles.length > 0 && !autocompleteDismissed;
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -19854,16 +19855,17 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
     (item: EngagementPossible) => {
       item.onSelect?.();
       applyDraft("");
-      setAutocompleteOpen(false);
+      setAutocompleteDismissed(true);
       setActivePossibleIndex(0);
     },
     [applyDraft],
   );
 
-  const openAutocomplete = reactHostPort.useCallback(() => {
-    if (!hasPossibles || !filteredPossibles.length) return;
-    setAutocompleteOpen(true);
-  }, [filteredPossibles.length, hasPossibles]);
+  const activatePossible = reactHostPort.useCallback((): boolean => {
+    if (!filteredPossibles.length) return false;
+    selectPossible(filteredPossibles[activePossibleIndex] ?? filteredPossibles[0]!);
+    return true;
+  }, [activePossibleIndex, filteredPossibles, selectPossible]);
 
   reactHostPort.useEffect(() => {
     if (!active || !hasInput || input?.disabled) return;
@@ -19894,44 +19896,48 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         </div>
       ) : null}
       {hasInput ? (
-        <Popover open={autocompleteOpen} onOpenChange={setAutocompleteOpen}>
+        <Popover
+          open={showAutocomplete}
+          onOpenChange={(open) => {
+            if (!open) setAutocompleteDismissed(true);
+          }}
+        >
           <PopoverAnchor asChild>
             <div className="w-full min-w-0">
               <Input
                 id={input!.id ?? "engagement-input"}
                 value={draft}
                 tabIndex={active ? 0 : -1}
+                onFocus={() => setAutocompleteDismissed(false)}
                 onChange={(event) => {
                   applyDraft(event.target.value);
+                  setAutocompleteDismissed(false);
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
-                    setAutocompleteOpen(false);
+                    setAutocompleteDismissed(true);
                     return;
                   }
                   if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && hasPossibles) {
                     event.preventDefault();
-                    openAutocomplete();
+                    activatePossible();
                     return;
                   }
                   if (event.key === "ArrowDown" && filteredPossibles.length) {
                     event.preventDefault();
-                    setAutocompleteOpen(true);
+                    setAutocompleteDismissed(false);
                     setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
                     return;
                   }
                   if (event.key === "ArrowUp" && filteredPossibles.length) {
                     event.preventDefault();
-                    setAutocompleteOpen(true);
+                    setAutocompleteDismissed(false);
                     setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
                     return;
                   }
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    if (autocompleteOpen && filteredPossibles.length) {
-                      selectPossible(filteredPossibles[activePossibleIndex] ?? filteredPossibles[0]!);
-                      return;
-                    }
+                    if (activatePossible()) return;
                     input!.onSubmit?.(draft);
                   }
                 }}
@@ -23800,11 +23806,11 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("Engagement opens autocomplete on Space and selects on Enter when open", async () => {
+    it("Engagement shows autocomplete while typing and activates on Space or Enter", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
-      const { container } = render(
+      render(
         <Engagement
           active
           input={{ placeholder: "Type an interaction" }}
@@ -23815,11 +23821,14 @@ if (import.meta.vitest) {
         />,
       );
       const field = screen.getByPlaceholderText("Type an interaction");
-      fireEvent.keyDown(field, { key: " " });
+      fireEvent.change(field, { target: { value: "sph" } });
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
-      expect(container.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      expect(screen.getByText("Sphere")).toBeTruthy();
       fireEvent.keyDown(field, { key: "Enter" });
-      await waitFor(() => expect(selected).toEqual(["primitive.box"]));
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.keyDown(field, { key: " " });
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
