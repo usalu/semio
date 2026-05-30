@@ -376,12 +376,12 @@ function sketchpadTitleFromDocPath(relativePath: string): string {
 type SketchpadDocPage = { readonly path: string; readonly title: string };
 type SketchpadDocSection = { readonly id: string; readonly label: string; readonly pages: readonly SketchpadDocPage[] };
 
+const SKETCHPAD_DOC_PAGE_MODULES = import.meta.glob("./pages/**/*.mdx");
+
 /** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
 export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 	const sectionMap = new Map<string, SketchpadDocPage[]>();
-	const glob = (import.meta as ImportMeta & { glob?: (pattern: string) => Record<string, unknown> }).glob;
-	const modules = typeof glob === "function" ? glob("./pages/**/*.mdx") : {};
-	for (const modulePath of Object.keys(modules)) {
+	for (const modulePath of Object.keys(SKETCHPAD_DOC_PAGE_MODULES)) {
 		const relative = modulePath.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
 		const sectionId = relative.split("/")[0] ?? "root";
 		const pages = sectionMap.get(sectionId) ?? [];
@@ -1807,6 +1807,20 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 		const { kitId, designId, typeId } = this.route;
 		if (!kitId) {
 			const open = ctrl?.listOpenKitIds() ?? [];
+			const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+			const selected = shell?.home.selectedKitIds ?? [];
+			if (selected.length > 0) {
+				const lines: { text: string; emphasize?: boolean }[] = [
+					{ text: "Home", emphasize: true },
+					{ text: `${selected.length} kit(s) selected` },
+				];
+				for (const id of selected.slice(0, 5)) {
+					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
+					lines.push({ text: kit?.name ?? id });
+				}
+				if (selected.length > 5) lines.push({ text: "…" });
+				return sketchpadPanelTextStack(lines);
+			}
 			return sketchpadPanelTextStack([
 				{ text: "Workbench", emphasize: true },
 				{ text: `${open.length} kit(s) open` },
@@ -2148,7 +2162,43 @@ export class SketchpadShellController extends Controller {
 		const shell = this.shellStore.get();
 		switch (command) {
 			case "setNavigation": {
-				this.shellStore.set({ ...shell, navigationPath: (args as { path: string }).path });
+				const path = (args as { path: string }).path;
+				const pathOnly = path.split("?")[0] ?? "/";
+				const home = pathOnly === "/" ? parseSketchpadHomeQuery(path) : shell.home;
+				this.shellStore.set({ ...shell, navigationPath: path, home });
+				break;
+			}
+			case "toggleHomeRowExpand": {
+				const rowId = (args as { rowId: string }).rowId;
+				const expanded = new Set(shell.home.expandedRowIds);
+				if (expanded.has(rowId)) expanded.delete(rowId);
+				else expanded.add(rowId);
+				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
+				break;
+			}
+			case "toggleTableRowSelection": {
+				const rowId = (args as { rowId: string }).rowId;
+				if (!shell.openKitIds.includes(rowId)) break;
+				const selected = new Set(shell.home.selectedKitIds);
+				if (selected.has(rowId)) selected.delete(rowId);
+				else selected.add(rowId);
+				this.updateHome({ ...shell.home, selectedKitIds: [...selected] });
+				break;
+			}
+			case "setHomeFilters": {
+				const payload = args as {
+					kind?: string | null;
+					q?: string;
+					name?: string | null;
+					version?: string | null;
+				};
+				this.updateHome({
+					...shell.home,
+					kindFilter: payload.kind === undefined ? shell.home.kindFilter : payload.kind,
+					searchQuery: payload.q === undefined ? shell.home.searchQuery : payload.q,
+					nameFilter: payload.name === undefined ? shell.home.nameFilter : payload.name,
+					versionFilter: payload.version === undefined ? shell.home.versionFilter : payload.version,
+				});
 				break;
 			}
 			case "togglePanel": {
@@ -2173,8 +2223,13 @@ export class SketchpadShellController extends Controller {
 				break;
 			}
 			case "importKitFromFile": {
-				void this.openKit("file").catch((error) => {
-					console.error("[semio.sketchpad] importKitFromFile failed:", error);
+				void (async () => {
+					const store = await sketchpadBrowserFileKitFactory();
+					const kitId = store.getSnapshot().kit.id;
+					this.registerKitStore(kitId, store, { kind: "file" });
+					this.navigateTo(`/kits/${kitId}`);
+				})().catch((error) => {
+					console.error("[semio/sketchpad] importKitFromFile failed:", error);
 				});
 				break;
 			}
@@ -2259,6 +2314,14 @@ function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 		sketchpadShellCommand("semio.sketchpad.home.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
 		sketchpadShellCommand("semio.sketchpad.home.openFile", "Open file kit", "openKit", { kind: "file" }),
 		sketchpadShellCommand("semio.sketchpad.home.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
+		sketchpadShellCommand("semio.sketchpad.home.filterTemporary", "Filter · temporary kits", "setHomeFilters", { kind: "temporary" }),
+		sketchpadShellCommand("semio.sketchpad.home.filterFile", "Filter · file kits", "setHomeFilters", { kind: "file" }),
+		sketchpadShellCommand("semio.sketchpad.home.clearFilters", "Clear home filters", "setHomeFilters", {
+			kind: null,
+			q: "",
+			name: null,
+			version: null,
+		}),
 	];
 }
 
@@ -2603,6 +2666,37 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("parseSketchpadHomeQuery", () => {
+		it("reads kind and search filters from the URI", () => {
+			const home = parseSketchpadHomeQuery("/?kind=file&q=metab&e=docs-root&sel=k1");
+			expect(home.kindFilter).toBe("file");
+			expect(home.searchQuery).toBe("metab");
+			expect(home.expandedRowIds).toEqual(["docs-root"]);
+			expect(home.selectedKitIds).toEqual(["k1"]);
+		});
+	});
+
+	describe("sketchpadBuildHomeTableModel", () => {
+		it("includes documentation root and grouped kit rows", () => {
+			const model = sketchpadBuildHomeTableModel({
+				openKitIds: ["k1", "k2"],
+				kitById: (id) =>
+					id === "k1"
+						? ({ id: "k1", name: "Alpha", version: "r1" } as Kit)
+						: ({ id: "k2", name: "Alpha", version: "r2" } as Kit),
+				kitKind: () => "temporary",
+				home: {
+					...sketchpadEmptyHomeUiState(),
+					expandedRowIds: ["docs-root", "docs-section-intro", "kit-group-Alpha"],
+				},
+				docs: [{ id: "intro", label: "Intro", pages: [{ path: "intro/index", title: "Overview" }] }],
+			});
+			expect(model.rows.some((row) => row.id === "docs-root")).toBe(true);
+			expect(model.rows.some((row) => row.id === "docs-page-intro/index")).toBe(true);
+			expect(model.rows.some((row) => row.id === "k2")).toBe(true);
+		});
+	});
+
 	describe("SketchpadHomeTable snapshot", () => {
 		it("lists open kits with version and kind columns", async () => {
 			const platform = await buildSketchpadPlatform();
@@ -2615,10 +2709,9 @@ if (import.meta.vitest) {
 			const table = new SketchpadHomeTable(platform);
 			const snap = table.buildSnapshot();
 			expect(snap.columns?.map((column) => column.id)).toEqual(expect.arrayContaining(["name", "version", "kind", "updated"]));
-			expect(snap.rows).toHaveLength(1);
-			expect(snap.rows[0]?.cells.name).toBe("Demo Kit");
-			expect(snap.rows[0]?.cells.version).toBe("r1");
-			expect(snap.rows[0]?.cells.kind).toBe("fixture");
+			expect(snap.rows.some((row) => row.id === "kit-group-Demo Kit")).toBe(true);
+			expect(snap.rows.find((row) => row.id === "kit-group-Demo Kit")?.cells.version).toBe("r1");
+			expect(snap.rows.find((row) => row.id === "kit-group-Demo Kit")?.cells.kind).toBe("fixture");
 			ctrl.dispose();
 		});
 	});

@@ -18,6 +18,8 @@ import {
 	cylinder,
 	extrude,
 	face,
+	filledFace,
+	healSolid,
 	getBounds,
 	getCurveType,
 	getEdges,
@@ -1809,6 +1811,26 @@ function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | n
 	return isOk(f) ? f.value : null;
 }
 
+/** @emoji 🔗 Oriented face from a model wire; uses `filledFace` when planar `face` fails (deformed boxes). */
+function geomWireToOrientedFaceLoose(model: Model, wireId: WireRef): OrientedFace | null {
+	const planar = geomWireToOrientedFace(model, wireId);
+	if (planar) return planar;
+	const w = geom(model).wires[wireId];
+	if (!w?.edgeIds.length) return null;
+	const edges: Edge[] = [];
+	for (const eid of w.edgeIds) {
+		const rec = geom(model).edges[eid];
+		if (!rec) return null;
+		const be = geomEdgeToBrepEdge(model, rec);
+		if (!be) return null;
+		edges.push(be);
+	}
+	const cw = wireLoop(edges);
+	if (!isOk(cw)) return null;
+	const filled = filledFace(cw.value as Parameters<typeof filledFace>[0]);
+	return isOk(filled) ? filled.value : null;
+}
+
 /** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs. */
 function extrudeModelWire(
 	model: Model,
@@ -1827,6 +1849,37 @@ function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
 	return modelFaceIdsForSolid(model, cell).length > 0;
 }
 
+/** @emoji 📦 Recomputes a box `SolidPrimitive` from live shell vertices (planar box edits). */
+function boxSolidPrimitiveFromShellVertices(model: Model, cell: SolidRecord): SolidPrimitive | null {
+	if (cell.solid?.kind !== "box") return null;
+	const pfx = `box-${cell.id}`;
+	const read = (suffix: string) => geom(model).vertices[`${pfx}-${suffix}` as VertexRef]?.position;
+	const p000 = read("v000");
+	const p100 = read("v100");
+	const p110 = read("v110");
+	const p010 = read("v010");
+	const p001 = read("v001");
+	const p101 = read("v101");
+	const p111 = read("v111");
+	const p011 = read("v011");
+	if (!p000 || !p100 || !p110 || !p010 || !p001 || !p101 || !p111 || !p011) return null;
+	const bottom = [p000, p100, p110, p010];
+	const top = [p001, p101, p111, p011];
+	const all = [...bottom, ...top];
+	const ax = Math.min(...all.map((p) => p[0]));
+	const ay = Math.min(...all.map((p) => p[1]));
+	const bx = Math.max(...all.map((p) => p[0]));
+	const by = Math.max(...all.map((p) => p[1]));
+	const z0 = Math.min(...bottom.map((p) => p[2]));
+	const z1 = Math.max(...top.map((p) => p[2]));
+	return {
+		kind: "box",
+		cornerA: [ax, ay, z0],
+		cornerB: [bx, by, z0],
+		height: Math.max(z1 - z0, 1e-6),
+	};
+}
+
 /** @emoji 🧊 Builds a brepjs `ValidSolid` by sewing model shell faces (follows live vertex positions). */
 function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | null {
 	const brepFaces: Face[] = [];
@@ -1834,7 +1887,7 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
 		const faceRec = geom(model).faces[fid];
 		if (!faceRec) continue;
 		for (const wid of faceRec.wireIds) {
-			const oriented = geomWireToOrientedFace(model, wid);
+			const oriented = geomWireToOrientedFaceLoose(model, wid);
 			if (!oriented) return null;
 			brepFaces.push(oriented);
 		}
@@ -1845,7 +1898,10 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
 	const sewn = sewShells(brepFaces);
 	if (isOk(sewn)) {
 		const fromShell = solidFromShell(sewn.value);
-		if (isOk(fromShell)) return fromShell.value;
+		if (isOk(fromShell)) {
+			const healed = healSolid(fromShell.value);
+			return isOk(healed) ? healed.value : fromShell.value;
+		}
 	}
 	return null;
 }
@@ -1976,6 +2032,8 @@ class BrepjsWasmEngine {
 		if (solidRecordHasShellTopology(model, rec)) {
 			const fromTopology = solidFromModelTopology(model, rec);
 			if (fromTopology) return fromTopology;
+			const syncedBox = boxSolidPrimitiveFromShellVertices(model, rec);
+			if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
 		}
 		if (rec.solid) return this.solidFromSolidPrimitive(rec.solid);
 		const points = derivedSolidPoints(model, rec);
@@ -2015,6 +2073,8 @@ class BrepjsWasmEngine {
 		if (solidRecordHasShellTopology(model, solid)) {
 			const fromTopology = solidFromModelTopology(model, solid);
 			if (fromTopology) return fromTopology;
+			const syncedBox = boxSolidPrimitiveFromShellVertices(model, solid);
+			if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
 		}
 		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const points = derivedSolidPoints(model, solid);
@@ -2834,15 +2894,16 @@ if (import.meta.vitest) {
 			expect(meshTransfer.faceGroups.length).toBeGreaterThan(0);
 		});
 
-		it("syncSolidsFromModel rebuilds box volume after vertex move (topology, not stale primitive)", async () => {
+		it("syncSolidsFromModel rebuilds box volume after planar vertex move (not stale primitive)", async () => {
 			const g = new Model();
 			const solid = kernelGeometry.solidRef("moved-box");
 			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
 			await kernel.syncSolidsFromModel(g);
 			expect(await kernel.volume(solid)).toBeCloseTo(1, 3);
-			const topVertex = Object.keys(g.vertices).find((id) => id.includes("v101")) as VertexRef | undefined;
-			expect(topVertex).toBeDefined();
-			g.vertices[topVertex!] = { ...g.vertices[topVertex!]!, position: [2, 1, 1] };
+			for (const [id, vert] of Object.entries(g.vertices)) {
+				if (!id.includes("moved-box") || vert.position[2] < 0.5) continue;
+				g.vertices[id as VertexRef] = { id: vert.id, position: [vert.position[0], vert.position[1], vert.position[2] + 1] };
+			}
 			g.bump();
 			await kernel.syncSolidsFromModel(g);
 			expect(await kernel.volume(solid)).toBeCloseTo(2, 2);

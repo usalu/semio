@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Expanded kit diagram topology to match legacy buildKitDiagramData: types, designs, qualities (key/value), ports (from type ports + connector refs), files, folders, authors, with part-of and reference edges. Extended SKETCHPAD_KIT_READ_INNER GraphQL fragment and DTO parsing. Kit table lists all entity kinds; board node navigation supports query-param routes for non-type/design nodes. Added sketchpadCollectKitPorts helper and tests (18/18 passing).",
+  "summary": "Home table: hierarchical rows (docs tree from MDX glob, kit name/version grouping), URL-synced filters (kind/q/name/version/e/sel), expand/collapse and modifier-click multi-select via extended TableRowModel + platform table renderer. Fixed importKitFromFile to use file picker factory. Home workbench shows selected kits. Commands for home filters. 20/20 sketchpad tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -16,6 +16,7 @@
     "⚪c488b595150c4898a8ffec5c878986b0",
     "⚪2dc44c792d69459f8b7c8cdeee334497",
     "⚪67dcb7fb3a494b1196311e7089596471",
-    "⚪f62cebc19b1d4192b204bc377fb71ee1"
+    "⚪f62cebc19b1d4192b204bc377fb71ee1",
+    "⚪45cb01f69a6944bdab704d1c83055c10"
   ]
 }

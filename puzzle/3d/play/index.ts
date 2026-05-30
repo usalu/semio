@@ -1493,9 +1493,8 @@ if (import.meta.vitest) {
       expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
     });
 
-    it("noteSelection notifies snapshot listeners without shell generation", () => {
+    it("selection commands refresh the viewport store and the declarative inspector/hierarchy panels", () => {
       const trackingBus = new CommandBus();
-      const trackingWb = new Platform();
       let shellNotifyCount = 0;
       const trackingCtrl = new Puzzle3dPlayShellController(trackingBus, () => {
         shellNotifyCount += 1;
@@ -1506,12 +1505,17 @@ if (import.meta.vitest) {
       });
       trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(snapshotCount).toBe(1);
-      expect(shellNotifyCount).toBe(0);
+      expect(shellNotifyCount).toBe(1);
       trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(snapshotCount).toBe(1);
-      trackingCtrl.run("noteSelection", { objectIds: ["b"], vortexIds: [], attractionIds: [] });
+      expect(shellNotifyCount).toBe(1);
+      trackingCtrl.run("setSelection", { selection: { objectIds: [], vortexIds: ["a:v1"], attractionIds: [] } });
       expect(snapshotCount).toBe(2);
-      expect(shellNotifyCount).toBe(0);
+      expect(shellNotifyCount).toBe(2);
+      expect(trackingCtrl.getSnapshot().selection.vortexIds).toEqual(["a:v1"]);
+      trackingCtrl.run("setSelectedId", { id: "a" });
+      expect(snapshotCount).toBe(3);
+      expect(shellNotifyCount).toBe(3);
       unsubscribe();
     });
 
