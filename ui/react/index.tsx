@@ -19814,10 +19814,10 @@ export interface EngagementProps extends EngagementSpec {
   active?: boolean;
 }
 
-/** @emoji 💬 Transparent overlay engagement with options, input, and status rows. */
+/** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
-  const [autocompleteDismissed, setAutocompleteDismissed] = reactHostPort.useState(false);
+  const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
   const filteredPossibles = reactHostPort.useMemo(
@@ -19834,14 +19834,14 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   }, [filteredPossibles.length, draft]);
 
   reactHostPort.useEffect(() => {
-    setAutocompleteDismissed(false);
-  }, [draft, possibleEngagements]);
+    setPossiblesExpanded(false);
+  }, [possibleEngagements]);
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
-  const showAutocomplete = hasPossibles && filteredPossibles.length > 0 && !autocompleteDismissed;
+  const showAutocomplete = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -19855,7 +19855,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
     (item: EngagementPossible) => {
       item.onSelect?.();
       applyDraft("");
-      setAutocompleteDismissed(true);
+      setPossiblesExpanded(false);
       setActivePossibleIndex(0);
     },
     [applyDraft],
@@ -19878,79 +19878,69 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   return (
     <LevelProvider level="overlay">
       <div ref={engagementRef} data-slot="engagement" data-active={active ? "true" : undefined} className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}>
-      {hasOptions ? (
-        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
-          <ButtonGroup id="engagement-options">
-            {options!.map((option) => (
-              <ButtonGroupItem
-                key={option.id}
-                id={option.id}
-                className={cn(option.pressed && "bg-active-base")}
-                onClick={option.onPress}
-                disabled={option.disabled}
-              >
-                {option.icon ?? option.label}
-              </ButtonGroupItem>
-            ))}
-          </ButtonGroup>
-        </div>
-      ) : null}
       {hasInput ? (
         <Popover
           open={showAutocomplete}
           onOpenChange={(open) => {
-            if (!open) setAutocompleteDismissed(true);
+            if (!open) setPossiblesExpanded(false);
           }}
         >
           <PopoverAnchor asChild>
-            <div className="w-full min-w-0">
+            <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
               <Input
                 id={input!.id ?? "engagement-input"}
+                className="min-w-0 flex-1"
                 value={draft}
                 tabIndex={active ? 0 : -1}
-                onFocus={() => setAutocompleteDismissed(false)}
-                onChange={(event) => {
-                  applyDraft(event.target.value);
-                  setAutocompleteDismissed(false);
-                }}
+                onChange={(event) => applyDraft(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
-                    setAutocompleteDismissed(true);
+                    if (possiblesExpanded) {
+                      setPossiblesExpanded(false);
+                      return;
+                    }
                     return;
                   }
-                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && hasPossibles) {
+                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && possiblesExpanded && hasPossibles) {
                     event.preventDefault();
                     activatePossible();
                     return;
                   }
-                  if (event.key === "ArrowDown" && filteredPossibles.length) {
+                  if (event.key === "ArrowDown" && possiblesExpanded && filteredPossibles.length) {
                     event.preventDefault();
-                    setAutocompleteDismissed(false);
                     setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
                     return;
                   }
-                  if (event.key === "ArrowUp" && filteredPossibles.length) {
+                  if (event.key === "ArrowUp" && possiblesExpanded && filteredPossibles.length) {
                     event.preventDefault();
-                    setAutocompleteDismissed(false);
                     setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
                     return;
                   }
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    if (activatePossible()) return;
+                    if (possiblesExpanded && activatePossible()) return;
                     input!.onSubmit?.(draft);
                   }
                 }}
                 placeholder={input!.placeholder}
                 disabled={input!.disabled}
               />
+              {hasPossibles ? (
+                <Action
+                  id="engagement-possibles-toggle"
+                  aria-expanded={possiblesExpanded}
+                  data-slot="engagement-possibles-toggle"
+                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
+                  onClick={() => setPossiblesExpanded((open) => !open)}
+                />
+              ) : null}
             </div>
           </PopoverAnchor>
           {hasPossibles ? (
             <PopoverContent
               data-slot="engagement-autocomplete"
               className="w-[min(100vw-1rem,28rem)] p-0"
-              align="center"
+              align="end"
               onOpenAutoFocus={(event) => event.preventDefault()}
             >
               <Command shouldFilter={false}>
@@ -19986,6 +19976,23 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
               {item.content}
             </span>
           ))}
+        </div>
+      ) : null}
+      {hasOptions ? (
+        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
+          <ButtonGroup id="engagement-options">
+            {options!.map((option) => (
+              <ButtonGroupItem
+                key={option.id}
+                id={option.id}
+                className={cn(option.pressed && "bg-active-base")}
+                onClick={option.onPress}
+                disabled={option.disabled}
+              >
+                {option.icon ?? option.label}
+              </ButtonGroupItem>
+            ))}
+          </ButtonGroup>
         </div>
       ) : null}
       </div>
@@ -20108,7 +20115,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {engagement && active ? (
             <div
               data-slot="window-engagement-overlay"
-              className="pointer-events-none absolute inset-0 z-window flex items-center justify-center"
+              className="pointer-events-none absolute inset-x-0 top-0 z-window flex items-start justify-center px-single pt-single"
             >
               <Engagement {...engagement} active />
             </div>
@@ -23806,7 +23813,7 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("Engagement shows autocomplete while typing and activates on Space or Enter", async () => {
+    it("Engagement hides possibles until chevron opens and activates on Space or Enter", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
@@ -23821,18 +23828,21 @@ if (import.meta.vitest) {
         />,
       );
       const field = screen.getByPlaceholderText("Type an interaction");
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       fireEvent.change(field, { target: { value: "sph" } });
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
       expect(screen.getByText("Sphere")).toBeTruthy();
       fireEvent.keyDown(field, { key: "Enter" });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
       fireEvent.change(field, { target: { value: "" } });
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("Window anchors engagement in a centered overlay when active", () => {
+    it("Window anchors engagement in a top overlay when active", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
@@ -23840,9 +23850,9 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       expect(overlay).toBeTruthy();
-      expect(overlay?.className).toContain("inset-0");
-      expect(overlay?.className).toContain("items-center");
-      expect(overlay?.className).toContain("justify-center");
+      expect(overlay?.className).toContain("top-0");
+      expect(overlay?.className).toContain("items-start");
+      expect(overlay?.className).not.toContain("items-center");
       expect(overlay?.className).toContain("z-window");
       expect(overlay?.className).not.toContain("z-overlay");
       expect(screen.getByText("Idle")).toBeTruthy();

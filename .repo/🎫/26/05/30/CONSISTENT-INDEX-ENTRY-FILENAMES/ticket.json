@@ -3,9 +3,10 @@
   "emoji": "📛",
   "status": "closed",
   "description": "Rename entry files (main.tsx, main.ts) to index.tsx/index.ts across play packages and CAD renderer; update HTML, vite, vitest, package exports, and references.",
-  "summary": "Standardized Vite/Electron entry filenames to index.* and moved playground runtime to play.ts where index was already the package export. CAD play main.tsx→index.tsx; puzzle plays main.ts→index.ts with former index.ts→play.ts; semio/coda desktop main.ts→index.ts; mit-bestand presentation main.tsx→index.tsx. Updated HTML, forge, vite aliases, vitest includes, and @puzzle/*/play package exports. Added @framework/platform/core vitest aliases where play.ts imports pulled core.",
+  "summary": "Merged puzzle play play.ts into index.ts (single file: runtime + vitest + guarded Vite boot). Boot uses dynamic imports and only runs when #root exists and not in vitest. Package exports and all @puzzle/*/play aliases point at index.ts; removed play.ts files.",
   "goal": "🎯refactoring",
   "sessions": [
-    "⚪272cdc72fab64d09acedcd67a167de73"
+    "⚪272cdc72fab64d09acedcd67a167de73",
+    "⚪23e385c74fc345da8b42f8ef6777af71"
   ]
 }

@@ -1396,6 +1396,7 @@ type ComponentKindRendererProps = {
 	readonly node: UiComponentHostSurfaceNode;
 	readonly commandBus: CommandBus;
 	readonly layout: "canvas" | "panel";
+	readonly platform?: Platform;
 };
 
 type ComponentKindRenderer = React.ComponentType<ComponentKindRendererProps>;
@@ -1411,7 +1412,7 @@ function useComponentModel<T>(component: Component<T>): T {
 	return React.useSyncExternalStore(component.subscribe.bind(component), () => component.getModel(), () => component.getModel());
 }
 
-const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component }) => {
+const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }) => {
 	const model = useComponentModel(component as Table);
 	return (
 		<div className="flex h-full min-h-0 w-full flex-col overflow-auto p-2" data-component-kind="table">
@@ -1430,7 +1431,18 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component }) => {
 					</thead>
 					<tbody>
 						{model.rows.map((row) => (
-							<tr key={row.id} className={model.selectedRowIds?.includes(row.id) ? "bg-muted/50" : undefined}>
+							<tr
+								key={row.id}
+								className={cn(
+									model.selectedRowIds?.includes(row.id) ? "bg-muted/50" : undefined,
+									row.navigateUri ? "cursor-pointer hover:bg-muted/40" : undefined,
+								)}
+								onClick={
+									row.navigateUri && platform?.onNavigate
+										? () => platform.onNavigate?.(row.navigateUri!)
+										: undefined
+								}
+							>
 								{model.columns.map((column) => (
 									<td key={`${row.id}:${column.id}`} className="border-b px-2 py-1">
 										{String(row.cells[column.id] ?? "")}
@@ -1552,11 +1564,11 @@ function renderBoundComponent(
 ): React.ReactElement {
 	const wrapperClass =
 		layout === "canvas" ? "absolute inset-0 min-h-0 min-w-0" : "relative min-h-0 min-w-0 flex-1 overflow-auto";
-	const explicitHost = surfaceBindingHosts.get(node.surfaceId);
-	if (explicitHost) {
+	const ExplicitHost = surfaceBindingHosts.get(node.surfaceId);
+	if (ExplicitHost) {
 		return (
 			<div className={wrapperClass}>
-				<explicitHost node={node} platform={platform} />
+				<ExplicitHost node={node} platform={platform} />
 			</div>
 		);
 	}
@@ -1572,6 +1584,7 @@ function renderBoundComponent(
 							node={node}
 							commandBus={commandBus ?? platform.commandBus}
 							layout={layout}
+							platform={platform}
 						/>
 					</div>
 				);
@@ -1794,6 +1807,26 @@ if (import.meta.vitest) {
 				),
 			);
 			expect(markup).toContain("kit-a");
+		});
+
+		it("renders registerSurfaceBinding hosts with PascalCase dynamic components", () => {
+			const surfaceId = "cad.play.scene3d/test-binding";
+			const TestCadHost: React.FC<{ readonly node: UiCadHostSurfaceNode }> = ({ node }) => (
+				<div data-testid="cad-surface-host">{node.surfaceId}</div>
+			);
+			registerSurfaceBinding(surfaceId, TestCadHost);
+			try {
+				const markup = renderToStaticMarkup(
+					<UiRenderer
+						commandBus={new CommandBus()}
+						node={{ type: "cad", componentKind: "cad", surfaceId, controllerId: "ctrl" }}
+					/>,
+				);
+				expect(markup).toContain('data-testid="cad-surface-host"');
+				expect(markup).toContain(surfaceId);
+			} finally {
+				unregisterSurfaceBinding(surfaceId);
+			}
 		});
 	});
 

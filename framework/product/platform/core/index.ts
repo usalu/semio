@@ -224,6 +224,7 @@ export interface TableColumnModel {
 export interface TableRowModel {
 	readonly id: string;
 	readonly cells: Readonly<Record<string, string | number | boolean | null>>;
+	readonly navigateUri?: string;
 }
 
 /** @emoji 📊 Render-agnostic tabular view-model for {@link Table}. */
