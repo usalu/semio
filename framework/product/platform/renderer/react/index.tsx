@@ -4,6 +4,7 @@
 
 export {
 	Platform,
+	Store,
 	APP_TOOL_CATEGORY_ORDER,
 	Table,
 	Puzzle2d,

@@ -387,14 +387,22 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 	private selection = new Set<TKey>();
 	private hover: TKey | null = null;
 	private hoverSourceId: string | null = null;
+	private snapshot: AppPointerFocusSnapshot<TKey> = {
+		selection: [],
+		hover: null,
+		hoverSourceId: null,
+	};
 
 	constructor(initialSelection: readonly TKey[] = []) {
 		super();
 		this.selection = new Set(initialSelection);
+		if (initialSelection.length > 0) {
+			this.rebuildSnapshot();
+		}
 	}
 
 	override getSnapshot(): AppPointerFocusSnapshot<TKey> {
-		return this.focusSnapshot();
+		return this.snapshot;
 	}
 
 	setSelection(keys: readonly TKey[]): void {
@@ -415,11 +423,10 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 	}
 
 	setHoverFromSource(sourceId: string, key: TKey | null): void {
-		this.hoverSourceId = sourceId;
-		if (Object.is(this.hover, key)) {
-			this.publish();
+		if (this.hoverSourceId === sourceId && Object.is(this.hover, key)) {
 			return;
 		}
+		this.hoverSourceId = sourceId;
 		this.hover = key;
 		this.publish();
 	}
@@ -445,8 +452,8 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 		this.publish();
 	}
 
-	private focusSnapshot(): AppPointerFocusSnapshot<TKey> {
-		return {
+	private rebuildSnapshot(): void {
+		this.snapshot = {
 			selection: [...this.selection],
 			hover: this.hover,
 			hoverSourceId: this.hoverSourceId,
@@ -454,6 +461,17 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 	}
 
 	private publish(): void {
+		const prev = this.snapshot;
+		const nextSelection = [...this.selection];
+		if (
+			prev.hover === this.hover &&
+			prev.hoverSourceId === this.hoverSourceId &&
+			prev.selection.length === nextSelection.length &&
+			prev.selection.every((key, index) => key === nextSelection[index])
+		) {
+			return;
+		}
+		this.rebuildSnapshot();
 		this.notify();
 	}
 }
@@ -506,6 +524,13 @@ export abstract class Controller {
 	/** @emoji 🔍 Resolves a controller-owned store by id. */
 	getStore<TSnapshot>(id: string): Store<TSnapshot> | undefined {
 		return this.ownedStores.get(id) as Store<TSnapshot> | undefined;
+	}
+
+	/** @emoji 🗑️ Disposes and unregisters a controller-owned store by id. */
+	protected revokeStore(id: string): void {
+		const store = this.ownedStores.get(id);
+		store?.dispose();
+		this.ownedStores.delete(id);
 	}
 
 	/** @emoji 📚 All stores currently provided by this controller. */
@@ -893,6 +918,31 @@ if (import.meta.vitest) {
 			ctrl.dispose();
 			expect(store.disposed).toBe(true);
 		});
+
+		it("revokeStore disposes and removes a store", () => {
+			class TCtrl extends Controller {
+				override run(): void {}
+			}
+			class CountStore extends Store<number> {
+				value = 0;
+				override getSnapshot(): number {
+					return this.value;
+				}
+				disposed = false;
+				override dispose(): void {
+					this.disposed = true;
+					super.dispose();
+				}
+			}
+			const bus = new CommandBus();
+			const ctrl = new TCtrl("c", bus, () => {});
+			const store = new CountStore();
+			ctrl.provideStore("count", store);
+			(ctrl as { revokeStore(id: string): void }).revokeStore("count");
+			expect(ctrl.getStore<number>("count")).toBeUndefined();
+			expect(store.disposed).toBe(true);
+			ctrl.dispose();
+		});
 	});
 
 	describe("CommandBus", () => {
@@ -944,6 +994,16 @@ if (import.meta.vitest) {
 			store.setHoverFromSource("canvas", "y");
 			store.setSelection(["z"]);
 			expect(store.getSnapshot()).toEqual({ selection: ["z"], hover: "y", hoverSourceId: "canvas" });
+		});
+
+		it("returns a stable getSnapshot reference until focus changes", () => {
+			const store = new AppPointerFocusStore<string>();
+			const first = store.getSnapshot();
+			expect(store.getSnapshot()).toBe(first);
+			store.setHoverFromSource("canvas", "y");
+			const second = store.getSnapshot();
+			expect(second).not.toBe(first);
+			expect(store.getSnapshot()).toBe(second);
 		});
 	});
 

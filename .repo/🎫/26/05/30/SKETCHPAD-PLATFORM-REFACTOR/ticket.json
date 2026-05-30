@@ -3,9 +3,10 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Continued clean rewrite using index.tsx.old as reference: added importKit/decodeKitSemioEnvelope, configureSketchpadKitFactories, attachSketchpadKit, openSketchpadKitFromImport, seedSketchpadDevFixtureKitIfEmpty, home app platform commands (open folder/file/remote/fixture), SketchpadShellController.openKit async via host factories. Desktop wires Electron folder/file factories; VS Code attaches InMemorySemioKitStore from injected JSON. Dev auto-loads metabolism fixture. 4 vitest tests pass. index.tsx.old retained for further porting.",
+  "summary": "Continued pure-TS sketchpad platform refactor: fixed navigateSketchpadTo to require platform while SketchpadShellController.navigateTo updates shell navigationPath without a mounted platform (tests/headless). closeKit now revokeStore so getKitStore is undefined after close. createTemporaryKit/openKit use navigateTo. Kit diagram snapshot includes types and designs; design scene and type CAD snapshots show kit labels. Added framework/core Controller.revokeStore with test. Sketchpad vitest: 7 tests (closeKit, createTemporaryKit, findDesignInKit). All sketchpad tsc + vitest and framework/core vitest pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪cf127c05a58a49ee9af34eb7e31c47a5"
+    "⚪cf127c05a58a49ee9af34eb7e31c47a5",
+    "⚪a111f9be56aa412f86a1a6b4bb3f0346"
   ]
 }

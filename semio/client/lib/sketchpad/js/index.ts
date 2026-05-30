@@ -122,20 +122,38 @@ export function configureSketchpadKitFactories(factories: Partial<Record<Sketchp
 	sketchpadKitBackendFactories = { ...sketchpadKitBackendFactories, ...factories };
 }
 
+/** @emoji 📎 Registers a {@link SemioKitStore} on the shell controller. */
+export function attachSketchpadKitStore(
+	kitId: string,
+	store: SemioKitStore,
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+): void {
+	const ctrl = getSketchpadShellController();
+	if (!ctrl) throw new Error("semio/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
+	ctrl.registerKitStore(kitId, store, { kind: options?.kind });
+	if (options?.navigate !== false) {
+		navigateSketchpadTo(`/kits/${kitId}`);
+	}
+}
+
 /** @emoji 📎 Attaches a kit backend to the shell controller and optionally navigates to it. */
 export function attachSketchpadKit(
 	kitId: string,
 	backend: SemioKitStoreBackend,
 	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
 ): void {
-	const ctrl = getSketchpadShellController();
-	if (!ctrl) throw new Error("semio/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
-	const store = new SemioKitStore(backend);
-	ctrl.registerKitStore(kitId, store, { kind: options?.kind });
-	if (options?.navigate !== false) {
-		const platform = getSketchpadPlatform();
-		platform?.onNavigate?.(`/kits/${kitId}`);
+	attachSketchpadKitStore(kitId, new SemioKitStore(backend), options);
+}
+
+/** @emoji 🧭 Navigates the sketchpad {@link Platform} (updates history when in a browser). */
+export function navigateSketchpadTo(uri: string): void {
+	const platform = getSketchpadPlatform();
+	if (!platform) throw new Error("semio/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
+	if (platform.onNavigate) {
+		platform.onNavigate(uri);
+		return;
 	}
+	applySketchpadUri(platform, uri);
 }
 
 /** @emoji 📦 Imports kit bytes/URL and registers them on the active platform. */
@@ -143,8 +161,11 @@ export async function openSketchpadKitFromImport(
 	data: ArrayBuffer | Blob | File | string,
 	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
 ): Promise<string> {
-	const { kit } = await importKit(data);
-	attachSketchpadKit(kit.id, new InMemorySemioKitStore(kit), { kind: options?.kind ?? "fixture", navigate: options?.navigate });
+	const { kit, session } = await importKit(data);
+	const jsStores = await session.stores();
+	const jsStore = jsStores[0];
+	const store = jsStore ? await createSemioKitStoreFromJsStore(jsStore) : new InMemorySemioKitStore(kit);
+	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate });
 	return kit.id;
 }
 
@@ -288,6 +309,38 @@ export function sketchpadAppIdFromPath(path: string): string {
 }
 //#endregion 🔖SketchpadRouteScope
 
+//#region 🔖KitHelpers
+/** @emoji 🔍 Finds a type row on a kit snapshot. */
+export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
+	if (!typeId) return undefined;
+	return kit.types?.find((t) => t.id === typeId);
+}
+
+/** @emoji 🔍 Finds a design row on a kit snapshot. */
+export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
+	if (!designId) return undefined;
+	return kit.designs?.find((d) => d.id === designId);
+}
+
+function sketchpadNewKitId(): string {
+	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+		return crypto.randomUUID();
+	}
+	return `kit-${Date.now()}`;
+}
+
+function sketchpadPanelTextStack(lines: readonly { readonly text: string; readonly emphasize?: boolean }[]): PanelModel {
+	return {
+		body: {
+			type: "stack",
+			direction: "vertical",
+			padding: "standard",
+			children: lines.map((line) => ({ type: "text", value: line.text, emphasize: line.emphasize })),
+		},
+	};
+}
+//#endregion 🔖KitHelpers
+
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "semio.sketchpad.shell";
 const SKETCHPAD_EXTENSION_ID = "semio.sketchpad.builtin";
 export const SKETCHPAD_HOME_APP_ID = "home";
@@ -308,7 +361,8 @@ const SKETCHPAD_SURFACE_KIT_TABLE = "semio.sketchpad.surface.kit.table/v1";
 const SKETCHPAD_SURFACE_KIT_DIAGRAM = "semio.sketchpad.surface.kit.diagram/v1";
 const SKETCHPAD_SURFACE_DESIGN_SCENE = "semio.sketchpad.surface.design.scene/v1";
 const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "semio.sketchpad.surface.design.diagram/v1";
-const SKETCHPAD_SURFACE_PANEL_MAIN = "semio.sketchpad.surface.panel.main/v1";
+const SKETCHPAD_SURFACE_WORKBENCH = "semio.sketchpad.surface.workbench/v1";
+const SKETCHPAD_SURFACE_DETAILS = "semio.sketchpad.surface.details/v1";
 const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "semio.sketchpad.surface.type.scene/v1";
 const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
@@ -460,13 +514,23 @@ export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle2dModel>
 			return { nodes: [], edges: [], emptyMessage: "Kit loading…" };
 		}
 		const kit = store.getSnapshot().kit;
-		const nodes = (kit.types ?? []).map((t, index) => ({
-			id: `type:${t.name}`,
-			label: t.name,
-			x: (index % 6) * 120,
-			y: Math.floor(index / 6) * 80,
-		}));
-		return { nodes, edges: [], emptyMessage: nodes.length ? undefined : "No types to diagram" };
+		const types = kit.types ?? [];
+		const designs = kit.designs ?? [];
+		const nodes = [
+			...types.map((t, index) => ({
+				id: `type:${t.id}`,
+				label: t.name ?? t.id,
+				x: (index % 6) * 120,
+				y: Math.floor(index / 6) * 80,
+			})),
+			...designs.map((d, index) => ({
+				id: `design:${d.id}`,
+				label: d.name ?? d.id,
+				x: ((index + types.length) % 6) * 120,
+				y: Math.floor((index + types.length) / 6) * 80 + 100,
+			})),
+		];
+		return { nodes, edges: [], emptyMessage: nodes.length ? undefined : "No types or designs to diagram" };
 	}
 }
 
@@ -487,7 +551,14 @@ export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel
 		if (!kitId || !designId) {
 			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE, emptyMessage: "Open a design to view the scene" };
 		}
-		return { presentation: "volume", instanceId: `${kitId}:${designId}:scene` };
+		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
+		const design = kit ? findDesignInKit(kit, designId) : undefined;
+		const label = design?.name ?? designId;
+		return {
+			presentation: "volume",
+			instanceId: `${kitId}:${designId}:scene`,
+			emptyMessage: design ? `${label} · ${design.pieces?.length ?? 0} piece(s)` : undefined,
+		};
 	}
 }
 
@@ -523,7 +594,12 @@ export class SketchpadTypeCad extends SketchpadRoutedComponent<CadModel> {
 		if (!kitId || !typeId) {
 			return { emptyMessage: "Open a type to view the CAD scene" };
 		}
-		return { instanceId: `${kitId}:${typeId}` };
+		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
+		const type = kit ? findTypeInKit(kit, typeId) : undefined;
+		return {
+			instanceId: `${kitId}:${typeId}`,
+			emptyMessage: type ? `${type.name ?? typeId} · CAD` : `Type ${typeId}`,
+		};
 	}
 }
 
@@ -565,12 +641,107 @@ export class SketchpadFeedbackPanel extends Panel {
 	}
 }
 
-/** @emoji 🧩 Workbench side panel placeholder. */
-class SketchpadWorkbenchPanel extends Panel {
-	constructor() {
-		super(SKETCHPAD_SURFACE_PANEL_MAIN, SKETCHPAD_SHELL_CONTROLLER_ID, {
-			body: { type: "text", value: "Workbench panel" },
-		});
+/** @emoji 🧩 Workbench side panel for the active route. */
+class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
+	constructor(platform: Platform) {
+		super("panel", SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "" } }, platform);
+	}
+
+	override buildSnapshot(): PanelModel {
+		const ctrl = getSketchpadShellController();
+		const { kitId, designId, typeId } = this.route;
+		if (!kitId) {
+			const open = ctrl?.listOpenKitIds() ?? [];
+			return sketchpadPanelTextStack([
+				{ text: "Workbench", emphasize: true },
+				{ text: `${open.length} kit(s) open` },
+				{ text: "Open a kit from Home or the command palette." },
+			]);
+		}
+		const kitStore = ctrl?.getKitStore(kitId);
+		const kit = kitStore?.getSnapshot().kit;
+		const kind = ctrl?.getKitPersistenceKind(kitId) ?? "";
+		if (designId && kit) {
+			const design = findDesignInKit(kit, designId);
+			const pieceCount = design?.pieces?.length ?? 0;
+			return sketchpadPanelTextStack([
+				{ text: "Design", emphasize: true },
+				{ text: design?.name ?? designId },
+				{ text: `${pieceCount} piece(s)` },
+				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
+			]);
+		}
+		if (typeId && kit) {
+			const type = findTypeInKit(kit, typeId);
+			return sketchpadPanelTextStack([
+				{ text: "Type", emphasize: true },
+				{ text: type?.name ?? typeId },
+				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
+			]);
+		}
+		if (kit) {
+			const types = kit.types?.length ?? 0;
+			const designs = kit.designs?.length ?? 0;
+			return sketchpadPanelTextStack([
+				{ text: "Kit", emphasize: true },
+				{ text: kit.name ?? kitId },
+				{ text: `${types} type(s) · ${designs} design(s)` },
+				{ text: kind ? `Persistence · ${kind}` : "Persistence · unknown" },
+			]);
+		}
+		return sketchpadPanelTextStack([{ text: "Kit loading…" }]);
+	}
+}
+
+/** @emoji 🔎 Details side panel for the active route. */
+class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
+	constructor(platform: Platform) {
+		super("panel", SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "" } }, platform);
+	}
+
+	override buildSnapshot(): PanelModel {
+		const ctrl = getSketchpadShellController();
+		const { kitId, designId, typeId } = this.route;
+		if (!kitId) {
+			return sketchpadPanelTextStack([
+				{ text: "Details", emphasize: true },
+				{ text: "No kit in scope." },
+			]);
+		}
+		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
+		if (!kit) {
+			return sketchpadPanelTextStack([{ text: "Details", emphasize: true }, { text: "Kit loading…" }]);
+		}
+		if (designId) {
+			const design = findDesignInKit(kit, designId);
+			const lines: { text: string; emphasize?: boolean }[] = [
+				{ text: "Design details", emphasize: true },
+				{ text: `Id · ${designId}` },
+			];
+			if (design?.description) lines.push({ text: design.description });
+			if (design?.unit) lines.push({ text: `Unit · ${design.unit}` });
+			lines.push({ text: `Pieces · ${design?.pieces?.length ?? 0}` });
+			return sketchpadPanelTextStack(lines);
+		}
+		if (typeId) {
+			const type = findTypeInKit(kit, typeId);
+			const lines: { text: string; emphasize?: boolean }[] = [
+				{ text: "Type details", emphasize: true },
+				{ text: `Id · ${typeId}` },
+			];
+			if (type?.description) lines.push({ text: type.description });
+			if (type?.unit) lines.push({ text: `Unit · ${type.unit}` });
+			const reps = type?.representations?.length ?? 0;
+			const connectors = type?.connectors?.length ?? 0;
+			lines.push({ text: `Representations · ${reps} · Connectors · ${connectors}` });
+			return sketchpadPanelTextStack(lines);
+		}
+		return sketchpadPanelTextStack([
+			{ text: "Kit details", emphasize: true },
+			{ text: `Id · ${kitId}` },
+			{ text: kit.description ?? kit.name ?? kitId },
+			{ text: `Authors · ${kit.authors?.length ?? 0} · Tags · ${kit.tags?.length ?? 0}` },
+		]);
 	}
 }
 
@@ -587,7 +758,8 @@ class SketchpadPlatformComponents {
 			new SketchpadTypeCad(platform),
 			new SketchpadDocsPanel(platform),
 			new SketchpadFeedbackPanel(platform),
-			new SketchpadWorkbenchPanel(),
+			new SketchpadWorkbenchPanel(platform),
+			new SketchpadDetailsPanel(platform),
 		];
 		for (const component of this.components) {
 			registerPlatformComponent(platform, component);
@@ -663,9 +835,44 @@ export class SketchpadShellController extends Controller {
 		const backend = await factory();
 		const kitId = backend.getSnapshot().kit.id;
 		this.registerKitStore(kitId, new SemioKitStore(backend), { kind });
-		const platform = getSketchpadPlatform();
-		platform?.onNavigate?.(`/kits/${kitId}`);
+		this.navigateTo(`/kits/${kitId}`);
 		return kitId;
+	}
+
+	/** @emoji 🆕 Creates an empty in-memory kit and opens it. */
+	createTemporaryKit(name = "Untitled Kit"): string {
+		const kitId = sketchpadNewKitId();
+		const kit = { id: kitId, name, types: [], designs: [] } as Kit;
+		this.registerKitStore(kitId, new InMemorySemioKitStore(kit), { kind: "temporary" });
+		this.navigateTo(`/kits/${kitId}`);
+		return kitId;
+	}
+
+	/** @emoji 🗑️ Closes a kit store and navigates home when it was active. */
+	closeKit(kitId: string): void {
+		const shell = this.shellStore.get();
+		const openKitIds = shell.openKitIds.filter((id) => id !== kitId);
+		this.shellStore.set({ ...shell, openKitIds });
+		this.revokeStore(sketchpadKitStoreId(kitId));
+		this.kitKinds.delete(kitId);
+		const platform = getSketchpadPlatform();
+		const activePath = platform?.uri.split("?")[0] ?? shell.navigationPath;
+		if (activePath.startsWith(`/kits/${kitId}`)) {
+			this.navigateTo(openKitIds.length > 0 ? `/kits/${openKitIds[openKitIds.length - 1]}` : "/");
+		}
+		this.emit();
+	}
+
+	/** @emoji 🧭 Navigates to a path (updates shell snapshot; drives platform when mounted). */
+	navigateTo(path: string): void {
+		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path });
+		const platform = getSketchpadPlatform();
+		if (!platform) return;
+		if (platform.onNavigate) {
+			platform.onNavigate(path);
+			return;
+		}
+		applySketchpadUri(platform, path);
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -696,6 +903,25 @@ export class SketchpadShellController extends Controller {
 				});
 				break;
 			}
+			case "navigate": {
+				this.navigateTo((args as { path: string }).path);
+				break;
+			}
+			case "createTemporaryKit": {
+				const name = (args as { name?: string }).name;
+				this.createTemporaryKit(name);
+				break;
+			}
+			case "closeKit": {
+				this.closeKit((args as { kitId: string }).kitId);
+				break;
+			}
+			case "closeActiveKit": {
+				const path = this.shellStore.get().navigationPath.split("?")[0] ?? "/";
+				const kitId = path.match(/^\/kits\/([^/]+)/)?.[1];
+				if (kitId) this.closeKit(kitId);
+				break;
+			}
 			default:
 				break;
 		}
@@ -709,39 +935,30 @@ let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
 let sketchpadPopstateBound = false;
 
+function sketchpadShellCommand(
+	id: string,
+	label: string,
+	command: string,
+	args?: unknown,
+	category = "Sketchpad",
+): SearchItemSpec {
+	return { id, label, category, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, command, args };
+}
+
 function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 	return [
-		{
-			id: "semio.sketchpad.home.openFixture",
-			label: "Open metabolism fixture",
-			category: "Kit",
-			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-			command: "importFixtureKit",
-		},
-		{
-			id: "semio.sketchpad.home.openFolder",
-			label: "Open folder kit",
-			category: "Kit",
-			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-			command: "openKit",
-			args: { kind: "folder" },
-		},
-		{
-			id: "semio.sketchpad.home.openFile",
-			label: "Open file kit",
-			category: "Kit",
-			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-			command: "openKit",
-			args: { kind: "file" },
-		},
-		{
-			id: "semio.sketchpad.home.openRemote",
-			label: "Open remote kit",
-			category: "Kit",
-			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-			command: "openKit",
-			args: { kind: "remote" },
-		},
+		sketchpadShellCommand("semio.sketchpad.home.openFixture", "Open metabolism fixture", "importFixtureKit"),
+		sketchpadShellCommand("semio.sketchpad.home.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
+		sketchpadShellCommand("semio.sketchpad.home.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
+		sketchpadShellCommand("semio.sketchpad.home.openFile", "Open file kit", "openKit", { kind: "file" }),
+		sketchpadShellCommand("semio.sketchpad.home.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
+	];
+}
+
+function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
+	return [
+		sketchpadShellCommand("semio.sketchpad.kit.goHome", "Go to Home", "navigate", { path: "/" }),
+		sketchpadShellCommand("semio.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
 	];
 }
 
@@ -770,6 +987,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_KIT_DIAGRAM },
 					],
 					defaultLayout: createDefaultLayout(["table", "diagram"], "row", [50, 50], ["Table", "Diagram"]),
+					commands: sketchpadKitAppCommands(),
 					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
 					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
 				},
@@ -813,10 +1031,6 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 	};
 }
 
-function declarativePanelMain(_ctx: WindowBodyViewContext): UiNode {
-	return buildPanelWindowBody(SKETCHPAD_SURFACE_PANEL_MAIN, SKETCHPAD_SHELL_CONTROLLER_ID);
-}
-
 function registerSketchpadWindowBodies(): void {
 	if (sketchpadBodiesRegistered) return;
 	sketchpadBodiesRegistered = true;
@@ -838,8 +1052,12 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_TYPE, () => buildCadWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
-	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, declarativePanelMain);
-	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, declarativePanelMain);
+	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, () =>
+		buildPanelWindowBody(SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, "workbench"),
+	);
+	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, () =>
+		buildPanelWindowBody(SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, "details"),
+	);
 }
 
 function applySketchpadUri(platform: Platform, uri: string): void {
@@ -955,6 +1173,35 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
 			expect(sketchpadAppIdFromPath(`/kits/${kitId}/designs/${designId}`)).toBe(SKETCHPAD_DESIGN_APP_ID);
+		});
+	});
+
+	describe("SketchpadShellController navigation", () => {
+		it("closeKit removes store and open id", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			ctrl.registerKitStore("k1", new InMemorySemioKitStore({ id: "k1", name: "A" } as Kit));
+			ctrl.closeKit("k1");
+			expect(ctrl.listOpenKitIds()).toEqual([]);
+			expect(ctrl.getKitStore("k1")).toBeUndefined();
+			ctrl.dispose();
+		});
+
+		it("createTemporaryKit registers navigable kit", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const id = ctrl.createTemporaryKit("Test");
+			expect(ctrl.listOpenKitIds()).toContain(id);
+			expect(ctrl.getKitStore(id)?.getSnapshot().kit.name).toBe("Test");
+			expect(ctrl.navigationPath).toBe(`/kits/${id}`);
+			ctrl.dispose();
+		});
+	});
+
+	describe("findDesignInKit", () => {
+		it("returns design by id", () => {
+			const kit = { id: "k", designs: [{ id: "d1", name: "D" }] } as Kit;
+			expect(findDesignInKit(kit, "d1")?.name).toBe("D");
 		});
 	});
 }

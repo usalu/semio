@@ -42,7 +42,7 @@ import {
   APP_TOOL_CATEGORY_ORDER,
   CommandBus,
   Expertise,
-  ProductRuntime,
+  Platform,
   resolveInitialPanelVisibility,
   WindowKindRuntime,
   getSidePanelBodyFactory,
@@ -3677,7 +3677,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   );
 }
 
-function BoardPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): ReactElement {
+function BoardPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
   return <BoardPlayInner boardRuntime={runtime} />;
 }
 
