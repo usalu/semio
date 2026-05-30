@@ -19671,7 +19671,7 @@ export interface EngagementProps extends EngagementSpec {
   className?: string;
 }
 
-/** @emoji 💬 Floating three-line engagement panel with options, input, and status rows. */
+/** @emoji 💬 Transparent overlay engagement with options, input, and status rows. */
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, className = "" }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
   reactHostPort.useEffect(() => {
@@ -19684,13 +19684,8 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, classNa
   if (!hasOptions && !hasInput && !hasStatus) return null;
 
   return (
-    <div
-      data-slot="engagement"
-      className={cn(
-        "pointer-events-auto absolute bottom-single left-1/2 z-panel flex w-[min(100%,28rem)] -translate-x-1/2 flex-col gap-half rounded border border-element bg-panel p-single shadow-md",
-        className,
-      )}
-    >
+    <LevelProvider level="overlay">
+      <div data-slot="engagement" className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}>
       {hasOptions ? (
         <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
           <ButtonGroup id="engagement-options">
@@ -19735,7 +19730,8 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, classNa
           ))}
         </div>
       ) : null}
-    </div>
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -19832,8 +19828,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         data-slot="window"
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDown={() => onActivate?.()}
-        className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, active && "ring-2 ring-inset ring-accent", className)}
+        onPointerDownCapture={() => onActivate?.()}
+        className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, active && "ring-2 ring-inset ring-active-base", className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -19851,7 +19847,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               </div>
             </div>
           ) : null}
-          {engagement ? <Engagement {...engagement} /> : null}
+          {engagement ? (
+            <div
+              data-slot="window-engagement-overlay"
+              className="pointer-events-none absolute inset-x-0 bottom-[var(--spacing-double)] z-overlay flex justify-center"
+            >
+              <Engagement {...engagement} />
+            </div>
+          ) : null}
         </div>
       </div>
     </LevelProvider>
@@ -22319,10 +22322,11 @@ interface ModeDockTabBarProps {
   stackPath: ModeLayoutPath;
   tabs: readonly { id: string; title: string }[];
   activeId: string | undefined;
+  activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
 }
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
   const tabInsertIndex =
@@ -22348,10 +22352,15 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             key={tab.id}
             data-slot="mode-dock-tab"
             data-window-id={tab.id}
-            data-active={activeId === tab.id ? "true" : undefined}
+            data-stack-active={activeId === tab.id ? "true" : undefined}
+            data-active={activeWindowId === tab.id ? "true" : undefined}
             className={cn(
               "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half border-r border-element px-single text-xs select-none transition-[margin,padding] duration-150",
-              activeId === tab.id ? "bg-window text-foreground" : "bg-base text-muted-foreground hover:bg-hover-window",
+              activeWindowId === tab.id
+                ? "bg-active-base text-active-foreground"
+                : activeId === tab.id
+                  ? "bg-window text-foreground"
+                  : "bg-base text-muted-foreground hover:bg-hover-window",
             )}
             onClick={() => onSelectTab(tab.id)}
             onPointerUp={(event) => {
@@ -22423,10 +22432,16 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   }, [dock, stackPath, node.children.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
+  const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
 
   return (
-    <div data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
-      <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
+    <div
+      data-slot="mode-dock-stack"
+      data-stack-path={stackPath}
+      data-active={stackGloballyActive ? "true" : undefined}
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden"
+    >
+      <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
       <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeDescriptor ? (
           (() => {
@@ -22981,13 +22996,20 @@ if (import.meta.vitest) {
     });
 
     it("Mode lays out all windows and marks the active one", () => {
-      render(
+      const { container } = render(
         <div className="h-[400px] w-[600px]">
           <Mode
             windows={[
               { id: "left", title: "Left", children: <div>Left Pane</div> },
               { id: "right", title: "Right", children: <div>Right Pane</div> },
             ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
+                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+              ],
+            }}
             activeWindowId="right"
             onActiveWindowChange={() => {}}
           />
@@ -22995,7 +23017,9 @@ if (import.meta.vitest) {
       );
       expect(screen.getByText("Left Pane")).toBeTruthy();
       expect(screen.getByText("Right Pane")).toBeTruthy();
-      expect(document.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="right"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
     });
@@ -23159,7 +23183,7 @@ if (import.meta.vitest) {
     });
 
     it("Engagement renders options, input, and status lines", () => {
-      render(
+      const { container } = render(
         <Engagement
           options={[{ id: "opt-a", label: "Option A", onPress: () => {} }]}
           input={{ placeholder: "Type here" }}
@@ -23169,6 +23193,19 @@ if (import.meta.vitest) {
       expect(screen.getByRole("button", { name: "Option A" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
+      expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
+    });
+
+    it("Window anchors engagement in a bottom overlay with panel spacing", () => {
+      const { container } = render(
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      expect(overlay).toBeTruthy();
+      expect(overlay?.className).toContain("bottom-[var(--spacing-double)]");
+      expect(screen.getByText("Idle")).toBeTruthy();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

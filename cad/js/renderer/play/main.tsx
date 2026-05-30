@@ -172,6 +172,12 @@ export function spatialPlayModelDefinitionIdForPane(pane: SpatialPlayPaneId): st
   return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.modelDefinitionId;
 }
 
+/** @emoji 🌌 Resolves one pane's model from the shared play model space record (viewport binding). */
+export function spatialPlayPaneModel(modelsByDefinitionId: Readonly<Record<string, Model>>, pane: SpatialPlayPaneId): Model {
+  const modelDefinitionId = spatialPlayModelDefinitionIdForPane(pane);
+  return modelsByDefinitionId[modelDefinitionId] ?? new Model();
+}
+
 /** @emoji 🧭 Scene surface id for a spatial play pane. */
 export function spatialPlaySceneSurfaceIdForPane(pane: SpatialPlayPaneId): string {
   return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.surfaceId;
@@ -565,7 +571,7 @@ export function buildSpatialPlayRuntime(): Platform {
 
 import "./globals.css";
 // #region 🔌Adapters
-import { getLevelBgClass, LevelProvider, reactHostPort, type EngagementSpec, type TreeDataItem, type TreeDataSection } from "@ui/react";
+import { Label, reactHostPort, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type EngagementSpec, type TreeDataItem, type TreeDataSection } from "@ui/react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 import {
@@ -574,6 +580,8 @@ import {
   PureSidePanelTabDefinition,
   StaticTreePanelDefinition,
   mountPlaygroundApp,
+  playgroundPanelSection,
+  registerUiScene3DSurfaceHost,
   type SidePanelTabConfig,
 } from "@framework/playground/renderer/react/shell";
 import { registerSurfaceBinding, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
@@ -1124,6 +1132,7 @@ interface SpatialPlayModelSpaceValue {
   readonly handleApplyTransformation: (spec: TransformationSpec) => void;
   readonly pickGeometry: Model;
   readonly handleModelAttributesChange: (model: Model) => void;
+  readonly commitModelForDefinition: (modelDefinitionId: string, model: Model) => void;
   readonly handleSnapshotChange: (snapshot: InteractionSnapshot) => void;
   readonly handleEngagementChange: (engagement: EngagementSpec | null) => void;
   readonly flushedModelsByDefinitionId: Record<string, Model>;
@@ -1246,6 +1255,11 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
 
   const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
 
+  const commitModelForDefinition = reactHostPort.useCallback((modelDefinitionId: string, model: Model) => {
+    setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
+    setModelDefinitionRevision((r) => r + 1);
+  }, []);
+
   const handleActiveModelDefinitionChange = reactHostPort.useCallback(
     (nextId: string) => {
       setModelsByDefinitionId((prev) => {
@@ -1260,19 +1274,18 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
 
   const focusModelDefinition = reactHostPort.useCallback(
     (modelDefinitionId: string) => {
-      if (modelDefinitionId !== activeModelDefinitionId) {
-        handleActiveModelDefinitionChange(modelDefinitionId);
-      }
+      if (modelDefinitionId === activeModelDefinitionId) return;
+      setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
+      setActiveModelDefinitionId(modelDefinitionId);
     },
-    [activeModelDefinitionId, handleActiveModelDefinitionChange],
+    [activeModelDefinitionId, liveModel],
   );
 
   const handleModelAttributesChange = reactHostPort.useCallback(
     (model: Model) => {
-      setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels({ ...prev, [activeModelDefinitionId]: Model.fromJSON(model.toJSON()) }));
-      setModelDefinitionRevision((r) => r + 1);
+      commitModelForDefinition(activeModelDefinitionId, model);
     },
-    [activeModelDefinitionId],
+    [activeModelDefinitionId, commitModelForDefinition],
   );
 
   const interactionActive = reactHostPort.useMemo(() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"), [spec, snapshot]);
@@ -1347,7 +1360,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   reactHostPort.useEffect(() => {
     history.clear();
     setSnapshot(null);
-  }, [history, modelDefinitionRevision]);
+  }, [history, interactionId, interactionBootId, shapeAssetId]);
 
   const saveBundle = reactHostPort.useCallback(async (name: string, payload: SpatialExchangeBundle, message: string) => {
     try {
@@ -1517,6 +1530,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       handleApplyTransformation,
       pickGeometry,
       handleModelAttributesChange,
+      commitModelForDefinition,
       handleSnapshotChange,
       handleEngagementChange,
       flushedModelsByDefinitionId,
@@ -1548,6 +1562,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       handleLoadRaw,
       handleLoadRawRequest,
       handleModelAttributesChange,
+      commitModelForDefinition,
       handleSaveCurrent,
       handleSaveInPlay,
       handleSaveSelected,
@@ -1586,7 +1601,7 @@ function SpatialPlayLoadInput(): ReactNode {
 function SpatialPlayDetailsAside(): ReactNode {
   const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } = useSpatialPlayModelSpace();
   if (selectionInScope.length === 0) {
-    return <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</div>;
+    return <p className="text-muted-foreground leading-snug">Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</p>;
   }
   return (
     <>
@@ -1599,26 +1614,31 @@ function SpatialPlayDetailsAside(): ReactNode {
 /** @emoji 📦 Workbench catalog: shape fixtures and file I/O status (toolbar handles save/load). */
 function SpatialPlayCatalogAside(): ReactNode {
   const { activeModelDefinitionId, shapeAssetId, handleShapeAssetChange, fileStatus } = useSpatialPlayModelSpace();
+  const statusTone = fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "text-destructive" : "text-muted-foreground";
   return (
     <>
       {isShapeModelDefinition(activeModelDefinitionId) ? (
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-          <span style={{ fontWeight: 600, color: "#c8c8e0" }}>Shape asset</span>
-          <select value={shapeAssetId} onChange={(e) => handleShapeAssetChange(e.target.value)} style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}>
-            <option value="">No asset</option>
-            {SHAPE_ASSETS.map((g) => (
-              <option key={g.id} value={g.id}>
-                [{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
-              </option>
-            ))}
-          </select>
-        </label>
+        <Label id="spatial.play.catalog.shape" label="Shape asset">
+          <Select value={shapeAssetId || "__none__"} onValueChange={(value) => handleShapeAssetChange(value === "__none__" ? "" : value)}>
+            <SelectTrigger className="h-medium w-full" id="spatial.play.catalog.shape.trigger" size="sm">
+              <SelectValue placeholder="No asset" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">No asset</SelectItem>
+              {SHAPE_ASSETS.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  [{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Label>
       ) : (
-        <span style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-          Shape assets apply to <code style={{ color: "#e8e8f0" }}>spatial.shape</code>. Focus the Shape pane to load source geometry.
-        </span>
+        <p className="text-muted-foreground leading-snug">
+          Shape assets apply to <code className="text-foreground">spatial.shape</code>. Focus the Shape pane to load source geometry.
+        </p>
       )}
-      {fileStatus ? <span style={{ fontSize: 12, color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>{fileStatus}</span> : null}
+      {fileStatus ? <p className={statusTone}>{fileStatus}</p> : null}
     </>
   );
 }
@@ -1629,13 +1649,12 @@ function SpatialPlayShapePane(): ReactNode {
     interactionId,
     spec,
     handleInteractionPick,
-    documentModel,
     history,
     kernel,
     computeModeForPane,
     sessionRestartNonce,
-    activeModelDefinitionId,
     focusModelDefinition,
+    flushedModelsByDefinitionId,
     rendererSelectionByModel,
     setRendererSelectionByModel,
     interactionSelectionByState,
@@ -1643,17 +1662,27 @@ function SpatialPlayShapePane(): ReactNode {
     modelDefinitionRevision,
     setModelDefinitionRevision,
     handleApplyTransformation,
-    pickGeometry,
-    handleModelAttributesChange,
+    commitModelForDefinition,
     handleSnapshotChange,
     handleEngagementChange,
   } = useSpatialPlayModelSpace();
+  const shapePane: SpatialPlayPaneId = "shape";
+  const shapeModelDefinitionId = spatialPlayModelDefinitionIdForPane(shapePane);
+  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, shapePane);
+  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
+  const pickGeometry = reactHostPort.useMemo(
+    () => pickShapeForModelDefinition(flushedModelsByDefinitionId, shapeModelDefinitionId, paneModel),
+    [flushedModelsByDefinitionId, shapeModelDefinitionId, paneModel, modelDefinitionRevision],
+  );
+  const commitShapeModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(shapeModelDefinitionId, model), [commitModelForDefinition, shapeModelDefinitionId]);
 
   if (!spec) {
     return (
-      <div style={{ padding: 16, color: "#f88" }}>
-        Unknown interaction <code>{interactionId}</code>.
-        <button type="button" onClick={() => handleInteractionPick("")}>
+      <div className="flex flex-col gap-double p-double text-destructive text-xs">
+        <p>
+          Unknown interaction <code className="text-foreground">{interactionId}</code>.
+        </p>
+        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-foreground" onClick={() => handleInteractionPick("")}>
           Reset
         </button>
       </div>
@@ -1674,8 +1703,8 @@ function SpatialPlayShapePane(): ReactNode {
         mode={mode}
         asideExtra={null}
         sessionRestartNonce={sessionRestartNonce}
-        activeModelDefinitionId={activeModelDefinitionId}
-        onActiveModelDefinitionId={focusModelDefinition}
+        activeModelDefinitionId={shapeModelDefinitionId}
+        onActiveModelDefinitionId={() => focusModelDefinition(shapeModelDefinitionId)}
         rendererSelectionByModel={rendererSelectionByModel}
         onRendererSelectionByModel={setRendererSelectionByModel}
         interactionSelectionByState={interactionSelectionByState}
@@ -1684,7 +1713,7 @@ function SpatialPlayShapePane(): ReactNode {
         onModelDefinitionRevision={setModelDefinitionRevision}
         onApplyTransformation={handleApplyTransformation}
         pickGeometry={pickGeometry}
-        onDocumentModelChange={handleModelAttributesChange}
+        onDocumentModelChange={commitShapeModel}
         onSnapshot={handleSnapshotChange}
         onEngagementChange={handleEngagementChange}
       />
@@ -1708,7 +1737,7 @@ function SpatialPlayViewPane({ pane }: { readonly pane: SpatialPlayPaneId }): Re
     handleSnapshotChange,
   } = useSpatialPlayModelSpace();
   const mode = computeModeForPane(pane);
-  const paneModel = flushedModelsByDefinitionId[modelDefinitionId] ?? new Model();
+  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, pane);
   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
   const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel), [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision]);
   const history = useDocumentHistory();
@@ -1773,11 +1802,11 @@ function registerSpatialPlayChrome(): void {
 /** @emoji 🧊 R3F viewport for one spatial play quad pane. */
 function SpatialPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
   if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
-    return <div style={{ padding: 8, fontSize: 12, color: "#f88" }}>Invalid spatial play surface binding</div>;
+    return <div className="p-single text-destructive text-xs">Invalid spatial play surface binding</div>;
   }
   const pane = spatialPlayPaneFromSurfaceId(node.surfaceId);
   if (!pane) {
-    return <div style={{ padding: 8, fontSize: 12, color: "#f88" }}>Unknown spatial play surface</div>;
+    return <div className="p-single text-destructive text-xs">Unknown spatial play surface</div>;
   }
   return <div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">{pane === "shape" ? <SpatialPlayShapePane /> : <SpatialPlayViewPane pane={pane} />}</div>;
 }
@@ -1789,14 +1818,7 @@ class SpatialPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
       icon: Shapes,
       order: 1,
       tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "spatial-play-catalog.section",
-            label: "Catalog",
-            defaultOpen: true,
-            items: [{ id: "spatial-play-catalog.body", label: "Shape fixtures", description: <SpatialPlayCatalogAside /> }],
-          },
-        ],
+        sections: [playgroundPanelSection("spatial-play-catalog.section", "Catalog", <SpatialPlayCatalogAside />)],
       }),
     };
   }
@@ -1809,14 +1831,7 @@ class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
       icon: ListTree,
       order: 0,
       tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "spatial-play-details.section",
-            label: "Selection",
-            defaultOpen: true,
-            items: [{ id: "spatial-play-details.body", label: "Properties", description: <SpatialPlayDetailsAside /> }],
-          },
-        ],
+        sections: [playgroundPanelSection("spatial-play-details.section", "Selection", <SpatialPlayDetailsAside />)],
       }),
     };
   }
@@ -1859,18 +1874,8 @@ function SpatialPlayRoot(): ReactNode {
   return (
     <SpatialPlayChromeContext.Provider value={chromeContextValue}>
       <SpatialPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
-        <LevelProvider level="window">
-          <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-            <SpatialPlayLoadInput />
-            <PlaygroundView
-              runtime={runtimeRef.current}
-              defaultAppId={SPATIAL_PLAY_APP_ID}
-              augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }}
-              initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
-              className="min-h-0 flex-1"
-            />
-          </div>
-        </LevelProvider>
+        <SpatialPlayLoadInput />
+        <PlaygroundView runtime={runtimeRef.current} defaultAppId={SPATIAL_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
       </SpatialPlayModelSpaceProvider>
     </SpatialPlayChromeContext.Provider>
   );
@@ -2065,6 +2070,19 @@ if (import.meta.vitest) {
       expect(labels).toContain("BasePlate");
       expect(labels).toContain("ExternalWall");
       expect(labels).toContain("Roof");
+    });
+  });
+
+  describe("spatial play shared model space", () => {
+    it("spatialPlayPaneModel keeps each pane bound to its model definition", () => {
+      const shape = new Model();
+      shape.objects["box1"] = { id: "box1", typology: "spatial.shape.primitive.box", primitives: { solid: "solid-1" } };
+      const building = new Model();
+      building.objects["site1"] = { id: "site1", typology: "aec.building.site", primitives: {} };
+      const models = { [SHAPE_MODEL_DEFINITION_ID]: shape, [SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID]: building };
+      expect(spatialPlayPaneModel(models, "shape").objects["box1"]).toBeDefined();
+      expect(spatialPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
+      expect(spatialPlayPaneModel(models, "shape")).not.toBe(spatialPlayPaneModel(models, "building"));
     });
   });
 

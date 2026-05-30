@@ -1,0 +1,11 @@
+{
+  "title": "Engagement Overlay Position",
+  "emoji": "💬",
+  "status": "closed",
+  "description": "Position engagement as transparent overlay at center bottom with panel spacing-double offset",
+  "summary": "Engagement as transparent center-bottom overlay with panel spacing-double offset. Level overlay, no opaque panel chrome; Window uses window-engagement-overlay anchor.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e47d06c343f741abb16607fdef0ca780"
+  ]
+}

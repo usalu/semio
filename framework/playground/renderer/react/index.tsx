@@ -21,7 +21,11 @@ import {
   ToolbarZone,
   Ui,
   cn,
+  getLevelBgClass,
+  Label,
+  LevelProvider,
   staticTreePanelDefinition,
+  useElementsSurfaceChrome,
   useMediaQuery,
   type EngagementSpec,
   type FooterItem,
@@ -46,7 +50,8 @@ import { twMerge } from "tailwind-merge";
 import {
   APP_TOOL_CATEGORY_ORDER,
   CommandBus,
-  Platform,
+  Expertise,
+  ProductRuntime,
   WindowKindRuntime,
   getSidePanelBodyFactory,
   getWindowBodyFactory,
@@ -110,6 +115,21 @@ function cnPlay(...inputs: ClassValue[]): string {
 }
 
 //#region 🔖TreePanels
+function isPlaygroundReactDescription(value: unknown): boolean {
+  return typeof value === "object" && value !== null && "$$typeof" in value;
+}
+
+function enforcePlaygroundTreeItemsNoReactDescription(items: readonly TreeDataItem[], path: string): void {
+  for (const item of items) {
+    if (item.description != null && isPlaygroundReactDescription(item.description)) {
+      throw new Error(`Playground tree item "${path}/${item.id}" must not use a React description; use section.content with playgroundPanelSection().`);
+    }
+    if (item.items?.length) {
+      enforcePlaygroundTreeItemsNoReactDescription(item.items, `${path}/${item.id}`);
+    }
+  }
+}
+
 /** @emoji 🌲 Enforces playground panels: each section needs `items` and/or `content` (no JSON-only fallbacks). */
 export function enforcePlaygroundTreePanel(config: TreePanelConfig): void {
   if (!config.sections?.length) {
@@ -120,6 +140,9 @@ export function enforcePlaygroundTreePanel(config: TreePanelConfig): void {
     const hasContent = section.content != null;
     if (!hasItems && !hasContent) {
       throw new Error(`Playground tree section "${section.id}" must declare items or content.`);
+    }
+    if (section.items?.length) {
+      enforcePlaygroundTreeItemsNoReactDescription(section.items, section.id);
     }
   }
 }
@@ -507,14 +530,7 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
       icon: shellTabIconComponent(tab.iconId),
       order: tab.order ?? orderIndex,
       tree: staticTreePanelDefinition({
-        sections: [
-          {
-            id: `${tab.id}.host`,
-            label: tab.id,
-            defaultOpen: true,
-            items: [{ id: `${tab.id}.body`, label: tab.id, description: <Body /> }],
-          },
-        ],
+        sections: [playgroundPanelSection(`${tab.id}.host`, tab.id, <Body />)],
       }),
     });
   });
@@ -800,7 +816,6 @@ export function useApp(): PlaygroundContextValue {
 export interface PlaygroundViewProps {
   readonly runtime: Platform;
   readonly defaultAppId?: string;
-  readonly className?: string;
   readonly mobile?: boolean;
   readonly mobileQuery?: string;
   readonly initialPanelVisibility?: PlaygroundPanelVisibility;
@@ -819,7 +834,7 @@ function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: reado
 }
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, defaultAppId, className, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
   reactHostPort.useSyncExternalStore(
     (onStoreChange) => runtime.subscribe(onStoreChange),
     () => runtime.generation,
@@ -921,7 +936,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
       }}
     >
       <Layout
-        className={className}
+        className="min-h-0 flex-1"
         mobile={resolvedMobile}
         navbar={<Navbar items={navbarItems} />}
         footer={footerItems.length > 0 ? <Footer items={footerItems} /> : undefined}
@@ -987,16 +1002,50 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
 };
 //#endregion 🔖PlaygroundView
 
+//#region 🔖PlaygroundShell
+/** @emoji 🌓 Fixed surface chrome for every playground static site (system theme, desktop device). */
+export const PLAYGROUND_SYSTEM_SURFACE_CHROME = {
+  theme: "system" as const,
+  device: "desktop" as const,
+  expertise: Expertise.NORMAL,
+};
+
+/** @emoji 🛝 Locks document theme to system preference; wraps the play viewport in window-level chrome. */
+export function PlaygroundShell({ children }: { readonly children: React.ReactNode }): React.ReactElement {
+  useElementsSurfaceChrome(PLAYGROUND_SYSTEM_SURFACE_CHROME);
+  return (
+    <LevelProvider level="window">
+      <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>{children}</div>
+    </LevelProvider>
+  );
+}
+
+/** @emoji 📦 Standard side-panel body; playgrounds must not use inline styles on panel chrome. */
+export function PlaygroundPanelBody({ children }: { readonly children: React.ReactNode }): React.ReactElement {
+  return <div className="flex min-h-0 flex-col gap-double p-single text-xs text-foreground">{children}</div>;
+}
+
+/** @emoji 🌲 Content-only tree section for playground workbench/details panels. */
+export function playgroundPanelSection(id: string, label: string, body: React.ReactNode, options?: { readonly defaultOpen?: boolean }): TreeDataSection {
+  return {
+    id,
+    label,
+    defaultOpen: options?.defaultOpen ?? true,
+    content: <PlaygroundPanelBody>{body}</PlaygroundPanelBody>,
+  };
+}
+//#endregion 🔖PlaygroundShell
+
 //#region 🔖Mount
 type ElementsDomRoot = HTMLElement & { __elementsPlaygroundRoot?: Root };
 
-/** @emoji 🚀 Mounts an arbitrary React tree into `#root` (or `rootId`). */
+/** @emoji 🚀 Mounts an arbitrary React tree into `#root` (or `rootId`) inside {@link PlaygroundShell}. */
 export function mountPlaygroundApp(element: React.ReactElement, rootId = "root"): void {
   if (typeof document === "undefined") return;
   const rootElement = document.getElementById(rootId) as ElementsDomRoot | null;
   if (!rootElement) throw new Error(`React root #${rootId} missing.`);
   rootElement.__elementsPlaygroundRoot ??= createRoot(rootElement);
-  rootElement.__elementsPlaygroundRoot.render(element);
+  rootElement.__elementsPlaygroundRoot.render(<PlaygroundShell>{element}</PlaygroundShell>);
 }
 
 /** @emoji 🚀 Alias for {@link mountPlaygroundApp}. */
@@ -1241,14 +1290,7 @@ class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
       icon: ClipboardList,
       order: 0,
       tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "puzzle-5d-play-status.section",
-            label: "Paired play",
-            defaultOpen: true,
-            items: [{ id: "puzzle-5d-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
-          },
-        ],
+        sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <TopologyPlayStatusPanel />)],
       }),
     };
   }
@@ -1343,13 +1385,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: Platform }): React.
     [snapshot, snapshotKey, controller, bus],
   );
   const detailTabs = reactHostPort.useMemo(() => [new TopologyPlayStatusPanelDefinition().resolveTab()], []);
-  const shell = (
-    <LevelProvider level="window">
-      <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-        <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
-      </div>
-    </LevelProvider>
-  );
+  const shell = <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
   if (!controller) {
     return shell;
   }
@@ -1411,9 +1447,6 @@ import {
   BOARD_FIXTURE_DRAG_V1_MIME,
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
   BOARD_LOD_MODE_AUTOMATIC,
-  BoardPaneChrome,
-  BoardStructuralDeleteReporter,
-  BoardPlayRedrawProgressReset,
   type BoardFixtureV1,
   type BoardFixtureNodeV1,
   type BoardFixtureRectangleNodeV1,
@@ -1443,51 +1476,6 @@ const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
 const boardPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
 const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Board background menu" }];
 
-const LS_THEME = "puzzle.2d-play.surface.theme";
-const LS_DEVICE = "puzzle.2d-play.surface.device";
-const LS_EXPERTISE = "puzzle.2d-play.surface.expertise";
-
-function parseStoredTheme(raw: string | null): ElementsSurfaceTheme {
-  if (raw === "light" || raw === "dark" || raw === "system") return raw;
-  return "system";
-}
-
-function parseStoredDevice(raw: string | null): ElementsSurfaceDevice {
-  if (raw === "desktop" || raw === "tablet" || raw === "mobile") return raw;
-  return "desktop";
-}
-
-function parseStoredExpertise(raw: string | null): Expertise {
-  if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
-  return Expertise.NORMAL;
-}
-
-function readTheme(): ElementsSurfaceTheme {
-  if (typeof localStorage === "undefined") return "system";
-  try {
-    return parseStoredTheme(localStorage.getItem(LS_THEME));
-  } catch {
-    return "system";
-  }
-}
-
-function readDevice(): ElementsSurfaceDevice {
-  if (typeof localStorage === "undefined") return "desktop";
-  try {
-    return parseStoredDevice(localStorage.getItem(LS_DEVICE));
-  } catch {
-    return "desktop";
-  }
-}
-
-function readExpertise(): Expertise {
-  if (typeof localStorage === "undefined") return Expertise.NORMAL;
-  try {
-    return parseStoredExpertise(localStorage.getItem(LS_EXPERTISE));
-  } catch {
-    return Expertise.NORMAL;
-  }
-}
 // #endregion 🔖Kinds
 
 // #region 🔖Geometry
@@ -2845,100 +2833,59 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
   }
   if (ids.length === 0) {
     return [
-      {
-        id: "puzzle-2d-play-inspector.empty",
-        label: "Detail",
-        defaultOpen: true,
-        items: [
-          {
-            id: "puzzle-2d-play-inspector.empty.header",
-            label: `pane: ${activePaneId}`,
-            description: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>,
-          },
-        ],
-      },
+      playgroundPanelSection(
+        "puzzle-2d-play-inspector.empty",
+        "Detail",
+        <p className="text-muted-foreground leading-snug">
+          pane: {activePaneId}. No selection. Click the graph or pick another tab.
+        </p>,
+      ),
     ];
   }
   const sections: TreeDataSection[] = [
-    {
-      id: "puzzle-2d-play-inspector.header",
-      label: "Detail",
-      defaultOpen: true,
-      items: [
-        {
-          id: "puzzle-2d-play-inspector.header.pane",
-          label: activePaneId,
-          description: (
-            <div className="text-muted-foreground text-[11px] opacity-80">
-              {ids.length} selected id{ids.length === 1 ? "" : "s"}
-            </div>
-          ),
-        },
-      ],
-    },
+    playgroundPanelSection(
+      "puzzle-2d-play-inspector.header",
+      "Detail",
+      <p className="text-muted-foreground text-[11px] leading-snug">
+        {activePaneId} · {ids.length} selected id{ids.length === 1 ? "" : "s"}
+      </p>,
+    ),
   ];
   if (nodeIds.length > 0) {
-    sections.push({
-      id: "puzzle-2d-play-inspector-nodes",
-      label: `Nodes (${nodeIds.length})`,
-      defaultOpen: true,
-      items: [
-        {
-          id: "puzzle-2d-play-inspector-nodes.fields",
-          label: "Properties",
-          defaultOpen: true,
-          description: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        },
-      ],
-    });
+    sections.push(
+      playgroundPanelSection(
+        "puzzle-2d-play-inspector-nodes",
+        `Nodes (${nodeIds.length})`,
+        <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+      ),
+    );
   }
   if (handleIds.length > 0) {
-    sections.push({
-      id: "puzzle-2d-play-inspector-handles",
-      label: `Handles (${handleIds.length})`,
-      defaultOpen: true,
-      items: [
-        {
-          id: "puzzle-2d-play-inspector-handles.fields",
-          label: "Properties",
-          defaultOpen: true,
-          description: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        },
-      ],
-    });
+    sections.push(
+      playgroundPanelSection(
+        "puzzle-2d-play-inspector-handles",
+        `Handles (${handleIds.length})`,
+        <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+      ),
+    );
   }
   if (edgeIds.length > 0) {
-    sections.push({
-      id: "puzzle-2d-play-inspector-edges",
-      label: `Edges (${edgeIds.length})`,
-      defaultOpen: true,
-      items: [
-        {
-          id: "puzzle-2d-play-inspector-edges.fields",
-          label: "Properties",
-          defaultOpen: true,
-          description: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-        },
-      ],
-    });
+    sections.push(
+      playgroundPanelSection(
+        "puzzle-2d-play-inspector-edges",
+        `Edges (${edgeIds.length})`,
+        <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+      ),
+    );
   }
   if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
-    sections.push({
-      id: "puzzle-2d-play-inspector-unknown",
-      label: "Selection",
-      defaultOpen: true,
-      items: [
-        {
-          id: "puzzle-2d-play-inspector-unknown.body",
-          label: "Unknown ids",
-          description: (
-            <div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
-              {ids.join(", ")}
-            </div>
-          ),
-        },
-      ],
-    });
+    sections.push(
+      playgroundPanelSection(
+        "puzzle-2d-play-inspector-unknown",
+        "Selection",
+        <p className="font-mono text-[11px] text-warning-foreground leading-snug">{ids.join(", ")}</p>,
+      ),
+    );
   }
   return sections;
 }
@@ -2946,56 +2893,6 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 
 // #region 🔖Layout
 // #endregion 🔖Layout
-
-// #region 🔖Surface
-function BoardPlaySurfaceFooter(props: {
-  theme: ElementsSurfaceTheme;
-  device: ElementsSurfaceDevice;
-  expertise: Expertise;
-  onTheme: (v: ElementsSurfaceTheme) => void;
-  onDevice: (v: ElementsSurfaceDevice) => void;
-  onExpertise: (v: Expertise) => void;
-}): ReactElement {
-  const { theme, device, expertise, onDevice, onExpertise, onTheme } = props;
-  return (
-    <div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
-      <span className="shrink-0 text-xs text-muted-foreground">Theme</span>
-      <Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
-        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-theme" size="sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="system">System</SelectItem>
-          <SelectItem value="light">Light</SelectItem>
-          <SelectItem value="dark">Dark</SelectItem>
-        </SelectContent>
-      </Select>
-      <span className="shrink-0 text-xs text-muted-foreground">Device</span>
-      <Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
-        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-device" size="sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="desktop">Desktop</SelectItem>
-          <SelectItem value="tablet">Tablet</SelectItem>
-          <SelectItem value="mobile">Mobile</SelectItem>
-        </SelectContent>
-      </Select>
-      <span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
-      <Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
-        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-expertise" size="sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
-          <SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
-          <SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-// #endregion 🔖Surface
 
 interface BoardPlayRedrawLoopSnapshot {
   activePaneId: Puzzle2dPlayPaneId;
@@ -3032,10 +2929,6 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<Puzzle2dPlayPaneId | null>(null);
   const hoverSourcePaneRef = useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
-  const [theme, setTheme] = reactHostPort.useState<ElementsSurfaceTheme>(readTheme);
-  const [device, setDevice] = reactHostPort.useState<ElementsSurfaceDevice>(readDevice);
-  const [expertise, setExpertise] = reactHostPort.useState<Expertise>(readExpertise);
-  const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
   const [boardSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
   const [boardSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
   const [boardSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
@@ -3085,41 +2978,6 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
 
   const boardRedrawPlayingRef = reactHostPort.useRef(boardRedrawPlaying);
   boardRedrawPlayingRef.current = boardRedrawPlaying;
-
-  reactHostPort.useEffect(() => {
-    try {
-      localStorage.setItem(LS_THEME, theme);
-    } catch {
-      /* ignore */
-    }
-  }, [theme]);
-
-  reactHostPort.useEffect(() => {
-    try {
-      localStorage.setItem(LS_DEVICE, device);
-    } catch {
-      /* ignore */
-    }
-  }, [device]);
-
-  reactHostPort.useEffect(() => {
-    try {
-      localStorage.setItem(LS_EXPERTISE, expertise);
-    } catch {
-      /* ignore */
-    }
-  }, [expertise]);
-
-  const surfaceFooterItems = reactHostPort.useMemo<FooterItem[]>(
-    () => [
-      {
-        content: <BoardPlaySurfaceFooter device={device} expertise={expertise} onDevice={setDevice} onExpertise={setExpertise} onTheme={setTheme} theme={theme} />,
-        id: "puzzle-2d-play-surface",
-        order: 0,
-      },
-    ],
-    [device, expertise, theme],
-  );
 
   const applyStructuralDelete = reactHostPort.useCallback((kind: "edge" | "node", id: string) => {
     const pruneSelections = (removeIds: readonly string[]): void => {
@@ -3875,28 +3733,14 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <PlaygroundView
-          runtime={boardRuntime}
-          defaultAppId={PUZZLE_2D_PLAY_APP_ID}
-          augmentPanelTabs={augmentPanelTabs}
-          extraFooterItems={surfaceFooterItems}
-          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
-          mobile={mobile}
-          onActiveWindowChange={onBoardPlayActiveWindowChange}
-        />
+        <PlaygroundView runtime={boardRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onBoardPlayActiveWindowChange} />
       </BoardPlayLodRuntimeContext.Provider>
     </BoardPlayShellContext.Provider>
   );
 }
 
-function BoardPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return (
-    <LevelProvider level="window">
-      <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-        <BoardPlayInner boardRuntime={runtime} />
-      </div>
-    </LevelProvider>
-  );
+function BoardPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): ReactElement {
+  return <BoardPlayInner boardRuntime={runtime} />;
 }
 
 /** @emoji 🚀 Mounts board play chrome for a {@link Playground}. */
@@ -4019,6 +3863,22 @@ if (import.meta.vitest) {
           sections: [{ id: "a", items: [{ id: "i", label: "Item" }] }],
         }),
       ).not.toThrow();
+    });
+
+    it("rejects React element descriptions on tree items", () => {
+      expect(() =>
+        enforcePlaygroundTreePanel({
+          sections: [{ id: "a", items: [{ id: "i", label: "Item", description: <span>panel</span> }] }],
+        }),
+      ).toThrow(/React description/);
+    });
+  });
+
+  describe("playgroundPanelSection", () => {
+    it("wraps panel bodies in PlaygroundPanelBody content", () => {
+      const section = playgroundPanelSection("panel.test", "Test", <span data-testid="body">x</span>);
+      expect(section.content).toBeTruthy();
+      expect(section.items).toBeUndefined();
     });
   });
 }
