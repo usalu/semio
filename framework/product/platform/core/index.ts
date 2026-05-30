@@ -218,6 +218,7 @@ export interface TableColumnModel {
 	readonly id: string;
 	readonly label: string;
 	readonly width?: number;
+	readonly sortable?: boolean;
 }
 
 /** @emoji 📊 Row descriptor for {@link TableModel}. */

@@ -1486,11 +1486,32 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 				<table className="w-full border-collapse text-xs">
 					<thead>
 						<tr>
-							{model.columns.map((column) => (
-								<th key={column.id} className="border-b px-2 py-1 text-left font-medium">
-									{column.label}
-								</th>
-							))}
+							{model.columns.map((column) => {
+								const active = model.sortColumnId === column.id;
+								const indicator = active ? (model.sortDescending ? " ▾" : " ▴") : "";
+								return (
+									<th
+										key={column.id}
+										className={cn(
+											"border-b px-2 py-1 text-left font-medium",
+											column.sortable ? "cursor-pointer select-none hover:bg-muted/40" : undefined,
+											active ? "text-foreground" : "text-muted-foreground",
+										)}
+										onClick={
+											column.sortable && platform
+												? () =>
+														platform.commandBus.dispatch(controllerId, "cycleTableSort", {
+															columnId: column.id,
+															surfaceId: component.surfaceId,
+														})
+												: undefined
+										}
+									>
+										{column.label}
+										{indicator}
+									</th>
+								);
+							})}
 						</tr>
 					</thead>
 					<tbody>

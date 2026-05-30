@@ -309,6 +309,7 @@ export type SketchpadKitSnapshot = { readonly kit: Kit };
 export interface SketchpadRouteSelection {
 	readonly pieceIds: readonly string[];
 	readonly connectionIds: readonly string[];
+	readonly kitDiagramNodeIds: readonly string[];
 }
 
 /** @emoji 🏠 Home table UI state (expand, selection, URL-synced filters). */
@@ -333,7 +334,7 @@ export interface SketchpadShellSnapshot {
 }
 
 function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
-	return { pieceIds: [], connectionIds: [] };
+	return { pieceIds: [], connectionIds: [], kitDiagramNodeIds: [] };
 }
 
 function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {

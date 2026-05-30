@@ -136,7 +136,7 @@ function puzzle2dFixtureRootNodeIds(fixture: BoardFixtureV1, childrenByParent: R
 }
 
 function puzzle2dFixtureNodeLabel(node: BoardFixtureNodeV1): string {
-	const caption = puzzle2dFixtureNodeCaption(node);
+	const caption = boardFixtureNodeCaption(node);
 	return caption?.trim() ? `${node.id} · ${caption}` : node.id;
 }
 
