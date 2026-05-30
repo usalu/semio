@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "importKit now materializes kits via sketchpadKitDtoFromJsStore (GraphQL copatibleWith + array types) with merged bundle/graphql port compat. Exported SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL; workbench + command palette importNakaginFilteredKit (2.6MB fixture via /fixtures/). Sketchpad 41/41.",
+  "summary": "Dev auto-seed uses Nakagin filtered fixture (~2.6MB); metabolism WIP (~19MB) only via explicit importFixtureKit. Exported platformPuzzle5dSelectionToApplyArgs + vitest; sketchpad 42/42, platform renderer 17/17. Playwright e2e extended (workbench fixture buttons) — not run here (vite build ENOTDIR on puzzle/3d import).",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -30,6 +30,7 @@
     "⚪a895cc44a27742d78b485a4b07c40e37",
     "⚪0b135944870543c38c918f82b181ce8a",
     "⚪ef1729d3255b460088b2e68a63584ed9",
-    "⚪7619e7f023ca4ce790f014bf2e6e0e9c"
+    "⚪7619e7f023ca4ce790f014bf2e6e0e9c",
+    "⚪0147bdac0a3942c487a5840815bedc83"
   ]
 }

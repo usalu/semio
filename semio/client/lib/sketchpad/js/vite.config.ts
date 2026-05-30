@@ -200,6 +200,26 @@ export default defineConfig(async ({ mode }) => {
         { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
         { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/core.ts") },
         {
+          find: "@framework/playground/renderer/react/puzzle/2d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/puzzle/3d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/puzzle/5d",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/shell",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
+          find: "@framework/playground/renderer/react/boot",
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
+        },
+        {
           find: "@framework/playground/renderer/react",
           replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
         },

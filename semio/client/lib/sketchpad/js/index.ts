@@ -440,10 +440,14 @@ export async function openSketchpadKitFromImport(
 	return kit.id;
 }
 
-const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/assets/semio/metabolism/wip/initialKit/kit.semio.json";
+/** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/assets/`). */
+const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = "/assets/semio/metabolism/wip/initialKit/kit.semio.json";
 
-/** @emoji 🧪 Dev-only Nakagin-filtered kit URL (served from `/fixtures/` in sketchpad Vite). */
-export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
+/** @emoji 🧪 Default dev auto-seed kit (served from `/fixtures/` in sketchpad Vite). */
+const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
+
+/** @emoji 🧪 Nakagin-filtered kit URL used for dev auto-seed. */
+export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = SKETCHPAD_DEV_FIXTURE_KIT_URL;
 
 /** @emoji 🧪 Loads the metabolism fixture when no kits are open (dev browser only). */
 export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
@@ -3031,7 +3035,7 @@ export class SketchpadShellController extends Controller {
 				break;
 			}
 			case "importFixtureKit": {
-				void seedSketchpadDevFixtureKitIfEmpty().catch((error) => {
+				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL, { kind: "fixture", navigate: true }).catch((error) => {
 					console.warn("[semio.sketchpad] importFixtureKit failed:", error);
 				});
 				break;
@@ -3414,6 +3418,12 @@ if (import.meta.vitest) {
 		it("unwraps wip.initialKit envelope", () => {
 			const inner = decodeKitSemioEnvelopeToFullFromValue({ wip: { initialKit: { id: "k", name: "N" } } });
 			expect((inner as { id: string }).id).toBe("k");
+		});
+	});
+
+	describe("sketchpad dev fixtures", () => {
+		it("auto-seeds from nakagin filtered fixture URL", () => {
+			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
 		});
 	});
 
@@ -4017,6 +4027,13 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 		test("workbench panel is present when platform loads", async ({ page }) => {
 			await page.goto("/");
 			await expect(page.getByTestId("app-panel.workbench")).toBeVisible({ timeout: 120_000 });
+		});
+
+		test("workbench lists dev fixture import actions", async ({ page }) => {
+			await page.goto("/");
+			await expect(page.getByTestId("app-panel.workbench")).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByText("Open metabolism fixture")).toBeVisible();
+			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible();
 		});
 	});
 }

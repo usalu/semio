@@ -38,11 +38,13 @@ import {
   fixtureStateFingerprint,
   formatLod,
   lodFromSliderValue,
+  cameraStateNearEqual,
   parseFixtureV1,
   parseVortexFullId,
   puzzle3dLodCanvasProps,
   puzzle3dVortexFullId,
   sliderValueFromLod,
+  updatePuzzle3dCameraInFixture,
   type AttractionProps,
   type CameraState,
   type AttractionKind,
@@ -318,23 +320,7 @@ export function updatePuzzle3dAttractionInFixture(fixture: FixtureV1, attraction
   };
 }
 
-/** @emoji 📷 True when two camera states match within epsilon (avoids redundant fixture writes). */
-export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1e-3): boolean {
-  for (let i = 0; i < 3; i += 1) {
-    if (Math.abs(a.position[i]! - b.position[i]!) > epsilon) return false;
-    if (Math.abs(a.target[i]! - b.target[i]!) > epsilon) return false;
-  }
-  return Math.abs(a.zoom - b.zoom) <= epsilon;
-}
-
-/** @emoji 📷 Writes camera fields on the fixture; returns the same reference when unchanged. */
-export function updatePuzzle3dCameraInFixture(fixture: FixtureV1, camera: Partial<CameraState>): FixtureV1 {
-  const nextCamera: CameraState = { ...fixture.camera, ...camera };
-  if (cameraStateNearEqual(fixture.camera, nextCamera)) {
-    return fixture;
-  }
-  return { ...fixture, camera: nextCamera };
-}
+export { cameraStateNearEqual, updatePuzzle3dCameraInFixture } from "../react/index.tsx";
 
 /** @emoji 🎯 Maps {@link SelectionSnapshot} to play selection. */
 export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot): Puzzle3dPlaySelection {

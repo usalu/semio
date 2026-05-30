@@ -508,6 +508,24 @@ export interface FixtureV1 {
   attractions: AttractionProps[];
   objects: FixtureObjectV1[];
 }
+
+/** @emoji 📷 True when two camera states match within epsilon (avoids redundant fixture writes). */
+export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1e-3): boolean {
+  for (let i = 0; i < 3; i += 1) {
+    if (Math.abs(a.position[i]! - b.position[i]!) > epsilon) return false;
+    if (Math.abs(a.target[i]! - b.target[i]!) > epsilon) return false;
+  }
+  return Math.abs(a.zoom - b.zoom) <= epsilon;
+}
+
+/** @emoji 📷 Writes camera fields on the fixture; returns the same reference when unchanged. */
+export function updatePuzzle3dCameraInFixture(fixture: FixtureV1, camera: Partial<CameraState>): FixtureV1 {
+  const nextCamera: CameraState = { ...fixture.camera, ...camera };
+  if (cameraStateNearEqual(fixture.camera, nextCamera)) {
+    return fixture;
+  }
+  return { ...fixture, camera: nextCamera };
+}
 //#endregion ­ƒöûKinds
 
 //#region 📶Lod
@@ -2597,7 +2615,6 @@ function HoverInvalidateBridge(): null {
   const { hoverTarget } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
-    (window as unknown as { __p3dHoverTarget?: unknown }).__p3dHoverTarget = hoverTarget;
     invalidate();
   }, [hoverTarget, invalidate]);
   return null;
@@ -2702,7 +2719,7 @@ function VortexScreenPick(): null {
   const invalidate = useThree((s) => s.invalidate);
   const { collectVortexTargets, collectObjectGroups, blockedVortexFullIds } = useRegistryCore();
   const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const { setHover, clearHoverAll } = useRegistryHover();
+  const { setHover } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
 
   const stateRef = reactHostPort.useRef({
@@ -2712,7 +2729,6 @@ function VortexScreenPick(): null {
     commitSelection,
     setActiveRelocateObjectId,
     setHover,
-    clearHoverAll,
     invalidate,
     camera,
     busy: false,
@@ -2723,7 +2739,6 @@ function VortexScreenPick(): null {
   stateRef.current.commitSelection = commitSelection;
   stateRef.current.setActiveRelocateObjectId = setActiveRelocateObjectId;
   stateRef.current.setHover = setHover;
-  stateRef.current.clearHoverAll = clearHoverAll;
   stateRef.current.invalidate = invalidate;
   stateRef.current.camera = camera;
   stateRef.current.busy = attractionDragActive || attractionIndirectPickAwait !== null;
@@ -4920,132 +4935,6 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 export function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
   const { setActiveRelocateObjectId, clearSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
-  const debugThree = useThree();
-  reactHostPort.useEffect(() => {
-    const w = window as unknown as { __puzzle3dDebugPick?: (x: number, y: number) => unknown };
-    w.__puzzle3dDebugPick = (x: number, y: number) => {
-      const gl = debugThree.gl;
-      const camera = debugThree.camera;
-      const scene = debugThree.scene;
-      const rect = gl.domElement.getBoundingClientRect();
-      const ndc = new Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
-      (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
-      const ray = new Raycaster();
-      ray.setFromCamera(ndc, camera);
-      const hits = ray.intersectObjects(scene.children, true);
-      return hits.slice(0, 10).map((h) => {
-        let o: { userData?: Record<string, unknown>; parent?: unknown } | null = h.object as never;
-        const info: Record<string, unknown> = { d: Number(h.distance.toFixed(2)) };
-        while (o) {
-          if (o.userData?.puzzle3dVortexFullId) {
-            info.vortex = o.userData.puzzle3dVortexFullId;
-            break;
-          }
-          if (o.userData?.puzzle3dObjectId) {
-            info.object = o.userData.puzzle3dObjectId;
-            break;
-          }
-          o = o.parent as never;
-        }
-        return info;
-      });
-    };
-    (window as unknown as { __puzzle3dDebugScene?: (x: number, y: number) => unknown }).__puzzle3dDebugScene = (x: number, y: number) => {
-      const scene = debugThree.scene;
-      const gl = debugThree.gl;
-      const camera = debugThree.camera;
-      const meshes: { userData?: Record<string, unknown>; type?: string; visible?: boolean; geometry?: { boundingSphere?: { radius?: number } | null }; layers?: { mask?: number }; raycast?: unknown }[] = [];
-      scene.traverse((o: never) => {
-        const obj = o as { type?: string; userData?: Record<string, unknown> };
-        if (obj.type === "Mesh" && obj.userData?.puzzle3dVortexFullId) meshes.push(o as never);
-      });
-      const sample = meshes[0] as unknown as { getWorldPosition?: (v: Vector3) => Vector3; matrixWorldNeedsUpdate?: boolean; visible?: boolean; geometry?: { boundingSphere?: { radius?: number } | null }; layers?: { mask?: number } };
-      const wp = sample?.getWorldPosition ? sample.getWorldPosition(new Vector3()) : null;
-      const camMaskHolder = camera as unknown as { layers?: { mask?: number } };
-      let vortexRayHits = 0;
-      if (typeof x === "number") {
-        const rect = gl.domElement.getBoundingClientRect();
-        const ndc = new Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
-        (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
-        const ray = new Raycaster();
-        (ray.layers as unknown as { enableAll: () => void }).enableAll();
-        ray.setFromCamera(ndc, camera);
-        vortexRayHits = ray.intersectObjects(meshes as never[], true).length;
-      }
-      const rect2 = gl.domElement.getBoundingClientRect();
-      (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
-      const screens: unknown[] = [];
-      let onScreen = 0;
-      let visibleUnoccluded = 0;
-      const visibleSamples: unknown[] = [];
-      const gaps: number[] = [];
-      let minGapInfo: { gap?: number; sx?: number; sy?: number; nearestDist?: number; ownDist?: number } = {};
-      for (const m of meshes) {
-        const mm = m as unknown as { getWorldPosition: (v: Vector3) => Vector3; userData: Record<string, unknown> };
-        const fid = mm.userData.puzzle3dVortexFullId as string;
-        const p = mm.getWorldPosition(new Vector3());
-        const proj = p.clone().project(camera as never);
-        if (proj.z > 1) continue;
-        const sx = rect2.left + ((proj.x + 1) / 2) * rect2.width;
-        const sy = rect2.top + ((1 - proj.y) / 2) * rect2.height;
-        if (sx < rect2.left || sx > rect2.left + rect2.width || sy < rect2.top || sy > rect2.top + rect2.height) continue;
-        onScreen += 1;
-        if (screens.length < 6) screens.push({ fullId: fid, sx: Math.round(sx), sy: Math.round(sy) });
-        const ndc2 = new Vector2(proj.x, proj.y);
-        const ray2 = new Raycaster();
-        (ray2.layers as unknown as { enableAll: () => void }).enableAll();
-        ray2.setFromCamera(ndc2, camera);
-        const allHits = ray2.intersectObjects(scene.children, true);
-        const chainFid = (obj: unknown): string | null => {
-          let node = obj as { userData?: Record<string, unknown>; parent?: unknown } | null;
-          while (node) {
-            if (node.userData?.puzzle3dVortexFullId) return node.userData.puzzle3dVortexFullId as string;
-            if (node.userData?.puzzle3dObjectId) return null;
-            node = node.parent as never;
-          }
-          return null;
-        };
-        if (allHits.length) {
-          const nearestFid = chainFid(allHits[0].object);
-          if (nearestFid === fid) {
-            visibleUnoccluded += 1;
-            if (visibleSamples.length < 4) visibleSamples.push({ fullId: fid, sx: Math.round(sx), sy: Math.round(sy) });
-          }
-          const ownHit = allHits.find((h) => chainFid(h.object) === fid);
-          if (ownHit) {
-            const gap = ownHit.distance - allHits[0].distance;
-            (gaps as number[]).push(gap);
-            if (gap < (minGapInfo.gap ?? Infinity)) minGapInfo = { gap: Number(gap.toFixed(2)), sx: Math.round(sx), sy: Math.round(sy), nearestDist: Number(allHits[0].distance.toFixed(2)), ownDist: Number(ownHit.distance.toFixed(2)) };
-          }
-        }
-      }
-      return {
-        vortexMeshCount: meshes.length,
-        sampleWorldPos: wp ? [Number(wp.x.toFixed(1)), Number(wp.y.toFixed(1)), Number(wp.z.toFixed(1))] : null,
-        sampleVisible: sample?.visible,
-        sampleBoundingRadius: sample?.geometry?.boundingSphere?.radius ?? "null",
-        sampleLayerMask: sample?.layers?.mask,
-        cameraLayerMask: camMaskHolder.layers?.mask,
-        vortexRayHits,
-        onScreen,
-        visibleUnoccluded,
-        visibleSamples,
-        minGapInfo,
-        gapBuckets: {
-          lt1: gaps.filter((g) => g < 1).length,
-          lt3: gaps.filter((g) => g < 3).length,
-          lt6: gaps.filter((g) => g < 6).length,
-          lt12: gaps.filter((g) => g < 12).length,
-          total: gaps.length,
-        },
-        screens,
-      };
-    };
-    return () => {
-      delete (window as unknown as { __puzzle3dDebugPick?: unknown }).__puzzle3dDebugPick;
-      delete (window as unknown as { __puzzle3dDebugScene?: unknown }).__puzzle3dDebugScene;
-    };
-  }, [debugThree]);
   reactHostPort.useEffect(() => {
     const w = window as unknown as {
       __puzzle3dPlaySelect?: (id: string) => void;
@@ -5171,8 +5060,7 @@ if (import.meta.vitest) {
     });
   });
   describe("cameraStateNearEqual", () => {
-    it("detects position and zoom deltas", async () => {
-      const { cameraStateNearEqual, updatePuzzle3dCameraInFixture } = await import("../play/index.ts");
+    it("detects position and zoom deltas", () => {
       const base = {
         position: [1, 2, 3] as const,
         target: [0, 0, 0] as const,
