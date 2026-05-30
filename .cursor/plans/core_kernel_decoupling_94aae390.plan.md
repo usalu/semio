@@ -4,16 +4,16 @@ overview: Strip all model-definition assets and geometry/transformation logic ou
 todos:
   - id: ticket
     content: Read repo://goals and open a ticket associated with the best goal before editing.
-    status: pending
+    status: completed
   - id: registry
     content: Replace ModelDefinitionAssets import.meta.glob in core/index.ts with a registry + registerModelDefinitionAssets API; accessors read the registry; clear owner/folder caches on register.
-    status: pending
+    status: completed
   - id: assets-file
     content: Create cad/js/core/assets.ts with the import.meta.glob blocks calling registerModelDefinitionAssets; add to core tsconfig include; side-effect import from kernel, query, play apps, renderer, and the core Tests region.
-    status: pending
+    status: completed
   - id: geometry-kernel
     content: Add geometry primitives (faceNormal/Centroid/areaEstimate, solidFaceIds, fuseSolidsToExternalFaces, projectPointOnScalarAxis, scalarTopOnAxis, clampPointAlongDirection) to SpatialPreviewKernel; move implementations into brepjs kernel; replace core call sites with preview.*.
-    status: pending
+    status: in_progress
   - id: transformation-schema
     content: Extend spatial.transformation/v1 with a declarative derive block (fuse/hull/rules/opening/ensure) in schema + core parser; encode energy from_geometry rules in its transformation.json.
     status: pending

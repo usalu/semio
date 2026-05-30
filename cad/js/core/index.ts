@@ -2,91 +2,86 @@
 /** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `spatial/AGENTS.md` and `spatial/assets/modelDefinition`. */
 // #endregion 🧲Header
 
-// #region 📥ModelDefinitionAssets
-const modelDefinitionTypologyModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
-  {
-    eager: true,
-    import: "default",
-  },
-) as Record<string, unknown>;
+// #region 📥ModelDefinitionRegistry
+/** @emoji 📥 Vite `import.meta.glob` modules registered by `@cad/js/core/assets`. */
+export interface ModelDefinitionAssetModules {
+  readonly typologies: Readonly<Record<string, unknown>>;
+  readonly actions: Readonly<Record<string, unknown>>;
+  readonly interactions: Readonly<Record<string, unknown>>;
+  readonly manifests: Readonly<Record<string, unknown>>;
+  readonly extensions: Readonly<Record<string, unknown>>;
+  readonly attributes: Readonly<Record<string, unknown>>;
+  readonly propertyDefinitions: Readonly<Record<string, unknown>>;
+  readonly properties: Readonly<Record<string, unknown>>;
+  readonly transformations: Readonly<Record<string, unknown>>;
+}
 
-const modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
+  typologies: {},
+  actions: {},
+  interactions: {},
+  manifests: {},
+  extensions: {},
+  attributes: {},
+  propertyDefinitions: {},
+  properties: {},
+  transformations: {},
+});
 
-const modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
 
-const modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
+let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let defaultModelDefinitionIdCache: string | null = null;
 
-const modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+function resetModelDefinitionCaches(): void {
+  modelDefinitionFolderIdMapCache = null;
+  typologyOwnerByIdCache = null;
+  actionOwnerByIdCache = null;
+  interactionOwnerByIdCache = null;
+  attributeOwnerByIdCache = null;
+  propertyOwnerByIdCache = null;
+  defaultModelDefinitionIdCache = null;
+}
 
-const modelDefinitionPropertyDefinitionModules = import.meta.glob(
-  [
-    "../../assets/modelDefinition/**/propertyDefinition/*.json",
-    "../../assets/modelDefinition/**/propertyKind/*.json",
-  ],
-  {
-    eager: true,
-    import: "default",
-  },
-) as Record<string, unknown>;
-
-const modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+/** @emoji 📥 Registers model-definition asset modules (typically from `assets.ts` at startup). */
+export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
+  modelDefinitionAssetModules = modules;
+  resetModelDefinitionCaches();
+}
 
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionTypologyModules);
+  return Object.values(modelDefinitionAssetModules.typologies);
 }
 
 function modelDefinitionActionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionActionModules);
+  return Object.values(modelDefinitionAssetModules.actions);
 }
 
 function modelDefinitionInteractionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionInteractionModules);
+  return Object.values(modelDefinitionAssetModules.interactions);
 }
 
 function modelDefinitionManifestCatalog(): readonly unknown[] {
-  return [
-    ...Object.values(modelDefinitionManifestModules),
-    ...Object.values(modelDefinitionExtensionManifestModules),
-  ];
+  return [...Object.values(modelDefinitionAssetModules.manifests), ...Object.values(modelDefinitionAssetModules.extensions)];
 }
 
 function modelDefinitionAttributeCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAttributeModules);
+  return Object.values(modelDefinitionAssetModules.attributes);
 }
 
 function modelDefinitionPropertyCatalog(): readonly unknown[] {
-  return [
-    ...Object.values(modelDefinitionPropertyDefinitionModules),
-    ...Object.values(modelDefinitionPropertyModules),
-  ];
+  return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
 }
-// #endregion 📥ModelDefinitionAssets
+
+function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
+  return modelDefinitionAssetModules.transformations;
+}
+// #endregion 📥ModelDefinitionRegistry
 
 // #region 🧮Vec
 /** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
@@ -2216,7 +2211,7 @@ function modelDefinitionIdFromTransformationAssetPath(assetPath: string): string
 function shippedTransformationCatalog(): readonly TransformationSpec[] {
   const seen = new Set<string>();
   const out: TransformationSpec[] = [];
-  for (const [path, raw] of Object.entries(modelDefinitionTransformationModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionTransformationModules())) {
     const modelDefinitionId = modelDefinitionIdFromTransformationAssetPath(path);
     if (!modelDefinitionId) continue;
     const spec = parseTransformationSpec(raw, modelDefinitionId);
@@ -2260,14 +2255,12 @@ function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
   return folder || null;
 }
 
-let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
-
 function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
   const map = new Map<string, string>();
   const modules = {
-    ...modelDefinitionManifestModules,
-    ...modelDefinitionExtensionManifestModules,
+    ...modelDefinitionAssetModules.manifests,
+    ...modelDefinitionAssetModules.extensions,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -2286,12 +2279,10 @@ export function modelDefinitionIdFromAssetPath(assetPath: string): string | null
   return modelDefinitionFolderIdMap().get(folder) ?? null;
 }
 
-let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function typologyOwnerById(): ReadonlyMap<string, string> {
   if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionTypologyModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.typologies)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseTypologySpec(raw);
     if (!owner || !spec) continue;
@@ -2307,12 +2298,10 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
   return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
-let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function actionOwnerById(): ReadonlyMap<string, string> {
   if (actionOwnerByIdCache) return actionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseActionSpec(raw);
     if (!owner || !spec) continue;
@@ -2340,12 +2329,10 @@ export interface SpatialInteraction {
   readonly key: string;
 }
 
-let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function interactionOwnerById(): ReadonlyMap<string, string> {
   if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionInteractionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.interactions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseInteractionSpec(raw);
     if (!owner || !spec) continue;
@@ -2384,12 +2371,10 @@ export function listSpatialInteractionsForModelDefinition(
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function attributeOwnerById(): ReadonlyMap<string, string> {
   if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAttributeModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.attributes)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseAttributeDefinitionSpec(raw);
     if (!owner || !spec) continue;
@@ -2405,14 +2390,12 @@ export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: st
   return shippedAttributeDefinitionCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
 }
 
-let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-
 function propertyOwnerById(): ReadonlyMap<string, string> {
   if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
   const map = new Map<string, string>();
   for (const [path, raw] of Object.entries({
-    ...modelDefinitionPropertyDefinitionModules,
-    ...modelDefinitionPropertyModules,
+    ...modelDefinitionAssetModules.propertyDefinitions,
+    ...modelDefinitionAssetModules.properties,
   })) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parsePropertyDefinitionSpec(raw);
@@ -2491,7 +2474,7 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
       if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
     }
   }
-  for (const [path, raw] of Object.entries(modelDefinitionActionModules)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
@@ -3215,6 +3198,19 @@ export interface SpatialPreviewKernel {
   computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number): { readonly position: Vec3; readonly scale: Vec3 };
   transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>): (point: Vec3) => Vec3;
   constrainMovePoint(from: Vec3, to: Vec3, mode: string, cplaneNormal?: Vec3): Vec3;
+  facePoints(model: Model, face: FaceRecord): readonly Vec3[];
+  faceCentroid(model: Model, face: FaceRecord): Vec3 | null;
+  faceNormal(model: Model, face: FaceRecord): Vec3 | null;
+  solidFaceIds(model: Model, solidId: string): readonly FaceRef[];
+  fuseSolidsToExternalFaces(
+    model: Model,
+    solidRefs: readonly SolidRef[],
+    options?: { readonly hullSolidId?: string; readonly contactPairs?: readonly (readonly [string, string])[]; readonly maxSeparation?: number },
+  ): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] };
+  facePlaneGroupKey(normal: Vec3, centroid: Vec3): string;
+  projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3): { readonly projected: Vec3; readonly t: number };
+  scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3;
+  clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3;
   abs(x: number): number;
   min2(a: number, b: number): number;
   max2(a: number, b: number): number;
@@ -5771,6 +5767,7 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦Interactions
 
 // #region 🧪Tests
+import "./assets.ts";
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 const __cadInteractionE2EFixtureModules = import.meta.vitest
   ? await Promise.all([

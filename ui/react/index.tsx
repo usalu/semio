@@ -22566,30 +22566,40 @@ interface ModeDockDragPreviewProps {
   content?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  compact?: boolean;
   tabOnly?: boolean;
 }
 
-/** @emoji 🪟 Floating popped-out window preview used while docking tabs. */
-const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, compact = false, tabOnly = false }) => (
-  <div
-    data-slot="mode-dock-drag-preview"
-    className={cn("pointer-events-none flex flex-col overflow-hidden shadow-lg", compact ? "rounded-sm" : "rounded", className)}
-    style={style}
-  >
-    <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
-      <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
+/** @emoji 🪟 Floating tab or window preview shown while docking. */
+const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, tabOnly = false }) =>
+  tabOnly ? (
+    <div
+      data-slot="mode-dock-drag-preview"
+      className={cn(
+        "pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-foreground shadow-md select-none",
+        modeDockInactiveTabClass,
+        className,
+      )}
+      style={style}
+    >
+      <span className="truncate">{title}</span>
     </div>
-    {tabOnly ? null : (
+  ) : (
+    <div
+      data-slot="mode-dock-drag-preview"
+      className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)}
+      style={style}
+    >
+      <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
+        <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
+      </div>
       <div
         data-slot="mode-dock-drag-preview-body"
-        className={cn("relative min-h-0 flex-1 overflow-hidden p-single", windowBodyFrameClass, compact ? "opacity-90" : "opacity-95")}
+        className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}
       >
         {content ? <div className="h-full w-full overflow-hidden bg-window [&_*]:pointer-events-none">{content}</div> : null}
       </div>
-    )}
-  </div>
-);
+    </div>
+  );
 
 //#endregion 🧭ModeDockDragPreview
 
@@ -22597,7 +22607,6 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
-  dropZone: ModeDropZone | null;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22628,17 +22637,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
   const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
   const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
-  const tabInsertIndex =
-    dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
-
-  const renderInsertSlot = (slotKey: string) => (
-    <div
-      key={slotKey}
-      data-slot="mode-dock-tab-insert-slot"
-      className="mx-half my-half h-[calc(100%-4px)] w-[5.5rem] shrink-0 rounded-sm border border-dashed border-accent bg-accent/15"
-      aria-hidden
-    />
-  );
 
   const renderTab = (tab: (typeof tabs)[number], index: number) => (
     <div
@@ -22682,15 +22680,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       </button>
     </div>
   );
-
-  const renderTabsWithInserts = (segment: typeof tabs, indexOffset: number) =>
-    segment.flatMap((tab, segmentIndex) => {
-      const index = indexOffset + segmentIndex;
-      const nodes: React.ReactNode[] = [];
-      if (tabInsertIndex === index) nodes.push(renderInsertSlot(`insert-${index}`));
-      nodes.push(renderTab(tab, index));
-      return nodes;
-    });
 
   const controlsCap = (
     <div

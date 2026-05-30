@@ -1,0 +1,10 @@
+{
+  "title": "Core Kernel Decoupling",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Strip model-definition assets and geometry/transformation logic from cad/js/core. Core provides interfaces + registry; assets.ts loads via registerModelDefinitionAssets; kernel implements geometry; transformations are pure data.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪016dae687ead4eb68fa330aa73c84121"
+  ]
+}

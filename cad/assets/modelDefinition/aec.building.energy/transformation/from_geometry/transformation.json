@@ -16,5 +16,73 @@
     "energy.energy.roof",
     "energy.energy.externalwall",
     "energy.energy.windows"
-  ]
+  ],
+  "derive": {
+    "collect": {
+      "sourceModelDefinition": "spatial.shape",
+      "primitiveKind": "solid"
+    },
+    "fuse": {
+      "hullSolidId": "from_geometry-hull",
+      "contactPairs": [
+        ["face-top", "face-bottom"],
+        ["face-bottom", "face-top"]
+      ],
+      "maxSeparation": 0.05
+    },
+    "hull": {
+      "typology": "energy.energy.hull",
+      "primitiveKind": "solid"
+    },
+    "classify": {
+      "zTolRatio": 0.02,
+      "zTolMin": 0.001,
+      "opening": {
+        "fields": ["opening", "spatial.shape.opening"],
+        "values": ["window", "door", true],
+        "typology": "energy.energy.windows",
+        "role": "window"
+      },
+      "mergeRoles": ["externalwall", "slab"],
+      "mergeByPlane": true,
+      "rules": [
+        {
+          "role": "roof",
+          "typology": "energy.energy.roof",
+          "dominantAxis": "z",
+          "minDominantNormal": 0.75,
+          "zBand": "max"
+        },
+        {
+          "role": "baseplate",
+          "typology": "energy.energy.baseplate",
+          "dominantAxis": "z",
+          "minDominantNormal": 0.75,
+          "zBand": "min"
+        },
+        {
+          "role": "slab",
+          "typology": "energy.energy.hull",
+          "dominantAxis": "z",
+          "minDominantNormal": 0.75
+        },
+        {
+          "role": "externalwall",
+          "typology": "energy.energy.externalwall",
+          "minAxisNormal": 0.5
+        },
+        {
+          "role": "slab",
+          "typology": "energy.energy.hull",
+          "fallback": true
+        }
+      ]
+    },
+    "ensure": [
+      {
+        "typology": "energy.energy.windows",
+        "empty": true
+      }
+    ]
+  }
 }

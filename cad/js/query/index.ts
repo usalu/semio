@@ -35,6 +35,7 @@ import {
 	evalExpr,
 	type ExprEnv,
 } from "@cad/js/core";
+import "../core/assets.ts";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;

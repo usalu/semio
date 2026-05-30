@@ -29,6 +29,7 @@ import {
 	type VertexRef,
 	type WireRef,
 } from "@cad/js/core";
+import "../../core/assets.ts";
 // #endregion 🔌Adapters
 
 // #region 🎭AdvanceEvent

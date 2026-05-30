@@ -1,0 +1,10 @@
+{
+  "title": "Mode Dock Tab Drag Preview",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Remove inconsistent tab drag feedback (dashed insert slots, thick insert line, body highlight) when dragging Mode dock tabs; keep only a clean cursor-following tab preview.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪ad12212982e84704ae7d45b30e0259a3"
+  ]
+}
