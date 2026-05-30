@@ -604,6 +604,14 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("board play declarative shell", () => {
+		it("default nakagin fixture parses with board graph nodes", () => {
+			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length).toBeGreaterThan(0);
+			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.edges.length).toBeGreaterThan(0);
+			expect(parseBoardFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(
+				PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length,
+			);
+		});
+
 		it("declarative overview body references board host surface", () => {
 			const runtime = buildBoardPlayRuntime();
 			const tree = buildBoardPlayOverviewDeclarativeBody({
