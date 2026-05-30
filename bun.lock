@@ -98,7 +98,7 @@
         "@cad/js/kernel/brepjs": "workspace:*",
         "@cad/js/machine/stately": "workspace:*",
         "@cad/js/query": "workspace:*",
-        "@framework/playground": "workspace:*",
+        "@framework/playground/core": "workspace:*",
         "@framework/playground/renderer/react": "workspace:*",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
@@ -153,7 +153,7 @@
       },
     },
     "framework/platform/core": {
-      "name": "@framework/platform",
+      "name": "@framework/platform/core",
       "version": "0.1.0",
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -163,7 +163,7 @@
       "name": "@framework/platform/renderer/react",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/platform": "workspace:*",
+        "@framework/platform/core": "workspace:*",
         "@ui/react": "workspace:*",
         "clsx": "^2.1.1",
         "fuse.js": "^7.1.0",
@@ -179,7 +179,7 @@
       },
     },
     "framework/playground/core": {
-      "name": "@framework/playground",
+      "name": "@framework/playground/core",
       "version": "0.1.0",
       "dependencies": {
         "@ui/react": "workspace:*",
@@ -199,7 +199,7 @@
       "name": "@framework/playground/renderer/react",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/playground": "workspace:*",
+        "@framework/playground/core": "workspace:*",
         "@puzzle/2d/play": "workspace:*",
         "@puzzle/2d/react": "workspace:*",
         "@puzzle/3d/play": "workspace:*",
@@ -242,7 +242,7 @@
       "name": "@puzzle/2d/play",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/playground": "workspace:*",
+        "@framework/playground/core": "workspace:*",
         "@puzzle/assets": "workspace:*",
       },
       "devDependencies": {
@@ -280,7 +280,7 @@
       "name": "@puzzle/3d/play",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/playground": "workspace:*",
+        "@framework/playground/core": "workspace:*",
         "@puzzle/assets": "workspace:*",
       },
       "devDependencies": {
@@ -322,7 +322,7 @@
       "name": "@puzzle/5d/play",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/playground": "workspace:*",
+        "@framework/playground/core": "workspace:*",
         "@puzzle/assets": "workspace:*",
       },
       "devDependencies": {
@@ -529,7 +529,7 @@
       "name": "@semio/sketchpad",
       "version": "0.1.0",
       "dependencies": {
-        "@framework/platform": "workspace:*",
+        "@framework/platform/core": "workspace:*",
         "@puzzle/2d/react": "workspace:*",
         "@puzzle/3d/react": "workspace:*",
         "@puzzle/5d/react": "workspace:*",
@@ -1260,11 +1260,11 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
-    "@framework/platform": ["@framework/platform@workspace:framework/platform/core"],
+    "@framework/platform/core": ["@framework/platform/core@workspace:framework/platform/core"],
 
     "@framework/platform/renderer/react": ["@framework/platform/renderer/react@workspace:framework/platform/renderer/react"],
 
-    "@framework/playground": ["@framework/playground@workspace:framework/playground/core"],
+    "@framework/playground/core": ["@framework/playground/core@workspace:framework/playground/core"],
 
     "@framework/playground/renderer/react": ["@framework/playground/renderer/react@workspace:framework/playground/renderer/react"],
 

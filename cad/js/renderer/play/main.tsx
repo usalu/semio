@@ -19,7 +19,7 @@ import {
   type WindowMeasure,
   type UiNode,
   type WindowLayout,
-} from "@framework/playground";
+} from "@framework/playground/core";
 import {
   DocumentHistory,
   SHAPE_MODEL_DEFINITION_ID,

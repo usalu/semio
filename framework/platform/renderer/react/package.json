@@ -2,14 +2,14 @@
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"name": "@framework/platform/renderer/react",
 	"version": "0.1.0",
-	"description": "framework · React renderer for @framework/platform",
+	"description": "framework · React renderer for @framework/platform/core",
 	"type": "module",
 	"private": true,
 	"exports": {
 		".": "./index.tsx"
 	},
 	"dependencies": {
-		"@framework/platform": "workspace:*",
+		"@framework/platform/core": "workspace:*",
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",
 		"fuse.js": "^7.1.0",

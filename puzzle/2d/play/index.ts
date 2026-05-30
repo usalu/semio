@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/board/play/index.ts — Board play shell on `@framework/playground`: declarative bodies, LOD measures, toolbar tools (no React).
+// 💻 elements/lib/board/play/index.ts — Board play shell on `@framework/playground/core`: declarative bodies, LOD measures, toolbar tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -23,7 +23,7 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 	type WindowLayout,
-} from "@framework/playground";
+} from "@framework/playground/core";
 
 import { NakaginCapsuleTowerBoardJson as nakaginFixtureJson } from "@puzzle/assets";
 import {

@@ -450,7 +450,7 @@ import {
 	type UiNode,
 	type UiPanelHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/platform";
+} from "@framework/platform/core";
 import {
 	ProductView,
 	getLevelBgClass,

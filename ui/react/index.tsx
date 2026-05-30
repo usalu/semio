@@ -23187,7 +23187,7 @@ if (import.meta.vitest) {
 // #region 🗿Framework Re-exports
 
 // Re-exports of common libraries used alongside UI primitives.
-// Workbench shell types and chrome live in `@framework/platform` / `@framework/platform/renderer/react`.
+// Workbench shell types and chrome live in `@framework/platform/core` / `@framework/platform/renderer/react`.
 
 // #region 🌩️DnD Kit
 export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";

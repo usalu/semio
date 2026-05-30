@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 puzzle/5d/play/index.ts — Topology play on `@framework/playground`: unified topology fixture, LOD measures, relocate tools (no React).
+// 💻 puzzle/5d/play/index.ts — Topology play on `@framework/playground/core`: unified topology fixture, LOD measures, relocate tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -20,7 +20,7 @@ import {
   playgroundTreePanelRootItems,
   type UiTreeItemNode,
   type UiTreeNode,
-} from "@framework/playground";
+} from "@framework/playground/core";
 
 import { buildBoardPlayHierarchySections } from "../../2d/play/index.ts";
 import { NakaginCapsuleTowerBoardJson as nakaginBoardJson } from "@puzzle/assets";

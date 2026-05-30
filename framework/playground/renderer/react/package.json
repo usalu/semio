@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@framework/playground/renderer/react",
   "version": "0.1.0",
-  "description": "framework · React renderer for @framework/playground",
+  "description": "framework · React renderer for @framework/playground/core",
   "type": "module",
   "private": true,
   "exports": {
@@ -14,7 +14,7 @@
     "./puzzle/5d": "./index.tsx"
   },
   "dependencies": {
-    "@framework/playground": "workspace:*",
+    "@framework/playground/core": "workspace:*",
     "@puzzle/assets": "workspace:*",
     "@puzzle/2d/play": "workspace:*",
     "@puzzle/2d/react": "workspace:*",

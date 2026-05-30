@@ -63,7 +63,7 @@ function buildStorybookAliases(): Record<string, string> {
 	if (loadUiStack || loadPuzzleStack) {
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
-		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
+		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
 		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
 		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
@@ -186,7 +186,7 @@ const config: StorybookConfig = {
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
 			"@ui/react",
-			"@framework/playground",
+			"@framework/playground/core",
 			"@framework/playground/renderer/react",
 			"@puzzle/2d/react",
 		]);

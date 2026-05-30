@@ -1,6 +1,6 @@
 {
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/playground",
+	"name": "@framework/playground/core",
 	"version": "0.1.0",
 	"description": "framework · playground miniframework (one app, fixture, selection, filter, workbench, details)",
 	"type": "module",

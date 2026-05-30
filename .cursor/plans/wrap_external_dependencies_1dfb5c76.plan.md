@@ -56,7 +56,7 @@ flowchart LR
 ## Existing anchors to use as templates
 
 - Rust: `Transport` trait in [semio/client/lib/query](semio/client/lib/query) (`MemoryTransport`/`JsTransport`/`SemioTransport`).
-- TS: `SpatialKernel`/`StateEngine` ports in [cad/js/core](cad/js/core) with `BrepjsKernel` and `StatelyStateEngine` adapters; `@framework/platform` core is already dependency-free.
+- TS: `SpatialKernel`/`StateEngine` ports in [cad/js/core](cad/js/core) with `BrepjsKernel` and `StatelyStateEngine` adapters; `@framework/platform/core` core is already dependency-free.
 - Go: `GraphQLExecutor`/`VersionControlProvider`/`SandboxProvider`/`EditorProvider` interfaces in [repo/client/cli](repo/client/cli).
 
 ## Per-language mechanics

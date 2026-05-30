@@ -1,8 +1,8 @@
 // #region 🧲Header
-/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform}: declarative {@link UiNode} host (monolith). */
+/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
-export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@framework/platform";
+export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@framework/platform/core";
 
 export type { Level } from "@ui/react";
 export {
@@ -48,7 +48,7 @@ import {
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
 	type UiTextNode,
-} from "@framework/platform";
+} from "@framework/platform/core";
 import {
 	ArrowLeft,
 	ArrowRight,

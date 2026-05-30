@@ -9,4 +9,4 @@ bundle:
 
 # 🧾 Specification
 
-Ship declarative `puzzle.*.fixture/v1` and `puzzle.5d.topology/v1` JSON here. Play harnesses and `@framework/playground` import `@puzzle/assets`; `@puzzle/*/react` libraries must not.
+Ship declarative `puzzle.*.fixture/v1` and `puzzle.5d.topology/v1` JSON here. Play harnesses and `@framework/playground/core` import `@puzzle/assets`; `@puzzle/*/react` libraries must not.

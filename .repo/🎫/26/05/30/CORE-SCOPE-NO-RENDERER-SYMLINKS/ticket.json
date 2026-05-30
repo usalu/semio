@@ -1,7 +1,26 @@
 {
   "id": "26/05/30/CORE-SCOPE-NO-RENDERER-SYMLINKS",
   "title": "Core Scope No Renderer Symlinks",
-  "status": "open",
+  "status": "closed",
   "goal": null,
-  "description": "Bun nests @framework/platform/renderer/react under @framework/platform/core, creating ugly core/renderer symlinks. Rename core packages to full folder scopes (@framework/platform/core, @framework/playground/core)."
+  "summary": "Bun nested renderer packages under core when core used the parent scope name. Renamed core to @framework/platform/core and @framework/playground/core; added namespace package.json at framework/platform and framework/playground (cad/js pattern); updated imports and aliases. Core dirs now have zero symlinks.",
+  "files": [
+    "framework/platform/package.json",
+    "framework/playground/package.json",
+    "framework/platform/core/package.json",
+    "framework/platform/core/project.json",
+    "framework/playground/core/package.json",
+    "framework/playground/core/project.json",
+    "framework/platform/renderer/react/package.json",
+    "framework/playground/renderer/react/package.json",
+    "framework/platform/renderer/react/index.tsx",
+    "framework/playground/renderer/react/index.tsx",
+    "framework/platform/renderer/react/vitest.config.ts",
+    "framework/playground/renderer/react/vitest.config.ts",
+    "ui/styling/vite-elements-assets.ts",
+    "cad/js/renderer/vitest.config.ts",
+    "semio/client/lib/sketchpad/js/package.json",
+    "semio/client/lib/sketchpad/js/index.ts",
+    "bun.lock"
+  ]
 }

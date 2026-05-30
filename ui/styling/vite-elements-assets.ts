@@ -185,7 +185,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     { find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(rendererRoot, "index.tsx") },
     { find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "index.tsx") },
     { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
-    { find: /^@framework\/playground$/, replacement: playgroundCore },
+    { find: /^@framework\/playground\/core$/, replacement: playgroundCore },
     { find: "@ui/react", replacement: uiReact },
     { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
     { find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },

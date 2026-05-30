@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 `@framework/playground` — React-neutral playground runtime, one-app shell (selection + filter toolbars, workbench + details), declarative {@link UiNode} bodies, command routing (no DOM). */
+/** @emoji 🛝 `@framework/playground/core` — React-neutral playground runtime, one-app shell (selection + filter toolbars, workbench + details), declarative {@link UiNode} bodies, command routing (no DOM). */
 // #endregion 🧲Header
 
 //#region 🔖JsonValue

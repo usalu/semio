@@ -6,13 +6,13 @@ todos:
     content: "Open ticket; rename ui technology: @elements/ui->@ui/react, @elements/styling->@ui/styling (+ Nx @ui/styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
     status: completed
   - id: ticket-framework
-    content: "Open ticket; rename framework technology: @elements/framework->@framework/platform, @elements/framework-react->@framework/platform-react, @elements/playground->@framework/playground; split playground renderer into @framework/playground-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
+    content: "Open ticket; rename framework technology: @elements/framework->@framework/platform/core, @elements/framework-react->@framework/platform/core-react, @elements/playground->@framework/playground/core; split playground renderer into @framework/playground/core-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
     status: completed
   - id: ticket-puzzle
-    content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @ui/react/@framework/playground(-react)."
+    content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @ui/react/@framework/playground/core(-react)."
     status: completed
   - id: ticket-cad
-    content: Open ticket; rename cad packages @spatial/js-*->@cad/js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @framework/playground + @ui/react.
+    content: Open ticket; rename cad packages @spatial/js-*->@cad/js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @framework/playground/core + @ui/react.
     status: completed
   - id: ticket-root-rewire
     content: Open consolidating ticket; rewire root package.json workspaces + scripts (dev:spatial->dev:cad, storybook ids), script.ts dev mapping, .vscode/launch.json, .storybook/main.ts + stories, nx.json/eslint/Monorepo.sln. Run bun install to regenerate bun.lock.
@@ -38,10 +38,10 @@ Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/
   - `@elements/styling` (`ui/styling/js`) -> `@ui/styling`
   - Nx `@elements/styling-core` (`ui/styling/project.json`) -> `@ui/styling-tokens`
 - framework
-  - `@elements/framework` (`framework/platform/core`) -> `@framework/platform`
-  - `@elements/framework-react` (`framework/platform/renderer/react`) -> `@framework/platform-react`
-  - `@elements/playground` (`framework/playground/core`) -> `@framework/playground`
-  - new `@framework/playground-react` package at `framework/playground/renderer/react` (currently a broken `./react` export off core)
+  - `@elements/framework` (`framework/platform/core`) -> `@framework/platform/core`
+  - `@elements/framework-react` (`framework/platform/renderer/react`) -> `@framework/platform/core-react`
+  - `@elements/playground` (`framework/playground/core`) -> `@framework/playground/core`
+  - new `@framework/playground/core-react` package at `framework/playground/renderer/react` (currently a broken `./react` export off core)
 - puzzle
   - `@elements/board` (`puzzle/2d`) -> `@puzzle/board`; crate `elements_board` (`puzzle/2d/rs`) -> `puzzle_board`; `@elements/board-wasm` -> `@puzzle/board-wasm`
   - `@elements/scene` (`puzzle/3d`) -> `@puzzle/scene`
@@ -55,7 +55,7 @@ Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/
 - Root [script.ts](script.ts): update `dev` subcommand mapping (`spatial`/`board`/`scene`) and any `@spatial/*` / `@elements/*` references and storybook project ids.
 - Every `project.json` under `ui/`, `framework/`, `puzzle/`, `cad/js/`: fix `cwd` (still `elements/lib/...` / `spatial/js/...`) and Nx project `name`.
 - Every package's `package.json` `name`, `repository.directory`, and intra-repo `dependencies` (the `@elements/*` / `@spatial/*` deps between these packages).
-- Per-package `vite.config.ts` aliases (notably `cad/js/renderer-r3f` aliasing `@elements/playground` -> `@framework/playground`, `@elements/ui` -> `@ui/react`).
+- Per-package `vite.config.ts` aliases (notably `cad/js/renderer-r3f` aliasing `@elements/playground` -> `@framework/playground/core`, `@elements/ui` -> `@ui/react`).
 - Fix `framework/playground/core/package.json` `./react` export and implement/export `renderPlayground` in `framework/playground/renderer/react/index.tsx` (referenced by `puzzle/3d/play/main.ts`).
 - [.storybook/main.ts](.storybook/main.ts) + stories under `.storybook/stories/elements/**`: update `@elements/*` imports and story paths.
 - [.vscode/launch.json](.vscode/launch.json): rename launch configs referencing spatial/elements/board/scene per existing grouping.
@@ -79,10 +79,10 @@ flowchart TB
     UIR --> UIS
   end
   subgraph fw [framework]
-    FP["@framework/platform"]
-    FPR["@framework/platform-react"]
-    PG["@framework/playground"]
-    PGR["@framework/playground-react"]
+    FP["@framework/platform/core"]
+    FPR["@framework/platform/core-react"]
+    PG["@framework/playground/core"]
+    PGR["@framework/playground/core-react"]
     FPR --> FP
     FPR --> UIR
     PGR --> PG

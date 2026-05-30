@@ -64,7 +64,7 @@ import {
   type WindowEngagement,
   type WindowLayout,
   type WindowMeasure,
-} from "@framework/playground";
+} from "@framework/playground/core";
 // #endregion 🔌Adapters
 
 export type {
@@ -83,7 +83,7 @@ export type {
   WindowBodyViewContext,
   WindowKindRuntime,
   WindowLayout,
-} from "@framework/playground";
+} from "@framework/playground/core";
 
 export {
   APP_TOOL_CATEGORY_ORDER,
@@ -103,7 +103,7 @@ export {
   registerWindowBody,
   resolveAppState,
   playgroundTreePanelRootItems,
-} from "@framework/playground";
+} from "@framework/playground/core";
 
 function cnPlay(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -1145,7 +1145,7 @@ export function boot3dPlay(playground: Playground, rootId = "root"): void {
 //#region 🔖Puzzle5dPlayHost
 // #region 🔌Adapters
 import { FiveD, TopologyStoreProvider } from "@puzzle/5d/react";
-import type { Playground } from "@framework/playground";
+import type { Playground } from "@framework/playground/core";
 import {
   PUZZLE_5D_PLAY_APP_ID,
   PUZZLE_5D_PLAY_BOARD_BODY_KEY,
@@ -1218,7 +1218,7 @@ function TopologyPlayStatusPanel(): React.ReactElement {
 }
 
 class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly buildTree: () => import("@framework/playground").UiTreeNode) {
+  constructor(private readonly buildTree: () => import("@framework/playground/core").UiTreeNode) {
     super();
   }
 
@@ -1425,7 +1425,7 @@ import {
   type BoardSelectionTargets,
   type CameraState,
 } from "@puzzle/2d/react";
-import type { Playground } from "@framework/playground";
+import type { Playground } from "@framework/playground/core";
 // #endregion 🔌Adapters
 
 const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
@@ -3918,7 +3918,7 @@ export function boot2dPlay(playground: Playground, rootId = "root"): void {
 //#endregion 🔖Puzzle2dPlayHost
 
 //#region 🔖Boot
-import type { Playground } from "@framework/playground";
+import type { Playground } from "@framework/playground/core";
 
 /** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
 export interface PlaygroundChromeBoot {

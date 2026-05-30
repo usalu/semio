@@ -11,7 +11,7 @@
     "test": "bun nx run @cad/js/renderer:test"
   },
   "dependencies": {
-    "@framework/playground": "workspace:*",
+    "@framework/playground/core": "workspace:*",
     "@framework/playground/renderer/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@react-three/drei": "^10.7.7",
