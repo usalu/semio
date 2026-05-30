@@ -36,7 +36,7 @@ import {
 	type CameraState,
 } from "../../2d/react/index.tsx";
 import nakaginSceneJson from "../../3d/play/fixtures/nakagin-capsule-tower.scene.json";
-import { buildScenePlayHierarchyTree, SCENE_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
+import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
 	DEFAULT_MANUAL_LOD,
 	SCENE_LOD_SLIDER_MAX,
@@ -53,19 +53,19 @@ import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../r
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
 //#region 🔖Ids
-export const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
-export const TOPOLOGY_PLAY_CONTROLLER_ID = "topology-play";
-export const TOPOLOGY_PLAY_BOARD_WINDOW_ID = "topology-board";
-export const TOPOLOGY_PLAY_SCENE_WINDOW_ID = "topology-scene";
-export const TOPOLOGY_PLAY_BOARD_WINDOW_LABEL = "Sketch board";
-export const TOPOLOGY_PLAY_SCENE_WINDOW_LABEL = "Spatial scene";
-export const TOPOLOGY_PLAY_BOARD_BODY_KEY = "elements.topology.play.board";
-export const TOPOLOGY_PLAY_SCENE_BODY_KEY = "elements.topology.play.scene";
-export const TOPOLOGY_PLAY_BOARD_SURFACE_ID = "elements.topology.play.board/v1";
-export const TOPOLOGY_PLAY_SCENE_SURFACE_ID = "elements.topology.play.scene/v1";
-export const TOPOLOGY_PLAY_HIERARCHY_TAB_ID = "topology-play-hierarchy";
+export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
+export const PUZZLE_5D_PLAY_CONTROLLER_ID = "puzzle-5d-play";
+export const PUZZLE_5D_PLAY_BOARD_WINDOW_ID = "puzzle-5d-2d";
+export const PUZZLE_5D_PLAY_SCENE_WINDOW_ID = "puzzle-5d-3d";
+export const PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL = "Puzzle 2d";
+export const PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL = "Puzzle 3d";
+export const PUZZLE_5D_PLAY_BOARD_BODY_KEY = "puzzle.5d.play.board";
+export const PUZZLE_5D_PLAY_SCENE_BODY_KEY = "puzzle.5d.play.scene";
+export const PUZZLE_5D_PLAY_BOARD_SURFACE_ID = "puzzle.5d.play.board/v1";
+export const PUZZLE_5D_PLAY_SCENE_SURFACE_ID = "puzzle.5d.play.scene/v1";
+export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 
-const TOPOLOGY_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const PUZZLE_5D_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 //#endregion 🔖Ids
 
 //#region 🔖TopologyPlayHierarchy
@@ -86,31 +86,31 @@ export function buildTopologyPlayHierarchySections(
 		const boardRoot = buildBoardPlayHierarchySections(snapshot.boardFixture, [...snapshot.boardSelected], handlers.onSelectBoard)
 			.sections[0]?.items?.[0];
 		branches.push({
-			id: "topology-play-hierarchy.board",
+			id: "puzzle-5d-play-hierarchy.board",
 			label: "Board",
 			defaultOpen: true,
-			items: boardRoot?.items ?? [{ id: "topology-play-hierarchy.board.empty", label: "(empty)" }],
+			items: boardRoot?.items ?? [{ id: "puzzle-5d-play-hierarchy.board.empty", label: "(empty)" }],
 		});
 	}
 	if (snapshot.sceneFixture) {
 		const sceneSelection = snapshot.sceneSelected
-			? { ...SCENE_PLAY_EMPTY_SELECTION, objectIds: [snapshot.sceneSelected] }
-			: SCENE_PLAY_EMPTY_SELECTION;
-		const sceneRoot = buildScenePlayHierarchyTree(snapshot.sceneFixture, sceneSelection).sections[0]?.items?.[0];
+			? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.sceneSelected] }
+			: PUZZLE_3D_PLAY_EMPTY_SELECTION;
+		const sceneRoot = buildPuzzle3dPlayHierarchyTree(snapshot.sceneFixture, sceneSelection).sections[0]?.items?.[0];
 		branches.push({
-			id: "topology-play-hierarchy.scene",
+			id: "puzzle-5d-play-hierarchy.scene",
 			label: "Scene",
 			defaultOpen: true,
-			items: sceneRoot?.items ?? [{ id: "topology-play-hierarchy.scene.empty", label: "(empty)" }],
+			items: sceneRoot?.items ?? [{ id: "puzzle-5d-play-hierarchy.scene.empty", label: "(empty)" }],
 		});
 	}
 	const topologyRoot: UiTreeItemNode = {
-		id: "topology-play-hierarchy.topology",
+		id: "puzzle-5d-play-hierarchy.topology",
 		label: snapshot.manifestLabel ?? "Topology",
 		defaultOpen: true,
-		items: branches.length ? branches : [{ id: "topology-play-hierarchy.topology.empty", label: "(no fixtures)" }],
+		items: branches.length ? branches : [{ id: "puzzle-5d-play-hierarchy.topology.empty", label: "(no fixtures)" }],
 	};
-	return playgroundTreePanelRootItems("topology-play-hierarchy.root", [topologyRoot]);
+	return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [topologyRoot]);
 }
 //#endregion 🔖TopologyPlayHierarchy
 
@@ -176,7 +176,7 @@ export class TopologyPlayShellController extends Controller {
 	private proximityScene = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
-		super(TOPOLOGY_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.rebuildShellMode();
 	}
 
@@ -187,7 +187,7 @@ export class TopologyPlayShellController extends Controller {
 			text: mode.charAt(0).toUpperCase() + mode.slice(1),
 			order,
 			pressed: this.relocateMode === mode,
-			controllerId: TOPOLOGY_PLAY_CONTROLLER_ID,
+			controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID,
 			command: "setRelocateMode",
 			args: { mode },
 		}));
@@ -198,14 +198,14 @@ export class TopologyPlayShellController extends Controller {
 	private boardLodMeasure(): WindowMeasure {
 		return {
 			kind: "select",
-			id: `${TOPOLOGY_PLAY_BOARD_WINDOW_ID}-lod`,
+			id: `${PUZZLE_5D_PLAY_BOARD_WINDOW_ID}-lod`,
 			label: "LOD",
 			value: this.boardLodMode,
 			items: [
 				{ id: "automatic", label: boardLodAutomaticSelectLabel(this.boardLodTag), value: BOARD_LOD_MODE_AUTOMATIC },
-				...TOPOLOGY_PLAY_LOD_TIERS_BOARD.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
+				...PUZZLE_5D_PLAY_LOD_TIERS_BOARD.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
 			],
-			onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setBoardLodMode" },
+			onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setBoardLodMode" },
 		};
 	}
 
@@ -213,36 +213,36 @@ export class TopologyPlayShellController extends Controller {
 		return [
 			{
 				kind: "toggle",
-				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-auto`,
+				id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-auto`,
 				label: "LOD",
 				text: "Auto zoom",
 				pressed: this.sceneAutomaticLod,
-				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneAutoLod" },
+				onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneAutoLod" },
 			},
 			{
 				kind: "toggle",
-				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-depth`,
+				id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-depth`,
 				text: "Depth-variable",
 				pressed: this.sceneDepthVariableLod,
-				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneDepthLod" },
+				onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneDepthLod" },
 			},
 			{
 				kind: "slider",
-				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-lod`,
+				id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-lod`,
 				label: formatSceneLod(this.sceneLodTag),
 				value: this.sceneLodSlider,
 				min: SCENE_LOD_SLIDER_MIN,
 				max: SCENE_LOD_SLIDER_MAX,
 				step: 1,
-				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneManualLod" },
+				onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneManualLod" },
 			},
 		];
 	}
 
 	getWindowKinds(): readonly WindowKindRuntime[] {
 		return [
-			new WindowKindRuntime(TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
-			new WindowKindRuntime(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [...this.sceneLodMeasures()]),
+			new WindowKindRuntime(PUZZLE_5D_PLAY_BOARD_WINDOW_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL, PUZZLE_5D_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
+			new WindowKindRuntime(PUZZLE_5D_PLAY_SCENE_WINDOW_ID, PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL, PUZZLE_5D_PLAY_SCENE_BODY_KEY, undefined, [...this.sceneLodMeasures()]),
 		];
 	}
 
@@ -375,11 +375,11 @@ export class TopologyPlayShellController extends Controller {
 //#region 🔖TopologyPlayRuntime
 export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellController): AppRuntime {
 	const app = new AppRuntime(
-		TOPOLOGY_PLAY_APP_ID,
+		PUZZLE_5D_PLAY_APP_ID,
 		"Topology play",
 		undefined,
 		controller,
-		createDefaultLayout([TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_ID], "row", [50, 50], [TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL]) as never,
+		createDefaultLayout([PUZZLE_5D_PLAY_BOARD_WINDOW_ID, PUZZLE_5D_PLAY_SCENE_WINDOW_ID], "row", [50, 50], [PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL, PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL]) as never,
 		controller.getWindowKinds(),
 	);
 	app.defaultModeId = controller.mainMode.id;
@@ -398,7 +398,7 @@ export function buildTopologyPlayRuntime(): ProductRuntime {
 
 /** @emoji 🛝 Topology play harness as a single {@link Playground} instance. */
 export class Playground5d extends Playground {
-	readonly id = TOPOLOGY_PLAY_APP_ID;
+	readonly id = PUZZLE_5D_PLAY_APP_ID;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
 	createRuntime(): ProductRuntime {
@@ -416,14 +416,14 @@ export function buildTopologyBoardDeclarativeBody(ctx: WindowBodyViewContext): U
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.boardFixture) return { type: "text", value: "Invalid board fixture" };
-	return buildBoardWindowBody(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID, TOPOLOGY_PLAY_BOARD_WINDOW_ID);
+	return buildBoardWindowBody(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_ID);
 }
 
 export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
-	return buildScene3dWindowBody(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID);
+	return buildScene3dWindowBody(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
 }
 //#endregion 🔖DeclarativeBodies
 
@@ -458,7 +458,7 @@ if (import.meta.vitest) {
 		});
 		it("parses topology manifest", () => {
 			const t = parseTopologyFixtureV1(topologyManifestJson as unknown);
-			expect(t?.schema).toBe("elements.topology.fixture/v1");
+			expect(t?.schema).toBe("puzzle.5d.fixture/v1");
 		});
 		it("shared kinds merge metas like the play harness", () => {
 			const sk = topologySharedKindsFromPairedMetas({
@@ -471,20 +471,20 @@ if (import.meta.vitest) {
 			const wb = buildTopologyPlayRuntime();
 			const board = buildTopologyBoardDeclarativeBody({
 				runtime: wb,
-				windowKindId: TOPOLOGY_PLAY_BOARD_WINDOW_ID,
-				bodyKey: TOPOLOGY_PLAY_BOARD_BODY_KEY,
+				windowKindId: PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
+				bodyKey: PUZZLE_5D_PLAY_BOARD_BODY_KEY,
 				activeModeId: "main",
 				generation: 0,
 			});
 			const scene = buildTopologySceneDeclarativeBody({
 				runtime: wb,
-				windowKindId: TOPOLOGY_PLAY_SCENE_WINDOW_ID,
-				bodyKey: TOPOLOGY_PLAY_SCENE_BODY_KEY,
+				windowKindId: PUZZLE_5D_PLAY_SCENE_WINDOW_ID,
+				bodyKey: PUZZLE_5D_PLAY_SCENE_BODY_KEY,
 				activeModeId: "main",
 				generation: 0,
 			});
-			expect(board).toEqual(buildBoardWindowBody(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID, TOPOLOGY_PLAY_BOARD_WINDOW_ID));
-			expect(scene).toEqual(buildScene3dWindowBody(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID));
+			expect(board).toEqual(buildBoardWindowBody(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_ID));
+			expect(scene).toEqual(buildScene3dWindowBody(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
 		});
 	});
 }

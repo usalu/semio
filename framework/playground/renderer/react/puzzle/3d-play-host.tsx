@@ -31,28 +31,28 @@ import {
 	type RelocatePayload,
 } from "@puzzle/3d/react";
 import {
-	SCENE_PLAY_BODY_KEY,
-	SCENE_PLAY_CONTROLLER_ID,
-	SCENE_PLAY_EMPTY_SELECTION,
-	SCENE_PLAY_ICON_HIERARCHY,
-	SCENE_PLAY_ICON_INSPECTOR,
-	SCENE_PLAY_ICON_KINDS,
-	SCENE_PLAY_ICON_SETTINGS,
-	SCENE_PLAY_SCENE_SURFACE_ID,
-	ScenePlayShellController,
+	PUZZLE_3D_PLAY_BODY_KEY,
+	PUZZLE_3D_PLAY_CONTROLLER_ID,
+	PUZZLE_3D_PLAY_EMPTY_SELECTION,
+	PUZZLE_3D_PLAY_ICON_HIERARCHY,
+	PUZZLE_3D_PLAY_ICON_INSPECTOR,
+	PUZZLE_3D_PLAY_ICON_KINDS,
+	PUZZLE_3D_PLAY_ICON_SETTINGS,
+	PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
+	Puzzle3dPlayShellController,
 	parseKindCatalogs,
 	parseKindCompatibility,
-	type ScenePlaySnapshot,
+	type Puzzle3dPlaySnapshot,
 } from "@puzzle/3d/play";
 // #endregion 🔌Adapters
 
-function useScenePlayController(): ScenePlayShellController | undefined {
+function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
 	const { runtime } = useApp();
-	return runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
+	return runtime.getActiveApp()?.controller as Puzzle3dPlayShellController | undefined;
 }
 
-function useScenePlaySnapshot(): ScenePlaySnapshot {
-	const ctrl = useScenePlayController();
+function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
+	const ctrl = usePuzzle3dPlayController();
 	return reactHostPort.useSyncExternalStore(
 		(onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
 		() =>
@@ -65,7 +65,7 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 				automaticLod: true,
 				depthVariableLod: false,
 				relocateMode: "translate",
-				selection: SCENE_PLAY_EMPTY_SELECTION,
+				selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
 				selectedId: null,
 				selectedLabel: null,
 				selectionMode: "single",
@@ -89,7 +89,7 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 			automaticLod: true,
 			depthVariableLod: false,
 			relocateMode: "translate",
-			selection: SCENE_PLAY_EMPTY_SELECTION,
+			selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
 			selectedId: null,
 			selectedLabel: null,
 			selectionMode: "single",
@@ -107,14 +107,14 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 	);
 }
 
-function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
+function Puzzle3dPlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
 	const { runtime } = useApp();
 	const bus = runtime.commandBus;
-	const ctrl = useScenePlayController();
-	if (node.controllerId !== SCENE_PLAY_CONTROLLER_ID) {
+	const ctrl = usePuzzle3dPlayController();
+	if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid scene viewport binding</div>;
 	}
-	const snap = useScenePlaySnapshot();
+	const snap = usePuzzle3dPlaySnapshot();
 	if (!snap.fixture) {
 		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
 	}
@@ -142,7 +142,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 				fixtureRevision={snap.fixtureRevision}
 				onConnect={(payload) => {
 					patchFixture((fixture) => applyConnectToSceneFixture(fixture, payload));
-					bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect");
+					bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteConnect");
 				}}
 				onRelocate={onRelocatePersist}
 			>
@@ -165,14 +165,14 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					gridFactor={snap.gridFactor}
 					showLodGrid={snap.showLodGrid}
 					gridSnapEnabled={snap.gridSnapEnabled}
-					setSelectedId={(id) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
-					onSelect={(selection) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteSelection", selection)}
-					onIndirectConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteIndirect")}
-					onProximityConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteProximity")}
-					onLodChange={(lod) => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
+					setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
+					onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
+					onIndirectConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteIndirect")}
+					onProximityConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteProximity")}
+					onLodChange={(lod) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
 					onCamera={(camera) => ctrl?.setCamera(camera)}
-					onAttractionCompatibleObjects={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
-					onAttractionTargetRing={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteTargetRing")}
+					onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
+					onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
 				/>
 			</SceneObjectStateProvider>
 		</div>
@@ -185,11 +185,11 @@ let scenePlayChromeRegistered = false;
 export function registerSceneSurfaceHosts(): void {
 	if (scenePlayChromeRegistered) return;
 	scenePlayChromeRegistered = true;
-	registerUiScene3DSurfaceHost(SCENE_PLAY_SCENE_SURFACE_ID, ScenePlaySceneSurfaceHost);
-	registerTabIcon(SCENE_PLAY_ICON_INSPECTOR, ClipboardList);
-	registerTabIcon(SCENE_PLAY_ICON_KINDS, Tags);
-	registerTabIcon(SCENE_PLAY_ICON_HIERARCHY, ListTree);
-	registerTabIcon(SCENE_PLAY_ICON_SETTINGS, Settings);
+	registerUiScene3DSurfaceHost(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, Puzzle3dPlaySceneSurfaceHost);
+	registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, ClipboardList);
+	registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, Tags);
+	registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, ListTree);
+	registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, Settings);
 	const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
 	if (fixture) {
 		const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
@@ -198,7 +198,7 @@ export function registerSceneSurfaceHosts(): void {
 }
 
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
-export function mountScenePlayChrome(playground: Playground, rootId = "root"): void {
+export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
 	mountPlaygroundApp(
 		<PlaygroundView runtime={playground.runtime} initialPanelVisibility={playground.initialPanelVisibility} />,
 		rootId,
@@ -207,7 +207,7 @@ export function mountScenePlayChrome(playground: Playground, rootId = "root"): v
 
 const scenePlayChromeBoot: PlaygroundChromeBoot = {
 	registerHosts: registerSceneSurfaceHosts,
-	mount: mountScenePlayChrome,
+	mount: mountPuzzle3dPlayChrome,
 };
 
 /** @emoji 🛝 Scene play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */

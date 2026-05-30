@@ -1,5 +1,5 @@
 {
-  "schema": "elements.topology.fixture/v1",
+  "schema": "puzzle.5d.fixture/v1",
   "label": "Nakagin capsule tower",
   "meta": {
     "description": "Topology manifest pairing the Nakagin board graph with the Nakagin 3D scene; concrete board/scene payloads are loaded from their respective fixture files in the play harness."

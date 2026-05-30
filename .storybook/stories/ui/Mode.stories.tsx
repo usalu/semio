@@ -2,10 +2,11 @@
 // .storybook/stories/elements/ui/Mode.stories.tsx
 // #endregion 🧲Header
 
-import { Mode, createEvenWindowLayout } from "@ui/react";
+// #region 🔌Adapters
+import { Mode, createEvenWindowLayout, reactHostPort } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import * as React from "react";
 import { expect, userEvent, within } from "storybook/test";
+// #endregion 🔌Adapters
 
 const Pane = ({ label }: { label: string }) => (
   <div className="flex h-full items-center justify-center bg-window">
@@ -26,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 export const QuadLayout: Story = {
   render: () => {
-    const [activeWindowId, setActiveWindowId] = React.useState<string | null>("overview");
+    const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("overview");
     return (
       <div className="h-[500px] w-full p-single">
         <Mode
@@ -74,7 +75,7 @@ export const QuadLayout: Story = {
 
 export const TabStack: Story = {
   render: () => {
-    const [activeWindowId, setActiveWindowId] = React.useState<string | null>("design");
+    const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("design");
     return (
       <div className="h-[400px] w-full p-single">
         <Mode

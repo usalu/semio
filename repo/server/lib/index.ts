@@ -1087,12 +1087,6 @@ export function getDiscordChannel(eventKind: string): string {
 // #endregion 🔖events
 
 // #region 🔖worker
-// 🗄️#region ⏱️Config
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://semio:semio@localhost:5432/semio_repo";
-// #endregion ⏱️Config
-
 // #region 🌊Jobs
 // Job handler definitions.
 
@@ -1131,9 +1125,8 @@ async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
 // #endregion 🌊Jobs
 
 // #region 🌩️Main
-// Worker main entry point.
-
-async function main() {
+/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `worker.ts`). */
+export async function runRepoServerWorker(): Promise<void> {
   const boss = new PgBoss(DATABASE_URL);
 
   boss.on("error", (error) => console.error("[pg-boss error]", error));
@@ -1158,10 +1151,5 @@ async function main() {
     process.exit(0);
   });
 }
-
-main().catch((err) => {
-  console.error("[worker] fatal error:", err);
-  process.exit(1);
-});
 // #endregion 🌩️Main
 // #endregion 🔖worker

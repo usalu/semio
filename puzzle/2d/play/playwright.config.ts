@@ -13,8 +13,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const boardRoot = path.resolve(__dirname, "..");
 const playPort = process.env.PUZZLE_2D_PLAY_PORT ?? "6027";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playPort}`;
-/** Use real Chrome/Edge for WebGPU: `BOARD_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …` (bundled Chromium may lack an adapter on some Windows setups). */
-const rawChannel = process.env.BOARD_PLAYWRIGHT_CHANNEL;
+/** Use real Chrome/Edge for WebGPU: `PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …` (bundled Chromium may lack an adapter on some Windows setups). */
+const rawChannel = process.env.PUZZLE_2D_PLAYWRIGHT_CHANNEL;
 const chromeChannel = rawChannel === "chrome" || rawChannel === "msedge" ? rawChannel : undefined;
 
 export default defineConfig({

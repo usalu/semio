@@ -1204,18 +1204,18 @@ function SpatialPlayModelSpaceProvider({
 	const [interactionId, setInteractionId] = reactHostPort.useState("");
 	const [interactionBootId, setInteractionBootId] = reactHostPort.useState(0);
 	const [shapeAssetId, setShapeAssetId] = reactHostPort.useState("");
-	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(emptyPlayModels);
+	const [modelsByDefinitionId, setModelsByDefinitionId] = reactHostPort.useState<Record<string, Model>>(emptyPlayModels);
 	const [loadedRawName, setLoadedRawName] = reactHostPort.useState("");
-	const [rendererSelectionByModel, setRendererSelectionByModel] = useState<SpatialRendererSelectionByModel>({});
-	const [interactionSelectionByState, setInteractionSelectionByState] = useState<SpatialInteractionSelectionByState>({});
+	const [rendererSelectionByModel, setRendererSelectionByModel] = reactHostPort.useState<SpatialRendererSelectionByModel>({});
+	const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
 	const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
-	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
-	const [fileStatus, setFileStatus] = useState<string>("");
-	const loadInputRef = useRef<HTMLInputElement>(null);
-	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
+	const [snapshot, setSnapshot] = reactHostPort.useState<InteractionSnapshot | null>(null);
+	const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
+	const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
+	const spec = reactHostPort.useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
 	const brepjsKernel = reactHostPort.useMemo(() => new BrepjsKernel(), []);
-	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(
+	const kernel = reactHostPort.useMemo<InteractionRuntimeOptions["kernel"]>(
 		() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"],
 		[brepjsKernel],
 	);
@@ -1585,7 +1585,7 @@ function SpatialPlayModelSpaceProvider({
 		}
 	}, []);
 
-	const modelSpaceValue = useMemo<SpatialPlayModelSpaceValue>(
+	const modelSpaceValue = reactHostPort.useMemo<SpatialPlayModelSpaceValue>(
 		() => ({
 			activeModelDefinitionId,
 			setActiveModelDefinitionId,
@@ -1944,9 +1944,9 @@ class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function SpatialPlayRoot(): ReactNode {
-	const runtimeRef = useRef<ProductRuntime | null>(null);
-	const shellControllerRef = useRef<SpatialPlayShellController | null>(null);
-	const [chromeSnapshot, setChromeSnapshot] = useState<SpatialPlayChromeSnapshot | null>(null);
+	const runtimeRef = reactHostPort.useRef<ProductRuntime | null>(null);
+	const shellControllerRef = reactHostPort.useRef<SpatialPlayShellController | null>(null);
+	const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<SpatialPlayChromeSnapshot | null>(null);
 	if (!runtimeRef.current) {
 		registerSpatialPlayChrome();
 		runtimeRef.current = buildSpatialPlayRuntime();
@@ -1957,7 +1957,7 @@ function SpatialPlayRoot(): ReactNode {
 	if (!shellController) {
 		return null;
 	}
-	const chromeContextValue = useMemo<SpatialPlayChromeContextValue>(
+	const chromeContextValue = reactHostPort.useMemo<SpatialPlayChromeContextValue>(
 		() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }),
 		[chromeSnapshot],
 	);

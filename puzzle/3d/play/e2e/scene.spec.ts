@@ -19,7 +19,7 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("updateMatrixWorld");
 	expect(text).not.toContain("lodFromCameraDistance is not defined");
 	expect(text).not.toContain("must declare items or content");
-	expect(text).not.toContain("An error occurred in the <ScenePlayProductShell> component");
+	expect(text).not.toContain("An error occurred in the <Puzzle3dPlayProductShell> component");
 	expect(text).not.toContain("Failed to decode downloaded font");
 	expect(text).not.toContain("OTS parsing error");
 	expect(text).not.toContain("invalid sfntVersion");
@@ -43,7 +43,7 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	await page.waitForTimeout(500);
 	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-domain", "architecture");
 	await expectSceneLodReady(page);
-	await expect(page.locator('[data-measure-id="scene-main-lod"]')).toBeVisible({ timeout: 120_000 });
+	await expect(page.locator('[data-measure-id="puzzle-3d-main-lod"]')).toBeVisible({ timeout: 120_000 });
 	expectCleanSceneConsole(messages);
 });
 
@@ -51,13 +51,13 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await expect(page.locator('[data-measure-id="scene-main-auto"]')).toBeVisible({ timeout: 120_000 });
+	await expect(page.locator('[data-measure-id="puzzle-3d-main-auto"]')).toBeVisible({ timeout: 120_000 });
 	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
 	if ((await detailsPanelToggle.getAttribute("data-state")) === "on") {
 		await detailsPanelToggle.click();
 	}
-	await page.locator("#scene-main-auto").click({ timeout: 30_000 });
-	const slider = page.locator('[data-measure-id="scene-main-lod"] [role="slider"]');
+	await page.locator("#puzzle-3d-main-auto").click({ timeout: 30_000 });
+	const slider = page.locator('[data-measure-id="puzzle-3d-main-lod"] [role="slider"]');
 	await slider.waitFor({ state: "visible", timeout: 30_000 });
 	await slider.focus();
 	for (let i = 0; i < 40; i += 1) {
@@ -79,7 +79,7 @@ test("scene play inspector panel is visible", async ({ page }) => {
 	if ((await detailsPanelToggle.getAttribute("data-state")) !== "on") {
 		await detailsPanelToggle.click();
 	}
-	await page.locator("#scene-play-inspector").click({ timeout: 30_000 });
+	await page.locator("#puzzle-3d-play-inspector").click({ timeout: 30_000 });
 	await expect(page.getByText("Inspector", { exact: true })).toBeVisible({ timeout: 30_000 });
 	expectCleanSceneConsole(messages);
 });

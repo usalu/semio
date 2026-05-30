@@ -1097,8 +1097,8 @@ mod force_graph {
 		let Some(root) = fixture.as_object_mut() else {
 			return Err("fixture root must be object".into());
 		};
-		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
-			return Err("schema must be elements.board.fixture/v1".into());
+		if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
+			return Err("schema must be puzzle.2d.fixture/v1".into());
 		}
 		let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
 		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -1703,8 +1703,8 @@ mod hierarchical_tree {
 		let Some(root) = fixture.as_object_mut() else {
 			return Err("fixture root must be object".into());
 		};
-		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
-			return Err("schema must be elements.board.fixture/v1".into());
+		if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
+			return Err("schema must be puzzle.2d.fixture/v1".into());
 		}
 		let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
 		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -1968,8 +1968,8 @@ mod redraw_layout {
 		let Some(root) = fixture.as_object_mut() else {
 			return Err("fixture root must be object".into());
 		};
-		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
-			return Err("schema must be elements.board.fixture/v1".into());
+		if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
+			return Err("schema must be puzzle.2d.fixture/v1".into());
 		}
 		let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
 		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -5376,7 +5376,7 @@ mod board_host {
 				Ok(v) => v,
 				Err(_) => return false,
 			};
-			if f.schema != "elements.board.fixture/v1" {
+			if f.schema != "puzzle.2d.fixture/v1" {
 				return false;
 			}
 			self.set_camera(f.camera.x, f.camera.y, f.camera.zoom);
@@ -9406,7 +9406,7 @@ mod host_tests {
 		h.set_size(800, 600, 1.0);
 		set_detail_lod(&mut h);
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -9449,7 +9449,7 @@ mod host_tests {
 		h.set_camera(0.0, 0.0, 1.0);
 		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -9937,7 +9937,7 @@ mod force_graph_tests {
 	#[test]
 	fn force_graph_spreads_two_linked_circles_along_x() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -9976,7 +9976,7 @@ mod force_graph_tests {
 	#[test]
 	fn force_graph_pins_locked_node_positions() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10018,7 +10018,7 @@ mod force_graph_tests {
 	#[test]
 	fn redraw_force_graph_top_level_locked_node_ids_pins() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10087,7 +10087,7 @@ mod force_graph_tests {
 			}
 		}
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": nodes,
 			"edges": edges
@@ -10139,7 +10139,7 @@ mod force_graph_tests {
 			}
 		}
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": nodes,
 			"edges": edges
@@ -10164,7 +10164,7 @@ mod force_graph_tests {
 	#[test]
 	fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{ "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
@@ -10195,7 +10195,7 @@ mod force_graph_tests {
 	#[test]
 	fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{ "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
@@ -10228,7 +10228,7 @@ mod force_graph_tests {
 	#[test]
 	fn redraw_force_graph_wraps_flat_options() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10270,7 +10270,7 @@ mod force_graph_tests {
 	#[test]
 	fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10302,7 +10302,7 @@ mod force_graph_tests {
 	#[test]
 	fn redraw_force_graph_with_snap_sets_handle_angles() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10359,7 +10359,7 @@ mod force_graph_tests {
 	#[test]
 	fn force_graph_accepts_logical_nodes_without_xy() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10393,7 +10393,7 @@ mod force_graph_tests {
 	#[test]
 	fn hierarchical_tree_stacks_by_depth() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10442,7 +10442,7 @@ mod force_graph_tests {
 	#[test]
 	fn hierarchical_tree_pins_locked_root_coordinates() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10498,7 +10498,7 @@ mod force_graph_tests {
 	#[test]
 	fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10544,7 +10544,7 @@ mod force_graph_tests {
 	#[test]
 	fn hierarchical_tree_right_places_children_larger_x_than_root() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10582,7 +10582,7 @@ mod force_graph_tests {
 	#[test]
 	fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10620,7 +10620,7 @@ mod force_graph_tests {
 	#[test]
 	fn hierarchical_tree_rejects_unknown_direction() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [
 				{
@@ -10643,7 +10643,7 @@ mod force_graph_tests {
 	#[test]
 	fn redraw_rejects_unknown_mode() {
 		let fixture = json!({
-			"schema": "elements.board.fixture/v1",
+			"schema": "puzzle.2d.fixture/v1",
 			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
 			"nodes": [],
 			"edges": []

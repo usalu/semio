@@ -893,7 +893,7 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
   const witnessChildren = node.children.filter((c) => c.kind === "Witness");
   const nonWitnessChildren = node.children.filter((c) => c.kind !== "Witness");
   const useAlternatives = witnessChildren.length > 1;
-  const [activeWitnessIndex, setActiveWitnessIndex] = React.reactHostPort.useState(0);
+  const [activeWitnessIndex, setActiveWitnessIndex] = reactHostPort.useState(0);
   const clampedIndex = useAlternatives ? Math.min(activeWitnessIndex, witnessChildren.length - 1) : 0;
 
   return (

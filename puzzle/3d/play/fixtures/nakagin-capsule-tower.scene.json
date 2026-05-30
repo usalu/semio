@@ -1,5 +1,5 @@
 {
-  "schema": "elements.scene.fixture/v1",
+  "schema": "puzzle.3d.fixture/v1",
   "domain": "architecture",
   "camera": {
     "position": [

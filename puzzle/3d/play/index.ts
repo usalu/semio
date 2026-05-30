@@ -92,9 +92,9 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
 //#endregion 🧾Meta
 
 //#region 🖥️Surface
-export const LS_THEME = "elements.board-play.surface.theme";
-export const LS_DEVICE = "elements.board-play.surface.device";
-export const LS_EXPERTISE = "elements.board-play.surface.expertise";
+export const LS_THEME = "puzzle.2d-play.surface.theme";
+export const LS_DEVICE = "puzzle.2d-play.surface.device";
+export const LS_EXPERTISE = "puzzle.2d-play.surface.expertise";
 
 export function parseStoredTheme(raw: string | null) {
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
@@ -113,28 +113,28 @@ export function parseStoredExpertise(raw: string | null) {
 //#endregion 🖥️Surface
 
 //#region 🎬Play
-export const PLAY_APP_ID = "elements-scene-play";
-export const SCENE_PLAY_WINDOW_ID = "scene-main";
-export const SCENE_PLAY_WINDOW_LABEL = "Scene";
-export const SCENE_PLAY_BODY_KEY = "elements.scene.play.window";
-export const SCENE_PLAY_CONTROLLER_ID = "scene-play";
-export const SCENE_PLAY_SCENE_SURFACE_ID = "elements.scene.play.scene/v1";
-export const SCENE_PLAY_INSPECTOR_TAB_ID = "scene-play-inspector";
-export const SCENE_PLAY_SETTINGS_TAB_ID = "scene-play-settings";
-export const SCENE_PLAY_HIERARCHY_TAB_ID = "scene-play-hierarchy";
-export const SCENE_PLAY_KINDS_TAB_ID = "scene-play-kinds";
-export const SCENE_PLAY_HIERARCHY_BODY_KEY = "elements.scene.play.hierarchy";
-export const SCENE_PLAY_KINDS_BODY_KEY = "elements.scene.play.kinds";
-export const SCENE_PLAY_INSPECTOR_BODY_KEY = "elements.scene.play.inspector";
-export const SCENE_PLAY_SETTINGS_BODY_KEY = "elements.scene.play.settings";
-export const SCENE_PLAY_ICON_HIERARCHY = "elements.scene-play.icon.hierarchy";
-export const SCENE_PLAY_ICON_KINDS = "elements.scene-play.icon.kinds";
-export const SCENE_PLAY_ICON_INSPECTOR = "elements.scene-play.icon.inspector";
-export const SCENE_PLAY_ICON_SETTINGS = "elements.scene-play.icon.settings";
+export const PLAY_APP_ID = "elements-puzzle-3d-play";
+export const PUZZLE_3D_PLAY_WINDOW_ID = "puzzle-3d-main";
+export const PUZZLE_3D_PLAY_WINDOW_LABEL = "Puzzle 3d";
+export const PUZZLE_3D_PLAY_BODY_KEY = "puzzle.3d.play.window";
+export const PUZZLE_3D_PLAY_CONTROLLER_ID = "puzzle-3d-play";
+export const PUZZLE_3D_PLAY_SCENE_SURFACE_ID = "puzzle.3d.play.scene/v1";
+export const PUZZLE_3D_PLAY_INSPECTOR_TAB_ID = "puzzle-3d-play-inspector";
+export const PUZZLE_3D_PLAY_SETTINGS_TAB_ID = "puzzle-3d-play-settings";
+export const PUZZLE_3D_PLAY_HIERARCHY_TAB_ID = "puzzle-3d-play-hierarchy";
+export const PUZZLE_3D_PLAY_KINDS_TAB_ID = "puzzle-3d-play-kinds";
+export const PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY = "puzzle.3d.play.hierarchy";
+export const PUZZLE_3D_PLAY_KINDS_BODY_KEY = "puzzle.3d.play.kinds";
+export const PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY = "puzzle.3d.play.inspector";
+export const PUZZLE_3D_PLAY_SETTINGS_BODY_KEY = "puzzle.3d.play.settings";
+export const PUZZLE_3D_PLAY_ICON_HIERARCHY = "puzzle.3d-play.icon.hierarchy";
+export const PUZZLE_3D_PLAY_ICON_KINDS = "puzzle.3d-play.icon.kinds";
+export const PUZZLE_3D_PLAY_ICON_INSPECTOR = "puzzle.3d-play.icon.inspector";
+export const PUZZLE_3D_PLAY_ICON_SETTINGS = "puzzle.3d-play.icon.settings";
 //#endregion 🎬Play
 
 function scenePlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
-	return { controllerId: SCENE_PLAY_CONTROLLER_ID, command, args: args as never };
+	return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
 function scenePlaySelectObjectCommand(objectId: string): CommandDescriptor {
@@ -151,13 +151,13 @@ function scenePlaySelectAttractionCommand(attractionId: string): CommandDescript
 
 export { parseKindCatalogs, parseKindCompatibility };
 
-//#region 🔖ScenePlaySelection
+//#region 🔖Puzzle3dPlaySelection
 /** @emoji 🎯 Play harness selection: objects, vortex full ids, and attractions. */
-export interface ScenePlaySelection extends SelectionSnapshot {
+export interface Puzzle3dPlaySelection extends SelectionSnapshot {
   readonly attractionIds: readonly string[];
 }
 
-export const SCENE_PLAY_EMPTY_SELECTION: ScenePlaySelection = {
+export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
   objectIds: [],
   vortexIds: [],
   attractionIds: [],
@@ -175,7 +175,7 @@ export function scenePlayFixtureRowLabel(label: string | undefined, fallbackId: 
 }
 
 /** @emoji 🎯 Resolved selection label for play chrome (objects, vortices, attractions). */
-export function scenePlaySelectionLabel(fixture: FixtureV1 | null, selection: ScenePlaySelection): string | null {
+export function scenePlaySelectionLabel(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): string | null {
   if (!fixture) return null;
   if (selection.attractionIds[0]) {
     return selection.attractionIds[0];
@@ -300,7 +300,7 @@ export function updateSceneCameraInFixture(fixture: FixtureV1, camera: Partial<C
 }
 
 /** @emoji 🎯 Maps {@link SelectionSnapshot} to play selection (attractions filled separately). */
-export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot, attractionIds: readonly string[] = []): ScenePlaySelection {
+export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot, attractionIds: readonly string[] = []): Puzzle3dPlaySelection {
   return {
     objectIds: snap.objectIds,
     vortexIds: snap.vortexIds,
@@ -309,7 +309,7 @@ export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot, attrac
 }
 
 /** @emoji 🎯 True when two selection snapshots match (skips redundant shell updates). */
-export function scenePlaySelectionEqual(a: ScenePlaySelection, b: ScenePlaySelection): boolean {
+export function scenePlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3dPlaySelection): boolean {
   if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length) {
     return false;
   }
@@ -334,11 +334,11 @@ export function scenePlaySelectionEqual(a: ScenePlaySelection, b: ScenePlaySelec
   return true;
 }
 
-//#region 🔖ScenePlayHierarchy
+//#region 🔖Puzzle3dPlayHierarchy
 /** @emoji 🌳 Nested workbench tree: Scene → Objects → Vortices; Attractions sibling group. */
-export function buildScenePlayHierarchyTree(fixture: FixtureV1 | null, selection: ScenePlaySelection): UiNode {
+export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): UiNode {
   if (!fixture) {
-    return playgroundTreePanelRootItems("scene-play-hierarchy.root", [{ id: "scene-play-hierarchy.invalid", label: "Invalid scene fixture" }]);
+    return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid scene fixture" }]);
   }
   const selectedObjects = new Set(selection.objectIds);
   const selectedVortices = new Set(selection.vortexIds);
@@ -347,20 +347,20 @@ export function buildScenePlayHierarchyTree(fixture: FixtureV1 | null, selection
     const vortexItems: UiTreeItemNode[] = object.vortices.map((vortex) => {
       const fullId = sceneVortexFullId(object.id, vortex.id);
       return {
-        id: `scene-play-hierarchy.vortex.${fullId}`,
+        id: `puzzle-3d-play-hierarchy.vortex.${fullId}`,
         label: scenePlayFixtureRowLabel(vortex.label, fullId),
         selected: selectedVortices.has(fullId),
         command: scenePlaySelectVortexCommand(fullId),
       };
     });
     const vorticesGroup: UiTreeItemNode = {
-      id: `scene-play-hierarchy.object.${object.id}.vortices`,
+      id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices`,
       label: "Vortices",
       defaultOpen: true,
-      items: vortexItems.length ? vortexItems : [{ id: `scene-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
+      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
     };
     return {
-      id: `scene-play-hierarchy.object.${object.id}`,
+      id: `puzzle-3d-play-hierarchy.object.${object.id}`,
       label: scenePlayFixtureRowLabel(object.label, object.id),
       selected: selectedObjects.has(object.id),
       defaultOpen: true,
@@ -369,43 +369,43 @@ export function buildScenePlayHierarchyTree(fixture: FixtureV1 | null, selection
     };
   });
   const objectsGroup: UiTreeItemNode = {
-    id: "scene-play-hierarchy.objects",
+    id: "puzzle-3d-play-hierarchy.objects",
     label: "Objects",
     defaultOpen: true,
-    items: objectItems.length ? objectItems : [{ id: "scene-play-hierarchy.objects.empty", label: "(none)" }],
+    items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
   };
   const attractionItems: UiTreeItemNode[] = fixture.attractions.map((attraction) => ({
-    id: `scene-play-hierarchy.attraction.${attraction.id}`,
+    id: `puzzle-3d-play-hierarchy.attraction.${attraction.id}`,
     label: attraction.id,
     description: `${attraction.attracting} → ${attraction.attracted}`,
     selected: selectedAttractions.has(attraction.id),
     command: scenePlaySelectAttractionCommand(attraction.id),
   }));
   const attractionsGroup: UiTreeItemNode = {
-    id: "scene-play-hierarchy.attractions",
+    id: "puzzle-3d-play-hierarchy.attractions",
     label: "Attractions",
     defaultOpen: true,
-    items: attractionItems.length ? attractionItems : [{ id: "scene-play-hierarchy.attractions.empty", label: "(none)" }],
+    items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
   };
   const sceneRoot: UiTreeItemNode = {
-    id: "scene-play-hierarchy.scene",
+    id: "puzzle-3d-play-hierarchy.scene",
     label: "Scene",
     defaultOpen: true,
     items: [objectsGroup, attractionsGroup],
   };
-  return playgroundTreePanelRootItems("scene-play-hierarchy.root", [sceneRoot]);
+  return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [sceneRoot]);
 }
-//#endregion 🔖ScenePlayHierarchy
+//#endregion 🔖Puzzle3dPlayHierarchy
 
-//#region 🔖ScenePlayKinds
-type ScenePlayKindCatalogEntry = NodeKindCatalogEntry | HandleKindCatalogEntry | WireKindCatalogEntry | EdgeKindCatalogEntry;
+//#region 🔖Puzzle3dPlayKinds
+type Puzzle3dPlayKindCatalogEntry = NodeKindCatalogEntry | HandleKindCatalogEntry | WireKindCatalogEntry | EdgeKindCatalogEntry;
 
-function scenePlayKindCatalogEntryLabel(entry: ScenePlayKindCatalogEntry): string {
+function scenePlayKindCatalogEntryLabel(entry: Puzzle3dPlayKindCatalogEntry): string {
   const display = entry.label?.trim() || entry.name?.trim();
   return display && display.length > 0 ? display : entry.id;
 }
 
-function scenePlayKindCatalogSection(sectionId: string, label: string, entries: readonly ScenePlayKindCatalogEntry[] | undefined): UiTreeSectionNode | null {
+function scenePlayKindCatalogSection(sectionId: string, label: string, entries: readonly Puzzle3dPlayKindCatalogEntry[] | undefined): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
   }
@@ -420,32 +420,32 @@ function scenePlayKindCatalogSection(sectionId: string, label: string, entries: 
 }
 
 /** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Attractions (and Edges when catalogued). */
-export function buildScenePlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
+export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
   const sections = [
-    scenePlayKindCatalogSection("scene-play-kinds.objects", "Objects", catalogs?.nodes),
-    scenePlayKindCatalogSection("scene-play-kinds.vortices", "Vortices", catalogs?.handles),
-    scenePlayKindCatalogSection("scene-play-kinds.attractions", "Attractions", catalogs?.wires),
-    scenePlayKindCatalogSection("scene-play-kinds.edges", "Edges", catalogs?.edges),
+    scenePlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.nodes),
+    scenePlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.handles),
+    scenePlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.wires),
+    scenePlayKindCatalogSection("puzzle-3d-play-kinds.edges", "Edges", catalogs?.edges),
   ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
       type: "tree",
       sections: [
         {
-          id: "scene-play-kinds.empty",
+          id: "puzzle-3d-play-kinds.empty",
           label: "Kinds",
           defaultOpen: true,
-          items: [{ id: "scene-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
+          items: [{ id: "puzzle-3d-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
         },
       ],
     };
   }
   return { type: "tree", sections };
 }
-//#endregion 🔖ScenePlayKinds
+//#endregion 🔖Puzzle3dPlayKinds
 
 /** @emoji 🎯 Primary object id for relocate / legacy e2e hooks. */
-export function primaryScenePlayObjectId(selection: ScenePlaySelection): string | null {
+export function primaryPuzzle3dPlayObjectId(selection: Puzzle3dPlaySelection): string | null {
   if (selection.objectIds[0]) {
     return selection.objectIds[0];
   }
@@ -454,23 +454,23 @@ export function primaryScenePlayObjectId(selection: ScenePlaySelection): string 
   }
   return null;
 }
-//#endregion 🔖ScenePlaySelection
+//#endregion 🔖Puzzle3dPlaySelection
 
-//#region 🔖ScenePlayController
-const SCENE_PLAY_KINDS = ["object", "vortex", "attraction"] as const;
-type ScenePlayPickKind = (typeof SCENE_PLAY_KINDS)[number];
+//#region 🔖Puzzle3dPlayController
+const PUZZLE_3D_PLAY_KINDS = ["object", "vortex", "attraction"] as const;
+type Puzzle3dPlayPickKind = (typeof PUZZLE_3D_PLAY_KINDS)[number];
 
-function scenePlayKindLabel(kind: ScenePlayPickKind): string {
+function scenePlayKindLabel(kind: Puzzle3dPlayPickKind): string {
   if (kind === "object") return "Objects";
   if (kind === "vortex") return "Vortices";
   return "Attractions";
 }
 
 /** @emoji 🎬 Playground scene play controller: fixture, LOD, selection/filter tools, and interaction counters. */
-export class ScenePlayShellController extends Controller {
+export class Puzzle3dPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Scene", undefined);
-  readonly selectableKinds: Record<ScenePlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
-  readonly visibleKinds: Record<ScenePlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
+  readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
+  readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   private fixture: FixtureV1 | null;
   private fixtureRevision: number;
   private automaticLod: boolean;
@@ -479,7 +479,7 @@ export class ScenePlayShellController extends Controller {
   private lodSlider: number;
   private lodTag: number;
   private relocateMode: RelocateMode;
-  private selection: ScenePlaySelection;
+  private selection: Puzzle3dPlaySelection;
   private selectionMode: SelectionMode;
   private proximityRadius: number;
   private chunkSize: number;
@@ -494,7 +494,7 @@ export class ScenePlayShellController extends Controller {
   private snapshotListeners = new Set<() => void>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
-    super(SCENE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
     this.fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
     this.fixtureRevision = 0;
     this.automaticLod = true;
@@ -503,7 +503,7 @@ export class ScenePlayShellController extends Controller {
     this.lodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
     this.lodTag = DEFAULT_MANUAL_LOD;
     this.relocateMode = "translate";
-    this.selection = SCENE_PLAY_EMPTY_SELECTION;
+    this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.selectionMode = "single";
     this.proximityRadius = 24;
     this.chunkSize = 256;
@@ -592,52 +592,52 @@ export class ScenePlayShellController extends Controller {
     return [
       {
         kind: "toggle",
-        id: `${SCENE_PLAY_WINDOW_ID}-auto`,
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-auto`,
         label: "LOD",
         text: "Auto zoom",
         pressed: this.automaticLod,
-        onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setAutoLod" },
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setAutoLod" },
       },
       {
         kind: "toggle",
-        id: `${SCENE_PLAY_WINDOW_ID}-depth`,
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-depth`,
         text: "Depth-variable",
         pressed: this.depthVariableLod,
-        onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setDepthLod" },
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setDepthLod" },
       },
       {
         kind: "slider",
-        id: `${SCENE_PLAY_WINDOW_ID}-lod`,
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-lod`,
         label: formatSceneLod(this.lodTag),
         value: this.lodSlider,
         min: SCENE_LOD_SLIDER_MIN,
         max: SCENE_LOD_SLIDER_MAX,
         step: 1,
-        onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setManualLod" },
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setManualLod" },
       },
     ];
   }
 
   private rebuildShellMode(): void {
-    this.mainMode.windowKinds = [new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, this.lodMeasures())];
+    this.mainMode.windowKinds = [new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.lodMeasures())];
     const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
       id: `scene.relocate.${mode}`,
       kind: "toggle" as const,
       text: mode.charAt(0).toUpperCase() + mode.slice(1),
       order,
       pressed: this.relocateMode === mode,
-      controllerId: SCENE_PLAY_CONTROLLER_ID,
+      controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
       command: "setRelocateMode",
       args: { mode },
     }));
     this.mainMode.tools = {
-      selection: buildPlaygroundBrowseSelectionTools(SCENE_PLAY_KINDS, scenePlayKindLabel, this.selectableKinds, SCENE_PLAY_CONTROLLER_ID),
-      filter: buildPlaygroundBrowseFilterTools(SCENE_PLAY_KINDS, scenePlayKindLabel, this.visibleKinds, SCENE_PLAY_CONTROLLER_ID),
+      selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, scenePlayKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
+      filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, scenePlayKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       actions: relocateTools,
     };
   }
 
-  private filterSelectionByPlaygroundKinds(selection: ScenePlaySelection): ScenePlaySelection {
+  private filterSelectionByPlaygroundKinds(selection: Puzzle3dPlaySelection): Puzzle3dPlaySelection {
     return {
       objectIds: this.selectableKinds.object && this.visibleKinds.object ? [...selection.objectIds] : [],
       vortexIds: this.selectableKinds.vortex && this.visibleKinds.vortex ? [...selection.vortexIds] : [],
@@ -683,7 +683,7 @@ export class ScenePlayShellController extends Controller {
         return;
       }
       case "toggleSelectableKind": {
-        const { kind } = args as { kind: ScenePlayPickKind };
+        const { kind } = args as { kind: Puzzle3dPlayPickKind };
         if (kind === "object" || kind === "vortex" || kind === "attraction") {
           this.selectableKinds[kind] = !this.selectableKinds[kind];
           this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
@@ -693,7 +693,7 @@ export class ScenePlayShellController extends Controller {
         return;
       }
       case "toggleVisibleKind": {
-        const { kind } = args as { kind: ScenePlayPickKind };
+        const { kind } = args as { kind: Puzzle3dPlayPickKind };
         if (kind === "object" || kind === "vortex" || kind === "attraction") {
           this.visibleKinds[kind] = !this.visibleKinds[kind];
           this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
@@ -703,7 +703,7 @@ export class ScenePlayShellController extends Controller {
         return;
       }
       case "setSelection": {
-        const next = (args as { selection: ScenePlaySelection }).selection;
+        const next = (args as { selection: Puzzle3dPlaySelection }).selection;
         if (next && typeof next === "object") {
           const resolved = this.filterSelectionByPlaygroundKinds({
             objectIds: [...(next.objectIds ?? [])],
@@ -720,7 +720,7 @@ export class ScenePlayShellController extends Controller {
       }
       case "setSelectedId": {
         const id = (args as { id: string | null }).id;
-        const resolved: ScenePlaySelection = id ? { objectIds: [id], vortexIds: [], attractionIds: [] } : SCENE_PLAY_EMPTY_SELECTION;
+        const resolved: Puzzle3dPlaySelection = id ? { objectIds: [id], vortexIds: [], attractionIds: [] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
         if (scenePlaySelectionEqual(this.selection, resolved)) {
           return;
         }
@@ -909,11 +909,11 @@ export class ScenePlayShellController extends Controller {
       }
       return next;
     });
-    this.selection = SCENE_PLAY_EMPTY_SELECTION;
+    this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.notifySnapshot();
   }
 
-  getSnapshot(): ScenePlaySnapshot {
+  getSnapshot(): Puzzle3dPlaySnapshot {
     return {
       fixture: this.fixture,
       fixtureRevision: this.fixtureRevision,
@@ -928,7 +928,7 @@ export class ScenePlayShellController extends Controller {
       depthVariableLod: this.depthVariableLod,
       relocateMode: this.relocateMode,
       selection: this.selection,
-      selectedId: primaryScenePlayObjectId(this.selection),
+      selectedId: primaryPuzzle3dPlayObjectId(this.selection),
       selectedLabel: scenePlaySelectionLabel(this.fixture, this.selection),
       selectionMode: this.selectionMode,
       proximityRadius: this.proximityRadius,
@@ -946,7 +946,7 @@ export class ScenePlayShellController extends Controller {
 }
 
 /** @emoji 📸 Host-consumed scene play state (no React/DOM). */
-export interface ScenePlaySnapshot {
+export interface Puzzle3dPlaySnapshot {
   readonly fixture: FixtureV1 | null;
   readonly fixtureRevision: number;
   readonly lodProps: ReturnType<typeof sceneLodCanvasProps>;
@@ -955,7 +955,7 @@ export interface ScenePlaySnapshot {
   readonly automaticLod: boolean;
   readonly depthVariableLod: boolean;
   readonly relocateMode: RelocateMode;
-  readonly selection: ScenePlaySelection;
+  readonly selection: Puzzle3dPlaySelection;
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;
   readonly selectionMode: SelectionMode;
@@ -971,37 +971,37 @@ export interface ScenePlaySnapshot {
   readonly targetRingCount: number;
 }
 
-export function buildScenePlayAppRuntime(controller: ScenePlayShellController): AppRuntime {
-  const app = new AppRuntime(PLAY_APP_ID, "Scene play", undefined, controller, createStackLayout([SCENE_PLAY_WINDOW_ID], [SCENE_PLAY_WINDOW_LABEL]) as never, [
-    new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY),
+export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {
+  const app = new AppRuntime(PLAY_APP_ID, "Scene play", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
+    new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY),
   ]);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
   app.leftTabs = [
-    { id: SCENE_PLAY_HIERARCHY_TAB_ID, iconId: SCENE_PLAY_ICON_HIERARCHY, order: 0, bodyKey: SCENE_PLAY_HIERARCHY_BODY_KEY },
-    { id: SCENE_PLAY_KINDS_TAB_ID, iconId: SCENE_PLAY_ICON_KINDS, order: 1, bodyKey: SCENE_PLAY_KINDS_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_HIERARCHY_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_HIERARCHY, order: 0, bodyKey: PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_KINDS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_KINDS, order: 1, bodyKey: PUZZLE_3D_PLAY_KINDS_BODY_KEY },
   ];
   app.rightTabs = [
-    { id: SCENE_PLAY_INSPECTOR_TAB_ID, iconId: SCENE_PLAY_ICON_INSPECTOR, order: 0, bodyKey: SCENE_PLAY_INSPECTOR_BODY_KEY },
-    { id: SCENE_PLAY_SETTINGS_TAB_ID, iconId: SCENE_PLAY_ICON_SETTINGS, order: 1, bodyKey: SCENE_PLAY_SETTINGS_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_INSPECTOR_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_INSPECTOR, order: 0, bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_SETTINGS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_SETTINGS, order: 1, bodyKey: PUZZLE_3D_PLAY_SETTINGS_BODY_KEY },
   ];
   return app;
 }
 
 /** @emoji 🚀 Creates a {@link ProductRuntime} with scene play app registered. */
-export function buildScenePlayRuntime(): ProductRuntime {
+export function buildPuzzle3dPlayRuntime(): ProductRuntime {
   const runtime = new ProductRuntime();
-  const controller = new ScenePlayShellController(runtime.commandBus, () => runtime.notify());
-  runtime.addApp(buildScenePlayAppRuntime(controller));
+  const controller = new Puzzle3dPlayShellController(runtime.commandBus, () => runtime.notify());
+  runtime.addApp(buildPuzzle3dPlayAppRuntime(controller));
   return runtime;
 }
 
-function sceneControllerFromContext(ctx: WindowBodyViewContext): ScenePlayShellController | undefined {
-  return ctx.runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
+function sceneControllerFromContext(ctx: WindowBodyViewContext): Puzzle3dPlayShellController | undefined {
+  return ctx.runtime.getActiveApp()?.controller as Puzzle3dPlayShellController | undefined;
 }
 
 /** @emoji 🧩 Declarative scene window: fullscreen scene3d only (relocate tools live on {@link ModeRuntime.tools}). */
-export function buildScenePlayDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle3dPlayDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = sceneControllerFromContext(ctx);
   if (!ctrl) {
     return { type: "text", value: "Missing scene controller" };
@@ -1010,7 +1010,7 @@ export function buildScenePlayDeclarativeBody(ctx: WindowBodyViewContext): UiNod
   if (!snap.fixture) {
     return { type: "text", value: "Invalid scene fixture" };
   }
-  return buildScene3dWindowBody(SCENE_PLAY_SCENE_SURFACE_ID, SCENE_PLAY_CONTROLLER_ID);
+  return buildScene3dWindowBody(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, PUZZLE_3D_PLAY_CONTROLLER_ID);
 }
 
 function scenePlayAllEqual<T>(values: readonly T[]): boolean {
@@ -1023,7 +1023,7 @@ function scenePlayAllEqual<T>(values: readonly T[]): boolean {
 }
 
 /** @emoji 🔎 Declarative inspector panel for scene play selection. */
-export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = sceneControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   const fixture = snap?.fixture;
@@ -1039,7 +1039,7 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
   const children: UiNode[] = [
     {
       type: "section",
-      id: "scene-play-inspector.header",
+      id: "puzzle-3d-play-inspector.header",
       label: "Inspector",
       children: [
         {
@@ -1051,7 +1051,7 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
           : [{ type: "text", value: "Select objects, vortices, or attractions in the canvas or workbench hierarchy." }]),
         {
           type: "button",
-          id: "scene-play-inspector.delete",
+          id: "puzzle-3d-play-inspector.delete",
           label: "Delete selection",
           command: scenePlayCmd("deleteSelection"),
         },
@@ -1070,11 +1070,11 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
     if (selection.objectIds.length === 1) {
       objectFields.push({
         type: "field",
-        id: "scene-play-inspector.object.id",
+        id: "puzzle-3d-play-inspector.object.id",
         label: "Id",
         child: {
           type: "input",
-          id: "scene-play-inspector.object.id.input",
+          id: "puzzle-3d-play-inspector.object.id.input",
           inputKind: "text",
           value: selection.objectIds[0]!,
           commit: "blur",
@@ -1085,11 +1085,11 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
     objectFields.push(
       {
         type: "field",
-        id: "scene-play-inspector.object.label",
+        id: "puzzle-3d-play-inspector.object.label",
         label: "Label",
         child: {
           type: "input",
-          id: "scene-play-inspector.object.label.input",
+          id: "puzzle-3d-play-inspector.object.label.input",
           inputKind: "text",
           value: labelUniform ? (labels[0] ?? "") : "",
           placeholder: labelUniform ? undefined : "Mixed",
@@ -1098,11 +1098,11 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
       },
       {
         type: "field",
-        id: "scene-play-inspector.object.kind",
+        id: "puzzle-3d-play-inspector.object.kind",
         label: "Object kind",
         child: {
           type: "select",
-          id: "scene-play-inspector.object.kind.select",
+          id: "puzzle-3d-play-inspector.object.kind.select",
           value: kindUniform ? (kinds[0] ?? "") : "",
           placeholder: kindUniform ? "kind" : "Mixed",
           items: nodeKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
@@ -1111,11 +1111,11 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
       },
       {
         type: "field",
-        id: "scene-play-inspector.object.origin",
+        id: "puzzle-3d-play-inspector.object.origin",
         label: "Origin",
         child: {
           type: "vec3",
-          id: "scene-play-inspector.object.origin.vec3",
+          id: "puzzle-3d-play-inspector.object.origin.vec3",
           value: originUniform ? (origins[0] as [number, number, number]) : null,
           onChange: scenePlayCmd("patchSceneObjects", { objectIds: selection.objectIds, field: "origin" }),
         },
@@ -1123,7 +1123,7 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
     );
     children.push({
       type: "section",
-      id: "scene-play-inspector.objects",
+      id: "puzzle-3d-play-inspector.objects",
       label: `Objects (${selection.objectIds.length})`,
       children: objectFields,
     });
@@ -1135,16 +1135,16 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
     if (!object || !vortex) continue;
     children.push({
       type: "section",
-      id: `scene-play-inspector.vortex.${vortexFullId}`,
+      id: `puzzle-3d-play-inspector.vortex.${vortexFullId}`,
       label: scenePlayFixtureRowLabel(vortex.label, vortexFullId),
       children: [
         {
           type: "field",
-          id: `scene-play-inspector.vortex.kind.${vortexFullId}`,
+          id: `puzzle-3d-play-inspector.vortex.kind.${vortexFullId}`,
           label: "Vortex kind",
           child: {
             type: "select",
-            id: `scene-play-inspector.vortex.kind.select.${vortexFullId}`,
+            id: `puzzle-3d-play-inspector.vortex.kind.select.${vortexFullId}`,
             value: vortex.vortexKind ?? "",
             items: handleKinds.map((entry) => ({ value: entry.id, label: entry.label ?? entry.name ?? entry.id })),
             onChange: scenePlayCmd("patchSceneVortex", { vortexFullId, field: "vortexKind" }),
@@ -1152,22 +1152,22 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
         },
         {
           type: "field",
-          id: `scene-play-inspector.vortex.position.${vortexFullId}`,
+          id: `puzzle-3d-play-inspector.vortex.position.${vortexFullId}`,
           label: "Position",
           child: {
             type: "vec3",
-            id: `scene-play-inspector.vortex.position.vec3.${vortexFullId}`,
+            id: `puzzle-3d-play-inspector.vortex.position.vec3.${vortexFullId}`,
             value: vortex.position as [number, number, number],
             onChange: scenePlayCmd("patchSceneVortex", { vortexFullId, field: "position" }),
           },
         },
         {
           type: "field",
-          id: `scene-play-inspector.vortex.radius.${vortexFullId}`,
+          id: `puzzle-3d-play-inspector.vortex.radius.${vortexFullId}`,
           label: "Radius",
           child: {
             type: "input",
-            id: `scene-play-inspector.vortex.radius.input.${vortexFullId}`,
+            id: `puzzle-3d-play-inspector.vortex.radius.input.${vortexFullId}`,
             inputKind: "number",
             value: String(vortex.radius ?? 0.35),
             onChange: scenePlayCmd("patchSceneVortex", { vortexFullId, field: "radius" }),
@@ -1181,16 +1181,16 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
     if (!attraction) continue;
     children.push({
       type: "section",
-      id: `scene-play-inspector.attraction.${attractionId}`,
+      id: `puzzle-3d-play-inspector.attraction.${attractionId}`,
       label: attraction.id,
       children: [
         {
           type: "field",
-          id: `scene-play-inspector.attraction.attracting.${attractionId}`,
+          id: `puzzle-3d-play-inspector.attraction.attracting.${attractionId}`,
           label: "Attracting",
           child: {
             type: "input",
-            id: `scene-play-inspector.attraction.attracting.input.${attractionId}`,
+            id: `puzzle-3d-play-inspector.attraction.attracting.input.${attractionId}`,
             inputKind: "text",
             value: attraction.attracting,
             onChange: scenePlayCmd("patchSceneAttraction", { attractionId, field: "attracting" }),
@@ -1198,11 +1198,11 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
         },
         {
           type: "field",
-          id: `scene-play-inspector.attraction.attracted.${attractionId}`,
+          id: `puzzle-3d-play-inspector.attraction.attracted.${attractionId}`,
           label: "Attracted",
           child: {
             type: "input",
-            id: `scene-play-inspector.attraction.attracted.input.${attractionId}`,
+            id: `puzzle-3d-play-inspector.attraction.attracted.input.${attractionId}`,
             inputKind: "text",
             value: attraction.attracted,
             onChange: scenePlayCmd("patchSceneAttraction", { attractionId, field: "attracted" }),
@@ -1215,7 +1215,7 @@ export function buildScenePlayInspectorBody(ctx: WindowBodyViewContext): UiNode 
 }
 
 /** @emoji ⚙️ Declarative settings panel for scene play. */
-export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = sceneControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   if (!snap) {
@@ -1229,16 +1229,16 @@ export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
     children: [
       {
         type: "section",
-        id: "scene-play-settings.root",
+        id: "puzzle-3d-play-settings.root",
         label: "Scene options",
         children: [
           {
             type: "field",
-            id: "scene-play-settings.selectionMode",
+            id: "puzzle-3d-play-settings.selectionMode",
             label: "Selection mode",
             child: {
               type: "select",
-              id: "scene-play-settings.selectionMode.select",
+              id: "puzzle-3d-play-settings.selectionMode.select",
               value: snap.selectionMode,
               items: [
                 { value: "single", label: "single" },
@@ -1251,11 +1251,11 @@ export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
           },
           {
             type: "field",
-            id: "scene-play-settings.proximityRadius",
+            id: "puzzle-3d-play-settings.proximityRadius",
             label: "Proximity radius",
             child: {
               type: "input",
-              id: "scene-play-settings.proximityRadius.input",
+              id: "puzzle-3d-play-settings.proximityRadius.input",
               inputKind: "number",
               value: String(snap.proximityRadius),
               onChange: scenePlayCmd("setProximityRadius", { value: 0 }),
@@ -1263,11 +1263,11 @@ export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
           },
           {
             type: "field",
-            id: "scene-play-settings.chunkSize",
+            id: "puzzle-3d-play-settings.chunkSize",
             label: "Chunk size",
             child: {
               type: "input",
-              id: "scene-play-settings.chunkSize.input",
+              id: "puzzle-3d-play-settings.chunkSize.input",
               inputKind: "number",
               value: String(snap.chunkSize),
               onChange: scenePlayCmd("setChunkSize", { value: 0 }),
@@ -1275,11 +1275,11 @@ export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
           },
           {
             type: "field",
-            id: "scene-play-settings.gridFactor",
+            id: "puzzle-3d-play-settings.gridFactor",
             label: "Grid factor",
             child: {
               type: "input",
-              id: "scene-play-settings.gridFactor.input",
+              id: "puzzle-3d-play-settings.gridFactor.input",
               inputKind: "number",
               value: String(snap.gridFactor),
               onChange: scenePlayCmd("setGridFactor", { value: 0 }),
@@ -1301,17 +1301,17 @@ export function buildScenePlaySettingsBody(ctx: WindowBodyViewContext): UiNode {
   };
 }
 
-export function buildScenePlayHierarchyPanelBody(ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle3dPlayHierarchyPanelBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = sceneControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
-  return buildScenePlayHierarchyTree(snap?.fixture ?? null, snap?.selection ?? SCENE_PLAY_EMPTY_SELECTION);
+  return buildPuzzle3dPlayHierarchyTree(snap?.fixture ?? null, snap?.selection ?? PUZZLE_3D_PLAY_EMPTY_SELECTION);
 }
 
-export function buildScenePlayKindsPanelBody(ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle3dPlayKindsPanelBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = sceneControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   const catalogs = snap?.fixture ? parseKindCatalogs(snap.fixture.meta) : undefined;
-  return buildScenePlayKindsTree(catalogs);
+  return buildPuzzle3dPlayKindsTree(catalogs);
 }
 
 /** @emoji 🛝 Scene play harness as a single {@link Playground} instance. */
@@ -1319,24 +1319,24 @@ export class Playground3d extends Playground {
   readonly id = PLAY_APP_ID;
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
   readonly keybindings = [
-    { key: "Delete", controllerId: SCENE_PLAY_CONTROLLER_ID, command: "deleteSelection" },
-    { key: "Backspace", controllerId: SCENE_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+    { key: "Delete", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+    { key: "Backspace", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
   ];
 
   createRuntime(): ProductRuntime {
-    return buildScenePlayRuntime();
+    return buildPuzzle3dPlayRuntime();
   }
 
   registerBodies(): void {
-    registerWindowBody(SCENE_PLAY_BODY_KEY, buildScenePlayDeclarativeBody);
-    registerSidePanelBody(SCENE_PLAY_HIERARCHY_BODY_KEY, buildScenePlayHierarchyPanelBody);
-    registerSidePanelBody(SCENE_PLAY_KINDS_BODY_KEY, buildScenePlayKindsPanelBody);
-    registerSidePanelBody(SCENE_PLAY_INSPECTOR_BODY_KEY, buildScenePlayInspectorBody);
-    registerSidePanelBody(SCENE_PLAY_SETTINGS_BODY_KEY, buildScenePlaySettingsBody);
+    registerWindowBody(PUZZLE_3D_PLAY_BODY_KEY, buildPuzzle3dPlayDeclarativeBody);
+    registerSidePanelBody(PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY, buildPuzzle3dPlayHierarchyPanelBody);
+    registerSidePanelBody(PUZZLE_3D_PLAY_KINDS_BODY_KEY, buildPuzzle3dPlayKindsPanelBody);
+    registerSidePanelBody(PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY, buildPuzzle3dPlayInspectorBody);
+    registerSidePanelBody(PUZZLE_3D_PLAY_SETTINGS_BODY_KEY, buildPuzzle3dPlaySettingsBody);
   }
 
 }
-//#endregion 🔖ScenePlayController
+//#endregion 🔖Puzzle3dPlayController
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -1362,7 +1362,7 @@ if (import.meta.vitest) {
     it("patchFixture bumps revision only when structure changes", () => {
       const bus = new CommandBus();
       const wb = new ProductRuntime();
-      const ctrl = new ScenePlayShellController(bus, () => wb.notify());
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const base = ctrl.getFixture();
       expect(base).not.toBeNull();
       const revisionBefore = ctrl.getFixtureRevision();
@@ -1382,7 +1382,7 @@ if (import.meta.vitest) {
       const trackingBus = new CommandBus();
       const trackingWb = new ProductRuntime();
       let shellNotifyCount = 0;
-      const trackingCtrl = new ScenePlayShellController(trackingBus, () => {
+      const trackingCtrl = new Puzzle3dPlayShellController(trackingBus, () => {
         shellNotifyCount += 1;
       });
       let snapshotCount = 0;
@@ -1403,7 +1403,7 @@ if (import.meta.vitest) {
     it("setAutoLod still bumps shell generation", () => {
       const trackingBus = new CommandBus();
       let shellNotifyCount = 0;
-      const trackingCtrl = new ScenePlayShellController(trackingBus, () => {
+      const trackingCtrl = new Puzzle3dPlayShellController(trackingBus, () => {
         shellNotifyCount += 1;
       });
       trackingCtrl.run("setAutoLod", { pressed: true });
@@ -1413,7 +1413,7 @@ if (import.meta.vitest) {
     it("deleteSelection removes selected fixture rows and clears selection", () => {
       const bus = new CommandBus();
       const wb = new ProductRuntime();
-      const ctrl = new ScenePlayShellController(bus, () => wb.notify());
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const before = ctrl.getSnapshot().fixture;
       expect(before).not.toBeNull();
       const target = before!.objects[0]!;
@@ -1425,12 +1425,12 @@ if (import.meta.vitest) {
       const snap = ctrl.getSnapshot();
       expect(snap.fixture?.objects.some((object) => object.id === target.id)).toBe(false);
       expect(snap.fixture?.objects.length).toBe(countBefore - 1);
-      expect(snap.selection).toEqual(SCENE_PLAY_EMPTY_SELECTION);
+      expect(snap.selection).toEqual(PUZZLE_3D_PLAY_EMPTY_SELECTION);
     });
 
     it("deleteSceneObjectFromFixture removes child vortices and stale attractions", () => {
       const base = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [
           { id: "t1", attracting: "a:v1", attracted: "b:v2" },
@@ -1450,7 +1450,7 @@ if (import.meta.vitest) {
 
     it("scenePlaySelectionLabel resolves object and vortex fixture labels", () => {
       const fixture = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [
@@ -1467,9 +1467,9 @@ if (import.meta.vitest) {
       expect(scenePlaySelectionLabel(fixture, { objectIds: [], vortexIds: ["a:v1"], attractionIds: [] })).toBe("Handle A");
     });
 
-    it("buildScenePlayHierarchySections nests objects, vortices, and attractions", () => {
+    it("buildPuzzle3dPlayHierarchySections nests objects, vortices, and attractions", () => {
       const fixture = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [{ id: "t1", attracting: "a:v1", attracted: "b:v2" }],
         objects: [
@@ -1484,7 +1484,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      const tree = buildScenePlayHierarchyTree(fixture, SCENE_PLAY_EMPTY_SELECTION);
+      const tree = buildPuzzle3dPlayHierarchyTree(fixture, PUZZLE_3D_PLAY_EMPTY_SELECTION);
       const sceneRoot = tree.sections[0]?.items?.[0];
       expect(sceneRoot?.label).toBe("Scene");
       const objectsGroup = sceneRoot?.items?.find((row) => row.label === "Objects");
@@ -1493,12 +1493,12 @@ if (import.meta.vitest) {
       expect(firstObject?.label).toBe("Alpha");
       expect(firstObject?.items?.[0]?.label).toBe("Vortices");
       expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
-      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("scene-play-hierarchy.vortex.a:v1");
+      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
       const attractionsGroup = sceneRoot?.items?.find((row) => row.label === "Attractions");
-      expect(attractionsGroup?.items?.[0]?.id).toBe("scene-play-hierarchy.attraction.t1");
+      expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
     });
 
-    it("buildScenePlayKindsSections lists object, vortex, and attraction kind categories", () => {
+    it("buildPuzzle3dPlayKindsSections lists object, vortex, and attraction kind categories", () => {
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
           nodes: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
@@ -1506,7 +1506,7 @@ if (import.meta.vitest) {
           wires: [{ id: "board.wire.link", label: "Link", name: "Link" }],
         },
       });
-      const tree = buildScenePlayKindsTree(catalogs);
+      const tree = buildPuzzle3dPlayKindsTree(catalogs);
       expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Attractions"]);
       expect(tree.sections[0]?.items?.[0]?.label).toBe("Capsule");
     });
@@ -1514,16 +1514,16 @@ if (import.meta.vitest) {
     it("declarative window body is a lone scene3d surface", () => {
       const bus = new CommandBus();
       const wb = new ProductRuntime();
-      const ctrl = new ScenePlayShellController(bus, () => wb.notify());
-      wb.addApp(buildScenePlayAppRuntime(ctrl));
-      const tree = buildScenePlayDeclarativeBody({
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
+      const tree = buildPuzzle3dPlayDeclarativeBody({
         runtime: wb,
-        windowKindId: SCENE_PLAY_WINDOW_ID,
-        bodyKey: SCENE_PLAY_BODY_KEY,
+        windowKindId: PUZZLE_3D_PLAY_WINDOW_ID,
+        bodyKey: PUZZLE_3D_PLAY_BODY_KEY,
         activeModeId: "main",
         generation: wb.generation,
       });
-      expect(tree).toEqual(buildScene3dWindowBody(SCENE_PLAY_SCENE_SURFACE_ID, SCENE_PLAY_CONTROLLER_ID));
+      expect(tree).toEqual(buildScene3dWindowBody(PUZZLE_3D_PLAY_SCENE_SURFACE_ID, PUZZLE_3D_PLAY_CONTROLLER_ID));
     });
   });
 }

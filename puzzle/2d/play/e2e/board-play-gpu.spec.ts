@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/e2e/board-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
+// 💻 elements/client/lib/board/play/e2e/puzzle-2d-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
 // #endregion 🧲Header
 
 import { expect, test, type Page } from "@playwright/test";
@@ -18,12 +18,12 @@ async function gotoBoardPlayShell(page: Page): Promise<void> {
 	if ((await workbenchToggle.getAttribute("data-state")) !== "on") {
 		await workbenchToggle.click();
 	}
-	const libraryTab = page.locator("#board-play-library");
+	const libraryTab = page.locator("#puzzle-2d-play-library");
 	if (await libraryTab.isVisible()) {
 		await libraryTab.click();
 	}
 	await expect
-		.poll(async () => await page.getByTestId("board-play-fixture-shelf").isVisible(), { timeout: 120_000 })
+		.poll(async () => await page.getByTestId("puzzle-2d-play-fixture-shelf").isVisible(), { timeout: 120_000 })
 		.toBe(true);
 }
 
@@ -33,7 +33,7 @@ async function gotoBoardPlayReady(page: Page): Promise<void> {
 		.poll(async () => await page.locator('[data-testid="board-canvas"]').first().isVisible(), { timeout: 180_000 })
 		.toBe(true);
 	await expect
-		.poll(async () => await page.locator('[data-measure-id="board-overview-lod"]').isVisible(), { timeout: 180_000 })
+		.poll(async () => await page.locator('[data-measure-id="2d-overview-lod"]').isVisible(), { timeout: 180_000 })
 		.toBe(true);
 }
 
@@ -41,9 +41,9 @@ test.describe("board play", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.addInitScript(() => {
 			try {
-				localStorage.removeItem("elements.board-play.surface.device");
-				localStorage.removeItem("elements.board-play.surface.theme");
-				localStorage.removeItem("elements.board-play.surface.expertise");
+				localStorage.removeItem("puzzle.2d-play.surface.device");
+				localStorage.removeItem("puzzle.2d-play.surface.theme");
+				localStorage.removeItem("puzzle.2d-play.surface.expertise");
 			} catch {
 				/* ignore */
 			}
@@ -96,12 +96,12 @@ test.describe("board play", () => {
 		const handlesToolbar = page.locator('button[title^="Redraw handles"]');
 		await expect(handlesToolbar).toBeVisible({ timeout: 120_000 });
 		await handlesToolbar.click({ force: true });
-		await page.locator("#board-play-settings").click({ force: true });
-		await expect(page.locator("#board-play-redraw-nodes")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator("#board-play-redraw-handles")).toBeVisible();
+		await page.locator("#puzzle-2d-play-settings").click({ force: true });
+		await expect(page.locator("#puzzle-2d-play-redraw-nodes")).toBeVisible({ timeout: 120_000 });
+		await expect(page.locator("#puzzle-2d-play-redraw-handles")).toBeVisible();
 		await page.evaluate(() => {
-			document.getElementById("board-play-redraw-nodes")?.click();
-			document.getElementById("board-play-redraw-handles")?.click();
+			document.getElementById("puzzle-2d-play-redraw-nodes")?.click();
+			document.getElementById("puzzle-2d-play-redraw-handles")?.click();
 		});
 		await handlesToolbar.click({ force: true });
 		await page.waitForTimeout(100);
@@ -117,13 +117,13 @@ test.describe("board play", () => {
 
 	test("LOD select is visible on each pane and pins a tier without clearing the graph", async ({ page }) => {
 		await gotoBoardPlayReady(page);
-		await expect(page.locator('[data-measure-id="board-detail-lod"]')).toBeVisible();
-		await expect(page.locator('[data-measure-id="board-selection-lod"]')).toBeVisible();
+		await expect(page.locator('[data-measure-id="2d-detail-lod"]')).toBeVisible();
+		await expect(page.locator('[data-measure-id="2d-selection-lod"]')).toBeVisible();
 		const overviewCanvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 120_000 })
 			.toBeGreaterThan(0);
-		await page.locator('[data-measure-id="board-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
+		await page.locator('[data-measure-id="2d-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
 		await page.getByRole("option", { name: "Overview", exact: true }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
@@ -131,7 +131,7 @@ test.describe("board play", () => {
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 30_000 })
 			.toBeGreaterThan(0);
-		await page.locator('[data-measure-id="board-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
+		await page.locator('[data-measure-id="2d-overview-lod"] [data-slot="select-trigger"]').click({ force: true });
 		await page.getByRole("option", { name: /^Automatic · / }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
@@ -215,7 +215,7 @@ test.describe("board play", () => {
 			return adapter != null;
 		});
 		if (!adapterOk) {
-			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
+			testInfo.skip(true, "No WebGPU adapter: use PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
 		await gotoBoardPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
@@ -295,7 +295,7 @@ test.describe("board play", () => {
 			return adapter != null;
 		});
 		if (!adapterOk) {
-			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
+			testInfo.skip(true, "No WebGPU adapter: use PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
 		await gotoBoardPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();

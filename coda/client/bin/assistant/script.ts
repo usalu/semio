@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭 `@coda/assistant` router: `bun ./script.ts <dev|build|policy>`. */
 import { execFileSync } from "node:child_process";
-import type { FileLinter } from "../../../../repo/lib/js/src/linter.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/dependency-boundary.ts";
-import { getWorkspaceRoot } from "../../../../repo/lib/js/src/cli.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx } from "../../../../repo/lib/js/src/bundle-script.ts";
-import { defineLint } from "../../../../repo/lib/js/src/script.ts";
+import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx } from "../../../../repo/lib/js/src/index.ts";
+import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "mcp-app.tsx";
 

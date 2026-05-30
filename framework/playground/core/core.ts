@@ -1134,8 +1134,8 @@ if (import.meta.vitest) {
 
 	describe("canonical window bodies", () => {
 		it("buildBoardWindowBody is canvas-only", () => {
-			const node = buildBoardWindowBody("elements.board/v1", "board-ctrl", "pane-a");
-			expect(node).toEqual({ type: "board", surfaceId: "elements.board/v1", controllerId: "board-ctrl", paneId: "pane-a" });
+			const node = buildBoardWindowBody("puzzle.2d/v1", "board-ctrl", "pane-a");
+			expect(node).toEqual({ type: "board", surfaceId: "puzzle.2d/v1", controllerId: "board-ctrl", paneId: "pane-a" });
 		});
 	});
 

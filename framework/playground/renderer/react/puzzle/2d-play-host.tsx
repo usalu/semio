@@ -41,21 +41,21 @@ import { bootPlayground, type PlaygroundChromeBoot } from "@framework/playground
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 import {
-	BOARD_PLAY_APP_ID,
-	BOARD_PLAY_BOARD_SURFACE_ID,
-	BOARD_PLAY_BODY_KEY_DETAIL,
-	BOARD_PLAY_BODY_KEY_OVERVIEW,
-	BOARD_PLAY_BODY_KEY_SELECTION,
-	BOARD_PLAY_CONTROLLER_ID,
-	BOARD_PLAY_DEFAULT_FIXTURE,
-	BOARD_PLAY_HIERARCHY_TAB_ID,
+	PUZZLE_2D_PLAY_APP_ID,
+	PUZZLE_2D_PLAY_BOARD_SURFACE_ID,
+	PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
+	PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
+	PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
+	PUZZLE_2D_PLAY_CONTROLLER_ID,
+	PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+	PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
 	BoardPlayShellController,
 	buildBoardPlayHierarchySections,
 	buildBoardPlayOverviewDeclarativeBody,
 	buildBoardPlayDetailDeclarativeBody,
 	buildBoardPlaySelectionDeclarativeBody,
 	buildBoardPlayRuntime,
-	type BoardPlayPaneId,
+	type Puzzle2dPlayPaneId,
 } from "@puzzle/2d/play";
 import {
 	mergeBoardKindCatalogBundleByRowId,
@@ -91,13 +91,13 @@ import {
 import type { Playground } from "@framework/playground";
 // #endregion 🔌Adapters
 
-const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
+const NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
-	boardFixtureMetaKindCatalogBundle(BOARD_PLAY_DEFAULT_FIXTURE) ?? {},
+	boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {},
 );
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "@puzzle/2d/play";
+export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -107,9 +107,9 @@ const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
 const boardPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
 const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Board background menu" }];
 
-const LS_THEME = "elements.board-play.surface.theme";
-const LS_DEVICE = "elements.board-play.surface.device";
-const LS_EXPERTISE = "elements.board-play.surface.expertise";
+const LS_THEME = "puzzle.2d-play.surface.theme";
+const LS_DEVICE = "puzzle.2d-play.surface.device";
+const LS_EXPERTISE = "puzzle.2d-play.surface.expertise";
 
 function parseStoredTheme(raw: string | null): ElementsSurfaceTheme {
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
@@ -192,7 +192,7 @@ function fixtureWorldBounds(fixture: BoardFixtureV1): { cx: number; cy: number; 
 }
 
 /** @emoji 📷 Default cameras for all play panes: center on fixture bounds; zoom fits the graph’s longest axis into the reference short viewport (margin padding). */
-function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneId, CameraState> {
+function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<Puzzle2dPlayPaneId, CameraState> {
   const { cx, cy, halfSpan } = fixtureWorldBounds(fixture);
   const base = fixture.camera;
   const margin = 0.06;
@@ -201,20 +201,20 @@ function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPa
   const zoom = clampZoom(usable / worldSpan);
   const cam: CameraState = { x: cx + base.x, y: cy + base.y, zoom };
   return {
-    "board-detail": { ...cam },
-    "board-overview": { ...cam },
-    "board-selection": { ...cam },
+    "2d-detail": { ...cam },
+    "2d-overview": { ...cam },
+    "2d-selection": { ...cam },
   };
 }
 
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
-const BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
+const PUZZLE_2D_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
 
 /** @emoji ⏱️ After one-shot “Redraw nodes”, shell cameras ease to bbox fit (first third hold, last two thirds smooth). */
-const BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS = 1800;
+const PUZZLE_2D_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS = 1800;
 
 /** @emoji 📷 Linear blend toward bbox-fit cameras each fixture commit while redraw play is on (damped follow). */
-const BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND = 0.22;
+const PUZZLE_2D_PLAY_REDRAW_CAMERA_CHASE_BLEND = 0.22;
 
 function easeInOutCubic01(t: number): number {
   const x = Math.min(1, Math.max(0, t));
@@ -232,11 +232,11 @@ function lerpCameraState(a: CameraState, b: CameraState, tLinear: number): Camer
 }
 
 /** @emoji 🎯 Lerps only `activePane` between `from` and `to`; other panes keep shallow copies of `from`. */
-function blendTriptychCamerasActivePaneOnly(from: Record<BoardPlayPaneId, CameraState>, to: Record<BoardPlayPaneId, CameraState>, tLinear: number, activePane: BoardPlayPaneId): Record<BoardPlayPaneId, CameraState> {
-  const out: Record<BoardPlayPaneId, CameraState> = {
-    "board-detail": { ...from["board-detail"] },
-    "board-overview": { ...from["board-overview"] },
-    "board-selection": { ...from["board-selection"] },
+function blendTriptychCamerasActivePaneOnly(from: Record<Puzzle2dPlayPaneId, CameraState>, to: Record<Puzzle2dPlayPaneId, CameraState>, tLinear: number, activePane: Puzzle2dPlayPaneId): Record<Puzzle2dPlayPaneId, CameraState> {
+  const out: Record<Puzzle2dPlayPaneId, CameraState> = {
+    "2d-detail": { ...from["2d-detail"] },
+    "2d-overview": { ...from["2d-overview"] },
+    "2d-selection": { ...from["2d-selection"] },
   };
   out[activePane] = lerpCameraState(from[activePane], to[activePane], tLinear);
   return out;
@@ -264,23 +264,23 @@ interface BoardPlayShellValue {
   fixture: BoardFixtureV1;
   setFixture: (next: BoardFixtureV1) => void;
   /** @emoji 🎯 Palette drags merge one node at the pointer; full fixtures replace the graph. */
-  handleCanvasFixtureDrop: (pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => void;
+  handleCanvasFixtureDrop: (pane: Puzzle2dPlayPaneId, detail: BoardFixtureDropDetail) => void;
   patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
-  activePaneId: BoardPlayPaneId;
-  setActivePaneId: (id: BoardPlayPaneId) => void;
+  activePaneId: Puzzle2dPlayPaneId;
+  setActivePaneId: (id: Puzzle2dPlayPaneId) => void;
   selectionIds: Set<string>;
   setSelectionIds: (ids: readonly string[]) => void;
   preselection: BoardPreselectSnapshot;
   setPreselection: (snapshot: BoardPreselectSnapshot) => void;
   hoveredId: string | null;
   /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link BoardPlayShellValue.hoveredId}. */
-  hoverSourcePane: BoardPlayPaneId | null;
-  setHoverPane: (pane: BoardPlayPaneId) => void;
-  setHoverForPane: (pane: BoardPlayPaneId, id: string | null) => void;
-  clearHoverForPane: (pane: BoardPlayPaneId) => void;
+  hoverSourcePane: Puzzle2dPlayPaneId | null;
+  setHoverPane: (pane: Puzzle2dPlayPaneId) => void;
+  setHoverForPane: (pane: Puzzle2dPlayPaneId, id: string | null) => void;
+  clearHoverForPane: (pane: Puzzle2dPlayPaneId) => void;
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
-  camerasByPane: Record<BoardPlayPaneId, CameraState>;
+  camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
   /** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link boardPlayPaneCamerasBaseline}; other panes unchanged. */
   syncBaselineFromViewportCamera: (cam: CameraState) => void;
   boardSelectionMethod: BoardSelectionMethod;
@@ -292,8 +292,8 @@ interface BoardPlayShellValue {
   boardGridSnapEnabled: boolean;
   setBoardGridSnapEnabled: (value: boolean) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
-  boardLodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>;
-  setBoardLodModeForPane: (pane: BoardPlayPaneId, mode: BoardLodModeKind) => void;
+  boardLodModeByPane: Record<Puzzle2dPlayPaneId, BoardLodModeKind>;
+  setBoardLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: BoardLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
@@ -336,7 +336,7 @@ class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: BOARD_PLAY_HIERARCHY_TAB_ID,
+			id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
 			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
@@ -347,13 +347,13 @@ class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: "board-play-library",
+			id: "puzzle-2d-play-library",
 			icon: Library,
 			order: 1,
 			tree: new StaticTreePanelDefinition({
 				sections: [
 					{
-						id: "board-play-library.section",
+						id: "puzzle-2d-play-library.section",
 						label: "Library",
 						defaultOpen: true,
 						content: <BoardFixtureLibraryPanel />,
@@ -372,7 +372,7 @@ class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
 
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: "board-play-inspector",
+			id: "puzzle-2d-play-inspector",
 			icon: ClipboardList,
 			order: 0,
 			tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
@@ -383,13 +383,13 @@ class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
 class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: "board-play-settings",
+			id: "puzzle-2d-play-settings",
 			icon: Settings,
 			order: 1,
 			tree: new StaticTreePanelDefinition({
 				sections: [
 					{
-						id: "board-play-settings.section",
+						id: "puzzle-2d-play-settings.section",
 						label: "Settings",
 						defaultOpen: true,
 						content: <BoardPlaySettingsPanel />,
@@ -403,7 +403,7 @@ class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
 
 const BoardPlayShellContext = reactHostPort.createContext<BoardPlayShellValue | null>(null);
 
-const BoardPlayLodRuntimeContext = reactHostPort.createContext<((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
+const BoardPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
 
 function useBoardPlayShell(): BoardPlayShellValue {
   const value = reactHostPort.useContext(BoardPlayShellContext);
@@ -423,7 +423,7 @@ function newBoardAuthoringId(prefix: string): string {
 }
 
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
-const BOARD_PLAY_DEFAULT_NODE_SIZE_PX = 40;
+const PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX = 40;
 
 const BOARD_PLAYRedraw_FRAME_BUDGET_MS = 14;
 
@@ -437,8 +437,8 @@ function boardPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number, p
 
 /** @emoji 📐 Builds {@link BoardRedrawLayoutOptions} for the active pane camera center and redraw mode. */
 function boardPlayRedrawLayoutOpts(
-  pane: BoardPlayPaneId,
-  camerasByPane: Record<BoardPlayPaneId, CameraState>,
+  pane: Puzzle2dPlayPaneId,
+  camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>,
   mode: BoardRedrawModeKind,
   forceIters: number,
   forceIdealEdge: number,
@@ -524,7 +524,7 @@ function BoardPlaySettingsPanel(): ReactElement {
         <div className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">Redraw nodes</div>
         <Label id="board.play.settings.redraw.mode" label="Layout kind">
           <Select onValueChange={(v) => setBoardRedrawMode(v as BoardRedrawModeKind)} value={boardRedrawMode}>
-            <SelectTrigger className="h-8 w-full" id="board-play-redraw-mode" size="sm">
+            <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-redraw-mode" size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -534,23 +534,23 @@ function BoardPlaySettingsPanel(): ReactElement {
           </Select>
         </Label>
         <div className="flex items-center gap-2">
-          <input checked={boardRedrawHandlesAfterNodes} className="accent-accent size-3.5 shrink-0" id="board-play-redraw-handles-after-nodes" onChange={(e) => setBoardRedrawHandlesAfterNodes(e.target.checked)} type="checkbox" />
-          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="board-play-redraw-handles-after-nodes">
+          <input checked={boardRedrawHandlesAfterNodes} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-handles-after-nodes" onChange={(e) => setBoardRedrawHandlesAfterNodes(e.target.checked)} type="checkbox" />
+          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-handles-after-nodes">
             Also redraw handles after node redraw
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <input checked={boardRedrawProgressiveEnabled} className="accent-accent size-3.5 shrink-0" id="board-play-redraw-progressive" onChange={(e) => setBoardRedrawProgressiveEnabled(e.target.checked)} type="checkbox" />
-          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="board-play-redraw-progressive">
+          <input checked={boardRedrawProgressiveEnabled} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-progressive" onChange={(e) => setBoardRedrawProgressiveEnabled(e.target.checked)} type="checkbox" />
+          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-progressive">
             Progressive iterations while play is on (graph ramps up; tree still one pass per frame)
           </label>
         </div>
         <Label id="board.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
-          <Slider id="board-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[boardRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setBoardRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
+          <Slider id="puzzle-2d-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[boardRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setBoardRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
         </Label>
         {boardRedrawMode === "force-graph" ? (
           <Label id="board.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
-            <Slider id="board-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[boardRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setBoardRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
+            <Slider id="puzzle-2d-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[boardRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setBoardRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
           </Label>
         ) : (
           <p className="text-muted-foreground text-[11px] leading-snug">Tree redraw runs once per animation frame while play is on; use auto-stop to end play after a duration.</p>
@@ -559,30 +559,30 @@ function BoardPlaySettingsPanel(): ReactElement {
           <>
             <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Graph</div>
             <Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
-              <Slider id="board-play-slider-force-full-iters" max={720} min={24} step={4} value={[forceLayoutFullIterations]} onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)} />
+              <Slider id="puzzle-2d-play-slider-force-full-iters" max={720} min={24} step={4} value={[forceLayoutFullIterations]} onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)} />
             </Label>
             <Label id="board.play.settings.force.idealEdge" label="Ideal edge (px)">
-              <Slider id="board-play-slider-force-ideal" max={160} min={20} step={2} value={[forceLayoutIdealEdgeLength]} onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)} />
+              <Slider id="puzzle-2d-play-slider-force-ideal" max={160} min={20} step={2} value={[forceLayoutIdealEdgeLength]} onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)} />
             </Label>
             <Label id="board.play.settings.force.repulsion" label="Repulsion (medium 80, ±40)">
-              <Slider id="board-play-slider-force-repulsion" max={120} min={40} step={2} value={[forceLayoutRepulsionStrength]} onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 80)} />
+              <Slider id="puzzle-2d-play-slider-force-repulsion" max={120} min={40} step={2} value={[forceLayoutRepulsionStrength]} onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 80)} />
             </Label>
             <Label id="board.play.settings.force.gravity" label="Gravity">
-              <Slider id="board-play-slider-force-gravity" max={0.05} min={0} step={0.002} value={[forceLayoutGravity]} onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)} />
+              <Slider id="puzzle-2d-play-slider-force-gravity" max={0.05} min={0} step={0.002} value={[forceLayoutGravity]} onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)} />
             </Label>
           </>
         ) : (
           <>
             <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Tree</div>
             <Label id="board.play.settings.tree.layerSpacing" label="Layer spacing (px)">
-              <Slider id="board-play-slider-tree-layer" max={280} min={40} step={4} value={[treeLayoutLayerSpacing]} onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)} />
+              <Slider id="puzzle-2d-play-slider-tree-layer" max={280} min={40} step={4} value={[treeLayoutLayerSpacing]} onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)} />
             </Label>
             <Label id="board.play.settings.tree.siblingGap" label="Sibling gap (px)">
-              <Slider id="board-play-slider-tree-sibling" max={120} min={0} step={2} value={[treeLayoutSiblingGap]} onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)} />
+              <Slider id="puzzle-2d-play-slider-tree-sibling" max={120} min={0} step={2} value={[treeLayoutSiblingGap]} onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)} />
             </Label>
             <Label id="board.play.settings.tree.direction" label="Direction">
               <Select onValueChange={(v) => setTreeLayoutDirection(v as BoardHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
-                <SelectTrigger className="h-8 w-full" id="board-play-tree-direction" size="sm">
+                <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-tree-direction" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -595,12 +595,12 @@ function BoardPlaySettingsPanel(): ReactElement {
             </Label>
           </>
         )}
-        <Button className="h-8 w-full text-xs" id="board-play-redraw-nodes" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
+        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
           Redraw nodes
         </Button>
         <div className="text-muted-foreground border-t border-element pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
         <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
-        <Button className="h-8 w-full text-xs" id="board-play-redraw-handles" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
+        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
           Redraw handles
         </Button>
         <p className="text-muted-foreground text-[11px] leading-snug">
@@ -710,7 +710,7 @@ function BoardPlayRedrawProgressReset(): null {
 
 // #region 🔖Panes
 /** @emoji 🪟 Captures pointer focus for the active pane (tabs + canvas). */
-function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: BoardPlayPaneId }): ReactElement {
+function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Puzzle2dPlayPaneId }): ReactElement {
   const { clearHoverForPane, setActivePaneId, setHoverPane } = useBoardPlayShell();
   return (
     <div
@@ -740,7 +740,7 @@ function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolea
   return { automaticLod: false, lod: mode };
 }
 
-function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
+function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
   const {
     activePaneId,
     boardGridSnapEnabled,
@@ -783,7 +783,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
         fixtureDragDrop
         gridSnapEnabled={boardGridSnapEnabled}
         hoveredId={hoveredId}
-        kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
+        kindCatalogs={NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -805,11 +805,11 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
 }
 
 function BoardPlayBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): ReactElement {
-  if (node.controllerId !== BOARD_PLAY_CONTROLLER_ID || node.surfaceId !== BOARD_PLAY_BOARD_SURFACE_ID) {
+  if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_BOARD_SURFACE_ID) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid board surface binding</div>;
   }
-  const paneId = node.paneId as BoardPlayPaneId;
-  return <BoardPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "board-overview"} />;
+  const paneId = node.paneId as Puzzle2dPlayPaneId;
+  return <BoardPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "2d-overview"} />;
 }
 
 let boardPlayChromeRegistered = false;
@@ -818,33 +818,33 @@ let boardPlayChromeRegistered = false;
 export function registerBoardPlaySurfaceHosts(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;
-  registerUiBoardSurfaceHost(BOARD_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
-  registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-  registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-  registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-  registerTabIcon("elements.board-play.icon.library", Library);
-  registerTabIcon("elements.board-play.icon.inspector", ClipboardList);
-  registerTabIcon("elements.board-play.icon.settings", Settings);
+  registerUiBoardSurfaceHost(PUZZLE_2D_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+  registerTabIcon("puzzle.2d-play.icon.library", Library);
+  registerTabIcon("puzzle.2d-play.icon.inspector", ClipboardList);
+  registerTabIcon("puzzle.2d-play.icon.settings", Settings);
 }
 // #endregion 🔖Panes
 
 // #region 🔖SidePanels
 // #region 🔖PaletteFixtureShelf
-/** @emoji 📐 Palette seeds match {@link BOARD_PLAY_DEFAULT_NODE_SIZE_PX} (circle radius = span/2). */
+/** @emoji 📐 Palette seeds match {@link PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX} (circle radius = span/2). */
 
-const BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
+const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
   parseBoardFixtureV1({
     camera: { x: 0, y: 0, zoom: 1 },
     edges: [],
     meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
-    nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2, x: 0, y: 0 }],
-    schema: "elements.board.fixture/v1",
+    nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2, x: 0, y: 0 }],
+    schema: "puzzle.2d.fixture/v1",
   }) ??
   (() => {
     throw new Error("Board play: palette circle drag fixture failed validation.");
   })();
 
-const BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
+const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
   parseBoardFixtureV1({
     camera: { x: 0, y: 0, zoom: 1 },
     edges: [],
@@ -852,15 +852,15 @@ const BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
     nodes: [
       {
         handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
-        height: BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
+        height: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX,
         id: "palette-seed-rectangle",
         shape: "rectangle",
-        width: BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
+        width: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX,
         x: 0,
         y: 0,
       },
     ],
-    schema: "elements.board.fixture/v1",
+    schema: "puzzle.2d.fixture/v1",
   }) ??
   (() => {
     throw new Error("Board play: palette rectangle drag fixture failed validation.");
@@ -927,14 +927,14 @@ function BoardFixtureLibraryPanel(): ReactElement {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
-      <div className="text-muted-foreground text-xs uppercase tracking-wide" data-testid="board-play-fixture-shelf">
+      <div className="text-muted-foreground text-xs uppercase tracking-wide" data-testid="puzzle-2d-play-fixture-shelf">
         Fixture shelf
       </div>
       <div className="flex flex-col gap-2">
         <div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
         <div className="flex flex-wrap gap-2">
-          <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE} label="Drag circle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />} />
-          <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
+          <BoardFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE} label="Drag circle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />} />
+          <BoardFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
       <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
@@ -1201,7 +1201,7 @@ function InspectorNodeBatch({
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
       {nodeIds.length === 1 ? (
-        <Label id="board-play.inspector.node.id" label="Id">
+        <Label id="puzzle-2d-play.inspector.node.id" label="Id">
           <Input
             className="h-7 font-mono text-xs"
             defaultValue={nodeIds[0]}
@@ -1221,13 +1221,13 @@ function InspectorNodeBatch({
           />
         </Label>
       ) : null}
-      <Label id="board-play.inspector.node.name" label="Name">
+      <Label id="puzzle-2d-play.inspector.node.name" label="Name">
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
-      <Label id="board-play.inspector.node.icon" label="Icon">
-        <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="board-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
+      <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
+        <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
       </Label>
-      <Label id="board-play.inspector.node.shape" label="Shape">
+      <Label id="puzzle-2d-play.inspector.node.shape" label="Shape">
         <Select
           key={shapeUniform && shapeValue ? `shape-${shapeValue}` : "shape-mixed"}
           onValueChange={(v) => {
@@ -1246,11 +1246,11 @@ function InspectorNodeBatch({
           </SelectContent>
         </Select>
       </Label>
-      <NumericStepperRow id="board-play.inspector.node.x" label="x" onAbsolute={(v) => patchNodes((n) => ({ ...n, x: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, x: n.x + d }))} step={1} uniform={xUniform} value={xValue} />
-      <NumericStepperRow id="board-play.inspector.node.y" label="y" onAbsolute={(v) => patchNodes((n) => ({ ...n, y: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, y: n.y + d }))} step={1} uniform={yUniform} value={yValue} />
+      <NumericStepperRow id="puzzle-2d-play.inspector.node.x" label="x" onAbsolute={(v) => patchNodes((n) => ({ ...n, x: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, x: n.x + d }))} step={1} uniform={xUniform} value={xValue} />
+      <NumericStepperRow id="puzzle-2d-play.inspector.node.y" label="y" onAbsolute={(v) => patchNodes((n) => ({ ...n, y: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, y: n.y + d }))} step={1} uniform={yUniform} value={yValue} />
       {targets.some((n) => !nodeIsRectangle(n)) ? (
         <NumericStepperRow
-          id="board-play.inspector.node.r"
+          id="puzzle-2d-play.inspector.node.r"
           label="radius"
           onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, v) }))}
           onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, n.radius + d) }))}
@@ -1262,7 +1262,7 @@ function InspectorNodeBatch({
       {targets.some(nodeIsRectangle) ? (
         <>
           <NumericStepperRow
-            id="board-play.inspector.node.w"
+            id="puzzle-2d-play.inspector.node.w"
             label="width"
             onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, v) } : n))}
             onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, n.width + d) } : n))}
@@ -1271,7 +1271,7 @@ function InspectorNodeBatch({
             value={wValue}
           />
           <NumericStepperRow
-            id="board-play.inspector.node.h"
+            id="puzzle-2d-play.inspector.node.h"
             label="height"
             onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, v) } : n))}
             onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, n.height + d) } : n))}
@@ -1343,7 +1343,7 @@ function InspectorHandleBatch({
         />
         <div className="min-w-0 flex-1 space-y-3">
           <NumericStepperRow
-            id="board-play.inspector.handle.t"
+            id="puzzle-2d-play.inspector.handle.t"
             label="t (rad)"
             onAbsolute={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
             onDelta={(d) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(h.angle + d) }))}
@@ -1352,7 +1352,7 @@ function InspectorHandleBatch({
             value={angleUniform ? angleValue : Number.NaN}
           />
           <NumericStepperRow
-            id="board-play.inspector.handle.radius"
+            id="puzzle-2d-play.inspector.handle.radius"
             label="Hit radius"
             onAbsolute={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
             onDelta={(d) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, (h.radius ?? 8) + d) }))}
@@ -1360,11 +1360,11 @@ function InspectorHandleBatch({
             uniform={radiusUniform}
             value={radiusValue}
           />
-          <Label id="board-play.inspector.handle.icon" label="Icon">
-            <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="board-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
+          <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
+            <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
           </Label>
           {handleIds.length === 1 ? (
-            <Label id="board-play.inspector.handle.id" label="Id">
+            <Label id="puzzle-2d-play.inspector.handle.id" label="Id">
               <Input
                 className="h-7 font-mono text-xs"
                 defaultValue={handleIds[0]}
@@ -1430,7 +1430,7 @@ function InspectorEdgeBatch({
 
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
-      <Label id="board-play.inspector.edge.source" label="Source">
+      <Label id="puzzle-2d-play.inspector.edge.source" label="Source">
         <Select
           onValueChange={(v) => {
             patchEdges((e) => ({ ...e, source: v }));
@@ -1449,7 +1449,7 @@ function InspectorEdgeBatch({
           </SelectContent>
         </Select>
       </Label>
-      <Label id="board-play.inspector.edge.target" label="Target">
+      <Label id="puzzle-2d-play.inspector.edge.target" label="Target">
         <Select
           onValueChange={(v) => {
             patchEdges((e) => ({ ...e, target: v }));
@@ -1469,7 +1469,7 @@ function InspectorEdgeBatch({
         </Select>
       </Label>
       {edgeIds.length === 1 ? (
-        <Label id="board-play.inspector.edge.id" label="Id">
+        <Label id="puzzle-2d-play.inspector.edge.id" label="Id">
           <Input
             className="h-7 font-mono text-xs"
             defaultValue={edgeIds[0]}
@@ -1512,12 +1512,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	if (ids.length === 0) {
 		return [
 			{
-				id: "board-play-inspector.empty",
+				id: "puzzle-2d-play-inspector.empty",
 				label: "Detail",
 				defaultOpen: true,
 				items: [
 					{
-						id: "board-play-inspector.empty.header",
+						id: "puzzle-2d-play-inspector.empty.header",
 						label: `pane: ${activePaneId}`,
 						description: (
 							<p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>
@@ -1529,12 +1529,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	}
 	const sections: TreeDataSection[] = [
 		{
-			id: "board-play-inspector.header",
+			id: "puzzle-2d-play-inspector.header",
 			label: "Detail",
 			defaultOpen: true,
 			items: [
 				{
-					id: "board-play-inspector.header.pane",
+					id: "puzzle-2d-play-inspector.header.pane",
 					label: activePaneId,
 					description: (
 						<div className="text-muted-foreground text-[11px] opacity-80">
@@ -1547,12 +1547,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	];
 	if (nodeIds.length > 0) {
 		sections.push({
-			id: "board-play-inspector-nodes",
+			id: "puzzle-2d-play-inspector-nodes",
 			label: `Nodes (${nodeIds.length})`,
 			defaultOpen: true,
 			items: [
 				{
-					id: "board-play-inspector-nodes.fields",
+					id: "puzzle-2d-play-inspector-nodes.fields",
 					label: "Properties",
 					defaultOpen: true,
 					description: (
@@ -1564,12 +1564,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	}
 	if (handleIds.length > 0) {
 		sections.push({
-			id: "board-play-inspector-handles",
+			id: "puzzle-2d-play-inspector-handles",
 			label: `Handles (${handleIds.length})`,
 			defaultOpen: true,
 			items: [
 				{
-					id: "board-play-inspector-handles.fields",
+					id: "puzzle-2d-play-inspector-handles.fields",
 					label: "Properties",
 					defaultOpen: true,
 					description: (
@@ -1581,12 +1581,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	}
 	if (edgeIds.length > 0) {
 		sections.push({
-			id: "board-play-inspector-edges",
+			id: "puzzle-2d-play-inspector-edges",
 			label: `Edges (${edgeIds.length})`,
 			defaultOpen: true,
 			items: [
 				{
-					id: "board-play-inspector-edges.fields",
+					id: "puzzle-2d-play-inspector-edges.fields",
 					label: "Properties",
 					defaultOpen: true,
 					description: (
@@ -1598,12 +1598,12 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 	}
 	if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
 		sections.push({
-			id: "board-play-inspector-unknown",
+			id: "puzzle-2d-play-inspector-unknown",
 			label: "Selection",
 			defaultOpen: true,
 			items: [
 				{
-					id: "board-play-inspector-unknown.body",
+					id: "puzzle-2d-play-inspector-unknown.body",
 					label: "Unknown ids",
 					description: (
 						<div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
@@ -1635,7 +1635,7 @@ function BoardPlaySurfaceFooter(props: {
     <div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
       <span className="shrink-0 text-xs text-muted-foreground">Theme</span>
       <Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
-        <SelectTrigger className="h-medium w-30" id="board-play-surface-theme" size="sm">
+        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-theme" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -1646,7 +1646,7 @@ function BoardPlaySurfaceFooter(props: {
       </Select>
       <span className="shrink-0 text-xs text-muted-foreground">Device</span>
       <Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
-        <SelectTrigger className="h-medium w-30" id="board-play-surface-device" size="sm">
+        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-device" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -1657,7 +1657,7 @@ function BoardPlaySurfaceFooter(props: {
       </Select>
       <span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
       <Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
-        <SelectTrigger className="h-medium w-30" id="board-play-surface-expertise" size="sm">
+        <SelectTrigger className="h-medium w-30" id="puzzle-2d-play-surface-expertise" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -1672,12 +1672,12 @@ function BoardPlaySurfaceFooter(props: {
 // #endregion 🔖Surface
 
 interface BoardPlayRedrawLoopSnapshot {
-  activePaneId: BoardPlayPaneId;
+  activePaneId: Puzzle2dPlayPaneId;
   boardRedrawHandlesAfterNodes: boolean;
   boardRedrawProgressiveAutoStopMs: number;
   boardRedrawProgressiveEnabled: boolean;
   boardRedrawPlayMaxItersPerFrame: number;
-  camerasByPane: Record<BoardPlayPaneId, CameraState>;
+  camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
   forceLayoutGravity: number;
   forceLayoutIdealEdgeLength: number;
   forceLayoutRepulsionStrength: number;
@@ -1688,23 +1688,23 @@ interface BoardPlayRedrawLoopSnapshot {
 }
 
 // #region 🔖Entrypoint
-const initialFixture = BOARD_PLAY_DEFAULT_FIXTURE;
+const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
 
 function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntime }): ReactElement {
   const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
   const fixtureRef = useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
-  const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
+  const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
   const boardPlayPaneCamerasBaselineRef = reactHostPort.useRef(boardPlayPaneCamerasBaseline);
   boardPlayPaneCamerasBaselineRef.current = boardPlayPaneCamerasBaseline;
-  const [activePaneId, setActivePaneId] = reactHostPort.useState<BoardPlayPaneId>("board-overview");
+  const [activePaneId, setActivePaneId] = reactHostPort.useState<Puzzle2dPlayPaneId>("2d-overview");
   const activePaneIdRef = reactHostPort.useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
   const [selectionIds, setSelectionIdsState] = reactHostPort.useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
   const [preselection, setPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
   const [hoveredId, setHoveredId] = reactHostPort.useState<string | null>(null);
-  const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<BoardPlayPaneId | null>(null);
-  const hoverSourcePaneRef = useRef<BoardPlayPaneId | null>(hoverSourcePane);
+  const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<Puzzle2dPlayPaneId | null>(null);
+  const hoverSourcePaneRef = useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
   const [theme, setTheme] = reactHostPort.useState<ElementsSurfaceTheme>(readTheme);
   const [device, setDevice] = reactHostPort.useState<ElementsSurfaceDevice>(readDevice);
@@ -1722,24 +1722,24 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   );
   void shellGeneration;
   const boardLodModeByPane = boardShellController?.getLodModeByPane() ?? {
-    "board-detail": BOARD_LOD_MODE_AUTOMATIC,
-    "board-overview": BOARD_LOD_MODE_AUTOMATIC,
-    "board-selection": BOARD_LOD_MODE_AUTOMATIC,
+    "2d-detail": BOARD_LOD_MODE_AUTOMATIC,
+    "2d-overview": BOARD_LOD_MODE_AUTOMATIC,
+    "2d-selection": BOARD_LOD_MODE_AUTOMATIC,
   };
   const setBoardLodModeForPane = reactHostPort.useCallback(
-    (pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
-      boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
+    (pane: Puzzle2dPlayPaneId, mode: BoardLodModeKind) => {
+      boardRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
     },
     [boardRuntime.commandBus],
   );
   const setBoardEffectiveLodForPane = reactHostPort.useCallback(
-    (pane: BoardPlayPaneId, lod: BoardDrawLodKind) => {
-      boardRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
+    (pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => {
+      boardRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
     [boardRuntime.commandBus],
   );
   const onBoardPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
-    if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
+    if (windowKindId === "2d-overview" || windowKindId === "2d-detail" || windowKindId === "2d-selection") {
       setActivePaneId(windowKindId);
     }
   }, []);
@@ -1788,7 +1788,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     () => [
       {
         content: <BoardPlaySurfaceFooter device={device} expertise={expertise} onDevice={setDevice} onExpertise={setExpertise} onTheme={setTheme} theme={theme} />,
-        id: "board-play-surface",
+        id: "puzzle-2d-play-surface",
         order: 0,
       },
     ],
@@ -1845,7 +1845,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setSelectionIdsState(new Set(ids));
   }, []);
 
-  const setHoverPane = reactHostPort.useCallback((pane: BoardPlayPaneId) => {
+  const setHoverPane = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId) => {
     if (hoverSourcePaneRef.current === pane) {
       return;
     }
@@ -1853,13 +1853,13 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     setHoverSourcePane(pane);
   }, []);
 
-  const setHoverForPane = reactHostPort.useCallback((pane: BoardPlayPaneId, id: string | null) => {
+  const setHoverForPane = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId, id: string | null) => {
     hoverSourcePaneRef.current = pane;
     setHoverSourcePane(pane);
     setHoveredId(id);
   }, []);
 
-  const clearHoverForPane = reactHostPort.useCallback((pane: BoardPlayPaneId) => {
+  const clearHoverForPane = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId) => {
     if (hoverSourcePaneRef.current !== pane) {
       return;
     }
@@ -1869,7 +1869,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   }, []);
 
   const handleCanvasFixtureDrop = reactHostPort.useCallback(
-    (pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => {
+    (pane: Puzzle2dPlayPaneId, detail: BoardFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
       const merged = mergePaletteNodeFromDrop(detail);
       if (merged) {
@@ -1893,17 +1893,17 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
   const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
-  const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<BoardPlayPaneId, CameraState> | null>(null);
-  const cameraDisplayOverrideRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
+  const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
+  const cameraDisplayOverrideRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
   const suppressCameraBasisSyncRef = reactHostPort.useRef(false);
   const cameraPlayEndAnimRafRef = useRef<number | null>(null);
   const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
-  const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
+  const boardPlayRedrawCameraChaseRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   const lastPlayingForCameraEaseRef = reactHostPort.useRef(false);
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
-  const nodesRedrawEaseFromRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
+  const nodesRedrawEaseFromRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
   const nodesRedrawEaseGenerationRef = reactHostPort.useRef(0);
 
@@ -1963,9 +1963,9 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
       cameraBasisFixtureRef.current = fixture;
       const prevCam = boardPlayPaneCamerasBaselineRef.current;
       boardPlayRedrawCameraChaseRef.current = {
-        "board-detail": { ...prevCam["board-detail"] },
-        "board-overview": { ...prevCam["board-overview"] },
-        "board-selection": { ...prevCam["board-selection"] },
+        "2d-detail": { ...prevCam["2d-detail"] },
+        "2d-overview": { ...prevCam["2d-overview"] },
+        "2d-selection": { ...prevCam["2d-selection"] },
       };
     } else if (!suppressCameraBasisSyncRef.current) {
       if (cameraPlayEndAnimRafRef.current != null) {
@@ -1988,11 +1988,11 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     const target = triptychCamerasFromFixture(fixture);
     setBoardPlayPaneCamerasBaseline((baselinePrev) => {
       const prevChase = boardPlayRedrawCameraChaseRef.current ?? baselinePrev;
-      const damped = dampCameraStateLinear(prevChase[pane], target[pane], BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND);
-      const nextChase: Record<BoardPlayPaneId, CameraState> = {
-        "board-detail": { ...prevChase["board-detail"] },
-        "board-overview": { ...prevChase["board-overview"] },
-        "board-selection": { ...prevChase["board-selection"] },
+      const damped = dampCameraStateLinear(prevChase[pane], target[pane], PUZZLE_2D_PLAY_REDRAW_CAMERA_CHASE_BLEND);
+      const nextChase: Record<Puzzle2dPlayPaneId, CameraState> = {
+        "2d-detail": { ...prevChase["2d-detail"] },
+        "2d-overview": { ...prevChase["2d-overview"] },
+        "2d-selection": { ...prevChase["2d-selection"] },
       };
       nextChase[pane] = damped;
       boardPlayRedrawCameraChaseRef.current = nextChase;
@@ -2020,10 +2020,10 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     lastPlayingForCameraEaseRef.current = false;
 
     const snapshotFixture = fixtureRef.current;
-    const from: Record<BoardPlayPaneId, CameraState> = {
-      "board-detail": { ...boardPlayPaneCamerasBaseline["board-detail"] },
-      "board-overview": { ...boardPlayPaneCamerasBaseline["board-overview"] },
-      "board-selection": { ...boardPlayPaneCamerasBaseline["board-selection"] },
+    const from: Record<Puzzle2dPlayPaneId, CameraState> = {
+      "2d-detail": { ...boardPlayPaneCamerasBaseline["2d-detail"] },
+      "2d-overview": { ...boardPlayPaneCamerasBaseline["2d-overview"] },
+      "2d-selection": { ...boardPlayPaneCamerasBaseline["2d-selection"] },
     };
     cameraBasisFixtureRef.current = snapshotFixture;
     const to = triptychCamerasFromFixture(snapshotFixture);
@@ -2036,7 +2036,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     nodesRedrawEaseGenerationRef.current += 1;
     setCameraDisplayOverrideByPane(from);
 
-    const total = BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS;
+    const total = PUZZLE_2D_PLAY_CAMERA_POST_REDRAW_TOTAL_MS;
     const holdEnd = total / 3;
     const animSpan = total - holdEnd;
     const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -2098,14 +2098,14 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
       boardPlayNodesRedrawCameraAnimRafRef.current = null;
     }
     const snapshotFixture = fixtureRef.current;
-    const from: Record<BoardPlayPaneId, CameraState> = {
-      "board-detail": { ...fromSnapshot["board-detail"] },
-      "board-overview": { ...fromSnapshot["board-overview"] },
-      "board-selection": { ...fromSnapshot["board-selection"] },
+    const from: Record<Puzzle2dPlayPaneId, CameraState> = {
+      "2d-detail": { ...fromSnapshot["2d-detail"] },
+      "2d-overview": { ...fromSnapshot["2d-overview"] },
+      "2d-selection": { ...fromSnapshot["2d-selection"] },
     };
     const to = triptychCamerasFromFixture(snapshotFixture);
     const nodesRedrawEasePaneId = activePaneIdRef.current;
-    const total = BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
+    const total = PUZZLE_2D_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
     const holdEnd = total / 3;
     const animSpan = total - holdEnd;
     const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -2151,7 +2151,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   const redrawPlayingRef = reactHostPort.useRef(false);
   const redrawProgressiveEpochRef = reactHostPort.useRef(0);
   const redrawLoopSnapshotRef = useRef<BoardPlayRedrawLoopSnapshot>({
-    activePaneId: "board-overview",
+    activePaneId: "2d-overview",
     boardRedrawHandlesAfterNodes: false,
     boardRedrawProgressiveAutoStopMs: 3000,
     boardRedrawProgressiveEnabled: true,
@@ -2197,9 +2197,9 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
     }
     nodesRedrawEaseGenerationRef.current += 1;
     nodesRedrawEaseFromRef.current = {
-      "board-detail": { ...camerasByPane["board-detail"] },
-      "board-overview": { ...camerasByPane["board-overview"] },
-      "board-selection": { ...camerasByPane["board-selection"] },
+      "2d-detail": { ...camerasByPane["2d-detail"] },
+      "2d-overview": { ...camerasByPane["2d-overview"] },
+      "2d-selection": { ...camerasByPane["2d-selection"] },
     };
     const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
     patchFixture((prev) => {
@@ -2422,7 +2422,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
 
   // #region 🔖ToolbarHostBridge
   const boardPlayToolbarHostRef = reactHostPort.useRef({
-    activePaneId: "board-overview" as BoardPlayPaneId,
+    activePaneId: "2d-overview" as Puzzle2dPlayPaneId,
     applyBoardRedrawHandlesOnce: () => {},
     camerasByPane: triptychCamerasFromFixture(initialFixture),
     patchFixture: (_updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {},
@@ -2485,7 +2485,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
             const node: BoardFixtureCircleNodeV1 = {
               handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               id,
-              radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2,
+              radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2,
               x: camera.x,
               y: camera.y,
             };
@@ -2497,7 +2497,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
             const camera = h.camerasByPane[h.activePaneId];
             const id = newBoardAuthoringId("node");
             const handleId = `${id}.h0`;
-            const d = BOARD_PLAY_DEFAULT_NODE_SIZE_PX;
+            const d = PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX;
             const node: BoardFixtureRectangleNodeV1 = {
               handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               height: d,
@@ -2571,7 +2571,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
         <PlaygroundView
           runtime={boardRuntime}
-          defaultAppId={BOARD_PLAY_APP_ID}
+          defaultAppId={PUZZLE_2D_PLAY_APP_ID}
           augmentPanelTabs={augmentPanelTabs}
           extraFooterItems={surfaceFooterItems}
           initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}

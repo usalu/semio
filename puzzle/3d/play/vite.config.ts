@@ -18,7 +18,7 @@ const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.modul
 const threePackageRoot = path.resolve(repoRoot, "node_modules/three");
 
 const scenePlayMeshes: Plugin = {
-	name: "scene-play-meshes",
+	name: "puzzle-3d-play-meshes",
 	configureServer(server) {
 		server.middlewares.use((req, res, next) => {
 			if (!req.url?.startsWith("/meshes/")) {

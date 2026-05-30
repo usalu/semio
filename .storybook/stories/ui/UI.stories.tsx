@@ -2,9 +2,10 @@
 // .storybook/stories/elements/ui/Ui.stories.tsx
 // #endregion 🧲Header
 
-import { App, Mode, Ui } from "@ui/react";
+// #region 🔌Adapters
+import { App, Mode, Ui, reactHostPort } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import * as React from "react";
+// #endregion 🔌Adapters
 
 const Pane = ({ title }: { title: string }) => (
   <div className="flex h-full items-center justify-center bg-window">
@@ -25,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    const [activeAppId, setActiveAppId] = React.useState("editor");
+    const [activeAppId, setActiveAppId] = reactHostPort.useState("editor");
     return (
       <div className="h-[480px] w-full">
         <Ui

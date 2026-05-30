@@ -39,9 +39,9 @@ import {
 // #endregion 🔌Adapters
 
 //#region ┬¡ãÆ├Â├╗TopologyFixture
-/** @emoji ┬¡ãÆ├┤├ñ Parsed `elements.topology.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */
+/** @emoji ┬¡ãÆ├┤├ñ Parsed `puzzle.5d.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */
 export interface TopologyFixtureV1 {
-	readonly schema: "elements.topology.fixture/v1";
+	readonly schema: "puzzle.5d.fixture/v1";
 	readonly label?: string;
 	readonly meta?: Record<string, unknown>;
 }
@@ -50,9 +50,9 @@ export interface TopologyFixtureV1 {
 export function parseTopologyFixtureV1(raw: unknown): TopologyFixtureV1 | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
-	if (r.schema !== "elements.topology.fixture/v1") return null;
+	if (r.schema !== "puzzle.5d.fixture/v1") return null;
 	return {
-		schema: "elements.topology.fixture/v1",
+		schema: "puzzle.5d.fixture/v1",
 		...(typeof r.label === "string" ? { label: r.label } : {}),
 		...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
 	};
@@ -541,7 +541,7 @@ export const TopologyBoardPane = reactHostPort.memo(function TopologyBoardPane(p
 	const mergedCatalogs =
 		boardExtra.kindCatalogs ?? b.kindCatalogs ?? boardFixtureMetaKindCatalogBundle(props.fixture.meta);
 	return (
-		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-board-root data-topology-surface="board">
+		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-puzzle-5d-2d-root data-topology-surface="board">
 			<BoardCanvas
 				camera={boardExtra.camera ?? props.fixture.camera}
 				className="min-h-0 flex-1"
@@ -593,7 +593,7 @@ const TopologySceneCanvas = reactHostPort.memo(function TopologySceneCanvas(
 export const TopologyScenePane = reactHostPort.memo(function TopologyScenePane(props: TopologyScenePaneProps) {
 	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromAttractions(props.fixture.attractions);
 	return (
-		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
+		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-puzzle-5d-3d-root data-topology-surface="scene">
 			<reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes├ö├ç┬¬</div>}>
 				<SceneObjectStateProvider
 					fixture={props.fixture}
@@ -617,10 +617,10 @@ if (import.meta.vitest) {
 	describe("parseTopologyFixtureV1", () => {
 		it("accepts manifest", () => {
 			const t = parseTopologyFixtureV1({
-				schema: "elements.topology.fixture/v1",
+				schema: "puzzle.5d.fixture/v1",
 				label: "x",
 			});
-			expect(t?.schema).toBe("elements.topology.fixture/v1");
+			expect(t?.schema).toBe("puzzle.5d.fixture/v1");
 			expect(t?.label).toBe("x");
 		});
 	});
@@ -686,7 +686,7 @@ if (import.meta.vitest) {
 	describe("topologyApplyBoardFixtureCentersToTopLeft", () => {
 		it("converts centers to top-left using frame size", () => {
 			const fixture: BoardFixtureV1 = {
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "n1", shape: "rectangle", width: 40, height: 20, x: 50, y: 30, handles: [] }],
 				edges: [],

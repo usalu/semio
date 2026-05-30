@@ -33,14 +33,14 @@ import {
 } from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground";
 import {
-	TOPOLOGY_PLAY_APP_ID,
-	TOPOLOGY_PLAY_BOARD_BODY_KEY,
-	TOPOLOGY_PLAY_BOARD_SURFACE_ID,
-	TOPOLOGY_PLAY_BOARD_WINDOW_ID,
-	TOPOLOGY_PLAY_CONTROLLER_ID,
-	TOPOLOGY_PLAY_SCENE_BODY_KEY,
-	TOPOLOGY_PLAY_SCENE_SURFACE_ID,
-	TOPOLOGY_PLAY_HIERARCHY_TAB_ID,
+	PUZZLE_5D_PLAY_APP_ID,
+	PUZZLE_5D_PLAY_BOARD_BODY_KEY,
+	PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
+	PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
+	PUZZLE_5D_PLAY_CONTROLLER_ID,
+	PUZZLE_5D_PLAY_SCENE_BODY_KEY,
+	PUZZLE_5D_PLAY_SCENE_SURFACE_ID,
+	PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
 	TopologyPlayShellController,
 	buildTopologyBoardDeclarativeBody,
 	buildTopologyPlayHierarchySections,
@@ -110,7 +110,7 @@ class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: TOPOLOGY_PLAY_HIERARCHY_TAB_ID,
+			id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
 			icon: ListTree,
 			order: 0,
 			tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
@@ -121,16 +121,16 @@ class TopologyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
 	resolveTab(): SidePanelTabConfig {
 		return {
-			id: "topology-play-status",
+			id: "puzzle-5d-play-status",
 			icon: ClipboardList,
 			order: 0,
 			tree: new StaticTreePanelDefinition({
 				sections: [
 					{
-						id: "topology-play-status.section",
+						id: "puzzle-5d-play-status.section",
 						label: "Paired play",
 						defaultOpen: true,
-						items: [{ id: "topology-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
+						items: [{ id: "puzzle-5d-play-status.body", label: "Status", description: <TopologyPlayStatusPanel /> }],
 					},
 				],
 			}),
@@ -142,18 +142,18 @@ class TopologyPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
 //#region 🔖Surfaces
 function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
 	const { controller, snapshot } = useTopologyPlaySnapshot();
-	if (node.controllerId !== TOPOLOGY_PLAY_CONTROLLER_ID || node.surfaceId !== TOPOLOGY_PLAY_BOARD_SURFACE_ID || node.paneId !== TOPOLOGY_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
+	if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_BOARD_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid topology board binding</div>;
 	}
 	const bindings = buildTopologyDualSurfaceBindings({
 		...snapshot.sharedKinds,
-		onBoardSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
-		onSceneSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
-		onBoardCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
-		onSceneCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
+		onBoardSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
+		onSceneSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
+		onBoardCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
+		onSceneCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
 		onSceneLodChange: undefined,
-		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
-		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
+		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
+		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
 	});
 	return (
 		<TopologyBoardPane
@@ -162,7 +162,7 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
 			selectedIds={snapshot.boardSelected}
 			board={{
 				camera: snapshot.boardCamera,
-				onLodChange: (lod) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardLodTag", { lod }),
+				onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardLodTag", { lod }),
 				...snapshot.boardLodProps,
 			}}
 		/>
@@ -171,7 +171,7 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
 
 function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
 	const { controller, snapshot } = useTopologyPlaySnapshot();
-	if (node.controllerId !== TOPOLOGY_PLAY_CONTROLLER_ID || node.surfaceId !== TOPOLOGY_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
+	if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid topology scene binding</div>;
 	}
 	const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
@@ -180,13 +180,13 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 	}, [meshUrls]);
 	const bindings = buildTopologyDualSurfaceBindings({
 		...snapshot.sharedKinds,
-		onBoardSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
-		onSceneSelect: (snap) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
-		onBoardCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
-		onSceneCamera: (camera) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
+		onBoardSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: snap.ids }),
+		onSceneSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: snap.objectIds }),
+		onBoardCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardCamera", { camera }),
+		onSceneCamera: (camera) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneCamera", { camera }),
 		onSceneLodChange: undefined,
-		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
-		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
+		...topologyMirrorConnectHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardConnect" : "noteSceneConnect")),
+		...topologyMirrorProximityHandlers((payload) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, payload.surface === "board" ? "noteBoardProximity" : "noteSceneProximity")),
 	});
 	return (
 		<TopologyScenePane
@@ -207,10 +207,10 @@ let topologyPlayChromeRegistered = false;
 export function registerTopologyPlaySurfaceHosts(): void {
 	if (topologyPlayChromeRegistered) return;
 	topologyPlayChromeRegistered = true;
-	registerUiBoardSurfaceHost(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
-	registerUiScene3DSurfaceHost(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TopologySceneSurfaceHost);
-	registerWindowBody(TOPOLOGY_PLAY_BOARD_BODY_KEY, buildTopologyBoardDeclarativeBody);
-	registerWindowBody(TOPOLOGY_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
+	registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
+	registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, TopologySceneSurfaceHost);
+	registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyBoardDeclarativeBody);
+	registerWindowBody(PUZZLE_5D_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
 }
 
 function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
@@ -232,9 +232,9 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
 				? [
 						new TopologyPlayHierarchyPanelDefinition(() =>
 							buildTopologyPlayHierarchySections(snapshot, {
-								onSelectBoard: (id) => bus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
+								onSelectBoard: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
 								onSelectSceneObject: (objectId) =>
-									bus.dispatch(TOPOLOGY_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
+									bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
 								onSelectSceneVortex: () => {},
 								onSelectSceneAttraction: () => {},
 							}),
@@ -249,7 +249,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
 			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
 				<PlaygroundView
 					runtime={runtime}
-					defaultAppId={TOPOLOGY_PLAY_APP_ID}
+					defaultAppId={PUZZLE_5D_PLAY_APP_ID}
 					augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
 					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
 				/>

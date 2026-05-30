@@ -593,13 +593,6 @@ export function dependencyBoundaryBreachesForFile(
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
-import {
-  BundleLinter,
-  FileLinter,
-  FolderLinter,
-  type GraphNode,
-  TechnologyLinter,
-} from "./linter.ts";
 
 export type LintScriptModule = {
   policy?: LintFn<never>;

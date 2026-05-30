@@ -190,7 +190,7 @@ test("board default: selection, zoom in stays on detail LOD while raising zoom",
 	expect(initialZoom).toBeCloseTo(1, 1);
 
 	await clickBoardObject(page, "alpha");
-	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha");
 
 	for (let index = 0; index < 18; index += 1) {
 		await wheelOnCanvasNormalized(page, canvas, 0.5, 0.5, -120);
@@ -200,13 +200,13 @@ test("board default: selection, zoom in stays on detail LOD while raising zoom",
 	expect(zoomed).toBeGreaterThan(initialZoom);
 
 	await clickCanvasNormalized(page, canvas, 0.04, 0.04);
-	await expect(canvas).toHaveAttribute("data-board-selection", "");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
 test("board default: deletes selected node after Delete and keeps scene in sync", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
 	await clickBoardObject(page, "beta");
-	await expect(canvas).toHaveAttribute("data-board-selection", "beta");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "beta");
 	await page.keyboard.press("Delete");
 	await expect
 		.poll(async () =>
@@ -220,14 +220,14 @@ test("board default: deletes selected node after Delete and keeps scene in sync"
 			}),
 		)
 		.toBe("absent");
-	await expect(canvas).toHaveAttribute("data-board-selection", "");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
 test("board default: deletes selected edge after Delete", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
 	const mid = await boardEdgeMidClientPoint(page, "link-1");
 	await page.mouse.click(mid.clientX, mid.clientY);
-	await expect(canvas).toHaveAttribute("data-board-selection", "link-1");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "link-1");
 	await page.keyboard.press("Delete");
 	await expect
 		.poll(async () =>
@@ -241,7 +241,7 @@ test("board default: deletes selected edge after Delete", async ({ page }) => {
 			}),
 		)
 		.toBe("absent");
-	await expect(canvas).toHaveAttribute("data-board-selection", "");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
 test("board default: zoom out to overview LOD while preserving wheel anchor", async ({ page }) => {
@@ -308,7 +308,7 @@ test("board nakagin fixture: json scene hub piece selects", async ({ page }) => 
 	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
 	await clickBoardObject(page, nakaginCapsuleTowerHubPieceId);
-	await expect(canvas).toHaveAttribute("data-board-selection", nakaginCapsuleTowerHubPieceId);
+	await expect(canvas).toHaveAttribute("data-2d-selection", nakaginCapsuleTowerHubPieceId);
 });
 
 test("board world-clip: raster mode, node selection, handle hit", async ({ page }) => {
@@ -317,8 +317,8 @@ test("board world-clip: raster mode, node selection, handle hit", async ({ page 
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "world-clip");
 
 	await clickBoardObject(page, "alpha");
-	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha");
 
 	await clickBoardObject(page, "alpha.out");
-	await expect(canvas).toHaveAttribute("data-board-selection", "alpha.out");
+	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha.out");
 });

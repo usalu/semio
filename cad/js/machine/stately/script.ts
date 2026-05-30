@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭 `@cad/js/machine/stately` task router: `generate` | `test` | `policy`. */
 import { join, resolve } from "node:path";
-import type { FileLinter } from "../../../../repo/lib/js/src/linter.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/dependency-boundary.ts";
-import { getWorkspaceRoot } from "../../../../repo/lib/js/src/cli.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/bundle-script.ts";
-import { defineLint } from "../../../../repo/lib/js/src/script.ts";
+import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
+import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.ts";
 

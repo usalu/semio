@@ -507,7 +507,7 @@ export interface BoardFixtureEdgeV1 {
 	target: string;
 }
 
-/** @emoji 📄 Parsed `elements.board.fixture/v1` JSON for declarative board scenes. */
+/** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative board scenes. */
 export interface BoardFixtureV1 {
 	camera: CameraState;
 	edges: BoardFixtureEdgeV1[];
@@ -1432,7 +1432,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		return null;
 	}
 	const root = raw as Record<string, unknown>;
-	if (root.schema !== "elements.board.fixture/v1") {
+	if (root.schema !== "puzzle.2d.fixture/v1") {
 		return null;
 	}
 	const cam = root.camera;
@@ -1591,7 +1591,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		edges.push({ id, source, target });
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
-	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
+	return { camera, edges, meta, nodes, schema: "puzzle.2d.fixture/v1" };
 }
 
 /** @emoji 📌 MIME for in-app board fixture drags (not host filesystem file drops). */
@@ -4925,7 +4925,7 @@ if (boardVitest) {
 					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 10, text: "α", x: 0, y: 0 },
 					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 10, x: 50, y: 0 },
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed).not.toBeNull();
 			expect(parsed?.nodes).toHaveLength(2);
@@ -4952,7 +4952,7 @@ if (boardVitest) {
 						y: -5,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box", text: "crate" });
 		});
@@ -4971,7 +4971,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({
 				id: "ic",
@@ -4993,7 +4993,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ id: "nk", iconKind: "capsule-with-balcony_p" });
 		});
@@ -5011,7 +5011,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			const n = parsed?.nodes[0];
 			expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
@@ -5034,7 +5034,7 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [],
 				nodes: [{ handles: [{ angle: 0, id: "c.h" }], id: "c", radius: 12, text: "cap", textAutofit: true, x: 0, y: 0 }],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(circle?.nodes[0]).toMatchObject({ id: "c", textAutofit: true, text: "cap" });
 			const rect = parseBoardFixtureV1({
@@ -5053,7 +5053,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(rect?.nodes[0]).toMatchObject({ id: "r", textAutofit: true });
 		});
@@ -5075,7 +5075,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({
 				id: "z",
@@ -5087,7 +5087,7 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [],
 				nodes: [{ handles: [{ angle: 0, id: "bad.aln" }], id: "bad", radius: 3, textAlignment: "xx", x: 0, y: 0 }],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			})?.nodes[0]).not.toHaveProperty("textAlignment");
 		});
 
@@ -5106,7 +5106,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
@@ -5120,7 +5120,7 @@ if (boardVitest) {
 						{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 20, x: 0, y: 0 },
 						{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 20, x: 100, y: 0 },
 					],
-					schema: "elements.board.fixture/v1",
+					schema: "puzzle.2d.fixture/v1",
 				}),
 			).toBeNull();
 		});
@@ -5131,7 +5131,7 @@ if (boardVitest) {
 					camera: { x: 0, y: 0, zoom: 1 },
 					edges: [],
 					nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
-					schema: "elements.board.fixture/v1",
+					schema: "puzzle.2d.fixture/v1",
 				}),
 			).toBeNull();
 		});
@@ -5164,7 +5164,7 @@ if (boardVitest) {
 						y: 2,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "semio.kit.node.a" });
 			expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "semio.kit.node.b" });
@@ -5196,7 +5196,7 @@ if (boardVitest) {
             y: 2,
           },
         ],
-        schema: "elements.board.fixture/v1",
+        schema: "puzzle.2d.fixture/v1",
       });
       expect(parsed?.nodes[0]).toMatchObject({
         id: "a",
@@ -5208,13 +5208,13 @@ if (boardVitest) {
 
 		it("rejects wrong schema or malformed nodes", () => {
 			expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
-			expect(parseBoardFixtureV1({ schema: "elements.board.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+			expect(parseBoardFixtureV1({ schema: "puzzle.2d.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
 			expect(
 				parseBoardFixtureV1({
 					camera: { x: 0, y: 0, zoom: 1 },
 					edges: [],
 					nodes: [{ handles: [], id: "bad", shape: "triangle", x: 0, y: 0 }],
-					schema: "elements.board.fixture/v1",
+					schema: "puzzle.2d.fixture/v1",
 				}),
 			).toBeNull();
 		});
@@ -5247,7 +5247,7 @@ if (boardVitest) {
 						y: 0,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			};
 			const decoded = decodeBoardFixtureFromDragV1(encodeBoardFixtureForDragV1(fixture));
 			expect(decoded).toEqual(fixture);
@@ -5270,7 +5270,7 @@ if (boardVitest) {
 						y: 2,
 					},
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ id: "r", root: true });
 			expect(parsed?.nodes[1]).toMatchObject({ id: "sq", shape: "rectangle" });
@@ -5287,13 +5287,13 @@ if (boardVitest) {
 					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
 					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
 				],
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 			};
 			const laid = layoutBoardFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
 			const ax = (laid.nodes[0] as { x: number }).x;
 			const bx = (laid.nodes[1] as { x: number }).x;
 			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
-			expect(laid.schema).toBe("elements.board.fixture/v1");
+			expect(laid.schema).toBe("puzzle.2d.fixture/v1");
 		});
 
 		it("throws on invalid fixture schema from wasm", () => {
@@ -5536,10 +5536,10 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 };
 
 //#region 🔖HostKinds
-export const BOARD_HOST_NODE = "elements.board/node";
-export const BOARD_HOST_HANDLE = "elements.board/handle";
-export const BOARD_HOST_EDGE = "elements.board/edge";
-export const BOARD_HOST_WIRE = "elements.board/wire";
+export const BOARD_HOST_NODE = "puzzle.2d/node";
+export const BOARD_HOST_HANDLE = "puzzle.2d/handle";
+export const BOARD_HOST_EDGE = "puzzle.2d/edge";
+export const BOARD_HOST_WIRE = "puzzle.2d/wire";
 
 export type BoardHostType = typeof BOARD_HOST_NODE | typeof BOARD_HOST_HANDLE | typeof BOARD_HOST_EDGE | typeof BOARD_HOST_WIRE;
 
@@ -6658,8 +6658,8 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#region 🔖HostMountBridge
 /** @emoji 🌉 Secondary host root per {@link BoardRenderer}; scene sync runs on `children` changes and on {@link BoardRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
 function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: BoardRenderer }): null {
-  const hostMountRef = useRef<BoardHostMount | null>(null);
-  const mountedRendererRef = useRef<BoardRenderer | null>(null);
+  const hostMountRef = reactHostPort.useRef<BoardHostMount | null>(null);
+  const mountedRendererRef = reactHostPort.useRef<BoardRenderer | null>(null);
   const Bridge = useHostMountBridge();
   const wasmHostSceneMergeResyncEpoch = reactHostPort.useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
 
@@ -6763,11 +6763,11 @@ export function BoardCanvas({
   width,
   worldRasterTiling,
 }: BoardCanvasProps): ReactElement {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const textOverlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
+  const textOverlayCanvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
+  const containerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const [contextRenderer, setContextRenderer] = reactHostPort.useState<BoardRenderer | null>(null);
-  const rendererRef = useRef<BoardRenderer | null>(null);
+  const rendererRef = reactHostPort.useRef<BoardRenderer | null>(null);
   const [uncontrolledSelection, setUncontrolledSelection] = reactHostPort.useState<BoardSelectionSnapshot>(() =>
     normalizeBoardSelectionProp(defaultSelection),
   );
@@ -7229,8 +7229,8 @@ export function BoardCanvas({
     renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, targets: selectionTargets });
   }, [selectionMethod, selectionMode, selectionTargets]);
 
-  const lastSyncedControlledSelectionRef = useRef<BoardSelectionSnapshot | null>(null);
-  const lastSyncedControlledPreselectionRef = useRef<BoardPreselectSnapshot | null>(null);
+  const lastSyncedControlledSelectionRef = reactHostPort.useRef<BoardSelectionSnapshot | null>(null);
+  const lastSyncedControlledPreselectionRef = reactHostPort.useRef<BoardPreselectSnapshot | null>(null);
 
   reactHostPort.useLayoutEffect(() => {
     lastSyncedControlledSelectionRef.current = null;

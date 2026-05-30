@@ -42,44 +42,44 @@ import {
 } from "../react/index.tsx";
 
 //#region 🔖Ids
-export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
+export type Puzzle2dPlayPaneId = "2d-overview" | "2d-detail" | "2d-selection";
 
-export const BOARD_PLAY_APP_ID = "elements-board-play";
-export const BOARD_PLAY_CONTROLLER_ID = "board-play";
-export const BOARD_PLAY_BOARD_SURFACE_ID = "elements.board.play.board/v1";
+export const PUZZLE_2D_PLAY_APP_ID = "puzzle-2d-play";
+export const PUZZLE_2D_PLAY_CONTROLLER_ID = "puzzle-2d-play";
+export const PUZZLE_2D_PLAY_BOARD_SURFACE_ID = "puzzle.2d.play.board/v1";
 
-export const BOARD_PLAY_BODY_KEY_OVERVIEW = "elements.board.play.overview";
-export const BOARD_PLAY_BODY_KEY_DETAIL = "elements.board.play.detail";
-export const BOARD_PLAY_BODY_KEY_SELECTION = "elements.board.play.selection";
+export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
+export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
+export const PUZZLE_2D_PLAY_BODY_KEY_SELECTION = "puzzle.2d.play.selection";
 
-export const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+export const PUZZLE_2D_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 export function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-export const BOARD_PLAY_HIERARCHY_TAB_ID = "board-play-hierarchy";
+export const PUZZLE_2D_PLAY_HIERARCHY_TAB_ID = "puzzle-2d-play-hierarchy";
 
-export const BOARD_PLAY_PACKAGE_ROOT = import.meta.url;
+export const PUZZLE_2D_PLAY_PACKAGE_ROOT = import.meta.url;
 
-export const BOARD_PLAY_DEFAULT_FIXTURE: BoardFixtureV1 =
+export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: BoardFixtureV1 =
 	parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
 
-export const BOARD_PLAY_LAYOUT: WindowLayout = {
+export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 	root: {
 		kind: "row",
 		children: [
 			{
 				kind: "stack",
 				size: 50,
-				children: [createWindowLayout("board-overview", "Overview")],
+				children: [createWindowLayout("2d-overview", "Overview")],
 			},
 			{
 				kind: "column",
 				size: 50,
 				children: [
-					{ kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
-					{ kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
+					{ kind: "stack", size: 50, children: [createWindowLayout("2d-detail", "Zoom")] },
+					{ kind: "stack", size: 50, children: [createWindowLayout("2d-selection", "Selection")] },
 				],
 			},
 		],
@@ -157,16 +157,16 @@ function buildBoardFixtureNodeHierarchyItem(
 	}
 	visiting.add(nodeId);
 	const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
-		id: `board-play-hierarchy.handle.${handle.id}`,
+		id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
 		label: handle.handleKind ? `${handle.id} · ${handle.handleKind}` : handle.id,
 		isSelected: selectedIds.has(handle.id),
 		onClick: () => onSelect(handle.id),
 	}));
 	const handlesGroup: UiTreeItemNode = {
-		id: `board-play-hierarchy.node.${nodeId}.handles`,
+		id: `puzzle-2d-play-hierarchy.node.${nodeId}.handles`,
 		label: "Handles",
 		defaultOpen: true,
-		items: handleItems.length ? handleItems : [{ id: `board-play-hierarchy.node.${nodeId}.handles.empty`, label: "(none)" }],
+		items: handleItems.length ? handleItems : [{ id: `puzzle-2d-play-hierarchy.node.${nodeId}.handles.empty`, label: "(none)" }],
 	};
 	const childItems: UiTreeItemNode[] = [];
 	for (const childId of childrenByParent.get(nodeId) ?? []) {
@@ -177,7 +177,7 @@ function buildBoardFixtureNodeHierarchyItem(
 	}
 	visiting.delete(nodeId);
 	return {
-		id: `board-play-hierarchy.node.${nodeId}`,
+		id: `puzzle-2d-play-hierarchy.node.${nodeId}`,
 		label: boardFixtureNodeLabel(node),
 		description: node.nodeKind ?? undefined,
 		isSelected: selectedIds.has(nodeId),
@@ -205,37 +205,37 @@ export function buildBoardPlayHierarchySections(
 		}
 	}
 	const nodesGroup: UiTreeItemNode = {
-		id: "board-play-hierarchy.nodes",
+		id: "puzzle-2d-play-hierarchy.nodes",
 		label: "Nodes",
 		defaultOpen: true,
-		items: nodeItems.length ? nodeItems : [{ id: "board-play-hierarchy.nodes.empty", label: "(none)" }],
+		items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
 	};
 	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
-		id: `board-play-hierarchy.edge.${edge.id}`,
+		id: `puzzle-2d-play-hierarchy.edge.${edge.id}`,
 		label: edge.id,
 		description: `${edge.source} → ${edge.target}`,
 		isSelected: selectedIds.has(edge.id),
 		onClick: () => onSelect(edge.id),
 	}));
 	const edgesGroup: UiTreeItemNode = {
-		id: "board-play-hierarchy.edges",
+		id: "puzzle-2d-play-hierarchy.edges",
 		label: "Edges",
 		defaultOpen: true,
-		items: edgeItems.length ? edgeItems : [{ id: "board-play-hierarchy.edges.empty", label: "(none)" }],
+		items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
 	};
 	const boardRoot: UiTreeItemNode = {
-		id: "board-play-hierarchy.board",
+		id: "puzzle-2d-play-hierarchy.board",
 		label: "Board",
 		defaultOpen: true,
 		items: [nodesGroup, edgesGroup],
 	};
-	return playgroundTreePanelRootItems("board-play-hierarchy.root", [boardRoot]) as UiTreeNode;
+	return playgroundTreePanelRootItems("puzzle-2d-play-hierarchy.root", [boardRoot]) as UiTreeNode;
 }
 //#endregion 🔖BoardPlayHierarchy
 
 //#region 🔖Controller
-const BOARD_PLAY_TARGET_KINDS = ["nodes", "edges", "handles"] as const;
-type BoardPlayTargetKind = (typeof BOARD_PLAY_TARGET_KINDS)[number];
+const PUZZLE_2D_PLAY_TARGET_KINDS = ["nodes", "edges", "handles"] as const;
+type BoardPlayTargetKind = (typeof PUZZLE_2D_PLAY_TARGET_KINDS)[number];
 
 function boardPlayTargetLabel(kind: BoardPlayTargetKind): string {
 	if (kind === "nodes") return "Nodes";
@@ -326,7 +326,7 @@ export function buildBoardPlayToolbarTools(state: BoardPlayToolbarState, control
 			command: "setSelectionMode",
 			args: { mode: "invertive" },
 		},
-		...buildPlaygroundKindToggleTools("selection", BOARD_PLAY_TARGET_KINDS, boardPlayTargetLabel, targetRecord, controllerId, "toggleSelectionTarget"),
+		...buildPlaygroundKindToggleTools("selection", PUZZLE_2D_PLAY_TARGET_KINDS, boardPlayTargetLabel, targetRecord, controllerId, "toggleSelectionTarget"),
 		{
 			id: "board.selection.clear",
 			kind: "button",
@@ -371,21 +371,21 @@ export function buildBoardPlayToolbarTools(state: BoardPlayToolbarState, control
 /** @emoji 🎛 Board play shell controller: per-pane LOD modes + playground toolbar tools. */
 export class BoardPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Board", undefined);
-	private lodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>;
-	private effectiveLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind>;
+	private lodModeByPane: Record<Puzzle2dPlayPaneId, BoardLodModeKind>;
+	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, BoardDrawLodKind>;
 	private hostBridge: BoardPlayHostBridge | null = null;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
-		super(BOARD_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.lodModeByPane = {
-			"board-detail": BOARD_LOD_MODE_AUTOMATIC,
-			"board-overview": BOARD_LOD_MODE_AUTOMATIC,
-			"board-selection": BOARD_LOD_MODE_AUTOMATIC,
+			"2d-detail": BOARD_LOD_MODE_AUTOMATIC,
+			"2d-overview": BOARD_LOD_MODE_AUTOMATIC,
+			"2d-selection": BOARD_LOD_MODE_AUTOMATIC,
 		};
 		this.effectiveLodByPane = {
-			"board-detail": "normal",
-			"board-overview": "normal",
-			"board-selection": "normal",
+			"2d-detail": "normal",
+			"2d-overview": "normal",
+			"2d-selection": "normal",
 		};
 		this.rebuildShellMode();
 	}
@@ -405,7 +405,7 @@ export class BoardPlayShellController extends Controller {
 		this.mainMode.tools = buildBoardPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
 	}
 
-	private lodMeasureForPane(paneId: BoardPlayPaneId): WindowMeasure {
+	private lodMeasureForPane(paneId: Puzzle2dPlayPaneId): WindowMeasure {
 		return {
 			kind: "select",
 			id: `${paneId}-lod`,
@@ -413,32 +413,32 @@ export class BoardPlayShellController extends Controller {
 			value: this.lodModeByPane[paneId],
 			items: [
 				{ id: "automatic", value: BOARD_LOD_MODE_AUTOMATIC, label: boardLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },
-				...BOARD_PLAY_LOD_TIERS.map((tier) => ({ id: tier, value: tier, label: boardPlayLodTierMenuLabel(tier) })),
+				...PUZZLE_2D_PLAY_LOD_TIERS.map((tier) => ({ id: tier, value: tier, label: boardPlayLodTierMenuLabel(tier) })),
 			],
-			onChange: { controllerId: BOARD_PLAY_CONTROLLER_ID, command: "setLodModeForPane", args: { pane: paneId } },
+			onChange: { controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "setLodModeForPane", args: { pane: paneId } },
 		};
 	}
 
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime("board-overview", "Overview", BOARD_PLAY_BODY_KEY_OVERVIEW, undefined, [this.lodMeasureForPane("board-overview")]),
-			new WindowKindRuntime("board-detail", "Zoom", BOARD_PLAY_BODY_KEY_DETAIL, undefined, [this.lodMeasureForPane("board-detail")]),
-			new WindowKindRuntime("board-selection", "Selection", BOARD_PLAY_BODY_KEY_SELECTION, undefined, [this.lodMeasureForPane("board-selection")]),
+			new WindowKindRuntime("2d-overview", "Overview", PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, undefined, [this.lodMeasureForPane("2d-overview")]),
+			new WindowKindRuntime("2d-detail", "Zoom", PUZZLE_2D_PLAY_BODY_KEY_DETAIL, undefined, [this.lodMeasureForPane("2d-detail")]),
+			new WindowKindRuntime("2d-selection", "Selection", PUZZLE_2D_PLAY_BODY_KEY_SELECTION, undefined, [this.lodMeasureForPane("2d-selection")]),
 		];
 	}
 
 	override run(command: string, args?: unknown): void {
 		switch (command) {
 			case "setLodModeForPane": {
-				const { pane, value } = args as { pane: BoardPlayPaneId; value?: string };
-				if (pane !== "board-overview" && pane !== "board-detail" && pane !== "board-selection") break;
+				const { pane, value } = args as { pane: Puzzle2dPlayPaneId; value?: string };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") break;
 				if (value === BOARD_LOD_MODE_AUTOMATIC || (typeof value === "string" && isBoardDrawLodKind(value))) {
 					this.lodModeByPane = { ...this.lodModeByPane, [pane]: value as BoardLodModeKind };
 				}
 				break;
 			}
 			case "setEffectiveLodForPane": {
-				const { pane, lod } = args as { pane: BoardPlayPaneId; lod: BoardDrawLodKind };
+				const { pane, lod } = args as { pane: Puzzle2dPlayPaneId; lod: BoardDrawLodKind };
 				if (!isBoardDrawLodKind(lod)) break;
 				if (this.effectiveLodByPane[pane] === lod) break;
 				this.effectiveLodByPane = { ...this.effectiveLodByPane, [pane]: lod };
@@ -464,11 +464,11 @@ export class BoardPlayShellController extends Controller {
 		this.emit();
 	}
 
-	getLodModeByPane(): Readonly<Record<BoardPlayPaneId, BoardLodModeKind>> {
+	getLodModeByPane(): Readonly<Record<Puzzle2dPlayPaneId, BoardLodModeKind>> {
 		return this.lodModeByPane;
 	}
 
-	getEffectiveLodByPane(): Readonly<Record<BoardPlayPaneId, BoardDrawLodKind>> {
+	getEffectiveLodByPane(): Readonly<Record<Puzzle2dPlayPaneId, BoardDrawLodKind>> {
 		return this.effectiveLodByPane;
 	}
 }
@@ -479,23 +479,23 @@ function boardPlayControllerFromContext(ctx: WindowBodyViewContext): BoardPlaySh
 	return ctx.runtime.getActiveApp()?.controller as BoardPlayShellController | undefined;
 }
 
-function buildBoardPlayDeclarativeBody(paneId: BoardPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
+function buildBoardPlayDeclarativeBody(paneId: Puzzle2dPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
 	return (ctx) => {
 		if (!boardPlayControllerFromContext(ctx)) {
 			return { type: "text", value: "Missing board play controller" };
 		}
-		return buildBoardWindowBody(BOARD_PLAY_BOARD_SURFACE_ID, BOARD_PLAY_CONTROLLER_ID, paneId);
+		return buildBoardWindowBody(PUZZLE_2D_PLAY_BOARD_SURFACE_ID, PUZZLE_2D_PLAY_CONTROLLER_ID, paneId);
 	};
 }
 
-export const buildBoardPlayOverviewDeclarativeBody = buildBoardPlayDeclarativeBody("board-overview");
-export const buildBoardPlayDetailDeclarativeBody = buildBoardPlayDeclarativeBody("board-detail");
-export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeBody("board-selection");
+export const buildBoardPlayOverviewDeclarativeBody = buildBoardPlayDeclarativeBody("2d-overview");
+export const buildBoardPlayDetailDeclarativeBody = buildBoardPlayDeclarativeBody("2d-detail");
+export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeBody("2d-selection");
 //#endregion 🔖DeclarativeBodies
 
 /** @emoji 🧩 Registers board play window kinds on the supplied controller (layout supplied by host). */
 export function attachBoardPlayWindowKinds(controller: BoardPlayShellController, layout: unknown): AppRuntime {
-	const app = new AppRuntime(BOARD_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
+	const app = new AppRuntime(PUZZLE_2D_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
 	return app;
@@ -503,7 +503,7 @@ export function attachBoardPlayWindowKinds(controller: BoardPlayShellController,
 
 /** @emoji 🧩 Builds the board play {@link AppRuntime}; side panels are tree tabs via {@link PlaygroundView} `augmentPanelTabs` only. */
 export function buildBoardPlayAppRuntime(controller: BoardPlayShellController): AppRuntime {
-	const app = attachBoardPlayWindowKinds(controller, BOARD_PLAY_LAYOUT);
+	const app = attachBoardPlayWindowKinds(controller, PUZZLE_2D_PLAY_LAYOUT);
 	app.leftTabs = [];
 	app.rightTabs = [];
 	return app;
@@ -511,19 +511,19 @@ export function buildBoardPlayAppRuntime(controller: BoardPlayShellController): 
 
 /** @emoji 📝 Registers board play declarative window bodies on the playground host (side tabs are host tree panels only). */
 export function registerBoardPlayDeclarativeBodies(): void {
-	registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-	registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-	registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
 }
 
 //#region 🔖Extension
-/** @emoji 🔌 Host context for optional board-play extension activation. */
+/** @emoji 🔌 Host context for optional puzzle-2d-play extension activation. */
 export interface BoardPlayPluginContext {
 	registerWindowBody(bodyKey: string, factory: (ctx: WindowBodyViewContext) => UiNode): void;
 }
 
 /** @emoji 📦 Extension manifest shape for board play (host-agnostic). */
-export interface BoardPlayExtensionManifest {
+export interface Puzzle2dPlayExtensionManifest {
 	readonly id: string;
 	readonly label: string;
 	readonly version: string;
@@ -540,22 +540,22 @@ export interface BoardPlayExtensionManifest {
 	};
 }
 
-export const BOARD_PLAY_EXTENSION_MANIFEST: BoardPlayExtensionManifest = {
-	id: "elements.board-play",
+export const PUZZLE_2D_PLAY_EXTENSION_MANIFEST: Puzzle2dPlayExtensionManifest = {
+	id: "elements.puzzle-2d-play",
 	label: "Board Play",
 	version: "0.1.0",
 	contributes: {
 		apps: [
 			{
-				id: BOARD_PLAY_APP_ID,
+				id: PUZZLE_2D_PLAY_APP_ID,
 				label: "Board",
-				controllerId: BOARD_PLAY_CONTROLLER_ID,
-				defaultLayout: BOARD_PLAY_LAYOUT,
+				controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID,
+				defaultLayout: PUZZLE_2D_PLAY_LAYOUT,
 				defaultModeId: "main",
 				windowKinds: [
-					{ id: "board-overview", label: "Overview", bodyKey: BOARD_PLAY_BODY_KEY_OVERVIEW },
-					{ id: "board-detail", label: "Zoom", bodyKey: BOARD_PLAY_BODY_KEY_DETAIL },
-					{ id: "board-selection", label: "Selection", bodyKey: BOARD_PLAY_BODY_KEY_SELECTION },
+					{ id: "2d-overview", label: "Overview", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW },
+					{ id: "2d-detail", label: "Zoom", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_DETAIL },
+					{ id: "2d-selection", label: "Selection", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_SELECTION },
 				],
 				modes: [{ id: "main", label: "Board" }],
 			},
@@ -565,11 +565,11 @@ export const BOARD_PLAY_EXTENSION_MANIFEST: BoardPlayExtensionManifest = {
 
 /** @emoji 🔌 Board play plugin: registers declarative bodies on activate. */
 export const boardPlayPlugin: { readonly id: string; activate(context: BoardPlayPluginContext): void } = {
-	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
+	id: PUZZLE_2D_PLAY_EXTENSION_MANIFEST.id,
 	activate(context: BoardPlayPluginContext): void {
-		context.registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-		context.registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-		context.registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+		context.registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+		context.registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+		context.registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
 	},
 };
 
@@ -584,7 +584,7 @@ export function buildBoardPlayRuntime(): ProductRuntime {
 
 /** @emoji 🛝 Board play harness as a single {@link Playground} instance. */
 export class Playground2d extends Playground {
-	readonly id = BOARD_PLAY_APP_ID;
+	readonly id = PUZZLE_2D_PLAY_APP_ID;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
 	createRuntime(): ProductRuntime {
@@ -609,17 +609,17 @@ if (import.meta.vitest) {
 			const runtime = buildBoardPlayRuntime();
 			const tree = buildBoardPlayOverviewDeclarativeBody({
 				runtime,
-				windowKindId: "board-overview",
-				bodyKey: BOARD_PLAY_BODY_KEY_OVERVIEW,
+				windowKindId: "2d-overview",
+				bodyKey: PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
 				activeModeId: "main",
 				generation: 0,
 			});
-			expect(tree).toEqual(buildBoardWindowBody(BOARD_PLAY_BOARD_SURFACE_ID, BOARD_PLAY_CONTROLLER_ID, "board-overview"));
+			expect(tree).toEqual(buildBoardWindowBody(PUZZLE_2D_PLAY_BOARD_SURFACE_ID, PUZZLE_2D_PLAY_CONTROLLER_ID, "2d-overview"));
 		});
 
 		it("buildBoardPlayHierarchySections nests root nodes, handles, and child nodes", () => {
 			const fixture = parseBoardFixtureV1({
-				schema: "elements.board.fixture/v1",
+				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
 					{
@@ -647,9 +647,9 @@ if (import.meta.vitest) {
 			const boardRoot = tree.sections[0]?.items?.[0];
 			expect(boardRoot?.label).toBe("Board");
 			const nodesGroup = boardRoot?.items?.find((row) => row.label === "Nodes");
-			expect(nodesGroup?.items?.[0]?.id).toBe("board-play-hierarchy.node.root");
+			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
 			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
-			expect(nodesGroup?.items?.[0]?.items?.[1]?.id).toBe("board-play-hierarchy.node.child");
+			expect(nodesGroup?.items?.[0]?.items?.[1]?.id).toBe("puzzle-2d-play-hierarchy.node.child");
 		});
 
 		it("buildBoardPlayRuntime wires main mode and empty side tab slots", () => {

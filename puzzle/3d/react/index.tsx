@@ -200,7 +200,7 @@ export interface AttractionProps {
   attractionKind?: string;
 }
 
-export const PLACEHOLDER_MESH_URL = "elements.scene.placeholder://box";
+export const PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
 export interface EdgeKindCatalogEntry {
   id: string;
@@ -423,7 +423,7 @@ export interface FixtureObjectV1 extends ObjectProps {
 
 /** @emoji 🧭 Scene fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
 export interface FixtureV1 {
-  schema: "elements.scene.fixture/v1";
+  schema: "puzzle.3d.fixture/v1";
   camera: CameraState;
   domain: DomainKind;
   meta?: Record<string, unknown>;
@@ -762,7 +762,7 @@ function parseHandleMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
 export function parseFixtureV1(raw: unknown): FixtureV1 | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "elements.scene.fixture/v1") return null;
+  if (r.schema !== "puzzle.3d.fixture/v1") return null;
   const cam = r.camera;
   if (!cam || typeof cam !== "object") return null;
   const c = cam as Record<string, unknown>;
@@ -827,7 +827,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
     });
   }
   return {
-    schema: "elements.scene.fixture/v1",
+    schema: "puzzle.3d.fixture/v1",
     camera: { position: pos, target: tgt, zoom },
     domain: parseDomainKind(r.domain),
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
@@ -4470,7 +4470,7 @@ export function PlaySceneCanvas(props: PlaySceneCanvasProps): React.ReactElement
         relocate={props.relocateMode}
       />
       <SceneAttractionTreeRoots />
-      <ScenePlayTestBridge setSelectedId={props.setSelectedId} />
+      <Puzzle3dPlayTestBridge setSelectedId={props.setSelectedId} />
     </Canvas3D>
   );
 }
@@ -4505,7 +4505,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 }
 
 /** @emoji ­ƒº¬ Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
-export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
+export function Puzzle3dPlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
   const { setActiveRelocateObjectId, clearSceneSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
   reactHostPort.useEffect(() => {
@@ -4643,7 +4643,7 @@ if (import.meta.vitest) {
       expect(cameraStateNearEqual(base, { ...base, position: [1.0001, 2, 3] })).toBe(true);
       expect(cameraStateNearEqual(base, { ...base, position: [2, 2, 3] })).toBe(false);
       const fixture = {
-        schema: "elements.scene.fixture/v1" as const,
+        schema: "puzzle.3d.fixture/v1" as const,
         domain: "architecture" as const,
         camera: base,
         objects: [],
@@ -4723,7 +4723,7 @@ if (import.meta.vitest) {
   describe("parseFixtureV1", () => {
     it("accepts minimal fixture", () => {
       const f = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [
@@ -4741,7 +4741,7 @@ if (import.meta.vitest) {
     });
     it("parses domain case-insensitively", () => {
       const f = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         domain: "Urban",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -4751,7 +4751,7 @@ if (import.meta.vitest) {
     });
     it("parses meshByLod list entries", () => {
       const f = parseFixtureV1({
-        schema: "elements.scene.fixture/v1",
+        schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [

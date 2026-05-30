@@ -8,11 +8,13 @@
 
 // #endregion 🧲Header
 
-import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem } from "@ui/react";
+// #region 🔌Adapters
+import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
-import React from "react";
+import type React from "react";
 import { expect, fireEvent, within } from "storybook/test";
+// #endregion 🔌Adapters
 
 // 🌳#region 📜Tree
 const meta = {
@@ -109,7 +111,7 @@ export const Default: Story = {
 };
 
 const ControlTreeDemo = () => {
-  const [values, setValues] = React.useState<Record<string, any>>({
+  const [values, setValues] = reactHostPort.useState<Record<string, any>>({
     "Transform/Position/x": 0,
     "Transform/Position/y": 1.5,
     "Transform/Position/z": 0,
@@ -127,8 +129,8 @@ const ControlTreeDemo = () => {
     "Metadata/visible": true,
     "Metadata/layer": "default",
   });
-  const [filterText, setFilterText] = React.useState("");
-  const [folderSettings] = React.useState<Record<string, ControlTreeFolderSettings>>({
+  const [filterText, setFilterText] = reactHostPort.useState("");
+  const [folderSettings] = reactHostPort.useState<Record<string, ControlTreeFolderSettings>>({
     Transform: { path: "Transform", order: 0 },
     "Transform/Position": { path: "Transform/Position", order: 0 },
     "Transform/Rotation": { path: "Transform/Rotation", order: 1 },
@@ -267,14 +269,14 @@ const createStoryDataTransfer = () => {
 };
 
 const DragAndDropTreeDemo = () => {
-  const paletteItems = React.useMemo(
+  const paletteItems = reactHostPort.useMemo(
     () => [
       { id: "palette.chair", label: "Chair", icon: <File size={12} />, draggable: true },
       { id: "palette.table", label: "Table", icon: <File size={12} />, draggable: true },
     ],
     [],
   );
-  const [selectedItems, setSelectedItems] = React.useState<Array<{ id: string; label: string; icon: React.ReactNode }>>([]);
+  const [selectedItems, setSelectedItems] = reactHostPort.useState<Array<{ id: string; label: string; icon: React.ReactNode }>>([]);
 
   return (
     <div className="border p-4 w-[320px]">
