@@ -234,9 +234,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const uiReact = resolve(repoRoot, "ui/react/index.tsx");
   const rendererIndex = resolve(rendererRoot, "index.tsx");
   const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
-    { find: "@framework/playground/renderer/react/puzzle/2d", replacement: resolve(rendererRoot, "index.tsx") },
-    { find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(rendererRoot, "index.tsx") },
-    { find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "index.tsx") },
     { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
     { find: /^@framework\/playground\/core$/, replacement: playgroundCore },
     { find: /^@framework\/platform\/core$/, replacement: platformCore },

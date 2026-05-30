@@ -2596,7 +2596,7 @@ export function registerTransformationApplier(qualifiedTransformationId: string,
   transformationAppliers.set(qualifiedTransformationId, applier);
 }
 
-function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null {
+function transformationFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
   const pts: Vec3[] = [];
   for (const wid of face.wireIds) {
     for (const eid of model.wires[wid]?.edgeIds ?? []) {
@@ -2606,6 +2606,11 @@ function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null
       }
     }
   }
+  return [...new Map(pts.map((p) => [p.join(","), p])).values()];
+}
+
+function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null {
+  const pts = transformationFacePoints(model, face);
   if (!pts.length) return null;
   let x = 0;
   let y = 0;
@@ -2625,30 +2630,20 @@ function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
     const len = Math.hypot(n[0], n[1], n[2]);
     return len > 1e-9 ? ([n[0] / len, n[1] / len, n[2] / len] as Vec3) : null;
   }
-  const pts: Vec3[] = [];
-  for (const wid of face.wireIds) {
-    for (const eid of model.wires[wid]?.edgeIds ?? []) {
-      for (const vid of model.edges[eid]?.vertexIds ?? []) {
-        const p = model.vertices[vid]?.position;
-        if (p) pts.push(p);
-      }
-    }
-  }
+  const pts = transformationFacePoints(model, face);
   if (pts.length < 3) return null;
-  for (let i = 2; i < pts.length; i++) {
-    const ax = pts[i - 1]![0] - pts[0]![0];
-    const ay = pts[i - 1]![1] - pts[0]![1];
-    const az = pts[i - 1]![2] - pts[0]![2];
-    const bx = pts[i]![0] - pts[0]![0];
-    const by = pts[i]![1] - pts[0]![1];
-    const bz = pts[i]![2] - pts[0]![2];
-    const nx = ay * bz - az * by;
-    const ny = az * bx - ax * bz;
-    const nz = ax * by - ay * bx;
-    const len = Math.hypot(nx, ny, nz);
-    if (len > 1e-9) return [nx / len, ny / len, nz / len];
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p0 = pts[i]!;
+    const p1 = pts[(i + 1) % pts.length]!;
+    nx += (p0[1] - p1[1]) * (p0[2] + p1[2]);
+    ny += (p0[2] - p1[2]) * (p0[0] + p1[0]);
+    nz += (p0[0] - p1[0]) * (p0[1] + p1[1]);
   }
-  return null;
+  const len = Math.hypot(nx, ny, nz);
+  return len > 1e-9 ? ([nx / len, ny / len, nz / len] as Vec3) : null;
 }
 
 function transformationFaceAreaEstimate(model: Model, face: FaceRecord): number {

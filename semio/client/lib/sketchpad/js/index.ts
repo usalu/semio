@@ -15,6 +15,8 @@ import {
 	ObservableCell,
 	Panel,
 	Platform,
+	PluginHost,
+	Store,
 	PlatformTopologyStore,
 	PlatformTopologyPayload,
 	platformTopologyStoreId,
@@ -318,7 +320,7 @@ export class SemioJsKitStore extends SemioKitStore {
 /** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
 export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<Kit> {
 	const data = await jsStore.readKitInner(
-		`id name description files { edges { node { id name url uri path } } } designs { edges { node { id name description unit pieces { edges { node { id name type { id } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } } } types { edges { node { id name description representations { edges { node { id name file { id } tags { edges { node { id } } } } } } } connectors { edges { node { id } } } } } }`,
+		`id name description designs { edges { node { id name description unit } } } types { edges { node { id name description } } }`,
 	);
 	if (!data) return { id: "", name: "" } as Kit;
 	const nodes = (key: string): readonly Record<string, unknown>[] => {
@@ -779,9 +781,13 @@ export function sketchpadNavigateFromBoardSelection(instanceId: string, boardIds
 }
 
 /** @emoji 🎯 Applies FiveD flat board selection (kit navigation or design piece selection). */
-export function sketchpadApplyBoardSelection(instanceId: string, boardIds: readonly string[]): void {
+export function sketchpadApplyBoardSelection(
+	instanceId: string,
+	boardIds: readonly string[],
+	controller?: SketchpadShellController,
+): void {
 	const scope = parseSketchpadPuzzleInstanceId(instanceId);
-	const ctrl = getSketchpadShellController();
+	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
 	if (scope.pane === "kit-diagram") {
 		sketchpadNavigateFromBoardSelection(instanceId, boardIds);
@@ -2004,7 +2010,7 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
 			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
-			sketchpadApplyBoardSelection(sketchpadDesignDiagramInstanceId(kitId, designId), ["piece-a", "piece-b"]);
+			sketchpadApplyBoardSelection(sketchpadDesignDiagramInstanceId(kitId, designId), ["piece-a", "piece-b"], ctrl);
 			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a", "piece-b"]);
 			ctrl.dispose();
 		});
