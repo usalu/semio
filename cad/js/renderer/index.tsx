@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, Input, Label, reactHostPort, sceneHostPort, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, Input, Label, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -4717,55 +4717,19 @@ export function InteractionRepl({
       </div>
       {showAside ? (
         <aside
-          style={{
-            width: fillHost ? "100%" : 360,
-            maxHeight: fillHost ? "45%" : undefined,
-            flexShrink: fillHost ? 0 : undefined,
-            padding: 12,
-            background: "#12121c",
-            borderLeft: fillHost ? undefined : "1px solid #2a2a3a",
-            borderTop: fillHost ? "1px solid #2a2a3a" : undefined,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            overflow: "auto",
-            position: "relative",
-            zIndex: 2,
-            ...asideStyle,
-          }}
+          className={cn(cadChromePanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-[360px] shrink-0")}
+          style={asideStyle}
         >
-          <strong>Spatial play</strong>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <strong className="text-sm font-semibold">Spatial play</strong>
+          <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
-              <button
-                key={`${row.key}-${row.eventKind}-${row.label}`}
-                type="button"
-                onClick={() => runTransitionRow(row)}
-                style={{
-                  padding: "5px 7px",
-                  borderRadius: 6,
-                  border: "1px solid #2e3a52",
-                  background: "#182238",
-                  color: "#e8e8f0",
-                  cursor: "pointer",
-                  fontSize: 12,
-                }}
-              >
-                <span style={{ textDecoration: "underline", fontWeight: 700 }}>{row.key}</span> {row.label}
-              </button>
+              <Button key={`${row.key}-${row.eventKind}-${row.label}`} type="button" variant="outline" size="sm" className="h-auto px-single py-half text-xs" onClick={() => runTransitionRow(row)}>
+                <span className="font-bold underline">{row.key}</span> {row.label}
+              </Button>
             ))}
           </div>
-          <div
-            style={{
-              display: "grid",
-              position: "relative",
-              overflow: "visible",
-              borderRadius: 6,
-              background: "#0e0e16",
-              border: "1px solid #3a4762",
-            }}
-          >
-            <input
+          <div className="border-border bg-background relative grid overflow-visible rounded-md border">
+            <Input
               ref={cmdRef}
               type="text"
               autoComplete="off"
@@ -4777,135 +4741,42 @@ export function InteractionRepl({
               }}
               onKeyDown={onInputKeyDown}
               placeholder="Type an interaction or transition"
-              style={{
-                gridArea: "1 / 1",
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "8px 34px 8px 9px",
-                borderRadius: 6,
-                background: "transparent",
-                color: "#e8e8f0",
-                border: "none",
-                outline: "none",
-                fontSize: 13,
-                fontFamily: "inherit",
-                lineHeight: "normal",
-              }}
+              className="col-start-1 row-start-1 border-0 bg-transparent pr-[34px] shadow-none focus-visible:ring-0"
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className={cn("col-start-1 row-start-1 z-[1] mr-single size-[22px] justify-self-end self-center p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 setInteractionMenuOpen((open) => !open);
                 cmdRef.current?.focus();
               }}
               aria-label="Show matching interactions"
-              style={{
-                gridArea: "1 / 1",
-                justifySelf: "end",
-                alignSelf: "center",
-                marginRight: 6,
-                width: 22,
-                height: 22,
-                borderRadius: 4,
-                border: "1px solid #2e3a52",
-                background: interactionMenuOpen ? "#1f3656" : "#141420",
-                color: "#e8e8f0",
-                cursor: "pointer",
-                fontSize: 11,
-                lineHeight: "20px",
-                padding: 0,
-                zIndex: 1,
-              }}
             >
               v
-            </button>
+            </Button>
             {completionSuffix ? (
-              <div
-                aria-hidden
-                style={{
-                  gridArea: "1 / 1",
-                  pointerEvents: "none",
-                  boxSizing: "border-box",
-                  padding: "8px 34px 8px 9px",
-                  fontSize: 13,
-                  fontFamily: "inherit",
-                  lineHeight: "normal",
-                  whiteSpace: "pre",
-                  overflow: "hidden",
-                  color: "#e8e8f0",
-                }}
-              >
-                <span style={{ color: "transparent" }}>{cmdLine}</span>
-                <span style={{ opacity: 0.45 }}>{completionSuffix}</span>
+              <div aria-hidden className="text-foreground pointer-events-none col-start-1 row-start-1 overflow-hidden pr-[34px] pl-[9px] py-[8px] text-sm leading-normal whitespace-pre">
+                <span className="text-transparent">{cmdLine}</span>
+                <span className="text-muted-foreground">{completionSuffix}</span>
               </div>
             ) : null}
             {interactionMenuOpen ? (
-              <div
-                onPointerDown={(e) => e.stopPropagation()}
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 6px)",
-                  right: 0,
-                  width: 280,
-                  maxWidth: "calc(100vw - 32px)",
-                  maxHeight: 220,
-                  overflowY: "auto",
-                  background: "#10101a",
-                  border: "1px solid #4c5a78",
-                  borderRadius: 7,
-                  boxShadow: "0 10px 28px rgba(0,0,0,0.55)",
-                  zIndex: 3,
-                  padding: 4,
-                }}
-              >
+              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+6px)] right-0 z-[3] max-h-[220px] w-[280px] max-w-[calc(100vw-32px)] overflow-y-auto", cadChromePopoverClass)}>
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
-                    <button
-                      key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`}
-                      type="button"
-                      onClick={() => runSuggestion(suggestion)}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        width: "100%",
-                        border: "none",
-                        borderRadius: 5,
-                        padding: "6px 7px",
-                        textAlign: "left",
-                        background: "transparent",
-                        color: "#e8e8f0",
-                        cursor: "pointer",
-                        fontSize: 12,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: 24,
-                            height: 20,
-                            padding: "0 6px",
-                            borderRadius: 999,
-                            border: "1px solid #2e3a52",
-                            background: "#182238",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {suggestion.key}
-                        </span>
+                    <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={cadChromeMenuButtonClass} onClick={() => runSuggestion(suggestion)}>
+                      <div className="flex items-center gap-single">
+                        <span className="border-border bg-muted text-foreground inline-flex min-w-6 items-center justify-center rounded-full border px-half py-0 text-2xs font-bold uppercase">{suggestion.key}</span>
                         <span>{suggestion.label}</span>
                       </div>
-                      <div style={{ fontSize: 11, opacity: 0.7 }}>{suggestion.detail}</div>
+                      <div className="text-muted-foreground text-2xs">{suggestion.detail}</div>
                     </button>
                   ))
                 ) : (
-                  <div style={{ padding: "6px 7px", fontSize: 12, opacity: 0.7 }}>No matching interactions.</div>
+                  <div className="text-muted-foreground px-single py-half text-xs">No matching interactions.</div>
                 )}
               </div>
             ) : null}
@@ -4920,10 +4791,10 @@ export function InteractionRepl({
               onModelChange={onDocumentModelChange}
             />
           ) : null}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+          <div className="flex flex-col gap-single text-xs">
             {hideModelDefinitionControls ? null : (
               <>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label className="flex flex-col gap-half">
                   <span>Model definition</span>
                   <select
                     value={activeModelDefinitionId ?? defaultModelDefinitionId()}
@@ -4934,7 +4805,7 @@ export function InteractionRepl({
                       setSelectionMenu(null);
                       setHoveredPickKey(null);
                     }}
-                    style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+                    className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
                   >
                     {modelDefinitions.map((row) => (
                       <option key={row.id} value={row.id}>
@@ -4943,7 +4814,7 @@ export function InteractionRepl({
                     ))}
                   </select>
                 </label>
-                <span style={{ opacity: 0.75 }}>
+                <span className="text-muted-foreground">
                   {modelDefinitionScope.typologies.length} typolog{modelDefinitionScope.typologies.length === 1 ? "y" : "ies"}
                   {" · "}
                   {modelDefinitionScope.interactions.length} interaction{modelDefinitionScope.interactions.length === 1 ? "" : "s"}
@@ -4953,7 +4824,7 @@ export function InteractionRepl({
                   {modelDefinitionScope.propertyDefinitions.length} propert{modelDefinitionScope.propertyDefinitions.length === 1 ? "y" : "ies"}
                 </span>
                 {transfersFrom.length ? (
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label className="flex flex-col gap-half">
                     <span>Transfer from</span>
                     <select
                       defaultValue=""
@@ -4964,7 +4835,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+                      className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
                     >
                       <option value="">Select incoming transformation…</option>
                       {transfersFrom.map((row) => (
@@ -4976,7 +4847,7 @@ export function InteractionRepl({
                   </label>
                 ) : null}
                 {transfersTo.length ? (
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label className="flex flex-col gap-half">
                     <span>Transfer to</span>
                     <select
                       defaultValue=""
@@ -4987,7 +4858,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+                      className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
                     >
                       <option value="">Select outgoing transformation…</option>
                       {transfersTo.map((row) => (
@@ -5001,36 +4872,17 @@ export function InteractionRepl({
               </>
             )}
             {!isShapeModelDefinition(activeModelDefinitionId) ? (
-              <span style={{ opacity: 0.75 }}>
+              <span className="text-muted-foreground">
                 {viewObjectCount} object{viewObjectCount === 1 ? "" : "s"}
               </span>
             ) : null}
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontWeight: 600,
-                color: "#c8c8e0",
-              }}
-            >
+            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
               <SpatialChromeMasterToggle state={primitiveShowGroupState} ariaLabel="Show all primitives" onEnabledChange={(enabled) => setFilterPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled))} />
               Primitives · Show
             </label>
-            <div role="group" aria-label="Show primitives" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div role="group" aria-label="Show primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label
-                  key={`show-primitive-${kind}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "3px 6px",
-                    border: "1px solid #2a2a3a",
-                    borderRadius: 999,
-                    background: filterPrimitiveToggles[kind] !== false ? "#1a3040" : "#12121c",
-                  }}
-                >
+                <label key={`show-primitive-${kind}`} className={cn(cadChromeTagClass, filterPrimitiveToggles[kind] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
                   <input
                     type="checkbox"
                     checked={filterPrimitiveToggles[kind] !== false}
@@ -5042,15 +4894,7 @@ export function InteractionRepl({
                 </label>
               ))}
             </div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontWeight: 600,
-                color: "#c8c8e0",
-              }}
-            >
+            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
               <SpatialChromeMasterToggle
                 state={primitiveFilterGroupState}
                 ariaLabel="Filter all primitives"
@@ -5071,20 +4915,9 @@ export function InteractionRepl({
               />
               Primitives · Filter
             </label>
-            <div role="group" aria-label="Filter primitives" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div role="group" aria-label="Filter primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label
-                  key={`filter-primitive-${kind}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "3px 6px",
-                    border: "1px solid #2a2a3a",
-                    borderRadius: 999,
-                    background: selectionPrimitiveToggles[kind] !== false ? "#1a2638" : "#12121c",
-                  }}
-                >
+                <label key={`filter-primitive-${kind}`} className={cn(cadChromeTagClass, selectionPrimitiveToggles[kind] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
                   <input
                     type="checkbox"
                     checked={selectionPrimitiveToggles[kind] !== false}
@@ -5102,34 +4935,15 @@ export function InteractionRepl({
                 </label>
               ))}
             </div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontWeight: 600,
-                color: "#c8c8e0",
-              }}
-            >
+            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
               <SpatialChromeMasterToggle state={typologyShowGroupState} ariaLabel="Show all typologies" onEnabledChange={(enabled) => setFilterTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled))} />
               Typologies · Show
             </label>
-            <div role="group" aria-label="Show typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div role="group" aria-label="Show typologies" className="flex flex-wrap gap-half">
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
-                  <label
-                    key={`show-${typology.id}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "3px 6px",
-                      border: "1px solid #2a2a3a",
-                      borderRadius: 999,
-                      background: filterTypologyToggles[typology.id] !== false ? "#1a3040" : "#12121c",
-                    }}
-                  >
+                  <label key={`show-${typology.id}`} className={cn(cadChromeTagClass, filterTypologyToggles[typology.id] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
                     <input
                       type="checkbox"
                       checked={filterTypologyToggles[typology.id] !== false}
@@ -5142,15 +4956,7 @@ export function InteractionRepl({
                 );
               })}
             </div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontWeight: 600,
-                color: "#c8c8e0",
-              }}
-            >
+            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
               <SpatialChromeMasterToggle
                 state={typologySelectionGroupState}
                 ariaLabel="Select all typologies"
@@ -5171,22 +4977,11 @@ export function InteractionRepl({
               />
               Typologies · Selection
             </label>
-            <div role="group" aria-label="Selection typologies" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div role="group" aria-label="Selection typologies" className="flex flex-wrap gap-half">
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
-                  <label
-                    key={`select-${typology.id}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "3px 6px",
-                      border: "1px solid #2a2a3a",
-                      borderRadius: 999,
-                      background: selectionTypologyToggles[typology.id] !== false ? "#1a2638" : "#12121c",
-                    }}
-                  >
+                  <label key={`select-${typology.id}`} className={cn(cadChromeTagClass, selectionTypologyToggles[typology.id] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
                     <input
                       type="checkbox"
                       checked={selectionTypologyToggles[typology.id] !== false}
@@ -5206,22 +5001,22 @@ export function InteractionRepl({
               })}
             </div>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.85 }}>
+          <div className="text-muted-foreground text-xs">
             {interactionId ? (
               <>
-                Interaction <code>{interactionId}</code> ┬À state <code>{snapshot.state}</code> ┬À rev {snapshot.revision}
+                Interaction <code className="text-foreground">{interactionId}</code> · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
               </>
             ) : (
               <>
-                No interaction selected ┬À state <code>{snapshot.state}</code> ┬À rev {snapshot.revision}
+                No interaction selected · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
               </>
             )}
           </div>
-          <div style={{ fontSize: 12, borderTop: "1px solid #2a2a3a", paddingTop: 8 }}>
-            <strong>Last response</strong>
-            <pre style={{ fontSize: 10, overflow: "auto", maxHeight: 120, margin: "6px 0 0" }}>{lr ? JSON.stringify(lr, null, 2) : "ÔÇö"}</pre>
+          <div className="border-border text-xs border-t pt-single">
+            <strong className="text-foreground">Last response</strong>
+            <pre className="text-muted-foreground mt-half mb-0 max-h-[120px] overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
             {snapshot.diagnostics.length ? (
-              <ul style={{ fontSize: 11, margin: 0, paddingLeft: 16 }}>
+              <ul className="text-muted-foreground m-0 list-inside list-disc text-2xs">
                 {snapshot.diagnostics.map((d, i) => (
                   <li key={`${d.code}-${i}`}>
                     [{d.severity}] {d.code}: {d.message}
@@ -5249,24 +5044,22 @@ export interface SelectionAttributesPanelProps {
   readonly onModelChange: (model: Model) => void;
 }
 
-const ATTRIBUTE_FIELD_STYLE = { padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0", border: "1px solid #2a2a3c" } as const;
-
 /** @emoji 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
 export function SelectionAttributesPanel({ model, activeModelDefinitionId, selection, selectionCount, onModelChange }: SelectionAttributesPanelProps): ReactNode {
   const target = reactHostPort.useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
   const definitions = reactHostPort.useMemo(() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []), [activeModelDefinitionId, target]);
   if (!target) {
     return (
-      <div style={{ fontSize: 12, opacity: 0.75 }}>
-        Select a primitive or object to edit attributes for <code>{activeModelDefinitionId}</code>.
-      </div>
+      <p className="text-muted-foreground text-xs leading-snug">
+        Select a primitive or object to edit attributes for <code className="text-foreground">{activeModelDefinitionId}</code>.
+      </p>
     );
   }
   if (!definitions.length) {
     return (
-      <div style={{ fontSize: 12, opacity: 0.75 }}>
-        No attribute definitions for <code>{target.kind}</code> on this model definition.
-      </div>
+      <p className="text-muted-foreground text-xs leading-snug">
+        No attribute definitions for <code className="text-foreground">{target.kind}</code> on this model definition.
+      </p>
     );
   }
   const fields = model.metadata.get(target.id) ?? {};
@@ -5281,35 +5074,23 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
     onModelChange(model);
   };
   const fieldRow = (defn: AttributeDefinitionSpec, current: unknown, control: ReactNode) => (
-    <div key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-        <span>{defn.label}</span>
+    <div key={defn.id} className="flex flex-col gap-half">
+      <div className="flex items-center justify-between gap-single">
+        <Label className="text-xs">{defn.label}</Label>
         {current !== undefined ? (
-          <button
-            type="button"
-            onClick={() => clearField(defn)}
-            style={{
-              padding: "2px 6px",
-              borderRadius: 4,
-              border: "1px solid #2a2a3c",
-              background: "#12121c",
-              color: "#a8a8c8",
-              cursor: "pointer",
-              fontSize: 10,
-            }}
-          >
+          <Button type="button" variant="outline" size="sm" className="h-auto px-half py-0 text-2xs" onClick={() => clearField(defn)}>
             Clear
-          </button>
+          </Button>
         ) : null}
       </div>
       {control}
     </div>
   );
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-      <span style={{ fontWeight: 600, color: "#c8c8e0" }}>Attributes</span>
-      <span style={{ opacity: 0.75, fontSize: 11 }}>
-        {target.kind} · <code style={{ color: "#e8e8f0" }}>{target.id}</code>
+    <div className="flex flex-col gap-single text-xs">
+      <span className="text-foreground text-sm font-semibold">Attributes</span>
+      <span className="text-muted-foreground text-2xs">
+        {target.kind} · <code className="text-foreground">{target.id}</code>
         {count > 1 ? ` · ${count} selected` : ""}
       </span>
       {definitions.map((defn) => {
@@ -5326,7 +5107,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
                 if (!e.target.value) clearField(defn);
                 else setField(defn, e.target.value);
               }}
-              style={ATTRIBUTE_FIELD_STYLE}
+              className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
             >
               <option value="">—</option>
               {options.map((option) => (
@@ -5341,14 +5122,14 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
           return fieldRow(
             defn,
             current,
-            <input
+            <Input
               type="number"
+              className={cadFieldClass}
               value={typeof current === "number" ? current : ""}
               onChange={(e) => {
                 if (e.target.value === "") clearField(defn);
                 else setField(defn, Number(e.target.value));
               }}
-              style={ATTRIBUTE_FIELD_STYLE}
             />,
           );
         }
@@ -5356,7 +5137,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
           return fieldRow(
             defn,
             current,
-            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <label className="flex items-center gap-single">
               <input type="checkbox" checked={current === true} onChange={(e) => setField(defn, e.target.checked)} />
               <span>Enabled</span>
             </label>,
@@ -5365,14 +5146,14 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
         return fieldRow(
           defn,
           current,
-          <input
+          <Input
             type="text"
+            className={cadFieldClass}
             value={typeof current === "string" ? current : current === undefined || current === null ? "" : JSON.stringify(current)}
             onChange={(e) => {
               if (!e.target.value) clearField(defn);
               else setField(defn, e.target.value);
             }}
-            style={ATTRIBUTE_FIELD_STYLE}
           />,
         );
       })}
@@ -5416,16 +5197,16 @@ export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionI
   if (!objectRow || !definitions.length) return null;
   const count = selectionCount ?? selection.length;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-      <span style={{ fontWeight: 600, color: "#c8c8e0" }}>Properties</span>
-      <span style={{ opacity: 0.75, fontSize: 11 }}>
-        object · <code style={{ color: "#e8e8f0" }}>{objectRow.id}</code>
+    <div className="flex flex-col gap-single text-xs">
+      <span className="text-foreground text-sm font-semibold">Properties</span>
+      <span className="text-muted-foreground text-2xs">
+        object · <code className="text-foreground">{objectRow.id}</code>
         {count > 1 ? ` · ${count} selected` : ""}
       </span>
       {definitions.map((defn) => (
-        <div key={defn.id} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div key={defn.id} className="flex flex-col gap-half">
           <span>{defn.label}</span>
-          <pre style={{ margin: 0, fontSize: 11, opacity: 0.85, overflow: "auto" }}>{JSON.stringify(values[defn.id] ?? {}, null, 2)}</pre>
+          <pre className="text-muted-foreground m-0 overflow-auto text-2xs">{JSON.stringify(values[defn.id] ?? {}, null, 2)}</pre>
         </div>
       ))}
     </div>
@@ -5797,6 +5578,15 @@ if (import.meta.vitest) {
       ];
       expect(resolveSpatialPickTargetsToRender(targets, { edge: false }).map(spatialPickTargetKey)).toEqual(["vertex:v0"]);
       expect(resolveSpatialPickTargetsToRender(targets, {}).map(spatialPickTargetKey).sort()).toEqual(["edge:e0", "vertex:v0"]);
+    });
+
+    it("spatialSceneColors exposes a single product-aligned palette", () => {
+      resetSpatialSceneColorCache();
+      const palette = spatialSceneColors();
+      expect(palette.accent).toBeTruthy();
+      expect(palette.construction).toBe(palette.accent);
+      expect(palette.selected).toBeTruthy();
+      resetSpatialSceneColorCache();
     });
   });
 }

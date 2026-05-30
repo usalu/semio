@@ -104,8 +104,8 @@ import {
   ExternalLink as ExternalLinkIcon,
   Folder as FolderIcon,
   GripVertical as GripVerticalIcon,
-  Image as BoardIconRasterGlyphIcon,
-  ImagePlus as BoardIconFileImportIcon,
+  Image as Puzzle2dIconRasterGlyphIcon,
+  ImagePlus as Puzzle2dIconFileImportIcon,
   Info as InfoIcon,
   Lightbulb as LightbulbIcon,
   Maximize2 as Maximize2Icon,
@@ -125,9 +125,9 @@ import {
   Plus as PlusIcon,
   Filter as FilterIcon,
   Settings2 as Settings2Icon,
-  Shapes as BoardIconCatalogGlyphIcon,
-  Sigma as BoardIconMathGlyphIcon,
-  Smile as BoardIconEmojiGlyphIcon,
+  Shapes as Puzzle2dIconCatalogGlyphIcon,
+  Sigma as Puzzle2dIconMathGlyphIcon,
+  Smile as Puzzle2dIconEmojiGlyphIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
 } from "lucide-react";
@@ -282,7 +282,7 @@ const contextMenuItemClassName =
 const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
 
 /**
- * 🧩 Serializable right-click entry for {@link ContextMenu} and board/window surfaces.
+ * 🧩 Serializable right-click entry for {@link ContextMenu} and puzzle 2d/window surfaces.
  **/
 export interface ContextMenuItem {
   id: string;
@@ -516,7 +516,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
 }
 
 /**
- * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the board `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
+ * 🧩 Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -15796,8 +15796,8 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🖼️IconSelector
 
-/** @emoji 🎛️ Tab buckets for {@link IconSelector} (board WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
-export type ElementsBoardIconSelectorMode = "data" | "emoji" | "math" | "vector";
+/** @emoji 🎛️ Tab buckets for {@link IconSelector} (puzzle 2d WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
+export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
 
 function stripLegacyImageDataPrefixForIconSelectorUi(raw: string): string {
 	const t = raw.trim();
@@ -15824,8 +15824,8 @@ function looksLikeAsciiCatalogishVectorStemForIconSelectorUi(s: string): boolean
 	return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyElementsBoardIconSelectorMode` in `@puzzle/2d/react`. */
-function defaultClassifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
+/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyPuzzle2dIconSelectorMode` in `@puzzle/2d/react`. */
+function defaultClassifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
 	const t = raw.trim();
 	if (t === "") {
 		return "math";
@@ -15884,8 +15884,8 @@ function emitEmojiIconKindFromInner(inner: string): string {
 
 function migrateIconKindToIconSelectorMode(
 	prev: string,
-	mode: ElementsBoardIconSelectorMode,
-	classify: (raw: string) => ElementsBoardIconSelectorMode,
+	mode: Puzzle2dIconSelectorMode,
+	classify: (raw: string) => Puzzle2dIconSelectorMode,
 ): string {
 	const cur = classify(prev);
 	if (cur === mode) {
@@ -15916,19 +15916,19 @@ export interface IconSelectorProps {
 	onChange: (next: string) => void;
 	disabled?: boolean;
 	uniform?: boolean;
-	classifyElementsBoardIconSelectorMode?: (raw: string) => ElementsBoardIconSelectorMode;
+	classifyPuzzle2dIconSelectorMode?: (raw: string) => Puzzle2dIconSelectorMode;
 }
 
-/** @emoji 🖼️ Board `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
+/** @emoji 🖼️ Puzzle 2d `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
 export function IconSelector({
 	id,
 	value,
 	onChange,
 	disabled = false,
 	uniform = true,
-	classifyElementsBoardIconSelectorMode: classifyModeProp,
+	classifyPuzzle2dIconSelectorMode: classifyModeProp,
 }: IconSelectorProps): React.ReactElement {
-	const classifyMode = classifyModeProp ?? defaultClassifyElementsBoardIconSelectorMode;
+	const classifyMode = classifyModeProp ?? defaultClassifyPuzzle2dIconSelectorMode;
 	const activeMode = classifyMode(value);
 	const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
 	const locked = disabled || !uniform;
@@ -15941,7 +15941,7 @@ export function IconSelector({
 		if (locked) {
 			return;
 		}
-		const mode = next as ElementsBoardIconSelectorMode;
+		const mode = next as Puzzle2dIconSelectorMode;
 		onChange(migrateIconKindToIconSelectorMode(value, mode, classifyMode));
 	};
 
@@ -16093,25 +16093,25 @@ export function IconSelector({
 				<SelectContent position="popper">
 					<SelectItem id={`${id}.mode.math`} value="math">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Math
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.data`} value="data">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Data URL
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.emoji`} value="emoji">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Emoji
 						</span>
 					</SelectItem>
 					<SelectItem id={`${id}.mode.vector`} value="vector">
 						<span className="inline-flex items-center gap-2">
-							<BoardIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							<Puzzle2dIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Catalog / SVG
 						</span>
 					</SelectItem>
@@ -16131,7 +16131,7 @@ export function IconSelector({
 			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
 			<div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
 				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
-					<BoardIconFileImportIcon className="size-3.5" />
+					<Puzzle2dIconFileImportIcon className="size-3.5" />
 					Import file…
 				</Button>
 				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">

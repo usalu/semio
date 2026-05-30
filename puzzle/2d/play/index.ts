@@ -27,11 +27,18 @@ import {
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
 import {
+	DEFAULT_KIND_CATALOG_BUNDLE,
 	PUZZLE_2D_LOD_MODE_AUTOMATIC,
-	puzzle2dFixtureNodeCaption,
+	fixtureMetaKindCatalogBundle,
+	mergeKindCatalogBundleByRowId,
+	puzzle2dFixtureEdgeDisplayLabel,
+	puzzle2dFixtureHandleDisplayLabel,
+	puzzle2dFixtureNodeDisplayDescription,
+	puzzle2dFixtureNodeDisplayLabel,
 	puzzle2dLodAutomaticSelectLabel,
 	isPuzzle2dDrawLodKind,
 	parsePuzzle2dFixtureV1,
+	type KindCatalogBundle,
 	type Puzzle2dDrawLodKind,
 	type Puzzle2dFixtureNodeV1,
 	type Puzzle2dFixtureV1,
@@ -135,13 +142,9 @@ function puzzle2dFixtureRootNodeIds(fixture: Puzzle2dFixtureV1, childrenByParent
 	return inferred.length > 0 ? inferred.sort((a, b) => a.localeCompare(b)) : fixture.nodes.map((node) => node.id).sort((a, b) => a.localeCompare(b));
 }
 
-function puzzle2dFixtureNodeLabel(node: Puzzle2dFixtureNodeV1): string {
-	const caption = puzzle2dFixtureNodeCaption(node);
-	return caption?.trim() ? `${node.id} · ${caption}` : node.id;
-}
-
 function buildPuzzle2dFixtureNodeHierarchyItem(
 	fixture: Puzzle2dFixtureV1,
+	kindCatalogs: KindCatalogBundle,
 	nodeId: string,
 	childrenByParent: ReadonlyMap<string, readonly string[]>,
 	selectedIds: ReadonlySet<string>,
@@ -158,7 +161,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	visiting.add(nodeId);
 	const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
 		id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
-		label: handle.handleKind ? `${handle.id} · ${handle.handleKind}` : handle.id,
+		label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
 		isSelected: selectedIds.has(handle.id),
 		onClick: () => onSelect(handle.id),
 	}));
@@ -170,7 +173,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	};
 	const childItems: UiTreeItemNode[] = [];
 	for (const childId of childrenByParent.get(nodeId) ?? []) {
-		const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, childId, childrenByParent, selectedIds, onSelect, visiting);
+		const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, childId, childrenByParent, selectedIds, onSelect, visiting);
 		if (childItem) {
 			childItems.push(childItem);
 		}
@@ -178,8 +181,8 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	visiting.delete(nodeId);
 	return {
 		id: `puzzle-2d-play-hierarchy.node.${nodeId}`,
-		label: puzzle2dFixtureNodeLabel(node),
-		description: node.nodeKind ?? undefined,
+		label: puzzle2dFixtureNodeDisplayLabel(node, kindCatalogs),
+		description: puzzle2dFixtureNodeDisplayDescription(node, kindCatalogs),
 		isSelected: selectedIds.has(nodeId),
 		defaultOpen: true,
 		onClick: () => onSelect(nodeId),
@@ -192,6 +195,7 @@ export function buildPuzzle2dPlayHierarchySections(
 	fixture: Puzzle2dFixtureV1,
 	selectionIds: readonly string[],
 	onSelect: (id: string) => void,
+	kindCatalogs: KindCatalogBundle = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {}),
 ): UiTreeNode {
 	const selectedIds = new Set(selectionIds);
 	const childrenByParent = puzzle2dFixtureChildrenByNodeId(fixture);
@@ -199,7 +203,7 @@ export function buildPuzzle2dPlayHierarchySections(
 	const visiting = new Set<string>();
 	const nodeItems: UiTreeItemNode[] = [];
 	for (const rootId of rootIds) {
-		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, rootId, childrenByParent, selectedIds, onSelect, visiting);
+		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, rootId, childrenByParent, selectedIds, onSelect, visiting);
 		if (item) {
 			nodeItems.push(item);
 		}
@@ -212,8 +216,7 @@ export function buildPuzzle2dPlayHierarchySections(
 	};
 	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
 		id: `puzzle-2d-play-hierarchy.edge.${edge.id}`,
-		label: edge.id,
-		description: `${edge.source} → ${edge.target}`,
+		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
 		isSelected: selectedIds.has(edge.id),
 		onClick: () => onSelect(edge.id),
 	}));
@@ -633,6 +636,7 @@ if (import.meta.vitest) {
 						id: "root",
 						root: true,
 						shape: "circle",
+						text: "Root",
 						x: 0,
 						y: 0,
 						radius: 10,
@@ -641,6 +645,7 @@ if (import.meta.vitest) {
 					{
 						id: "child",
 						shape: "circle",
+						text: "Child",
 						x: 10,
 						y: 0,
 						radius: 10,
@@ -655,8 +660,9 @@ if (import.meta.vitest) {
 			expect(puzzle2dRoot?.label).toBe("Puzzle 2D");
 			const nodesGroup = puzzle2dRoot?.items?.find((row) => row.label === "Nodes");
 			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
+			expect(nodesGroup?.items?.[0]?.label).toBe("Root");
 			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
-			expect(nodesGroup?.items?.[0]?.items?.[1]?.id).toBe("puzzle-2d-play-hierarchy.node.child");
+			expect(nodesGroup?.items?.[0]?.items?.[1]?.label).toBe("Child");
 		});
 
 		it("buildPuzzle2dPlayRuntime wires main mode and empty side tab slots", () => {

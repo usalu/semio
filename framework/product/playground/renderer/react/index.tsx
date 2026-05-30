@@ -1312,6 +1312,9 @@ import {
   PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
   fixtureMetaKindCatalogBundle,
   puzzle2dFixtureNodeCaption,
+  puzzle2dFixtureHandleEndpointDisplayLabel,
+  puzzle2dFixtureMergedKindCatalogs,
+  puzzle2dFixtureObjectDisplayLabel,
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
@@ -1341,6 +1344,7 @@ import {
   type Puzzle2dRedrawModeKind,
   type Puzzle2dHierarchicalTreeDirectionKind,
   type Puzzle2dRedrawLayoutOptions,
+  type KindCatalogBundle,
   type CameraState,
 } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground/core";
@@ -2272,12 +2276,10 @@ function InspectorNodeBatch({
   fixture,
   nodeIds,
   patchFixture,
-  remapIdInSelections,
 }: {
   fixture: Puzzle2dFixtureV1;
   nodeIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-  remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(nodeIds), [nodeIds]);
   const targets = reactHostPort.useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
@@ -2354,27 +2356,6 @@ function InspectorNodeBatch({
 
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
-      {nodeIds.length === 1 ? (
-        <Label id="puzzle-2d-play.inspector.node.id" label="Id">
-          <Input
-            className="h-7 font-mono text-xs"
-            defaultValue={nodeIds[0]}
-            key={nodeIds[0]}
-            onBlur={(e) => {
-              const nextId = e.currentTarget.value.trim();
-              const oldId = nodeIds[0];
-              if (!oldId || !nextId || nextId === oldId) {
-                return;
-              }
-              patchFixture((prev) => ({
-                ...prev,
-                nodes: prev.nodes.map((n) => (n.id === oldId ? { ...n, id: nextId } : n)),
-              }));
-              remapIdInSelections(oldId, nextId);
-            }}
-          />
-        </Label>
-      ) : null}
       <Label id="puzzle-2d-play.inspector.node.name" label="Name">
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
@@ -2444,12 +2425,10 @@ function InspectorHandleBatch({
   fixture,
   handleIds,
   patchFixture,
-  remapIdInSelections,
 }: {
   fixture: Puzzle2dFixtureV1;
   handleIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-  remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(handleIds), [handleIds]);
   const handles = reactHostPort.useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is Puzzle2dFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
@@ -2517,35 +2496,6 @@ function InspectorHandleBatch({
           <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
             <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
           </Label>
-          {handleIds.length === 1 ? (
-            <Label id="puzzle-2d-play.inspector.handle.id" label="Id">
-              <Input
-                className="h-7 font-mono text-xs"
-                defaultValue={handleIds[0]}
-                key={handleIds[0]}
-                onBlur={(e) => {
-                  const nextId = e.currentTarget.value.trim();
-                  const oldId = handleIds[0];
-                  if (!oldId || !nextId || nextId === oldId) {
-                    return;
-                  }
-                  patchFixture((prev) => ({
-                    ...prev,
-                    edges: prev.edges.map((edge) => ({
-                      ...edge,
-                      source: edge.source === oldId ? nextId : edge.source,
-                      target: edge.target === oldId ? nextId : edge.target,
-                    })),
-                    nodes: prev.nodes.map((node) => ({
-                      ...node,
-                      handles: node.handles.map((h) => (h.id === oldId ? { ...h, id: nextId } : h)),
-                    })),
-                  }));
-                  remapIdInSelections(oldId, nextId);
-                }}
-              />
-            </Label>
-          ) : null}
         </div>
       </div>
     </div>
@@ -2556,13 +2506,13 @@ function InspectorHandleBatch({
 function InspectorEdgeBatch({
   fixture,
   edgeIds,
+  kindCatalogs,
   patchFixture,
-  remapIdInSelections,
 }: {
   fixture: Puzzle2dFixtureV1;
   edgeIds: readonly string[];
+  kindCatalogs: KindCatalogBundle;
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-  remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(edgeIds), [edgeIds]);
   const edges = reactHostPort.useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is Puzzle2dFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
@@ -2597,7 +2547,7 @@ function InspectorEdgeBatch({
           <SelectContent>
             {handleOptions.map((hid) => (
               <SelectItem key={hid} value={hid}>
-                {hid}
+                {puzzle2dFixtureHandleEndpointDisplayLabel(hid, fixture, kindCatalogs)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -2616,40 +2566,20 @@ function InspectorEdgeBatch({
           <SelectContent>
             {handleOptions.map((hid) => (
               <SelectItem key={`target-${hid}`} value={hid}>
-                {hid}
+                {puzzle2dFixtureHandleEndpointDisplayLabel(hid, fixture, kindCatalogs)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </Label>
-      {edgeIds.length === 1 ? (
-        <Label id="puzzle-2d-play.inspector.edge.id" label="Id">
-          <Input
-            className="h-7 font-mono text-xs"
-            defaultValue={edgeIds[0]}
-            key={edgeIds[0]}
-            onBlur={(e) => {
-              const nextId = e.currentTarget.value.trim();
-              const oldId = edgeIds[0];
-              if (!oldId || !nextId || nextId === oldId) {
-                return;
-              }
-              patchFixture((prev) => ({
-                ...prev,
-                edges: prev.edges.map((edge) => (edge.id === oldId ? { ...edge, id: nextId } : edge)),
-              }));
-              remapIdInSelections(oldId, nextId);
-            }}
-          />
-        </Label>
-      ) : null}
     </div>
   );
 }
 
 /** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
 function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): TreeDataSection[] {
-  const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = shell;
+  const { activePaneId, fixture, patchFixture, selectionIds } = shell;
+  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
   const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
   const nodeIds: string[] = [];
   const handleIds: string[] = [];
@@ -2679,7 +2609,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
       "puzzle-2d-play-inspector.header",
       "Detail",
       <p className="text-muted-foreground text-[11px] leading-snug">
-        {activePaneId} · {ids.length} selected id{ids.length === 1 ? "" : "s"}
+        {activePaneId} · {ids.length} selected
       </p>,
     ),
   ];
@@ -2688,7 +2618,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
       playgroundPanelSection(
         "puzzle-2d-play-inspector-nodes",
         `Nodes (${nodeIds.length})`,
-        <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -2697,7 +2627,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
       playgroundPanelSection(
         "puzzle-2d-play-inspector-handles",
         `Handles (${handleIds.length})`,
-        <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -2706,7 +2636,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
       playgroundPanelSection(
         "puzzle-2d-play-inspector-edges",
         `Edges (${edgeIds.length})`,
-        <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
+        <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} kindCatalogs={kindCatalogs} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -2715,7 +2645,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
       playgroundPanelSection(
         "puzzle-2d-play-inspector-unknown",
         "Selection",
-        <p className="font-mono text-[11px] text-warning-foreground leading-snug">{ids.join(", ")}</p>,
+        <p className="text-[11px] text-warning-foreground leading-snug">{ids.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
       ),
     );
   }

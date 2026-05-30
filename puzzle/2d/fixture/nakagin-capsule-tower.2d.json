@@ -1017,7 +1017,7 @@
       "nodes": [
         {
           "id": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
-          "name": "semio.sketchpad.app.kit.defaultTypeName"
+          "name": "Default type"
         },
         {
           "id": "semio.metabolism.light.node.0271dcc8-c961-4ecf-8591-9f8027252174",

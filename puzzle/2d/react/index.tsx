@@ -2383,16 +2383,160 @@ export function puzzle2dHandleOverlayCaptionForLod(raw: string, lod: Puzzle2dDra
 
 /** @emoji 🧩 Resolves a handle-kind catalog label for overlay captions. */
 export function puzzle2dHandleKindOverlayLabel(handleKind: string, catalogs: KindCatalogBundle): string {
-  const id = handleKind.trim();
+  return puzzle2dKindCatalogRowName(handleKind, catalogs.handles);
+}
+
+/** @emoji 🧩 Resolves a node-kind catalog label for panels and overlays. */
+export function puzzle2dNodeKindOverlayLabel(nodeKind: string, catalogs: KindCatalogBundle): string {
+  return puzzle2dKindCatalogRowName(nodeKind, catalogs.nodes);
+}
+
+/** @emoji 🔀 Merges {@link DEFAULT_KIND_CATALOG_BUNDLE} with `meta.kindCatalogs` on a parsed fixture. */
+export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixtureV1): KindCatalogBundle {
+  return mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {});
+}
+
+function puzzle2dCatalogNameLooksLikeI18nKey(name: string): boolean {
+  return /^semio\.(sketchpad|metabolism)\./.test(name.trim());
+}
+
+/** @emoji 🏷️ Resolves a kind-catalog row `name` for a stable kind id (never returns raw semio i18n keys). */
+export function puzzle2dKindCatalogRowName(kindId: string, rows: readonly { readonly id: string; readonly name: string }[] | undefined): string {
+  const id = kindId.trim();
   if (id === "") {
     return "";
   }
-  for (const row of catalogs.handles ?? []) {
+  for (const row of rows ?? []) {
     if (row.id === id) {
-      return (row.name ?? id).trim() || id;
+      const name = row.name?.trim() ?? "";
+      if (name !== "" && !puzzle2dCatalogNameLooksLikeI18nKey(name)) {
+        return name;
+      }
+      break;
     }
   }
-  return id;
+  if (id === BUILTIN_PORT_HANDLE_KIND) {
+    return "Port";
+  }
+  return puzzle2dHumanizeKindIdTail(id);
+}
+
+function puzzle2dHumanizeKindIdTail(kindId: string): string {
+  const colon = kindId.lastIndexOf(":");
+  if (colon >= 0 && colon < kindId.length - 1) {
+    const tail = kindId.slice(colon + 1).trim();
+    if (tail !== "" && !/^[0-9a-f-]{8}-/i.test(tail)) {
+      return tail.replace(/_/g, " ");
+    }
+  }
+  const icon = kindId.match(/^capsule_(.+)$/i);
+  if (icon) {
+    return icon[1]!.replace(/_/g, " ");
+  }
+  return "Item";
+}
+
+/** @emoji 🏷️ Primary tree/panel label for a fixture node (caption, then kind name — never the instance id). */
+export function puzzle2dFixtureNodeDisplayLabel(node: Puzzle2dFixtureNodeV1, catalogs: KindCatalogBundle): string {
+  const caption = puzzle2dFixtureNodeCaption(node);
+  if (caption) {
+    return caption;
+  }
+  const kind = node.nodeKind?.trim();
+  if (kind) {
+    const kindLabel = puzzle2dNodeKindOverlayLabel(kind, catalogs);
+    if (kindLabel) {
+      return kindLabel;
+    }
+  }
+  const icon = node.iconKind?.trim();
+  if (icon) {
+    return puzzle2dHumanizeKindIdTail(icon);
+  }
+  return "Node";
+}
+
+/** @emoji 🏷️ Secondary line for a fixture node (kind name when caption is the primary label). */
+export function puzzle2dFixtureNodeDisplayDescription(node: Puzzle2dFixtureNodeV1, catalogs: KindCatalogBundle): string | undefined {
+  const caption = puzzle2dFixtureNodeCaption(node);
+  const kind = node.nodeKind?.trim();
+  if (!kind) {
+    return undefined;
+  }
+  const kindLabel = puzzle2dNodeKindOverlayLabel(kind, catalogs);
+  if (!kindLabel || kindLabel === caption) {
+    return undefined;
+  }
+  return kindLabel;
+}
+
+function puzzle2dFixtureHandleRoleSuffix(handleId: string): string | undefined {
+  const colon = handleId.lastIndexOf(":");
+  if (colon < 0 || colon >= handleId.length - 1) {
+    return undefined;
+  }
+  const tail = handleId.slice(colon + 1).trim();
+  return tail === "link" ? undefined : tail.replace(/_/g, " ");
+}
+
+/** @emoji 🏷️ Primary tree/panel label for a fixture handle (kind name, optional role suffix — not the instance id). */
+export function puzzle2dFixtureHandleDisplayLabel(handle: Puzzle2dFixtureHandleV1, catalogs: KindCatalogBundle): string {
+  const kindLabel = puzzle2dHandleKindOverlayLabel(handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND, catalogs);
+  const suffix = puzzle2dFixtureHandleRoleSuffix(handle.id);
+  return suffix ? `${kindLabel} · ${suffix}` : kindLabel;
+}
+
+/** @emoji 🏷️ Resolves a handle endpoint id (`nodeId:role` or catalog handle id) to a panel label. */
+export function puzzle2dFixtureHandleEndpointDisplayLabel(handleId: string, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+  for (const node of fixture.nodes) {
+    const handle = node.handles.find((row) => row.id === handleId);
+    if (handle) {
+      const nodeLabel = puzzle2dFixtureNodeDisplayLabel(node, catalogs);
+      const kindLabel = puzzle2dHandleKindOverlayLabel(handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND, catalogs);
+      return kindLabel === "Port" || kindLabel === nodeLabel ? `${nodeLabel} · link` : `${nodeLabel} · ${kindLabel}`;
+    }
+  }
+  const colon = handleId.lastIndexOf(":");
+  if (colon > 0) {
+    const nodeId = handleId.slice(0, colon);
+    const node = fixture.nodes.find((row) => row.id === nodeId);
+    if (node) {
+      const nodeLabel = puzzle2dFixtureNodeDisplayLabel(node, catalogs);
+      const role = handleId.slice(colon + 1).trim();
+      return role === "link" ? `${nodeLabel} · link` : `${nodeLabel} · ${role.replace(/_/g, " ")}`;
+    }
+  }
+  const catalogLabel = puzzle2dHandleKindOverlayLabel(handleId, catalogs);
+  if (catalogLabel !== handleId && catalogLabel !== "Item") {
+    return catalogLabel;
+  }
+  return puzzle2dHumanizeKindIdTail(handleId);
+}
+
+/** @emoji 🏷️ Primary tree/panel label for an edge (endpoint labels, not the edge uuid). */
+export function puzzle2dFixtureEdgeDisplayLabel(edge: Puzzle2dFixtureEdgeV1, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+  const source = puzzle2dFixtureHandleEndpointDisplayLabel(edge.source, fixture, catalogs);
+  const target = puzzle2dFixtureHandleEndpointDisplayLabel(edge.target, fixture, catalogs);
+  return `${source} → ${target}`;
+}
+
+/** @emoji 🏷️ Resolves any puzzle 2d scene object id to a panel label when possible. */
+export function puzzle2dFixtureObjectDisplayLabel(objectId: string, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+  const node = fixture.nodes.find((row) => row.id === objectId);
+  if (node) {
+    return puzzle2dFixtureNodeDisplayLabel(node, catalogs);
+  }
+  const edge = fixture.edges.find((row) => row.id === objectId);
+  if (edge) {
+    return puzzle2dFixtureEdgeDisplayLabel(edge, fixture, catalogs);
+  }
+  for (const row of fixture.nodes) {
+    const handle = row.handles.find((h) => h.id === objectId);
+    if (handle) {
+      return puzzle2dFixtureHandleDisplayLabel(handle, catalogs);
+    }
+  }
+  return puzzle2dHumanizeKindIdTail(objectId);
 }
 
 //#region 🔖Renderer
@@ -5143,6 +5287,43 @@ if (puzzle2dVitest) {
       expect(merged.handles?.find((h) => h.id === BUILTIN_PORT_HANDLE_KIND)?.name).toBe("Patched");
       expect(merged.handles?.find((h) => h.id === BUILTIN_PORT_HANDLE_KIND)?.color).toBe("#ff0000");
       expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
+    });
+
+    it("puzzle2dFixtureNodeDisplayLabel prefers caption over kind name and never shows instance id", () => {
+      const catalogs: KindCatalogBundle = {
+        nodes: [{ id: "semio.metabolism.light.node.k", name: "Capsule" }],
+        handles: [{ color: "#888", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: "semio.metabolism.light.handle.h", name: "door east" }],
+      };
+      const node = {
+        handles: [{ angle: 0, handleKind: "semio.metabolism.light.handle.h", id: "piece:link" }],
+        id: "01890804-66f2-4544-98f0-b6f0c0615492",
+        nodeKind: "semio.metabolism.light.node.k",
+        radius: 10,
+        shape: "circle" as const,
+        text: "cs_sl1_d0_t_f4_b_c1",
+        x: 0,
+        y: 0,
+      };
+      expect(puzzle2dFixtureNodeDisplayLabel(node, catalogs)).toBe("cs_sl1_d0_t_f4_b_c1");
+      expect(puzzle2dFixtureNodeDisplayDescription(node, catalogs)).toBe("Capsule");
+      expect(puzzle2dKindCatalogRowName("semio.sketchpad.app.kit.defaultTypeName", catalogs.nodes)).toBe("Item");
+      expect(puzzle2dFixtureHandleDisplayLabel(node.handles[0]!, catalogs)).toBe("door east");
+    });
+
+    it("puzzle2dFixtureEdgeDisplayLabel uses endpoint labels not edge uuid", () => {
+      const catalogs: KindCatalogBundle = {
+        handles: [{ color: "#888", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: BUILTIN_PORT_HANDLE_KIND, name: "Port" }],
+      };
+      const fixture: Puzzle2dFixtureV1 = {
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "ff58a7b3-40c5-4a45-a260-c124706a1b8c", source: "a:link", target: "b:link" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:link" }], id: "a", radius: 10, shape: "circle", text: "Alpha", x: 0, y: 0 },
+          { handles: [{ angle: 0, id: "b:link" }], id: "b", radius: 10, shape: "circle", text: "Beta", x: 1, y: 0 },
+        ],
+      };
+      expect(puzzle2dFixtureEdgeDisplayLabel(fixture.edges[0]!, fixture, catalogs)).toBe("Alpha · link → Beta · link");
+      expect(puzzle2dFixtureObjectDisplayLabel("a", fixture, catalogs)).toBe("Alpha");
     });
 
     it("maps kit piece name to node text", () => {

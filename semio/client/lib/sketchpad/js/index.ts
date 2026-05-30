@@ -85,8 +85,18 @@ export function decodeKitSemioEnvelopeToFullFromValue(v: unknown): unknown {
 	return semioDenormalizeBundleValue(inner);
 }
 
+/** @emoji 🧾 Reads a kit DTO root from a decoded semio bundle value. */
+export function sketchpadKitFromDecodedBundle(value: unknown): Kit | null {
+	const denorm = decodeKitSemioEnvelopeToFullFromValue(value);
+	if (denorm == null || typeof denorm !== "object" || Array.isArray(denorm)) return null;
+	if ("id" in denorm) return denorm as Kit;
+	return null;
+}
+
 /** @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
-export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit; session: Session }> {
+export async function importKit(
+	data: ArrayBuffer | Blob | File | string,
+): Promise<{ readonly kit: Kit; readonly session: Session; readonly portCompatSource: Kit }> {
 	let bytes: Uint8Array;
 	if (typeof data === "string") {
 		const res = await fetch(data);
@@ -102,14 +112,17 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
 	const text = new TextDecoder().decode(bytes);
 	const plainUnknown = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
 	const payload = typeof plainUnknown === "object" && plainUnknown != null ? JSON.stringify(plainUnknown) : String(plainUnknown);
+	const bundleKit = sketchpadKitFromDecodedBundle(plainUnknown);
 	const session = await SemioSession.openInMemory();
 	const stores = await session.stores();
 	if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after openInMemory");
 	const store = stores[0]!;
 	const installed = await store.installProjection(payload);
 	if (!installed.ok) throw new Error(`semio/sketchpad: importKit installProjection failed: ${installed.error?.message ?? "unknown"}`);
-	const kit = await store.wip().theKit().kit();
-	return { kit, session };
+	const kitRaw = await store.wip().theKit().kit();
+	const portCompatSource = bundleKit ?? kitRaw;
+	const kit = sketchpadApplyPortCompatById(kitRaw, sketchpadExtractPortCompatById(portCompatSource));
+	return { kit, session, portCompatSource };
 }
 
 /** @emoji 📤 Wraps a kit DTO in the `wip.initialKit` envelope used by {@link importKit}. */
@@ -218,13 +231,13 @@ export async function sketchpadPickKitImportFile(): Promise<File | null> {
 export async function sketchpadBrowserFileKitFactory(): Promise<SemioJsKitStore> {
 	const file = await sketchpadPickKitImportFile();
 	if (!file) throw new Error("semio/sketchpad: file kit open cancelled");
-	const { session } = await importKit(file);
+	const { session, portCompatSource } = await importKit(file);
 	const jsStore = (await session.stores())[0];
 	if (!jsStore) {
 		await session.dispose();
 		throw new Error("semio/sketchpad: file kit open found no stores");
 	}
-	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
 }
 
 /** @emoji 📁 Opens a folder kit when {@link showDirectoryPicker} is available (kit.semio.json at folder root). */
@@ -239,13 +252,13 @@ export async function sketchpadBrowserFolderKitFactory(): Promise<SemioJsKitStor
 		(await dir.getFileHandle("kit.semio.json", { create: false }).then((h) => h.getFile()).catch(() => null)) ??
 		(await dir.getFileHandle("wip/initialKit/kit.semio.json", { create: false }).then((h) => h.getFile()).catch(() => null));
 	if (!kitFile) throw new Error("semio/sketchpad: no kit.semio.json in selected folder");
-	const { session } = await importKit(kitFile);
+	const { session, portCompatSource } = await importKit(kitFile);
 	const jsStore = (await session.stores())[0];
 	if (!jsStore) {
 		await session.dispose();
 		throw new Error("semio/sketchpad: folder kit open found no stores");
 	}
-	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
 }
 
 /** @emoji 🌐 Registers browser file/folder/remote kit factories for {@link SketchpadShellController}. */
@@ -262,6 +275,7 @@ let sketchpadHomeDropzoneInstalled = false;
 let sketchpadHomeDropzoneDragDepth = 0;
 
 const SKETCHPAD_HOME_DROPZONE_OVERLAY_ID = "semio-sketchpad-home-dropzone-overlay";
+const SKETCHPAD_HOME_KIT_FILE_INPUT_ID = "semio-sketchpad-home-kit-file-input";
 
 /** @emoji 🏠 Home table surface id (dropzone host binds in {@link boot.ts}). */
 export const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
@@ -303,10 +317,39 @@ export function sketchpadSetHomeDropzoneOverlayVisible(visible: boolean): void {
 	if (overlay) overlay.classList.toggle("hidden", !visible);
 }
 
+function sketchpadEnsureHomeKitFileInput(): HTMLInputElement {
+	let input = document.getElementById(SKETCHPAD_HOME_KIT_FILE_INPUT_ID) as HTMLInputElement | null;
+	if (!input) {
+		input = document.createElement("input");
+		input.type = "file";
+		input.id = SKETCHPAD_HOME_KIT_FILE_INPUT_ID;
+		input.accept = ".zip,.semio.zip,application/zip,application/x-zip-compressed";
+		input.className = "hidden";
+		input.setAttribute("data-testid", SKETCHPAD_HOME_KIT_FILE_INPUT_ID);
+		document.body.appendChild(input);
+	}
+	return input;
+}
+
+/** @emoji 📂 Opens the hidden home kit archive file picker (`.zip` / `.semio.zip`). */
+export function sketchpadPromptHomeKitArchiveFile(): void {
+	if (typeof document === "undefined") return;
+	sketchpadEnsureHomeKitFileInput().click();
+}
+
 /** @emoji 📥 Installs document-level home drag/drop (overlay + kit import on `/`). */
 export function sketchpadInstallHomeDropzone(): void {
 	if (typeof window === "undefined" || sketchpadHomeDropzoneInstalled) return;
 	sketchpadHomeDropzoneInstalled = true;
+	const fileInput = sketchpadEnsureHomeKitFileInput();
+	fileInput.addEventListener("change", () => {
+		const file = fileInput.files?.[0];
+		fileInput.value = "";
+		if (!file) return;
+		const ctrl = getSketchpadShellController();
+		if (!ctrl) return;
+		ctrl.run("importKitFromDrop", { file });
+	});
 	const onDragEnter = (event: DragEvent) => {
 		if (!sketchpadHomeRouteActive()) return;
 		if (!sketchpadTransferHasKitArchive(event.dataTransfer)) return;
@@ -381,11 +424,14 @@ export async function openSketchpadKitFromImport(
 	data: ArrayBuffer | Blob | File | string,
 	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
 ): Promise<string> {
-	const { kit, session } = await importKit(data);
+	const { kit, session, portCompatSource } = await importKit(data);
 	const jsStores = await session.stores();
 	const jsStore = jsStores[0];
 	const store = jsStore
-		? await createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() })
+		? await createSemioKitStoreFromJsStore(jsStore, {
+				onDispose: () => void session.dispose(),
+				portCompatSource,
+			})
 		: new InMemorySemioKitStore(kit);
 	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate });
 	return kit.id;
@@ -420,6 +466,13 @@ export interface SketchpadRouteSelection {
 	readonly kitDiagramNodeIds: readonly string[];
 }
 
+/** @emoji 📥 Home kit import progress surfaced in workbench chrome. */
+export interface SketchpadImportStatus {
+	readonly phase: "idle" | "importing" | "success" | "error";
+	readonly label?: string;
+	readonly error?: string;
+}
+
 /** @emoji 🏠 Home table UI state (expand, selection, URL-synced filters). */
 export interface SketchpadHomeUiState {
 	readonly expandedRowIds: readonly string[];
@@ -439,6 +492,7 @@ export interface SketchpadShellSnapshot {
 	readonly openKitIds: readonly string[];
 	readonly routeSelection: SketchpadRouteSelection;
 	readonly home: SketchpadHomeUiState;
+	readonly importStatus: SketchpadImportStatus;
 }
 
 function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
@@ -456,6 +510,35 @@ function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {
 		sortColumnId: null,
 		sortDescending: false,
 	};
+}
+
+function sketchpadEmptyImportStatus(): SketchpadImportStatus {
+	return { phase: "idle" };
+}
+
+function sketchpadPathSupportsRouteSelectionQuery(pathOnly: string): boolean {
+	return pathOnly.startsWith("/kits/");
+}
+
+/** @emoji 🔎 Parses kit/design diagram selection query params from a platform URI. */
+export function parseSketchpadRouteSelectionQuery(uri: string): SketchpadRouteSelection {
+	const query = uri.includes("?") ? uri.slice(uri.indexOf("?") + 1) : "";
+	const params = new URLSearchParams(query);
+	return {
+		pieceIds: params.getAll("piece"),
+		connectionIds: params.getAll("conn"),
+		kitDiagramNodeIds: params.getAll("diag"),
+	};
+}
+
+/** @emoji 🔗 Serializes {@link SketchpadRouteSelection} into kit-route query params. */
+export function sketchpadRouteSelectionUriFilters(selection: SketchpadRouteSelection): string {
+	const params = new URLSearchParams();
+	for (const id of selection.pieceIds) params.append("piece", id);
+	for (const id of selection.connectionIds) params.append("conn", id);
+	for (const id of selection.kitDiagramNodeIds) params.append("diag", id);
+	const serialized = params.toString();
+	return serialized.length > 0 ? `?${serialized}` : "";
 }
 
 /** @emoji 🔎 Parses home filter query params from a platform URI. */
@@ -709,7 +792,7 @@ export function sketchpadBuildHomeTableModel(input: {
 		sortDescending: input.home.sortDescending,
 			emptyMessage:
 				rows.length === 0
-					? "No kits open — drop a .kit.semio.json / .zip here or use Import from the command palette"
+					? "No kits open — drop a .zip here, use Workbench → Import kit archive, or the command palette"
 					: undefined,
 	};
 }
@@ -765,7 +848,8 @@ export class SemioJsKitStore extends SemioKitStore {
 	constructor(
 		backend: SemioKitStoreBackend,
 		readonly jsStore: JsKitStore,
-		private readonly onSessionDispose?: () => void | Promise<void>,
+		private readonly onSessionDispose: (() => void | Promise<void>) | undefined,
+		private readonly portCompatById: ReadonlyMap<string, readonly { readonly id: string }[]>,
 	) {
 		super(backend);
 	}
@@ -777,7 +861,8 @@ export class SemioJsKitStore extends SemioKitStore {
 
 	/** @emoji 🔄 Re-reads kit DTO from rs and notifies subscribers. */
 	async refreshFromJs(): Promise<void> {
-		this.replaceKit(await sketchpadKitDtoFromJsStore(this.jsStore));
+		const kit = await sketchpadKitDtoFromJsStore(this.jsStore);
+		this.replaceKit(sketchpadApplyPortCompatById(kit, this.portCompatById));
 	}
 
 	override dispose(): void {
@@ -887,11 +972,14 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 /** @emoji 🌐 Builds a {@link SemioJsKitStore} from a live {@link @semio/js} store. */
 export async function createSemioKitStoreFromJsStore(
 	jsStore: JsKitStore,
-	options?: { readonly onDispose?: () => void | Promise<void> },
+	options?: { readonly onDispose?: () => void | Promise<void>; readonly portCompatSource?: Kit },
 ): Promise<SemioJsKitStore> {
-	let kit = await sketchpadKitDtoFromJsStore(jsStore);
+	const portCompatById = sketchpadExtractPortCompatById(
+		options?.portCompatSource ?? ({ id: "", name: "" } as Kit),
+	);
+	let kit = sketchpadApplyPortCompatById(await sketchpadKitDtoFromJsStore(jsStore), portCompatById);
 	const refresh = async (): Promise<void> => {
-		kit = await sketchpadKitDtoFromJsStore(jsStore);
+		kit = sketchpadApplyPortCompatById(await sketchpadKitDtoFromJsStore(jsStore), portCompatById);
 	};
 	await refresh();
 	return new SemioJsKitStore(
@@ -907,6 +995,7 @@ export async function createSemioKitStoreFromJsStore(
 		},
 		jsStore,
 		options?.onDispose,
+		portCompatById,
 	);
 }
 
@@ -1088,6 +1177,18 @@ function sketchpadPanelTextStack(lines: readonly { readonly text: string; readon
 		},
 	};
 }
+
+function sketchpadPanelCommandButton(
+	label: string,
+	command: string,
+	args?: unknown,
+): { readonly type: "button"; readonly label: string; readonly command: { readonly controllerId: string; readonly command: string; readonly args?: unknown } } {
+	return {
+		type: "button",
+		label,
+		command: { controllerId: "semio.sketchpad.shell", command, ...(args !== undefined ? { args } : {}) },
+	};
+}
 //#endregion 🔖KitHelpers
 
 //#region 🔖Topology
@@ -1267,6 +1368,42 @@ function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unkno
 		for (const connector of type.connectors ?? []) remember((connector as { port?: unknown }).port);
 	}
 	return [...byId.values()];
+}
+
+/** @emoji 🗺️ Collects port {@code compatiblePorts} refs from a kit snapshot (bundle or DTO). */
+export function sketchpadExtractPortCompatById(kit: Kit): Map<string, readonly { readonly id: string }[]> {
+	const map = new Map<string, readonly { readonly id: string }[]>();
+	for (const port of sketchpadCollectKitPortRecords(kit)) {
+		const id = sketchpadReadEntityId(port);
+		const compatIds = sketchpadReadCompatiblePortIds(port);
+		if (id && compatIds.length > 0) map.set(id, compatIds.map((compatId) => ({ id: compatId })));
+	}
+	return map;
+}
+
+/** @emoji 🔗 Re-applies stored {@code compatiblePorts} onto a GraphQL-shaped kit DTO. */
+export function sketchpadApplyPortCompatById(
+	kit: Kit,
+	compatById: ReadonlyMap<string, readonly { readonly id: string }[]>,
+): Kit {
+	if (compatById.size === 0) return kit;
+	const enrichPort = (port: unknown): unknown => {
+		if (port == null || typeof port !== "object") return port;
+		const row = { ...(port as Record<string, unknown>) };
+		const id = sketchpadReadEntityId(row);
+		const compat = id ? compatById.get(id) : undefined;
+		if (compat?.length) row.compatiblePorts = compat;
+		return row;
+	};
+	const types = (kit.types ?? []).map((type) => ({
+		...type,
+		ports: ((type as { ports?: readonly unknown[] }).ports ?? []).map(enrichPort),
+		connectors: (type.connectors ?? []).map((connector) => ({
+			...connector,
+			port: enrichPort((connector as { port?: unknown }).port),
+		})),
+	}));
+	return { ...kit, types } as Kit;
 }
 
 function sketchpadReadCompatiblePortIds(port: Record<string, unknown>): readonly string[] {
@@ -2257,11 +2394,22 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				if (selected.length > 5) lines.push({ text: "…" });
 				return sketchpadPanelTextStack(lines);
 			}
-			return sketchpadPanelTextStack([
-				{ text: "Workbench", emphasize: true },
-				{ text: `${open.length} kit(s) open` },
-				{ text: "Open a kit from Home or the command palette." },
-			]);
+			return {
+				body: {
+					type: "stack",
+					direction: "vertical",
+					padding: "standard",
+					gap: "tight",
+					children: [
+						{ type: "text", value: "Workbench", emphasize: true },
+						{ type: "text", value: `${open.length} kit(s) open` },
+						sketchpadPanelCommandButton("Import kit archive…", "importKitFromFile"),
+						sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
+						sketchpadPanelCommandButton("Open metabolism fixture", "importFixtureKit"),
+						{ type: "text", value: "Drag a .zip onto Home or use the command palette." },
+					],
+				},
+			};
 		}
 		const kitStore = ctrl?.getKitStore(kitId);
 		const kit = kitStore?.getSnapshot().kit;
@@ -2698,9 +2846,12 @@ export class SketchpadShellController extends Controller {
 				const file = (args as { file?: File }).file;
 				if (!file) break;
 				void (async () => {
-					const { kit, session } = await importKit(file);
-					const store = await createSemioKitStoreFromJsStore((await session.stores())[0]!, {
+					const { kit, session, portCompatSource } = await importKit(file);
+					const jsStore = (await session.stores())[0];
+					if (!jsStore) throw new Error("semio/sketchpad: importKitFromDrop found no stores");
+					const store = await createSemioKitStoreFromJsStore(jsStore, {
 						onDispose: () => void session.dispose(),
+						portCompatSource,
 					});
 					const kitId = kit.id;
 					this.registerKitStore(kitId, store, { kind: "file" });
@@ -2732,14 +2883,7 @@ export class SketchpadShellController extends Controller {
 				break;
 			}
 			case "importKitFromFile": {
-				void (async () => {
-					const store = await sketchpadBrowserFileKitFactory();
-					const kitId = store.getSnapshot().kit.id;
-					this.registerKitStore(kitId, store, { kind: "file" });
-					this.navigateTo(`/kits/${kitId}`);
-				})().catch((error) => {
-					console.error("[semio/sketchpad] importKitFromFile failed:", error);
-				});
+				sketchpadPromptHomeKitArchiveFile();
 				break;
 			}
 			case "navigate": {
@@ -3210,6 +3354,38 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadApplyPortCompatById", () => {
+		it("restores compatiblePorts stripped by GraphQL-shaped reads", () => {
+			const bundle = {
+				id: "k",
+				types: [
+					{ id: "t1", connectors: [{ port: { id: "p1", compatiblePorts: [{ id: "p2" }] } }] },
+					{ id: "t2", connectors: [{ port: { id: "p2", compatiblePorts: [{ id: "p1" }] } }] },
+				],
+			} as Kit;
+			const graphqlKit = {
+				id: "k",
+				types: [
+					{ id: "t1", connectors: [{ port: { id: "p1", label: "A" } }] },
+					{ id: "t2", connectors: [{ port: { id: "p2", label: "B" } }] },
+				],
+			} as Kit;
+			const compat = sketchpadExtractPortCompatById(bundle);
+			const merged = sketchpadApplyPortCompatById(graphqlKit, compat);
+			const fixture = sketchpadKitPuzzle2dFixtureFromKit(merged);
+			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
+		});
+	});
+
+	describe("sketchpadEnsureHomeKitFileInput", () => {
+		it("creates a hidden file input once", () => {
+			if (typeof document === "undefined") return;
+			sketchpadInstallHomeDropzone();
+			const input = document.getElementById(SKETCHPAD_HOME_KIT_FILE_INPUT_ID);
+			expect(input?.getAttribute("type")).toBe("file");
+		});
+	});
+
 	describe("sketchpadSetHomeDropzoneOverlayVisible", () => {
 		it("creates and toggles the overlay element", () => {
 			if (typeof document === "undefined") return;
@@ -3469,7 +3645,7 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 	test.describe("sketchpad platform", () => {
 		test("home table mounts on root", async ({ page }) => {
 			await page.goto("/");
-			await expect(page.getByText("No kits open")).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByText(/No kits open/)).toBeVisible({ timeout: 120_000 });
 		});
 
 		test("workbench panel is present when platform loads", async ({ page }) => {
