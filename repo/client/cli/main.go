@@ -6946,55 +6946,17 @@ func hashSemioMetaState(repoRoot string) string {
 	if !FileExists(metaRoot) {
 		return ""
 	}
-
-	var entries []string
-	_ = filepath.WalkDir(metaRoot, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
+	var parts []string
+	for _, top := range []string{"🎯", "👮", "📝", "📊", "✍️"} {
+		p := filepath.Join(metaRoot, top)
+		if st, err := os.Stat(p); err == nil {
+			parts = append(parts, "d:"+top+":"+strconv.FormatInt(st.ModTime().UnixNano(), 10))
 		}
-		rel, relErr := filepath.Rel(metaRoot, path)
-		if relErr != nil {
-			return nil
-		}
-		rel = filepath.ToSlash(rel)
-		if rel == "." {
-			return nil
-		}
-		// Skip directories that are either caches or ephemeral hook artifacts.
-		// These change frequently and must not invalidate the tree cache.
-		switch {
-		case rel == "cache" || strings.HasPrefix(rel, "cache/"):
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		case rel == "⚡" || strings.HasPrefix(rel, "⚡/"):
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if d.IsDir() {
-			entries = append(entries, "d:"+rel)
-			return nil
-		}
-		// For ticket files, hooks constantly update agent tracking metadata
-		// (via trackHookInOpenTicket) without changing tree-relevant structure.
-		// Only track ticket directory existence (not file contents/modtimes)
-		// so the cache invalidates on ticket open/close but not on every hook.
-		if strings.Contains(rel, "🎫") && !d.IsDir() {
-			return nil
-		}
-		info, statErr := d.Info()
-		if statErr != nil {
-			return nil
-		}
-		entries = append(entries, fmt.Sprintf("f:%s:%d:%d", rel, info.Size(), info.ModTime().UnixNano()))
-		return nil
-	})
-
-	sort.Strings(entries)
-	return hashString(strings.Join(entries, "|"))
+	}
+	tickets, _ := filepath.Glob(filepath.Join(metaRoot, "🎫", "*", "*", "*", "*"))
+	sort.Strings(tickets)
+	parts = append(parts, "tickets:"+strings.Join(tickets, ","))
+	return hashString(strings.Join(parts, "|"))
 }
 
 func treeNodeScopePath(node *TreeNode) string {

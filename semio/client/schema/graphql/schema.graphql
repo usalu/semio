@@ -942,11 +942,11 @@ type Change implements StrongEntity {
 	description: String!
 	origin: String!
 	"""
-	@emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+	@emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
 	"""
 	forwardOperationRecordIds: [ID!]!
 	"""
-	@emoji 🔗 Ordered  operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+	@emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
 	"""
 	backwardOperationRecordIds: [ID!]!
 }

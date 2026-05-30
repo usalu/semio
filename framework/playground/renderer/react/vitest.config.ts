@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [react(), playgroundRendererVitestShellOnlyPlugin(rendererIndex), playgroundRendererShellEntryPlugin(rendererIndex)],
   resolve: {
     alias: [
-      { find: "@framework/playground", replacement: resolve(root, "../../core/core.ts") },
+      { find: /^@framework\/playground$/, replacement: resolve(root, "../../core/core.ts") },
       { find: "@framework/playground/renderer/react/puzzle/2d", replacement: resolve(root, "index.tsx") },
       { find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(root, "index.tsx") },
       { find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(root, "index.tsx") },

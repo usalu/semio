@@ -22182,8 +22182,28 @@ function pointerInRect(x: number, y: number, rect: DOMRect): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
-function modeDropEdgeDepth(size: number, ratio = 0.2, minPx = 28): number {
-  return Math.min(size / 2, Math.max(minPx, size * ratio));
+/** @emoji 🧭 Maps pointer position in a rectangle to a split side using half-panel zones (dominant axis from center). */
+function resolveModeSplitSideInBody(localX: number, localY: number, bodyWidth: number, bodyHeight: number): ModeDockSide {
+  const midX = bodyWidth / 2;
+  const midY = bodyHeight / 2;
+  const dx = Math.abs(localX - midX);
+  const dy = Math.abs(localY - midY);
+  if (dx >= dy) return localX < midX ? "left" : "right";
+  return localY < midY ? "top" : "bottom";
+}
+
+/** @emoji 📐 Half-panel rectangle for split drop preview inside a stack body (origin top-left of body). */
+function computeModeSplitPreviewInBody(
+  bodyWidth: number,
+  bodyHeight: number,
+  side: ModeDockSide,
+): { left: number; top: number; width: number; height: number } {
+  const halfWidth = bodyWidth / 2;
+  const halfHeight = bodyHeight / 2;
+  if (side === "left") return { left: 0, top: 0, width: halfWidth, height: bodyHeight };
+  if (side === "right") return { left: bodyWidth - halfWidth, top: 0, width: halfWidth, height: bodyHeight };
+  if (side === "top") return { left: 0, top: 0, width: bodyWidth, height: halfHeight };
+  return { left: 0, top: bodyHeight - halfHeight, width: bodyWidth, height: halfHeight };
 }
 
 function computeModeDropZone(
@@ -22200,24 +22220,17 @@ function computeModeDropZone(
   for (const [stackPath, targets] of stackTargets) {
     const rect = targets.body;
     if (!rect || !pointerInRect(pointerX, pointerY, rect)) continue;
-    const edgeX = modeDropEdgeDepth(rect.width);
-    const edgeY = modeDropEdgeDepth(rect.height);
-    const x = pointerX - rect.left;
-    const y = pointerY - rect.top;
-    if (x < edgeX) return { kind: "split", stackPath, side: "left" };
-    if (x > rect.width - edgeX) return { kind: "split", stackPath, side: "right" };
-    if (y < edgeY) return { kind: "split", stackPath, side: "top" };
-    if (y > rect.height - edgeY) return { kind: "split", stackPath, side: "bottom" };
+    const side = resolveModeSplitSideInBody(pointerX - rect.left, pointerY - rect.top, rect.width, rect.height);
+    return { kind: "split", stackPath, side };
   }
-  if (!modeRect) return null;
-  const relX = (pointerX - modeRect.left) / modeRect.width;
-  const relY = (pointerY - modeRect.top) / modeRect.height;
-  const edge = 0.12;
-  if (relX < edge) return { kind: "root-split", side: "left" };
-  if (relX > 1 - edge) return { kind: "root-split", side: "right" };
-  if (relY < edge) return { kind: "root-split", side: "top" };
-  if (relY > 1 - edge) return { kind: "root-split", side: "bottom" };
-  return null;
+  if (!modeRect || !pointerInRect(pointerX, pointerY, modeRect)) return null;
+  const side = resolveModeSplitSideInBody(
+    pointerX - modeRect.left,
+    pointerY - modeRect.top,
+    modeRect.width,
+    modeRect.height,
+  );
+  return { kind: "root-split", side };
 }
 
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
@@ -22315,9 +22328,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const tabInsertIndex =
     dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
 
-  const insertSlot = (
+  const renderInsertSlot = (slotKey: string) => (
     <div
-      key="mode-dock-tab-insert-slot"
+      key={slotKey}
       data-slot="mode-dock-tab-insert-slot"
       className="mx-half my-half h-[calc(100%-4px)] w-[5.5rem] shrink-0 rounded-sm border border-dashed border-accent bg-accent/15"
       aria-hidden
@@ -22329,7 +22342,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
         {tabs.flatMap((tab, index) => {
           const nodes: React.ReactNode[] = [];
-          if (tabInsertIndex === index) nodes.push(insertSlot);
+          if (tabInsertIndex === index) nodes.push(renderInsertSlot(`insert-${index}`));
           nodes.push(
           <div
             key={tab.id}
@@ -22367,7 +22380,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           );
           return nodes;
         })}
-        {tabInsertIndex === tabs.length ? insertSlot : null}
+        {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
       </div>
       <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
         <button
@@ -22703,7 +22716,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const draggedPreviewTitle = draggedWindow?.title ?? dragState?.ghostLabel ?? "";
 
   return (
-    <div data-slot="mode" data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
+    <div
+      data-slot="mode"
+      data-dragging={dragState ? "true" : undefined}
+      data-maximized-path={maximizedStackPath ?? undefined}
+      className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
+    >
       <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
         {dragState ? (
@@ -22728,23 +22746,24 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
                     style={(() => {
                       if (dropZone.kind === "root-split") {
                         const side = dropZone.side;
-                        if (side === "left") return { left: 0, top: 0, width: "30%", height: "100%" };
-                        if (side === "right") return { right: 0, top: 0, width: "30%", height: "100%" };
-                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "30%" };
-                        return { left: 0, bottom: 0, width: "100%", height: "30%" };
+                        if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
+                        if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
+                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
+                        return { left: 0, bottom: 0, width: "100%", height: "50%" };
                       }
                       const elements = stackDropElementsRef.current.get(dropZone.stackPath);
                       const rect = elements?.body?.getBoundingClientRect();
                       const modeRect = modeBodyRef.current?.getBoundingClientRect();
                       if (!rect || !modeRect) return { display: "none" };
-                      const left = rect.left - modeRect.left;
-                      const top = rect.top - modeRect.top;
-                      const edgeX = modeDropEdgeDepth(rect.width);
-                      const edgeY = modeDropEdgeDepth(rect.height);
-                      if (dropZone.side === "left") return { left, top, width: edgeX, height: rect.height };
-                      if (dropZone.side === "right") return { left: left + rect.width - edgeX, top, width: edgeX, height: rect.height };
-                      if (dropZone.side === "top") return { left, top, width: rect.width, height: edgeY };
-                      return { left, top: top + rect.height - edgeY, width: rect.width, height: edgeY };
+                      const bodyOriginLeft = rect.left - modeRect.left;
+                      const bodyOriginTop = rect.top - modeRect.top;
+                      const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
+                      return {
+                        left: bodyOriginLeft + preview.left,
+                        top: bodyOriginTop + preview.top,
+                        width: preview.width,
+                        height: preview.height,
+                      };
                     })()}
                   />
                 ) : (
@@ -22795,6 +22814,8 @@ export {
   normalizeLayoutToStacks,
   collapseLayout,
   computeModeDropZone,
+  computeModeSplitPreviewInBody,
+  resolveModeSplitSideInBody,
   computeTabInsertPreview,
   modeDockOutLayout,
 };
@@ -23045,14 +23066,39 @@ if (import.meta.vitest) {
       expect(end?.insertX).toBe(160);
     });
 
-    it("computeModeDropZone treats tab bar hits as tab drops not vertical splits", () => {
+    it("computeModeSplitPreviewInBody covers half the stack body on each side", () => {
+      expect(computeModeSplitPreviewInBody(400, 300, "left")).toEqual({ left: 0, top: 0, width: 200, height: 300 });
+      expect(computeModeSplitPreviewInBody(400, 300, "right")).toEqual({ left: 200, top: 0, width: 200, height: 300 });
+      expect(computeModeSplitPreviewInBody(400, 300, "top")).toEqual({ left: 0, top: 0, width: 400, height: 150 });
+      expect(computeModeSplitPreviewInBody(400, 300, "bottom")).toEqual({ left: 0, top: 150, width: 400, height: 150 });
+    });
+
+    it("resolveModeSplitSideInBody uses half-panel zones with dominant axis at corners", () => {
+      expect(resolveModeSplitSideInBody(50, 100, 200, 200)).toBe("left");
+      expect(resolveModeSplitSideInBody(150, 100, 200, 200)).toBe("right");
+      expect(resolveModeSplitSideInBody(100, 50, 200, 200)).toBe("top");
+      expect(resolveModeSplitSideInBody(100, 150, 200, 200)).toBe("bottom");
+      expect(resolveModeSplitSideInBody(40, 40, 200, 200)).toBe("left");
+      expect(resolveModeSplitSideInBody(160, 40, 200, 200)).toBe("right");
+    });
+
+    it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {
       const tabBar = { left: 0, top: 0, right: 200, bottom: 24, width: 200, height: 24 } as DOMRect;
       const body = { left: 0, top: 24, right: 200, bottom: 224, width: 200, height: 200 } as DOMRect;
       const targets = new Map([["1", { tabBar, body, tabBarElement: null }]]);
       expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", index: 0 });
       expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
       expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
-      expect(computeModeDropZone(100, 120, targets, null)).toBeNull();
+      expect(computeModeDropZone(50, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "left" });
+      expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "right" });
+    });
+
+    it("computeModeDropZone root-split uses half of the mode when pointer is outside stack bodies", () => {
+      const modeRect = { left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300 } as DOMRect;
+      expect(computeModeDropZone(80, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "left" });
+      expect(computeModeDropZone(320, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "right" });
+      expect(computeModeDropZone(200, 40, new Map(), modeRect)).toEqual({ kind: "root-split", side: "top" });
+      expect(computeModeDropZone(200, 260, new Map(), modeRect)).toEqual({ kind: "root-split", side: "bottom" });
     });
 
     it("modeDockOutLayout removes the dragged window without mutating drop targets", () => {
