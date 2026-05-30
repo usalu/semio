@@ -23,7 +23,7 @@ import {
 } from "@framework/playground/core";
 import {
   DocumentHistory,
-  SHAPE_MODEL_DEFINITION_ID,
+  defaultModelDefinitionId,
   applyTransformation,
   buildModelTopologyHierarchy,
   countViewObjectsForModelDefinition,
@@ -142,7 +142,7 @@ const CAD_PLAY_PANE_SPECS: readonly {
     label: CAD_PLAY_SHAPE_WINDOW_LABEL,
     bodyKey: CAD_PLAY_SHAPE_BODY_KEY,
     surfaceId: CAD_PLAY_SHAPE_SCENE_SURFACE_ID,
-    modelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+    modelDefinitionId: defaultModelDefinitionId(),
   },
   {
     pane: "building",
@@ -676,7 +676,7 @@ import geometryRoutes from "../../../assets/play/geometry-routes.json";
 import geometrySmallBuilding from "../../../assets/play/small-building.model.json";
 import geometryTallBuilding from "../../../assets/play/tall-building.model.json";
 import geometryLargeBuilding from "../../../assets/play/large-building.model.json";
-import { BrepjsKernel } from "@cad/js/kernel/brepjs";
+import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
   InteractionRepl,
@@ -770,8 +770,8 @@ interface SavePickerWindow extends Window {
 }
 
 function ensurePlayShapeModel(models: Readonly<Record<string, Model>>): Record<string, Model> {
-  if (models[SHAPE_MODEL_DEFINITION_ID]) return { ...models };
-  return { ...models, [SHAPE_MODEL_DEFINITION_ID]: new Model() };
+  if (models[defaultModelDefinitionId()]) return { ...models };
+  return { ...models, [defaultModelDefinitionId()]: new Model() };
 }
 
 function parseModelSpaceJson(raw: unknown): ModelSpace | null {
@@ -970,7 +970,7 @@ function modelsFromCadJson(json: unknown): Record<string, Model> {
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
   if (modelSpace) return ensurePlayShapeModel(recordFromModelSpace(modelSpace));
   return ensurePlayShapeModel({
-    [SHAPE_MODEL_DEFINITION_ID]: parseModelJson(bundle?.model ?? json) ?? new Model(),
+    [defaultModelDefinitionId()]: parseModelJson(bundle?.model ?? json) ?? new Model(),
   });
 }
 
@@ -978,7 +978,7 @@ function activeModelDefinitionIdFromSpatialJson(json: unknown): string {
   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
   if (typeof bundle?.activeModelDefinitionId === "string") return bundle.activeModelDefinitionId;
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-  return Object.keys(modelSpace?.models ?? {})[0] ?? SHAPE_MODEL_DEFINITION_ID;
+  return Object.keys(modelSpace?.models ?? {})[0] ?? defaultModelDefinitionId();
 }
 
 function flushModelsRecord(models: Readonly<Record<string, Model>>, activeId: string, live: Model): Record<string, Model> {
@@ -1006,13 +1006,13 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
   if (isShapeModelDefinition(definitionId)) return withShape;
   const candidates = listTransformationsIntoModelDefinition(definitionId);
   const fromShape = candidates.find((row) => isShapeModelDefinition(row.source.modelDefinition));
-  const shape = withShape[SHAPE_MODEL_DEFINITION_ID];
+  const shape = withShape[defaultModelDefinitionId()];
   if (fromShape && shape) {
-    return { ...withShape, [definitionId]: applyTransformation(fromShape, shape) };
+    return { ...withShape, [definitionId]: applyTransformation(fromShape, shape, preciseSpatialKernelMath) };
   }
   const fromLinked = candidates.find((row) => withShape[row.source.modelDefinition]);
   if (fromLinked) {
-    return { ...withShape, [definitionId]: applyTransformation(fromLinked, withShape[fromLinked.source.modelDefinition]!) };
+    return { ...withShape, [definitionId]: applyTransformation(fromLinked, withShape[fromLinked.source.modelDefinition]!, preciseSpatialKernelMath) };
   }
   return withShape;
 }
@@ -1035,10 +1035,10 @@ function emptyPlayModels(): Record<string, Model> {
 
 function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, activeModelDefinitionId: string, liveModel: Model): Model {
   if (isShapeModelDefinition(activeModelDefinitionId)) {
-    return models[SHAPE_MODEL_DEFINITION_ID] ?? liveModel;
+    return models[defaultModelDefinitionId()] ?? liveModel;
   }
   if (modelDefinitionUsesGeometryPicking(activeModelDefinitionId)) {
-    return models[activeModelDefinitionId] ?? models[SHAPE_MODEL_DEFINITION_ID] ?? liveModel;
+    return models[activeModelDefinitionId] ?? models[defaultModelDefinitionId()] ?? liveModel;
   }
   return liveModel;
 }
@@ -1289,7 +1289,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     () => pointerFocusRef.current!.getSnapshot(),
     () => pointerFocusRef.current!.getSnapshot(),
   );
-  const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
+  const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(defaultModelDefinitionId());
   const [interactionIdByPane, setInteractionIdByPane] = reactHostPort.useState(emptyInteractionIdByPane);
   const [interactionBootIdByPane, setInteractionBootIdByPane] = reactHostPort.useState(emptyInteractionBootIdByPane);
   const [shapeAssetId, setShapeAssetId] = reactHostPort.useState("");
@@ -1347,7 +1347,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     if (!id) {
       pointerFocusRef.current?.clearHover();
       setModelsByDefinitionId(emptyPlayModels());
-      setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
+      setActiveModelDefinitionId(defaultModelDefinitionId());
     } else {
       const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
       if (!asset) return;
@@ -1363,7 +1363,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     const resolved = modelsForActiveDefinition[activeModelDefinitionId];
     if (resolved) return resolved;
     if (isShapeModelDefinition(activeModelDefinitionId)) {
-      return modelsForActiveDefinition[SHAPE_MODEL_DEFINITION_ID] ?? new Model();
+      return modelsForActiveDefinition[defaultModelDefinitionId()] ?? new Model();
     }
     throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
   }, [activeModelDefinitionId, modelsForActiveDefinition]);
@@ -1681,7 +1681,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       setShapeAssetId("");
       setLoadedRawName(file.name);
       setModelsByDefinitionId(modelsFromCadJson(model.toJSON()));
-      setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
+      setActiveModelDefinitionId(defaultModelDefinitionId());
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Loaded model from ${file.name}.`);
     } catch (error) {
@@ -2141,7 +2141,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformsTo: [], transformsFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
@@ -2167,7 +2167,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformsTo: [], transformsFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       const app = buildCadPlayAppRuntime(controller);
@@ -2183,7 +2183,7 @@ if (import.meta.vitest) {
 
   describe("cadPlayPaneForModelDefinition", () => {
     it("maps each quad model definition to its pane", () => {
-      expect(cadPlayPaneForModelDefinition(SHAPE_MODEL_DEFINITION_ID)).toBe("shape");
+      expect(cadPlayPaneForModelDefinition(defaultModelDefinitionId())).toBe("shape");
       expect(cadPlayPaneForModelDefinition(CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toBe("building");
       expect(cadPlayPaneForModelDefinition(CAD_PLAY_ENERGY_MODEL_DEFINITION_ID)).toBe("energy");
       expect(cadPlayPaneForModelDefinition(CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID)).toBe("structure-classic");
@@ -2194,7 +2194,7 @@ if (import.meta.vitest) {
     it("registers view, save, and transform categories", () => {
       const tools = buildCadPlayToolbarTools(
         {
-          activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+          activeModelDefinitionId: defaultModelDefinitionId(),
           selectionCount: 0,
           transformsTo: [],
           transformsFrom: [],
@@ -2266,13 +2266,13 @@ if (import.meta.vitest) {
       const rt = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },
-        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+        activeModelDefinitionId: defaultModelDefinitionId(),
       });
       await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
       await rt.send({ kind: "confirm", modifiers: {} });
-      const sections = buildCadPlayHierarchySections({ [SHAPE_MODEL_DEFINITION_ID]: model }, SHAPE_MODEL_DEFINITION_ID, [], () => {});
+      const sections = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
       const modelBranch = sections[0]?.items?.[0]?.items?.[0];
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
     });
@@ -2336,7 +2336,7 @@ if (import.meta.vitest) {
       shape.objects["box1"] = { id: "box1", typology: "spatial.shape.primitive.box", primitives: { solid: "solid-1" } };
       const building = new Model();
       building.objects["site1"] = { id: "site1", typology: "aec.building.site", primitives: {} };
-      const models = { [SHAPE_MODEL_DEFINITION_ID]: shape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: building };
+      const models = { [defaultModelDefinitionId()]: shape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: building };
       expect(cadPlayPaneModel(models, "shape").objects["box1"]).toBeDefined();
       expect(cadPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
       expect(cadPlayPaneModel(models, "shape")).not.toBe(cadPlayPaneModel(models, "building"));
@@ -2345,27 +2345,27 @@ if (import.meta.vitest) {
 
   describe("CAD play model bootstrap", () => {
     it("emptyPlayModels always seeds spatial.shape", () => {
-      expect(emptyPlayModels()[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(emptyPlayModels()[defaultModelDefinitionId()]).toBeInstanceOf(Model);
     });
 
     it("modelsFromCadJson on empty model space still seeds spatial.shape", () => {
       const models = modelsFromCadJson(new ModelSpace().toJSON());
-      expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
     });
 
     it("modelsFromCadJson loads fixture models under spatial.shape", () => {
       const models = modelsFromCadJson(geometrySmallBuilding);
-      expect(models[SHAPE_MODEL_DEFINITION_ID]?.objects).not.toEqual({});
+      expect(models[defaultModelDefinitionId()]?.objects).not.toEqual({});
     });
 
     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
-      const models = ensureDerivedModelInSpace({}, SHAPE_MODEL_DEFINITION_ID);
-      expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      const models = ensureDerivedModelInSpace({}, defaultModelDefinitionId());
+      expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
     });
 
     it("ensureCadPlayQuadModels seeds all four play panes", () => {
       const models = ensureCadPlayQuadModels({});
-      expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);

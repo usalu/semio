@@ -1362,10 +1362,10 @@ export class ModelSpace {
   }
 
   /** @emoji 🔄 Applies a transformation from a linked source model into a new linked target model. */
-  transform(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec): Model {
+  transform(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec, preview: SpatialPreviewKernel): Model {
     const source = this.models[linkedSourceId];
     if (!source) throw new Error(`ModelSpace: unknown source model ${linkedSourceId}`);
-    const target = applyTransformation(spec, source);
+    const target = applyTransformation(spec, source, preview);
     this.link(linkedTargetId, target);
     return target;
   }
@@ -1649,6 +1649,9 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
+/** @emoji 🧱 Topology primitive kind allowed on typology objects (`spatial/AGENTS.md`). */
+export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
+
 /** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
   readonly schema: "spatial.modelDefinition/v1";
@@ -1657,14 +1660,31 @@ export interface ModelDefinitionManifest {
   readonly label: string;
   readonly description?: string;
   readonly kinds: readonly string[];
+  readonly default?: boolean;
+  readonly kernelTopologyTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
 }
 
-/** @emoji 🧭 ModelDefinition geometry model definition id (raw kernel topology editing). */
-export const SHAPE_MODEL_DEFINITION_ID = "spatial.shape";
+/** @emoji 🧭 Default geometry-edit model definition id (manifest `default: true`). */
+export function defaultModelDefinitionId(): string {
+  if (defaultModelDefinitionIdCache) return defaultModelDefinitionIdCache;
+  const manifests = listModelDefinitionManifests();
+  const row = manifests.find((m) => m.default) ?? manifests[0];
+  defaultModelDefinitionIdCache = row?.id ?? "";
+  return defaultModelDefinitionIdCache;
+}
 
 /** @emoji 🧭 True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
 export function isShapeModelDefinition(modelDefinitionId: string | null | undefined): boolean {
-  return modelDefinitionId == null || modelDefinitionId === SHAPE_MODEL_DEFINITION_ID;
+  if (modelDefinitionId == null) return true;
+  return kernelTopologyTypologyIds(modelDefinitionId) !== null;
+}
+
+/** @emoji 🪪 Kernel topology typology ids declared on a model-definition manifest. */
+export function kernelTopologyTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | null {
+  const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
+  const map = manifest?.kernelTopologyTypologies;
+  if (!map || Object.keys(map).length === 0) return null;
+  return map;
 }
 
 /** @emoji 🧾 Parses a model-definition manifest JSON or returns `null`. */
@@ -1674,6 +1694,7 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
   if (r.schema !== "spatial.modelDefinition/v1" && r.schema !== "spatial.extension/v1") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.kinds) || r.kinds.length === 0) return null;
+  const kernelTopologyTypologies = parseKernelTopologyTypologies(r.kernelTopologyTypologies);
   return {
     schema: "spatial.modelDefinition/v1",
     id: r.id,
@@ -1681,7 +1702,20 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
     label: r.label,
     description: typeof r.description === "string" ? r.description : undefined,
     kinds: r.kinds as string[],
+    ...(r.default === true ? { default: true } : {}),
+    ...(kernelTopologyTypologies ? { kernelTopologyTypologies } : {}),
   };
+}
+
+function parseKernelTopologyTypologies(raw: unknown): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const out: Partial<Record<TypologyPrimitiveKind, string>> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!allowed.has(key as TypologyPrimitiveKind) || typeof value !== "string" || value.length === 0) continue;
+    out[key as TypologyPrimitiveKind] = value;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** @emoji 📚 Lists model-definition manifests under spatial/assets/modelDefinition. */
@@ -1690,9 +1724,6 @@ export function listModelDefinitionManifests(): readonly ModelDefinitionManifest
     .map((raw) => parseModelDefinitionManifest(raw))
     .filter((m): m is ModelDefinitionManifest => m !== null);
 }
-
-/** @emoji 🧱 Topology primitive kind allowed on typology objects (`spatial/AGENTS.md`). */
-export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
 
 /** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
@@ -1715,8 +1746,6 @@ export function inferTypologyPrimitiveKinds(typology: string): readonly Typology
   if (id.includes(".measure.") && id.includes("volume")) return [];
   if (id.includes(".entity.") || id.includes("create-anchor")) return ["anchor"];
   if (id.includes(".measure.")) return ["anchor"];
-  if (id.includes("energy.energy.") || id.includes("structure.structure.")) return ["solid"];
-  if (id.includes("lineelement") || id.includes("surfaceelement") || id.includes("solidelement")) return ["solid"];
   if (id.includes(".curve.")) return ["edge", "wire"];
   if (id.includes(".surface.")) return ["face"];
   if (id.includes(".primitive.") || id.includes(".solid.")) return ["solid"];
@@ -2001,22 +2030,14 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
   return primitiveKinds.length > 0 && primitiveKinds.every((kind) => typologyAllowsPrimitiveKind(typology, kind));
 }
 
-/** @emoji 🪪 Kernel topology typology ids used by construct `MATCH` on geometry rows. */
-export const KERNEL_TOPOLOGY_TYPOLOGY_IDS: Readonly<Record<TypologyPrimitiveKind, string>> = {
-  anchor: "spatial.shape.kernel.anchor",
-  vertex: "spatial.shape.kernel.vertex",
-  edge: "spatial.shape.kernel.edge",
-  wire: "spatial.shape.kernel.wire",
-  face: "spatial.shape.kernel.face",
-  shell: "spatial.shape.kernel.shell",
-  solid: "spatial.shape.kernel.solid",
-};
-
 /** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel topology ids; AEC typologies map to `object`). */
 export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId: string): Readonly<Record<string, ModelEntityKind>> {
   const out: Record<string, ModelEntityKind> = {};
-  if (isShapeModelDefinition(modelDefinitionId)) {
-    for (const [kind, id] of Object.entries(KERNEL_TOPOLOGY_TYPOLOGY_IDS)) out[id] = kind as ModelEntityKind;
+  const kernelTopology = kernelTopologyTypologyIds(modelDefinitionId);
+  if (kernelTopology) {
+    for (const [kind, id] of Object.entries(kernelTopology)) {
+      if (typeof id === "string" && id.length > 0) out[id] = kind as ModelEntityKind;
+    }
     for (const spec of listTypologiesForModelDefinition(modelDefinitionId)) {
       if (spec.primitiveKinds.length !== 1) continue;
       const kind = spec.primitiveKinds[0]!;
@@ -2066,7 +2087,7 @@ export function listApplicablePropertyDefinitionsForModelDefinition(
 
 /** @emoji 🧭 Throws when `actionId` is outside the active model definition catalog. */
 export function assertActionAvailableInModelDefinition(actionId: string, activeModelDefinitionId?: string | null): void {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (!actionAvailableInModelDefinition(actionId, mdId)) {
     throw new Error(`action ${actionId} is not available in model definition ${mdId}`);
   }
@@ -2158,6 +2179,69 @@ export function qualifiedTransformationId(modelDefinitionId: string, transformat
   return `${modelDefinitionId}.${transformationId}`;
 }
 
+/** @emoji 🔄 Z-band selector for surface classification rules. */
+export type TransformationDeriveZBand = "min" | "max" | "mid";
+
+/** @emoji 🔄 One surface-classification rule in a transformation `derive` block. */
+export interface TransformationDeriveClassifyRule {
+  readonly role: string;
+  readonly typology: string;
+  readonly dominantAxis?: "x" | "y" | "z";
+  readonly minDominantNormal?: number;
+  readonly minAxisNormal?: number;
+  readonly zBand?: TransformationDeriveZBand;
+  readonly fallback?: boolean;
+}
+
+/** @emoji 🔄 Opening metadata → typology mapping in a transformation `derive` block. */
+export interface TransformationDeriveOpening {
+  readonly fields: readonly string[];
+  readonly values: readonly (string | boolean)[];
+  readonly typology: string;
+  readonly role: string;
+}
+
+/** @emoji 🔄 Solid-fuse options for a transformation `derive` block. */
+export interface TransformationDeriveFuse {
+  readonly hullSolidId?: string;
+  readonly contactPairs?: readonly (readonly [string, string])[];
+  readonly maxSeparation?: number;
+}
+
+/** @emoji 🔄 Source primitive collection for a transformation `derive` block. */
+export interface TransformationDeriveCollect {
+  readonly sourceModelDefinition: string;
+  readonly primitiveKind: TypologyPrimitiveKind;
+}
+
+/** @emoji 🔄 Hull object row for a transformation `derive` block. */
+export interface TransformationDeriveHull {
+  readonly typology: string;
+  readonly primitiveKind: string;
+}
+
+/** @emoji 🔄 Ensures typology rows exist after derive. */
+export interface TransformationDeriveEnsure {
+  readonly typology: string;
+  readonly empty?: boolean;
+}
+
+/** @emoji 🔄 Declarative surface-classification derive spec on `spatial.transformation/v1`. */
+export interface TransformationDeriveSpec {
+  readonly collect: TransformationDeriveCollect;
+  readonly fuse?: TransformationDeriveFuse;
+  readonly hull: TransformationDeriveHull;
+  readonly classify: {
+    readonly zTolRatio?: number;
+    readonly zTolMin?: number;
+    readonly rules: readonly TransformationDeriveClassifyRule[];
+    readonly opening?: TransformationDeriveOpening;
+    readonly mergeRoles?: readonly string[];
+    readonly mergeByPlane?: boolean;
+  };
+  readonly ensure?: readonly TransformationDeriveEnsure[];
+}
+
 /** @emoji 🔄 Parsed transformation (`spatial.transformation/v1`). */
 export interface TransformationSpec {
   readonly schema: "spatial.transformation/v1";
@@ -2169,6 +2253,94 @@ export interface TransformationSpec {
   readonly source: { readonly modelDefinition: string };
   readonly target: { readonly modelDefinition: string };
   readonly typologies: readonly string[];
+  readonly derive?: TransformationDeriveSpec;
+}
+
+function parseTransformationDeriveClassifyRule(raw: unknown): TransformationDeriveClassifyRule | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.role !== "string" || typeof r.typology !== "string") return null;
+  const dominantAxis = r.dominantAxis === "x" || r.dominantAxis === "y" || r.dominantAxis === "z" ? r.dominantAxis : undefined;
+  const zBand = r.zBand === "min" || r.zBand === "max" || r.zBand === "mid" ? r.zBand : undefined;
+  return {
+    role: r.role,
+    typology: r.typology,
+    ...(dominantAxis ? { dominantAxis } : {}),
+    ...(typeof r.minDominantNormal === "number" ? { minDominantNormal: r.minDominantNormal } : {}),
+    ...(typeof r.minAxisNormal === "number" ? { minAxisNormal: r.minAxisNormal } : {}),
+    ...(zBand ? { zBand } : {}),
+    ...(r.fallback === true ? { fallback: true } : {}),
+  };
+}
+
+function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const collect = r.collect as Record<string, unknown> | undefined;
+  const hull = r.hull as Record<string, unknown> | undefined;
+  const classify = r.classify as Record<string, unknown> | undefined;
+  if (typeof collect?.sourceModelDefinition !== "string") return null;
+  const primitiveKind = collect.primitiveKind;
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  if (typeof primitiveKind !== "string" || !allowed.has(primitiveKind as TypologyPrimitiveKind)) return null;
+  if (typeof hull?.typology !== "string" || typeof hull?.primitiveKind !== "string") return null;
+  if (!classify || !Array.isArray(classify.rules) || classify.rules.length === 0) return null;
+  const rules = classify.rules.map(parseTransformationDeriveClassifyRule).filter((row): row is TransformationDeriveClassifyRule => row !== null);
+  if (rules.length !== classify.rules.length) return null;
+  const fuseRaw = r.fuse as Record<string, unknown> | undefined;
+  const fuse: TransformationDeriveFuse | undefined =
+    fuseRaw && typeof fuseRaw === "object"
+      ? {
+          ...(typeof fuseRaw.hullSolidId === "string" ? { hullSolidId: fuseRaw.hullSolidId } : {}),
+          ...(Array.isArray(fuseRaw.contactPairs)
+            ? {
+                contactPairs: fuseRaw.contactPairs
+                  .filter((pair): pair is [string, string] => Array.isArray(pair) && pair.length === 2 && typeof pair[0] === "string" && typeof pair[1] === "string")
+                  .map((pair) => [pair[0], pair[1]] as const),
+              }
+            : {}),
+          ...(typeof fuseRaw.maxSeparation === "number" ? { maxSeparation: fuseRaw.maxSeparation } : {}),
+        }
+      : undefined;
+  const openingRaw = classify.opening as Record<string, unknown> | undefined;
+  const opening: TransformationDeriveOpening | undefined =
+    openingRaw &&
+    Array.isArray(openingRaw.fields) &&
+    openingRaw.fields.every((f) => typeof f === "string") &&
+    Array.isArray(openingRaw.values) &&
+    typeof openingRaw.typology === "string" &&
+    typeof openingRaw.role === "string"
+      ? {
+          fields: openingRaw.fields as string[],
+          values: openingRaw.values as (string | boolean)[],
+          typology: openingRaw.typology,
+          role: openingRaw.role,
+        }
+      : undefined;
+  const ensure: TransformationDeriveEnsure[] | undefined = Array.isArray(r.ensure)
+    ? r.ensure
+        .map((row) => {
+          if (!row || typeof row !== "object") return null;
+          const e = row as Record<string, unknown>;
+          if (typeof e.typology !== "string") return null;
+          return { typology: e.typology, ...(e.empty === true ? { empty: true } : {}) };
+        })
+        .filter((row): row is TransformationDeriveEnsure => row !== null)
+    : undefined;
+  return {
+    collect: { sourceModelDefinition: collect.sourceModelDefinition, primitiveKind: primitiveKind as TypologyPrimitiveKind },
+    ...(fuse ? { fuse } : {}),
+    hull: { typology: hull.typology, primitiveKind: hull.primitiveKind },
+    classify: {
+      rules,
+      ...(typeof classify.zTolRatio === "number" ? { zTolRatio: classify.zTolRatio } : {}),
+      ...(typeof classify.zTolMin === "number" ? { zTolMin: classify.zTolMin } : {}),
+      ...(opening ? { opening } : {}),
+      ...(Array.isArray(classify.mergeRoles) ? { mergeRoles: classify.mergeRoles.filter((x): x is string => typeof x === "string") } : {}),
+      ...(classify.mergeByPlane === true ? { mergeByPlane: true } : {}),
+    },
+    ...(ensure?.length ? { ensure } : {}),
+  };
 }
 
 /** @emoji 🧾 Parses `spatial.transformation/v1` JSON; `modelDefinitionId` comes from the asset folder. */
@@ -2183,6 +2355,8 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
   if (!Array.isArray(r.typologies) || r.typologies.length === 0) return null;
   const typologies = r.typologies.filter((row): row is string => typeof row === "string");
   if (typologies.length !== r.typologies.length) return null;
+  const derive = r.derive !== undefined ? parseTransformationDeriveSpec(r.derive) : undefined;
+  if (r.derive !== undefined && !derive) return null;
   return {
     schema: "spatial.transformation/v1",
     id: r.id,
@@ -2193,6 +2367,7 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
     source: { modelDefinition: source.modelDefinition },
     target: { modelDefinition: target.modelDefinition },
     typologies,
+    ...(derive ? { derive } : {}),
   };
 }
 
@@ -2574,89 +2749,15 @@ export function registerTransformationApplier(qualifiedTransformationId: string,
   transformationAppliers.set(qualifiedTransformationId, applier);
 }
 
-function transformationFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
-  const pts: Vec3[] = [];
-  for (const wid of face.wireIds) {
-    for (const eid of model.wires[wid]?.edgeIds ?? []) {
-      for (const vid of model.edges[eid]?.vertexIds ?? []) {
-        const p = model.vertices[vid]?.position;
-        if (p) pts.push(p);
-      }
-    }
-  }
-  return [...new Map(pts.map((p) => [p.join(","), p])).values()];
-}
-
-function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null {
-  const pts = transformationFacePoints(model, face);
-  if (!pts.length) return null;
-  let x = 0;
-  let y = 0;
-  let z = 0;
-  for (const p of pts) {
-    x += p[0];
-    y += p[1];
-    z += p[2];
-  }
-  const n = pts.length;
-  return [x / n, y / n, z / n];
-}
-
-function transformationFaceNormalFromId(faceId: string): Vec3 | null {
-  if (faceId.includes("face-top")) return [0, 0, 1];
-  if (faceId.includes("face-bottom")) return [0, 0, -1];
-  if (faceId.includes("face-x0")) return [-1, 0, 0];
-  if (faceId.includes("face-x1")) return [1, 0, 0];
-  if (faceId.includes("face-y0")) return [0, -1, 0];
-  if (faceId.includes("face-y1")) return [0, 1, 0];
-  return null;
-}
-
-function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
-  if (face.surface?.kind === "plane") {
-    const n = face.surface.normal;
-    const len = Math.hypot(n[0], n[1], n[2]);
-    return len > 1e-9 ? ([n[0] / len, n[1] / len, n[2] / len] as Vec3) : null;
-  }
-  const pts = transformationFacePoints(model, face);
-  if (pts.length >= 3) {
-    let nx = 0;
-    let ny = 0;
-    let nz = 0;
-    for (let i = 0; i < pts.length; i++) {
-      const p0 = pts[i]!;
-      const p1 = pts[(i + 1) % pts.length]!;
-      nx += (p0[1] - p1[1]) * (p0[2] + p1[2]);
-      ny += (p0[2] - p1[2]) * (p0[0] + p1[0]);
-      nz += (p0[0] - p1[0]) * (p0[1] + p1[1]);
-    }
-    const len = Math.hypot(nx, ny, nz);
-    if (len > 1e-9) return [nx / len, ny / len, nz / len];
-  }
-  return transformationFaceNormalFromId(String(face.id));
-}
-
-function solidFaceIds(model: Model, solidId: string): readonly FaceRef[] {
-  const solid = model.solids[solidId];
-  if (!solid) return [];
-  const out: FaceRef[] = [];
-  const seen = new Set<string>();
-  for (const shellId of solid.shellIds) {
-    for (const faceId of model.shells[shellId]?.faceIds ?? []) {
-      const key = String(faceId);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(faceId);
-    }
-  }
-  return out;
-}
-
-function collectShapeSolidRefs(model: Model): readonly SolidRef[] {
+function collectTransformationPrimitiveRefs(
+  model: Model,
+  sourceModelDefinition: string,
+  primitiveKind: TypologyPrimitiveKind,
+): readonly SolidRef[] {
   const refs = new Set<string>();
-  for (const obj of listModelObjectsForModelDefinition(model, "spatial.shape")) {
-    for (const [, primitiveRef] of objectPrimitiveEntries(obj)) {
-      if (model.solids[primitiveRef]) refs.add(primitiveRef);
+  for (const obj of listModelObjectsForModelDefinition(model, sourceModelDefinition)) {
+    for (const [kind, primitiveRef] of objectPrimitiveEntries(obj)) {
+      if (kind === primitiveKind && model.solids[primitiveRef]) refs.add(primitiveRef);
     }
   }
   if (!refs.size) {
@@ -2665,114 +2766,57 @@ function collectShapeSolidRefs(model: Model): readonly SolidRef[] {
   return [...refs].sort().map((id) => id as SolidRef);
 }
 
-function facesAreContactPair(
-  a: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
-  b: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
-): boolean {
-  if (a.solid === b.solid) return false;
-  const aId = String(a.face);
-  const bId = String(b.face);
-  const contactPairs: readonly (readonly [string, string])[] = [
-    ["face-top", "face-bottom"],
-    ["face-bottom", "face-top"],
-  ];
-  let suffixMatch = false;
-  for (const [suffixA, suffixB] of contactPairs) {
-    if (aId.endsWith(suffixA) && bId.endsWith(suffixB)) {
-      suffixMatch = true;
-      break;
-    }
-  }
-  if (!suffixMatch) return false;
-  const sep = Math.hypot(a.centroid[0] - b.centroid[0], a.centroid[1] - b.centroid[1], a.centroid[2] - b.centroid[2]);
-  return sep <= 0.05;
-}
-
-function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidRef[]): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] } {
-  const allFaces = solidRefs.flatMap((solidId) => solidFaceIds(model, solidId));
-  const internal = new Set<string>();
-  for (let i = 0; i < solidRefs.length; i++) {
-    for (let j = i + 1; j < solidRefs.length; j++) {
-      const solidA = solidRefs[i]!;
-      const solidB = solidRefs[j]!;
-      for (const faceA of solidFaceIds(model, solidA)) {
-        const centroidA = transformationFaceCentroid(model, model.faces[faceA]!);
-        if (!centroidA) continue;
-        for (const faceB of solidFaceIds(model, solidB)) {
-          const centroidB = transformationFaceCentroid(model, model.faces[faceB]!);
-          if (!centroidB) continue;
-          if (!facesAreContactPair({ face: faceA, solid: solidA, centroid: centroidA }, { face: faceB, solid: solidB, centroid: centroidB })) continue;
-          internal.add(String(faceA));
-          internal.add(String(faceB));
-        }
-      }
-    }
-  }
-  const externalFaces = allFaces.filter((faceId) => !internal.has(String(faceId)));
-  const hullSolid: SolidRef = solidRefs.length === 1 ? solidRefs[0]! : ("from_geometry-hull" as SolidRef);
-  return { hullSolid, externalFaces };
-}
-
-type EnergySurfaceRole = "roof" | "baseplate" | "slab" | "externalwall" | "window";
-
-function facePlaneGroupKey(normal: Vec3, centroid: Vec3): string {
-  const ax = Math.abs(normal[0]);
-  const ay = Math.abs(normal[1]);
-  const az = Math.abs(normal[2]);
-  if (az >= ax && az >= ay) {
-    const sign = normal[2] >= 0 ? "+" : "-";
-    return `z:${Math.round(centroid[2] * 1000)}:${sign}`;
-  }
-  if (ax >= ay) {
-    const sign = normal[0] >= 0 ? "+" : "-";
-    return `x:${Math.round(centroid[0] * 1000)}:${sign}`;
-  }
-  const sign = normal[1] >= 0 ? "+" : "-";
-  return `y:${Math.round(centroid[1] * 1000)}:${sign}`;
-}
-
-function classifyEnergySurfaceRole(normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): EnergySurfaceRole {
-  const ax = Math.abs(normal[0]);
-  const ay = Math.abs(normal[1]);
-  const az = Math.abs(normal[2]);
-  if (az >= ax && az >= ay && az >= 0.75) {
-    if (centroid[2] >= zMax - zTol) return "roof";
-    if (centroid[2] <= zMin + zTol) return "baseplate";
-    return "slab";
-  }
-  if (ax >= 0.5 || ay >= 0.5) return "externalwall";
-  return "slab";
-}
-
-function energyTypologyForRole(role: EnergySurfaceRole): TypologyRef {
-  switch (role) {
-    case "roof":
-      return "energy.energy.roof" as TypologyRef;
-    case "baseplate":
-      return "energy.energy.baseplate" as TypologyRef;
-    case "externalwall":
-      return "energy.energy.externalwall" as TypologyRef;
-    case "window":
-      return "energy.energy.windows" as TypologyRef;
-    case "slab":
-    default:
-      return "energy.energy.hull" as TypologyRef;
-  }
-}
-
 function transformationObjectId(typology: string, index: number): ObjectRef {
   return (index === 0 ? typology : `${typology}#${index}`) as ObjectRef;
 }
 
-function faceHasOpeningAttribute(model: Model, faceId: FaceRef): boolean {
+function deriveOpeningMatch(model: Model, faceId: FaceRef, opening: TransformationDeriveOpening): boolean {
   const fields = model.metadata.get(String(faceId));
   if (!fields) return false;
-  const opening = fields.opening ?? fields["spatial.shape.opening"];
-  return opening === "window" || opening === "door" || opening === true;
+  for (const field of opening.fields) {
+    const value = fields[field];
+    if (opening.values.some((candidate) => candidate === value)) return true;
+  }
+  return false;
 }
 
-/** @emoji 🔄 Shape → energy: fuse solids, keep external faces, classify into envelope typologies. */
-export function applyEnergyFromGeometryTransformation(source: Model): Model {
+function deriveClassifyRuleMatches(
+  rule: TransformationDeriveClassifyRule,
+  normal: Vec3,
+  centroid: Vec3,
+  zMin: number,
+  zMax: number,
+  zTol: number,
+): boolean {
+  if (rule.fallback) return true;
+  const ax = Math.abs(normal[0]);
+  const ay = Math.abs(normal[1]);
+  const az = Math.abs(normal[2]);
+  if (rule.dominantAxis === 'z' && rule.minDominantNormal != null) {
+    if (!(az >= ax && az >= ay && az >= rule.minDominantNormal)) return false;
+    if (rule.zBand === 'max') return centroid[2] >= zMax - zTol;
+    if (rule.zBand === 'min') return centroid[2] <= zMin + zTol;
+    return true;
+  }
+  if (rule.minAxisNormal != null) return ax >= rule.minAxisNormal || ay >= rule.minAxisNormal;
+  return false;
+}
+
+function classifyFaceFromDeriveRules(
+  derive: TransformationDeriveSpec,
+  normal: Vec3,
+  centroid: Vec3,
+  zMin: number,
+  zMax: number,
+  zTol: number,
+): TransformationDeriveClassifyRule {
+  for (const rule of derive.classify.rules) {
+    if (deriveClassifyRuleMatches(rule, normal, centroid, zMin, zMax, zTol)) return rule;
+  }
+  return derive.classify.rules[derive.classify.rules.length - 1]!;
+}
+
+function cloneModelGeometryShell(source: Model): Model {
   const target = new Model();
   target.revision = source.revision;
   target.anchors = source.anchors;
@@ -2782,15 +2826,26 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
   target.faces = source.faces;
   target.shells = { ...source.shells };
   target.solids = { ...source.solids };
-  const solidRefs = collectShapeSolidRefs(source);
+  return target;
+}
+
+function runDeriveTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
+  const derive = spec.derive;
+  if (!derive) return applyTransformationFallback(spec, source);
+  const target = cloneModelGeometryShell(source);
+  const solidRefs = collectTransformationPrimitiveRefs(source, derive.collect.sourceModelDefinition, derive.collect.primitiveKind);
   if (!solidRefs.length) {
     target.bump();
     return target;
   }
   const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
-  const { hullSolid, externalFaces } = fuseShapeSolidsToExternalFaces(target, solidRefs);
+  const { hullSolid, externalFaces } = preview.fuseSolidsToExternalFaces(target, solidRefs, {
+    hullSolidId: derive.fuse?.hullSolidId,
+    contactPairs: derive.fuse?.contactPairs,
+    maxSeparation: derive.fuse?.maxSeparation,
+  });
   if (solidRefs.length > 1) {
-    target.metadata.setField(String(hullSolid), "fuseSourceSolidIds", solidRefs.map(String));
+    target.metadata.setField(String(hullSolid), 'fuseSourceSolidIds', solidRefs.map(String));
     target.solids[hullSolid] = { id: hullSolid, shellIds: [] };
   }
   const centroids: Vec3[] = [];
@@ -2798,8 +2853,8 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
   for (const faceId of externalFaces) {
     const face = target.faces[faceId];
     if (!face) continue;
-    const normal = transformationFaceNormal(target, face);
-    const centroid = transformationFaceCentroid(target, face);
+    const normal = preview.faceNormal(target, face);
+    const centroid = preview.faceCentroid(target, face);
     if (!normal || !centroid) continue;
     faceMeta.push({ face: faceId, normal, centroid });
     centroids.push(centroid);
@@ -2814,23 +2869,36 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
     zMin = 0;
     zMax = 0;
   }
-  const zTol = Math.max((zMax - zMin) * 0.02, 1e-3);
+  const zTolRatio = derive.classify.zTolRatio ?? 0.02;
+  const zTolMin = derive.classify.zTolMin ?? 1e-3;
+  const zTol = Math.max((zMax - zMin) * zTolRatio, zTolMin);
   const roleCounts = new Map<string, number>();
-  target.objects["energy.energy.hull" as ObjectRef] = {
-    id: "energy.energy.hull" as ObjectRef,
-    typology: "energy.energy.hull" as TypologyRef,
-    primitives: { solid: String(hullSolid) },
+  const hullTypology = derive.hull.typology as TypologyRef;
+  target.objects[transformationObjectId(hullTypology, 0)] = {
+    id: transformationObjectId(hullTypology, 0),
+    typology: hullTypology,
+    primitives: { [derive.hull.primitiveKind]: String(hullSolid) },
     attributes: { sourceObjectIds, fusedSolidIds: solidRefs.map(String) },
   };
-  const groupedFaces = new Map<string, { readonly role: EnergySurfaceRole; readonly typology: TypologyRef; readonly faces: FaceRef[] }>();
+  const mergeRoles = new Set(derive.classify.mergeRoles ?? []);
+  const mergeByPlane = derive.classify.mergeByPlane === true;
+  const groupedFaces = new Map<string, { readonly role: string; readonly typology: TypologyRef; readonly faces: FaceRef[] }>();
   for (const row of faceMeta) {
-    const role = faceHasOpeningAttribute(source, row.face) ? "window" : classifyEnergySurfaceRole(row.normal, row.centroid, zMin, zMax, zTol);
-    const typology = energyTypologyForRole(role);
-    const mergeGroup = role === "externalwall" || role === "slab";
-    const groupKey = mergeGroup ? `${typology}:${facePlaneGroupKey(row.normal, row.centroid)}` : `${typology}:${String(row.face)}`;
+    const opening = derive.classify.opening;
+    const classified =
+      opening && deriveOpeningMatch(source, row.face, opening)
+        ? { role: opening.role, typology: opening.typology as TypologyRef }
+        : (() => {
+            const rule = classifyFaceFromDeriveRules(derive, row.normal, row.centroid, zMin, zMax, zTol);
+            return { role: rule.role, typology: rule.typology as TypologyRef };
+          })();
+    const mergeGroup = mergeRoles.has(classified.role);
+    const groupKey = mergeGroup && mergeByPlane
+      ? `${classified.typology}:${preview.facePlaneGroupKey(row.normal, row.centroid)}`
+      : `${classified.typology}:${String(row.face)}`;
     const existing = groupedFaces.get(groupKey);
     if (existing) existing.faces.push(row.face);
-    else groupedFaces.set(groupKey, { role, typology, faces: [row.face] });
+    else groupedFaces.set(groupKey, { role: classified.role, typology: classified.typology, faces: [row.face] });
   }
   for (const group of groupedFaces.values()) {
     const index = roleCounts.get(group.typology) ?? 0;
@@ -2843,60 +2911,29 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
       attributes: { sourceObjectIds, surfaceRole: group.role, faceIds: group.faces.map(String) },
     };
   }
-  if (!roleCounts.has("energy.energy.windows")) {
-    target.objects["energy.energy.windows" as ObjectRef] = {
-      id: "energy.energy.windows" as ObjectRef,
-      typology: "energy.energy.windows" as TypologyRef,
-      primitives: {},
-      attributes: { sourceObjectIds },
-    };
+  for (const ensure of derive.ensure ?? []) {
+    if (!roleCounts.has(ensure.typology)) {
+      const objectId = transformationObjectId(ensure.typology, 0);
+      target.objects[objectId] = {
+        id: objectId,
+        typology: ensure.typology as TypologyRef,
+        primitives: ensure.empty ? {} : { face: String(externalFaces[0] ?? '') },
+        attributes: { sourceObjectIds },
+      };
+    }
   }
   target.bump();
   return target;
 }
 
-function applyTransformationFallback(spec: TransformationSpec, source: Model): Model {
-  const target = new Model();
-  target.revision = source.revision;
-  target.anchors = source.anchors;
-  target.vertices = source.vertices;
-  target.edges = source.edges;
-  target.wires = source.wires;
-  target.faces = source.faces;
-  target.shells = source.shells;
-  target.solids = source.solids;
-  const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
-  const primaryPrimitiveRef =
-    sourceObjectIds.length > 0
-      ? (objectPrimaryPrimitiveRef(source.objects[sourceObjectIds[0]!]!) ?? sourceObjectIds[0]!)
-      : (Object.keys(source.solids)[0] ?? "");
-  if (!primaryPrimitiveRef) {
-    target.bump();
-    return target;
-  }
-  const primaryPrimitiveKind = resolvePrimitiveRefKind(source, primaryPrimitiveRef) ?? "primitive";
-  for (const typologyId of spec.typologies) {
-    if (!loadTypology(typologyId)) continue;
-    target.objects[typologyId] = {
-      id: typologyId as ObjectRef,
-      typology: typologyId as TypologyRef,
-      primitives: { [primaryPrimitiveKind]: primaryPrimitiveRef },
-      attributes: { sourceObjectIds },
-    };
-  }
-  target.bump();
-  return target;
-}
 // #endregion 🔄TransformationGeometry
 
 /** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
-export function applyTransformation(spec: TransformationSpec, source: Model): Model {
+export function applyTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
   const qualified = qualifiedTransformationId(spec.modelDefinitionId, spec.id);
   const applier = transformationAppliers.get(qualified);
   if (applier) return applier(spec, source);
-  if (qualified === "aec.building.energy.from_geometry" && spec.source.modelDefinition === "spatial.shape") {
-    return applyEnergyFromGeometryTransformation(source);
-  }
+  if (spec.derive) return runDeriveTransformation(spec, source, preview);
   return applyTransformationFallback(spec, source);
 }
 
@@ -3976,7 +4013,7 @@ export function primaryAttributeSelectionTarget(selection: readonly SelectionTar
 
 /** @emoji 🪪 Collects stable `SelectionTarget` rows for kernel `kinds` scoped to the active model definition. */
 export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const allowed = new Set(scopeKinds);
   const out: SelectionTarget[] = [];
@@ -4026,7 +4063,7 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
 /** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
 export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
   const universe = collectGeometrySelectionTargets(model, scopeKinds, mdId);
   if (operation === "selectAll" || operation === "selectKinds") return universe;
@@ -4344,7 +4381,7 @@ export function interactionNumericEntryApplyEvent(spec: InteractionSpec, state: 
   return null;
 }
 
-function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): Vec3 | null {
+function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, preview: SpatialPreviewKernel): Vec3 | null {
   const fromField = readInteractionContextVec3(ctx, entry.field);
   if (fromField) return fromField;
   const lock = positiveLengthLock(ctx);
@@ -4352,7 +4389,7 @@ function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: Interaction
   const raw = lengthEntryRawPoint(ctx, entry);
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   if (!raw || !anchor) return null;
-  return clampPointAlongDirection(anchor, raw, lock);
+  return preview.clampPointAlongDirection(anchor, raw, lock);
 }
 
 /** @emoji 🔢 Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
@@ -4360,6 +4397,7 @@ export function interactionNumericEntryCommitEvent(
   spec: InteractionSpec,
   state: string,
   ctx: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
 ): InteractionEvent | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   const scalarEntry = interactionScalarEntryForState(spec, state);
@@ -4370,13 +4408,13 @@ export function interactionNumericEntryCommitEvent(
   const commitKind =
     scalarEntry?.commit ?? lengthEntry?.commit ?? (scalarEntry ? "confirm" : events.has("pointer.down") ? "pointer.down" : "confirm");
   if (commitKind === "pointer.down" && events.has("pointer.down") && lengthEntry) {
-    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    const point = lengthEntryCommitPoint(ctx, lengthEntry, preview);
     if (point) return { kind: "pointer.down", point, modifiers: {} };
     return null;
   }
   if (commitKind === "confirm" && events.has("confirm")) return { kind: "confirm", modifiers: {} };
   if (events.has("pointer.down") && lengthEntry) {
-    const point = lengthEntryCommitPoint(ctx, lengthEntry);
+    const point = lengthEntryCommitPoint(ctx, lengthEntry, preview);
     if (point) return { kind: "pointer.down", point, modifiers: {} };
   }
   if (events.has("confirm")) return { kind: "confirm", modifiers: {} };
@@ -4406,19 +4444,9 @@ export function projectPointOnScalarAxis(
   base: Vec3,
   axis: Vec3,
   raw: Vec3,
+  preview: SpatialPreviewKernel,
 ): { readonly projected: Vec3; readonly t: number } {
-  const ax = axis[0];
-  const ay = axis[1];
-  const az = axis[2];
-  const len = Math.hypot(ax, ay, az) || 1;
-  const ux = ax / len;
-  const uy = ay / len;
-  const uz = az / len;
-  const t = (raw[0] - base[0]) * ux + (raw[1] - base[1]) * uy + (raw[2] - base[2]) * uz;
-  return {
-    projected: [base[0] + ux * t, base[1] + uy * t, base[2] + uz * t],
-    t,
-  };
+  return preview.projectPointOnScalarAxis(base, axis, raw);
 }
 
 function scalarEntryAxis(entry: InteractionScalarEntrySpec): Vec3 {
@@ -4434,18 +4462,6 @@ function positiveHeightLock(ctx: Record<string, unknown>): number | null {
 
 function scalarHeightFromAxisT(t: number): number {
   return Math.max(0.01, Math.abs(t));
-}
-
-function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3 {
-  const ax = axis[0];
-  const ay = axis[1];
-  const az = axis[2];
-  const len = Math.hypot(ax, ay, az) || 1;
-  const ux = ax / len;
-  const uy = ay / len;
-  const uz = az / len;
-  const sign = signedT < 0 ? -1 : 1;
-  return [base[0] + ux * height * sign, base[1] + uy * height * sign, base[2] + uz * height * sign];
 }
 
 /** @emoji 📏 Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
@@ -4495,14 +4511,8 @@ export function writeInteractionContextVec3(ctx: Record<string, unknown>, path: 
 }
 
 /** @emoji 📏 Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
-export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3 {
-  const dx = target[0] - anchor[0];
-  const dy = target[1] - anchor[1];
-  const dz = target[2] - anchor[2];
-  const d = Math.hypot(dx, dy, dz);
-  if (d < 1e-9) return [target[0], target[1], target[2]];
-  const s = length / d;
-  return [anchor[0] + dx * s, anchor[1] + dy * s, anchor[2] + dz * s];
+export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number, preview: SpatialPreviewKernel): Vec3 {
+  return preview.clampPointAlongDirection(anchor, target, length);
 }
 
 function positiveLengthLock(ctx: Record<string, unknown>): number | null {
@@ -4518,10 +4528,16 @@ function lengthEntryRawPoint(ctx: Record<string, unknown>, entry: InteractionLen
   return [anchor[0] + 1, anchor[1], anchor[2]];
 }
 
-function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, raw: Vec3, lock: number): void {
+function applyLengthEntryToContext(
+  ctx: Record<string, unknown>,
+  entry: InteractionLengthEntrySpec,
+  raw: Vec3,
+  lock: number,
+  preview: SpatialPreviewKernel,
+): void {
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   if (!anchor) return;
-  const clamped = clampPointAlongDirection(anchor, raw, lock);
+  const clamped = preview.clampPointAlongDirection(anchor, raw, lock);
   writeInteractionContextVec3(ctx, entry.field, clamped);
   if (entry.field === "cursor" && "prevPoint" in ctx) ctx.prevPoint = anchor;
 }
@@ -4632,8 +4648,13 @@ export interface DisplayModel {
 }
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
-export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>): DisplayModel {
-  const env: ExprEnv = { context };
+export function resolveDisplay(
+  spec: InteractionSpec,
+  state: string,
+  context: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
+): DisplayModel {
+  const env: ExprEnv = { context, preview };
   const section = spec.display?.states?.find((s) => s.state === state);
   const raw = section?.items ?? [];
   const items: DisplayItem[] = [];
@@ -4756,7 +4777,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         typeof context[SCALAR_AXIS_T_CTX] === "number" && Number.isFinite(context[SCALAR_AXIS_T_CTX])
           ? (context[SCALAR_AXIS_T_CTX] as number)
           : height;
-      const top = scalarTopOnAxis(base, axis, height, signedT);
+      const top = preview.scalarTopOnAxis(base, axis, height, signedT);
       items.push({
         kind: "segment",
         id: `${state}-scalar-height`,
@@ -4764,7 +4785,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
         params: { from: base, to: top },
       });
       if (raw) {
-        const projected = heightLock != null ? top : projectPointOnScalarAxis(base, axis, raw).projected;
+        const projected = heightLock != null ? top : preview.projectPointOnScalarAxis(base, axis, raw).projected;
         items.push({
           kind: "point",
           id: `${state}-scalar-cursor`,
@@ -5143,7 +5164,7 @@ export class InteractionRuntime {
     if (lock == null) return event;
     const anchor = readInteractionContextVec3(ctx, entry.anchor);
     if (!anchor) return event;
-    return { ...event, point: clampPointAlongDirection(anchor, raw, lock) };
+    return { ...event, point: this.previewKernel().clampPointAlongDirection(anchor, raw, lock) };
   }
 
   private handleSetLength(event: InteractionEvent): void {
@@ -5164,7 +5185,7 @@ export class InteractionRuntime {
     const raw = lengthEntryRawPoint(ctx, entry);
     if (raw) {
       ctx[CURSOR_RAW_CTX] = raw;
-      applyLengthEntryToContext(ctx, entry, raw, lock);
+      applyLengthEntryToContext(ctx, entry, raw, lock, this.previewKernel());
     }
     this.emit();
   }
@@ -5180,7 +5201,7 @@ export class InteractionRuntime {
     const base = scalarEntryAxisBase(ctx, entry);
     if (!base) return false;
     const axis = scalarEntryAxis(entry);
-    const { t } = projectPointOnScalarAxis(base, axis, raw);
+    const { t } = this.previewKernel().projectPointOnScalarAxis(base, axis, raw);
     ctx[SCALAR_AXIS_T_CTX] = t;
     const lock = positiveHeightLock(ctx);
     ctx[entry.field] = lock ?? scalarHeightFromAxisT(t);
@@ -5284,7 +5305,7 @@ export class InteractionRuntime {
     if (this.snapshotCache) return this.snapshotCache;
     const ctx = this.sm.getContext();
     const st = this.sm.getState();
-    const display = resolveDisplay(this.spec, st, ctx);
+    const display = resolveDisplay(this.spec, st, ctx, this.previewKernel());
     const spatialInteraction = mergeInteractionSpatial(this.spec);
     const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
     const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
@@ -5570,7 +5591,7 @@ export async function runSelectionOperationInteraction(
   interactionId: string,
   opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] },
 ): Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }> {
-  const mdId = opts.activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = opts.activeModelDefinitionId ?? defaultModelDefinitionId();
   const defn = selectionOperationsForModelDefinitionFromActions(mdId).find((row) => row.id === interactionId);
   if (!defn) throw new Error(`Not a selection operation: ${interactionId}`);
   assertActionAvailableInModelDefinition(interactionId, mdId);
@@ -5828,7 +5849,7 @@ if (import.meta.vitest) {
       } as unknown as SpatialKernel;
       const out = await derivePropertyValue(defn, { model, kernel, object });
       expect(out.volume).toBe(42);
-      expect(listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, model, object).map((row) => row.id)).toContain("spatial.shape.volume");
+      expect(listApplicablePropertyDefinitionsForModelDefinition(defaultModelDefinitionId(), model, object).map((row) => row.id)).toContain("spatial.shape.volume");
     });
     it("validates object geometry against typology primitiveKinds", () => {
       const model = new Model();
@@ -5891,7 +5912,7 @@ if (import.meta.vitest) {
       expect(listTransformationsFromModelDefinition("spatial.shape").some((row) => row.target.modelDefinition === "aec.building.energy")).toBe(true);
     });
     it("scopes catalogs to active model definition", () => {
-      const shape = resolveModelDefinitionScope(SHAPE_MODEL_DEFINITION_ID);
+      const shape = resolveModelDefinitionScope(defaultModelDefinitionId());
       const energy = resolveModelDefinitionScope("aec.building.energy");
       expect(shape.interactions.some((row) => row.id === "primitive.box")).toBe(true);
       expect(energy.interactions.length).toBe(5);
@@ -5909,9 +5930,9 @@ if (import.meta.vitest) {
         true,
       );
       expect(listPropertyDefinitionsForModelDefinition("aec.building.energy").some((row) => row.id === "energy.heatedvolume")).toBe(true);
-      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", SHAPE_MODEL_DEFINITION_ID)).toBe(true);
+      expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", defaultModelDefinitionId())).toBe(true);
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
-      expect(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID).some((row) => row.id === "selection.selectVertices")).toBe(true);
+      expect(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
     it("buildModelTopologyHierarchy nests shell through vertex under solid", () => {
@@ -5975,7 +5996,7 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "box" },
       };
-      const target = applyTransformation(spec!, source);
+      const target = applyTransformation(spec!, source, M);
       expect(target.objects["energy.energy.hull"]?.typology).toBe("energy.energy.hull");
       expect(target.objects["energy.energy.hull"]?.primitives).toEqual({ solid: "box" });
       expect(target.solids.box).toBe(source.solids.box);
@@ -5986,7 +6007,7 @@ if (import.meta.vitest) {
       expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-box-face-bottom");
       const space = new ModelSpace();
       space.link("geometry", source);
-      space.transform("geometry", "energy", spec!);
+      space.transform("geometry", "energy", spec!, M);
       expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
     });
     it("from_geometry fuses touching shape solids and drops internal faces", () => {
@@ -6004,7 +6025,7 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "upper" },
       };
-      const target = applyTransformation(spec, source);
+      const target = applyTransformation(spec, source, M);
       expect(target.solids["from_geometry-hull"]?.shellIds).toEqual([]);
       expect(target.metadata.get("from_geometry-hull")?.fuseSourceSolidIds).toEqual(["lower", "upper"]);
       expect(target.objects["energy.energy.hull"]?.primitives.solid).toBe("from_geometry-hull");
@@ -6036,7 +6057,7 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "east" },
       };
-      const target = applyTransformation(spec, source);
+      const target = applyTransformation(spec, source, M);
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const hull = target.objects["energy.energy.hull"]!;
       const heated = await derivePropertyValue(loadPropertyDefinition("energy.heatedvolume")!, { model: target, kernel, object: hull });
@@ -6541,7 +6562,7 @@ if (import.meta.vitest) {
       const rt = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },
-        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+        activeModelDefinitionId: defaultModelDefinitionId(),
       });
       await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
       await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
@@ -6549,20 +6570,20 @@ if (import.meta.vitest) {
       await rt.send({ kind: "confirm", modifiers: {} });
       const res = rt.getSnapshot().lastResponse!;
       expect(res.ok).toBe(true);
-      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
       expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
       expect(model.objects[typology as ObjectRef]?.primitives.solid).toBeTruthy();
       const rt2 = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },
-        activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+        activeModelDefinitionId: defaultModelDefinitionId(),
       });
       await rt2.send({ kind: "pointer.down", point: [5, 0, 0], modifiers: {} });
       await rt2.send({ kind: "pointer.down", point: [7, 2, 0], modifiers: {} });
       await rt2.send({ kind: "set.height", value: 2, modifiers: {} });
       await rt2.send({ kind: "confirm", modifiers: {} });
       expect(rt2.getSnapshot().lastResponse?.ok).toBe(true);
-      expect(listModelObjectsForModelDefinition(model, SHAPE_MODEL_DEFINITION_ID)).toHaveLength(2);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(2);
     });
     it("typologyConstructCommitActionForMode resolves exactly one mode construct action", () => {
       const ids = typologyConstructAssetIds("energy.energy.hull", "Hull");
@@ -6956,7 +6977,7 @@ if (import.meta.vitest) {
       );
       expect(hist.entries()).toEqual([]);
     });
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("registers selection command action $id", (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("registers selection command action $id", (defn) => {
       expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action/v1");
     });
     it("selection.invert honors seed targets", async () => {
@@ -7000,7 +7021,7 @@ if (import.meta.vitest) {
       const headless = await runSelectionApply(params, ctx);
       expect(headless).toEqual(direct);
     });
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("runSelectionApply matches runSelectionOperationInteraction for $id", async (defn) => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -7265,7 +7286,7 @@ if (import.meta.vitest) {
         __scalarAxisT: 3,
         __cursorRaw: [5, 6, 4] as Vec3,
       };
-      const d = resolveDisplay(spec, "first_corner_height", ctx);
+      const d = resolveDisplay(spec, "first_corner_height", ctx, M);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-height")).toBe(true);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-cursor" && i.role === "cursor")).toBe(true);
       expect(d.items.some((i) => i.id === "first_corner_height-scalar-guide" && i.role === "guide")).toBe(true);
@@ -7345,7 +7366,7 @@ if (import.meta.vitest) {
     });
 
     it("clampPointAlongDirection preserves direction and length", () => {
-      expect(clampPointAlongDirection([0, 0, 0], [3, 4, 0], 2.5)).toEqual([1.5, 2, 0]);
+      expect(clampPointAlongDirection([0, 0, 0], [3, 4, 0], 2.5, M)).toEqual([1.5, 2, 0]);
     });
 
     it("set.length clamps cursor along anchor direction", async () => {
@@ -7397,14 +7418,14 @@ if (import.meta.vitest) {
       const line = requireSpatialInteraction("curve.line");
       const box = buildBoxInteractionSpec();
       const ctx = { points: { start: [0, 0, 0] as Vec3 }, cursor: [3, 0, 0] as Vec3 };
-      expect(interactionNumericEntryCommitEvent(line, "end_of_line", ctx)?.kind).toBe("pointer.down");
-      expect(interactionNumericEntryCommitEvent(box, "first_corner_height", { height: 2 })?.kind).toBe("confirm");
+      expect(interactionNumericEntryCommitEvent(line, "end_of_line", ctx, M)?.kind).toBe("pointer.down");
+      expect(interactionNumericEntryCommitEvent(box, "first_corner_height", { height: 2 }, M)?.kind).toBe("confirm");
     });
 
     it("interactionNumericEntryCommitEvent pointer.down from length lock without field", () => {
       const box = buildBoxInteractionSpec();
       const ctx = { origin: [0, 0, 0] as Vec3, diagA: [0, 0, 0] as Vec3, __lengthLock: 4 };
-      const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx);
+      const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx, M);
       expect(ev?.kind).toBe("pointer.down");
       if (ev?.kind === "pointer.down") {
         expect(ev.point[0]).toBeCloseTo(4, 5);
@@ -7427,7 +7448,7 @@ if (import.meta.vitest) {
       await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "pointer.move", point: [3, 4, 0] as Vec3, modifiers: {} });
       await rt.send({ kind: "set.length", value: 2.5, modifiers: {} });
-      const commitEv = interactionNumericEntryCommitEvent(spec, rt.getSnapshot().state, rt.getSnapshot().context);
+      const commitEv = interactionNumericEntryCommitEvent(spec, rt.getSnapshot().state, rt.getSnapshot().context, M);
       expect(commitEv?.kind).toBe("pointer.down");
       await rt.send(commitEv!);
       expect(rt.getSnapshot().state).toBe("committed");
@@ -7809,7 +7830,7 @@ if (import.meta.vitest) {
         corner: [2, 3, 0] as Vec3,
         height: 4,
       };
-      const d = resolveDisplay(spec, "committed", ctx);
+      const d = resolveDisplay(spec, "committed", ctx, M);
       const prev = d.items.find((i) => i.kind === "box-preview" && i.id === "preview-committed");
       expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
       expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
@@ -8276,7 +8297,7 @@ if (import.meta.vitest) {
     ];
 
     it("covers every shipped interaction", () => {
-      const ids = listSpatialInteractionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID)
+      const ids = listSpatialInteractionsForModelDefinition(defaultModelDefinitionId())
         .map((row) => row.id)
         .filter((id) => {
           const spec = loadSpatialInteraction(id);
@@ -8286,7 +8307,7 @@ if (import.meta.vitest) {
       expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
     });
 
-    it.each(listSelectionOperationsForModelDefinition(SHAPE_MODEL_DEFINITION_ID))("$id selection action completes on seeded box", async (defn) => {
+    it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("$id selection action completes on seeded box", async (defn) => {
       const model = topoFromFixture("empty");
       seedBoxCell(model);
       if (defn.kinds?.includes("object")) {

@@ -88,7 +88,7 @@ import {
 	stepSpatialFileHeader,
 	StepEntityWriter,
 	derivePropertyValue,
-	SHAPE_MODEL_DEFINITION_ID,
+	defaultModelDefinitionId,
 	type ObjectRef,
 	type TypologyRef,
 } from "@cad/js/core";
@@ -3099,7 +3099,7 @@ if (import.meta.vitest) {
 			const space = await kernel.importStepToModelSpace(stepText);
 			const restored = space.models.props!;
 			const obj = restored.objects["obj-vol"]!;
-			const defns = listApplicablePropertyDefinitionsForModelDefinition(SHAPE_MODEL_DEFINITION_ID, restored, obj);
+			const defns = listApplicablePropertyDefinitionsForModelDefinition(defaultModelDefinitionId(), restored, obj);
 			const volumeDefn = defns.find((d) => d.id === "spatial.shape.volume");
 			expect(volumeDefn).toBeDefined();
 			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });

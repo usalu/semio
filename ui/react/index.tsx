@@ -22557,9 +22557,8 @@ function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): Windo
 
 //#region 🧭ModeDockDragPreview
 
-const MODE_DRAG_CURSOR_TAB_WIDTH = 148;
-const MODE_DRAG_CURSOR_OFFSET_X = 12;
-const MODE_DRAG_CURSOR_OFFSET_Y = 14;
+const MODE_DRAG_CURSOR_OFFSET_X = 8;
+const MODE_DRAG_CURSOR_OFFSET_Y = 10;
 
 interface ModeDockDragPreviewProps {
   title: string;
@@ -22737,18 +22736,12 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
               )}
               style={{ gridColumn: chromeGrid.tabCol(index) }}
             >
-              {tabInsertIndex === index ? renderInsertSlot(`insert-${index}`) : null}
               {renderTab(tab, index)}
               {activeId === tab.id && stackGloballyActive ? (
                 <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
               ) : null}
             </div>
           ))}
-          {tabInsertIndex === tabs.length ? (
-            <div className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: chromeGrid.gapCol }}>
-              {renderInsertSlot("insert-end")}
-            </div>
-          ) : null}
           <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: chromeGrid.gapCol }}>
             {tabGap}
           </div>
@@ -22776,8 +22769,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         )}
       >
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
-          {renderTabsWithInserts(tabs, 0)}
-          {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
+          {tabs.map((tab, index) => renderTab(tab, index))}
         </div>
         <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right")} aria-hidden />
       </div>
@@ -23111,7 +23103,6 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
-      dropZone,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -23120,7 +23111,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, dropZone, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [dragState, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
@@ -23170,74 +23161,40 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
             <ModeDockDragPreview
               title={draggedPreviewTitle}
               tabOnly
-              compact
               style={{
                 position: "fixed",
                 left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
                 top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
-                width: MODE_DRAG_CURSOR_TAB_WIDTH,
                 zIndex: 70,
               }}
             />
-            {dropZone ? (
+            {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
               <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
-                {dropZone.kind === "split" || dropZone.kind === "root-split" ? (
-                  <div
-                    className="absolute rounded-sm border-2 border-accent bg-accent/20"
-                    style={(() => {
-                      if (dropZone.kind === "root-split") {
-                        const side = dropZone.side;
-                        if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
-                        if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
-                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
-                        return { left: 0, bottom: 0, width: "100%", height: "50%" };
-                      }
-                      const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                      const rect = elements?.body?.getBoundingClientRect();
-                      const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                      if (!rect || !modeRect) return { display: "none" };
-                      const bodyOriginLeft = rect.left - modeRect.left;
-                      const bodyOriginTop = rect.top - modeRect.top;
-                      const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
-                      return {
-                        left: bodyOriginLeft + preview.left,
-                        top: bodyOriginTop + preview.top,
-                        width: preview.width,
-                        height: preview.height,
-                      };
-                    })()}
-                  />
-                ) : (
-                  (() => {
+                <div
+                  className="absolute rounded-sm border-2 border-accent bg-accent/20"
+                  style={(() => {
+                    if (dropZone.kind === "root-split") {
+                      const side = dropZone.side;
+                      if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
+                      if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
+                      if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
+                      return { left: 0, bottom: 0, width: "100%", height: "50%" };
+                    }
                     const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                    const preview = computeTabInsertPreview(elements?.tabBar ?? null, dropZone.index);
-                    const bodyRect = elements?.body?.getBoundingClientRect();
+                    const rect = elements?.body?.getBoundingClientRect();
                     const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                    if (!preview || !modeRect) return null;
-                    const lineLeft = preview.insertX - modeRect.left - 1;
-                    const slotTop = preview.top - modeRect.top;
-                    const bodyLeft = bodyRect ? bodyRect.left - modeRect.left : 0;
-                    const bodyTop = bodyRect ? bodyRect.top - modeRect.top : slotTop + preview.height;
-                    const bodyWidth = bodyRect?.width ?? 0;
-                    const bodyHeight = bodyRect?.height ?? 0;
-                    return (
-                      <>
-                        <div
-                          data-slot="mode-dock-tab-insert-line"
-                          className="absolute w-[2px] rounded-full bg-accent shadow-[0_0_0_1px_var(--accent)]"
-                          style={{ left: lineLeft, top: slotTop + 2, height: preview.height - 4 }}
-                        />
-                        {bodyRect ? (
-                          <div
-                            data-slot="mode-dock-tab-target-body"
-                            className="absolute rounded-sm border-2 border-accent/80 bg-accent/10"
-                            style={{ left: bodyLeft, top: bodyTop, width: bodyWidth, height: bodyHeight }}
-                          />
-                        ) : null}
-                      </>
-                    );
-                  })()
-                )}
+                    if (!rect || !modeRect) return { display: "none" };
+                    const bodyOriginLeft = rect.left - modeRect.left;
+                    const bodyOriginTop = rect.top - modeRect.top;
+                    const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
+                    return {
+                      left: bodyOriginLeft + preview.left,
+                      top: bodyOriginTop + preview.top,
+                      width: preview.width,
+                      height: preview.height,
+                    };
+                  })()}
+                />
               </div>
             ) : null}
           </>

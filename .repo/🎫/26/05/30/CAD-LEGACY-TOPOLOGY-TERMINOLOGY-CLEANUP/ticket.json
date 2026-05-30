@@ -1,0 +1,10 @@
+{
+  "title": "Cad Legacy Topology Terminology Cleanup",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Remove legacy CAD terminology (topology-prefixed APIs, Topologic references, kernelTopologyTypologies, etc.) and align names/comments with cad/AGENTS.md vocabulary only.",
+  "goal": "🎯spatial",
+  "sessions": [
+    "⚪827c71ef4fd94f3b9aab78413841372a"
+  ]
+}

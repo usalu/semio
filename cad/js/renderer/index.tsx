@@ -32,7 +32,7 @@ import {
   isEmptyModelDiff,
   isInteractionSessionActive,
   isShapeModelDefinition,
-  SHAPE_MODEL_DEFINITION_ID,
+  defaultModelDefinitionId,
   listModelDefinitionManifests,
   listTransformationsFromModelDefinition,
   listTransformationsIntoModelDefinition,
@@ -607,7 +607,7 @@ export function intersectSpatialPickKindToggles(visibleKindToggles: SpatialPickK
 
 /** @emoji 👁️ Maps active model-definition entity kinds to renderer pick-kind toggles. */
 export function modelDefinitionPickTargetKinds(modelDefinitionId: string | null): readonly SpatialPickTargetKind[] {
-  const entityKinds = modelDefinitionSelectionEntityKinds(modelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
+  const entityKinds = modelDefinitionSelectionEntityKinds(modelDefinitionId ?? defaultModelDefinitionId());
   const out = new Set<SpatialPickTargetKind>();
   for (const kind of entityKinds) {
     if (kind === "vertex" || kind === "anchor") out.add("vertex");
@@ -627,7 +627,7 @@ export function defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionI
 
 /** @emoji 👁️ Typology ids declared on the active model definition (sorted). */
 export function modelDefinitionTypologyIds(modelDefinitionId: string | null): readonly string[] {
-  return listTypologiesForModelDefinition(modelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID)
+  return listTypologiesForModelDefinition(modelDefinitionId ?? defaultModelDefinitionId())
     .map((row) => row.id)
     .sort((a, b) => a.localeCompare(b));
 }
@@ -720,7 +720,7 @@ export function resolveSpatialSceneVisibility(
   readonly showCommittedEdges: boolean;
 } {
   const visible = (kind: SpatialPickTargetKind) => filterKindToggles[kind] !== false;
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (modelDefinitionUsesGeometryPicking(mdId)) {
     return {
       showFactoryWireframe: visible("edge"),
@@ -741,7 +741,7 @@ function spatialPickKindsForActiveView(activeModelDefinitionId: string | null): 
 
 /** @emoji 👁️ Keeps pick targets allowed by the active model definition (topology + typology objects). */
 export function filterSpatialPickTargetsForActiveView(targets: readonly SpatialPickTarget[], activeModelDefinitionId: string | null): SpatialPickTarget[] {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const allowedPickKinds = spatialPickKindsForActiveView(mdId);
   const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
   return targets.filter((target) => {
@@ -1054,7 +1054,7 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
   const buckets = geometryBuckets(geometry);
   const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
   if (!model) return [];
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
   const geometryTypologyIndex = buildGeometryTypologyIndex(model, mdId);
   const targets: SpatialPickTarget[] = [];
@@ -1897,7 +1897,7 @@ export function replHostGeometryPickingEnabled(interactionId: string, spec: Inte
 
 /** @emoji 👁️ Pick-target overlay visible whenever the active model definition uses factory geometry picking. */
 export function replGeometryPickLayerVisible(modelDefinitionId: string | null): boolean {
-  return modelDefinitionUsesGeometryPicking(modelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
+  return modelDefinitionUsesGeometryPicking(modelDefinitionId ?? defaultModelDefinitionId());
 }
 
 /** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
@@ -2005,7 +2005,7 @@ function GeometryFactoryWireframeLayer({ geometry, visible = true }: { readonly 
 //#region 🧲SpatialPickGeometryLayer
 export function SpatialPickGeometryLayer({
   geometry,
-  activeModelDefinitionId = SHAPE_MODEL_DEFINITION_ID,
+  activeModelDefinitionId = defaultModelDefinitionId(),
   modelDefinitionRevision = 0,
   geometryPreviewTransform = null,
   selectionAccept = [],
@@ -2590,7 +2590,7 @@ export function InteractionSpatialView({
   committedMeshes,
   geometry,
   pickGeometry: pickGeometryProp,
-  activeModelDefinitionId = SHAPE_MODEL_DEFINITION_ID,
+  activeModelDefinitionId = defaultModelDefinitionId(),
   modelDefinitionRevision = 0,
   displayModel,
   renderDisplayItem,
@@ -3048,7 +3048,7 @@ export function replPruneSelectionByPrimitive(selection: readonly SelectionTarge
 export function replPruneSelectionByTypology(selection: readonly SelectionTarget[], model: Model, activeModelDefinitionId: string | null, typologyId: string): SelectionTarget[] {
   const typologyIds = modelDefinitionTypologyIds(activeModelDefinitionId);
   if (!typologyIds.includes(typologyId)) return [...selection];
-  const index = buildGeometryTypologyIndex(model, activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
+  const index = buildGeometryTypologyIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId());
   return selection.filter((target) => {
     if (target.kind === "object" && target.editable === false) {
       const row = model.objects[target.id];
@@ -3067,7 +3067,7 @@ export function replDisplayedSelectionTargets(
   rendererByModel: SpatialRendererSelectionByModel,
   interactionByState: SpatialInteractionSelectionByState,
 ): readonly SelectionTarget[] {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (interactionActive) return replInteractionSelectionTargets(interactionByState, interactionState);
   return replRendererSelectionTargets(rendererByModel, mdId);
 }
@@ -3082,7 +3082,7 @@ export function replMergeSelectionPickInView(
   picked: readonly SelectionTarget[],
   modifiers: InteractionEvent["modifiers"] = {},
 ): SelectionTarget[] {
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const current = interactionActive ? replInteractionSelectionTargets(interactionByState, interactionState) : replRendererSelectionTargets(rendererByModel, mdId);
   return replApplySelectionPick(current, picked, modifiers);
 }
@@ -3090,7 +3090,7 @@ export function replMergeSelectionPickInView(
 /** @emoji 🪪 Applies archived interaction result to renderer selection for the active model when `archiveContext.targets` is set (including `[]`). */
 export function replFinalizeSelection(rendererByModel: SpatialRendererSelectionByModel, activeModelDefinitionId: string | null, result: InteractionSnapshot["lastResponse"]): SpatialRendererSelectionByModel {
   const ctx = result?.archiveContext;
-  const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (!ctx || typeof ctx !== "object" || !Object.hasOwn(ctx, "targets")) return rendererByModel;
   const targets = replInteractionSelectionFromContext(ctx as Record<string, unknown>);
   return replWithRendererSelectionTargets(rendererByModel, mdId, targets);
@@ -3245,11 +3245,11 @@ export function defaultInteractionReplChromeState(): Required<
   return {
     cmdLine: "",
     activeSuggestionIndex: 0,
-    filterTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
-    selectionTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(SHAPE_MODEL_DEFINITION_ID),
+    filterTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(defaultModelDefinitionId()),
+    selectionTypologyToggles: defaultSpatialTypologyTogglesForModelDefinition(defaultModelDefinitionId()),
     filterPrimitiveToggles: defaultSpatialPrimitiveToggles(),
     selectionPrimitiveToggles: defaultSpatialPrimitiveToggles(),
-    activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
+    activeModelDefinitionId: defaultModelDefinitionId(),
     selectionMethod: "rectangle",
     modelDefinitionRevision: 0,
     dragSelection: null,
@@ -3455,15 +3455,15 @@ export function InteractionRepl({
   const [filterPrimitiveToggles, setFilterPrimitiveToggles] = useHostState(filterPrimitiveTogglesProp, onFilterPrimitiveTogglesChange, () => chromeDefaults.filterPrimitiveToggles);
   const [selectionPrimitiveToggles, setSelectionPrimitiveToggles] = useHostState(selectionPrimitiveTogglesProp, onSelectionPrimitiveTogglesChange, () => chromeDefaults.selectionPrimitiveToggles);
   const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(activeModelDefinitionIdProp, onActiveModelDefinitionIdChange, () => chromeDefaults.activeModelDefinitionId);
-  const mdIdForView = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+  const mdIdForView = activeModelDefinitionId ?? defaultModelDefinitionId();
   const committedMeshesForView = reactHostPort.useMemo(() => (modelDefinitionUsesGeometryPicking(mdIdForView) ? committedMeshes : []), [committedMeshes, mdIdForView]);
   const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
   const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(modelDefinitionRevisionProp, onModelDefinitionRevisionChange, () => chromeDefaults.modelDefinitionRevision);
   const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
-  const transformsFrom = reactHostPort.useMemo(() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID), [activeModelDefinitionId]);
-  const transformsTo = reactHostPort.useMemo(() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID), [activeModelDefinitionId]);
-  const modelDefinitionScope = reactHostPort.useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID), [activeModelDefinitionId]);
-  const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID), [activeModelDefinitionId, modelDefinitionRevision]);
+  const transformsFrom = reactHostPort.useMemo(() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const transformsTo = reactHostPort.useMemo(() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const modelDefinitionScope = reactHostPort.useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId, modelDefinitionRevision]);
   const kernel = rt.kernel();
   const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
   const [selectionMenu, setSelectionMenu] = useHostState(selectionMenuProp, onSelectionMenuChange, () => chromeDefaults.selectionMenu);
@@ -3599,7 +3599,7 @@ export function InteractionRepl({
 
   const startRuntime = reactHostPort.useCallback(async () => {
     const accept = rt.listActiveSelectionAccept() as readonly ModelEntityKind[];
-    const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+    const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
     const accepted = replSelectionAccepted(accept, replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId));
     setInteractionSelectionByState({ [rt.getSnapshot().state]: [...accepted] });
     await rt.send(replStartEvent(accepted));
@@ -3635,7 +3635,7 @@ export function InteractionRepl({
   }, [geometry, snapshot.state, modelDefinitionRevision]);
 
   reactHostPort.useEffect(() => {
-    const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+    const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
     const typologyDefaults = defaultSpatialTypologyTogglesForModelDefinition(mdId);
     const primitiveDefaults = defaultSpatialPrimitiveToggles();
     setFilterTypologyToggles(typologyDefaults);
@@ -3681,7 +3681,7 @@ export function InteractionRepl({
   }, [interactionId, interactionActive, hostPickingEnabled, snapshot.revision, snapshot.state, snapshot.context, setInteractionSelectionByState]);
 
   const runtimeSelectionAccept = reactHostPort.useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
-  const defaultSelectionAccept = reactHostPort.useMemo(() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID), [activeModelDefinitionId]);
+  const defaultSelectionAccept = reactHostPort.useMemo(() => modelDefinitionSelectionEntityKinds(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
   const activeSelectionAccept = reactHostPort.useMemo((): readonly ModelEntityKind[] => {
     if (runtimeSelectionAccept.length > 0) {
       const allowed = new Set(defaultSelectionAccept);
@@ -3699,7 +3699,7 @@ export function InteractionRepl({
     (selection: readonly SelectionTarget[]) => {
       setSelectionMenu(null);
       setHoveredPickKey(null);
-      const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+      const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
       if (boundInteractionSession) {
         setInteractionSelectionByState((prev) => replWithInteractionSelectionTargets(prev, snapshot.state, selection));
       } else {
@@ -3711,7 +3711,7 @@ export function InteractionRepl({
 
   const applySelectionPrune = reactHostPort.useCallback(
     (map: (selection: readonly SelectionTarget[]) => readonly SelectionTarget[]) => {
-      const mdId = activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID;
+      const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
       setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, mdId, map(replRendererSelectionTargets(prev, mdId))));
       setInteractionSelectionByState((prev) => {
         let next: SpatialInteractionSelectionByState = prev;
@@ -4057,7 +4057,7 @@ export function InteractionRepl({
       setCmdLine("");
       return true;
     }
-    const interactionHit = resolveScopedSpatialInteractionKey(raw, activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID);
+    const interactionHit = resolveScopedSpatialInteractionKey(raw, activeModelDefinitionId ?? defaultModelDefinitionId());
     if (interactionHit) {
       onInteractionId(interactionHit.id);
       setCmdLine("");
@@ -4643,7 +4643,7 @@ export function InteractionRepl({
           {onDocumentModelChange ? (
             <SelectionAttributesPanel
               model={documentModel.model}
-              activeModelDefinitionId={activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID}
+              activeModelDefinitionId={activeModelDefinitionId ?? defaultModelDefinitionId()}
               selection={displayedSelectionTargets}
               selectionCount={displayedSelectionTargets.length}
               onModelChange={onDocumentModelChange}
@@ -4655,9 +4655,9 @@ export function InteractionRepl({
                 <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <span>Model definition</span>
                   <select
-                    value={activeModelDefinitionId ?? SHAPE_MODEL_DEFINITION_ID}
+                    value={activeModelDefinitionId ?? defaultModelDefinitionId()}
                     onChange={(e) => {
-                      const next = e.target.value || SHAPE_MODEL_DEFINITION_ID;
+                      const next = e.target.value || defaultModelDefinitionId();
                       setActiveModelDefinitionId(next);
                       setModelDefinitionRevision((r) => r + 1);
                       setSelectionMenu(null);
@@ -5323,7 +5323,7 @@ if (import.meta.vitest) {
         primitives: { solid: String(cell) },
       };
       const activeModelDefinitionId = "aec.building.energy";
-      const editTargets = createSpatialPickTargets(model, SHAPE_MODEL_DEFINITION_ID);
+      const editTargets = createSpatialPickTargets(model, defaultModelDefinitionId());
       const objectTargets = createSpatialPickTargets(model, activeModelDefinitionId);
       expect(editTargets.some((t) => t.kind === "vertex")).toBe(true);
       expect(objectTargets.some((t) => t.kind === "object" && !t.geometryKind)).toBe(true);
@@ -5339,13 +5339,13 @@ if (import.meta.vitest) {
         { kind: "face", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0.5] },
         { kind: "object", id: "energy.energy.hull", point: [0.5, 0.5, 0.5] },
       ];
-      expect(filterSpatialPickTargetsForActiveView(targets, SHAPE_MODEL_DEFINITION_ID).map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0"]);
+      expect(filterSpatialPickTargetsForActiveView(targets, defaultModelDefinitionId()).map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0"]);
       expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.energy").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0", "object:energy.energy.hull"]);
       expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.structure").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0", "object:energy.energy.hull"]);
     });
 
     it("resolveSpatialSceneVisibility switches edit wireframe vs committed object mesh", () => {
-      expect(resolveSpatialSceneVisibility(SHAPE_MODEL_DEFINITION_ID, { edge: true, face: true })).toEqual({
+      expect(resolveSpatialSceneVisibility(defaultModelDefinitionId(), { edge: true, face: true })).toEqual({
         showFactoryWireframe: true,
         showCommittedFaces: true,
         showCommittedEdges: true,
@@ -5359,7 +5359,7 @@ if (import.meta.vitest) {
 
     it("defaultInteractionReplChromeState seeds typology and primitive toggles by default", () => {
       const chrome = defaultInteractionReplChromeState();
-      expect(chrome.activeModelDefinitionId).toBe(SHAPE_MODEL_DEFINITION_ID);
+      expect(chrome.activeModelDefinitionId).toBe(defaultModelDefinitionId());
       expect(chrome.filterTypologyToggles["spatial.shape.primitive.box"]).toBe(true);
       expect(chrome.filterPrimitiveToggles.vertex).toBe(true);
       expect(chrome.filterPrimitiveToggles.solid).toBe(true);
@@ -5397,13 +5397,13 @@ if (import.meta.vitest) {
 
     it("scopes displayed selection to activeModelDefinitionId", () => {
       const rendererByModel: SpatialRendererSelectionByModel = {
-        [SHAPE_MODEL_DEFINITION_ID]: [{ kind: "face", id: "f0", editable: true }],
+        [defaultModelDefinitionId()]: [{ kind: "face", id: "f0", editable: true }],
         "aec.building.energy": [
           { kind: "face", id: "f0", editable: true },
           { kind: "object", id: "o0", editable: false },
         ],
       };
-      expect(replDisplayedSelectionTargets(false, SHAPE_MODEL_DEFINITION_ID, "idle", rendererByModel, {})).toEqual([{ kind: "face", id: "f0", editable: true }]);
+      expect(replDisplayedSelectionTargets(false, defaultModelDefinitionId(), "idle", rendererByModel, {})).toEqual([{ kind: "face", id: "f0", editable: true }]);
       expect(replDisplayedSelectionTargets(false, "aec.building.energy", "idle", rendererByModel, {})).toEqual([
         { kind: "face", id: "f0", editable: true },
         { kind: "object", id: "o0", editable: false },
@@ -5419,22 +5419,22 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       const faceId = Object.keys(model.faces)[0]!;
       model.shells["sh0"] = { id: "sh0" as ShellRef, faceIds: [faceId] };
-      const targets = createSpatialPickTargets(model, SHAPE_MODEL_DEFINITION_ID);
+      const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
       expect(targets.some((t) => t.geometryKind === "anchor")).toBe(true);
       expect(targets.some((t) => t.geometryKind === "shell")).toBe(true);
     });
 
     it("modelDefinitionPickTargetKinds maps topology entity kinds to pick toggles", () => {
-      expect(modelDefinitionPickTargetKinds(SHAPE_MODEL_DEFINITION_ID).sort()).toEqual(["edge", "face", "object", "vertex"]);
+      expect(modelDefinitionPickTargetKinds(defaultModelDefinitionId()).sort()).toEqual(["edge", "face", "object", "vertex"]);
       expect(modelDefinitionPickTargetKinds("aec.building.structure").sort()).toEqual(["edge", "face", "object", "vertex"]);
     });
 
     it("merges picks within active model definition without clearing other models", () => {
       const rendererByModel: SpatialRendererSelectionByModel = {
-        [SHAPE_MODEL_DEFINITION_ID]: [{ kind: "wire", id: "w0", editable: true }],
+        [defaultModelDefinitionId()]: [{ kind: "wire", id: "w0", editable: true }],
         "aec.building.energy": [{ kind: "object", id: "o0", editable: false }],
       };
-      expect(replMergeSelectionPickInView(false, SHAPE_MODEL_DEFINITION_ID, "idle", rendererByModel, {}, [{ kind: "wire", id: "w1", editable: true }], {})).toEqual([{ kind: "wire", id: "w1", editable: true }]);
+      expect(replMergeSelectionPickInView(false, defaultModelDefinitionId(), "idle", rendererByModel, {}, [{ kind: "wire", id: "w1", editable: true }], {})).toEqual([{ kind: "wire", id: "w1", editable: true }]);
       expect(replRendererSelectionTargets(rendererByModel, "aec.building.energy")).toEqual([{ kind: "object", id: "o0", editable: false }]);
     });
 
@@ -5449,8 +5449,8 @@ if (import.meta.vitest) {
         first_corner: [{ kind: "vertex", id: "v0", editable: true }],
         second_corner: [{ kind: "vertex", id: "v1", editable: true }],
       };
-      expect(replDisplayedSelectionTargets(true, SHAPE_MODEL_DEFINITION_ID, "first_corner", {}, interactionByState)).toEqual([{ kind: "vertex", id: "v0", editable: true }]);
-      expect(replMergeSelectionPickInView(true, SHAPE_MODEL_DEFINITION_ID, "second_corner", {}, interactionByState, [{ kind: "edge", id: "e0", editable: true }], { shift: true })).toEqual([
+      expect(replDisplayedSelectionTargets(true, defaultModelDefinitionId(), "first_corner", {}, interactionByState)).toEqual([{ kind: "vertex", id: "v0", editable: true }]);
+      expect(replMergeSelectionPickInView(true, defaultModelDefinitionId(), "second_corner", {}, interactionByState, [{ kind: "edge", id: "e0", editable: true }], { shift: true })).toEqual([
         { kind: "vertex", id: "v1", editable: true },
         { kind: "edge", id: "e0", editable: true },
       ]);
