@@ -195,6 +195,25 @@ export function spatialPlayPaneFromWindowKindId(windowKindId: string): SpatialPl
   return SPATIAL_PLAY_PANE_SPECS.find((row) => row.windowKindId === windowKindId)?.pane ?? null;
 }
 
+/** @emoji 🧭 Maps a model definition id to its spatial play pane id. */
+export function spatialPlayPaneForModelDefinition(modelDefinitionId: string): SpatialPlayPaneId | null {
+  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.modelDefinitionId === modelDefinitionId)?.pane ?? null;
+}
+
+const SPATIAL_PLAY_PANE_IDS: readonly SpatialPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
+
+function emptyInteractionIdByPane(): Record<SpatialPlayPaneId, string> {
+  return { shape: "", building: "", energy: "", "structure-classic": "" };
+}
+
+function emptyInteractionBootIdByPane(): Record<SpatialPlayPaneId, number> {
+  return { shape: 0, building: 0, energy: 0, "structure-classic": 0 };
+}
+
+function emptySnapshotByPane(): Record<SpatialPlayPaneId, InteractionSnapshot | null> {
+  return { shape: null, building: null, energy: null, "structure-classic": null };
+}
+
 function isSpatialComputeMode(value: string): value is SpatialComputeMode {
   return value === "fast" || value === "precise";
 }
@@ -423,14 +442,14 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
 }
 
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
-export function spatialPlayEngagementMirror(engagement: EngagementSpec | null): WindowEngagement | undefined {
+export function spatialPlayEngagementMirror(engagement: EngagementSpec | null, pane: SpatialPlayPaneId): WindowEngagement | undefined {
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
     label: option.label,
     pressed: option.pressed,
     disabled: option.disabled,
-    command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: option.id } },
+    command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane, optionId: option.id } },
   }));
   const input = engagement.input
     ? {
@@ -438,8 +457,8 @@ export function spatialPlayEngagementMirror(engagement: EngagementSpec | null): 
         value: engagement.input.value,
         placeholder: engagement.input.placeholder,
         disabled: engagement.input.disabled,
-        onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementInput" },
-        onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit" },
+        onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
+        onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
@@ -453,7 +472,7 @@ export class SpatialPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Spatial", undefined);
   private hostBridge: SpatialPlayHostBridge | null = null;
   private computeModeByPane: Record<SpatialPlayPaneId, SpatialComputeMode>;
-  private shapeEngagement: WindowEngagement | undefined;
+  private engagementByPane: Record<SpatialPlayPaneId, WindowEngagement | undefined>;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -463,6 +482,7 @@ export class SpatialPlayShellController extends Controller {
       energy: "fast",
       "structure-classic": "fast",
     };
+    this.engagementByPane = { shape: undefined, building: undefined, energy: undefined, "structure-classic": undefined };
     this.rebuildShellMode();
   }
 
@@ -481,16 +501,17 @@ export class SpatialPlayShellController extends Controller {
     };
   }
 
-  /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and the shape pane's live interaction engagement. */
+  /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and live interaction engagement per pane. */
   rebuildShellMode(): void {
     this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map(
-      (row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], row.pane === "shape" ? this.shapeEngagement : undefined),
+      (row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], this.engagementByPane[row.pane]),
     );
   }
 
-  /** @emoji 💬 Sets the shape pane's interaction engagement (built from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
-  setShapeEngagement(engagement: WindowEngagement | undefined): void {
-    this.shapeEngagement = engagement;
+  /** @emoji 💬 Sets one pane's interaction engagement (from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
+  setPaneEngagement(pane: SpatialPlayPaneId, engagement: WindowEngagement | undefined): void {
+    if (this.engagementByPane[pane] === engagement) return;
+    this.engagementByPane = { ...this.engagementByPane, [pane]: engagement };
     this.rebuildShellMode();
     this.emit();
   }
@@ -625,7 +646,6 @@ import { BrepjsKernel } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
   InteractionRepl,
-  InteractionReplViewport,
   SelectionAttributesPanel,
   SelectionPropertiesPanel,
   replDisplayedSelectionTargets,
@@ -1061,6 +1081,8 @@ interface PlaySessionProps {
   readonly hoveredPickKey: string | null;
   readonly onHoveredPickKeyChange: (key: string | null) => void;
   readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
+  readonly autoFitMeshes?: boolean;
+  readonly autoFitBehavior?: "initial" | "always";
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1090,6 +1112,8 @@ function PlaySession({
   hoveredPickKey,
   onHoveredPickKeyChange,
   onCanvasHoverTarget,
+  autoFitMeshes = false,
+  autoFitBehavior = "initial",
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1147,6 +1171,8 @@ function PlaySession({
       hoveredPickKey={hoveredPickKey}
       onHoveredPickKeyChange={onHoveredPickKeyChange}
       onHoverTarget={onCanvasHoverTarget}
+      autoFitMeshes={autoFitMeshes}
+      autoFitBehavior={autoFitBehavior}
     />
   );
 }
@@ -1157,14 +1183,14 @@ interface SpatialPlayModelSpaceValue {
   readonly activeModelDefinitionId: string;
   readonly setActiveModelDefinitionId: (value: string) => void;
   readonly focusModelDefinition: (modelDefinitionId: string) => void;
-  readonly interactionId: string;
-  readonly handleInteractionPick: (id: string) => void;
-  readonly spec: InteractionSpec;
+  readonly interactionIdForPane: (pane: SpatialPlayPaneId) => string;
+  readonly handleInteractionPickForPane: (pane: SpatialPlayPaneId, id: string) => void;
+  readonly specForPane: (pane: SpatialPlayPaneId) => InteractionSpec;
   readonly documentModel: ModelDocument;
   readonly history: DocumentHistory;
   readonly kernel: InteractionRuntimeOptions["kernel"];
   readonly computeModeForPane: (pane: SpatialPlayPaneId) => SpatialComputeMode;
-  readonly sessionRestartNonce: number;
+  readonly sessionRestartNonceForPane: (pane: SpatialPlayPaneId) => number;
   readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
   readonly setRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
   readonly interactionSelectionByState: SpatialInteractionSelectionByState;
@@ -1175,8 +1201,8 @@ interface SpatialPlayModelSpaceValue {
   readonly pickGeometry: Model;
   readonly handleModelAttributesChange: (model: Model) => void;
   readonly commitModelForDefinition: (modelDefinitionId: string, model: Model) => void;
-  readonly handleSnapshotChange: (snapshot: InteractionSnapshot) => void;
-  readonly handleEngagementChange: (engagement: EngagementSpec | null) => void;
+  readonly handleSnapshotChangeForPane: (pane: SpatialPlayPaneId, snapshot: InteractionSnapshot) => void;
+  readonly handleEngagementChangeForPane: (pane: SpatialPlayPaneId, engagement: EngagementSpec | null) => void;
   readonly flushedModelsByDefinitionId: Record<string, Model>;
   readonly playModelSpace: ModelSpace;
   readonly viewObjectCount: number;
@@ -1227,43 +1253,55 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     () => pointerFocusRef.current!.getSnapshot(),
   );
   const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
-  const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
-  const [interactionId, setInteractionId] = reactHostPort.useState("");
-  const [interactionBootId, setInteractionBootId] = reactHostPort.useState(0);
+  const [interactionIdByPane, setInteractionIdByPane] = reactHostPort.useState(emptyInteractionIdByPane);
+  const [interactionBootIdByPane, setInteractionBootIdByPane] = reactHostPort.useState(emptyInteractionBootIdByPane);
   const [shapeAssetId, setShapeAssetId] = reactHostPort.useState("");
   const [modelsByDefinitionId, setModelsByDefinitionId] = reactHostPort.useState<Record<string, Model>>(emptyPlayModels);
   const [loadedRawName, setLoadedRawName] = reactHostPort.useState("");
   const [rendererSelectionByModel, setRendererSelectionByModel] = reactHostPort.useState<SpatialRendererSelectionByModel>({});
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
-  const [snapshot, setSnapshot] = reactHostPort.useState<InteractionSnapshot | null>(null);
-  const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
+  const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
+  const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<SpatialPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
-  const spec = reactHostPort.useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
+  const specForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId): InteractionSpec => {
+    const interactionId = interactionIdByPane[pane];
+    return interactionId ? (loadSpatialInteraction(interactionId) ?? PLAY_REPL_SPEC) : PLAY_REPL_SPEC;
+  }, [interactionIdByPane]);
   const history = useDocumentHistory();
   const brepjsKernel = reactHostPort.useMemo(() => new BrepjsKernel(), []);
   const kernel = reactHostPort.useMemo<InteractionRuntimeOptions["kernel"]>(() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"], [brepjsKernel]);
 
   reactHostPort.useEffect(() => {
-    if (!interactionId) return;
-    if (!scopedInteractions.some((row) => row.id === interactionId)) setInteractionId("");
-  }, [activeModelDefinitionId, interactionId, scopedInteractions]);
+    setInteractionIdByPane((prev) => {
+      let next: Record<SpatialPlayPaneId, string> | null = null;
+      for (const row of SPATIAL_PLAY_PANE_SPECS) {
+        const interactionId = prev[row.pane];
+        if (!interactionId) continue;
+        const scoped = listSpatialInteractionsForModelDefinition(row.modelDefinitionId);
+        if (scoped.some((candidate) => candidate.id === interactionId)) continue;
+        if (!next) next = { ...prev };
+        next[row.pane] = "";
+      }
+      return next ?? prev;
+    });
+  }, [interactionIdByPane]);
 
   reactHostPort.useEffect(() => {
     setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels(prev));
   }, [activeModelDefinitionId]);
 
-  const handleInteractionPick = reactHostPort.useCallback(
-    (id: string) => {
-      if (id === interactionId) setInteractionBootId((b) => b + 1);
-      else {
-        setInteractionId(id);
-        setInteractionBootId(0);
+  const handleInteractionPickForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId, id: string) => {
+    setInteractionIdByPane((prev) => {
+      if (id === prev[pane]) {
+        setInteractionBootIdByPane((boot) => ({ ...boot, [pane]: boot[pane] + 1 }));
+        return prev;
       }
-    },
-    [interactionId],
-  );
+      setInteractionBootIdByPane((boot) => ({ ...boot, [pane]: 0 }));
+      return { ...prev, [pane]: id };
+    });
+  }, []);
 
   const handleShapeAssetChange = reactHostPort.useCallback((id: string) => {
     setShapeAssetId(id);
@@ -1343,17 +1381,25 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     [activeModelDefinitionId, commitModelForDefinition],
   );
 
-  const interactionActive = reactHostPort.useMemo(() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"), [spec, snapshot]);
-  const boundInteractionSession = Boolean(interactionId) && interactionActive;
-  const handleSnapshotChange = reactHostPort.useCallback((next: InteractionSnapshot) => {
-    setSnapshot((prev) => {
-      if (prev && prev.revision === next.revision && prev.state === next.state) return prev;
-      return next;
+  const activePane = reactHostPort.useMemo(() => spatialPlayPaneForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
+  const activeInteractionId = activePane ? interactionIdByPane[activePane] : "";
+  const activeSnapshot = activePane ? snapshotByPane[activePane] : null;
+  const activeSpec = activePane ? specForPane(activePane) : PLAY_REPL_SPEC;
+  const interactionActive = reactHostPort.useMemo(
+    () => Boolean(activeSnapshot) && isInteractionSessionActive(activeSpec, activeSnapshot?.state ?? "idle"),
+    [activeSnapshot, activeSpec],
+  );
+  const boundInteractionSession = Boolean(activeInteractionId) && interactionActive;
+  const handleSnapshotChangeForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId, next: InteractionSnapshot) => {
+    setSnapshotByPane((prev) => {
+      const current = prev[pane];
+      if (current && current.revision === next.revision && current.state === next.state) return prev;
+      return { ...prev, [pane]: next };
     });
   }, []);
   const currentSelection = reactHostPort.useMemo(
-    () => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, snapshot?.state ?? "idle", rendererSelectionByModel, interactionSelectionByState),
-    [boundInteractionSession, activeModelDefinitionId, snapshot?.state, rendererSelectionByModel, interactionSelectionByState],
+    () => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, activeSnapshot?.state ?? "idle", rendererSelectionByModel, interactionSelectionByState),
+    [boundInteractionSession, activeModelDefinitionId, activeSnapshot?.state, rendererSelectionByModel, interactionSelectionByState],
   );
   const selectionKinds = reactHostPort.useMemo(() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)), [activeModelDefinitionId]);
   const viewObjectCount = reactHostPort.useMemo(() => countViewObjectsForModelDefinition(liveModel, activeModelDefinitionId), [liveModel, activeModelDefinitionId, modelDefinitionRevision]);
@@ -1444,8 +1490,8 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
 
   reactHostPort.useEffect(() => {
     history.clear();
-    setSnapshot(null);
-  }, [history, interactionId, interactionBootId, shapeAssetId]);
+    setSnapshotByPane(emptySnapshotByPane());
+  }, [history, interactionIdByPane, interactionBootIdByPane, shapeAssetId]);
 
   const saveBundle = reactHostPort.useCallback(async (name: string, payload: SpatialExchangeBundle, message: string) => {
     try {
@@ -1489,10 +1535,10 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     loadInputRef.current?.click();
   }, []);
 
-  const handleEngagementChange = reactHostPort.useCallback(
-    (engagement: EngagementSpec | null) => {
-      engagementSpecRef.current = engagement;
-      shellController.setShapeEngagement(spatialPlayEngagementMirror(engagement));
+  const handleEngagementChangeForPane = reactHostPort.useCallback(
+    (pane: SpatialPlayPaneId, engagement: EngagementSpec | null) => {
+      engagementSpecRefByPane.current[pane] = engagement;
+      shellController.setPaneEngagement(pane, spatialPlayEngagementMirror(engagement, pane));
     },
     [shellController],
   );
@@ -1534,16 +1580,24 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
             handleLoadRawRequest();
             break;
           case "engagementOption": {
+            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
-            engagementSpecRef.current?.options?.find((option) => option.id === optionId)?.onPress?.();
+            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            engagementSpecRefByPane.current[pane]?.options?.find((option) => option.id === optionId)?.onPress?.();
             break;
           }
-          case "engagementInput":
-            engagementSpecRef.current?.input?.onChange?.((args as { value?: string })?.value ?? "");
+          case "engagementInput": {
+            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
+            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            engagementSpecRefByPane.current[pane]?.input?.onChange?.((args as { value?: string })?.value ?? "");
             break;
-          case "engagementSubmit":
-            engagementSpecRef.current?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
+          }
+          case "engagementSubmit": {
+            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
+            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            engagementSpecRefByPane.current[pane]?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
             break;
+          }
           default:
             break;
         }
@@ -1598,14 +1652,14 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       activeModelDefinitionId,
       setActiveModelDefinitionId,
       focusModelDefinition,
-      interactionId,
-      handleInteractionPick,
-      spec: spec ?? PLAY_REPL_SPEC,
+      interactionIdForPane: (pane) => interactionIdByPane[pane],
+      handleInteractionPickForPane,
+      specForPane,
       documentModel,
       history,
       kernel,
       computeModeForPane,
-      sessionRestartNonce: interactionBootId,
+      sessionRestartNonceForPane: (pane) => interactionBootIdByPane[pane],
       rendererSelectionByModel,
       setRendererSelectionByModel,
       interactionSelectionByState,
@@ -1616,8 +1670,8 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       pickGeometry,
       handleModelAttributesChange,
       commitModelForDefinition,
-      handleSnapshotChange,
-      handleEngagementChange,
+      handleSnapshotChangeForPane,
+      handleEngagementChangeForPane,
       flushedModelsByDefinitionId,
       playModelSpace,
       viewObjectCount,
@@ -1646,7 +1700,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       flushedModelsByDefinitionId,
       focusModelDefinition,
       handleApplyTransformation,
-      handleInteractionPick,
+      handleInteractionPickForPane,
       handleLoadRaw,
       handleLoadRawRequest,
       handleModelAttributesChange,
@@ -1655,11 +1709,11 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       handleSaveInPlay,
       handleSaveSelected,
       handleShapeAssetChange,
-      handleSnapshotChange,
-      handleEngagementChange,
+      handleSnapshotChangeForPane,
+      handleEngagementChangeForPane,
       history,
-      interactionBootId,
-      interactionId,
+      interactionBootIdByPane,
+      interactionIdByPane,
       interactionSelectionByState,
       kernel,
       liveModel,
@@ -1673,7 +1727,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       onCanvasHoverTarget,
       onHoveredPickKeyChange,
       shapeAssetId,
-      spec,
+      specForPane,
       viewObjectCount,
       brepjsKernel,
     ],
@@ -1734,16 +1788,16 @@ function SpatialPlayCatalogAside(): ReactNode {
   );
 }
 
-/** @emoji 🎮 Shape pane: interaction editing on spatial.shape. */
-function SpatialPlayShapePane(): ReactNode {
+/** @emoji 🎮 One quad pane: interaction editing for its model definition with window engagement. */
+function SpatialPlayInteractionPane({ pane }: { readonly pane: SpatialPlayPaneId }): ReactNode {
   const {
-    interactionId,
-    spec,
-    handleInteractionPick,
+    interactionIdForPane,
+    specForPane,
+    handleInteractionPickForPane,
     history,
     kernel,
     computeModeForPane,
-    sessionRestartNonce,
+    sessionRestartNonceForPane,
     focusModelDefinition,
     flushedModelsByDefinitionId,
     rendererSelectionByModel,
@@ -1754,51 +1808,56 @@ function SpatialPlayShapePane(): ReactNode {
     setModelDefinitionRevision,
     handleApplyTransformation,
     commitModelForDefinition,
-    handleSnapshotChange,
-    handleEngagementChange,
+    handleSnapshotChangeForPane,
+    handleEngagementChangeForPane,
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
   } = useSpatialPlayModelSpace();
-  const shapePane: SpatialPlayPaneId = "shape";
-  const shapeModelDefinitionId = spatialPlayModelDefinitionIdForPane(shapePane);
-  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, shapePane);
+  const modelDefinitionId = spatialPlayModelDefinitionIdForPane(pane);
+  const interactionId = interactionIdForPane(pane);
+  const spec = specForPane(pane);
+  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, pane);
   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
   const pickGeometry = reactHostPort.useMemo(
-    () => pickShapeForModelDefinition(flushedModelsByDefinitionId, shapeModelDefinitionId, paneModel),
-    [flushedModelsByDefinitionId, shapeModelDefinitionId, paneModel, modelDefinitionRevision],
+    () => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
+    [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
   );
-  const commitShapeModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(shapeModelDefinitionId, model), [commitModelForDefinition, shapeModelDefinitionId]);
+  const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
+  const onSnapshot = reactHostPort.useCallback((snapshot: InteractionSnapshot) => handleSnapshotChangeForPane(pane, snapshot), [handleSnapshotChangeForPane, pane]);
+  const onEngagementChange = reactHostPort.useCallback((engagement: EngagementSpec | null) => handleEngagementChangeForPane(pane, engagement), [handleEngagementChangeForPane, pane]);
+  const onInteractionId = reactHostPort.useCallback((id: string) => handleInteractionPickForPane(pane, id), [handleInteractionPickForPane, pane]);
 
-  if (!spec) {
+  if (interactionId && !loadSpatialInteraction(interactionId)) {
     return (
       <div className="flex flex-col gap-double p-double text-destructive text-xs">
         <p>
           Unknown interaction <code className="text-foreground">{interactionId}</code>.
         </p>
-        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-foreground" onClick={() => handleInteractionPick("")}>
+        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-foreground" onClick={() => onInteractionId("")}>
           Reset
         </button>
       </div>
     );
   }
 
-  const mode = computeModeForPane("shape");
+  const mode = computeModeForPane(pane);
+  const autoFitMeshes = pane !== "shape";
 
   return (
-    <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(SHAPE_MODEL_DEFINITION_ID)}>
+    <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(modelDefinitionId)}>
       <PlaySession
         interactionId={interactionId}
         spec={spec}
-        onInteractionId={handleInteractionPick}
+        onInteractionId={onInteractionId}
         documentModel={documentModel}
         history={history}
         kernel={kernel}
         mode={mode}
         asideExtra={null}
-        sessionRestartNonce={sessionRestartNonce}
-        activeModelDefinitionId={shapeModelDefinitionId}
-        onActiveModelDefinitionId={() => focusModelDefinition(shapeModelDefinitionId)}
+        sessionRestartNonce={sessionRestartNonceForPane(pane)}
+        activeModelDefinitionId={modelDefinitionId}
+        onActiveModelDefinitionId={() => focusModelDefinition(modelDefinitionId)}
         rendererSelectionByModel={rendererSelectionByModel}
         onRendererSelectionByModel={setRendererSelectionByModel}
         interactionSelectionByState={interactionSelectionByState}
@@ -1807,78 +1866,13 @@ function SpatialPlayShapePane(): ReactNode {
         onModelDefinitionRevision={setModelDefinitionRevision}
         onApplyTransformation={handleApplyTransformation}
         pickGeometry={pickGeometry}
-        onDocumentModelChange={commitShapeModel}
-        onSnapshot={handleSnapshotChange}
-        onEngagementChange={handleEngagementChange}
+        onDocumentModelChange={commitPaneModel}
+        onSnapshot={onSnapshot}
+        onEngagementChange={onEngagementChange}
         hoveredPickKey={hoveredPickKey}
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
-      />
-    </div>
-  );
-}
-
-/** @emoji 👁️ Derived model pane: read-only viewport for one model definition in the quad. */
-function SpatialPlayViewPane({ pane }: { readonly pane: SpatialPlayPaneId }): ReactNode {
-  const modelDefinitionId = spatialPlayModelDefinitionIdForPane(pane);
-  const {
-    focusModelDefinition,
-    flushedModelsByDefinitionId,
-    modelDefinitionRevision,
-    rendererSelectionByModel,
-    setRendererSelectionByModel,
-    interactionSelectionByState,
-    setInteractionSelectionByState,
-    kernel,
-    computeModeForPane,
-    handleSnapshotChange,
-  } = useSpatialPlayModelSpace();
-  const mode = computeModeForPane(pane);
-  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, pane);
-  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
-  const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel), [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision]);
-  const history = useDocumentHistory();
-  const rtOpts = reactHostPort.useMemo(
-    (): InteractionRuntimeOptions => ({
-      kernel,
-      previewKernel: r3fPreviewKernel,
-      mode,
-      document: documentModel,
-      history,
-      stateEngine: statelyStateEngineProvider,
-      query: defaultConstructRunner,
-      activeModelDefinitionId: modelDefinitionId,
-    }),
-    [kernel, mode, documentModel, history, modelDefinitionId],
-  );
-  const rt = useInteractionRuntime(PLAY_REPL_SPEC, rtOpts);
-  reactHostPort.useEffect(() => {
-    return rt.subscribe(() => {
-      handleSnapshotChange(rt.getSnapshot());
-    });
-  }, [rt, handleSnapshotChange]);
-
-  return (
-    <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(modelDefinitionId)}>
-      <InteractionReplViewport
-        interactionId=""
-        spec={PLAY_REPL_SPEC}
-        onInteractionId={() => {}}
-        runtime={rt}
-        history={history}
-        document={documentModel}
-        geometry={paneModel}
-        pickGeometry={pickGeometry}
-        hideModelDefinitionControls
-        activeModelDefinitionId={modelDefinitionId}
-        onActiveModelDefinitionIdChange={focusModelDefinition}
-        rendererSelectionByModel={rendererSelectionByModel}
-        onRendererSelectionByModelChange={setRendererSelectionByModel}
-        interactionSelectionByState={interactionSelectionByState}
-        onInteractionSelectionByStateChange={setInteractionSelectionByState}
-        modelDefinitionRevision={modelDefinitionRevision}
-        autoFitMeshes
-        autoFitBehavior="initial"
+        autoFitMeshes={autoFitMeshes}
       />
     </div>
   );
@@ -1905,7 +1899,11 @@ function SpatialPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode 
   if (!pane) {
     return <div className="p-single text-destructive text-xs">Unknown spatial play surface</div>;
   }
-  return <div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">{pane === "shape" ? <SpatialPlayShapePane /> : <SpatialPlayViewPane pane={pane} />}</div>;
+  return (
+    <div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">
+      <SpatialPlayInteractionPane pane={pane} />
+    </div>
+  );
 }
 
 class SpatialPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
@@ -2011,23 +2009,30 @@ if (import.meta.vitest) {
 
   describe("spatialPlayEngagementMirror", () => {
     it("returns undefined for a null engagement", () => {
-      expect(spatialPlayEngagementMirror(null)).toBeUndefined();
+      expect(spatialPlayEngagementMirror(null, "shape")).toBeUndefined();
     });
 
     it("mirrors a ui engagement spec into neutral commands routed to the controller", () => {
-      const mirror = spatialPlayEngagementMirror({
-        options: [{ id: "confirm", label: "Confirm", onPress: () => {} }],
-        input: { id: "in", value: "box", placeholder: "Type an interaction", onSubmit: () => {} },
-        status: [{ id: "state", content: "State: idle" }],
+      const mirror = spatialPlayEngagementMirror(
+        {
+          options: [{ id: "confirm", label: "Confirm", onPress: () => {} }],
+          input: { id: "in", value: "box", placeholder: "Type an interaction", onSubmit: () => {} },
+          status: [{ id: "state", content: "State: idle" }],
+        },
+        "energy",
+      );
+      expect(mirror?.options?.[0]).toMatchObject({
+        id: "confirm",
+        label: "Confirm",
+        command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane: "energy", optionId: "confirm" } },
       });
-      expect(mirror?.options?.[0]).toMatchObject({ id: "confirm", label: "Confirm", command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: "confirm" } } });
-      expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit" } });
+      expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane: "energy" } } });
       expect(mirror?.status?.[0]).toEqual({ id: "state", text: "State: idle" });
     });
   });
 
   describe("SpatialPlayShellController engagement", () => {
-    it("attaches the shape engagement only to the shape window and routes engagement commands to the host bridge", () => {
+    it("attaches engagement per pane and routes pane-scoped engagement commands to the host bridge", () => {
       const runtime = new Platform();
       const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
@@ -2035,17 +2040,29 @@ if (import.meta.vitest) {
         getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
-      controller.setShapeEngagement({ options: [{ id: "confirm", label: "Confirm", command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: "confirm" } } }] });
+      controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
+      controller.setPaneEngagement("energy", { options: [{ id: "wall", label: "Wall" }] });
       const shapeWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_SHAPE_WINDOW_ID);
       const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
+      const buildingWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_BUILDING_WINDOW_ID);
       expect(shapeWindow?.engagement?.options?.[0]?.id).toBe("confirm");
-      expect(energyWindow?.engagement).toBeUndefined();
-      controller.run("engagementOption", { optionId: "confirm" });
-      controller.run("engagementSubmit", { value: "box" });
+      expect(energyWindow?.engagement?.options?.[0]?.id).toBe("wall");
+      expect(buildingWindow?.engagement).toBeUndefined();
+      controller.run("engagementOption", { pane: "shape", optionId: "confirm" });
+      controller.run("engagementSubmit", { pane: "energy", value: "box" });
       expect(calls).toEqual([
-        { command: "engagementOption", args: { optionId: "confirm" } },
-        { command: "engagementSubmit", args: { value: "box" } },
+        { command: "engagementOption", args: { pane: "shape", optionId: "confirm" } },
+        { command: "engagementSubmit", args: { pane: "energy", value: "box" } },
       ]);
+    });
+  });
+
+  describe("spatialPlayPaneForModelDefinition", () => {
+    it("maps each quad model definition to its pane", () => {
+      expect(spatialPlayPaneForModelDefinition(SHAPE_MODEL_DEFINITION_ID)).toBe("shape");
+      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID)).toBe("building");
+      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID)).toBe("energy");
+      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID)).toBe("structure-classic");
     });
   });
 
@@ -2148,7 +2165,8 @@ if (import.meta.vitest) {
         primitives: { solid: String(solid) },
       };
       const sections = buildSpatialPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {}, "object:box1");
-      const objectNode = sections[0]?.items?.[0]?.items?.[0];
+      const modelBranch = sections[0]?.items?.[0]?.items?.[0];
+      const objectNode = modelBranch?.items?.[0];
       expect(objectNode?.isHighlighted).toBe(true);
     });
 

@@ -1,0 +1,11 @@
+{
+  "title": "Cad Play Per Model Interactions",
+  "emoji": "🎮",
+  "status": "closed",
+  "description": "Wire interaction sessions and window engagement for every spatial play quad pane (shape, building, energy, structure-classic), not only shape.",
+  "summary": "Spatial play now runs a full PlaySession (InteractionRepl + showEngagement) in every quad pane, with per-pane interactionId, snapshot, and window engagement mirrored through SpatialPlayShellController.setPaneEngagement. Engagement commands include pane in args so each window routes input/options to its own InteractionRepl. Derived panes keep auto-fit on first load. All @cad/js/renderer tests pass (45).",
+  "goal": "🎯r26-02/🎯runningsketchpad",
+  "sessions": [
+    "⚪d19897e17db5407b954e458cc1d50e23"
+  ]
+}

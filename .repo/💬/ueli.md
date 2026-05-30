@@ -422,6 +422,13 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+The canvas doesnt feel like a canvas because it is not really visually different.
+The canvas is a different level.
+All windows should be slightly offsetted inwards, so they feel like windows.
+All windows must show between the tab and the fullscreen button the canvas.
+
+---
+
 Make sure it is 100% shell free, react only library. The shells are moved to framework or playground.
 
 ---

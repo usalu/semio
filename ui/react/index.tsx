@@ -19870,7 +19870,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {engagement ? (
             <div
               data-slot="window-engagement-overlay"
-              className="pointer-events-none absolute inset-x-0 bottom-[var(--spacing-double)] z-overlay flex justify-center"
+              className="pointer-events-none absolute inset-x-0 bottom-[var(--spacing-double)] z-window flex justify-center"
             >
               <Engagement {...engagement} />
             </div>
@@ -23174,6 +23174,34 @@ if (import.meta.vitest) {
       }
     });
 
+    it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }],
+        activeId: "a",
+      };
+      const drag = {
+        windowId: "a",
+        stackPath: "",
+        tabIndex: 0,
+        pointerId: 1,
+        ghostLabel: "A",
+        x: 0,
+        y: 0,
+      };
+      const zone = { kind: "split" as const, stackPath: "", side: "right" as const };
+      const next = applyModeDrop(layout, drag, zone);
+      expect(next.kind).toBe("row");
+      if (next.kind !== "row") return;
+      expect(next.children).toHaveLength(2);
+      const leftStack = next.children[0];
+      const rightStack = next.children[1];
+      expect(leftStack?.kind).toBe("stack");
+      expect(rightStack?.kind).toBe("stack");
+      if (leftStack?.kind === "stack") expect(leftStack.children.map((c) => c.id)).toEqual(["b"]);
+      if (rightStack?.kind === "stack") expect(rightStack.children.map((c) => c.id)).toEqual(["a"]);
+    });
+
     it("Mode maximize shows only one stack", () => {
       const { container } = render(
         <div className="h-[400px] w-[600px]">
@@ -23223,6 +23251,8 @@ if (import.meta.vitest) {
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("bottom-[var(--spacing-double)]");
+      expect(overlay?.className).toContain("z-window");
+      expect(overlay?.className).not.toContain("z-overlay");
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
