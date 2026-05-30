@@ -204,11 +204,6 @@ export {
   isCanvasOnlyWindowBody,
 } from "@framework/platform/core";
 
-/** @emoji 📋 Playground alias for {@link buildPuzzle2dWindowBody}. */
-export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
-  return buildPuzzle2dWindowBody(surfaceId, controllerId, paneId);
-}
-
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
   if (isCanvasOnlyWindowBody(node)) return;
   throw new Error(`Declarative window body "${bodyKey}" must be a single canvas component surface (optional none padding stack wrapper). Found "${node.type}".`);
@@ -778,9 +773,9 @@ if (import.meta.vitest) {
   });
 
   describe("canonical window bodies", () => {
-    it("buildBoardWindowBody is canvas-only", () => {
-      const node = buildBoardWindowBody("puzzle.2d/v1", "board-ctrl", "pane-a");
-      expect(node).toEqual({ type: "puzzle2d", componentKind: "puzzle2d", surfaceId: "puzzle.2d/v1", controllerId: "board-ctrl", paneId: "pane-a" });
+    it("buildPuzzle2dWindowBody is canvas-only", () => {
+      const node = buildPuzzle2dWindowBody("puzzle.2d/v1", "puzzle2d-ctrl", "pane-a");
+      expect(node).toEqual({ type: "puzzle2d", componentKind: "puzzle2d", surfaceId: "puzzle.2d/v1", controllerId: "puzzle2d-ctrl", paneId: "pane-a" });
     });
   });
 

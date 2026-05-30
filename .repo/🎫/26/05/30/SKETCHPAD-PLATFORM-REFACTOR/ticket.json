@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Home table: hierarchical rows (docs tree from MDX glob, kit name/version grouping), URL-synced filters (kind/q/name/version/e/sel), expand/collapse and modifier-click multi-select via extended TableRowModel + platform table renderer. Fixed importKitFromFile to use file picker factory. Home workbench shows selected kits. Commands for home filters. 20/20 sketchpad tests pass.",
+  "summary": "Docs app: lazy MDX loading (sketchpadLoadMdxModule, sketchpadResolveMdxModuleKey) in index.ts; boot.ts registers SketchpadDocsMdxHost with MDXProvider + @ui/react components and internal /docs/ link handling. Home table sort via URL (?sort=\u0026dir=) and palette commands. Docs workbench panel shows section context. Exported SKETCHPAD_SURFACE_DOCS_PAGE. 21/21 tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -17,6 +17,7 @@
     "⚪2dc44c792d69459f8b7c8cdeee334497",
     "⚪67dcb7fb3a494b1196311e7089596471",
     "⚪f62cebc19b1d4192b204bc377fb71ee1",
-    "⚪45cb01f69a6944bdab704d1c83055c10"
+    "⚪45cb01f69a6944bdab704d1c83055c10",
+    "⚪502b471a512846c9a0569cc2508a9335"
   ]
 }

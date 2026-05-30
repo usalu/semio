@@ -4,7 +4,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-async function gotoBoardPlayShell(page: Page): Promise<void> {
+async function gotoPuzzle2dPlayShell(page: Page): Promise<void> {
 	const errors: string[] = [];
 	page.on("pageerror", (error) => errors.push(error.message));
 	await page.goto("/", { waitUntil: "load", timeout: 180_000 });
@@ -27,8 +27,8 @@ async function gotoBoardPlayShell(page: Page): Promise<void> {
 		.toBe(true);
 }
 
-async function gotoBoardPlayReady(page: Page): Promise<void> {
-	await gotoBoardPlayShell(page);
+async function gotoPuzzle2dPlayReady(page: Page): Promise<void> {
+	await gotoPuzzle2dPlayShell(page);
 	await expect
 		.poll(async () => await page.locator('[data-testid="board-canvas"]').first().isVisible(), { timeout: 180_000 })
 		.toBe(true);
@@ -37,7 +37,7 @@ async function gotoBoardPlayReady(page: Page): Promise<void> {
 		.toBe(true);
 }
 
-test.describe("board play", () => {
+test.describe("puzzle 2d play", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.addInitScript(() => {
 			try {
@@ -52,7 +52,7 @@ test.describe("board play", () => {
 	});
 
 	test("opens board background context menu on overview canvas", async ({ page }) => {
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect
@@ -75,7 +75,7 @@ test.describe("board play", () => {
 		});
 		const menu = page.locator('[role="menu"]').first();
 		await expect(menu).toBeVisible({ timeout: 30_000 });
-		await expect(page.getByRole("menuitem", { name: "Board background menu" })).toHaveCount(1);
+		await expect(page.getByRole("menuitem", { name: "Puzzle 2D background menu" })).toHaveCount(1);
 		const menuBox = await menu.boundingBox();
 		expect(menuBox).not.toBeNull();
 		expect(Math.abs((menuBox?.x ?? 0) - point.x)).toBeLessThan(8);
@@ -92,7 +92,7 @@ test.describe("board play", () => {
 		page.on("pageerror", (err) => {
 			errors.push(err.message);
 		});
-		await gotoBoardPlayShell(page);
+		await gotoPuzzle2dPlayShell(page);
 		const handlesToolbar = page.locator('button[title^="Redraw handles"]');
 		await expect(handlesToolbar).toBeVisible({ timeout: 120_000 });
 		await handlesToolbar.click({ force: true });
@@ -116,7 +116,7 @@ test.describe("board play", () => {
 	});
 
 	test("LOD select is visible on each pane and pins a tier without clearing the graph", async ({ page }) => {
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		await expect(page.locator('[data-measure-id="2d-detail-lod"]')).toBeVisible();
 		await expect(page.locator('[data-measure-id="2d-selection-lod"]')).toBeVisible();
 		const overviewCanvas = page.locator('[data-testid="board-canvas"]').first();
@@ -139,7 +139,7 @@ test.describe("board play", () => {
 	});
 
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const overlays = page.locator('[data-slot="window-measures-overlay"]');
 		await expect(overlays).toHaveCount(3, { timeout: 120_000 });
 		const n = await overlays.count();
@@ -150,7 +150,7 @@ test.describe("board play", () => {
 	});
 
 	test("hover state follows the pointer and syncs across every board pane", async ({ page }) => {
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 120_000 });
 		const canvas = canvases.first();
@@ -177,7 +177,7 @@ test.describe("board play", () => {
 	});
 
 	test("hit target at canvas center is the board canvas under Golden Layout", async ({ page }) => {
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect
@@ -217,7 +217,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter: use PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
@@ -258,7 +258,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter reported by the browser");
 		}
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
@@ -297,7 +297,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter: use PUZZLE_2D_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
-		await gotoBoardPlayReady(page);
+		await gotoPuzzle2dPlayReady(page);
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect

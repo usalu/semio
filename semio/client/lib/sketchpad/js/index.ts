@@ -319,6 +319,8 @@ export interface SketchpadHomeUiState {
 	readonly searchQuery: string;
 	readonly nameFilter: string | null;
 	readonly versionFilter: string | null;
+	readonly sortColumnId: string | null;
+	readonly sortDescending: boolean;
 }
 
 /** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
@@ -335,7 +337,16 @@ function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
 }
 
 function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {
-	return { expandedRowIds: [], selectedKitIds: [], kindFilter: null, searchQuery: "", nameFilter: null, versionFilter: null };
+	return {
+		expandedRowIds: [],
+		selectedKitIds: [],
+		kindFilter: null,
+		searchQuery: "",
+		nameFilter: null,
+		versionFilter: null,
+		sortColumnId: null,
+		sortDescending: false,
+	};
 }
 
 /** @emoji 🔎 Parses home filter query params from a platform URI. */
@@ -349,6 +360,8 @@ export function parseSketchpadHomeQuery(uri: string): SketchpadHomeUiState {
 		searchQuery: params.get("q") ?? "",
 		nameFilter: params.get("name"),
 		versionFilter: params.get("version"),
+		sortColumnId: params.get("sort"),
+		sortDescending: params.get("dir") === "desc",
 	};
 }
 
@@ -360,6 +373,8 @@ function sketchpadHomeUriFilters(home: SketchpadHomeUiState): string {
 	if (home.versionFilter) params.set("version", home.versionFilter);
 	for (const id of home.expandedRowIds) params.append("e", id);
 	for (const id of home.selectedKitIds) params.append("sel", id);
+	if (home.sortColumnId) params.set("sort", home.sortColumnId);
+	if (home.sortDescending) params.set("dir", "desc");
 	const serialized = params.toString();
 	return serialized.length > 0 ? `?${serialized}` : "";
 }
@@ -376,12 +391,49 @@ function sketchpadTitleFromDocPath(relativePath: string): string {
 type SketchpadDocPage = { readonly path: string; readonly title: string };
 type SketchpadDocSection = { readonly id: string; readonly label: string; readonly pages: readonly SketchpadDocPage[] };
 
-const SKETCHPAD_DOC_PAGE_MODULES = import.meta.glob("./pages/**/*.mdx");
+/** @emoji 📄 Lazy-loaded MDX module shape from the sketchpad pages bundle. */
+export type SketchpadMdxModule = {
+	readonly default: unknown;
+	readonly frontmatter?: Readonly<Record<string, unknown>>;
+};
+
+const SKETCHPAD_MDX_MODULE_LOADERS = import.meta.glob<SketchpadMdxModule>("./pages/**/*.mdx");
+const SKETCHPAD_MDX_MODULE_PATHS = Object.keys(SKETCHPAD_MDX_MODULE_LOADERS);
+
+/** @emoji 🔍 Resolves a docs route path to a Vite MDX module key. */
+export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
+	const clean = docsPath.replace(/^\/+/, "").replace(/\.mdx$/, "");
+	const matches = SKETCHPAD_MDX_MODULE_PATHS.filter((key) => {
+		const keyPath = key.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
+		return keyPath === clean || keyPath === `${clean}/index`;
+	});
+	return matches[0] ?? null;
+}
+
+/** @emoji 📥 Loads an MDX page module for a docs route (`getting-started/index`, …). */
+export async function sketchpadLoadMdxModule(docsPath: string): Promise<SketchpadMdxModule | null> {
+	const moduleKey = sketchpadResolveMdxModuleKey(docsPath);
+	if (!moduleKey) return null;
+	try {
+		return await SKETCHPAD_MDX_MODULE_LOADERS[moduleKey]!();
+	} catch {
+		return null;
+	}
+}
+
+/** @emoji 🏷️ Reads a display title from MDX frontmatter or route path. */
+export function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: string): string {
+	const frontmatter = module?.frontmatter;
+	if (frontmatter && typeof frontmatter["title"] === "string" && frontmatter["title"].length > 0) {
+		return frontmatter["title"];
+	}
+	return sketchpadTitleFromDocPath(docsPath);
+}
 
 /** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
 export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 	const sectionMap = new Map<string, SketchpadDocPage[]>();
-	for (const modulePath of Object.keys(SKETCHPAD_DOC_PAGE_MODULES)) {
+	for (const modulePath of SKETCHPAD_MDX_MODULE_PATHS) {
 		const relative = modulePath.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
 		const sectionId = relative.split("/")[0] ?? "root";
 		const pages = sectionMap.get(sectionId) ?? [];
@@ -471,7 +523,35 @@ export function sketchpadBuildHomeTableModel(input: {
 		group.push({ kitId, kit, kind });
 		kitGroups.set(name, group);
 	}
-	for (const [name, group] of [...kitGroups.entries()].sort((left, right) => left[0].localeCompare(right[0]))) {
+	const sortedKitGroups = [...kitGroups.entries()].sort((left, right) => {
+		const column = input.home.sortColumnId;
+		if (!column) return left[0].localeCompare(right[0]);
+		const leftKit = (left[1].find((entry) => !entry.kit.version) ?? left[1][0]!).kit;
+		const rightKit = (right[1].find((entry) => !entry.kit.version) ?? right[1][0]!).kit;
+		const leftKind = left[1][0]?.kind ?? "";
+		const rightKind = right[1][0]?.kind ?? "";
+		let comparison = 0;
+		switch (column) {
+			case "name":
+				comparison = left[0].localeCompare(right[0]);
+				break;
+			case "version":
+				comparison = (leftKit.version ?? "").localeCompare(rightKit.version ?? "");
+				break;
+			case "kind":
+				comparison = leftKind.localeCompare(rightKind);
+				break;
+			case "updated":
+				comparison = sketchpadFormatKitTimestamp(leftKit.updatedAt ?? leftKit.createdAt).localeCompare(
+					sketchpadFormatKitTimestamp(rightKit.updatedAt ?? rightKit.createdAt),
+				);
+				break;
+			default:
+				comparison = left[0].localeCompare(right[0]);
+		}
+		return input.home.sortDescending ? -comparison : comparison;
+	});
+	for (const [name, group] of sortedKitGroups) {
 		const parentId = `kit-group-${name}`;
 		const defaultKit = group.find((entry) => !entry.kit.version) ?? group[0]!;
 		const hasChildren = group.length > 1;
@@ -516,6 +596,8 @@ export function sketchpadBuildHomeTableModel(input: {
 		],
 		rows,
 		selectedRowIds: input.home.selectedKitIds,
+		sortColumnId: input.home.sortColumnId,
+		sortDescending: input.home.sortDescending,
 		emptyMessage: rows.length === 0 ? "No kits open — use Open to add kits" : undefined,
 	};
 }
@@ -1454,7 +1536,7 @@ const SKETCHPAD_SURFACE_WORKBENCH = "semio.sketchpad.surface.workbench/v1";
 const SKETCHPAD_SURFACE_DETAILS = "semio.sketchpad.surface.details/v1";
 const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "semio.sketchpad.surface.type.scene/v1";
-const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
+export const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
 const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v1";
 const SKETCHPAD_PANEL_WINDOWS_BODY = "semio.sketchpad.panel.windows";
 const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
@@ -1765,14 +1847,16 @@ export class SketchpadDocsPanel extends SketchpadRoutedComponent<PanelModel> {
 	}
 
 	override buildSnapshot(): PanelModel {
+		const docsPath = this.route.docsPath;
 		return {
 			body: {
 				type: "stack",
 				direction: "vertical",
 				padding: "standard",
 				children: [
-					{ type: "text", value: `Docs · ${this.route.docsPath}`, emphasize: true },
-					{ type: "text", value: "Navigate to /docs/… to browse documentation." },
+					{ type: "text", value: sketchpadTitleFromDocPath(docsPath), emphasize: true },
+					{ type: "text", value: `/docs/${docsPath}` },
+					{ type: "text", value: "MDX content renders in the docs window." },
 				],
 			},
 		};
@@ -1806,6 +1890,22 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 		const ctrl = getSketchpadShellController();
 		const { kitId, designId, typeId } = this.route;
 		if (!kitId) {
+			const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
+			if (path.startsWith("/docs")) {
+				const docsPath = parseSketchpadRouteScopeFromPath(path).docsPath;
+				const lines: { text: string; emphasize?: boolean }[] = [
+					{ text: "Documentation", emphasize: true },
+					{ text: sketchpadTitleFromDocPath(docsPath) },
+				];
+				for (const section of sketchpadBuildDocsRegistry()) {
+					const page = section.pages.find((entry) => entry.path === docsPath);
+					if (page) {
+						lines.push({ text: `Section · ${section.label}` });
+						break;
+					}
+				}
+				return sketchpadPanelTextStack(lines);
+			}
 			const open = ctrl?.listOpenKitIds() ?? [];
 			const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
 			const selected = shell?.home.selectedKitIds ?? [];
@@ -2201,6 +2301,15 @@ export class SketchpadShellController extends Controller {
 				});
 				break;
 			}
+			case "setHomeSort": {
+				const payload = args as { columnId?: string | null; descending?: boolean };
+				this.updateHome({
+					...shell.home,
+					sortColumnId: payload.columnId === undefined ? shell.home.sortColumnId : payload.columnId,
+					sortDescending: payload.descending === undefined ? shell.home.sortDescending : payload.descending,
+				});
+				break;
+			}
 			case "togglePanel": {
 				const panel = (args as { panel: "leftSidePanel" | "rightSidePanel" }).panel;
 				this.shellStore.set({
@@ -2322,6 +2431,11 @@ function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 			name: null,
 			version: null,
 		}),
+		sketchpadShellCommand("semio.sketchpad.home.sortUpdated", "Sort home by updated", "setHomeSort", {
+			columnId: "updated",
+			descending: true,
+		}),
+		sketchpadShellCommand("semio.sketchpad.home.sortName", "Sort home by name", "setHomeSort", { columnId: "name", descending: false }),
 	];
 }
 
@@ -2668,11 +2782,20 @@ if (import.meta.vitest) {
 
 	describe("parseSketchpadHomeQuery", () => {
 		it("reads kind and search filters from the URI", () => {
-			const home = parseSketchpadHomeQuery("/?kind=file&q=metab&e=docs-root&sel=k1");
+			const home = parseSketchpadHomeQuery("/?kind=file&q=metab&e=docs-root&sel=k1&sort=updated&dir=desc");
 			expect(home.kindFilter).toBe("file");
 			expect(home.searchQuery).toBe("metab");
 			expect(home.expandedRowIds).toEqual(["docs-root"]);
 			expect(home.selectedKitIds).toEqual(["k1"]);
+			expect(home.sortColumnId).toBe("updated");
+			expect(home.sortDescending).toBe(true);
+		});
+	});
+
+	describe("sketchpadResolveMdxModuleKey", () => {
+		it("resolves index and leaf docs paths", () => {
+			expect(sketchpadResolveMdxModuleKey("getting-started/index")).toMatch(/getting-started\/index\.mdx$/);
+			expect(sketchpadResolveMdxModuleKey("getting-started/installation")).toMatch(/installation\.mdx$/);
 		});
 	});
 

@@ -1623,7 +1623,7 @@ if (import.meta.vitest) {
           objects: [{ id: "capsule", label: "Capsule", name: "Capsule" }],
           vortices: [{ id: "core circular top", label: "Core circular top", name: "Core circular top" }],
           cables: [{ id: "cable.link", label: "Link", name: "Link" }],
-          attractions: [{ id: "board.attraction.link", label: "Link", name: "Link" }],
+          attractions: [{ id: "puzzle3d.attraction.link", label: "Link", name: "Link" }],
         },
       });
       const tree = buildPuzzle3dPlayKindsTree(catalogs);

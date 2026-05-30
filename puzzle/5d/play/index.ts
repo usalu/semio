@@ -10,7 +10,7 @@ import {
   AppRuntime,
   ModeRuntime,
   WindowKindRuntime,
-  buildBoardWindowBody,
+  buildPuzzle2dWindowBody,
   buildPuzzle3dWindowBody,
   createDefaultLayout,
   type ToolItem,
@@ -23,7 +23,7 @@ import {
   type UiTreeNode,
 } from "@framework/playground/core";
 
-import { buildBoardPlayHierarchySections } from "../../2d/play/index.ts";
+import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 import { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, boardLodCanvasProps, isBoardDrawLodKind, parseBoardFixtureV1, type BoardDrawLodKind, type BoardFixtureV1, type BoardLodModeKind, type CameraState } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
@@ -71,7 +71,7 @@ export interface Puzzle5dPlayHierarchySelectHandlers {
 export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
   const branches: UiTreeItemNode[] = [];
   if (snapshot.fixture2d) {
-    const root2d = buildBoardPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
+    const root2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
     branches.push({
       id: "puzzle-5d-play-hierarchy.2d",
       label: "2d",
@@ -429,7 +429,7 @@ export function buildPuzzle5d2dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
   const ctrl = puzzle5dControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   if (!snap?.fixture2d) return { type: "text", value: "Invalid 2d fixture" };
-  return buildBoardWindowBody(PUZZLE_5D_PLAY_2D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_2D_WINDOW_ID);
+  return buildPuzzle2dWindowBody(PUZZLE_5D_PLAY_2D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_2D_WINDOW_ID);
 }
 
 export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
@@ -516,7 +516,7 @@ if (import.meta.vitest) {
         activeModeId: "main",
         generation: 0,
       });
-      expect(body2d).toEqual(buildBoardWindowBody(PUZZLE_5D_PLAY_2D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_2D_WINDOW_ID));
+      expect(body2d).toEqual(buildPuzzle2dWindowBody(PUZZLE_5D_PLAY_2D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_2D_WINDOW_ID));
       expect(body3d).toEqual(buildPuzzle3dWindowBody(PUZZLE_5D_PLAY_3D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
     });
   });

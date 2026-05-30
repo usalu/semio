@@ -1279,20 +1279,20 @@ export function boot5dPlay(playground: Playground, rootId = "root"): void {
 import type { ReactElement, ReactNode } from "react";
 import {
   PUZZLE_2D_PLAY_APP_ID,
-  PUZZLE_2D_PLAY_BOARD_SURFACE_ID,
+  PUZZLE_2D_PLAY_SURFACE_ID,
   PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
   PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
   PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
   PUZZLE_2D_PLAY_CONTROLLER_ID,
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
   PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
-  BoardPlayShellController,
-  buildBoardPlayHierarchySections,
-  buildBoardPlayOverviewDeclarativeBody,
-  buildBoardPlayDetailDeclarativeBody,
-  buildBoardPlaySelectionDeclarativeBody,
-  buildBoardPlayRuntime,
-  type BoardPlayHostBridge,
+  Puzzle2dPlayShellController,
+  buildPuzzle2dPlayHierarchySections,
+  buildPuzzle2dPlayOverviewDeclarativeBody,
+  buildPuzzle2dPlayDetailDeclarativeBody,
+  buildPuzzle2dPlaySelectionDeclarativeBody,
+  buildPuzzle2dPlayRuntime,
+  type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
 } from "@puzzle/2d/play";
 import {
@@ -1460,7 +1460,7 @@ function selectionSeedForFixture(fixture: BoardFixtureV1): Set<string> {
 // #endregion 🔖Geometry
 
 // #region 🔖ShellContext
-interface BoardPlayShellValue {
+interface Puzzle2dPlayShellValue {
   fixture: BoardFixtureV1;
   setFixture: (next: BoardFixtureV1) => void;
   /** @emoji 🎯 Palette drags merge one node at the pointer; full fixtures replace the graph. */
@@ -1473,7 +1473,7 @@ interface BoardPlayShellValue {
   preselection: BoardPreselectSnapshot;
   setPreselection: (snapshot: BoardPreselectSnapshot) => void;
   hoveredId: string | null;
-  /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link BoardPlayShellValue.hoveredId}. */
+  /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link Puzzle2dPlayShellValue.hoveredId}. */
   hoverSourcePane: Puzzle2dPlayPaneId | null;
   setHoverPane: (pane: Puzzle2dPlayPaneId) => void;
   setHoverForPane: (pane: Puzzle2dPlayPaneId, id: string | null) => void;
@@ -1481,15 +1481,15 @@ interface BoardPlayShellValue {
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
-  /** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link boardPlayPaneCamerasBaseline}; other panes unchanged. */
+  /** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link puzzle2dPlayPaneCamerasBaseline}; other panes unchanged. */
   syncBaselineFromViewportCamera: (cam: CameraState) => void;
-  boardSelectionMethod: BoardSelectionMethod;
+  puzzle2dSelectionMethod: BoardSelectionMethod;
   setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
-  boardSelectionMode: BoardSelectionMode;
+  puzzle2dSelectionMode: BoardSelectionMode;
   setBoardSelectionMode: (value: BoardSelectionMode) => void;
-  boardSelectionTargets: BoardSelectionTargets;
+  puzzle2dSelectionTargets: BoardSelectionTargets;
   setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
-  boardGridSnapEnabled: boolean;
+  puzzle2dGridSnapEnabled: boolean;
   setBoardGridSnapEnabled: (value: boolean) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
   boardLodModeByPane: Record<Puzzle2dPlayPaneId, BoardLodModeKind>;
@@ -1497,7 +1497,7 @@ interface BoardPlayShellValue {
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
-  boardRedrawPlaying: boolean;
+  puzzle2dRedrawPlaying: boolean;
   setBoardRedrawPlaying: (value: boolean) => void;
   boardRedrawMode: BoardRedrawModeKind;
   setBoardRedrawMode: (value: BoardRedrawModeKind) => void;
@@ -1529,7 +1529,7 @@ interface BoardPlayShellValue {
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
-class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   constructor(private readonly buildTree: () => UiTreeNode) {
     super();
   }
@@ -1544,7 +1544,7 @@ class BoardPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle2dPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
       id: "puzzle-2d-play-library",
@@ -1565,7 +1565,7 @@ class BoardPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
   constructor(private readonly buildSections: () => TreeDataSection[]) {
     super();
   }
@@ -1580,7 +1580,7 @@ class BoardPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
+class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
       id: "puzzle-2d-play-settings",
@@ -1592,7 +1592,7 @@ class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
             id: "puzzle-2d-play-settings.section",
             label: "Settings",
             defaultOpen: true,
-            content: <BoardPlaySettingsPanel />,
+            content: <Puzzle2dPlaySettingsPanel />,
             items: [],
           },
         ],
@@ -1601,14 +1601,14 @@ class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-const BoardPlayShellContext = reactHostPort.createContext<BoardPlayShellValue | null>(null);
+const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellValue | null>(null);
 
-const BoardPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
+const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
 
-function useBoardPlayShell(): BoardPlayShellValue {
-  const value = reactHostPort.useContext(BoardPlayShellContext);
+function usePuzzle2dPlayShell(): Puzzle2dPlayShellValue {
+  const value = reactHostPort.useContext(Puzzle2dPlayShellContext);
   if (!value) {
-    throw new Error("useBoardPlayShell must be used inside BoardPlayShellContext.");
+    throw new Error("usePuzzle2dPlayShell must be used inside Puzzle2dPlayShellContext.");
   }
   return value;
 }
@@ -1679,7 +1679,7 @@ function boardPlayRedrawLayoutOpts(
 
 // #region 🔖SettingsPanel
 /** @emoji ⚙️ Board play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
-function BoardPlaySettingsPanel(): ReactElement {
+function Puzzle2dPlaySettingsPanel(): ReactElement {
   const {
     activePaneId,
     applyBoardRedrawHandlesOnce,
@@ -1708,7 +1708,7 @@ function BoardPlaySettingsPanel(): ReactElement {
     treeLayoutLayerSpacing,
     treeLayoutDirection,
     treeLayoutSiblingGap,
-  } = useBoardPlayShell();
+  } = usePuzzle2dPlayShell();
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
@@ -1819,7 +1819,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 // #region 🔖Panes
 /** @emoji 🪟 Captures pointer focus for the active pane (tabs + canvas). */
 function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Puzzle2dPlayPaneId }): ReactElement {
-  const { clearHoverForPane, setActivePaneId, setHoverPane } = useBoardPlayShell();
+  const { clearHoverForPane, setActivePaneId, setHoverPane } = usePuzzle2dPlayShell();
   return (
     <div
       className="flex h-full min-h-0 w-full flex-col"
@@ -1848,16 +1848,16 @@ function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolea
   return { automaticLod: false, lod: mode };
 }
 
-function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
+function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
   const {
     activePaneId,
     applyStructuralDelete,
-    boardGridSnapEnabled,
+    puzzle2dGridSnapEnabled,
     boardLodModeByPane,
-    boardRedrawPlaying,
-    boardSelectionMethod,
-    boardSelectionMode,
-    boardSelectionTargets,
+    puzzle2dRedrawPlaying,
+    puzzle2dSelectionMethod,
+    puzzle2dSelectionMode,
+    puzzle2dSelectionTargets,
     fixture,
     handleCanvasFixtureDrop,
     camerasByPane,
@@ -1869,10 +1869,10 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
     setPreselection,
     setSelectionIds,
     syncBaselineFromViewportCamera,
-  } = useBoardPlayShell();
+  } = usePuzzle2dPlayShell();
   const camera = camerasByPane[paneId];
   const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
-  const reportEffectiveLod = reactHostPort.useContext(BoardPlayLodRuntimeContext);
+  const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const selection = reactHostPort.useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = reactHostPort.useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
@@ -1904,12 +1904,12 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
   );
   const onCanvasDrag = reactHostPort.useCallback(
     (_payload: { id: string }) => {
-      if (!boardRedrawPlaying) {
+      if (!puzzle2dRedrawPlaying) {
         return;
       }
       resetBoardRedrawProgressiveEpoch();
     },
-    [boardRedrawPlaying, resetBoardRedrawProgressiveEpoch],
+    [puzzle2dRedrawPlaying, resetBoardRedrawProgressiveEpoch],
   );
   return (
     <BoardPaneChrome paneId={paneId}>
@@ -1920,7 +1920,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         className="min-h-0 flex-1"
         contextMenu={showBackgroundMenu ? boardPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
-        gridSnapEnabled={boardGridSnapEnabled}
+        gridSnapEnabled={puzzle2dGridSnapEnabled}
         hoveredId={hoveredId}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
@@ -1933,9 +1933,9 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         onSelect={onSelect}
         preselection={preselection}
         selection={selection}
-        selectionMethod={boardSelectionMethod}
-        selectionMode={boardSelectionMode}
-        selectionTargets={boardSelectionTargets}
+        selectionMethod={puzzle2dSelectionMethod}
+        selectionMode={puzzle2dSelectionMode}
+        selectionTargets={puzzle2dSelectionTargets}
       >
         {sceneMarkers}
       </BoardCanvas>
@@ -1943,24 +1943,24 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
   );
 }
 
-function BoardPlayBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): ReactElement {
-  if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_BOARD_SURFACE_ID) {
+function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): ReactElement {
+  if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_SURFACE_ID) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid board surface binding</div>;
   }
   const paneId = node.paneId as Puzzle2dPlayPaneId;
-  return <BoardPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "2d-overview"} />;
+  return <Puzzle2dPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "2d-overview"} />;
 }
 
-let boardPlayChromeRegistered = false;
+let puzzle2dPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers board play surface host, window bodies, and tab icons (called from `@framework/playground/renderer/react`). */
-export function registerBoardPlaySurfaceHosts(): void {
-  if (boardPlayChromeRegistered) return;
-  boardPlayChromeRegistered = true;
-  registerUiBoardSurfaceHost(PUZZLE_2D_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+export function registerPuzzle2dPlaySurfaceHosts(): void {
+  if (puzzle2dPlayChromeRegistered) return;
+  puzzle2dPlayChromeRegistered = true;
+  registerUiBoardSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID, Puzzle2dPlayPaneSurfaceHost);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
   registerTabIcon("puzzle.2d-play.icon.library", Library);
   registerTabIcon("puzzle.2d-play.icon.inspector", ClipboardList);
   registerTabIcon("puzzle.2d-play.icon.settings", Settings);
@@ -2050,7 +2050,7 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 
 /** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
 function BoardFixtureLibraryPanel(): ReactElement {
-  const { fixture } = useBoardPlayShell();
+  const { fixture } = usePuzzle2dPlayShell();
 
   const shelfDragProps = useNativeDragAndDrop(
     reactHostPort.useMemo(
@@ -2631,7 +2631,7 @@ function InspectorEdgeBatch({
 }
 
 /** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
-function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSection[] {
+function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): TreeDataSection[] {
   const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = shell;
   const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
   const nodeIds: string[] = [];
@@ -2709,7 +2709,7 @@ function buildBoardPlayInspectorSections(shell: BoardPlayShellValue): TreeDataSe
 // #region 🔖Layout
 // #endregion 🔖Layout
 
-interface BoardPlayRedrawLoopSnapshot {
+interface Puzzle2dPlayRedrawLoopSnapshot {
   activePaneId: Puzzle2dPlayPaneId;
   boardRedrawHandlesAfterNodes: boolean;
   boardRedrawProgressiveAutoStopMs: number;
@@ -2728,13 +2728,13 @@ interface BoardPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
 
-function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): ReactElement {
+function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): ReactElement {
   const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
   const fixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
-  const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
-  const boardPlayPaneCamerasBaselineRef = reactHostPort.useRef(boardPlayPaneCamerasBaseline);
-  boardPlayPaneCamerasBaselineRef.current = boardPlayPaneCamerasBaseline;
+  const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
+  const puzzle2dPlayPaneCamerasBaselineRef = reactHostPort.useRef(puzzle2dPlayPaneCamerasBaseline);
+  puzzle2dPlayPaneCamerasBaselineRef.current = puzzle2dPlayPaneCamerasBaseline;
   const [activePaneId, setActivePaneId] = reactHostPort.useState<Puzzle2dPlayPaneId>("2d-overview");
   const activePaneIdRef = reactHostPort.useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
@@ -2744,18 +2744,18 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<Puzzle2dPlayPaneId | null>(null);
   const hoverSourcePaneRef = reactHostPort.useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
-  const [boardSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
-  const [boardSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
-  const [boardSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
-  const [boardGridSnapEnabled, setBoardGridSnapEnabled] = reactHostPort.useState(false);
-  const boardShellController = boardRuntime.getActiveApp()?.controller as BoardPlayShellController | undefined;
+  const [puzzle2dSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
+  const [puzzle2dSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
+  const [puzzle2dSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
+  const [puzzle2dGridSnapEnabled, setBoardGridSnapEnabled] = reactHostPort.useState(false);
+  const puzzle2dShellController = boardRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => boardRuntime.subscribe(onStoreChange),
     () => boardRuntime.generation,
     () => 0,
   );
   void shellGeneration;
-  const boardLodModeByPane = boardShellController?.getLodModeByPane() ?? {
+  const boardLodModeByPane = puzzle2dShellController?.getLodModeByPane() ?? {
     "2d-detail": BOARD_LOD_MODE_AUTOMATIC,
     "2d-overview": BOARD_LOD_MODE_AUTOMATIC,
     "2d-selection": BOARD_LOD_MODE_AUTOMATIC,
@@ -2772,12 +2772,12 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
     },
     [boardRuntime.commandBus],
   );
-  const onBoardPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
+  const onPuzzle2dPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
     if (windowKindId === "2d-overview" || windowKindId === "2d-detail" || windowKindId === "2d-selection") {
       setActivePaneId(windowKindId);
     }
   }, []);
-  const [boardRedrawPlaying, setBoardRedrawPlaying] = reactHostPort.useState(false);
+  const [puzzle2dRedrawPlaying, setBoardRedrawPlaying] = reactHostPort.useState(false);
   const [forceLayoutFullIterations, setForceLayoutFullIterations] = reactHostPort.useState(200);
   const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = reactHostPort.useState(64);
   const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(0.012);
@@ -2791,8 +2791,8 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = reactHostPort.useState(28);
   const [treeLayoutDirection, setTreeLayoutDirection] = reactHostPort.useState<BoardHierarchicalTreeDirectionKind>("downwards");
 
-  const boardRedrawPlayingRef = reactHostPort.useRef(boardRedrawPlaying);
-  boardRedrawPlayingRef.current = boardRedrawPlaying;
+  const puzzle2dRedrawPlayingRef = reactHostPort.useRef(puzzle2dRedrawPlaying);
+  puzzle2dRedrawPlayingRef.current = puzzle2dRedrawPlaying;
 
   const applyStructuralDelete = reactHostPort.useCallback((kind: "edge" | "node", id: string) => {
     const pruneSelections = (removeIds: readonly string[]): void => {
@@ -2833,7 +2833,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
     setHoveredId(null);
     hoverSourcePaneRef.current = null;
     setHoverSourcePane(null);
-    setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
+    setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
   }, []);
 
   const patchFixture = reactHostPort.useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
@@ -2889,7 +2889,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   }, []);
 
   const cameraBasisFixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
-  /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
+  /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link puzzle2dPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
   const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
   const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
@@ -2903,11 +2903,11 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
   const nodesRedrawEaseFromRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
-  /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
+  /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setPuzzle2dPlayPaneCamerasBaseline}. */
   const nodesRedrawEaseGenerationRef = reactHostPort.useRef(0);
 
   const syncBaselineFromViewportCamera = reactHostPort.useCallback((cam: CameraState) => {
-    if (boardRedrawPlayingRef.current) {
+    if (puzzle2dRedrawPlayingRef.current) {
       return;
     }
     if (suppressCameraBasisSyncRef.current) {
@@ -2917,7 +2917,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       return;
     }
     const c = { x: cam.x, y: cam.y, zoom: cam.zoom };
-    setBoardPlayPaneCamerasBaseline((prev) => {
+    setPuzzle2dPlayPaneCamerasBaseline((prev) => {
       const pane = activePaneIdRef.current;
       const p = prev[pane];
       if (Math.abs(p.x - c.x) < 1e-6 && Math.abs(p.y - c.y) < 1e-6 && Math.abs(p.zoom - c.zoom) < 1e-9) {
@@ -2928,7 +2928,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   }, []);
 
   reactHostPort.useEffect(() => {
-    if (boardRedrawPlaying) {
+    if (puzzle2dRedrawPlaying) {
       return;
     }
     if (suppressCameraBasisSyncRef.current) {
@@ -2940,11 +2940,11 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       return;
     }
     cameraBasisFixtureRef.current = fixture;
-  }, [fixture, boardRedrawPlaying]);
+  }, [fixture, puzzle2dRedrawPlaying]);
 
   reactHostPort.useEffect(() => {
     const prevPlaying = prevBoardRedrawPlayingRef.current;
-    const playJustStarted = boardRedrawPlaying && !prevPlaying;
+    const playJustStarted = puzzle2dRedrawPlaying && !prevPlaying;
 
     if (playJustStarted) {
       nodesRedrawEaseGenerationRef.current += 1;
@@ -2960,7 +2960,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       setCameraDisplayOverrideByPane(null);
       suppressCameraBasisSyncRef.current = false;
       cameraBasisFixtureRef.current = fixture;
-      const prevCam = boardPlayPaneCamerasBaselineRef.current;
+      const prevCam = puzzle2dPlayPaneCamerasBaselineRef.current;
       boardPlayRedrawCameraChaseRef.current = {
         "2d-detail": { ...prevCam["2d-detail"] },
         "2d-overview": { ...prevCam["2d-overview"] },
@@ -2972,11 +2972,11 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
         cameraPlayEndAnimRafRef.current = null;
       }
     }
-    prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
-  }, [boardRedrawPlaying, fixture]);
+    prevBoardRedrawPlayingRef.current = puzzle2dRedrawPlaying;
+  }, [puzzle2dRedrawPlaying, fixture]);
 
   reactHostPort.useEffect(() => {
-    if (!boardRedrawPlaying) {
+    if (!puzzle2dRedrawPlaying) {
       boardPlayRedrawCameraChaseRef.current = null;
       return;
     }
@@ -2985,7 +2985,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
     }
     const pane = activePaneIdRef.current;
     const target = triptychCamerasFromFixture(fixture);
-    setBoardPlayPaneCamerasBaseline((baselinePrev) => {
+    setPuzzle2dPlayPaneCamerasBaseline((baselinePrev) => {
       const prevChase = boardPlayRedrawCameraChaseRef.current ?? baselinePrev;
       const damped = dampCameraStateLinear(prevChase[pane], target[pane], PUZZLE_2D_PLAY_REDRAW_CAMERA_CHASE_BLEND);
       const nextChase: Record<Puzzle2dPlayPaneId, CameraState> = {
@@ -2997,10 +2997,10 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       boardPlayRedrawCameraChaseRef.current = nextChase;
       return nextChase;
     });
-  }, [boardRedrawPlaying, fixture]);
+  }, [puzzle2dRedrawPlaying, fixture]);
 
   reactHostPort.useEffect(() => {
-    if (boardRedrawPlaying) {
+    if (puzzle2dRedrawPlaying) {
       lastPlayingForCameraEaseRef.current = true;
       return () => {
         if (cameraPlayEndAnimRafRef.current != null) {
@@ -3020,9 +3020,9 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
 
     const snapshotFixture = fixtureRef.current;
     const from: Record<Puzzle2dPlayPaneId, CameraState> = {
-      "2d-detail": { ...boardPlayPaneCamerasBaseline["2d-detail"] },
-      "2d-overview": { ...boardPlayPaneCamerasBaseline["2d-overview"] },
-      "2d-selection": { ...boardPlayPaneCamerasBaseline["2d-selection"] },
+      "2d-detail": { ...puzzle2dPlayPaneCamerasBaseline["2d-detail"] },
+      "2d-overview": { ...puzzle2dPlayPaneCamerasBaseline["2d-overview"] },
+      "2d-selection": { ...puzzle2dPlayPaneCamerasBaseline["2d-selection"] },
     };
     cameraBasisFixtureRef.current = snapshotFixture;
     const to = triptychCamerasFromFixture(snapshotFixture);
@@ -3051,7 +3051,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
           setCameraDisplayOverrideByPane(null);
           const fit = triptychCamerasFromFixture(fixtureRef.current);
           const p = postPlayEasePaneId;
-          setBoardPlayPaneCamerasBaseline((prev) => ({ ...prev, [p]: { ...fit[p] } }));
+          setPuzzle2dPlayPaneCamerasBaseline((prev) => ({ ...prev, [p]: { ...fit[p] } }));
           cameraPlayEndAnimRafRef.current = null;
         });
         return;
@@ -3070,15 +3070,15 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
         cameraPlayEndAnimRafRef.current = null;
       }
     };
-  }, [boardRedrawPlaying]);
+  }, [puzzle2dRedrawPlaying]);
 
-  const camerasByPane = cameraDisplayOverrideByPane ?? boardPlayPaneCamerasBaseline;
+  const camerasByPane = cameraDisplayOverrideByPane ?? puzzle2dPlayPaneCamerasBaseline;
 
   reactHostPort.useEffect(() => {
     if (nodesRedrawCameraEaseTick === 0) {
       return;
     }
-    if (boardRedrawPlayingRef.current) {
+    if (puzzle2dRedrawPlayingRef.current) {
       return;
     }
     if (suppressCameraBasisSyncRef.current) {
@@ -3116,14 +3116,14 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       const elapsed = now - t0;
       if (elapsed >= total) {
         const endCameras = blendTriptychCamerasActivePaneOnly(from, to, 1, nodesRedrawEasePaneId);
-        setBoardPlayPaneCamerasBaseline(endCameras);
+        setPuzzle2dPlayPaneCamerasBaseline(endCameras);
         boardPlayNodesRedrawCameraAnimRafRef.current = null;
         nodesRedrawEaseFromRef.current = null;
         return;
       }
       if (elapsed >= holdEnd) {
         const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
-        setBoardPlayPaneCamerasBaseline(blendTriptychCamerasActivePaneOnly(from, to, u, nodesRedrawEasePaneId));
+        setPuzzle2dPlayPaneCamerasBaseline(blendTriptychCamerasActivePaneOnly(from, to, u, nodesRedrawEasePaneId));
       }
       boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
     };
@@ -3149,7 +3149,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
 
   const redrawPlayingRef = reactHostPort.useRef(false);
   const redrawProgressiveEpochRef = reactHostPort.useRef(0);
-  const redrawLoopSnapshotRef = reactHostPort.useRef<BoardPlayRedrawLoopSnapshot>({
+  const redrawLoopSnapshotRef = reactHostPort.useRef<Puzzle2dPlayRedrawLoopSnapshot>({
     activePaneId: "2d-overview",
     boardRedrawHandlesAfterNodes: false,
     boardRedrawProgressiveAutoStopMs: 3000,
@@ -3237,7 +3237,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   ]);
 
   reactHostPort.useEffect(() => {
-    if (!boardRedrawPlaying) {
+    if (!puzzle2dRedrawPlaying) {
       redrawPlayingRef.current = false;
       return;
     }
@@ -3315,9 +3315,9 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       redrawPlayingRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [boardRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
+  }, [puzzle2dRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
 
-  const shellValue = reactHostPort.useMemo<BoardPlayShellValue>(
+  const shellValue = reactHostPort.useMemo<Puzzle2dPlayShellValue>(
     () => ({
       activePaneId,
       applyBoardRedrawHandlesOnce,
@@ -3326,13 +3326,13 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       boardRedrawHandlesAfterNodes,
       boardRedrawMode,
       boardRedrawPlayMaxItersPerFrame,
-      boardRedrawPlaying,
+      puzzle2dRedrawPlaying,
       boardRedrawProgressiveAutoStopMs,
       boardRedrawProgressiveEnabled,
-      boardSelectionMethod,
-      boardSelectionMode,
-      boardSelectionTargets,
-      boardGridSnapEnabled,
+      puzzle2dSelectionMethod,
+      puzzle2dSelectionMode,
+      puzzle2dSelectionTargets,
+      puzzle2dGridSnapEnabled,
       camerasByPane,
       syncBaselineFromViewportCamera,
       fixture,
@@ -3386,13 +3386,13 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
       boardRedrawHandlesAfterNodes,
       boardRedrawMode,
       boardRedrawPlayMaxItersPerFrame,
-      boardRedrawPlaying,
+      puzzle2dRedrawPlaying,
       boardRedrawProgressiveAutoStopMs,
       boardRedrawProgressiveEnabled,
-      boardSelectionMethod,
-      boardSelectionMode,
-      boardSelectionTargets,
-      boardGridSnapEnabled,
+      puzzle2dSelectionMethod,
+      puzzle2dSelectionMode,
+      puzzle2dSelectionTargets,
+      puzzle2dGridSnapEnabled,
       boardLodModeByPane,
       setBoardLodModeForPane,
       camerasByPane,
@@ -3420,7 +3420,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   );
 
   // #region 🔖ToolbarHostBridge
-  const boardPlayToolbarHostRef = reactHostPort.useRef({
+  const puzzle2dPlayToolbarHostRef = reactHostPort.useRef({
     activePaneId: "2d-overview" as Puzzle2dPlayPaneId,
     applyBoardRedrawHandlesOnce: () => {},
     camerasByPane: triptychCamerasFromFixture(initialFixture),
@@ -3432,7 +3432,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
     setBoardSelectionTargets: (_value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => {},
     setSelectionIds: (_ids: readonly string[]) => {},
   });
-  boardPlayToolbarHostRef.current = {
+  puzzle2dPlayToolbarHostRef.current = {
     activePaneId,
     applyBoardRedrawHandlesOnce,
     camerasByPane,
@@ -3446,19 +3446,19 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   };
 
   reactHostPort.useEffect(() => {
-    if (!boardShellController) {
+    if (!puzzle2dShellController) {
       return;
     }
-    const bridge: BoardPlayHostBridge = {
+    const bridge: Puzzle2dPlayHostBridge = {
       getToolbarState: () => ({
-        boardGridSnapEnabled,
-        boardRedrawPlaying,
-        boardSelectionMethod,
-        boardSelectionMode,
-        boardSelectionTargets,
+        puzzle2dGridSnapEnabled,
+        puzzle2dRedrawPlaying,
+        puzzle2dSelectionMethod,
+        puzzle2dSelectionMode,
+        puzzle2dSelectionTargets,
       }),
       runHostCommand: (command, args) => {
-        const h = boardPlayToolbarHostRef.current;
+        const h = puzzle2dPlayToolbarHostRef.current;
         switch (command) {
           case "setSelectionMethod":
             h.setBoardSelectionMethod((args as { method: BoardSelectionMethod }).method);
@@ -3521,56 +3521,56 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
         }
       },
     };
-    boardShellController.setHostBridge(bridge);
-    return () => boardShellController.setHostBridge(null);
-  }, [applyBoardRedrawHandlesOnce, boardGridSnapEnabled, boardRedrawPlaying, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, boardShellController]);
+    puzzle2dShellController.setHostBridge(bridge);
+    return () => puzzle2dShellController.setHostBridge(null);
+  }, [applyBoardRedrawHandlesOnce, puzzle2dGridSnapEnabled, puzzle2dRedrawPlaying, puzzle2dSelectionMethod, puzzle2dSelectionMode, puzzle2dSelectionTargets, puzzle2dShellController]);
   // #endregion 🔖ToolbarHostBridge
 
   const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
-  const boardPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
-  const boardPlayFixtureKey = reactHostPort.useMemo(() => `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`, [shellValue.fixture]);
-  const boardPlayLibraryTab = reactHostPort.useMemo(() => new BoardPlayLibraryPanelDefinition().resolveTab(), []);
-  const boardPlayHierarchyTab = reactHostPort.useMemo(
-    () => new BoardPlayHierarchyPanelDefinition(() => buildBoardPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id]))).resolveTab(),
-    [boardPlaySelectionKey, boardPlayFixtureKey],
+  const puzzle2dPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
+  const puzzle2dPlayFixtureKey = reactHostPort.useMemo(() => `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`, [shellValue.fixture]);
+  const puzzle2dPlayLibraryTab = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition().resolveTab(), []);
+  const puzzle2dPlayHierarchyTab = reactHostPort.useMemo(
+    () => new Puzzle2dPlayHierarchyPanelDefinition(() => buildPuzzle2dPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id]))).resolveTab(),
+    [puzzle2dPlaySelectionKey, puzzle2dPlayFixtureKey],
   );
-  const boardPlaySettingsTab = reactHostPort.useMemo(() => new BoardPlaySettingsPanelDefinition().resolveTab(), []);
-  const boardPlayInspectorTab = reactHostPort.useMemo(() => new BoardPlayInspectorPanelDefinition(() => buildBoardPlayInspectorSections(shellValueRef.current)).resolveTab(), [boardPlaySelectionKey]);
+  const puzzle2dPlaySettingsTab = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition().resolveTab(), []);
+  const puzzle2dPlayInspectorTab = reactHostPort.useMemo(() => new Puzzle2dPlayInspectorPanelDefinition(() => buildPuzzle2dPlayInspectorSections(shellValueRef.current)).resolveTab(), [puzzle2dPlaySelectionKey]);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [boardPlayHierarchyTab, boardPlayLibraryTab],
-      details: [boardPlayInspectorTab, boardPlaySettingsTab],
+      workbench: [puzzle2dPlayHierarchyTab, puzzle2dPlayLibraryTab],
+      details: [puzzle2dPlayInspectorTab, puzzle2dPlaySettingsTab],
     }),
-    [boardPlayHierarchyTab, boardPlayInspectorTab, boardPlaySettingsTab, boardPlayLibraryTab],
+    [puzzle2dPlayHierarchyTab, puzzle2dPlayInspectorTab, puzzle2dPlaySettingsTab, puzzle2dPlayLibraryTab],
   );
 
   return (
-    <BoardPlayShellContext.Provider value={shellValue}>
-      <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <PlaygroundView runtime={boardRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onBoardPlayActiveWindowChange} />
-      </BoardPlayLodRuntimeContext.Provider>
-    </BoardPlayShellContext.Provider>
+    <Puzzle2dPlayShellContext.Provider value={shellValue}>
+      <Puzzle2dPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
+        <PlaygroundView runtime={boardRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+      </Puzzle2dPlayLodRuntimeContext.Provider>
+    </Puzzle2dPlayShellContext.Provider>
   );
 }
 
-function BoardPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <BoardPlayInner boardRuntime={runtime} />;
+function Puzzle2dPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <Puzzle2dPlayInner boardRuntime={runtime} />;
 }
 
 /** @emoji 🚀 Mounts board play chrome for a {@link Playground}. */
-export function mountBoardPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<BoardPlayChrome runtime={playground.runtime} />, rootId);
+export function mountPuzzle2dPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<Puzzle2dPlayChrome runtime={playground.runtime} />, rootId);
 }
 
-const boardPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerBoardPlaySurfaceHosts,
-  mount: mountBoardPlayChrome,
+const puzzle2dPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerPuzzle2dPlaySurfaceHosts,
+  mount: mountPuzzle2dPlayChrome,
 };
 
 /** @emoji 🛝 Puzzle 2D play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/index.ts`). */
 export function boot2dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, boardPlayChromeBoot, rootId);
+  bootPlayground(playground, puzzle2dPlayChromeBoot, rootId);
 }
 
 // #endregion 🔖Entrypoint
@@ -3768,7 +3768,7 @@ if (import.meta.vitest) {
 
     it("renders puzzle2d nodes through platform surface bindings", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { buildBoardWindowBody } = await import("@framework/playground/core");
+      const { buildPuzzle2dWindowBody } = await import("@framework/playground/core");
       const surfaceId = "playground.test/puzzle2d";
       function TestBoardHost(): React.ReactElement {
         return <div data-host="puzzle2d">board canvas</div>;
@@ -3776,7 +3776,7 @@ if (import.meta.vitest) {
       registerSurfaceBinding(surfaceId, TestBoardHost);
       try {
         const html = renderToStaticMarkup(
-          <UiRenderer node={buildBoardWindowBody(surfaceId, "ctrl", "pane")} commandBus={new CommandBus()} />,
+          <UiRenderer node={buildPuzzle2dWindowBody(surfaceId, "ctrl", "pane")} commandBus={new CommandBus()} />,
         );
         expect(html).toContain('data-host="puzzle2d"');
         expect(html).not.toContain("Unsupported UiNode");

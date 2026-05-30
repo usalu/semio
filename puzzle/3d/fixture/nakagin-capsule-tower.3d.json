@@ -401,12 +401,12 @@
           "id": "cable.link",
           "label": "Link",
           "name": "Link",
-          "defaultAttractionKind": "board.attraction.link"
+          "defaultAttractionKind": "puzzle3d.attraction.link"
         }
       ],
       "attractions": [
         {
-          "id": "board.attraction.link",
+          "id": "puzzle3d.attraction.link",
           "label": "Link",
           "name": "Link"
         }

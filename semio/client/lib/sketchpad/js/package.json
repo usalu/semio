@@ -12,8 +12,12 @@
   "dependencies": {
     "@framework/core": "workspace:*",
     "@framework/platform/core": "workspace:*",
+    "@mdx-js/react": "^3.1.1",
     "@semio/js": "*",
-    "fflate": "^0.8.2"
+    "@ui/react": "workspace:*",
+    "fflate": "^0.8.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@framework/platform/renderer/react": "workspace:*",

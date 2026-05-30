@@ -2138,7 +2138,7 @@ export class BoardScene {
       for (const handle of Array.from(object.handles)) {
         this.remove(handle);
       }
-      this.renderer?.emit("nodeDelete", { id: object.id });
+      this.renderer?.emitSceneDeleteEvent("nodeDelete", { id: object.id });
       this.nodes.delete(object.id);
       object.parent = null;
       object.attachRenderer(null);
@@ -2168,7 +2168,7 @@ export class BoardScene {
     }
 
     if (object instanceof BoardSceneWire) {
-      this.renderer?.emit("wireDestroy", { id: object.id });
+      this.renderer?.emitSceneDeleteEvent("wireDestroy", { id: object.id });
       this.wires.delete(object.id);
       object.parent = null;
       object.attachRenderer(null);
@@ -2176,7 +2176,7 @@ export class BoardScene {
       return this;
     }
 
-    this.renderer?.emit("edgeDelete", { id: object.id });
+    this.renderer?.emitSceneDeleteEvent("edgeDelete", { id: object.id });
     this.edges.delete(object.id);
     object.parent = null;
     object.attachRenderer(null);
@@ -2185,18 +2185,25 @@ export class BoardScene {
   }
 
   clear(): void {
-    for (const edge of Array.from(this.edges.values())) {
-      this.remove(edge);
-    }
-    for (const wire of Array.from(this.wires.values())) {
-      this.remove(wire);
-    }
-    for (const handle of Array.from(this.handles.values())) {
-      this.remove(handle);
-    }
-    for (const node of Array.from(this.nodes.values())) {
-      this.remove(node);
-    }
+    const runSilent =
+      this.renderer?.runWithoutSceneDeleteEvents.bind(this.renderer) ??
+      ((fn: () => void) => {
+        fn();
+      });
+    runSilent(() => {
+      for (const edge of Array.from(this.edges.values())) {
+        this.remove(edge);
+      }
+      for (const wire of Array.from(this.wires.values())) {
+        this.remove(wire);
+      }
+      for (const handle of Array.from(this.handles.values())) {
+        this.remove(handle);
+      }
+      for (const node of Array.from(this.nodes.values())) {
+        this.remove(node);
+      }
+    });
   }
 
   getObjectById(id: string): BoardObject | undefined {
@@ -2402,6 +2409,8 @@ export class BoardRenderer {
   readonly wasmHostAuthoredLinkByEdgeId = new Map<string, { source: string; target: string }>();
 
   private batchDepth = 0;
+  /** @emoji 🔇 While >0, {@link BoardScene.remove} does not emit delete events (dispose / JSX resync). */
+  private suppressSceneDeleteEvents = 0;
   /** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
   private renderPipelineDepth = 0;
   /** @emoji ⛓️ Tracks async WASM session borrows such as {@link BoardSession.attach_canvas} so sync probes like `gpuReady()` do not re-enter the same `RefCell`. */
@@ -2412,6 +2421,24 @@ export class BoardRenderer {
   /** @emoji 🚧 True while wasm-bindgen holds `&mut BoardSession`; any other JS→wasm call on this session must defer (see commit 379 + follow-up). */
   private wasmSessionCallBlockedForReentry(): boolean {
     return this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0;
+  }
+
+  /** @emoji 🔇 Runs `fn` without {@link BoardEventMap.nodeDelete} / edge / wire delete emissions (internal teardown or descriptor resync). */
+  runWithoutSceneDeleteEvents(fn: () => void): void {
+    this.suppressSceneDeleteEvents += 1;
+    try {
+      fn();
+    } finally {
+      this.suppressSceneDeleteEvents -= 1;
+    }
+  }
+
+  /** @emoji 📣 Forwards structural delete events to play/fixture listeners unless suppressed or disposed. */
+  emitSceneDeleteEvent<TKey extends "nodeDelete" | "edgeDelete" | "wireDestroy">(name: TKey, payload: BoardEventMap[TKey]): void {
+    if (this.suppressSceneDeleteEvents > 0 || this.isDisposed) {
+      return;
+    }
+    this.emit(name, payload);
   }
   /** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
   private cachedWasmGpuReady = false;
@@ -3503,7 +3530,7 @@ export class BoardRenderer {
             } else {
               this.clearWasmHostAuthorshipForEdge(id);
               graphMutatedForHostMerge = true;
-              this.emitter.emit("edgeDelete", { id });
+              this.emitSceneDeleteEvent("edgeDelete", { id });
             }
             break;
           }
@@ -3514,7 +3541,7 @@ export class BoardRenderer {
               this.scene.remove(node);
               graphMutatedForHostMerge = true;
             } else {
-              this.emitter.emit("nodeDelete", { id });
+              this.emitSceneDeleteEvent("nodeDelete", { id });
             }
             break;
           }
@@ -3763,7 +3790,9 @@ export class BoardRenderer {
     if (this.rafId !== null && globalThis.cancelAnimationFrame) {
       globalThis.cancelAnimationFrame(this.rafId);
     }
-    this.scene.clear();
+    this.runWithoutSceneDeleteEvents(() => {
+      this.scene.clear();
+    });
     if (BoardRenderer.activeRenderer === this) {
       BoardRenderer.activeRenderer = null;
     }
@@ -4380,6 +4409,17 @@ if (boardVitest) {
       expect(edgeEvents[0].target).toBe("b:h0");
 
       renderer.dispose();
+    });
+
+    it("dispose does not emit structural delete events that would clear play fixtures", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const nodeDeletes: string[] = [];
+      renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      const root = new BoardSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(root);
+      renderer.dispose();
+      expect(nodeDeletes).toEqual([]);
     });
 
     it("deletes selected edges and nodes when Delete reaches the window listener after pointerdown", () => {
@@ -6116,7 +6156,9 @@ export function updateBoardHostMount(root: BoardHostMount, element: ReactElement
 export function unmountBoardHostMount(root: BoardHostMount): void {
   updateBoardHostMount(root, null, null);
   const renderer = root.containerInfo as BoardRenderer;
-  renderer.scene.clear();
+  renderer.runWithoutSceneDeleteEvents(() => {
+    renderer.scene.clear();
+  });
   renderer.invalidate();
 }
 
@@ -6606,27 +6648,29 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
       applyWireProps(wire, wireDescriptor, sourceHandle, targetHandle);
     }
 
-    for (const edge of Array.from(renderer.scene.edges.values())) {
-      if (!desiredEdgeIds.has(edge.id)) {
-        renderer.clearWasmHostAuthorshipForEdge(edge.id);
-        renderer.scene.remove(edge);
+    renderer.runWithoutSceneDeleteEvents(() => {
+      for (const edge of Array.from(renderer.scene.edges.values())) {
+        if (!desiredEdgeIds.has(edge.id)) {
+          renderer.clearWasmHostAuthorshipForEdge(edge.id);
+          renderer.scene.remove(edge);
+        }
       }
-    }
-    for (const wire of Array.from(renderer.scene.wires.values())) {
-      if (!desiredWireIds.has(wire.id)) {
-        renderer.scene.remove(wire);
+      for (const wire of Array.from(renderer.scene.wires.values())) {
+        if (!desiredWireIds.has(wire.id)) {
+          renderer.scene.remove(wire);
+        }
       }
-    }
-    for (const handle of Array.from(renderer.scene.handles.values())) {
-      if (!desiredHandleIds.has(handle.id)) {
-        renderer.scene.remove(handle);
+      for (const handle of Array.from(renderer.scene.handles.values())) {
+        if (!desiredHandleIds.has(handle.id)) {
+          renderer.scene.remove(handle);
+        }
       }
-    }
-    for (const node of Array.from(renderer.scene.nodes.values())) {
-      if (!desiredNodeIds.has(node.id)) {
-        renderer.scene.remove(node);
+      for (const node of Array.from(renderer.scene.nodes.values())) {
+        if (!desiredNodeIds.has(node.id)) {
+          renderer.scene.remove(node);
+        }
       }
-    }
+    });
   });
 
   renderer.syncInteractionChrome();
