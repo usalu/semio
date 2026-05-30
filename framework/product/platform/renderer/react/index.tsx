@@ -110,6 +110,7 @@ import {
 	MessageSquare,
 	MoreHorizontal as MoreHorizontalIcon,
 	MousePointer2 as MousePointerIcon,
+	Move3d as Move3dIcon,
 	Plus as PlusIcon,
 	Save as SaveIcon,
 	Search,
@@ -1114,6 +1115,8 @@ function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode 
       return <SaveIcon className="size-tiny" aria-hidden />;
     case "transfer":
       return <ArrowRightLeftIcon className="size-tiny" aria-hidden />;
+    case "transform":
+      return <Move3dIcon className="size-tiny" aria-hidden />;
     case "create":
       return <PlusIcon className="size-tiny" aria-hidden />;
     case "view":

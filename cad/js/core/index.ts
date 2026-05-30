@@ -3704,9 +3704,30 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
     },
     { id: "transform.move", run: (params, ctx) => ({ diff: transformDiff(params, ctx, false) }) },
     { id: "transform.copy", run: (params, ctx) => ({ diff: transformDiff(params, ctx, true) }) },
-    { id: "transform.rotate", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
-    { id: "transform.scale1d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
-    { id: "transform.scale3d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
+    {
+      id: "transform.rotate",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("rotate-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
+    {
+      id: "transform.scale1d",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("scale1d-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
+    {
+      id: "transform.scale3d",
+      run: (params, ctx) => {
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+        const map = ctx.preview.transformPointsForPreviewKind("scale-preview", params);
+        return { diff: vertexPositionsTransformDiff(ctx.model, targets, map) };
+      },
+    },
     {
       id: "measure.vertexDistance",
       run: async (params, ctx) => {
@@ -3961,6 +3982,34 @@ export function selectionTargetsCenter(model: Model, targets: readonly Selection
   const box = preview.aabbFromPoints(pts);
   if (!box) return null;
   return [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
+}
+
+/** @emoji 🎛 CAD play gumball modes (toolbar move / rotate / scale). */
+export type CadTransformGumballMode = "move" | "rotate" | "scale";
+
+/** @emoji ✋ True when `targets` resolve to at least one model vertex. */
+export function selectionTargetsHaveTransformableVertices(model: Model, targets: readonly SelectionTarget[]): boolean {
+  return collectTargetVertices(model, targets).size > 0;
+}
+
+/** @emoji 🎛 Maps toolbar gumball mode to TransformControls mode. */
+export function cadTransformGumballModeToControlsMode(mode: CadTransformGumballMode): "translate" | "rotate" | "scale" {
+  if (mode === "rotate") return "rotate";
+  if (mode === "scale") return "scale";
+  return "translate";
+}
+
+function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  const vertexIds = collectTargetVertices(model, targets);
+  const modified: VertexRecordDiff[] = [];
+  for (const vid of vertexIds) {
+    const v = model.vertices[vid];
+    if (!v) continue;
+    const next = mapPoint(v.position);
+    if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
+    modified.push({ id: v.id, position: next });
+  }
+  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
 }
 
 function selectionTargetKey(target: SelectionTarget): string {

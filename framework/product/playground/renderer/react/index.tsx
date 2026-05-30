@@ -1864,7 +1864,7 @@ function boardFixtureMarkers(fixture: BoardFixtureV1): ReactElement {
   );
 }
 
-/** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. */
+/** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. Renders outside {@link BoardCanvas} so shell context stays on the DOM tree (not the board host reconciler). */
 function BoardStructuralDeleteReporter(): null {
   const { applyStructuralDelete } = useBoardPlayShell();
   const onEdgeDelete = reactHostPort.useCallback(
@@ -1884,7 +1884,7 @@ function BoardStructuralDeleteReporter(): null {
   return null;
 }
 
-/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. */
+/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. Renders outside {@link BoardCanvas} (DOM tree only). */
 function BoardPlayRedrawProgressReset(): null {
   const { boardRedrawPlaying, resetBoardRedrawProgressiveEpoch } = useBoardPlayShell();
   const handler = reactHostPort.useCallback(() => {

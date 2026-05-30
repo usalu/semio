@@ -13,7 +13,8 @@ import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
-const { Line, OrbitControls, Text } = sceneHostPort.drei;
+const { Line, OrbitControls, Text, TransformControls } = sceneHostPort.drei;
+const createPortal = sceneHostPort.fiber.createPortal;
 const THREE = sceneHostPort.three;
 const MOUSE = THREE.MOUSE;
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
@@ -97,6 +98,12 @@ import {
   type ObjectRef,
   type Vec3,
   type SpatialComputeMode,
+  cadTransformGumballModeToControlsMode,
+  selectionTargetsCenter,
+  collectTargetVertices,
+  selectionTargetsHaveTransformableVertices,
+  type CadTransformGumballMode,
+  type ModelDiff,
 } from "@cad/js/core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
@@ -1528,6 +1535,120 @@ function renderDisplayItem(item: DisplayItem, geometry: SpatialPickGeometry | nu
   return custom ? custom(item, geometry, fallback) : fallback();
 }
 
+//#region 🔖TransformGumball
+/** @emoji 📐 World-space gumball matrix snapshot (Three.js compose order). */
+export interface GumballMatrixSnapshot {
+  readonly position: Vec3;
+  readonly quaternion: readonly [number, number, number, number];
+  readonly scale: Vec3;
+}
+
+function gumballSnapshotFromObject3D(object: THREE.Object3D): GumballMatrixSnapshot {
+  const position = object.position;
+  const quaternion = object.quaternion;
+  const scale = object.scale;
+  return {
+    position: [position.x, position.y, position.z],
+    quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
+    scale: [scale.x, scale.y, scale.z],
+  };
+}
+
+/** @emoji 🎛 Applies a gumball world-matrix delta to all vertices reachable from `targets`. */
+export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot): ModelDiff {
+  const vertexIds = collectTargetVertices(model, targets);
+  if (vertexIds.size === 0) return EMPTY_MODEL_DIFF;
+  const mBefore = new THREE.Matrix4().compose(
+    new THREE.Vector3(before.position[0], before.position[1], before.position[2]),
+    new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]),
+    new THREE.Vector3(before.scale[0], before.scale[1], before.scale[2]),
+  );
+  const mAfter = new THREE.Matrix4().compose(
+    new THREE.Vector3(after.position[0], after.position[1], after.position[2]),
+    new THREE.Quaternion(after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]),
+    new THREE.Vector3(after.scale[0], after.scale[1], after.scale[2]),
+  );
+  const delta = mAfter.multiply(mBefore.clone().invert());
+  const point = new THREE.Vector3();
+  const modified: { id: VertexRef; position: Vec3 }[] = [];
+  for (const vid of vertexIds) {
+    const v = model.vertices[vid];
+    if (!v) continue;
+    point.set(v.position[0], v.position[1], v.position[2]);
+    point.applyMatrix4(delta);
+    const next: Vec3 = [point.x, point.y, point.z];
+    if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
+    modified.push({ id: v.id, position: next });
+  }
+  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+}
+
+/** @emoji 🎛 R3F gumball for multi-target primitive transforms (pivot at selection bbox center). */
+export function SpatialTransformGumball(props: {
+  readonly mode: CadTransformGumballMode;
+  readonly model: Model;
+  readonly targets: readonly SelectionTarget[];
+  readonly previewKernel?: SpatialPreviewKernel;
+  readonly onCommit: (diff: ModelDiff) => void;
+}): ReactNode {
+  const previewKernel = props.previewKernel ?? r3fPreviewKernel;
+  const pivot = reactHostPort.useMemo(() => selectionTargetsCenter(props.model, props.targets, previewKernel), [props.model, props.targets, previewKernel, props.model.revision]);
+  const groupRef = reactHostPort.useRef<THREE.Group>(null);
+  const [tcTarget, setTcTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
+  const beforeRef = reactHostPort.useRef<GumballMatrixSnapshot | null>(null);
+  const scene = useThree((state) => state.scene);
+  const controlsMode = cadTransformGumballModeToControlsMode(props.mode);
+  const canTransform = selectionTargetsHaveTransformableVertices(props.model, props.targets);
+
+  reactHostPort.useLayoutEffect(() => {
+    const group = groupRef.current;
+    if (!group || !pivot) return;
+    group.position.set(pivot[0], pivot[1], pivot[2]);
+    group.quaternion.set(0, 0, 0, 1);
+    group.scale.set(1, 1, 1);
+    group.updateMatrixWorld(true);
+    setTcTarget(group);
+  }, [pivot, props.mode, props.targets]);
+
+  if (!pivot || !canTransform) return null;
+
+  return (
+    <>
+      <group ref={groupRef}>
+        <mesh visible={false}>
+          <boxGeometry args={[0.001, 0.001, 0.001]} />
+        </mesh>
+      </group>
+      {tcTarget
+        ? createPortal(
+            <TransformControls
+              object={tcTarget}
+              mode={controlsMode}
+              onMouseDown={() => {
+                if (groupRef.current) beforeRef.current = gumballSnapshotFromObject3D(groupRef.current);
+              }}
+              onMouseUp={() => {
+                const before = beforeRef.current;
+                const group = groupRef.current;
+                beforeRef.current = null;
+                if (!before || !group || !pivot) return;
+                const after = gumballSnapshotFromObject3D(group);
+                const diff = transformGumballMatrixDiff(props.model, props.targets, before, after);
+                if (!isEmptyModelDiff(diff)) props.onCommit(diff);
+                group.position.set(pivot[0], pivot[1], pivot[2]);
+                group.quaternion.set(0, 0, 0, 1);
+                group.scale.set(1, 1, 1);
+                group.updateMatrixWorld(true);
+              }}
+            />,
+            scene,
+          )
+        : null}
+    </>
+  );
+}
+//#endregion 🔖TransformGumball
+
 /** @emoji 🪩 Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
 export interface InteractionSpatialViewSlots {
   readonly beforeScene?: ReactNode;
@@ -2563,6 +2684,10 @@ export interface InteractionSpatialViewProps {
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly theme?: InteractionSpatialViewTheme;
   readonly slots?: InteractionSpatialViewSlots;
+  /** @emoji 🎛 When set with targets, shows a gumball at the selection centroid (toolbar move/rotate/scale). */
+  readonly transformGumballMode?: CadTransformGumballMode | null;
+  readonly transformGumballTargets?: readonly SelectionTarget[];
+  readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
 }
 
 /** @emoji 📡 Host event callbacks accepted by {@link InteractionSpatialView}. */
@@ -2613,6 +2738,9 @@ export function InteractionSpatialView({
   autoFitBehavior = "initial",
   theme = defaultInteractionSpatialViewTheme,
   slots,
+  transformGumballMode = null,
+  transformGumballTargets = [],
+  onTransformGumballCommit,
 }: InteractionSpatialViewProps): ReactNode {
   reactHostPort.useEffect(() => {
     bindScenePreviewKernel(previewKernel);
@@ -2725,6 +2853,9 @@ export function InteractionSpatialView({
       <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
       {slots?.afterDisplay}
       {slots?.afterCommitted}
+      {transformGumballMode && geometry && onTransformGumballCommit ? (
+        <SpatialTransformGumball mode={transformGumballMode} model={geometry} targets={transformGumballTargets} previewKernel={previewKernel} onCommit={onTransformGumballCommit} />
+      ) : null}
     </>
   );
 }
@@ -3279,6 +3410,9 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly autoFitMeshes?: boolean;
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly tessellationTolerance?: number;
+  /** @emoji 🎛 Toolbar gumball mode; hidden while an interaction session is active. */
+  readonly transformGumballMode?: CadTransformGumballMode | null;
+  readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
 }
 
 /** @emoji 💬 One interaction a window can start from the floating panel while idle. */
@@ -3436,6 +3570,8 @@ export function InteractionRepl({
   frameloop = "always",
   canvas: canvasOverrides,
   spatialView: spatialViewOverrides,
+  transformGumballMode = null,
+  onTransformGumballCommit,
 }: InteractionReplProps): ReactNode {
   const snapshot = useInteractionSnapshot(rt);
   const rtRef = reactHostPort.useRef(rt);
@@ -3497,6 +3633,7 @@ export function InteractionRepl({
   const cameraNavigatingRef = reactHostPort.useRef(false);
   const interactionActive = isInteractionSessionActive(spec, snapshot.state);
   const boundInteractionSession = Boolean(interactionId) && interactionActive;
+  const activeTransformGumballMode = !boundInteractionSession && transformGumballMode ? transformGumballMode : null;
   const displayedSelectionTargets = reactHostPort.useMemo(
     () => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState),
     [boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState],
@@ -4344,6 +4481,9 @@ export function InteractionRepl({
             autoFitBehavior={autoFitBehavior}
             theme={viewTheme}
             slots={viewSlots}
+            transformGumballMode={activeTransformGumballMode}
+            transformGumballTargets={displayedSelectionTargets}
+            onTransformGumballCommit={onTransformGumballCommit}
             {...spatialViewOverrides}
           />
         </InteractionCanvas>
@@ -5354,6 +5494,22 @@ if (import.meta.vitest) {
         showCommittedFaces: true,
         showCommittedEdges: true,
       });
+    });
+
+    it("transformGumballMatrixDiff translates solid selection vertices", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const diff = transformGumballMatrixDiff(
+        model,
+        [{ kind: "solid", id: solidId, editable: true }],
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      );
+      applyModelDiff(model, diff);
+      for (const v of Object.values(model.vertices)) {
+        expect(v.position[0]).toBeGreaterThanOrEqual(1.5);
+      }
     });
 
     it("defaultInteractionReplChromeState seeds typology and primitive toggles by default", () => {

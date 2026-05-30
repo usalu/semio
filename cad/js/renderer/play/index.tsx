@@ -56,6 +56,9 @@ import {
   type SelectionTarget,
   type SpatialComputeMode,
   type TransformationSpec,
+  applyModelDiff,
+  type CadTransformGumballMode,
+  type ModelDiff,
 } from "@cad/js/core";
 
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
@@ -353,6 +356,7 @@ export function buildCadPlayHierarchySections(
 export interface CadPlayToolbarState {
   readonly activeModelDefinitionId: string;
   readonly selectionCount: number;
+  readonly transformTool: CadTransformGumballMode | null;
   readonly transfersTo: readonly TransformationSpec[];
   readonly transfersFrom: readonly TransformationSpec[];
 }
@@ -411,6 +415,44 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       command: "loadRawRequest",
     },
   ];
+  const transformTools: ToolItem[] = [
+    {
+      id: "cad.play.transform.move",
+      kind: "toggle",
+      label: "Move",
+      text: "Move",
+      title: "Move selection (gumball)",
+      order: 0,
+      pressed: state.transformTool === "move",
+      controllerId,
+      command: "setTransformTool",
+      args: { tool: "move" },
+    },
+    {
+      id: "cad.play.transform.rotate",
+      kind: "toggle",
+      label: "Rotate",
+      text: "Rotate",
+      title: "Rotate selection (gumball)",
+      order: 1,
+      pressed: state.transformTool === "rotate",
+      controllerId,
+      command: "setTransformTool",
+      args: { tool: "rotate" },
+    },
+    {
+      id: "cad.play.transform.scale",
+      kind: "toggle",
+      label: "Scale",
+      text: "Scale",
+      title: "Scale selection (gumball)",
+      order: 2,
+      pressed: state.transformTool === "scale",
+      controllerId,
+      command: "setTransformTool",
+      args: { tool: "scale" },
+    },
+  ];
   const transferTools: ToolItem[] = [
     ...state.transfersTo.map((spec, index) => ({
       id: `cad.play.transfer.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
@@ -437,6 +479,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
   return {
     view: viewTools,
     save: saveTools,
+    transform: transformTools,
     ...(transferTools.length > 0 ? { transfer: transferTools } : {}),
   };
 }
@@ -1117,6 +1160,8 @@ interface PlaySessionProps {
   readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
   readonly autoFitMeshes?: boolean;
   readonly autoFitBehavior?: "initial" | "always";
+  readonly transformGumballMode: CadTransformGumballMode | null;
+  readonly onTransformGumballCommit: (diff: ModelDiff) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1149,6 +1194,8 @@ function PlaySession({
   onCanvasHoverTarget,
   autoFitMeshes = false,
   autoFitBehavior = "initial",
+  transformGumballMode,
+  onTransformGumballCommit,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1209,6 +1256,8 @@ function PlaySession({
       onHoverTarget={onCanvasHoverTarget}
       autoFitMeshes={autoFitMeshes}
       autoFitBehavior={autoFitBehavior}
+      transformGumballMode={transformGumballMode}
+      onTransformGumballCommit={onTransformGumballCommit}
     />
   );
 }
@@ -1258,6 +1307,9 @@ interface CadPlayModelSpaceValue {
   readonly handleLoadRaw: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   readonly liveModel: Model;
   readonly brepjsKernel: BrepjsKernel;
+  readonly transformGumballMode: CadTransformGumballMode | null;
+  readonly setTransformGumballMode: (value: CadTransformGumballMode | null) => void;
+  readonly handleTransformGumballCommit: (modelDefinitionId: string, diff: ModelDiff) => void;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1297,6 +1349,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const [rendererSelectionByModel, setRendererSelectionByModel] = reactHostPort.useState<SpatialRendererSelectionByModel>({});
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
+  const [transformGumballMode, setTransformGumballMode] = reactHostPort.useState<CadTransformGumballMode | null>(null);
   const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
   const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<CadPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
@@ -1415,6 +1468,16 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       commitModelForDefinition(activeModelDefinitionId, model);
     },
     [activeModelDefinitionId, commitModelForDefinition],
+  );
+
+  const handleTransformGumballCommit = reactHostPort.useCallback(
+    (modelDefinitionId: string, diff: ModelDiff) => {
+      if (isEmptyModelDiff(diff)) return;
+      const model = Model.fromJSON((flushedModelsByDefinitionId[modelDefinitionId] ?? liveModel).toJSON());
+      applyModelDiff(model, diff);
+      commitModelForDefinition(modelDefinitionId, model);
+    },
+    [commitModelForDefinition, flushedModelsByDefinitionId, liveModel],
   );
 
   const activePane = reactHostPort.useMemo(() => cadPlayPaneForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
@@ -1584,6 +1647,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       getToolbarState: () => ({
         activeModelDefinitionId,
         selectionCount: selectionInScope.length,
+        transformTool: transformGumballMode,
         transfersTo: listTransformationsFromModelDefinition(activeModelDefinitionId),
         transfersFrom: listTransformationsIntoModelDefinition(activeModelDefinitionId),
       }),
@@ -1615,6 +1679,12 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
           case "loadRawRequest":
             handleLoadRawRequest();
             break;
+          case "setTransformTool": {
+            const tool = (args as { tool?: CadTransformGumballMode })?.tool;
+            if (!tool) break;
+            setTransformGumballMode((prev) => (prev === tool ? null : tool));
+            break;
+          }
           case "engagementOption": {
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
@@ -1648,7 +1718,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     };
     shellController.setHostBridge(bridge);
     return () => shellController.setHostBridge(null);
-  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController]);
+  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, transformGumballMode]);
 
   const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1734,6 +1804,9 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       handleLoadRaw,
       liveModel,
       brepjsKernel,
+      transformGumballMode,
+      setTransformGumballMode,
+      handleTransformGumballCommit,
     }),
     [
       activeModelDefinitionId,
@@ -1773,6 +1846,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       specForPane,
       viewObjectCount,
       brepjsKernel,
+      transformGumballMode,
+      handleTransformGumballCommit,
     ],
   );
 
@@ -1857,6 +1932,8 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
+    transformGumballMode,
+    handleTransformGumballCommit,
   } = useCadPlayModelSpace();
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
@@ -1872,6 +1949,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
   );
   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
+  const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
   const onSnapshot = reactHostPort.useCallback((snapshot: InteractionSnapshot) => handleSnapshotChangeForPane(pane, snapshot), [handleSnapshotChangeForPane, pane]);
   const onEngagementChange = reactHostPort.useCallback((engagement: EngagementSpec | null) => handleEngagementChangeForPane(pane, engagement), [handleEngagementChangeForPane, pane]);
   const onInteractionId = reactHostPort.useCallback((id: string) => handleInteractionPickForPane(pane, id), [handleInteractionPickForPane, pane]);
@@ -1922,6 +2000,8 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
         autoFitMeshes={autoFitMeshes}
+        transformGumballMode={transformGumballMode}
+        onTransformGumballCommit={onTransformGumballCommit}
       />
     </div>
   );
@@ -2140,7 +2220,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformTool: null, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
@@ -2166,7 +2246,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformTool: null, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       const app = buildCadPlayAppRuntime(controller);
@@ -2190,11 +2270,12 @@ if (import.meta.vitest) {
   });
 
   describe("buildCadPlayToolbarTools", () => {
-    it("registers view, save, and transfer categories", () => {
+    it("registers view, save, transform, and transfer categories", () => {
       const tools = buildCadPlayToolbarTools(
         {
           activeModelDefinitionId: defaultModelDefinitionId(),
           selectionCount: 0,
+          transformTool: "move",
           transfersTo: [],
           transfersFrom: [],
         },
@@ -2203,6 +2284,9 @@ if (import.meta.vitest) {
       expect(tools.view?.length).toBeGreaterThan(0);
       expect(tools.save?.map((row) => row.id)).toEqual(["cad.play.save.selected", "cad.play.save.modelspace", "cad.play.save.current", "cad.play.save.load"]);
       expect(tools.save?.[0]?.disabled).toBe(true);
+      expect(tools.transform?.map((row) => row.id)).toEqual(["cad.play.transform.move", "cad.play.transform.rotate", "cad.play.transform.scale"]);
+      expect(tools.transform?.[0]?.pressed).toBe(true);
+      expect(tools.transform?.[1]?.pressed).toBe(false);
     });
   });
 
