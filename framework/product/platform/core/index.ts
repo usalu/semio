@@ -10,7 +10,7 @@ import {
 	BaseWindowKindRuntime,
 	CommandBus,
 	Controller,
-	ObservableCell,
+	Store,
 	Platform,
 	createTabStackLayout,
 	mergeAppTools,
@@ -21,7 +21,7 @@ import {
 	type Disposable,
 	type FindItem,
 	type FooterItem,
-	type PlatformComponentEntry,
+	type SurfaceComponent,
 	type PlatformSubscriber,
 	type SearchItemSpec,
 	type SideTabSpec,
@@ -286,102 +286,101 @@ export interface PanelModel {
 //#endregion 🔖ComponentModels
 
 //#region 🔖Component
-/** @emoji 🧩 Render-agnostic platform surface with an observable view-model. */
-export abstract class Component<TModel> implements PlatformComponentEntry {
+/** @emoji 🧩 Render-agnostic platform surface backed by a {@link Store} snapshot. */
+export abstract class Component<TSnapshot> extends Store<TSnapshot> implements SurfaceComponent {
 	readonly componentKind: ComponentKind;
 	readonly surfaceId: string;
 	readonly controllerId: string;
-	private readonly modelCell: ObservableCell<TModel>;
+	private snapshotValue: TSnapshot;
 
-	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialModel: TModel) {
+	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialSnapshot: TSnapshot) {
+		super();
 		this.componentKind = componentKind;
 		this.surfaceId = surfaceId;
 		this.controllerId = controllerId;
-		this.modelCell = new ObservableCell(initialModel);
+		this.snapshotValue = initialSnapshot;
 	}
 
-	getModel(): TModel {
-		return this.modelCell.get();
+	override getSnapshot(): TSnapshot {
+		return this.snapshotValue;
 	}
 
-	protected setModel(next: TModel): void {
-		this.modelCell.set(next);
+	protected setSnapshot(next: TSnapshot): void {
+		if (Object.is(this.snapshotValue, next)) return;
+		this.snapshotValue = next;
+		this.notify();
 	}
 
-	subscribe(listener: PlatformSubscriber): () => void {
-		return this.modelCell.subscribe(listener);
-	}
-
-	abstract buildModel(): TModel;
+	abstract buildSnapshot(): TSnapshot;
 
 	refresh(): void {
-		this.setModel(this.buildModel());
+		this.setSnapshot(this.buildSnapshot());
 	}
 }
 
 /** @emoji 📊 Table surface component base class. */
 export class Table extends Component<TableModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: TableModel = { columns: [], rows: [] }) {
-		super("table", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: TableModel = { columns: [], rows: [] }) {
+		super("table", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): TableModel {
-		return this.getModel();
+	buildSnapshot(): TableModel {
+		return this.getSnapshot();
 	}
 }
 
 /** @emoji 📋 2D puzzle board surface component base class. */
 export class Puzzle2d extends Component<Puzzle2dModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle2dModel = { nodes: [], edges: [] }) {
-		super("puzzle2d", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: Puzzle2dModel = { nodes: [], edges: [] }) {
+		super("puzzle2d", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): Puzzle2dModel {
-		return this.getModel();
+	buildSnapshot(): Puzzle2dModel {
+		return this.getSnapshot();
 	}
 }
 
 /** @emoji 🧊 3D puzzle scene surface component base class. */
 export class Puzzle3d extends Component<Puzzle3dModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle3dModel = {}) {
-		super("puzzle3d", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: Puzzle3dModel = {}) {
+		super("puzzle3d", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): Puzzle3dModel {
-		return this.getModel();
+	buildSnapshot(): Puzzle3dModel {
+		return this.getSnapshot();
 	}
 }
 
 /** @emoji 🌐 5D topology surface component base class. */
 export class Puzzle5d extends Component<Puzzle5dModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: Puzzle5dModel) {
-		super("puzzle5d", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: Puzzle5dModel) {
+		super("puzzle5d", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): Puzzle5dModel {
-		return this.getModel();
+	buildSnapshot(): Puzzle5dModel {
+		return this.getSnapshot();
 	}
 }
 
 /** @emoji 📐 CAD surface component base class. */
 export class Cad extends Component<CadModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: CadModel = {}) {
-		super("cad", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: CadModel = {}) {
+		super("cad", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): CadModel {
-		return this.getModel();
+	buildSnapshot(): CadModel {
+		return this.getSnapshot();
 	}
 }
 
 /** @emoji 🧩 Panel surface component base class. */
 export class Panel extends Component<PanelModel> {
-	constructor(surfaceId: string, controllerId: string, initialModel: PanelModel) {
-		super("panel", surfaceId, controllerId, initialModel);
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: PanelModel) {
+		super("panel", surfaceId, controllerId, initialSnapshot);
 	}
 
-	buildModel(): PanelModel {
-		return this.getModel();
+	buildSnapshot(): PanelModel {
+		return this.getSnapshot();
 	}
 }
 

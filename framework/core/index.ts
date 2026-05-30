@@ -316,16 +316,41 @@ export function mergeSearchItems(base?: readonly SearchItemSpec[], extension?: r
 }
 //#endregion 🔖Merge
 
-//#region 🔖Observable
+//#region 🔖Store
 /** @emoji 📡 Minimal listener set for host invalidation without external reactive libs. */
 export type PlatformSubscriber = () => void;
 
-/** @emoji 📦 Holds a value and notifies subscribers on `set`. */
-export class ObservableCell<T> {
-	private value: T;
+/** @emoji 🗄️ Renderer-neutral observable state; backends (memory, disk, worker, …) live in subclasses. */
+export abstract class Store<TSnapshot> {
 	private readonly listeners = new Set<PlatformSubscriber>();
+	private disposed = false;
+
+	abstract getSnapshot(): TSnapshot;
+
+	subscribe(listener: PlatformSubscriber): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	protected notify(): void {
+		if (this.disposed) return;
+		for (const listener of this.listeners) listener();
+	}
+
+	dispose(): void {
+		this.disposed = true;
+		this.listeners.clear();
+	}
+}
+//#endregion 🔖Store
+
+//#region 🔖Observable
+/** @emoji 📦 In-memory cell store; notifies subscribers on `set`. */
+export class ObservableCell<T> extends Store<T> {
+	private value: T;
 
 	constructor(initial: T) {
+		super();
 		this.value = initial;
 	}
 
@@ -333,19 +358,18 @@ export class ObservableCell<T> {
 		return this.value;
 	}
 
+	getSnapshot(): T {
+		return this.value;
+	}
+
 	set(next: T): void {
 		if (Object.is(this.value, next)) return;
 		this.value = next;
-		for (const listener of this.listeners) listener();
+		this.notify();
 	}
 
 	update(updater: (previous: T) => T): void {
 		this.set(updater(this.value));
-	}
-
-	subscribe(listener: PlatformSubscriber): () => void {
-		this.listeners.add(listener);
-		return () => this.listeners.delete(listener);
 	}
 }
 //#endregion 🔖Observable
@@ -359,19 +383,18 @@ export interface AppPointerFocusSnapshot<TKey> {
 }
 
 /** @emoji 🖱️ Shared selection + hover with per-surface hover ownership (hierarchy, canvas, …). */
-export class AppPointerFocusStore<TKey> {
+export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TKey>> {
 	private selection = new Set<TKey>();
 	private hover: TKey | null = null;
 	private hoverSourceId: string | null = null;
-	readonly cell: ObservableCell<AppPointerFocusSnapshot<TKey>>;
 
 	constructor(initialSelection: readonly TKey[] = []) {
+		super();
 		this.selection = new Set(initialSelection);
-		this.cell = new ObservableCell(this.snapshot());
 	}
 
-	getSnapshot(): AppPointerFocusSnapshot<TKey> {
-		return this.cell.get();
+	override getSnapshot(): AppPointerFocusSnapshot<TKey> {
+		return this.focusSnapshot();
 	}
 
 	setSelection(keys: readonly TKey[]): void {
@@ -422,7 +445,7 @@ export class AppPointerFocusStore<TKey> {
 		this.publish();
 	}
 
-	private snapshot(): AppPointerFocusSnapshot<TKey> {
+	private focusSnapshot(): AppPointerFocusSnapshot<TKey> {
 		return {
 			selection: [...this.selection],
 			hover: this.hover,
@@ -431,7 +454,7 @@ export class AppPointerFocusStore<TKey> {
 	}
 
 	private publish(): void {
-		this.cell.set(this.snapshot());
+		this.notify();
 	}
 }
 //#endregion 🔖AppPointerFocus
@@ -459,6 +482,7 @@ export abstract class Controller {
 	readonly id: string;
 	readonly commandBus: CommandBus;
 	private readonly hostNotify: () => void;
+	private readonly ownedStores = new Map<string, Store<unknown>>();
 
 	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
 		this.id = id;
@@ -471,7 +495,27 @@ export abstract class Controller {
 		this.hostNotify();
 	}
 
+	/** @emoji 🗄️ Registers a store owned by this controller (replaces same id). */
+	protected provideStore<TSnapshot>(id: string, store: Store<TSnapshot>): Store<TSnapshot> {
+		const previous = this.ownedStores.get(id);
+		if (previous && previous !== store) previous.dispose();
+		this.ownedStores.set(id, store as Store<unknown>);
+		return store;
+	}
+
+	/** @emoji 🔍 Resolves a controller-owned store by id. */
+	getStore<TSnapshot>(id: string): Store<TSnapshot> | undefined {
+		return this.ownedStores.get(id) as Store<TSnapshot> | undefined;
+	}
+
+	/** @emoji 📚 All stores currently provided by this controller. */
+	get stores(): ReadonlyMap<string, Store<unknown>> {
+		return this.ownedStores;
+	}
+
 	dispose(): void {
+		for (const store of this.ownedStores.values()) store.dispose();
+		this.ownedStores.clear();
 		this.commandBus.unregister(this.id);
 	}
 
@@ -721,16 +765,16 @@ export class Platform {
 		this.notify();
 	}
 
-	private readonly componentsBySurfaceId = new Map<string, PlatformComponentEntry>();
+	private readonly componentsBySurfaceId = new Map<string, SurfaceComponent>();
 
-	/** @emoji 🧩 Registers a render-agnostic surface component keyed by {@link PlatformComponentEntry.surfaceId}. */
-	registerComponent(component: PlatformComponentEntry): void {
+	/** @emoji 🧩 Registers a render-agnostic surface component keyed by {@link SurfaceComponent.surfaceId}. */
+	registerComponent(component: SurfaceComponent): void {
 		this.componentsBySurfaceId.set(component.surfaceId, component);
 		this.notify();
 	}
 
 	/** @emoji 🔍 Resolves a registered surface component by id. */
-	getComponent(surfaceId: string): PlatformComponentEntry | undefined {
+	getComponent(surfaceId: string): SurfaceComponent | undefined {
 		return this.componentsBySurfaceId.get(surfaceId);
 	}
 
@@ -742,15 +786,13 @@ export class Platform {
 }
 //#endregion 🔖Platform
 
-//#region 🔖PlatformComponentEntry
-/** @emoji 🧩 Minimal handle stored on {@link Platform} for renderer-agnostic surface components. */
-export interface PlatformComponentEntry {
+//#region 🔖SurfaceComponent
+/** @emoji 🧩 Minimal surface component handle stored on {@link Platform}. */
+export interface SurfaceComponent extends Store<unknown> {
 	readonly surfaceId: string;
 	readonly componentKind: string;
-	readonly subscribe: (listener: PlatformSubscriber) => () => void;
-	readonly getModel: () => unknown;
 }
-//#endregion 🔖PlatformComponentEntry
+//#endregion 🔖SurfaceComponent
 
 //#region 🔖BodyViewContext
 /** @emoji 🪟 Shared fields for declarative window and side-panel body builders. */
@@ -902,7 +944,7 @@ if (import.meta.vitest) {
 
 		it("registers render-agnostic surface components by surface id", () => {
 			const platform = new Platform({ id: "demo", name: "Demo" });
-			let model = "a";
+			let snapshot = "a";
 			platform.registerComponent({
 				surfaceId: "surface/demo",
 				componentKind: "table",
@@ -910,11 +952,12 @@ if (import.meta.vitest) {
 					listener();
 					return () => undefined;
 				},
-				getModel: () => model,
+				getSnapshot: () => snapshot,
+				dispose: () => undefined,
 			});
-			expect(platform.getComponent("surface/demo")?.getModel()).toBe("a");
-			model = "b";
-			expect(platform.getComponent("surface/demo")?.getModel()).toBe("b");
+			expect(platform.getComponent("surface/demo")?.getSnapshot()).toBe("a");
+			snapshot = "b";
+			expect(platform.getComponent("surface/demo")?.getSnapshot()).toBe("b");
 			platform.unregisterComponent("surface/demo");
 			expect(platform.getComponent("surface/demo")).toBeUndefined();
 		});

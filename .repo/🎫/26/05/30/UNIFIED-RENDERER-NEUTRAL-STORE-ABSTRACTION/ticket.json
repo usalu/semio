@@ -1,0 +1,15 @@
+{
+  "title": "Unified Renderer-Neutral Store Abstraction",
+  "emoji": "🗄️",
+  "status": "open",
+  "description": "Introduce abstract Store\u003cTSnapshot\u003e in @framework/core, controller-owned store registry, Component extends Store, renderer useStore hooks, sketchpad SemioKitStore + local store, puzzle play controllers provide domain stores. Full unification, no backwards compat.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "0cd71f44",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/unified_store_abstraction_0cd71f44.plan.md"
+  },
+  "sessions": [
+    "⚪1578323ce62a47fea81152d88dd88c28"
+  ]
+}
