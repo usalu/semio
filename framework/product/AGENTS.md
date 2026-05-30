@@ -1,1 +1,7 @@
-A product has a purpose and makes it possible to provide infrastructure for more consistent, render-indepenant user interfaces.
+# Platform
+
+A full-blown product framework for extendable platforms.
+
+# Playground
+
+A lightweight product framework for interactive playground apps.
