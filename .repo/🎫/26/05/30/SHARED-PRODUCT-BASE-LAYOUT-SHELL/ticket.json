@@ -1,7 +1,8 @@
 {
   "title": "Shared Product Base Layout Shell",
-  "status": "open",
+  "status": "closed",
   "description": "Extract duplicated navbar/canvas/footer + floating left/right side-panel shell into ProductShell in @framework/platform/renderer/react; PlatformView and PlaygroundView become thin wrappers.",
+  "summary": "Added ProductShell (navbar, floating left/right SidePanel, ShellModeCanvas window canvas, footer, toolbar overlay, optional search/find hotkeys). PlatformView delegates layout to ProductShell. PlaygroundView imports ProductShell and shared helpers (findDefaultActiveWindowKindId, declareToolsToViewTools, UIToolbar); removed duplicated ShellModeCanvas, layout conversion, and PlaygroundToolbar. Exported convertFrameworkLayoutToShellLayout, findDefaultActiveWindowKindId, ShellModeCanvas. Platform renderer 7 tests pass; playground renderer 11 tests pass.",
   "goal": "🎯AI-OPTIMIZED-REPO",
   "sessions": []
 }

@@ -348,6 +348,92 @@ export class ObservableCell<T> {
 }
 //#endregion 🔖Observable
 
+//#region 🔖AppPointerFocus
+/** @emoji 🎯 Snapshot of cross-surface selection and hover for one app session. */
+export interface AppPointerFocusSnapshot<TKey> {
+	readonly selection: readonly TKey[];
+	readonly hover: TKey | null;
+	readonly hoverSourceId: string | null;
+}
+
+/** @emoji 🖱️ Shared selection + hover with per-surface hover ownership (hierarchy, canvas, …). */
+export class AppPointerFocusStore<TKey> {
+	private selection = new Set<TKey>();
+	private hover: TKey | null = null;
+	private hoverSourceId: string | null = null;
+	readonly cell: ObservableCell<AppPointerFocusSnapshot<TKey>>;
+
+	constructor(initialSelection: readonly TKey[] = []) {
+		this.selection = new Set(initialSelection);
+		this.cell = new ObservableCell(this.snapshot());
+	}
+
+	getSnapshot(): AppPointerFocusSnapshot<TKey> {
+		return this.snapshot();
+	}
+
+	setSelection(keys: readonly TKey[]): void {
+		const next = new Set(keys);
+		if (next.size === this.selection.size && keys.every((key) => this.selection.has(key))) {
+			return;
+		}
+		this.selection = next;
+		this.publish();
+	}
+
+	claimHoverSource(sourceId: string): void {
+		if (this.hoverSourceId === sourceId) {
+			return;
+		}
+		this.hoverSourceId = sourceId;
+		this.publish();
+	}
+
+	setHoverFromSource(sourceId: string, key: TKey | null): void {
+		this.hoverSourceId = sourceId;
+		if (Object.is(this.hover, key)) {
+			this.publish();
+			return;
+		}
+		this.hover = key;
+		this.publish();
+	}
+
+	clearHoverFromSource(sourceId: string): void {
+		if (this.hoverSourceId !== sourceId) {
+			return;
+		}
+		this.hoverSourceId = null;
+		if (this.hover === null) {
+			return;
+		}
+		this.hover = null;
+		this.publish();
+	}
+
+	clearHover(): void {
+		if (this.hover === null && this.hoverSourceId === null) {
+			return;
+		}
+		this.hover = null;
+		this.hoverSourceId = null;
+		this.publish();
+	}
+
+	private snapshot(): AppPointerFocusSnapshot<TKey> {
+		return {
+			selection: [...this.selection],
+			hover: this.hover,
+			hoverSourceId: this.hoverSourceId,
+		};
+	}
+
+	private publish(): void {
+		this.cell.set(this.snapshot());
+	}
+}
+//#endregion 🔖AppPointerFocus
+
 //#region 🔖CommandBus
 /** @emoji 🚦 Routes toolbar/footer commands to {@link Controller} instances by id. */
 export class CommandBus {
@@ -716,6 +802,25 @@ if (import.meta.vitest) {
 			expect(hits).toBe(1);
 			cell.set(1);
 			expect(hits).toBe(1);
+		});
+	});
+
+	describe("AppPointerFocusStore", () => {
+		it("arbitrates hover by source id", () => {
+			const store = new AppPointerFocusStore<string>();
+			store.setHoverFromSource("hierarchy", "a");
+			expect(store.getSnapshot().hover).toBe("a");
+			store.clearHoverFromSource("canvas");
+			expect(store.getSnapshot().hover).toBe("a");
+			store.clearHoverFromSource("hierarchy");
+			expect(store.getSnapshot().hover).toBeNull();
+		});
+
+		it("updates selection independently of hover", () => {
+			const store = new AppPointerFocusStore<string>(["x"]);
+			store.setHoverFromSource("canvas", "y");
+			store.setSelection(["z"]);
+			expect(store.getSnapshot()).toEqual({ selection: ["z"], hover: "y", hoverSourceId: "canvas" });
 		});
 	});
 

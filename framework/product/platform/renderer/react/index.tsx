@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: declarative {@link UiNode} host (monolith). */
+/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: {@link ProductShell}, {@link PlatformView}, declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
 export { Platform, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory, type ComponentKind } from "@framework/platform/core";
@@ -1166,7 +1166,7 @@ const UIToolbar: React.FC<{
   );
 };
 
-export { ShellModeCanvas, UISearch, UIFind, UIToolbar };
+export { UISearch, UIFind, UIToolbar };
 export { App, Mode, Ui } from "@ui/react";
 
 // #endregion 📔UIToolbar
@@ -2108,7 +2108,6 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	className,
 	mobile,
 	mobileQuery = "(max-width: 767px)",
-	initialPanelVisibility,
 	navbarItems,
 	footerItems,
 	slotToolbar,

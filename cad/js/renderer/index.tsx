@@ -576,8 +576,13 @@ export function spatialPickTargetKey(target: SpatialPickTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-function spatialSelectionTargetKey(target: SelectionTarget): string {
+/** @emoji 🪪 Stable hover/selection key for a {@link SelectionTarget} (topology kinds use entity kind + id). */
+export function selectionTargetHoverKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
+}
+
+function spatialSelectionTargetKey(target: SelectionTarget): string {
+  return selectionTargetHoverKey(target);
 }
 
 /** @emoji 👁️ Default all geometry pick kinds enabled (visibility + selection). */

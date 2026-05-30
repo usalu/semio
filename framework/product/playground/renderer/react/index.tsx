@@ -4,11 +4,6 @@
 
 // #region 🔌Adapters
 import {
-  App,
-  Footer,
-  Layout,
-  Mode,
-  Navbar,
   Select,
   SelectContent,
   SelectItem,
@@ -16,10 +11,6 @@ import {
   SelectValue,
   Slider,
   Toggle,
-  ToolbarDivider,
-  ToolbarItem,
-  ToolbarZone,
-  Ui,
   cn,
   getLevelBgClass,
   Label,
@@ -29,9 +20,7 @@ import {
   useMediaQuery,
   type EngagementSpec,
   type FooterItem,
-  type ModeWindowDescriptor,
   type NavbarItem,
-  type WindowLayoutNode as ShellWindowLayoutNode,
   type SidePanelTabConfig,
   type SidePanelTabDefinition,
   type TreeDataItem,
@@ -43,7 +32,7 @@ import {
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 import type { LucideIcon } from "lucide-react";
-import { ArrowRightLeft, Filter, Folder, FolderOpen, Hand, History, Info, Lasso, LayoutGrid, MoreHorizontal, MousePointer2, Plus, Save, Search, Settings2 } from "lucide-react";
+import { Folder, Info } from "lucide-react";
 import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
@@ -571,231 +560,6 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 }
 //#endregion 🔖DeclarativeHosts
 
-//#region 🔖ShellModeCanvas
-const ShellModeCanvas: React.FC<{
-  windowKinds: UIWindowKindDefinition[];
-  defaultLayout: WindowLayout;
-  activeWindowId: string | null;
-  onActiveWindowChange?: (windowId: string) => void;
-}> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
-  const windows = reactHostPort.useMemo<ModeWindowDescriptor[]>(
-    () =>
-      windowKinds.map((windowKind) => {
-        const WindowComponent = windowKind.component;
-        return {
-          id: windowKind.id,
-          title: windowKind.label,
-          showControls: true,
-          measures: windowKind.measures,
-          engagement: windowKind.engagement,
-          children: (
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <WindowComponent />
-            </div>
-          ),
-        };
-      }),
-    [windowKinds],
-  );
-  const shellLayout = reactHostPort.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
-
-  return <Mode windows={windows} layout={shellLayout} activeWindowId={activeWindowId} onActiveWindowChange={onActiveWindowChange} className="h-full w-full" />;
-};
-//#endregion 🔖ShellModeCanvas
-
-//#region 🔖Toolbar
-type UIToolbarItem = {
-  id: string;
-  kind?: "separator" | "toggle";
-  icon?: React.ReactNode;
-  text?: string;
-  label?: string;
-  title?: string;
-  order?: number;
-  pressed?: boolean;
-  disabled?: boolean;
-  onPressedChange?: (pressed: boolean) => void;
-  onClick?: () => void;
-};
-
-function sortToolbarItems(items: readonly UIToolbarItem[]): UIToolbarItem[] {
-  return [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
-}
-
-function hasToolbarCategoryItems(items: readonly UIToolbarItem[] | undefined): boolean {
-  return Boolean(items?.some((item) => item.kind !== "separator"));
-}
-
-function listPopulatedToolbarCategories(tools: Partial<Record<AppToolCategory, UIToolbarItem[]>>): AppToolCategory[] {
-  return APP_TOOL_CATEGORY_ORDER.filter((category) => hasToolbarCategoryItems(tools[category]));
-}
-
-function resolvePlaygroundToolCategoryIcon(category: AppToolCategory): React.ReactNode {
-  switch (category) {
-    case "hand":
-      return <Hand className="size-tiny" aria-hidden />;
-    case "selection":
-      return <MousePointer2 className="size-tiny" aria-hidden />;
-    case "lasso":
-      return <Lasso className="size-tiny" aria-hidden />;
-    case "filter":
-      return <Filter className="size-tiny" aria-hidden />;
-    case "open":
-      return <FolderOpen className="size-tiny" aria-hidden />;
-    case "save":
-      return <Save className="size-tiny" aria-hidden />;
-    case "transform":
-      return <ArrowRightLeft className="size-tiny" aria-hidden />;
-    case "create":
-      return <Plus className="size-tiny" aria-hidden />;
-    case "view":
-      return <LayoutGrid className="size-tiny" aria-hidden />;
-    case "actions":
-      return <MoreHorizontal className="size-tiny" aria-hidden />;
-    case "settings":
-      return <Settings2 className="size-tiny" aria-hidden />;
-    case "history":
-      return <History className="size-tiny" aria-hidden />;
-    default:
-      return <Search className="size-tiny" aria-hidden />;
-  }
-}
-
-function resolvePlaygroundToolCategoryLabel(category: AppToolCategory): string {
-  if (category === "history") return "History";
-  return category.charAt(0).toUpperCase() + category.slice(1);
-}
-
-function declareToolsToViewTools(tools: AppTools | undefined, bus: CommandBus): Partial<Record<AppToolCategory, UIToolbarItem[]>> | undefined {
-  if (!tools) return undefined;
-  const merged: Partial<Record<AppToolCategory, UIToolbarItem[]>> = {};
-  for (const category of APP_TOOL_CATEGORY_ORDER) {
-    const list = tools[category];
-    if (!list?.length) continue;
-    merged[category] = list.map((item) => {
-      if (item.kind === "separator") return { id: item.id, kind: "separator", order: item.order };
-      if (item.kind === "toggle") {
-        return {
-          id: item.id,
-          kind: "toggle",
-          text: item.text,
-          label: item.label,
-          title: item.title,
-          order: item.order,
-          pressed: item.pressed,
-          disabled: item.disabled,
-          onPressedChange: (pressed: boolean) => {
-            if (item.disabled) return;
-            if (item.controllerId && item.command) bus.dispatch(item.controllerId, item.command, { ...(item.args as object | undefined), pressed });
-          },
-        };
-      }
-      return {
-        id: item.id,
-        text: item.text,
-        label: item.label,
-        title: item.title,
-        order: item.order,
-        disabled: item.disabled,
-        onClick: item.disabled || !item.controllerId || !item.command ? undefined : () => bus.dispatch(item.controllerId!, item.command!, item.args),
-      };
-    });
-  }
-  return Object.keys(merged).length > 0 ? merged : undefined;
-}
-
-const PlaygroundToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
-  const sorted = reactHostPort.useMemo(() => sortToolbarItems(items), [items]);
-  return (
-    <>
-      {sorted.map((item) => {
-        const tooltip = item.title ?? item.label ?? item.text;
-        if (item.kind === "separator") {
-          return <ToolbarDivider key={item.id} id={item.id} />;
-        }
-        if (item.kind === "toggle") {
-          return (
-            <ToolbarItem key={item.id}>
-              <Toggle id={item.id} title={tooltip} text={item.text ?? item.label} pressed={item.pressed ?? false} disabled={item.disabled} onPressedChange={(pressed) => item.onPressedChange?.(pressed)} />
-            </ToolbarItem>
-          );
-        }
-        return (
-          <ToolbarItem key={item.id}>
-            <button
-              type="button"
-              id={item.id}
-              title={tooltip}
-              disabled={item.disabled}
-              onClick={item.onClick}
-              className="flex cursor-pointer items-center gap-single rounded px-single py-tiny text-sm hover:bg-hover-panel disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {item.icon}
-              {(item.text ?? item.label) ? <span>{item.text ?? item.label}</span> : null}
-            </button>
-          </ToolbarItem>
-        );
-      })}
-    </>
-  );
-};
-
-/** @emoji 🧰 Playground toolbar: category toggles with one active category exposing its tools. */
-const PlaygroundToolbar: React.FC<{ tools: Partial<Record<AppToolCategory, UIToolbarItem[]>> }> = ({ tools }) => {
-  const populatedCategories = reactHostPort.useMemo(() => listPopulatedToolbarCategories(tools), [tools]);
-  const [activeCategory, setActiveCategory] = reactHostPort.useState<AppToolCategory | null>(null);
-
-  reactHostPort.useEffect(() => {
-    if (populatedCategories.length === 0) {
-      setActiveCategory(null);
-      return;
-    }
-    setActiveCategory((previousValue) => {
-      if (previousValue && populatedCategories.includes(previousValue)) return previousValue;
-      return populatedCategories.find((category) => category !== "history" && category !== "hand") ?? populatedCategories[0] ?? null;
-    });
-  }, [populatedCategories]);
-
-  if (populatedCategories.length === 0) return null;
-
-  const activeItems = activeCategory ? (tools[activeCategory] ?? []) : [];
-  const showCategoryNav = populatedCategories.length > 1;
-
-  return (
-    <div className="flex min-w-0 flex-1 items-center justify-center px-single">
-      <div role="toolbar" id="playground.toolbar" className={cn("flex max-w-full items-center gap-single", showCategoryNav && "relative h-[var(--toolbar-item-height)] w-full max-w-[min(100%,48rem)]")}>
-        {showCategoryNav ? (
-          <>
-            <ToolbarZone id="playground.toolbar.zone.categories" className="shrink-0">
-              {populatedCategories.map((category) => (
-                <Toggle
-                  key={category}
-                  kind="single"
-                  id={`playground.toolbar.group.${category}`}
-                  pressed={activeCategory === category}
-                  onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
-                  icon={resolvePlaygroundToolCategoryIcon(category)}
-                  text={resolvePlaygroundToolCategoryLabel(category)}
-                />
-              ))}
-            </ToolbarZone>
-            {activeCategory && hasToolbarCategoryItems(activeItems) ? (
-              <ToolbarZone id="playground.toolbar.zone.tools" className="min-h-[var(--toolbar-item-height)] min-w-0 h-auto flex-1 flex-wrap overflow-visible p-half">
-                <PlaygroundToolbarItems items={activeItems} />
-              </ToolbarZone>
-            ) : null}
-          </>
-        ) : (
-          <ToolbarZone className="max-w-full flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
-            <PlaygroundToolbarItems items={tools[populatedCategories[0]!] ?? []} />
-          </ToolbarZone>
-        )}
-      </div>
-    </div>
-  );
-};
-//#endregion 🔖Toolbar
-
 //#region 🔖PlaygroundView
 export interface PlaygroundPanelVisibility {
   leftSidePanel: boolean;
@@ -870,7 +634,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
   const detailsTabs = mergePanelTabs(undefined, augmentPanelTabs?.details);
 
   const mergedTools = declareToolsToViewTools(activeApp.tools, bus);
-  const hasToolbarTools = mergedTools && APP_TOOL_CATEGORY_ORDER.some((c) => mergedTools[c]?.some((i) => i.kind !== "separator"));
+  const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
   const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 
@@ -929,7 +693,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
     },
   ];
 
-  const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <PlaygroundToolbar tools={mergedTools} /> : undefined);
+  const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
 
   return (
     <PlaygroundContext.Provider
@@ -940,67 +704,35 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
         activeModeId,
       }}
     >
-      <Layout
+      <ProductShell
+        platform={runtime}
+        defaultAppId={defaultAppId}
         className="min-h-0 flex-1"
         mobile={resolvedMobile}
-        navbar={<Navbar items={navbarItems} />}
-        footer={footerItems.length > 0 ? <Footer items={footerItems} /> : undefined}
-        toolbar={toolbarElement}
-        leftSidePanel={
-          !resolvedMobile && workbenchTabs.length > 0
-            ? {
-                position: "left",
-                visible: panelVisibility.leftSidePanel,
-                size: leftPanelSize,
-                onSizeChange: setLeftPanelSize,
-                tabs: workbenchTabs,
-              }
-            : undefined
-        }
-        rightSidePanel={
-          !resolvedMobile && detailsTabs.length > 0
-            ? {
-                position: "right",
-                visible: panelVisibility.rightSidePanel,
-                size: rightPanelSize,
-                onSizeChange: setRightPanelSize,
-                tabs: detailsTabs,
-              }
-            : undefined
-        }
-        canvas={
-          <Ui
-            apps={[
-              {
-                id: activeApp.id,
-                label: activeApp.label,
-                children: (
-                  <App
-                    modes={activeAppBase.modes.length > 0 ? activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: activeApp.id, label: activeApp.label, children: null }]}
-                    activeModeId={activeModeId ?? activeAppBase.modes[0]?.id ?? activeApp.id}
-                    onActiveModeChange={(modeId) => {
-                      activeAppBase.setActiveModeId(modeId);
-                      runtime.notify();
-                    }}
-                    chrome={false}
-                  >
-                    <ShellModeCanvas
-                      windowKinds={goldenWindowKinds}
-                      defaultLayout={activeApp.defaultLayout}
-                      activeWindowId={activeWindowKindId}
-                      onActiveWindowChange={(windowKindId) => {
-                        setActiveWindowKindId(windowKindId);
-                        onActiveWindowChange?.(windowKindId);
-                      }}
-                    />
-                  </App>
-                ),
-              },
-            ]}
-            activeAppId={runtime.activeAppId}
-            chrome={false}
-          />
-        }
+        mobileQuery={mobileQuery}
+        navbarItems={navbarItems}
+        footerItems={footerItems}
+        slotToolbar={toolbarElement}
+        leftSidePanelTabs={workbenchTabs}
+        rightSidePanelTabs={detailsTabs}
+        panelVisibility={panelVisibility}
+        leftPanelSize={leftPanelSize}
+        onLeftPanelSizeChange={setLeftPanelSize}
+        rightPanelSize={rightPanelSize}
+        onRightPanelSizeChange={setRightPanelSize}
+        goldenWindowKinds={goldenWindowKinds}
+        defaultLayout={activeApp.defaultLayout}
+        activeWindowKindId={activeWindowKindId}
+        onActiveWindowKindChange={(windowKindId) => {
+          setActiveWindowKindId(windowKindId);
+          onActiveWindowChange?.(windowKindId);
+        }}
+        multiApp={false}
+        activeModeId={activeModeId}
+        onActiveModeChange={(modeId) => {
+          activeAppBase.setActiveModeId(modeId);
+          runtime.notify();
+        }}
       />
     </PlaygroundContext.Provider>
   );
@@ -3790,10 +3522,10 @@ export function bootPlayground(playground: Playground, boot: PlaygroundChromeBoo
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("PlaygroundToolbar categories", () => {
+  describe("Toolbar categories", () => {
     it("lists populated categories and omits separator-only groups", () => {
       expect(
-        listPopulatedToolbarCategories({
+        listPopulatedToolbarViewCategories({
           save: [{ id: "save.selected", label: "Selected" }],
           filter: [{ id: "sep", kind: "separator" }],
         }),

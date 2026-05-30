@@ -2,6 +2,7 @@
 // 💻 cad/js/renderer/play/main.tsx — Spatial play shell (headless + React chrome + Vite entry).
 // #endregion 🧲Header
 
+import { AppPointerFocusStore } from "@framework/core";
 import {
   CommandBus,
   Controller,
@@ -64,6 +65,12 @@ export const SPATIAL_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast"
 export const SPATIAL_PLAY_APP_ID = "spatial-play";
 export const SPATIAL_PLAY_CONTROLLER_ID = "spatial-play";
 export const SPATIAL_PLAY_HIERARCHY_TAB_ID = "spatial-play-hierarchy";
+
+/** @emoji 🖱️ Hover owner id when the workbench hierarchy drives shared pointer focus. */
+export const SPATIAL_PLAY_HOVER_SOURCE_HIERARCHY = "spatial-play-hierarchy";
+
+/** @emoji 🖱️ Hover owner id when the 3D canvas drives shared pointer focus. */
+export const SPATIAL_PLAY_HOVER_SOURCE_CANVAS = "spatial-play-canvas";
 
 export const SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID = "aec.building";
 export const SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
@@ -222,17 +229,29 @@ export function spatialPlayModelsDigest(modelsByDefinitionId: Record<string, Mod
 type SpatialPlayHierarchyPickContext = {
   readonly modelDefinitionId: string;
   readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
+  readonly isHighlighted: (kind: SelectionTarget["kind"], id: string) => boolean;
   readonly onSelect: (modelDefinitionId: string, target: SelectionTarget) => void;
+  readonly onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void;
 };
+
+function spatialPlayHierarchyHoverHandlers(ctx: SpatialPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
+  return {
+    onPointerEnter: () => ctx.onHover(ctx.modelDefinitionId, target),
+    onPointerLeave: () => ctx.onHover(ctx.modelDefinitionId, null),
+  };
+}
 
 function spatialPlayTopologyTreeItem(node: ModelTopologyHierarchyNode, path: string, ctx: SpatialPlayHierarchyPickContext): TreeDataItem {
   const childItems = node.children.map((child) => spatialPlayTopologyTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
+  const target: SelectionTarget = { kind: node.kind, id: node.id, editable: true };
   return {
     id: `spatial-play-hierarchy.topology.${path}`,
     label: `${node.kind} ${node.id}`,
     isSelected: ctx.isSelected(node.kind, node.id),
+    isHighlighted: ctx.isHighlighted(node.kind, node.id),
     defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
-    onClick: () => ctx.onSelect(ctx.modelDefinitionId, { kind: node.kind, id: node.id, editable: true }),
+    onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
+    ...spatialPlayHierarchyHoverHandlers(ctx, target),
     ...(childItems.length > 0 ? { items: childItems } : {}),
   };
 }
@@ -242,12 +261,15 @@ function spatialPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: stri
   const primitiveId = String(primitiveRef);
   const topology = buildModelTopologyHierarchy(model, primitiveId);
   const topologyItems = (topology?.children ?? []).map((child) => spatialPlayTopologyTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
+  const target: SelectionTarget = { kind, id: primitiveId, editable: true };
   return {
     id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
     label: `${slot}: ${kind} ${primitiveId}`,
     isSelected: ctx.isSelected(kind, primitiveId),
+    isHighlighted: ctx.isHighlighted(kind, primitiveId),
     defaultOpen: true,
-    onClick: () => ctx.onSelect(ctx.modelDefinitionId, { kind, id: primitiveId, editable: true }),
+    onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
+    ...spatialPlayHierarchyHoverHandlers(ctx, target),
     items: topologyItems.length ? topologyItems : [{ id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.topology.empty`, label: "(empty)" }],
   };
 }
@@ -258,9 +280,12 @@ export function buildSpatialPlayHierarchySections(
   activeModelDefinitionId: string,
   selection: readonly SelectionTarget[],
   onSelect: (modelDefinitionId: string, target: SelectionTarget) => void,
+  hoveredKey: string | null = null,
+  onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
 ): TreeDataSection[] {
   const selectedKeys = new Set(selection.map(spatialPlaySelectionKey));
   const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
+  const isHighlighted = (kind: SelectionTarget["kind"], id: string): boolean => hoveredKey === `${kind}:${id}`;
   const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
   const modelBranches: TreeDataItem[] = [];
   for (const modelDefinitionId of modelDefinitionIds) {
@@ -268,18 +293,21 @@ export function buildSpatialPlayHierarchySections(
     if (!model) {
       continue;
     }
-    const pickCtx: SpatialPlayHierarchyPickContext = { modelDefinitionId, isSelected, onSelect };
+    const pickCtx: SpatialPlayHierarchyPickContext = { modelDefinitionId, isSelected, isHighlighted, onSelect, onHover };
     const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
       const objectId = String(object.id);
       const typologyTail = object.typology.split(".").pop() ?? object.typology;
       const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => spatialPlayPrimitiveSlotTreeItems(model, modelDefinitionId, objectId, slot, primitiveRef, pickCtx));
+      const objectTarget: SelectionTarget = { kind: "object", id: objectId, editable: true };
       return {
         id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
         label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
         description: object.typology,
         isSelected: isSelected("object", objectId),
+        isHighlighted: isHighlighted("object", objectId),
         defaultOpen: true,
-        onClick: () => onSelect(modelDefinitionId, { kind: "object", id: objectId, editable: true }),
+        onClick: () => onSelect(modelDefinitionId, objectTarget),
+        ...spatialPlayHierarchyHoverHandlers(pickCtx, objectTarget),
         items: primitiveItems.length ? primitiveItems : [{ id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
       };
     });
@@ -603,9 +631,12 @@ import {
   replDisplayedSelectionTargets,
   replWithRendererSelectionTargets,
   r3fPreviewKernel,
+  selectionTargetHoverKey,
+  spatialPickTargetKey,
   useDocumentHistory,
   useInteractionRuntime,
   type SpatialInteractionSelectionByState,
+  type SpatialPickTarget,
   type SpatialRendererSelectionByModel,
 } from "../index";
 
@@ -963,7 +994,9 @@ export interface SpatialPlayChromeSnapshot {
   readonly modelsByDefinitionId: Record<string, Model>;
   readonly activeModelDefinitionId: string;
   readonly selection: readonly SelectionTarget[];
+  readonly hoveredKey: string | null;
   readonly selectTarget: (modelDefinitionId: string, target: SelectionTarget) => void;
+  readonly hoverTarget: (modelDefinitionId: string, target: SelectionTarget | null) => void;
 }
 
 interface SpatialPlayChromeContextValue {
@@ -1025,6 +1058,9 @@ interface PlaySessionProps {
   readonly onDocumentModelChange: (model: Model) => void;
   readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
   readonly onEngagementChange: (engagement: EngagementSpec | null) => void;
+  readonly hoveredPickKey: string | null;
+  readonly onHoveredPickKeyChange: (key: string | null) => void;
+  readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1051,6 +1087,9 @@ function PlaySession({
   onDocumentModelChange,
   onSnapshot,
   onEngagementChange,
+  hoveredPickKey,
+  onHoveredPickKeyChange,
+  onCanvasHoverTarget,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1105,6 +1144,9 @@ function PlaySession({
       hideModelDefinitionControls
       onSnapshotChange={onSnapshot}
       onEngagementChange={onEngagementChange}
+      hoveredPickKey={hoveredPickKey}
+      onHoveredPickKeyChange={onHoveredPickKeyChange}
+      onHoverTarget={onCanvasHoverTarget}
     />
   );
 }
@@ -1139,6 +1181,9 @@ interface SpatialPlayModelSpaceValue {
   readonly playModelSpace: ModelSpace;
   readonly viewObjectCount: number;
   readonly selectionInScope: readonly SelectionTarget[];
+  readonly hoveredPickKey: string | null;
+  readonly onHoveredPickKeyChange: (key: string | null) => void;
+  readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
   readonly shapeAssetId: string;
   readonly handleShapeAssetChange: (id: string) => void;
   readonly fileStatus: string;
@@ -1172,6 +1217,15 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   void shellGeneration;
   const computeModeForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
   const publishSpatialPlayChrome = useSpatialPlayChromePublish();
+  const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
+  if (!pointerFocusRef.current) {
+    pointerFocusRef.current = new AppPointerFocusStore<string>();
+  }
+  const pointerFocus = reactHostPort.useSyncExternalStore(
+    (onStoreChange) => pointerFocusRef.current!.cell.subscribe(onStoreChange),
+    () => pointerFocusRef.current!.getSnapshot(),
+    () => pointerFocusRef.current!.getSnapshot(),
+  );
   const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
   const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
   const [interactionId, setInteractionId] = reactHostPort.useState("");
@@ -1216,6 +1270,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     setLoadedRawName("");
     setFileStatus("");
     if (!id) {
+      pointerFocusRef.current?.clearHover();
       setModelsByDefinitionId(emptyPlayModels());
       setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
     } else {
@@ -1322,6 +1377,24 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     [activeModelDefinitionId, handleActiveModelDefinitionChange],
   );
 
+  const hoverHierarchyTarget = reactHostPort.useCallback(
+    (modelDefinitionId: string, target: SelectionTarget | null) => {
+      if (target && modelDefinitionId !== activeModelDefinitionId) {
+        handleActiveModelDefinitionChange(modelDefinitionId);
+      }
+      pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_HIERARCHY, target ? selectionTargetHoverKey(target) : null);
+    },
+    [activeModelDefinitionId, handleActiveModelDefinitionChange],
+  );
+
+  const onCanvasHoverTarget = reactHostPort.useCallback((target: SpatialPickTarget | null) => {
+    pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_CANVAS, target ? spatialPickTargetKey(target) : null);
+  }, []);
+
+  const onHoveredPickKeyChange = reactHostPort.useCallback((key: string | null) => {
+    pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_CANVAS, key);
+  }, []);
+
   const flushedModelsDigest = reactHostPort.useMemo(() => spatialPlayModelsDigest(flushedModelsByDefinitionId), [flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision]);
 
   reactHostPort.useEffect(() => {
@@ -1329,10 +1402,22 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       modelsByDefinitionId: flushedModelsByDefinitionId,
       activeModelDefinitionId,
       selection: selectionInScope,
+      hoveredKey: pointerFocus.hover,
       selectTarget: selectHierarchyTarget,
+      hoverTarget: hoverHierarchyTarget,
     });
     return () => publishSpatialPlayChrome(null);
-  }, [activeModelDefinitionId, flushedModelsByDefinitionId, flushedModelsDigest, modelDefinitionRevision, publishSpatialPlayChrome, selectHierarchyTarget, selectionInScope]);
+  }, [
+    activeModelDefinitionId,
+    flushedModelsByDefinitionId,
+    flushedModelsDigest,
+    hoverHierarchyTarget,
+    modelDefinitionRevision,
+    pointerFocus.hover,
+    publishSpatialPlayChrome,
+    selectHierarchyTarget,
+    selectionInScope,
+  ]);
 
   const exportBaseName = reactHostPort.useMemo(() => {
     if (loadedRawName) return fileStem(loadedRawName);
@@ -1537,6 +1622,9 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       playModelSpace,
       viewObjectCount,
       selectionInScope,
+      hoveredPickKey: pointerFocus.hover,
+      onCanvasHoverTarget,
+      onHoveredPickKeyChange,
       shapeAssetId,
       handleShapeAssetChange,
       fileStatus,
@@ -1581,6 +1669,9 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       playModelSpace,
       rendererSelectionByModel,
       selectionInScope,
+      pointerFocus.hover,
+      onCanvasHoverTarget,
+      onHoveredPickKeyChange,
       shapeAssetId,
       spec,
       viewObjectCount,
@@ -1665,6 +1756,9 @@ function SpatialPlayShapePane(): ReactNode {
     commitModelForDefinition,
     handleSnapshotChange,
     handleEngagementChange,
+    hoveredPickKey,
+    onCanvasHoverTarget,
+    onHoveredPickKeyChange,
   } = useSpatialPlayModelSpace();
   const shapePane: SpatialPlayPaneId = "shape";
   const shapeModelDefinitionId = spatialPlayModelDefinitionIdForPane(shapePane);
@@ -1716,6 +1810,9 @@ function SpatialPlayShapePane(): ReactNode {
         onDocumentModelChange={commitShapeModel}
         onSnapshot={handleSnapshotChange}
         onEngagementChange={handleEngagementChange}
+        hoveredPickKey={hoveredPickKey}
+        onHoveredPickKeyChange={onHoveredPickKeyChange}
+        onCanvasHoverTarget={onCanvasHoverTarget}
       />
     </div>
   );
@@ -1854,7 +1951,9 @@ function SpatialPlayRoot(): ReactNode {
   const chromeContextValue = reactHostPort.useMemo<SpatialPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
   const chromeSnapshotRef = reactHostPort.useRef(chromeSnapshot);
   chromeSnapshotRef.current = chromeSnapshot;
-  const chromeKey = chromeSnapshot ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}` : "";
+  const chromeKey = chromeSnapshot
+    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.hoveredKey ?? ""}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
+    : "";
   const workbenchTabs = reactHostPort.useMemo(
     () => [
       new SpatialPlayCatalogPanelDefinition().resolveTab(),
@@ -1863,7 +1962,7 @@ function SpatialPlayRoot(): ReactNode {
             new SpatialPlayHierarchyPanelDefinition(() => {
               const snap = chromeSnapshotRef.current;
               if (!snap) return [];
-              return buildSpatialPlayHierarchySections(snap.modelsByDefinitionId, snap.activeModelDefinitionId, snap.selection, snap.selectTarget);
+              return buildSpatialPlayHierarchySections(snap.modelsByDefinitionId, snap.activeModelDefinitionId, snap.selection, snap.selectTarget, snap.hoveredKey, snap.hoverTarget);
             }).resolveTab(),
           ]
         : []),
@@ -2035,6 +2134,22 @@ if (import.meta.vitest) {
       const sections = buildSpatialPlayHierarchySections({ [SHAPE_MODEL_DEFINITION_ID]: model }, SHAPE_MODEL_DEFINITION_ID, [], () => {});
       const modelBranch = sections[0]?.items?.[0]?.items?.[0];
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
+    });
+
+    it("buildSpatialPlayHierarchySections highlights hovered topology keys", async () => {
+      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
+      const { applyModelDiff, solidRef } = await import("@cad/js/core");
+      const model = new Model();
+      const solid = solidRef("solid-1");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+      model.objects["box1"] = {
+        id: "box1",
+        typology: "spatial.shape.primitive.box",
+        primitives: { solid: String(solid) },
+      };
+      const sections = buildSpatialPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {}, "object:box1");
+      const objectNode = sections[0]?.items?.[0]?.items?.[0];
+      expect(objectNode?.isHighlighted).toBe(true);
     });
 
     it("buildSpatialPlayHierarchySections nests topology under primitive slots", async () => {

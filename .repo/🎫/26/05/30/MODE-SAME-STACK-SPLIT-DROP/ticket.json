@@ -1,0 +1,10 @@
+{
+  "title": "Mode Same Stack Split Drop",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Fix Mode dock drag-drop: when dragging a tab within the same stack and dropping on left/right/top/bottom split zones, preview is correct but release leaves window in tab. applyModeDrop incorrectly no-ops when zone.stackPath === sourcePath for split kind.",
+  "goal": "🎯r26-02/🎯runningsketchpad",
+  "sessions": [
+    "⚪780efcc4b2e24c7b9dcae7df6caece01"
+  ]
+}

@@ -16514,6 +16514,8 @@ export interface TreeDataItem {
   draggable?: boolean;
   onClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 export interface TreeDataSection {
@@ -16642,6 +16644,8 @@ interface SortableTreeItemProps {
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
   layoutKind?: "default" | "property";
 }
 
@@ -16679,6 +16683,8 @@ interface TreeItemProps {
   activeBranchIndex?: number;
   /** Callback when the user navigates to a different branch. */
   onBranchChange?: (index: number) => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
   layoutKind?: "default" | "property";
 }
 
@@ -17267,6 +17273,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   branchCount = 0,
   activeBranchIndex = 0,
   onBranchChange,
+  onPointerEnter,
+  onPointerLeave,
   layoutKind = "default",
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
@@ -17286,6 +17294,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         isLastItem={isLastItem}
         actions={actions}
         onDoubleClick={onDoubleClick}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
       >
         {children}
       </SortableTreeItem>
@@ -17305,6 +17315,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     [onOpenChange, treeOpenState],
   );
   const [isHovered, setIsHovered] = reactHostPort.useState(false);
+  const handlePointerEnter = reactHostPort.useCallback(() => {
+    setIsHovered(true);
+    onPointerEnter?.();
+  }, [onPointerEnter]);
+  const handlePointerLeave = reactHostPort.useCallback(() => {
+    setIsHovered(false);
+    onPointerLeave?.();
+  }, [onPointerLeave]);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"}`;
@@ -17331,8 +17349,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           event.stopPropagation();
           onDoubleClick(event);
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handlePointerEnter}
+        onMouseLeave={handlePointerLeave}
       >
         <TreeAlignedRow
           level={level}
@@ -17442,8 +17460,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             event.stopPropagation();
             onDoubleClick(event);
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handlePointerEnter}
+          onMouseLeave={handlePointerLeave}
         >
           <TreeAlignedRow
             level={level}
@@ -17545,8 +17563,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handlePointerEnter}
+      onMouseLeave={handlePointerLeave}
     >
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
@@ -18047,6 +18065,8 @@ export const Tree = (({
         onDragStart={(event) => handleDragStart(event, item, section)}
         onDragOver={handleDragOver}
         onDrop={(event) => handleDrop(event, item, "item", section)}
+        onPointerEnter={item.onPointerEnter}
+        onPointerLeave={item.onPointerLeave}
         branchCount={branchCount}
         activeBranchIndex={clampedBranchIndex}
         onBranchChange={setActiveBranchIndex}
@@ -22239,10 +22259,7 @@ function computeModeDropZone(
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
   const { windowId, stackPath: sourcePath, tabIndex } = drag;
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
-  if (zone.kind === "split") {
-    if (zone.stackPath === sourcePath) return layout;
-    return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
-  }
+  if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   if (zone.stackPath === sourcePath) {
     const stackNode = readLayoutAtPath(layout, sourcePath);
     const childCount = stackNode?.kind === "stack" ? stackNode.children.length : 0;
@@ -22825,6 +22842,7 @@ export {
   Mode,
   removeWindowFromLayout,
   splitWithWindow,
+  applyModeDrop,
   reconcileWindows,
   normalizeLayoutToStacks,
   collapseLayout,
