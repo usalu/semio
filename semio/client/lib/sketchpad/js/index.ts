@@ -42,11 +42,13 @@ import {
 } from "@framework/platform/core";
 import type { SearchItemSpec } from "@framework/core";
 import type { BoardFixtureV1 } from "@puzzle/2d/react";
-import type { VolumeFixtureV1 } from "@puzzle/3d/react";
+import { PLACEHOLDER_MESH_URL, type VolumeFixtureV1 } from "@puzzle/3d/react";
 import {
 	createTopologyStore,
 	flatCameraFromPartCenters,
+	flatHandleCompoundId,
 	flatPartCenterFromTopLeft,
+	topologyAnchorFullId,
 	topologyCompose,
 	type TopologyStore,
 	type TopologyStoreSnapshot,
@@ -233,11 +235,22 @@ export const SKETCHPAD_KIT_STORE_PREFIX = "kit:";
 /** @emoji 📸 Kit row snapshot for {@link SemioKitStore}. */
 export type SketchpadKitSnapshot = { readonly kit: Kit };
 
+/** @emoji 🎯 Selection within the active kit/design route (diagram boards). */
+export interface SketchpadRouteSelection {
+	readonly pieceIds: readonly string[];
+	readonly connectionIds: readonly string[];
+}
+
 /** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
 export interface SketchpadShellSnapshot {
 	readonly navigationPath: string;
 	readonly panelVisibility: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
 	readonly openKitIds: readonly string[];
+	readonly routeSelection: SketchpadRouteSelection;
+}
+
+function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
+	return { pieceIds: [], connectionIds: [] };
 }
 
 /** @emoji 🔌 Backend contract for {@link SemioKitStore} (memory, WASM worker, HTTP, …). */
@@ -315,19 +328,42 @@ export class SemioJsKitStore extends SemioKitStore {
 /** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
 export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<Kit> {
 	const data = await jsStore.readKitInner(
-		`id name description designs { edges { node { id name description unit } } } types { edges { node { id name description unit } } }`,
+		`id name description files { edges { node { id name url uri path } } } designs { edges { node { id name description unit pieces { edges { node { id name type { id } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } } } types { edges { node { id name description representations { edges { node { id name file { id } tags { edges { node { id } } } } } } } connectors { edges { node { id } } } } } }`,
 	);
 	if (!data) return { id: "", name: "" } as Kit;
 	const nodes = (key: string): readonly Record<string, unknown>[] => {
 		const edges = (data[key] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 		return edges.map((edge) => edge.node).filter((node): node is Record<string, unknown> => node != null);
 	};
+	const parseDesigns = (): Design[] => {
+		const edges = (data["designs"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		return edges
+			.map((edge) => edge.node)
+			.filter((node): node is Record<string, unknown> => node != null)
+			.map((node) => {
+				const pieceEdges = (node["pieces"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const pieces = pieceEdges.map((pe) => pe.node).filter((n): n is Record<string, unknown> => n != null) as Design["pieces"];
+				return { ...node, pieces } as Design;
+			});
+	};
+	const parseTypes = (): Type[] => {
+		const edges = (data["types"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		return edges
+			.map((edge) => edge.node)
+			.filter((node): node is Record<string, unknown> => node != null)
+			.map((node) => {
+				const repEdges = (node["representations"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const representations = repEdges.map((re) => re.node).filter((n): n is Record<string, unknown> => n != null);
+				return { ...node, representations } as Type;
+			});
+	};
 	return {
 		id: String(data["id"] ?? ""),
 		name: String(data["name"] ?? ""),
 		description: data["description"] != null ? String(data["description"]) : undefined,
-		designs: nodes("designs") as Design[],
-		types: nodes("types") as Type[],
+		files: nodes("files") as Kit["files"],
+		designs: parseDesigns(),
+		types: parseTypes(),
 	} as Kit;
 }
 
@@ -436,6 +472,65 @@ export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type
 export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
 	if (!designId) return undefined;
 	return kit.designs?.find((d) => d.id === designId);
+}
+
+/** @emoji 🔍 Finds a piece row on a design snapshot. */
+export function findPieceInDesign(design: Design, pieceId: string | null | undefined) {
+	if (!pieceId) return undefined;
+	return design.pieces?.find((p) => p.id === pieceId);
+}
+
+function sketchpadReadEntityId(ref: unknown): string | null {
+	if (ref == null) return null;
+	if (typeof ref === "string") return ref;
+	if (typeof ref === "object" && "id" in ref) return String((ref as { id: unknown }).id);
+	return null;
+}
+
+const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = "/assets/semio/metabolism/wip/initialKit";
+
+/** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
+export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
+	const map = new Map<string, string>();
+	for (const file of kit.files ?? []) {
+		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string };
+		const direct = row.url ?? row.uri;
+		if (direct) {
+			map.set(row.id, direct);
+			continue;
+		}
+		if (row.path) {
+			const path = row.path.replace(/^\.\//, "");
+			map.set(row.id, path.startsWith("/") ? path : `${SKETCHPAD_METABOLISM_KIT_ASSET_ROOT}/${path}`);
+			continue;
+		}
+		if (row.name && row.name.endsWith(".glb")) {
+			map.set(row.id, `${SKETCHPAD_METABOLISM_KIT_ASSET_ROOT}/files/${row.name}`);
+		}
+	}
+	return map;
+}
+
+/** @emoji 🧊 Picks a representation mesh URL for a design piece (placeholder when unresolved). */
+export function sketchpadResolvePieceMeshUrl(
+	piece: { readonly type?: unknown },
+	kit: Kit,
+	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
+): string {
+	const typeId = sketchpadReadEntityId(piece.type);
+	if (!typeId) return PLACEHOLDER_MESH_URL;
+	const type = findTypeInKit(kit, typeId);
+	const reps = (type?.representations ?? []) as readonly { readonly file?: unknown; readonly tags?: unknown }[];
+	if (reps.length === 0) return PLACEHOLDER_MESH_URL;
+	const untagged =
+		reps.find((rep) => {
+			const tags = rep.tags as { items?: readonly unknown[] } | readonly unknown[] | undefined;
+			if (Array.isArray(tags)) return tags.length === 0;
+			return !tags?.items?.length;
+		}) ?? reps[0];
+	const fileId = sketchpadReadEntityId(untagged?.file);
+	if (!fileId) return PLACEHOLDER_MESH_URL;
+	return fileUrls.get(fileId) ?? PLACEHOLDER_MESH_URL;
 }
 
 function sketchpadNewKitId(): string {
@@ -597,44 +692,208 @@ export function sketchpadKitBoardFixtureFromKit(kit: Kit): BoardFixtureV1 {
 	};
 }
 
-/** @emoji 🗺️ Builds a flat design diagram board from design pieces. */
-export function sketchpadDesignBoardFixtureFromDesign(design: Design): BoardFixtureV1 {
+const SKETCHPAD_TOPOLOGY_ICON_WIDTH = 48;
+const SKETCHPAD_DESIGN_BOARD_NODE = { width: 80, height: 40 } as const;
+
+type SketchpadKitConnection = {
+	readonly id?: string;
+	readonly connecting?: { readonly piece?: unknown; readonly connector?: unknown };
+	readonly connected?: { readonly piece?: unknown; readonly connector?: unknown };
+};
+
+function sketchpadPieceLabel(piece: { readonly id: string; readonly name?: string | null }, kit?: Kit): string {
+	const typeId = sketchpadReadEntityId((piece as { type?: unknown }).type);
+	const type = typeId && kit ? findTypeInKit(kit, typeId) : undefined;
+	return piece.name ?? type?.name ?? piece.id;
+}
+
+function sketchpadPieceBoardUv(piece: { readonly id: string }, index: number): { readonly u: number; readonly v: number } {
+	const row = piece as {
+		readonly center?: { readonly u?: number; readonly v?: number };
+		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number } };
+	};
+	if (row.center && typeof row.center.u === "number") {
+		return { u: row.center.u, v: typeof row.center.v === "number" ? row.center.v : 0 };
+	}
+	if (row.plane?.origin) {
+		return { u: row.plane.origin.x ?? index, v: row.plane.origin.y ?? 0 };
+	}
+	return { u: (index % 8) * 1.2, v: Math.floor(index / 8) * 1.2 };
+}
+
+function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number): [number, number, number] {
+	const row = piece as {
+		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number } };
+	};
+	const o = row.plane?.origin;
+	if (o) return [o.x ?? 0, o.y ?? 0, o.z ?? 0];
+	return [index * 2, 0, 0];
+}
+
+/** @emoji 🧭 Maps kit diagram board node ids to sketchpad routes. */
+export function sketchpadPathFromBoardNodeId(kitId: string, boardNodeId: string): string | null {
+	const sep = boardNodeId.indexOf(":");
+	if (sep <= 0) return null;
+	const kind = boardNodeId.slice(0, sep);
+	const id = boardNodeId.slice(sep + 1);
+	if (kind === "type") return `/kits/${kitId}/types/${id}`;
+	if (kind === "design") return `/kits/${kitId}/designs/${id}`;
+	return null;
+}
+
+/** @emoji 🧭 Navigates from the first recognized kit diagram board selection entry. */
+export function sketchpadNavigateFromBoardSelection(instanceId: string, boardIds: readonly string[]): void {
+	const { kitId, pane } = parseSketchpadPuzzleInstanceId(instanceId);
+	if (!kitId || pane !== "kit-diagram") return;
+	const ctrl = getSketchpadShellController();
+	if (!ctrl) return;
+	for (const boardId of boardIds) {
+		const path = sketchpadPathFromBoardNodeId(kitId, boardId);
+		if (path) {
+			ctrl.navigateTo(path);
+			return;
+		}
+	}
+}
+
+/** @emoji 🎯 Applies FiveD flat board selection (kit navigation or design piece selection). */
+export function sketchpadApplyBoardSelection(instanceId: string, boardIds: readonly string[]): void {
+	const scope = parseSketchpadPuzzleInstanceId(instanceId);
+	const ctrl = getSketchpadShellController();
+	if (!ctrl || !scope.kitId) return;
+	if (scope.pane === "kit-diagram") {
+		sketchpadNavigateFromBoardSelection(instanceId, boardIds);
+		return;
+	}
+	if (scope.pane === "diagram" || scope.pane === "scene") {
+		const pieceIds = boardIds.filter((id) => id.length > 0 && !id.includes(":"));
+		const connectionIds = boardIds.filter((id) => id.includes("semio.connection") || id.startsWith("connection:"));
+		ctrl.setRouteSelection({ pieceIds, connectionIds });
+	}
+}
+
+/** @emoji 🔍 Parses sketchpad CAD {@link CadModel.instanceId}. */
+export function parseSketchpadCadInstanceId(instanceId: string): { readonly kitId: string | null; readonly typeId: string | null } {
+	const parts = instanceId.split(":");
+	if (parts.length === 2) return { kitId: parts[0] ?? null, typeId: parts[1] ?? null };
+	return { kitId: null, typeId: null };
+}
+
+/** @emoji 🗺️ Builds a flat design diagram board from design pieces and connections. */
+export function sketchpadDesignBoardFixtureFromDesign(design: Design, kit?: Kit): BoardFixtureV1 {
 	const pieces = design.pieces ?? [];
-	const centers = pieces.map((piece, index) =>
-		flatPartCenterFromTopLeft({ x: (index % 8) * 100, y: Math.floor(index / 8) * 72 }, { width: 80, height: 40 }),
-	);
+	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
+	const centers = pieces.map((piece, index) => {
+		const uv = sketchpadPieceBoardUv(piece, index);
+		return { x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH, y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH };
+	});
+	const edges = connections
+		.map((connection) => {
+			const sourcePieceId = sketchpadReadEntityId(connection.connecting?.piece);
+			const targetPieceId = sketchpadReadEntityId(connection.connected?.piece);
+			const sourceConnectorId = sketchpadReadEntityId(connection.connecting?.connector);
+			const targetConnectorId = sketchpadReadEntityId(connection.connected?.connector);
+			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+			return {
+				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
+				source: flatHandleCompoundId(sourcePieceId, sourceConnectorId),
+				target: flatHandleCompoundId(targetPieceId, targetConnectorId),
+				edgeKind: "semio.connection",
+			};
+		})
+		.filter((edge): edge is NonNullable<typeof edge> => edge !== null);
 	return {
 		schema: "puzzle.2d.fixture/v1",
 		camera: flatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
 		nodes: pieces.map((piece, index) => {
-			const center = centers[index]!;
+			const uv = sketchpadPieceBoardUv(piece, index);
 			return {
-				id: `piece:${piece.id}`,
+				id: piece.id,
 				shape: "rectangle",
-				width: 80,
-				height: 40,
-				x: center.x,
-				y: center.y,
-				text: piece.name ?? piece.id,
+				width: SKETCHPAD_DESIGN_BOARD_NODE.width,
+				height: SKETCHPAD_DESIGN_BOARD_NODE.height,
+				x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
+				y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
+				text: sketchpadPieceLabel(piece, kit),
 				nodeKind: "semio.design.piece",
 				root: true,
 				handles: [],
 			};
 		}),
-		edges: [],
+		edges,
 	};
+}
+
+/** @emoji 🌐 Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
+export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): VolumeFixtureV1 {
+	const pieces = design.pieces ?? [];
+	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
+	const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
+	const objects = pieces.map((piece, index) => ({
+		id: piece.id,
+		objectKind: "semio.design.piece",
+		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : PLACEHOLDER_MESH_URL,
+		origin: sketchpadPieceSceneOrigin(piece, index),
+		orientation: [0, 0, 0, 1] as [number, number, number, number],
+		scale: [1, 1, 1] as [number, number, number],
+		label: sketchpadPieceLabel(piece, kit),
+		vortices: [],
+	}));
+	const attractions = connections
+		.map((connection) => {
+			const sourcePieceId = sketchpadReadEntityId(connection.connecting?.piece);
+			const targetPieceId = sketchpadReadEntityId(connection.connected?.piece);
+			const sourceConnectorId = sketchpadReadEntityId(connection.connecting?.connector);
+			const targetConnectorId = sketchpadReadEntityId(connection.connected?.connector);
+			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+			return {
+				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
+				attracting: topologyAnchorFullId(sourcePieceId, sourceConnectorId),
+				attracted: topologyAnchorFullId(targetPieceId, targetConnectorId),
+				attractionKind: "semio.connection",
+			};
+		})
+		.filter((attraction): attraction is NonNullable<typeof attraction> => attraction !== null);
+	const camera = sketchpadSceneCameraFromDesign(design);
+	return {
+		schema: "puzzle.3d.fixture/v1",
+		domain: "architecture",
+		camera,
+		objects,
+		attractions,
+	};
+}
+
+function sketchpadSceneCameraFromDesign(design: Design): VolumeFixtureV1["camera"] {
+	const pieces = design.pieces ?? [];
+	if (pieces.length === 0) {
+		return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
+	}
+	let sx = 0;
+	let sy = 0;
+	let sz = 0;
+	let count = 0;
+	for (const piece of pieces) {
+		const [x, y, z] = sketchpadPieceSceneOrigin(piece, count);
+		sx += x;
+		sy += y;
+		sz += z;
+		count += 1;
+	}
+	const target: [number, number, number] = [sx / count, sy / count, sz / count];
+	return { position: [target[0] + 8, target[1] + 8, target[2] + 8], target, zoom: 1 };
 }
 
 function sketchpadTopologyModelForKitDiagram(kit: Kit) {
 	return topologyCompose(sketchpadKitBoardFixtureFromKit(kit), sketchpadEmptyVolumeFixture());
 }
 
-function sketchpadTopologyModelForDesignScene(design: Design) {
-	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design), sketchpadEmptyVolumeFixture());
+function sketchpadTopologyModelForDesignScene(design: Design, kit?: Kit) {
+	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design, kit), sketchpadDesignVolumeFixtureFromDesign(design, kit));
 }
 
-function sketchpadTopologyModelForDesignDiagram(design: Design) {
-	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design), sketchpadEmptyVolumeFixture());
+function sketchpadTopologyModelForDesignDiagram(design: Design, kit?: Kit) {
+	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
 }
 //#endregion 🔖Topology
 
@@ -904,7 +1163,9 @@ export class SketchpadTypeCad extends SketchpadRoutedComponent<CadModel> {
 		const type = kit ? findTypeInKit(kit, typeId) : undefined;
 		return {
 			instanceId: `${kitId}:${typeId}`,
-			emptyMessage: type ? `${type.name ?? typeId} · CAD` : `Type ${typeId}`,
+			emptyMessage: type
+				? `${type.name ?? typeId} · ${type.representations?.length ?? 0} representation(s)`
+				: `Type ${typeId}`,
 		};
 	}
 }
@@ -970,12 +1231,21 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 		if (designId && kit) {
 			const design = findDesignInKit(kit, designId);
 			const pieceCount = design?.pieces?.length ?? 0;
-			return sketchpadPanelTextStack([
+			const selected = ctrl?.routeSelection.pieceIds ?? [];
+			const lines: { text: string; emphasize?: boolean }[] = [
 				{ text: "Design", emphasize: true },
 				{ text: design?.name ?? designId },
-				{ text: `${pieceCount} piece(s)` },
+				{ text: `${pieceCount} piece(s) · ${selected.length} selected` },
 				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
-			]);
+			];
+			if (selected.length > 0) {
+				const names = selected
+					.map((id) => findPieceInDesign(design!, id)?.name ?? id)
+					.slice(0, 4)
+					.join(", ");
+				lines.push({ text: `Selection · ${names}${selected.length > 4 ? "…" : ""}` });
+			}
+			return sketchpadPanelTextStack(lines);
 		}
 		if (typeId && kit) {
 			const type = findTypeInKit(kit, typeId);
@@ -1027,6 +1297,17 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 			if (design?.description) lines.push({ text: design.description });
 			if (design?.unit) lines.push({ text: `Unit · ${design.unit}` });
 			lines.push({ text: `Pieces · ${design?.pieces?.length ?? 0}` });
+			const selected = ctrl?.routeSelection.pieceIds ?? [];
+			if (selected.length === 1) {
+				const piece = findPieceInDesign(design!, selected[0]!);
+				if (piece) {
+					lines.push({ text: `Selected · ${piece.name ?? piece.id}` });
+					const typeId = sketchpadReadEntityId((piece as { type?: unknown }).type);
+					if (typeId) lines.push({ text: `Type · ${findTypeInKit(kit, typeId)?.name ?? typeId}` });
+				}
+			} else if (selected.length > 1) {
+				lines.push({ text: `${selected.length} pieces selected` });
+			}
 			return sketchpadPanelTextStack(lines);
 		}
 		if (typeId) {
@@ -1091,6 +1372,7 @@ export class SketchpadShellController extends Controller {
 			navigationPath: "/",
 			panelVisibility: { leftSidePanel: false, rightSidePanel: false },
 			openKitIds: [],
+			routeSelection: sketchpadEmptyRouteSelection(),
 		});
 		this.provideStore(SKETCHPAD_SHELL_STORE_SHELL, this.shellStore);
 	}
@@ -1101,6 +1383,16 @@ export class SketchpadShellController extends Controller {
 
 	get panelVisibility(): SketchpadShellSnapshot["panelVisibility"] {
 		return this.shellStore.get().panelVisibility;
+	}
+
+	get routeSelection(): SketchpadRouteSelection {
+		return this.shellStore.get().routeSelection;
+	}
+
+	/** @emoji 🎯 Updates diagram/scene selection for the active route. */
+	setRouteSelection(selection: SketchpadRouteSelection): void {
+		this.shellStore.set({ ...this.shellStore.get(), routeSelection: selection });
+		this.emit();
 	}
 
 	/** @emoji 📋 Open kit ids from the shell store snapshot. */
@@ -1146,11 +1438,11 @@ export class SketchpadShellController extends Controller {
 		const design = findDesignInKit(kit, designId);
 		if (!design) return;
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_SCENE) {
-			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyModelForDesignScene(design));
+			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyModelForDesignScene(design, kit));
 			return;
 		}
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_DIAGRAM) {
-			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyModelForDesignDiagram(design));
+			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyModelForDesignDiagram(design, kit));
 		}
 	}
 
@@ -1231,7 +1523,7 @@ export class SketchpadShellController extends Controller {
 
 	/** @emoji 🧭 Navigates to a path (updates shell snapshot; drives platform when mounted). */
 	navigateTo(path: string): void {
-		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path });
+		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection: sketchpadEmptyRouteSelection() });
 		const platform = getSketchpadPlatform();
 		if (!platform) return;
 		if (platform.onNavigate) {
@@ -1271,6 +1563,10 @@ export class SketchpadShellController extends Controller {
 			}
 			case "navigate": {
 				this.navigateTo((args as { path: string }).path);
+				break;
+			}
+			case "setRouteSelection": {
+				this.setRouteSelection(args as SketchpadRouteSelection);
 				break;
 			}
 			case "createTemporaryKit": {
@@ -1546,6 +1842,7 @@ if (import.meta.vitest) {
 			const kitStore = new InMemorySemioKitStore({ id: "k1", name: "A" } as Kit);
 			ctrl.registerKitStore("k1", kitStore, { kind: "temporary" });
 			expect(ctrl.getStore(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot().openKitIds).toEqual(["k1"]);
+			expect(ctrl.routeSelection.pieceIds).toEqual([]);
 			expect(ctrl.getKitStore("k1")?.getSnapshot().kit.name).toBe("A");
 			expect(ctrl.getKitPersistenceKind("k1")).toBe("temporary");
 			ctrl.dispose();
@@ -1648,6 +1945,50 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadDesignVolumeFixtureFromDesign", () => {
+		it("creates placeholder mesh objects per piece", () => {
+			const design = {
+				id: "d",
+				pieces: [{ id: "p1", name: "A", plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } }],
+			} as Design;
+			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
+			expect(volume.objects).toHaveLength(1);
+			expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
+		});
+	});
+
+	describe("sketchpadKitFileUrlById", () => {
+		it("resolves metabolism-relative file paths", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f1", path: "files/mesh.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/assets/semio/metabolism/wip/initialKit/files/mesh.glb");
+		});
+	});
+
+	describe("sketchpadApplyBoardSelection", () => {
+		it("stores design piece selection on shell", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
+			sketchpadApplyBoardSelection(sketchpadDesignDiagramInstanceId(kitId, designId), ["piece-a", "piece-b"]);
+			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a", "piece-b"]);
+			ctrl.dispose();
+		});
+	});
+
+	describe("sketchpadPathFromBoardNodeId", () => {
+		it("maps kit diagram nodes to routes", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			expect(sketchpadPathFromBoardNodeId(kitId, "type:11111111-2222-3333-4444-555555555555")).toBe(
+				`/kits/${kitId}/types/11111111-2222-3333-4444-555555555555`,
+			);
+		});
+	});
+
 	describe("SketchpadShellController topology", () => {
 		it("upserts topology store for kit diagram surface", () => {
 			const bus = new CommandBus();
@@ -1679,6 +2020,11 @@ if (!import.meta.vitest) {
 		test("home table mounts on root", async ({ page }) => {
 			await page.goto("/");
 			await expect(page.getByText("No kits open")).toBeVisible({ timeout: 120_000 });
+		});
+
+		test("workbench panel is present when platform loads", async ({ page }) => {
+			await page.goto("/");
+			await expect(page.getByTestId("app-panel.workbench")).toBeVisible({ timeout: 120_000 });
 		});
 	});
 }

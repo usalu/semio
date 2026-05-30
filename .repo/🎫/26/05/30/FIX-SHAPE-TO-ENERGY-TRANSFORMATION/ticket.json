@@ -1,0 +1,10 @@
+{
+  "title": "Fix Shape To Energy Transformation",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Fuse all shape solids, explode into external surfaces, classify each surface (roof, baseplate, slabs, external walls, windows, hull).",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪7941f8092be446c5978a27ef54c5e27b"
+  ]
+}

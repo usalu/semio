@@ -2586,8 +2586,317 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
 }
 // #endregion 🧭ModelDefinitionScope
 
-/** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
-export function applyTransformation(spec: TransformationSpec, source: Model): Model {
+// #region 🔄TransformationGeometry
+type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
+
+const transformationAppliers = new Map<string, TransformationApplier>();
+
+/** @emoji 🔄 Registers a model-definition-specific transformation implementation. */
+export function registerTransformationApplier(qualifiedTransformationId: string, applier: TransformationApplier): void {
+  transformationAppliers.set(qualifiedTransformationId, applier);
+}
+
+function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null {
+  const pts: Vec3[] = [];
+  for (const wid of face.wireIds) {
+    for (const eid of model.wires[wid]?.edgeIds ?? []) {
+      for (const vid of model.edges[eid]?.vertexIds ?? []) {
+        const p = model.vertices[vid]?.position;
+        if (p) pts.push(p);
+      }
+    }
+  }
+  if (!pts.length) return null;
+  let x = 0;
+  let y = 0;
+  let z = 0;
+  for (const p of pts) {
+    x += p[0];
+    y += p[1];
+    z += p[2];
+  }
+  const n = pts.length;
+  return [x / n, y / n, z / n];
+}
+
+function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
+  if (face.surface?.kind === "plane") {
+    const n = face.surface.normal;
+    const len = Math.hypot(n[0], n[1], n[2]);
+    return len > 1e-9 ? ([n[0] / len, n[1] / len, n[2] / len] as Vec3) : null;
+  }
+  const pts: Vec3[] = [];
+  for (const wid of face.wireIds) {
+    for (const eid of model.wires[wid]?.edgeIds ?? []) {
+      for (const vid of model.edges[eid]?.vertexIds ?? []) {
+        const p = model.vertices[vid]?.position;
+        if (p) pts.push(p);
+      }
+    }
+  }
+  if (pts.length < 3) return null;
+  for (let i = 2; i < pts.length; i++) {
+    const ax = pts[i - 1]![0] - pts[0]![0];
+    const ay = pts[i - 1]![1] - pts[0]![1];
+    const az = pts[i - 1]![2] - pts[0]![2];
+    const bx = pts[i]![0] - pts[0]![0];
+    const by = pts[i]![1] - pts[0]![1];
+    const bz = pts[i]![2] - pts[0]![2];
+    const nx = ay * bz - az * by;
+    const ny = az * bx - ax * bz;
+    const nz = ax * by - ay * bx;
+    const len = Math.hypot(nx, ny, nz);
+    if (len > 1e-9) return [nx / len, ny / len, nz / len];
+  }
+  return null;
+}
+
+function transformationFaceAreaEstimate(model: Model, face: FaceRecord): number {
+  const c = transformationFaceCentroid(model, face);
+  const n = transformationFaceNormal(model, face);
+  if (!c || !n) return 0;
+  let maxU = 0;
+  let maxV = 0;
+  for (const wid of face.wireIds) {
+    for (const eid of model.wires[wid]?.edgeIds ?? []) {
+      for (const vid of model.edges[eid]?.vertexIds ?? []) {
+        const p = model.vertices[vid]?.position;
+        if (!p) continue;
+        const du = Math.abs((p[0] - c[0]) * n[1] - (p[1] - c[1]) * n[0]);
+        const dv = Math.abs(p[2] - c[2]);
+        maxU = Math.max(maxU, du);
+        maxV = Math.max(maxV, dv);
+      }
+    }
+  }
+  return maxU * maxV * 4;
+}
+
+function solidFaceIds(model: Model, solidId: string): readonly FaceRef[] {
+  const solid = model.solids[solidId];
+  if (!solid) return [];
+  const out: FaceRef[] = [];
+  const seen = new Set<string>();
+  for (const shellId of solid.shellIds) {
+    for (const faceId of model.shells[shellId]?.faceIds ?? []) {
+      const key = String(faceId);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(faceId);
+    }
+  }
+  return out;
+}
+
+function collectShapeSolidRefs(model: Model): readonly SolidRef[] {
+  const refs = new Set<string>();
+  for (const obj of listModelObjectsForModelDefinition(model, "spatial.shape")) {
+    for (const [, primitiveRef] of objectPrimitiveEntries(obj)) {
+      if (model.solids[primitiveRef]) refs.add(primitiveRef);
+    }
+  }
+  if (!refs.size) {
+    for (const id of Object.keys(model.solids)) refs.add(id);
+  }
+  return [...refs].sort().map((id) => id as SolidRef);
+}
+
+function facePlaneOffset(normal: Vec3, centroid: Vec3): number {
+  return normal[0] * centroid[0] + normal[1] * centroid[1] + normal[2] * centroid[2];
+}
+
+function faceDominantAxis(normal: Vec3): "x" | "y" | "z" {
+  const ax = Math.abs(normal[0]);
+  const ay = Math.abs(normal[1]);
+  const az = Math.abs(normal[2]);
+  if (az >= ax && az >= ay) return "z";
+  if (ay >= ax) return "y";
+  return "x";
+}
+
+function facePlaneLocation(normal: Vec3, centroid: Vec3): number {
+  const axis = faceDominantAxis(normal);
+  return axis === "x" ? centroid[0] : axis === "y" ? centroid[1] : centroid[2];
+}
+
+function facesAreInternalPair(a: { readonly normal: Vec3; readonly centroid: Vec3; readonly area: number }, b: { readonly normal: Vec3; readonly centroid: Vec3; readonly area: number }): boolean {
+  if (faceDominantAxis(a.normal) !== faceDominantAxis(b.normal)) return false;
+  if (Math.abs(facePlaneLocation(a.normal, a.centroid) - facePlaneLocation(b.normal, b.centroid)) > 1e-2) return false;
+  const sep = Math.hypot(a.centroid[0] - b.centroid[0], a.centroid[1] - b.centroid[1], a.centroid[2] - b.centroid[2]);
+  const span = Math.sqrt(Math.max(a.area, b.area, 1e-9));
+  if (sep >= Math.max(span * 0.35, 0.05)) return false;
+  const dot = a.normal[0] * b.normal[0] + a.normal[1] * b.normal[1] + a.normal[2] * b.normal[2];
+  return dot < -0.5 || dot > 0.9;
+}
+
+function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidRef[]): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] } {
+  type FaceDesc = { readonly solid: string; readonly face: FaceRef; readonly normal: Vec3; readonly centroid: Vec3; readonly area: number };
+  const descriptors: FaceDesc[] = [];
+  for (const solidId of solidRefs) {
+    for (const faceId of solidFaceIds(model, solidId)) {
+      const face = model.faces[faceId];
+      if (!face) continue;
+      const normal = transformationFaceNormal(model, face);
+      const centroid = transformationFaceCentroid(model, face);
+      if (!normal || !centroid) continue;
+      descriptors.push({ solid: solidId, face: faceId, normal, centroid, area: transformationFaceAreaEstimate(model, face) });
+    }
+  }
+  const allFaces = solidRefs.flatMap((solidId) => solidFaceIds(model, solidId));
+  const internal = new Set<string>();
+  for (let i = 0; i < descriptors.length; i++) {
+    for (let j = i + 1; j < descriptors.length; j++) {
+      const a = descriptors[i]!;
+      const b = descriptors[j]!;
+      if (a.solid === b.solid) continue;
+      if (!facesAreInternalPair(a, b)) continue;
+      internal.add(String(a.face));
+      internal.add(String(b.face));
+    }
+  }
+  const horizontal = descriptors.filter((row) => Math.abs(row.normal[2]) >= 0.85);
+  const horizontalByZ = new Map<number, typeof descriptors>();
+  for (const row of horizontal) {
+    const key = Math.round(row.centroid[2] * 1000);
+    const bucket = horizontalByZ.get(key) ?? [];
+    bucket.push(row);
+    horizontalByZ.set(key, bucket);
+  }
+  for (const bucket of horizontalByZ.values()) {
+    if (new Set(bucket.map((row) => row.solid)).size < 2) continue;
+    for (const row of bucket) internal.add(String(row.face));
+  }
+  const externalFaces = allFaces.filter((faceId) => !internal.has(String(faceId)));
+  const hullSolid =
+    solidRefs.length === 1
+      ? solidRefs[0]!
+      : (() => {
+          const shellId = "from_geometry-shell" as ShellRef;
+          const solidId = "from_geometry-hull" as SolidRef;
+          if (!model.shells[shellId]) {
+            model.shells[shellId] = { id: shellId, faceIds: externalFaces };
+          }
+          if (!model.solids[solidId]) {
+            model.solids[solidId] = { id: solidId, shellIds: [shellId] };
+          }
+          return solidId;
+        })();
+  return { hullSolid, externalFaces };
+}
+
+type EnergySurfaceRole = "roof" | "baseplate" | "slab" | "externalwall" | "window";
+
+function classifyEnergySurfaceRole(normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): EnergySurfaceRole {
+  const absZ = Math.abs(normal[2]);
+  if (absZ >= 0.85) {
+    if (centroid[2] >= zMax - zTol) return "roof";
+    if (centroid[2] <= zMin + zTol) return "baseplate";
+    return "slab";
+  }
+  if (absZ <= 0.35) return "externalwall";
+  return "slab";
+}
+
+function energyTypologyForRole(role: EnergySurfaceRole): TypologyRef {
+  switch (role) {
+    case "roof":
+      return "energy.energy.roof" as TypologyRef;
+    case "baseplate":
+      return "energy.energy.baseplate" as TypologyRef;
+    case "externalwall":
+      return "energy.energy.externalwall" as TypologyRef;
+    case "window":
+      return "energy.energy.windows" as TypologyRef;
+    case "slab":
+    default:
+      return "energy.energy.hull" as TypologyRef;
+  }
+}
+
+function transformationObjectId(typology: string, index: number): ObjectRef {
+  return (index === 0 ? typology : `${typology}#${index}`) as ObjectRef;
+}
+
+function faceHasOpeningAttribute(model: Model, faceId: FaceRef): boolean {
+  const fields = model.metadata.get(String(faceId));
+  if (!fields) return false;
+  const opening = fields.opening ?? fields["spatial.shape.opening"];
+  return opening === "window" || opening === "door" || opening === true;
+}
+
+/** @emoji 🔄 Shape → energy: fuse solids, keep external faces, classify into envelope typologies. */
+export function applyEnergyFromGeometryTransformation(source: Model): Model {
+  const target = new Model();
+  target.revision = source.revision;
+  target.anchors = source.anchors;
+  target.vertices = source.vertices;
+  target.edges = source.edges;
+  target.wires = source.wires;
+  target.faces = source.faces;
+  target.shells = { ...source.shells };
+  target.solids = { ...source.solids };
+  const solidRefs = collectShapeSolidRefs(source);
+  if (!solidRefs.length) {
+    target.bump();
+    return target;
+  }
+  const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
+  const { hullSolid, externalFaces } = fuseShapeSolidsToExternalFaces(target, solidRefs);
+  const centroids: Vec3[] = [];
+  const faceMeta: { readonly face: FaceRef; readonly normal: Vec3; readonly centroid: Vec3 }[] = [];
+  for (const faceId of externalFaces) {
+    const face = target.faces[faceId];
+    if (!face) continue;
+    const normal = transformationFaceNormal(target, face);
+    const centroid = transformationFaceCentroid(target, face);
+    if (!normal || !centroid) continue;
+    faceMeta.push({ face: faceId, normal, centroid });
+    centroids.push(centroid);
+  }
+  let zMin = Infinity;
+  let zMax = -Infinity;
+  for (const c of centroids) {
+    zMin = Math.min(zMin, c[2]);
+    zMax = Math.max(zMax, c[2]);
+  }
+  if (!Number.isFinite(zMin)) {
+    zMin = 0;
+    zMax = 0;
+  }
+  const zTol = Math.max((zMax - zMin) * 0.02, 1e-3);
+  const roleCounts = new Map<string, number>();
+  target.objects["energy.energy.hull" as ObjectRef] = {
+    id: "energy.energy.hull" as ObjectRef,
+    typology: "energy.energy.hull" as TypologyRef,
+    primitives: { solid: String(hullSolid) },
+    attributes: { sourceObjectIds, fusedSolidIds: solidRefs.map(String) },
+  };
+  for (const row of faceMeta) {
+    const role = faceHasOpeningAttribute(source, row.face) ? "window" : classifyEnergySurfaceRole(row.normal, row.centroid, zMin, zMax, zTol);
+    const typology = energyTypologyForRole(role);
+    const index = roleCounts.get(typology) ?? 0;
+    roleCounts.set(typology, index + 1);
+    const objectId = transformationObjectId(typology, index);
+    target.objects[objectId] = {
+      id: objectId,
+      typology,
+      primitives: { face: String(row.face) },
+      attributes: { sourceObjectIds, surfaceRole: role },
+    };
+  }
+  if (!roleCounts.has("energy.energy.windows")) {
+    target.objects["energy.energy.windows" as ObjectRef] = {
+      id: "energy.energy.windows" as ObjectRef,
+      typology: "energy.energy.windows" as TypologyRef,
+      primitives: {},
+      attributes: { sourceObjectIds },
+    };
+  }
+  target.bump();
+  return target;
+}
+
+function applyTransformationFallback(spec: TransformationSpec, source: Model): Model {
   const target = new Model();
   target.revision = source.revision;
   target.anchors = source.anchors;
@@ -2618,6 +2927,18 @@ export function applyTransformation(spec: TransformationSpec, source: Model): Mo
   }
   target.bump();
   return target;
+}
+// #endregion 🔄TransformationGeometry
+
+/** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
+export function applyTransformation(spec: TransformationSpec, source: Model): Model {
+  const qualified = qualifiedTransformationId(spec.modelDefinitionId, spec.id);
+  const applier = transformationAppliers.get(qualified);
+  if (applier) return applier(spec, source);
+  if (qualified === "aec.building.energy.from_geometry" && spec.source.modelDefinition === "spatial.shape") {
+    return applyEnergyFromGeometryTransformation(source);
+  }
+  return applyTransformationFallback(spec, source);
 }
 
 // #endregion 🧱Model
@@ -5683,10 +6004,41 @@ if (import.meta.vitest) {
       expect(target.objects["energy.energy.hull"]?.typology).toBe("energy.energy.hull");
       expect(target.objects["energy.energy.hull"]?.primitives).toEqual({ solid: "box" });
       expect(target.solids.box).toBe(source.solids.box);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall")).toHaveLength(4);
+      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-box-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-box-face-bottom");
       const space = new ModelSpace();
       space.link("geometry", source);
       space.transform("geometry", "energy", spec!);
       expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
+    });
+    it("from_geometry fuses touching shape solids and drops internal faces", () => {
+      const spec = loadTransformation("aec.building.energy.from_geometry")!;
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("lower")));
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 0], height: 1 }, solidRef("upper")));
+      source.objects["lower"] = {
+        id: "lower" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "lower" },
+      };
+      source.objects["upper"] = {
+        id: "upper" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "upper" },
+      };
+      const target = applyTransformation(spec, source);
+      expect(target.solids["from_geometry-hull"]).toBeTruthy();
+      const walls = listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall");
+      expect(walls).toHaveLength(4);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);
+      const slabLike = listModelObjectsForModelDefinition(target, "aec.building.energy").filter(
+        (row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull",
+      );
+      expect(slabLike).toHaveLength(0);
     });
   });
 

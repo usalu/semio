@@ -1,14 +1,16 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Wired FiveD puzzle surfaces to controller-owned topology stores: sketchpadKitBoardFixtureFromKit, design piece boards, parseSketchpadPuzzleInstanceId, SketchpadTopologyStoreBridge, syncTopologyForSurface on shell controller. Kit diagram window now puzzle5d flat; custom puzzle5d renderer in sketchpad-renderers.tsx (TopologyStoreProvider + FiveD). boot/desktop/vscode/docs register renderers before mount. Playwright smoke test on home table. Vitest 11 passed.",
+  "summary": "Design scene volume: sketchpadDesignVolumeFixtureFromDesign with PLACEHOLDER_MESH_URL objects from piece planes, connections as attractions, scene camera from piece origins. Enhanced sketchpadDesignBoardFixtureFromDesign with piece UV layout, connection edges, kit type labels. Kit diagram board selection navigates via sketchpadNavigateFromBoardSelection + FiveD flat onSelect. CAD kind renderer shows type representation/connector summary from kit store. Vitest 13 passed.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
     "⚪a111f9be56aa412f86a1a6b4bb3f0346",
     "⚪f1feea8b515741bf8fb873d4e5c03ca4",
-    "⚪d346fdca35604679b9c7df73dd8e574d"
+    "⚪d346fdca35604679b9c7df73dd8e574d",
+    "⚪00f0be4a9ae14e82bb7ec628f8cf91a8",
+    "⚪c8a67e3c6f71445091437aa82e936a7d"
   ]
 }
