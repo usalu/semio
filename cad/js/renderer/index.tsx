@@ -170,8 +170,8 @@ export function useTessellation(
 	solid: ReturnType<typeof solidRef> | null,
 	tolerance: number,
 ): MeshTransfer | null {
-	const [mesh, setMesh] = useState<MeshTransfer | null>(null);
-	const rafRef = useRef(0);
+	const [mesh, setMesh] = reactHostPort.useState<MeshTransfer | null>(null);
+	const rafRef = reactHostPort.useRef(0);
 	reactHostPort.useEffect(() => {
 		if (!kernel || !solid) {
 			setMesh(null);
@@ -229,7 +229,7 @@ export function useDocumentMeshes(
 	model: Model,
 	tolerance: number,
 ): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
-	const [meshes, setMeshes] = useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
+	const [meshes, setMeshes] = reactHostPort.useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
 	const revision = model.revision;
 	reactHostPort.useEffect(() => {
 		if (!kernel) {
@@ -1352,11 +1352,11 @@ function LabelItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const text = p.text;
 	if (!pos || typeof text !== "string") return null;
 	return (
-		<Suspense fallback={null}>
+		<reactHostPort.Suspense fallback={null}>
 			<Text position={pos} fontSize={0.22} color="#f4f4ff" anchorX="left" anchorY="bottom" raycast={raycastNone}>
 				{text}
 			</Text>
-		</Suspense>
+		</reactHostPort.Suspense>
 	);
 }
 
@@ -2678,7 +2678,7 @@ export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRu
 
 /** @emoji 🪝 Subscribes to `InteractionRuntime` revision updates for React hosts. */
 export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnapshot {
-	return useSyncExternalStore(
+	return reactHostPort.useSyncExternalStore(
 		(cb) => rt.subscribe(cb),
 		() => rt.getSnapshot(),
 		() => rt.getSnapshot(),
@@ -2696,7 +2696,7 @@ export function useHostState<T>(
 	onChange: ((value: T) => void) | undefined,
 	initial: T | (() => T),
 ): readonly [T, (next: T | ((prev: T) => T)) => void] {
-	const [internal, setInternal] = useState(initial);
+	const [internal, setInternal] = reactHostPort.useState(initial);
 	const isControlled = controlled !== undefined;
 	const value = isControlled ? controlled : internal;
 	const setValue = reactHostPort.useCallback(
@@ -2793,8 +2793,8 @@ export function SpatialAutoFit({
 		() => mergeSpatialSceneBounds(boundsFromMeshTransfers(meshes), boundsFromSpatialPickGeometry(geometry)),
 		[meshes, geometry, geometryRevision],
 	);
-	const lastKey = useRef("");
-	const hasApplied = useRef(false);
+	const lastKey = reactHostPort.useRef("");
+	const hasApplied = reactHostPort.useRef(false);
 	reactHostPort.useEffect(() => {
 		if (!bounds) return;
 		const meshKey = meshes.map((m, i) => meshTransferContentKey(m, i)).join("|");
@@ -2850,8 +2850,8 @@ function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selec
 /** @emoji 🔄 Keeps demand frameloop alive while the camera moves (playground `Invalidator`). */
 function SpatialInvalidator(): null {
 	const { controls, camera } = useThree();
-	const lastPos = useRef(new THREE.Vector3());
-	const lastTarget = useRef(new THREE.Vector3());
+	const lastPos = reactHostPort.useRef(new THREE.Vector3());
+	const lastTarget = reactHostPort.useRef(new THREE.Vector3());
 	useFrame(({ invalidate }) => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- drei OrbitControls
 		const ctrl = controls as any;
@@ -3993,7 +3993,7 @@ export function InteractionRepl({
 		onLastFinalizedInteractionIdChange,
 		() => chromeDefaults.lastFinalizedInteractionId,
 	);
-	const [canvasBinding, setCanvasBinding] = useState<{ readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement } | null>(null);
+	const [canvasBinding, setCanvasBinding] = reactHostPort.useState<{ readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement } | null>(null);
 	const handleCanvasReady = reactHostPort.useCallback(
 		(binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => {
 			setCanvasBinding(binding);
@@ -4005,10 +4005,10 @@ export function InteractionRepl({
 		onSnapshotChange?.(snapshot);
 	}, [snapshot, onSnapshotChange]);
 	const cmdRef = useRef<HTMLInputElement>(null);
-	const numericEntryPrevStateRef = useRef(snapshot.state);
-	const setCmdLineRef = useRef(setCmdLine);
-	const rendererSelectionByModelRef = useRef(rendererSelectionByModel);
-	const suppressAutoStartOnceRef = useRef(false);
+	const numericEntryPrevStateRef = reactHostPort.useRef(snapshot.state);
+	const setCmdLineRef = reactHostPort.useRef(setCmdLine);
+	const rendererSelectionByModelRef = reactHostPort.useRef(rendererSelectionByModel);
+	const suppressAutoStartOnceRef = reactHostPort.useRef(false);
 	const lastViewsRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number; readonly activeModelDefinitionId: string | null }>({
 		model: null,
 		revision: -1,
@@ -4016,7 +4016,7 @@ export function InteractionRepl({
 	});
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
-	const cameraNavigatingRef = useRef(false);
+	const cameraNavigatingRef = reactHostPort.useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const boundInteractionSession = Boolean(interactionId) && interactionActive;
 	const displayedSelectionTargets = reactHostPort.useMemo(
@@ -5840,7 +5840,7 @@ export function SelectionPropertiesPanel({
 		() => (objectRow ? listApplicablePropertyDefinitionsForModelDefinition(activeModelDefinitionId, model, objectRow) : []),
 		[activeModelDefinitionId, model, objectRow],
 	);
-	const [values, setValues] = useState<Readonly<Record<string, Record<string, unknown>>>>({});
+	const [values, setValues] = reactHostPort.useState<Readonly<Record<string, Record<string, unknown>>>>({});
 	reactHostPort.useEffect(() => {
 		if (!objectRow || !definitions.length) {
 			setValues({});

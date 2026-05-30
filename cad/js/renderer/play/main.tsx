@@ -573,22 +573,10 @@ export function buildSpatialPlayRuntime(): ProductRuntime {
 //#endregion 🔖Runtime
 
 import "./globals.css";
-import type { TreeDataItem, TreeDataSection } from "@ui/react";
-
-import {
-	StrictMode,
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	useSyncExternalStore,
-	type ChangeEvent,
-	type ReactNode,
-} from "react";
-import { getLevelBgClass, LevelProvider } from "@ui/react";
+// #region 🔌Adapters
+import { getLevelBgClass, LevelProvider, reactHostPort, type TreeDataItem, type TreeDataSection } from "@ui/react";
+import { StrictMode, type ChangeEvent, type ReactNode } from "react";
+// #endregion 🔌Adapters
 import {
 	PlaygroundView,
 	CallbackTreePanelDefinition,
@@ -1002,10 +990,10 @@ interface SpatialPlayChromeContextValue {
 	readonly publishSnapshot: (snapshot: SpatialPlayChromeSnapshot | null) => void;
 }
 
-const SpatialPlayChromeContext = createContext<SpatialPlayChromeContextValue | null>(null);
+const SpatialPlayChromeContext = reactHostPort.createContext<SpatialPlayChromeContextValue | null>(null);
 
 function useSpatialPlayChrome(): SpatialPlayChromeContextValue {
-	const value = useContext(SpatialPlayChromeContext);
+	const value = reactHostPort.useContext(SpatialPlayChromeContext);
 	if (!value) {
 		throw new Error("useSpatialPlayChrome must be used inside SpatialPlayChromeContext.");
 	}
@@ -1081,7 +1069,7 @@ function PlaySession({
 	onDocumentModelChange,
 	onSnapshot,
 }: PlaySessionProps) {
-	const rtOpts = useMemo(
+	const rtOpts = reactHostPort.useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
 			previewKernel: r3fPreviewKernel,
@@ -1095,7 +1083,7 @@ function PlaySession({
 		[kernel, mode, documentModel, history, activeModelDefinitionId],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		return rt.subscribe(() => {
 			const snap = rt.getSnapshot();
 			onSnapshot(snap);
@@ -1178,10 +1166,10 @@ interface SpatialPlayModelSpaceValue {
 	readonly brepjsKernel: BrepjsKernel;
 }
 
-const SpatialPlayModelSpaceContext = createContext<SpatialPlayModelSpaceValue | null>(null);
+const SpatialPlayModelSpaceContext = reactHostPort.createContext<SpatialPlayModelSpaceValue | null>(null);
 
 function useSpatialPlayModelSpace(): SpatialPlayModelSpaceValue {
-	const value = useContext(SpatialPlayModelSpaceContext);
+	const value = reactHostPort.useContext(SpatialPlayModelSpaceContext);
 	if (!value) {
 		throw new Error("useSpatialPlayModelSpace must be used inside SpatialPlayModelSpaceProvider.");
 	}
@@ -1197,51 +1185,51 @@ function SpatialPlayModelSpaceProvider({
 	readonly runtime: ProductRuntime;
 	readonly shellController: SpatialPlayShellController;
 }) {
-	const shellGeneration = useSyncExternalStore(
+	const shellGeneration = reactHostPort.useSyncExternalStore(
 		(onStoreChange) => runtime.subscribe(onStoreChange),
 		() => runtime.generation,
 		() => 0,
 	);
 	void shellGeneration;
-	const computeModeForPane = useCallback(
+	const computeModeForPane = reactHostPort.useCallback(
 		(pane: SpatialPlayPaneId) => shellController.getComputeModeForPane(pane),
 		[shellController, shellGeneration],
 	);
 	const publishSpatialPlayChrome = useSpatialPlayChromePublish();
-	const [activeModelDefinitionId, setActiveModelDefinitionId] = useState(SHAPE_MODEL_DEFINITION_ID);
-	const scopedInteractions = useMemo(
+	const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
+	const scopedInteractions = reactHostPort.useMemo(
 		() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId),
 		[activeModelDefinitionId],
 	);
-	const [interactionId, setInteractionId] = useState("");
-	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [shapeAssetId, setShapeAssetId] = useState("");
+	const [interactionId, setInteractionId] = reactHostPort.useState("");
+	const [interactionBootId, setInteractionBootId] = reactHostPort.useState(0);
+	const [shapeAssetId, setShapeAssetId] = reactHostPort.useState("");
 	const [modelsByDefinitionId, setModelsByDefinitionId] = useState<Record<string, Model>>(emptyPlayModels);
-	const [loadedRawName, setLoadedRawName] = useState("");
+	const [loadedRawName, setLoadedRawName] = reactHostPort.useState("");
 	const [rendererSelectionByModel, setRendererSelectionByModel] = useState<SpatialRendererSelectionByModel>({});
 	const [interactionSelectionByState, setInteractionSelectionByState] = useState<SpatialInteractionSelectionByState>({});
-	const [modelDefinitionRevision, setModelDefinitionRevision] = useState(0);
+	const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
 	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
 	const [fileStatus, setFileStatus] = useState<string>("");
 	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
-	const brepjsKernel = useMemo(() => new BrepjsKernel(), []);
+	const brepjsKernel = reactHostPort.useMemo(() => new BrepjsKernel(), []);
 	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(
 		() => brepjsKernel as unknown as InteractionRuntimeOptions["kernel"],
 		[brepjsKernel],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!interactionId) return;
 		if (!scopedInteractions.some((row) => row.id === interactionId)) setInteractionId("");
 	}, [activeModelDefinitionId, interactionId, scopedInteractions]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels(prev));
 	}, [activeModelDefinitionId]);
 
-	const handleInteractionPick = useCallback(
+	const handleInteractionPick = reactHostPort.useCallback(
 		(id: string) => {
 			if (id === interactionId) setInteractionBootId((b) => b + 1);
 			else {
@@ -1252,7 +1240,7 @@ function SpatialPlayModelSpaceProvider({
 		[interactionId],
 	);
 
-	const handleShapeAssetChange = useCallback((id: string) => {
+	const handleShapeAssetChange = reactHostPort.useCallback((id: string) => {
 		setShapeAssetId(id);
 		setLoadedRawName("");
 		setFileStatus("");
@@ -1268,12 +1256,12 @@ function SpatialPlayModelSpaceProvider({
 		setModelDefinitionRevision((r) => r + 1);
 	}, []);
 
-	const modelsForActiveDefinition = useMemo(
+	const modelsForActiveDefinition = reactHostPort.useMemo(
 		() => ensureSpatialPlayQuadModels(modelsByDefinitionId),
 		[activeModelDefinitionId, modelsByDefinitionId],
 	);
 
-	const activeModel = useMemo(() => {
+	const activeModel = reactHostPort.useMemo(() => {
 		const resolved = modelsForActiveDefinition[activeModelDefinitionId];
 		if (resolved) return resolved;
 		if (isShapeModelDefinition(activeModelDefinitionId)) {
@@ -1282,33 +1270,33 @@ function SpatialPlayModelSpaceProvider({
 		throw new Error(`Play model space missing model for ${activeModelDefinitionId}.`);
 	}, [activeModelDefinitionId, modelsForActiveDefinition]);
 
-	const documentModel = useMemo((): ModelDocument => {
+	const documentModel = reactHostPort.useMemo((): ModelDocument => {
 		const model = Model.fromJSON(activeModel.toJSON());
 		return { model: model, nodes: [] };
 	}, [activeModel, modelDefinitionRevision]);
 	const liveModel = documentModel.model;
 
-	const flushedModelsByDefinitionId = useMemo(() => {
+	const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
 		const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
 		return ensureSpatialPlayQuadModels(flushed);
 	}, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
-	const playModelSpace = useMemo(
+	const playModelSpace = reactHostPort.useMemo(
 		() => modelSpaceFromRecord(flushedModelsByDefinitionId),
 		[flushedModelsByDefinitionId],
 	);
 
-	const visibleExportModel = useMemo(
+	const visibleExportModel = reactHostPort.useMemo(
 		() => flushedModelsByDefinitionId[activeModelDefinitionId] ?? liveModel,
 		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
 	);
 
-	const pickGeometry = useMemo(
+	const pickGeometry = reactHostPort.useMemo(
 		() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel),
 		[activeModelDefinitionId, flushedModelsByDefinitionId, liveModel],
 	);
 
-	const handleActiveModelDefinitionChange = useCallback(
+	const handleActiveModelDefinitionChange = reactHostPort.useCallback(
 		(nextId: string) => {
 			setModelsByDefinitionId((prev) => {
 				const flushed = flushModelsRecord(prev, activeModelDefinitionId, liveModel);
@@ -1320,7 +1308,7 @@ function SpatialPlayModelSpaceProvider({
 		[activeModelDefinitionId, liveModel],
 	);
 
-	const focusModelDefinition = useCallback(
+	const focusModelDefinition = reactHostPort.useCallback(
 		(modelDefinitionId: string) => {
 			if (modelDefinitionId !== activeModelDefinitionId) {
 				handleActiveModelDefinitionChange(modelDefinitionId);
@@ -1329,7 +1317,7 @@ function SpatialPlayModelSpaceProvider({
 		[activeModelDefinitionId, handleActiveModelDefinitionChange],
 	);
 
-	const handleModelAttributesChange = useCallback(
+	const handleModelAttributesChange = reactHostPort.useCallback(
 		(model: Model) => {
 			setModelsByDefinitionId((prev) =>
 				ensureSpatialPlayQuadModels({ ...prev, [activeModelDefinitionId]: Model.fromJSON(model.toJSON()) }),
@@ -1339,18 +1327,18 @@ function SpatialPlayModelSpaceProvider({
 		[activeModelDefinitionId],
 	);
 
-	const interactionActive = useMemo(
+	const interactionActive = reactHostPort.useMemo(
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
 		[spec, snapshot],
 	);
 	const boundInteractionSession = Boolean(interactionId) && interactionActive;
-	const handleSnapshotChange = useCallback((next: InteractionSnapshot) => {
+	const handleSnapshotChange = reactHostPort.useCallback((next: InteractionSnapshot) => {
 		setSnapshot((prev) => {
 			if (prev && prev.revision === next.revision && prev.state === next.state) return prev;
 			return next;
 		});
 	}, []);
-	const currentSelection = useMemo(
+	const currentSelection = reactHostPort.useMemo(
 		() =>
 			replDisplayedSelectionTargets(
 				boundInteractionSession,
@@ -1367,16 +1355,16 @@ function SpatialPlayModelSpaceProvider({
 			interactionSelectionByState,
 		],
 	);
-	const selectionKinds = useMemo(
+	const selectionKinds = reactHostPort.useMemo(
 		() => new Set(modelDefinitionSelectionEntityKinds(activeModelDefinitionId)),
 		[activeModelDefinitionId],
 	);
-	const viewObjectCount = useMemo(
+	const viewObjectCount = reactHostPort.useMemo(
 		() => countViewObjectsForModelDefinition(liveModel, activeModelDefinitionId),
 		[liveModel, activeModelDefinitionId, modelDefinitionRevision],
 	);
 
-	const selectionInScope = useMemo(
+	const selectionInScope = reactHostPort.useMemo(
 		() =>
 			currentSelection.filter((target) => {
 				if (target.kind === "object" && target.editable === false) return selectionKinds.has("object");
@@ -1385,7 +1373,7 @@ function SpatialPlayModelSpaceProvider({
 		[currentSelection, selectionKinds],
 	);
 
-	const selectHierarchyTarget = useCallback(
+	const selectHierarchyTarget = reactHostPort.useCallback(
 		(modelDefinitionId: string, target: SelectionTarget) => {
 			if (modelDefinitionId !== activeModelDefinitionId) {
 				handleActiveModelDefinitionChange(modelDefinitionId);
@@ -1395,12 +1383,12 @@ function SpatialPlayModelSpaceProvider({
 		[activeModelDefinitionId, handleActiveModelDefinitionChange],
 	);
 
-	const flushedModelsDigest = useMemo(
+	const flushedModelsDigest = reactHostPort.useMemo(
 		() => spatialPlayModelsDigest(flushedModelsByDefinitionId),
 		[flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		publishSpatialPlayChrome({
 			modelsByDefinitionId: flushedModelsByDefinitionId,
 			activeModelDefinitionId,
@@ -1418,13 +1406,13 @@ function SpatialPlayModelSpaceProvider({
 		selectionInScope,
 	]);
 
-	const exportBaseName = useMemo(() => {
+	const exportBaseName = reactHostPort.useMemo(() => {
 		if (loadedRawName) return fileStem(loadedRawName);
 		const asset = SHAPE_ASSETS.find((g) => g.id === shapeAssetId);
 		return fileStem(asset?.id ?? "spatial");
 	}, [shapeAssetId, loadedRawName]);
 
-	const handleApplyTransformation = useCallback(
+	const handleApplyTransformation = reactHostPort.useCallback(
 		(spec: TransformationSpec) => {
 			const space = modelSpaceFromRecord(flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel));
 			try {
@@ -1441,12 +1429,12 @@ function SpatialPlayModelSpaceProvider({
 		[activeModelDefinitionId, liveModel, modelsByDefinitionId],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		history.clear();
 		setSnapshot(null);
 	}, [history, modelDefinitionRevision]);
 
-	const saveBundle = useCallback(
+	const saveBundle = reactHostPort.useCallback(
 		async (name: string, payload: SpatialExchangeBundle, message: string) => {
 			try {
 				await writeJsonFile(name, payload);
@@ -1458,7 +1446,7 @@ function SpatialPlayModelSpaceProvider({
 		[],
 	);
 
-	const handleSaveSelected = useCallback(async () => {
+	const handleSaveSelected = reactHostPort.useCallback(async () => {
 		const selectedModel = Model.fromJSON(selectRawModel(liveModel, selectionInScope));
 		const selectedModelSpace = new ModelSpace();
 		selectedModelSpace.link(activeModelDefinitionId, selectedModel);
@@ -1469,7 +1457,7 @@ function SpatialPlayModelSpaceProvider({
 		);
 	}, [activeModelDefinitionId, exportBaseName, liveModel, saveBundle, selectionInScope]);
 
-	const handleSaveInPlay = useCallback(async () => {
+	const handleSaveInPlay = reactHostPort.useCallback(async () => {
 		try {
 			const stepText = await brepjsKernel.exportModelSpaceToStep(playModelSpace, exportBaseName);
 			await writeStepFile(`${exportBaseName}.modelspace.stp`, stepText);
@@ -1479,7 +1467,7 @@ function SpatialPlayModelSpaceProvider({
 		}
 	}, [brepjsKernel, exportBaseName, playModelSpace]);
 
-	const handleSaveCurrent = useCallback(async () => {
+	const handleSaveCurrent = reactHostPort.useCallback(async () => {
 		try {
 			const modelId = activeModelDefinitionId;
 			const stepText = await brepjsKernel.exportModelToStep(visibleExportModel, modelId);
@@ -1491,11 +1479,11 @@ function SpatialPlayModelSpaceProvider({
 		}
 	}, [activeModelDefinitionId, brepjsKernel, exportBaseName, visibleExportModel]);
 
-	const handleLoadRawRequest = useCallback(() => {
+	const handleLoadRawRequest = reactHostPort.useCallback(() => {
 		loadInputRef.current?.click();
 	}, []);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const bridge = {
 			getToolbarState: () => ({
 				activeModelDefinitionId,
@@ -1554,7 +1542,7 @@ function SpatialPlayModelSpaceProvider({
 		shellController,
 	]);
 
-	const handleLoadRaw = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+	const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (!file) return;
 		try {
@@ -1832,16 +1820,16 @@ function SpatialPlayViewPane({ pane }: { readonly pane: SpatialPlayPaneId }): Re
 	} = useSpatialPlayModelSpace();
 	const mode = computeModeForPane(pane);
 	const paneModel = flushedModelsByDefinitionId[modelDefinitionId] ?? new Model();
-	const documentModel = useMemo(
+	const documentModel = reactHostPort.useMemo(
 		(): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }),
 		[paneModel, modelDefinitionRevision],
 	);
-	const pickGeometry = useMemo(
+	const pickGeometry = reactHostPort.useMemo(
 		() => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
 		[flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
 	);
 	const history = useDocumentHistory();
-	const rtOpts = useMemo(
+	const rtOpts = reactHostPort.useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
 			previewKernel: r3fPreviewKernel,
@@ -1855,7 +1843,7 @@ function SpatialPlayViewPane({ pane }: { readonly pane: SpatialPlayPaneId }): Re
 		[kernel, mode, documentModel, history, modelDefinitionId],
 	);
 	const rt = useInteractionRuntime(PLAY_REPL_SPEC, rtOpts);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		return rt.subscribe(() => {
 			handleSnapshotChange(rt.getSnapshot());
 		});
@@ -1973,12 +1961,12 @@ function SpatialPlayRoot(): ReactNode {
 		() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }),
 		[chromeSnapshot],
 	);
-	const chromeSnapshotRef = useRef(chromeSnapshot);
+	const chromeSnapshotRef = reactHostPort.useRef(chromeSnapshot);
 	chromeSnapshotRef.current = chromeSnapshot;
 	const chromeKey = chromeSnapshot
 		? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
 		: "";
-	const workbenchTabs = useMemo(
+	const workbenchTabs = reactHostPort.useMemo(
 		() => [
 			new SpatialPlayCatalogPanelDefinition().resolveTab(),
 			...(chromeSnapshot
@@ -1998,7 +1986,7 @@ function SpatialPlayRoot(): ReactNode {
 		],
 		[chromeSnapshot, chromeKey],
 	);
-	const detailsTabs = useMemo(
+	const detailsTabs = reactHostPort.useMemo(
 		() => [new SpatialPlayDetailsPanelDefinition().resolveTab()],
 		[],
 	);

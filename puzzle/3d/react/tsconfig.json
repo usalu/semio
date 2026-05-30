@@ -19,8 +19,8 @@
     "paths": {
       "@framework/playground": ["../../framework/playground/core/core.ts"],
       "@framework/playground/renderer/react": ["../../framework/playground/renderer/react/index.tsx"],
-      "@ui/react": ["./index.tsx"],
-      "@ui/react/*": ["./*"]
+      "@ui/react": ["../../../ui/react/index.tsx"],
+      "@ui/react/*": ["../../../ui/react/*"]
     }
   },
   "include": ["react/**/*.tsx", "play/**/*.tsx", "play/**/*.ts", "vitest.config.ts"],

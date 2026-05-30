@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Scene play React chrome in `@framework/playground/renderer/react/puzzle/scene` (not in `@puzzle/3d/play`). */
+/** @emoji 🛝 Puzzle 3d play React chrome in `@framework/playground/renderer/react/puzzle/3d` (not in `@puzzle/3d/play`). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -197,7 +197,7 @@ export function registerSceneSurfaceHosts(): void {
 	}
 }
 
-/** @emoji 🚀 Mounts scene play via standard {@link PlaygroundView} (bodies registered in {@link ScenePlayground}). */
+/** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountScenePlayChrome(playground: Playground, rootId = "root"): void {
 	mountPlaygroundApp(
 		<PlaygroundView runtime={playground.runtime} initialPanelVisibility={playground.initialPanelVisibility} />,

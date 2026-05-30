@@ -1,19 +1,17 @@
 // #region 🧲Header
-// 2025 Ueli Saluz <ueli@semio-tech.com>
-// AGPL-3.0
-// PostgreSQL database layer for persistent storage of tickets, scopes, claims, warnings, breaches, events, developers, and artifacts.
-
-// Specs:
-// - Use pg Pool for connection pooling.
-// - Mirror SQLite interface from Go server with PostgreSQL semantics.
-// - Use parameterized queries for all inputs.
-// - All timestamps are timestamptz.
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// AGPL-3.0 — Repo server library: PostgreSQL, auth, events, parsing (Next.js API routes).
 // #endregion 🧲Header
 
 // #region 🔌Adapters
 import { Pool, type PoolClient } from "pg";
+import { createHash } from "crypto";
+import { NextRequest, NextResponse } from "next/server";
+import PgBoss from "pg-boss";
 // #endregion 🔌Adapters
 
+
+// #region 🔖db
 // #region ⏱️Config
 // 🗄️Database configuration from environment variables.
 const DATABASE_URL =
@@ -619,3 +617,551 @@ export async function runSchema(): Promise<void> {
   await p.query(schema);
 }
 // #endregion 🎞️Schema
+// #endregion 🔖db
+
+// #region 🔖parsing
+// - Detect markdown headings for .md/.mdx files
+// - Language-specific definition patterns for Go, TS, JS, Python, C#, Rust, Ruby
+// - Build scope IDs deterministically
+// #endregion 🧲Header
+
+// #region ⚙️Types
+
+export interface ParsedSection {
+  name: string;
+  path: string;
+  startLine: number;
+  endLine: number;
+}
+
+export interface ParsedDefinition {
+  name: string;
+  startLine: number;
+  endLine: number;
+}
+// #endregion ⚙️Types
+
+// 🔬#region 📯RegionMarker
+export function parseRegionMarker(
+  line: string
+): { name: string; isEnd: boolean } | null {
+  let trimmed = line.trim();
+  trimmed = trimmed.replace(/^\/\/\s*/, "");
+  trimmed = trimmed.replace(/^#\s*/, "");
+  trimmed = trimmed.replace(/^--\s*/, "");
+  trimmed = trimmed.replace(/^\/\*\s*/, "");
+  trimmed = trimmed.replace(/\*\/\s*$/, "");
+  trimmed = trimmed.trim();
+  if (trimmed.startsWith("#region 🔖")) {
+    return { name: trimmed.replace("#region 🔖", "").trim(), isEnd: false };
+  }
+  if (trimmed.startsWith("#endregion 🔖")) {
+    return { name: trimmed.replace("#endregion 🔖", "").trim(), isEnd: true };
+  }
+  return null;
+}
+// #endregion 📯RegionMarker
+
+// 📰#region 🪁MarkdownHeading
+export function parseMarkdownHeading(
+  line: string
+): { level: number; title: string } | null {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("#")) return null;
+  let level = 0;
+  while (level < trimmed.length && trimmed[level] === "#") level++;
+  if (level === 0 || level > 6) return null;
+  const name = trimmed.slice(level).trim();
+  if (!name) return null;
+  return { level, title: name };
+}
+// #endregion 🪁MarkdownHeading
+
+// 📖#region 🖋️DefinitionPatterns
+export function definitionPatterns(ext: string): RegExp[] {
+  switch (ext) {
+    case ".go":
+      return [
+        /^\s*func\s+(?:\([^)]*\)\s*)?([A-Za-z0-9_]+)/,
+        /^\s*type\s+([A-Za-z0-9_]+)/,
+        /^\s*var\s+([A-Za-z0-9_]+)/,
+        /^\s*const\s+([A-Za-z0-9_]+)/,
+      ];
+    case ".ts":
+    case ".tsx":
+    case ".js":
+    case ".jsx":
+      return [
+        /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:export\s+)?class\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:export\s+)?interface\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:export\s+)?type\s+([A-Za-z0-9_]+)/,
+      ];
+    case ".py":
+      return [/^\s*def\s+([A-Za-z0-9_]+)/, /^\s*class\s+([A-Za-z0-9_]+)/];
+    case ".cs":
+      return [
+        /^\s*(?:public|private|protected|internal)?\s*(?:static\s+)?(?:class|struct|interface|enum|record)\s+([A-Za-z0-9_]+)/,
+      ];
+    case ".rs":
+      return [
+        /^\s*(?:pub\s+)?fn\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:pub\s+)?struct\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:pub\s+)?enum\s+([A-Za-z0-9_]+)/,
+        /^\s*(?:pub\s+)?trait\s+([A-Za-z0-9_]+)/,
+        /^\s*impl\s+([A-Za-z0-9_]+)/,
+      ];
+    case ".rb":
+      return [
+        /^\s*def\s+([A-Za-z0-9_]+)/,
+        /^\s*class\s+([A-Za-z0-9_]+)/,
+        /^\s*module\s+([A-Za-z0-9_]+)/,
+      ];
+    default:
+      return [];
+  }
+}
+// #endregion 🖋️DefinitionPatterns
+
+// 📑#region 🐹ParseSections
+export function parseSectionsFromLines(
+  lines: string[],
+  ext: string
+): ParsedSection[] {
+  const sections: ParsedSection[] = [];
+  interface SectionFrame {
+    name: string;
+    startLine: number;
+    level: number;
+    path: string;
+  }
+  const stack: SectionFrame[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineNumber = i + 1;
+    const line = lines[i];
+    const marker = parseRegionMarker(line);
+    if (marker) {
+      if (marker.isEnd) {
+        if (stack.length > 0) {
+          const frame = stack.pop()!;
+          sections.push({
+            name: frame.name,
+            path: frame.path,
+            startLine: frame.startLine,
+            endLine: lineNumber - 1,
+          });
+        }
+      } else {
+        const path =
+          stack.length > 0
+            ? `${stack[stack.length - 1].path}.${marker.name}`
+            : marker.name;
+        stack.push({ name: marker.name, startLine: lineNumber, level: 0, path });
+      }
+      continue;
+    }
+    if (ext === ".md" || ext === ".mdx") {
+      const heading = parseMarkdownHeading(line);
+      if (heading) {
+        while (
+          stack.length > 0 &&
+          stack[stack.length - 1].level >= heading.level
+        ) {
+          const frame = stack.pop()!;
+          sections.push({
+            name: frame.name,
+            path: frame.path,
+            startLine: frame.startLine,
+            endLine: lineNumber - 1,
+          });
+        }
+        const path =
+          stack.length > 0
+            ? `${stack[stack.length - 1].path}.${heading.title}`
+            : heading.title;
+        stack.push({
+          name: heading.title,
+          startLine: lineNumber,
+          level: heading.level,
+          path,
+        });
+      }
+    }
+  }
+
+  for (const frame of stack) {
+    sections.push({
+      name: frame.name,
+      path: frame.path,
+      startLine: frame.startLine,
+      endLine: lines.length,
+    });
+  }
+  return sections;
+}
+// #endregion 🐹ParseSections
+
+// 📖#region 💡ParseDefinitions
+export function parseDefinitionsFromLines(
+  lines: string[],
+  patterns: RegExp[]
+): ParsedDefinition[] {
+  const defs: ParsedDefinition[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lineNumber = i + 1;
+    for (const pattern of patterns) {
+      const match = lines[i].match(pattern);
+      if (match && match.length > 1) {
+        defs.push({
+          name: match[match.length - 1],
+          startLine: lineNumber,
+          endLine: lineNumber,
+        });
+        break;
+      }
+    }
+  }
+  return defs;
+}
+// #endregion 💡ParseDefinitions
+
+// 🔭#region ⛩️ScopeBuilding
+export function buildScopeId(
+  kind: string,
+  filePath: string,
+  sectionPath: string,
+  definition: string
+): string {
+  if (kind === "file") return `file:${filePath}`;
+  if (kind === "section") return `section:${filePath}#${sectionPath}`;
+  if (sectionPath) return `def:${filePath}#${sectionPath}::${definition}`;
+  return `def:${filePath}#${definition}`;
+}
+
+export function buildScopesForFile(path: string, content: string): Scope[] {
+  const lines = content.split("\n");
+  const ext = "." + (path.split(".").pop() || "").toLowerCase();
+  const now = new Date();
+  const entries: Scope[] = [];
+
+  entries.push({
+    id: buildScopeId("file", path, "", ""),
+    kind: "file",
+    file_path: path,
+    section_path: "",
+    definition_name: "",
+    start_line: 1,
+    end_line: lines.length,
+    updated_at: now,
+  });
+
+  const sections = parseSectionsFromLines(lines, ext);
+  for (const s of sections) {
+    entries.push({
+      id: buildScopeId("section", path, s.path, ""),
+      kind: "section",
+      file_path: path,
+      section_path: s.path,
+      definition_name: "",
+      start_line: s.startLine,
+      end_line: s.endLine,
+      updated_at: now,
+    });
+  }
+
+  const sectionByLine: Record<number, string> = {};
+  for (const s of sections) {
+    for (let line = s.startLine; line <= s.endLine; line++) {
+      sectionByLine[line] = s.path;
+    }
+  }
+
+  const patterns = definitionPatterns(ext);
+  const defs = parseDefinitionsFromLines(lines, patterns);
+  for (const d of defs) {
+    const sp = sectionByLine[d.startLine] || "";
+    entries.push({
+      id: buildScopeId("definition", path, sp, d.name),
+      kind: "definition",
+      file_path: path,
+      section_path: sp,
+      definition_name: d.name,
+      start_line: d.startLine,
+      end_line: d.endLine,
+      updated_at: now,
+    });
+  }
+
+  return entries;
+}
+// #endregion ⛩️ScopeBuilding
+
+// #region 🐍DiffParsing
+// Unified diff parser ported from Go server.
+
+export interface DiffHunk {
+  oldRange: { start: number; end: number };
+  newRange: { start: number; end: number };
+}
+
+export interface DiffFile {
+  path: string;
+  hunks: DiffHunk[];
+  deleted: boolean;
+  created: boolean;
+}
+
+const hunkHeaderRe = /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/;
+
+export function parseUnifiedDiff(patch: string): DiffFile[] {
+  const lines = patch.split("\n");
+  const files: DiffFile[] = [];
+  let current: DiffFile | null = null;
+
+  for (const line of lines) {
+    if (line.startsWith("diff --git ")) {
+      const parts = line.split(" ");
+      if (parts.length >= 4) {
+        const path = parts[3].replace(/^b\//, "");
+        current = { path, hunks: [], deleted: false, created: false };
+        files.push(current);
+      }
+      continue;
+    }
+    if (line.startsWith("+++ ") && current) {
+      if (line.includes("/dev/null")) current.deleted = true;
+      continue;
+    }
+    if (line.startsWith("@@ ") && current) {
+      const match = line.match(hunkHeaderRe);
+      if (match) {
+        const oldStart = parseInt(match[1]);
+        const oldCount = match[2] ? parseInt(match[2]) : 1;
+        const newStart = parseInt(match[3]);
+        const newCount = match[4] ? parseInt(match[4]) : 1;
+        current.hunks.push({
+          oldRange: { start: oldStart, end: oldStart + oldCount - 1 },
+          newRange: { start: newStart, end: newStart + newCount - 1 },
+        });
+      }
+    }
+  }
+  return files;
+}
+// #endregion 🐍DiffParsing
+// #endregion 🔖parsing
+
+// #region 🔖auth
+// #region 🔌Adapters
+import { createHash } from "crypto";
+import { NextRequest, NextResponse } from "next/server";
+// #endregion 🔌Adapters
+
+// 🔷#region 🩻Hashing
+export function hashApiKey(key: string): string {
+  return createHash("sha256").update(key).digest("hex");
+}
+// #endregion 🩻Hashing
+
+// #region 📎Auth
+// Authenticate a request by extracting the Bearer token and resolving to a developer.
+
+export async function authenticateRequest(
+  request: NextRequest
+): Promise<Developer | null> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader) return null;
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer") return null;
+  const apiKey = parts[1];
+  if (!apiKey) return null;
+  const keyHash = hashApiKey(apiKey);
+  const developer = await getDeveloperByApiKeyHash(keyHash);
+  if (!developer) return null;
+  if (!developer.active || !developer.trusted) return null;
+  return developer;
+}
+
+export function unauthorizedResponse(message: string = "unauthorized"): NextResponse {
+  return NextResponse.json({ error: message }, { status: 401 });
+}
+
+export function forbiddenResponse(message: string = "forbidden"): NextResponse {
+  return NextResponse.json({ error: message }, { status: 403 });
+}
+
+// 🔐Require authentication and trusted developer status.
+export async function requireAuth(
+  request: NextRequest
+): Promise<{ developer: Developer } | NextResponse> {
+  const developer = await authenticateRequest(request);
+  if (!developer) return unauthorizedResponse();
+  return { developer };
+}
+
+// 👑Require admin or owner role.
+export async function requireAdmin(
+  request: NextRequest
+): Promise<{ developer: Developer } | NextResponse> {
+  const developer = await authenticateRequest(request);
+  if (!developer) return unauthorizedResponse();
+  if (developer.role !== "admin" && developer.role !== "owner") {
+    return forbiddenResponse("admin access required");
+  }
+  return { developer };
+}
+
+// 📩Type guard to check if auth result is an error response.
+export function isAuthError(
+  result: { developer: Developer } | NextResponse
+): result is NextResponse {
+  return result instanceof NextResponse;
+}
+// #endregion 📎Auth
+// #endregion 🔖auth
+
+// #region 🔖events
+// #region 🔌Adapters
+// #endregion 🔌Adapters
+
+// #region 🌡️Publish
+// Publish an event: persist to DB and queue Discord delivery.
+
+export async function publishEvent(
+  kind: string,
+  source: string,
+  payload: unknown
+): Promise<Event> {
+  const event: Event = {
+    id: newId(),
+    kind,
+    source,
+    payload_json: payload,
+    created_at: new Date(),
+  };
+  await insertEvent(event);
+  // Queue Discord delivery for every event
+  try {
+    await insertDiscordDelivery(event.id, "");
+  } catch {
+    // Non-critical - event is already persisted
+  }
+  return event;
+}
+// #endregion 🌡️Publish
+
+// #region 🔷Discord
+// Discord notification helpers.
+
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK_URL || "";
+
+export async function sendDiscordMessage(
+  title: string,
+  body: string
+): Promise<boolean> {
+  if (!DISCORD_WEBHOOK) return false;
+  try {
+    const response = await fetch(DISCORD_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: `${title}\n${body}` }),
+      signal: AbortSignal.timeout(5000),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+// 📡Route event kind to Discord channel tier.
+export function getDiscordChannel(eventKind: string): string {
+  if (eventKind.startsWith("ticket.")) return "#tickets";
+  if (eventKind.includes("warning") || eventKind.includes("breach"))
+    return "#quality";
+  if (eventKind.startsWith("goal.")) return "#goals";
+  if (eventKind.startsWith("checkpoint")) return "#ops";
+  return "#activity";
+}
+// #endregion 🔷Discord
+// #endregion 🔖events
+
+// #region 🔖worker
+// 🗄️#region ⏱️Config
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  "postgresql://semio:semio@localhost:5432/semio_repo";
+// #endregion ⏱️Config
+
+// #region 🌊Jobs
+// Job handler definitions.
+
+interface DiscordSendJob {
+  deliveryId: string;
+  title: string;
+  body: string;
+  attempt: number;
+}
+
+async function handleDiscordSend(jobs: PgBoss.Job<DiscordSendJob>[]) {
+  for (const job of jobs) {
+    const { deliveryId, title, body, attempt } = job.data;
+    const success = await sendDiscordMessage(title, body);
+    if (success) {
+      await markDiscordDeliverySent(deliveryId);
+    } else {
+      await markDiscordDeliveryFailed(
+        deliveryId,
+        "delivery failed",
+        attempt + 1
+      );
+    }
+  }
+}
+
+interface ReindexJob {
+  repoRoot: string;
+}
+
+async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
+  for (const job of jobs) {
+    console.log(`[worker] reindex job for ${job.data.repoRoot}`);
+  }
+}
+// #endregion 🌊Jobs
+
+// #region 🌩️Main
+// Worker main entry point.
+
+async function main() {
+  const boss = new PgBoss(DATABASE_URL);
+
+  boss.on("error", (error) => console.error("[pg-boss error]", error));
+
+  await boss.start();
+  console.log("[worker] pg-boss started");
+
+  await boss.work<DiscordSendJob>("discord.send", handleDiscordSend);
+  await boss.work<ReindexJob>("repo.reindex", handleReindex);
+
+  console.log("[worker] listening for jobs");
+
+  process.on("SIGINT", async () => {
+    console.log("[worker] shutting down...");
+    await boss.stop();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", async () => {
+    console.log("[worker] shutting down...");
+    await boss.stop();
+    process.exit(0);
+  });
+}
+
+main().catch((err) => {
+  console.error("[worker] fatal error:", err);
+  process.exit(1);
+});
+// #endregion 🌩️Main
+// #endregion 🔖worker
