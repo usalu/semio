@@ -11334,9 +11334,13 @@ export function modeDockChromeGridPlacement(
 export const modeDockInactiveTabClass =
   "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
 
+/** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
+export const modeDockActiveTabFillClass =
+  "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
+
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body (no bottom stroke). */
 export const modeDockActiveTabClass =
-  "relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-active-base bg-window";
+  `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-active-base ${modeDockActiveTabFillClass}`;
 
 /** @emoji 📏 Maximize cap on the right of the gap (secondary chrome line). */
 export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
@@ -22649,9 +22653,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         perTabActiveChrome && activeId !== tab.id && cn(modeDockInactiveTabClass, baselineBottomClass),
         perTabActiveChrome && activeId === tab.id && !stackGloballyActive && cn(modeDockInactiveTabClass, baselineBottomClass),
         perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
-        !perTabActiveChrome &&
-          activeWindowId === tab.id &&
-          "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground",
+        !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
         activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
         perTabActiveChrome && activeId === tab.id && "text-foreground",
       )}
@@ -23569,6 +23571,8 @@ if (import.meta.vitest) {
       expect(inactiveStackTab?.className).not.toContain("border-b-0");
       expect(activeStackTab?.className).toContain("border-active-base");
       expect(activeStackTab?.className).toContain("border-b-0");
+      expect(activeStackTab?.className).toContain("bg-active-base");
+      expect(activeStackTab?.className).toContain("text-active-foreground");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
@@ -23634,6 +23638,8 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("bg-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-active-foreground");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-r");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
@@ -23701,6 +23707,8 @@ if (import.meta.vitest) {
       const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
       expect(activeTab?.className).toContain("border-active-base");
       expect(activeTab?.className).toContain("border-b-0");
+      expect(activeTab?.className).toContain("bg-active-base");
+      expect(activeTab?.className).toContain("text-active-foreground");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {

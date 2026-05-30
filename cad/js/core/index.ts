@@ -2624,6 +2624,16 @@ function transformationFaceCentroid(model: Model, face: FaceRecord): Vec3 | null
   return [x / n, y / n, z / n];
 }
 
+function transformationFaceNormalFromId(faceId: string): Vec3 | null {
+  if (faceId.includes("face-top")) return [0, 0, 1];
+  if (faceId.includes("face-bottom")) return [0, 0, -1];
+  if (faceId.includes("face-x0")) return [-1, 0, 0];
+  if (faceId.includes("face-x1")) return [1, 0, 0];
+  if (faceId.includes("face-y0")) return [0, -1, 0];
+  if (faceId.includes("face-y1")) return [0, 1, 0];
+  return null;
+}
+
 function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
   if (face.surface?.kind === "plane") {
     const n = face.surface.normal;
@@ -2631,19 +2641,21 @@ function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
     return len > 1e-9 ? ([n[0] / len, n[1] / len, n[2] / len] as Vec3) : null;
   }
   const pts = transformationFacePoints(model, face);
-  if (pts.length < 3) return null;
-  let nx = 0;
-  let ny = 0;
-  let nz = 0;
-  for (let i = 0; i < pts.length; i++) {
-    const p0 = pts[i]!;
-    const p1 = pts[(i + 1) % pts.length]!;
-    nx += (p0[1] - p1[1]) * (p0[2] + p1[2]);
-    ny += (p0[2] - p1[2]) * (p0[0] + p1[0]);
-    nz += (p0[0] - p1[0]) * (p0[1] + p1[1]);
+  if (pts.length >= 3) {
+    let nx = 0;
+    let ny = 0;
+    let nz = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const p0 = pts[i]!;
+      const p1 = pts[(i + 1) % pts.length]!;
+      nx += (p0[1] - p1[1]) * (p0[2] + p1[2]);
+      ny += (p0[2] - p1[2]) * (p0[0] + p1[0]);
+      nz += (p0[0] - p1[0]) * (p0[1] + p1[1]);
+    }
+    const len = Math.hypot(nx, ny, nz);
+    if (len > 1e-9) return [nx / len, ny / len, nz / len];
   }
-  const len = Math.hypot(nx, ny, nz);
-  return len > 1e-9 ? ([nx / len, ny / len, nz / len] as Vec3) : null;
+  return transformationFaceNormalFromId(String(face.id));
 }
 
 function transformationFaceAreaEstimate(model: Model, face: FaceRecord): number {
@@ -2714,14 +2726,11 @@ function facePlaneLocation(normal: Vec3, centroid: Vec3): number {
   return axis === "x" ? centroid[0] : axis === "y" ? centroid[1] : centroid[2];
 }
 
-function facesAreInternalPair(a: { readonly normal: Vec3; readonly centroid: Vec3; readonly area: number }, b: { readonly normal: Vec3; readonly centroid: Vec3; readonly area: number }): boolean {
-  if (faceDominantAxis(a.normal) !== faceDominantAxis(b.normal)) return false;
-  if (Math.abs(facePlaneLocation(a.normal, a.centroid) - facePlaneLocation(b.normal, b.centroid)) > 1e-2) return false;
+function facesAreContactPair(a: { readonly normal: Vec3; readonly centroid: Vec3 }, b: { readonly normal: Vec3; readonly centroid: Vec3 }): boolean {
   const sep = Math.hypot(a.centroid[0] - b.centroid[0], a.centroid[1] - b.centroid[1], a.centroid[2] - b.centroid[2]);
-  const span = Math.sqrt(Math.max(a.area, b.area, 1e-9));
-  if (sep >= Math.max(span * 0.35, 0.05)) return false;
+  if (sep > 1e-2) return false;
   const dot = a.normal[0] * b.normal[0] + a.normal[1] * b.normal[1] + a.normal[2] * b.normal[2];
-  return dot < -0.5 || dot > 0.9;
+  return Math.abs(dot) > 0.85;
 }
 
 function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidRef[]): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] } {
@@ -2744,22 +2753,10 @@ function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidR
       const a = descriptors[i]!;
       const b = descriptors[j]!;
       if (a.solid === b.solid) continue;
-      if (!facesAreInternalPair(a, b)) continue;
+      if (!facesAreContactPair(a, b)) continue;
       internal.add(String(a.face));
       internal.add(String(b.face));
     }
-  }
-  const horizontal = descriptors.filter((row) => Math.abs(row.normal[2]) >= 0.85);
-  const horizontalByZ = new Map<number, typeof descriptors>();
-  for (const row of horizontal) {
-    const key = Math.round(row.centroid[2] * 1000);
-    const bucket = horizontalByZ.get(key) ?? [];
-    bucket.push(row);
-    horizontalByZ.set(key, bucket);
-  }
-  for (const bucket of horizontalByZ.values()) {
-    if (new Set(bucket.map((row) => row.solid)).size < 2) continue;
-    for (const row of bucket) internal.add(String(row.face));
   }
   const externalFaces = allFaces.filter((faceId) => !internal.has(String(faceId)));
   const hullSolid =
@@ -6026,9 +6023,24 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "upper" },
       };
-      const target = applyTransformation(spec, source);
+      expect(solidFaceIds(source, solidRef("lower")).length).toBe(6);
+      expect(solidFaceIds(source, solidRef("upper")).length).toBe(6);
+      const shapeSolidRefs = collectShapeSolidRefs(source);
+      expect(shapeSolidRefs).toEqual([solidRef("lower"), solidRef("upper")]);
+      const probe = new Model();
+      probe.vertices = source.vertices;
+      probe.edges = source.edges;
+      probe.wires = source.wires;
+      probe.faces = source.faces;
+      probe.shells = { ...source.shells };
+      probe.solids = { ...source.solids };
+      const { externalFaces: probeExternal } = fuseShapeSolidsToExternalFaces(probe, shapeSolidRefs);
+      expect(probeExternal.length).toBe(10);
+      const target = applyEnergyFromGeometryTransformation(source);
       expect(target.solids["from_geometry-hull"]).toBeTruthy();
-      const walls = listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall");
+      const energyObjects = listModelObjectsForModelDefinition(target, "aec.building.energy");
+      expect(energyObjects.length).toBeGreaterThanOrEqual(6);
+      const walls = energyObjects.filter((row) => row.typology === "energy.energy.externalwall");
       expect(walls).toHaveLength(4);
       expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
       expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);

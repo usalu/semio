@@ -14,6 +14,7 @@ const repoRoot = path.resolve(playDir, "../../..");
 export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
+	playEntryKind: "2d",
 	extraAliases: [{ find: "@puzzle/2d/react", replacement: path.resolve(playDir, "../react/index.tsx") }],
 	watchIgnored: ["../rs/**"],
 });

@@ -47,6 +47,7 @@ const puzzle3dPlayMeshes: Plugin = {
 export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
+	playEntryKind: "3d",
 	extraPlugins: [puzzle3dPlayMeshes],
 	extraAliases: [
 		{ find: "@puzzle/3d/react", replacement: path.resolve(playDir, "../react/index.tsx") },

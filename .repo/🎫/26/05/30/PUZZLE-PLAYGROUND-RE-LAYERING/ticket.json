@@ -1,8 +1,9 @@
 {
   "title": "Puzzle Playground Re-layering",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Clean shell+boot pattern for puzzle plays: boot*Play subpath exports, remove puzzleChrome, shared createPlaygroundPlayViteConfig.",
+  "summary": "Fixed 2D/3D playgrounds booting 5D: removed side-effect boot from play index modules, added main.ts entries, slice renderer per puzzle subpath via stripPlaygroundRendererForPuzzleKind, dropped alias bypass in createPlaygroundPlayViteConfig. Verified dist bundles: 2d has 2d-overview only, 3d has puzzle-3d-main, 5d has topology panes. Vitest: renderer 14/14, puzzle 2d/3d/5d play unit tests pass.",
   "goal": "🎯framework🎯playground",
   "sessions": [
     "⚪c0b08030d004480abbd3dbe9a8b47376"

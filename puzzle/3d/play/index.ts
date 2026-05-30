@@ -1606,3 +1606,18 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪Tests
+
+//#region 🔖Boot
+if (
+  typeof document !== "undefined" &&
+  document.getElementById("root") != null &&
+  !import.meta.vitest &&
+  import.meta.env.PUZZLE_PLAY_ENTRY === "3d"
+) {
+  void (async () => {
+    await import("./globals.css");
+    const { bootPuzzle3dPlay } = await import("@framework/playground/renderer/react/puzzle/3d");
+    bootPuzzle3dPlay(new Playground3d());
+  })();
+}
+//#endregion 🔖Boot

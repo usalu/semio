@@ -213,6 +213,8 @@ export function playgroundRendererVitestShellOnlyPlugin(rendererIndexPath: strin
 export type PlaygroundPlayViteOptions = {
   readonly playDir: string;
   readonly repoRoot: string;
+  /** @emoji 🎯 When set, `import.meta.env.PUZZLE_PLAY_ENTRY` gates browser boot in that play's `index.ts`. */
+  readonly playEntryKind?: PlaygroundRendererPuzzleKind;
   readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
   readonly extraPlugins?: readonly Plugin[];
   readonly watchIgnored?: readonly string[];
@@ -224,7 +226,7 @@ export type PlaygroundPlayViteOptions = {
 
 /** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
-  const { playDir, repoRoot, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
+  const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const uiAssetsRoot = resolve(repoRoot, "ui/assets");
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
   const playgroundCore = resolve(repoRoot, "framework/product/playground/core/core.ts");
@@ -253,6 +255,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     publicDir: resolve(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
+    define: playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : undefined,
     plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react(), playgroundIframeEmbedHeadersPlugin(), playgroundRendererShellEntryPlugin(rendererIndex), ...extraPlugins],
     build: playgroundStaticSiteBuildOptions(build),
     server: {
