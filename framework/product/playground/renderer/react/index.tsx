@@ -55,6 +55,7 @@ import {
   WindowKindRuntime,
   getSidePanelBodyFactory,
   getWindowBodyFactory,
+  buildCadWindowBody,
   type AppToolCategory,
   type AppTools,
   type Playground,
@@ -108,7 +109,14 @@ export {
   registerWindowBody,
   resolveAppState,
   playgroundTreePanelRootItems,
+  buildCadWindowBody,
 } from "@framework/playground/core";
+import {
+  registerSurfaceBinding,
+  renderComponentHostSurface,
+  unregisterSurfaceBinding,
+  type UiComponentHostSurfaceNode,
+} from "@framework/platform/renderer/react";
 
 function cnPlay(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -247,26 +255,85 @@ function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowK
 type Scene3DSurfaceHost = React.ComponentType<{ readonly node: UiScene3DHostSurfaceNode }>;
 type BoardSurfaceHost = React.ComponentType<{ readonly node: UiBoardHostSurfaceNode }>;
 type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
+type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
 
 const scene3dSurfaceHosts = new Map<string, Scene3DSurfaceHost>();
 const boardSurfaceHosts = new Map<string, BoardSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["scene3d", "board", "puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
+
+function isPlaygroundCanvasHostChild(child: UiNode): boolean {
+  return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
+}
+
 /** @emoji 🧭 Binds a `surfaceId` from {@link UiScene3DHostSurfaceNode} to a host React canvas implementation. */
 export function registerUiScene3DSurfaceHost(surfaceId: string, Component: Scene3DSurfaceHost): void {
   scene3dSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
-export { registerSurfaceBinding } from "@framework/platform/renderer/react";
+export { registerSurfaceBinding, unregisterSurfaceBinding };
 
 /** @emoji 📋 Binds `surfaceId` from {@link UiBoardHostSurfaceNode} to a host board canvas. */
 export function registerUiBoardSurfaceHost(surfaceId: string, Component: BoardSurfaceHost): void {
   boardSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
 /** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
 export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
   tableSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): React.ReactElement {
+  if (node.type === "board") {
+    const Host = boardSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "scene3d") {
+    const Host = scene3dSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "table") {
+    const Host = tableSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (
+    node.type === "cad" ||
+    node.type === "puzzle2d" ||
+    node.type === "puzzle3d" ||
+    node.type === "puzzle5d" ||
+    node.type === "panel" ||
+    node.type === "table"
+  ) {
+    return renderComponentHostSurface(node as UiComponentHostSurfaceNode, layout);
+  }
+  const surfaceId = "surfaceId" in node ? String((node as { surfaceId: string }).surfaceId) : "?";
+  return (
+    <div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
+      Unsupported {node.type} surface &quot;{surfaceId}&quot;
+    </div>
+  );
 }
 
 function stackClass(spec: { direction: "horizontal" | "vertical"; gap?: string; padding?: string }): string {
@@ -280,7 +347,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
   switch (node.type) {
     case "stack":
       return (
-        <div className={cnPlay(stackClass(node), node.direction === "vertical" && node.children.some((c) => c.type === "scene3d" || c.type === "board") && "relative min-h-0 flex-1")}>
+        <div className={cnPlay(stackClass(node), node.direction === "vertical" && node.children.some(isPlaygroundCanvasHostChild) && "relative min-h-0 flex-1")}>
           {node.children.map((child, index) => (
             <UiRenderer key={index} node={child} commandBus={commandBus} />
           ))}
@@ -296,39 +363,15 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       );
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
-    case "scene3d": {
-      const Host = scene3dSurfaceHosts.get(node.surfaceId);
-      if (!Host) {
-        return <div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">Unsupported scene3d surface &quot;{node.surfaceId}&quot;</div>;
-      }
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-    case "board": {
-      const Host = boardSurfaceHosts.get(node.surfaceId);
-      if (!Host) {
-        return <div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">Unsupported board surface &quot;{node.surfaceId}&quot;</div>;
-      }
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-    case "table": {
-      const Host = tableSurfaceHosts.get(node.surfaceId);
-      if (!Host) {
-        return <div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">Unsupported table surface &quot;{node.surfaceId}&quot;</div>;
-      }
-      return (
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
-          <Host node={node} />
-        </div>
-      );
-    }
+    case "scene3d":
+    case "board":
+    case "puzzle2d":
+    case "puzzle3d":
+    case "puzzle5d":
+    case "cad":
+    case "panel":
+    case "table":
+      return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
     default:
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
@@ -3879,6 +3922,43 @@ if (import.meta.vitest) {
       const section = playgroundPanelSection("panel.test", "Test", <span data-testid="body">x</span>);
       expect(section.content).toBeTruthy();
       expect(section.items).toBeUndefined();
+    });
+  });
+
+  describe("UiRenderer host surfaces", () => {
+    it("renders cad nodes through platform surface bindings", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const surfaceId = "playground.test/cad";
+      function TestCadHost(): React.ReactElement {
+        return <div data-host="cad">cad canvas</div>;
+      }
+      registerSurfaceBinding(surfaceId, TestCadHost);
+      try {
+        const html = renderToStaticMarkup(<UiRenderer node={buildCadWindowBody(surfaceId, "ctrl")} commandBus={new CommandBus()} />);
+        expect(html).toContain('data-host="cad"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
+        unregisterSurfaceBinding(surfaceId);
+      }
+    });
+
+    it("renders puzzle2d nodes through platform surface bindings", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { buildBoardWindowBody } = await import("@framework/playground/core");
+      const surfaceId = "playground.test/puzzle2d";
+      function TestBoardHost(): React.ReactElement {
+        return <div data-host="puzzle2d">board canvas</div>;
+      }
+      registerSurfaceBinding(surfaceId, TestBoardHost);
+      try {
+        const html = renderToStaticMarkup(
+          <UiRenderer node={buildBoardWindowBody(surfaceId, "ctrl", "pane")} commandBus={new CommandBus()} />,
+        );
+        expect(html).toContain('data-host="puzzle2d"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
+        unregisterSurfaceBinding(surfaceId);
+      }
     });
   });
 }

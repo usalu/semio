@@ -2,32 +2,9 @@
   "title": "Framework Core Abstraction",
   "status": "closed",
   "description": "Extract render-independent shared primitives and runtime shell into @framework/core; platform and playground product cores specialize it; fix framework/product workspace wiring.",
-  "summary": "Created @framework/core with JsonValue, declarative primitives, layout/toolbar/command routing, BaseWindowKindRuntime/BaseModeRuntime/BaseAppRuntime, Platform shell, createBodyRegistry, and vitest coverage. Refactored @framework/platform/core to re-export core and extend runtime for capabilities/surfaces/plugins. Refactored @framework/playground/core to re-export core, extend WindowKindRuntime with engagement, and import canvas builders from platform. Fixed root workspaces, package paths, script.ts repo imports, vitest aliases, removed React deps from playground core, regenerated @framework symlinks. All three core test suites pass. Renderer vitest configs updated for framework/product depth (puzzle/ui/platform aliases); platform renderer 7 tests and playground renderer 9 tests pass.",
-  "files": [
-    "framework/core/index.ts",
-    "framework/core/package.json",
-    "framework/core/project.json",
-    "framework/core/script.ts",
-    "framework/core/vitest.config.ts",
-    "framework/product/platform/core/index.ts",
-    "framework/product/platform/core/package.json",
-    "framework/product/platform/core/project.json",
-    "framework/product/platform/core/script.ts",
-    "framework/product/platform/core/vitest.config.ts",
-    "framework/product/playground/core/core.ts",
-    "framework/product/playground/core/package.json",
-    "framework/product/playground/core/project.json",
-    "framework/product/playground/core/script.ts",
-    "framework/product/playground/core/vitest.config.ts",
-    "framework/product/platform/renderer/react/script.ts",
-    "framework/product/platform/renderer/react/vitest.config.ts",
-    "framework/product/platform/renderer/react/package.json",
-    "framework/product/platform/renderer/react/project.json",
-    "framework/product/playground/renderer/react/script.ts",
-    "framework/product/playground/renderer/react/project.json",
-    "package.json",
-    ".vscode/launch.json",
-    "framework/product/playground/renderer/react/vitest.config.ts"
-  ],
-  "goal": "🎯AI-OPTIMIZED-REPO"
+  "summary": "Fixed CAD/puzzle play window bodies showing \"Unsupported UiNode\": playground UiRenderer now routes cad, puzzle2d/3d/5d, and panel nodes through platform renderComponentHostSurface (registerSurfaceBinding). Legacy board/scene3d/table maps sync bindings to the platform registry. Exported renderComponentHostSurface from @framework/platform/renderer/react. Added vitest coverage (11 tests pass). Verified spatial play on fresh dev server (4 canvases, no unsupported nodes).",
+  "goal": "🎯AI-OPTIMIZED-REPO",
+  "sessions": [
+    "⚪7e0b3fb994384893aea54f57289e30e4"
+  ]
 }

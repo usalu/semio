@@ -1412,6 +1412,11 @@ function renderBoundComponent(node: UiComponentHostSurfaceNode, layout: "canvas"
 	);
 }
 
+/** @emoji 🖼 Renders a {@link UiComponentHostSurfaceNode} using {@link registerSurfaceBinding} (shared with playground shell). */
+export function renderComponentHostSurface(node: UiComponentHostSurfaceNode, layout: "canvas" | "panel" = "canvas"): React.ReactElement {
+	return renderBoundComponent(node, layout);
+}
+
 /** @emoji 📑 Binds a table `surfaceId` (alias for {@link registerSurfaceBinding}). */
 export function registerUiTableSurfaceHost(surfaceId: string, Component: React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>): void {
 	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
