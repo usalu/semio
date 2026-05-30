@@ -118,6 +118,28 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d";
+
+const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
+  "@framework/playground/renderer/react/puzzle/2d": "2d",
+  "@framework/playground/renderer/react/puzzle/3d": "3d",
+  "@framework/playground/renderer/react/puzzle/5d": "5d",
+};
+
+const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendererPuzzleKind, { readonly start: string; readonly end: string }>> = {
+  "3d": { start: "//#region 🔖Puzzle3dPlayHost", end: "//#endregion 🔖Puzzle3dPlayHost" },
+  "5d": { start: "//#region 🔖Puzzle5dPlayHost", end: "//#endregion 🔖Puzzle5dPlayHost" },
+  "2d": { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
+};
+
+function slicePlaygroundRendererRegion(source: string, startMarker: string, endMarker: string): string {
+  const start = source.indexOf(startMarker);
+  if (start < 0) return "";
+  const end = source.indexOf(endMarker, start);
+  if (end < 0) return "";
+  return source.slice(start, end + endMarker.length);
+}
+
 /** @emoji ✂️ Drops puzzle play hosts from monolithic renderer `index.tsx` (shell + boot + optional vitest). */
 export function stripPlaygroundRendererPuzzleHosts(source: string, options: { readonly includeVitest?: boolean } = {}): string {
   const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
@@ -130,18 +152,46 @@ export function stripPlaygroundRendererPuzzleHosts(source: string, options: { re
   return out;
 }
 
-/** @emoji 🛝 Vite virtual entry for `/shell` and `/boot` subpaths without pulling puzzle WASM. */
+/** @emoji ✂️ Keeps shell + one puzzle play host + boot (per-dimension playground entries). */
+export function stripPlaygroundRendererForPuzzleKind(
+  source: string,
+  kind: PlaygroundRendererPuzzleKind,
+  options: { readonly includeVitest?: boolean } = {},
+): string {
+  const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
+  const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
+  const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
+  const markers = PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS[kind];
+  if (puzzleStart < 0 || bootStart < 0) return source;
+  const bootEnd = testsStart >= 0 ? testsStart : source.length;
+  const host = slicePlaygroundRendererRegion(source, markers.start, markers.end);
+  let out = `${source.slice(0, puzzleStart)}${host}${source.slice(bootStart, bootEnd)}`;
+  if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
+  return out;
+}
+
+/** @emoji 🛝 Vite virtual entry for shell/boot and per-puzzle boot subpaths without cross-dimension hosts. */
 export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): Plugin {
-  const shellEntryId = `${rendererIndexPath}?playgroundEntry=shell`;
   return {
     name: "playground-renderer-shell-entry",
     enforce: "pre",
     resolveId(source) {
-      if ((PLAYGROUND_RENDERER_SHELL_SUBPATHS as readonly string[]).includes(source)) return shellEntryId;
+      if ((PLAYGROUND_RENDERER_SHELL_SUBPATHS as readonly string[]).includes(source)) {
+        return `${rendererIndexPath}?playgroundEntry=shell`;
+      }
+      const kind = PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS[source];
+      if (kind) return `${rendererIndexPath}?playgroundEntry=puzzle-${kind}`;
     },
     load(id) {
-      if (!id.startsWith(rendererIndexPath) || !id.includes("playgroundEntry=shell")) return;
-      return stripPlaygroundRendererPuzzleHosts(readFileSync(rendererIndexPath, "utf8"), { includeVitest: false });
+      if (!id.startsWith(rendererIndexPath) || !id.includes("playgroundEntry=")) return;
+      const source = readFileSync(rendererIndexPath, "utf8");
+      if (id.includes("playgroundEntry=shell")) {
+        return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
+      }
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d)/);
+      if (puzzleMatch) {
+        return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
+      }
     },
   };
 }
@@ -218,6 +268,39 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ...(resolveDedupe ? { dedupe: [...resolveDedupe] } : {}),
     },
     ...(optimizeDeps ? { optimizeDeps } : {}),
+  });
+}
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("stripPlaygroundRendererForPuzzleKind", () => {
+    const sample = [
+      "shell-before",
+      "//#region 🔖Puzzle3dPlayHost",
+      "host-3d",
+      "//#endregion 🔖Puzzle3dPlayHost",
+      "//#region 🔖Puzzle5dPlayHost",
+      "host-5d",
+      "//#endregion 🔖Puzzle5dPlayHost",
+      "//#region 🔖Puzzle2dPlayHost",
+      "host-2d",
+      "//#endregion 🔖Puzzle2dPlayHost",
+      "//#region 🔖Boot",
+      "boot-shared",
+      "//#region 🧪Tests",
+      "tests",
+    ].join("\n");
+
+    it("keeps only the requested puzzle host between shell and boot", () => {
+      expect(stripPlaygroundRendererForPuzzleKind(sample, "2d")).toBe(
+        ["shell-before", "//#region 🔖Puzzle2dPlayHost", "host-2d", "//#endregion 🔖Puzzle2dPlayHost", "//#region 🔖Boot", "boot-shared"].join("\n"),
+      );
+      expect(stripPlaygroundRendererForPuzzleKind(sample, "3d")).toContain("host-3d");
+      expect(stripPlaygroundRendererForPuzzleKind(sample, "3d")).not.toContain("host-5d");
+      expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).toContain("host-5d");
+      expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).not.toContain("host-2d");
+    });
   });
 }
 //#endregion 🔖ViteElementsAssets

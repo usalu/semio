@@ -283,6 +283,46 @@ export interface CadModel {
 export interface PanelModel {
 	readonly body: UiNode;
 }
+
+/** @emoji 🗺️ Serializable flat+volume fixtures composed at render time by puzzle topology. */
+export interface PlatformTopologyPayload {
+	readonly flat: Record<string, unknown>;
+	readonly volume: Record<string, unknown>;
+}
+
+export const PLATFORM_TOPOLOGY_STORE_PREFIX = "topology:";
+
+/** @emoji 🔑 Controller store id for {@link PlatformTopologyStore} (`topology:<instanceId>`). */
+export function platformTopologyStoreId(instanceId: string): string {
+	return `${PLATFORM_TOPOLOGY_STORE_PREFIX}${instanceId}`;
+}
+
+/** @emoji 🗄️ Controller-owned topology fixture pair for FiveD hosts. */
+export class PlatformTopologyStore extends Store<PlatformTopologyPayload> {
+	private payload: PlatformTopologyPayload;
+
+	constructor(payload: PlatformTopologyPayload) {
+		super();
+		this.payload = payload;
+	}
+
+	override getSnapshot(): PlatformTopologyPayload {
+		return this.payload;
+	}
+
+	replacePayload(next: PlatformTopologyPayload): void {
+		this.payload = next;
+		this.notify();
+	}
+}
+
+/** @emoji 🎛 Finds a mounted app {@link Controller} by id. */
+export function getPlatformControllerById(platform: Platform, controllerId: string): Controller | undefined {
+	for (const app of platform.apps) {
+		if (app.controller.id === controllerId) return app.controller;
+	}
+	return undefined;
+}
 //#endregion 🔖ComponentModels
 
 //#region 🔖Component

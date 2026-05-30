@@ -15,8 +15,10 @@ import {
 	ObservableCell,
 	Panel,
 	Platform,
-	PluginHost,
-	Store,
+	PlatformTopologyStore,
+	PlatformTopologyPayload,
+	platformTopologyStoreId,
+	PLATFORM_TOPOLOGY_STORE_PREFIX,
 	Table,
 	buildCadWindowBody,
 	buildPanelWindowBody,
@@ -41,18 +43,6 @@ import {
 	type WindowBodyViewContext,
 } from "@framework/platform/core";
 import type { SearchItemSpec } from "@framework/core";
-import type { BoardFixtureV1 } from "@puzzle/2d/react";
-import { PLACEHOLDER_MESH_URL, type VolumeFixtureV1 } from "@puzzle/3d/react";
-import {
-	createTopologyStore,
-	flatCameraFromPartCenters,
-	flatHandleCompoundId,
-	flatPartCenterFromTopLeft,
-	topologyAnchorFullId,
-	topologyCompose,
-	type TopologyStore,
-	type TopologyStoreSnapshot,
-} from "@puzzle/5d/react";
 //#endregion 🔌Adapters
 
 //#region 🔖KitImport
@@ -511,6 +501,8 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	return map;
 }
 
+const SKETCHPAD_PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
+
 /** @emoji 🧊 Picks a representation mesh URL for a design piece (placeholder when unresolved). */
 export function sketchpadResolvePieceMeshUrl(
 	piece: { readonly type?: unknown },
@@ -518,10 +510,10 @@ export function sketchpadResolvePieceMeshUrl(
 	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
 ): string {
 	const typeId = sketchpadReadEntityId(piece.type);
-	if (!typeId) return PLACEHOLDER_MESH_URL;
+	if (!typeId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
 	const type = findTypeInKit(kit, typeId);
 	const reps = (type?.representations ?? []) as readonly { readonly file?: unknown; readonly tags?: unknown }[];
-	if (reps.length === 0) return PLACEHOLDER_MESH_URL;
+	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
 	const untagged =
 		reps.find((rep) => {
 			const tags = rep.tags as { items?: readonly unknown[] } | readonly unknown[] | undefined;
@@ -529,8 +521,8 @@ export function sketchpadResolvePieceMeshUrl(
 			return !tags?.items?.length;
 		}) ?? reps[0];
 	const fileId = sketchpadReadEntityId(untagged?.file);
-	if (!fileId) return PLACEHOLDER_MESH_URL;
-	return fileUrls.get(fileId) ?? PLACEHOLDER_MESH_URL;
+	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
+	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
 }
 
 function sketchpadNewKitId(): string {
@@ -553,7 +545,51 @@ function sketchpadPanelTextStack(lines: readonly { readonly text: string; readon
 //#endregion 🔖KitHelpers
 
 //#region 🔖Topology
-export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = "topology:";
+const SKETCHPAD_FLAT_HANDLE_SEPARATOR = "::";
+
+/** @emoji 🔗 Re-exports {@link PLATFORM_TOPOLOGY_STORE_PREFIX} for sketchpad topology stores. */
+export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = PLATFORM_TOPOLOGY_STORE_PREFIX;
+
+type SketchpadBoardFixtureV1 = {
+	readonly schema: "puzzle.2d.fixture/v1";
+	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+	readonly nodes: readonly Record<string, unknown>[];
+	readonly edges: readonly Record<string, unknown>[];
+};
+
+type SketchpadVolumeFixtureV1 = {
+	readonly schema: "puzzle.3d.fixture/v1";
+	readonly domain: string;
+	readonly camera: {
+		readonly position: readonly [number, number, number];
+		readonly target: readonly [number, number, number];
+		readonly zoom: number;
+	};
+	readonly objects: readonly Record<string, unknown>[];
+	readonly attractions: readonly Record<string, unknown>[];
+};
+
+function sketchpadFlatPartCenterFromTopLeft(
+	position: { readonly x: number; readonly y: number },
+	frame: { readonly width: number; readonly height: number },
+): { x: number; y: number } {
+	return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
+}
+
+function sketchpadFlatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): SketchpadBoardFixtureV1["camera"] {
+	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
+	const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
+	const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
+	return { x: -avgX, y: -avgY, zoom: 1 };
+}
+
+function sketchpadFlatHandleCompoundId(left: string, right: string): string {
+	return `${left}${SKETCHPAD_FLAT_HANDLE_SEPARATOR}${right}`;
+}
+
+function sketchpadTopologyAnchorFullId(partId: string, anchorId: string): string {
+	return `${partId}:${anchorId}`;
+}
 
 /** @emoji 🧩 Stable FiveD instance id for kit diagram surfaces. */
 export function sketchpadKitDiagramInstanceId(kitId: string): string {
@@ -589,30 +625,12 @@ export function parseSketchpadPuzzleInstanceId(instanceId: string): {
 	return { kitId: null, designId: null, pane: null };
 }
 
+/** @emoji 🔑 Delegates to {@link platformTopologyStoreId}. */
 export function sketchpadTopologyStoreId(instanceId: string): string {
-	return `${SKETCHPAD_TOPOLOGY_STORE_PREFIX}${instanceId}`;
+	return platformTopologyStoreId(instanceId);
 }
 
-/** @emoji 🔗 Adapts {@link TopologyStore} for {@link Controller.provideStore}. */
-export class SketchpadTopologyStoreBridge extends Store<TopologyStoreSnapshot> {
-	private detach?: () => void;
-
-	constructor(readonly inner: TopologyStore) {
-		super();
-		this.detach = inner.subscribe(() => this.notify());
-	}
-
-	override getSnapshot(): TopologyStoreSnapshot {
-		return this.inner.getSnapshot();
-	}
-
-	override dispose(): void {
-		this.detach?.();
-		super.dispose();
-	}
-}
-
-function sketchpadEmptyVolumeFixture(): VolumeFixtureV1 {
+function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixtureV1 {
 	return {
 		schema: "puzzle.3d.fixture/v1",
 		domain: "architecture",
@@ -624,15 +642,19 @@ function sketchpadEmptyVolumeFixture(): VolumeFixtureV1 {
 
 const SKETCHPAD_KIT_DIAGRAM_NODE_FRAME = { width: 120, height: 48 } as const;
 
+function sketchpadTopologyPayload(flat: SketchpadBoardFixtureV1, volume: SketchpadVolumeFixtureV1): PlatformTopologyPayload {
+	return { flat: flat as unknown as Record<string, unknown>, volume: volume as unknown as Record<string, unknown> };
+}
+
 /** @emoji 🗺️ Builds a flat kit topology board from kit types, designs, and piece references. */
-export function sketchpadKitBoardFixtureFromKit(kit: Kit): BoardFixtureV1 {
-	const nodes: BoardFixtureV1["nodes"] = [];
-	const edges: BoardFixtureV1["edges"] = [];
+export function sketchpadKitBoardFixtureFromKit(kit: Kit): SketchpadBoardFixtureV1 {
+	const nodes: SketchpadBoardFixtureV1["nodes"] = [];
+	const edges: SketchpadBoardFixtureV1["edges"] = [];
 	const centers: { x: number; y: number }[] = [];
 	let column = 0;
 	for (const type of kit.types ?? []) {
 		const id = `type:${type.id}`;
-		const center = flatPartCenterFromTopLeft({ x: column * 140, y: 0 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
+		const center = sketchpadFlatPartCenterFromTopLeft({ x: column * 140, y: 0 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
 		centers.push(center);
 		nodes.push({
 			id,
@@ -651,7 +673,7 @@ export function sketchpadKitBoardFixtureFromKit(kit: Kit): BoardFixtureV1 {
 	let row = 1;
 	for (const design of kit.designs ?? []) {
 		const id = `design:${design.id}`;
-		const center = flatPartCenterFromTopLeft({ x: column * 140, y: row * 100 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
+		const center = sketchpadFlatPartCenterFromTopLeft({ x: column * 140, y: row * 100 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
 		centers.push(center);
 		nodes.push({
 			id,
@@ -686,7 +708,7 @@ export function sketchpadKitBoardFixtureFromKit(kit: Kit): BoardFixtureV1 {
 	}
 	return {
 		schema: "puzzle.2d.fixture/v1",
-		camera: flatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
+		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
 		nodes,
 		edges,
 	};
@@ -780,7 +802,7 @@ export function parseSketchpadCadInstanceId(instanceId: string): { readonly kitI
 }
 
 /** @emoji 🗺️ Builds a flat design diagram board from design pieces and connections. */
-export function sketchpadDesignBoardFixtureFromDesign(design: Design, kit?: Kit): BoardFixtureV1 {
+export function sketchpadDesignBoardFixtureFromDesign(design: Design, kit?: Kit): SketchpadBoardFixtureV1 {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
 	const centers = pieces.map((piece, index) => {
@@ -796,15 +818,15 @@ export function sketchpadDesignBoardFixtureFromDesign(design: Design, kit?: Kit)
 			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
 			return {
 				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
-				source: flatHandleCompoundId(sourcePieceId, sourceConnectorId),
-				target: flatHandleCompoundId(targetPieceId, targetConnectorId),
+				source: sketchpadFlatHandleCompoundId(sourcePieceId, sourceConnectorId),
+				target: sketchpadFlatHandleCompoundId(targetPieceId, targetConnectorId),
 				edgeKind: "semio.connection",
 			};
 		})
 		.filter((edge): edge is NonNullable<typeof edge> => edge !== null);
 	return {
 		schema: "puzzle.2d.fixture/v1",
-		camera: flatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
+		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
 		nodes: pieces.map((piece, index) => {
 			const uv = sketchpadPieceBoardUv(piece, index);
 			return {
@@ -825,14 +847,14 @@ export function sketchpadDesignBoardFixtureFromDesign(design: Design, kit?: Kit)
 }
 
 /** @emoji 🌐 Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
-export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): VolumeFixtureV1 {
+export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): SketchpadVolumeFixtureV1 {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
 	const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
 	const objects = pieces.map((piece, index) => ({
 		id: piece.id,
 		objectKind: "semio.design.piece",
-		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : PLACEHOLDER_MESH_URL,
+		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : SKETCHPAD_PLACEHOLDER_MESH_URL,
 		origin: sketchpadPieceSceneOrigin(piece, index),
 		orientation: [0, 0, 0, 1] as [number, number, number, number],
 		scale: [1, 1, 1] as [number, number, number],
@@ -848,8 +870,8 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
 			return {
 				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
-				attracting: topologyAnchorFullId(sourcePieceId, sourceConnectorId),
-				attracted: topologyAnchorFullId(targetPieceId, targetConnectorId),
+				attracting: sketchpadTopologyAnchorFullId(sourcePieceId, sourceConnectorId),
+				attracted: sketchpadTopologyAnchorFullId(targetPieceId, targetConnectorId),
 				attractionKind: "semio.connection",
 			};
 		})
@@ -864,7 +886,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 	};
 }
 
-function sketchpadSceneCameraFromDesign(design: Design): VolumeFixtureV1["camera"] {
+function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixtureV1["camera"] {
 	const pieces = design.pieces ?? [];
 	if (pieces.length === 0) {
 		return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
@@ -884,16 +906,19 @@ function sketchpadSceneCameraFromDesign(design: Design): VolumeFixtureV1["camera
 	return { position: [target[0] + 8, target[1] + 8, target[2] + 8], target, zoom: 1 };
 }
 
-function sketchpadTopologyModelForKitDiagram(kit: Kit) {
-	return topologyCompose(sketchpadKitBoardFixtureFromKit(kit), sketchpadEmptyVolumeFixture());
+function sketchpadTopologyPayloadForKitDiagram(kit: Kit): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadKitBoardFixtureFromKit(kit), sketchpadEmptyVolumeFixture());
 }
 
-function sketchpadTopologyModelForDesignScene(design: Design, kit?: Kit) {
-	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design, kit), sketchpadDesignVolumeFixtureFromDesign(design, kit));
+function sketchpadTopologyPayloadForDesignScene(design: Design, kit?: Kit): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(
+		sketchpadDesignBoardFixtureFromDesign(design, kit),
+		sketchpadDesignVolumeFixtureFromDesign(design, kit),
+	);
 }
 
-function sketchpadTopologyModelForDesignDiagram(design: Design, kit?: Kit) {
-	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
+function sketchpadTopologyPayloadForDesignDiagram(design: Design, kit?: Kit): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadDesignBoardFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
 }
 //#endregion 🔖Topology
 
@@ -1431,30 +1456,30 @@ export class SketchpadShellController extends Controller {
 		const kit = this.getKitStore(kitId)?.getSnapshot().kit;
 		if (!kit) return;
 		if (surfaceId === SKETCHPAD_SURFACE_KIT_DIAGRAM) {
-			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyModelForKitDiagram(kit));
+			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyPayloadForKitDiagram(kit));
 			return;
 		}
 		if (!designId) return;
 		const design = findDesignInKit(kit, designId);
 		if (!design) return;
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_SCENE) {
-			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyModelForDesignScene(design, kit));
+			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyPayloadForDesignScene(design, kit));
 			return;
 		}
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_DIAGRAM) {
-			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyModelForDesignDiagram(design, kit));
+			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyPayloadForDesignDiagram(design, kit));
 		}
 	}
 
-	private upsertTopologyStore(instanceId: string, model: ReturnType<typeof topologyCompose>): void {
-		const storeId = sketchpadTopologyStoreId(instanceId);
-		const existing = this.getStore(storeId) as SketchpadTopologyStoreBridge | undefined;
+	private upsertTopologyStore(instanceId: string, payload: PlatformTopologyPayload): void {
+		const storeId = platformTopologyStoreId(instanceId);
+		const existing = this.getStore(storeId) as PlatformTopologyStore | undefined;
 		if (existing) {
-			existing.inner.replaceModel(model);
+			existing.replacePayload(payload);
 			this.emit();
 			return;
 		}
-		this.provideStore(storeId, new SketchpadTopologyStoreBridge(createTopologyStore(model)));
+		this.provideStore(storeId, new PlatformTopologyStore(payload));
 		this.emit();
 	}
 
@@ -1508,7 +1533,7 @@ export class SketchpadShellController extends Controller {
 		this.shellStore.set({ ...shell, openKitIds });
 		this.revokeStore(sketchpadKitStoreId(kitId));
 		for (const storeId of [...this.stores.keys()]) {
-			if (storeId.startsWith(SKETCHPAD_TOPOLOGY_STORE_PREFIX) && storeId.includes(kitId)) {
+			if (storeId.startsWith(PLATFORM_TOPOLOGY_STORE_PREFIX) && storeId.includes(kitId)) {
 				this.revokeStore(storeId);
 			}
 		}
@@ -1567,6 +1592,11 @@ export class SketchpadShellController extends Controller {
 			}
 			case "setRouteSelection": {
 				this.setRouteSelection(args as SketchpadRouteSelection);
+				break;
+			}
+			case "applyBoardSelection": {
+				const payload = args as { instanceId: string; boardIds: readonly string[] };
+				sketchpadApplyBoardSelection(payload.instanceId, payload.boardIds);
 				break;
 			}
 			case "createTemporaryKit": {
@@ -2004,9 +2034,9 @@ if (import.meta.vitest) {
 				} as Kit),
 			);
 			ctrl.syncTopologyForSurface(SKETCHPAD_SURFACE_KIT_DIAGRAM, { kitId, designId: null, typeId: null });
-			const bridge = ctrl.getStore(sketchpadTopologyStoreId(sketchpadKitDiagramInstanceId(kitId))) as SketchpadTopologyStoreBridge;
-			expect(bridge).toBeDefined();
-			expect(bridge!.inner.getSnapshot().model).toBeDefined();
+			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitDiagramInstanceId(kitId))) as PlatformTopologyStore;
+			expect(topo).toBeDefined();
+			expect(topo!.getSnapshot().flat.schema).toBe("puzzle.2d.fixture/v1");
 			ctrl.dispose();
 		});
 	});

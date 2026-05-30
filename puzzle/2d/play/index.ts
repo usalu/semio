@@ -662,13 +662,3 @@ if (import.meta.vitest) {
 	});
 }
 //#endregion 🧪Tests
-
-//#region 🔖Boot
-if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
-	void (async () => {
-		await import("./globals.css");
-		const { boot2dPlay } = await import("@framework/playground/renderer/react/puzzle/2d");
-		boot2dPlay(new Playground2d());
-	})();
-}
-//#endregion 🔖Boot

@@ -12,9 +12,6 @@ export default defineConfig({
 		alias: {
 			"@framework/core": resolve(root, "../../../../../framework/core/index.ts"),
 			"@framework/platform/core": resolve(root, "../../../../../framework/product/platform/core/index.ts"),
-			"@puzzle/2d/react": resolve(root, "../../../../../puzzle/2d/react/index.tsx"),
-			"@puzzle/3d/react": resolve(root, "../../../../../puzzle/3d/react/index.tsx"),
-			"@puzzle/5d/react": resolve(root, "../../../../../puzzle/5d/react/index.tsx"),
 			"@semio/js": resolve(root, "../../js/index.ts"),
 		},
 	},

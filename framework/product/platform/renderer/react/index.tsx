@@ -22,6 +22,10 @@ export {
 	type Puzzle5dModel,
 	type CadModel,
 	type PanelModel,
+	type PlatformTopologyPayload,
+	PlatformTopologyStore,
+	getPlatformControllerById,
+	platformTopologyStoreId,
 } from "@framework/platform/core";
 
 export type { Level } from "@ui/react";
@@ -116,8 +120,9 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { BoardCanvas } from "@puzzle/2d/react";
-import { FiveD } from "@puzzle/5d/react";
+import { BoardCanvas, parseBoardFixtureV1, type BoardSelectionSnapshot } from "@puzzle/2d/react";
+import { parseFixtureV1 } from "@puzzle/3d/react";
+import { FiveD, TopologyStoreProvider, createTopologyStore, topologyCompose } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -1517,11 +1522,77 @@ const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node })
 	);
 };
 
-const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
+function usePlatformTopologyStore(
+	controller: Controller | undefined,
+	instanceId: string,
+): ReturnType<typeof createTopologyStore> | null {
+	const payload = useControllerStore<PlatformTopologyPayload>(controller, platformTopologyStoreId(instanceId));
+	const [topologyStore, setTopologyStore] = React.useState<ReturnType<typeof createTopologyStore> | null>(null);
+	React.useEffect(() => {
+		if (!payload) {
+			setTopologyStore(null);
+			return;
+		}
+		const model = topologyCompose(parseBoardFixtureV1(payload.flat), parseFixtureV1(payload.volume));
+		setTopologyStore((previous) => {
+			if (previous) {
+				previous.replaceModel(model);
+				return previous;
+			}
+			return createTopologyStore(model);
+		});
+	}, [payload]);
+	return topologyStore;
+}
+
+const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, commandBus, platform }) => {
 	const model = useStore(component as Puzzle5d);
+	const instanceId = model.instanceId || node.surfaceId;
+	const controller = platform ? getPlatformControllerById(platform, component.controllerId) : undefined;
+	const topologyStore = usePlatformTopologyStore(controller, instanceId);
+	const flatSelect = React.useMemo(
+		() =>
+			model.presentation === "flat"
+				? {
+						onSelect: (snapshot: BoardSelectionSnapshot) => {
+							commandBus.dispatch(component.controllerId, "applyBoardSelection", {
+								instanceId,
+								boardIds: snapshot.ids,
+							});
+						},
+					}
+				: undefined,
+		[commandBus, component.controllerId, instanceId, model.presentation],
+	);
+	if (model.emptyMessage) {
+		return (
+			<div
+				className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
+				data-surface-id={node.surfaceId}
+			>
+				{model.emptyMessage}
+			</div>
+		);
+	}
+	if (!topologyStore) {
+		return (
+			<div
+				className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
+				data-surface-id={node.surfaceId}
+			>
+				Topology loading…
+			</div>
+		);
+	}
 	return (
-		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-			<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={model.instanceId || node.surfaceId} />
+		<div
+			className="absolute inset-0 min-h-0 min-w-0"
+			data-surface-id={node.surfaceId}
+			data-testid={`platform-five-d-${instanceId}`}
+		>
+			<TopologyStoreProvider store={topologyStore}>
+				<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={instanceId} flat={flatSelect} />
+			</TopologyStoreProvider>
 		</div>
 	);
 };

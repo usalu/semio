@@ -523,13 +523,3 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪Tests
-
-//#region 🔖Boot
-if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
-	void (async () => {
-		await import("./globals.css");
-		const { boot5dPlay } = await import("@framework/playground/renderer/react/puzzle/5d");
-		boot5dPlay(new Playground5d());
-	})();
-}
-//#endregion 🔖Boot

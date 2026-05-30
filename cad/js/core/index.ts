@@ -2787,13 +2787,15 @@ function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidR
 type EnergySurfaceRole = "roof" | "baseplate" | "slab" | "externalwall" | "window";
 
 function classifyEnergySurfaceRole(normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): EnergySurfaceRole {
-  const absZ = Math.abs(normal[2]);
-  if (absZ >= 0.85) {
+  const ax = Math.abs(normal[0]);
+  const ay = Math.abs(normal[1]);
+  const az = Math.abs(normal[2]);
+  if (az >= ax && az >= ay && az >= 0.75) {
     if (centroid[2] >= zMax - zTol) return "roof";
     if (centroid[2] <= zMin + zTol) return "baseplate";
     return "slab";
   }
-  if (absZ <= 0.35) return "externalwall";
+  if (ax >= 0.5 || ay >= 0.5) return "externalwall";
   return "slab";
 }
 

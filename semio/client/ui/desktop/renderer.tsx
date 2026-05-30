@@ -18,7 +18,6 @@ import {
 	InMemorySemioKitStore,
 	type SemioKitStore,
 } from "@semio/sketchpad";
-import { registerSketchpadComponentKindRenderers } from "@semio/sketchpad/renderers";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
@@ -86,8 +85,6 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-white">Loading sketchpad…</div>,
 );
-
-registerSketchpadComponentKindRenderers();
 
 void (async () => {
   try {
