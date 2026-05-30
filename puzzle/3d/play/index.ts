@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/react/scene/play/index.ts — Scene play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
+// 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -93,9 +93,9 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
 //#endregion 🧾Meta
 
 //#region 🖥️Surface
-export const LS_THEME = "puzzle.2d-play.surface.theme";
-export const LS_DEVICE = "puzzle.2d-play.surface.device";
-export const LS_EXPERTISE = "puzzle.2d-play.surface.expertise";
+export const PUZZLE_3D_PLAY_LS_THEME = "puzzle.3d-play.surface.theme";
+export const PUZZLE_3D_PLAY_LS_DEVICE = "puzzle.3d-play.surface.device";
+export const PUZZLE_3D_PLAY_LS_EXPERTISE = "puzzle.3d-play.surface.expertise";
 
 export function parseStoredTheme(raw: string | null) {
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
@@ -114,9 +114,9 @@ export function parseStoredExpertise(raw: string | null) {
 //#endregion 🖥️Surface
 
 //#region 🎬Play
-export const PLAY_APP_ID = "elements-puzzle-3d-play";
+export const PUZZLE_3D_PLAY_APP_ID = "puzzle-3d-play";
 export const PUZZLE_3D_PLAY_WINDOW_ID = "puzzle-3d-main";
-export const PUZZLE_3D_PLAY_WINDOW_LABEL = "Puzzle 3d";
+export const PUZZLE_3D_PLAY_WINDOW_LABEL = "Puzzle 3D";
 export const PUZZLE_3D_PLAY_BODY_KEY = "puzzle.3d.play.window";
 export const PUZZLE_3D_PLAY_CONTROLLER_ID = "puzzle-3d-play";
 export const PUZZLE_3D_PLAY_SCENE_SURFACE_ID = "puzzle.3d.play.scene/v1";
@@ -1007,7 +1007,7 @@ export interface Puzzle3dPlaySnapshot {
 }
 
 export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {
-  const app = new AppRuntime(PLAY_APP_ID, "Scene play", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
+  const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "Puzzle 3D play", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
     new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY),
   ]);
   app.defaultModeId = controller.mainMode.id;
@@ -1349,9 +1349,9 @@ export function buildPuzzle3dPlayKindsPanelBody(ctx: WindowBodyViewContext): UiN
   return buildPuzzle3dPlayKindsTree(catalogs);
 }
 
-/** @emoji 🛝 Scene play harness as a single {@link Playground} instance. */
+/** @emoji 🛝 Puzzle 3D play harness as a single {@link Playground} instance. */
 export class Playground3d extends Playground {
-  readonly id = PLAY_APP_ID;
+  readonly id = PUZZLE_3D_PLAY_APP_ID;
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
   readonly keybindings = [
     { key: "Delete", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },

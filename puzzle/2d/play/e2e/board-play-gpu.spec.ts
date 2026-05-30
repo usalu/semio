@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/e2e/puzzle-2d-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
+// 💻 puzzle/2d/play/e2e/board-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
 // #endregion 🧲Header
 
 import { expect, test, type Page } from "@playwright/test";

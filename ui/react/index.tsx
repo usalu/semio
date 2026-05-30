@@ -11287,7 +11287,7 @@ export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activ
 export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${secondaryLineClass} bg-canvas`;
 
 /** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
-export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-x border-t-0 border-b ${activeLineClass} bg-canvas`;
+export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
 
 /** @emoji 📏 L-shaped joint at the bottom-outer corner of a window cap (connects side into gap baseline). */
 export const windowCapCornerClass = (lineClass: string, side: "left" | "right", behindTabs = false) =>
@@ -11323,7 +11323,8 @@ export function modeDockChromeGridPlacement(
   const tabsAfter = tabs.slice(activeTabIndex + 1);
   const templateParts: string[] = [];
   if (tabsBefore.length > 0) templateParts.push("auto");
-  templateParts.push("auto", "minmax(0, 1fr)");
+  templateParts.push("auto");
+  templateParts.push("minmax(0, 1fr)");
   if (tabsAfter.length > 0) templateParts.push("auto");
   templateParts.push("auto");
   let col = 1;
@@ -11332,6 +11333,7 @@ export function modeDockChromeGridPlacement(
   const gapCol = col++;
   const afterCol = tabsAfter.length > 0 ? col++ : undefined;
   const controlsCol = col++;
+  const bodyEndLine = afterCol ?? controlsCol;
   return {
     templateColumns: templateParts.join(" "),
     beforeCol,
@@ -11339,7 +11341,7 @@ export function modeDockChromeGridPlacement(
     gapCol,
     afterCol,
     controlsCol,
-    bodyColumnSpan: `${activeCol} / ${controlsCol}`,
+    bodyColumnSpan: `${activeCol} / ${bodyEndLine}`,
     activeTabIndex,
     tabsBefore,
     tabsAfter,
@@ -11347,11 +11349,22 @@ export function modeDockChromeGridPlacement(
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — sits above the active chrome stroke in a multi-tab stack. */
-export const modeDockInactiveTabClass = "relative z-20 border border-element bg-window";
+/** @emoji 📏 Inactive sibling tab — full pill above the active U-frame baseline. */
+export const modeDockInactiveTabClass =
+  "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
 
-/** @emoji 📏 Stack-active tab — active chrome attaches here; below inactive siblings. */
-export const modeDockActiveTabClass = "relative z-10 border-t border-l !border-b-0 !border-r-0 border-active-base bg-window";
+/** @emoji 📏 Stack-active tab — open bottom edge merges into the body; top/left primary stroke only. */
+export const modeDockActiveTabClass =
+  "relative z-20 box-border min-h-medium shrink-0 border-t border-l !border-r-0 !border-b-0 border-active-base bg-window";
+
+/** @emoji 📏 Maximize cap on the right of the gap (secondary chrome line). */
+export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+
+/** @emoji 📏 Maximize cap on the right when the stack owns the globally active window. */
+export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+
+/** @emoji 📏 Maximize cap on the right of the gap when multi-tab chrome uses a split column layout. */
+export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
@@ -19750,11 +19763,30 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
+/** @emoji 🔎 One autocomplete row for {@link EngagementSpec.possibleEngagements} (interaction, transition, …). */
+export interface EngagementPossible {
+  id: string;
+  label: string;
+  detail?: string;
+  onSelect?: () => void;
+}
+
+/** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
+export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) return [...items];
+  return items.filter((item) => {
+    const haystack = `${item.label} ${item.detail ?? ""} ${item.id}`.toLowerCase();
+    return haystack.includes(trimmed) || item.id.toLowerCase().startsWith(trimmed);
+  });
+}
+
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
   options?: EngagementOption[];
   input?: EngagementInput;
   status?: EngagementStatus[];
+  possibleEngagements?: EngagementPossible[];
 }
 
 export interface WindowLayoutWindowNode {
@@ -19800,16 +19832,55 @@ export interface EngagementProps extends EngagementSpec {
 }
 
 /** @emoji 💬 Transparent overlay engagement with options, input, and status rows. */
-const Engagement: React.FC<EngagementProps> = ({ options, input, status, className = "", active = false }) => {
+const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
+  const [autocompleteOpen, setAutocompleteOpen] = reactHostPort.useState(false);
+  const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const filteredPossibles = reactHostPort.useMemo(
+    () => filterEngagementPossibles(draft, possibleEngagements ?? []),
+    [draft, possibleEngagements],
+  );
+
   reactHostPort.useEffect(() => {
     setDraft(input?.value ?? "");
   }, [input?.value]);
 
+  reactHostPort.useEffect(() => {
+    setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
+  }, [filteredPossibles.length, draft]);
+
+  reactHostPort.useEffect(() => {
+    if (!filteredPossibles.length) setAutocompleteOpen(false);
+  }, [filteredPossibles.length]);
+
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
+  const hasPossibles = !!possibleEngagements?.length;
+
+  const applyDraft = reactHostPort.useCallback(
+    (value: string) => {
+      setDraft(value);
+      input?.onChange?.(value);
+    },
+    [input],
+  );
+
+  const selectPossible = reactHostPort.useCallback(
+    (item: EngagementPossible) => {
+      item.onSelect?.();
+      applyDraft("");
+      setAutocompleteOpen(false);
+      setActivePossibleIndex(0);
+    },
+    [applyDraft],
+  );
+
+  const openAutocomplete = reactHostPort.useCallback(() => {
+    if (!hasPossibles || !filteredPossibles.length) return;
+    setAutocompleteOpen(true);
+  }, [filteredPossibles.length, hasPossibles]);
 
   reactHostPort.useEffect(() => {
     if (!active || !hasInput || input?.disabled) return;
@@ -19840,23 +19911,84 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, classNa
         </div>
       ) : null}
       {hasInput ? (
-        <Input
-          id={input!.id ?? "engagement-input"}
-          value={draft}
-          tabIndex={active ? 0 : -1}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            input!.onChange?.(event.target.value);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              input!.onSubmit?.(draft);
-              event.preventDefault();
-            }
-          }}
-          placeholder={input!.placeholder}
-          disabled={input!.disabled}
-        />
+        <Popover open={autocompleteOpen} onOpenChange={setAutocompleteOpen}>
+          <PopoverAnchor asChild>
+            <div className="w-full min-w-0">
+              <Input
+                id={input!.id ?? "engagement-input"}
+                value={draft}
+                tabIndex={active ? 0 : -1}
+                onChange={(event) => {
+                  applyDraft(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setAutocompleteOpen(false);
+                    return;
+                  }
+                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && hasPossibles) {
+                    event.preventDefault();
+                    openAutocomplete();
+                    return;
+                  }
+                  if (event.key === "ArrowDown" && filteredPossibles.length) {
+                    event.preventDefault();
+                    setAutocompleteOpen(true);
+                    setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
+                    return;
+                  }
+                  if (event.key === "ArrowUp" && filteredPossibles.length) {
+                    event.preventDefault();
+                    setAutocompleteOpen(true);
+                    setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
+                    return;
+                  }
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (autocompleteOpen && filteredPossibles.length) {
+                      selectPossible(filteredPossibles[activePossibleIndex] ?? filteredPossibles[0]!);
+                      return;
+                    }
+                    input!.onSubmit?.(draft);
+                  }
+                }}
+                placeholder={input!.placeholder}
+                disabled={input!.disabled}
+              />
+            </div>
+          </PopoverAnchor>
+          {hasPossibles ? (
+            <PopoverContent
+              data-slot="engagement-autocomplete"
+              className="w-[min(100vw-1rem,28rem)] p-0"
+              align="center"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+            >
+              <Command shouldFilter={false}>
+                <CommandList>
+                  {filteredPossibles.length ? (
+                    <CommandGroup>
+                      {filteredPossibles.map((item, index) => (
+                        <CommandItem
+                          key={item.id}
+                          value={item.id}
+                          data-active={index === activePossibleIndex ? "true" : undefined}
+                          className={cn(index === activePossibleIndex && "bg-active-base")}
+                          onSelect={() => selectPossible(item)}
+                        >
+                          <span className="truncate">{item.label}</span>
+                          {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ) : (
+                    <CommandEmpty>No matches</CommandEmpty>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          ) : null}
+        </Popover>
       ) : null}
       {hasStatus ? (
         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
@@ -19984,12 +20116,12 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               </div>
             </div>
           ) : null}
-          {engagement ? (
+          {engagement && active ? (
             <div
               data-slot="window-engagement-overlay"
               className="pointer-events-none absolute inset-0 z-window flex items-center justify-center"
             >
-              <Engagement {...engagement} active={active} />
+              <Engagement {...engagement} active />
             </div>
           ) : null}
         </div>
@@ -22461,9 +22593,10 @@ interface ModeDockTabBarProps {
   activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
   chromeGrid?: ModeDockChromeGrid;
+  chromeBody?: React.ReactNode;
 }
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid }, ref) => {
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
@@ -22499,8 +22632,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         !perTabActiveChrome && "bg-window",
         perTabActiveChrome && activeId !== tab.id && modeDockInactiveTabClass,
         perTabActiveChrome && activeId === tab.id && modeDockActiveTabClass,
-        activeWindowId === tab.id && "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground",
+        !perTabActiveChrome &&
+          activeWindowId === tab.id &&
+          "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground",
         activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
+        perTabActiveChrome && activeId === tab.id && "text-foreground",
       )}
       onClick={() => onSelectTab(tab.id)}
       onPointerUp={(event) => {
@@ -22538,7 +22674,12 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     });
 
   const controlsCap = (
-    <div data-slot="mode-dock-controls-cap" className={cn("relative flex shrink-0 items-stretch", capFrameClass)}>
+    <div
+      data-slot="mode-dock-controls-cap"
+      className={cn(
+        perTabActiveChrome ? windowControlsCapActiveSplitClass : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass,
+      )}
+    >
       <button
         type="button"
         data-slot="mode-dock-maximize"
@@ -22559,46 +22700,62 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     />
   );
 
-  if (perTabActiveChrome && stackActiveTab && chromeGrid) {
+  if (perTabActiveChrome && stackActiveTab && chromeGrid && chromeBody) {
     return (
       <div
-        ref={ref}
-        data-slot="mode-dock-tabbar"
-        className="relative z-[2] col-span-full grid min-h-medium w-full min-w-0 grid-cols-subgrid items-stretch bg-transparent"
-        style={{ gridColumn: "1 / -1", gridRow: 1 }}
+        data-slot="mode-dock-chrome-column"
+        className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]"
+        style={{ gridTemplateColumns: chromeGrid.templateColumns }}
       >
-        {chromeGrid.beforeCol !== undefined && tabsBefore.length > 0 ? (
-          <div
-            data-slot="mode-dock-tabs-before"
-            className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
-            style={{ gridColumn: chromeGrid.beforeCol, gridRow: 1 }}
-          >
-            {renderTabsWithInserts(tabsBefore, 0)}
-          </div>
-        ) : null}
         <div
-          data-slot="mode-dock-tab-active-group"
-          className="relative z-10 flex min-h-medium min-w-0 shrink-0 items-stretch overflow-visible"
-          style={{ gridColumn: chromeGrid.activeCol, gridRow: 1 }}
+          ref={ref}
+          data-slot="mode-dock-tabbar"
+          className="grid min-h-medium min-w-0 items-stretch"
+          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: chromeGrid.templateColumns }}
         >
-          {renderTabsWithInserts([stackActiveTab], activeTabIndex)}
-          <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
-        </div>
-        <div className="relative z-0 min-h-medium min-w-0" style={{ gridColumn: chromeGrid.gapCol, gridRow: 1 }}>
-          {tabGap}
-        </div>
-        {chromeGrid.afterCol !== undefined && tabsAfter.length > 0 ? (
+          {chromeGrid.beforeCol !== undefined && tabsBefore.length > 0 ? (
+            <div
+              data-slot="mode-dock-tabs-before"
+              className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
+              style={{ gridColumn: chromeGrid.beforeCol }}
+            >
+              {renderTabsWithInserts(tabsBefore, 0)}
+            </div>
+          ) : null}
           <div
-            data-slot="mode-dock-tabs-after"
-            className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
-            style={{ gridColumn: chromeGrid.afterCol, gridRow: 1 }}
+            data-slot="mode-dock-tab-active-group"
+            className="relative z-10 flex min-h-medium min-w-0 shrink-0 items-stretch overflow-visible"
+            style={{ gridColumn: chromeGrid.activeCol }}
           >
-            {renderTabsWithInserts(tabsAfter, activeTabIndex + 1)}
+            {renderTabsWithInserts([stackActiveTab], activeTabIndex)}
+            <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
           </div>
-        ) : null}
-        <div className="relative z-10 flex min-h-medium items-stretch" style={{ gridColumn: chromeGrid.controlsCol, gridRow: 1 }}>
-          {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
-          {controlsCap}
+          <div className="relative z-0 min-h-medium min-w-0" style={{ gridColumn: chromeGrid.gapCol }}>
+            {tabGap}
+          </div>
+          {chromeGrid.afterCol !== undefined && tabsAfter.length > 0 ? (
+            <div
+              data-slot="mode-dock-tabs-after"
+              className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
+              style={{ gridColumn: chromeGrid.afterCol }}
+            >
+              {renderTabsWithInserts(tabsAfter, activeTabIndex + 1)}
+              {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
+            </div>
+          ) : tabInsertIndex === tabs.length ? (
+            <div className="relative z-20 flex min-h-medium items-stretch" style={{ gridColumn: chromeGrid.gapCol }}>
+              {renderInsertSlot("insert-end")}
+            </div>
+          ) : null}
+          <div className="relative z-10 flex min-h-medium items-stretch" style={{ gridColumn: chromeGrid.controlsCol }}>
+            {controlsCap}
+          </div>
+        </div>
+        <div
+          className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+          style={{ gridColumn: chromeGrid.bodyColumnSpan, gridRow: 2 }}
+        >
+          {chromeBody}
         </div>
       </div>
     );
@@ -22609,11 +22766,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <div
         data-slot="mode-dock-tab-cap"
         className={cn(
-          "relative flex min-h-medium w-max max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch",
+          "relative flex min-h-medium min-w-0 max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch",
           capFrameClass,
         )}
       >
-        <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch overflow-x-auto overflow-y-hidden">
+        <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {renderTabsWithInserts(tabs, 0)}
           {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
         </div>
@@ -22653,48 +22810,61 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const chromeGrid = stackGloballyActive && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
+  const chromeGrid = tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
+
+  const stackBody = (
+    <div
+      ref={bodyRef}
+      data-slot="mode-dock-stack-body"
+      className={cn(
+        "relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single",
+        stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass,
+      )}
+    >
+      {activeDescriptor ? (
+        (() => {
+          const { children, engagement, ...windowProps } = activeDescriptor;
+          return (
+            <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+              {children}
+            </Window>
+          );
+        })()
+      ) : null}
+    </div>
+  );
 
   return (
     <div
       data-slot="mode-dock-stack"
       data-stack-path={stackPath}
       data-active={stackGloballyActive ? "true" : undefined}
-      className={cn(
-        "flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent",
-        chromeGrid && "grid min-h-0 flex-1 grid-rows-[auto_1fr]",
-      )}
-      style={chromeGrid ? { gridTemplateColumns: chromeGrid.templateColumns } : undefined}
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent"
     >
-      <ModeDockTabBar
-        ref={tabBarRef}
-        stackPath={stackPath}
-        tabs={tabs}
-        activeId={activeId}
-        activeWindowId={activeWindowId}
-        chromeGrid={chromeGrid}
-        onSelectTab={(windowId) => dock?.activateWindow(windowId)}
-      />
-      <div
-        ref={bodyRef}
-        data-slot="mode-dock-stack-body"
-        style={chromeGrid ? { gridColumn: chromeGrid.bodyColumnSpan, gridRow: 2 } : undefined}
-        className={cn(
-          "relative z-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single",
-          stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass,
-        )}
-      >
-        {activeDescriptor ? (
-          (() => {
-            const { children, engagement, ...windowProps } = activeDescriptor;
-            return (
-              <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
-                {children}
-              </Window>
-            );
-          })()
-        ) : null}
-      </div>
+      {chromeGrid ? (
+        <ModeDockTabBar
+          ref={tabBarRef}
+          stackPath={stackPath}
+          tabs={tabs}
+          activeId={activeId}
+          activeWindowId={activeWindowId}
+          chromeGrid={chromeGrid}
+          chromeBody={stackBody}
+          onSelectTab={(windowId) => dock?.activateWindow(windowId)}
+        />
+      ) : (
+        <>
+          <ModeDockTabBar
+            ref={tabBarRef}
+            stackPath={stackPath}
+            tabs={tabs}
+            activeId={activeId}
+            activeWindowId={activeWindowId}
+            onSelectTab={(windowId) => dock?.activateWindow(windowId)}
+          />
+          {stackBody}
+        </>
+      )}
     </div>
   );
 };
@@ -22721,11 +22891,11 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
       panels.push(
         <ResizableHandle
           key={`sep-${childPath}`}
-          className="relative shrink-0 border-0 bg-transparent after:hidden hover:bg-accent/25 data-[panel-group-direction=vertical]:h-single data-[panel-group-direction=vertical]:min-h-0 data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=horizontal]:h-full data-[panel-group-direction=horizontal]:min-w-0 data-[panel-group-direction=horizontal]:w-single"
+          className="relative shrink-0 border-0 bg-transparent after:hidden hover:bg-accent/25 data-[panel-group-direction=vertical]:h-double data-[panel-group-direction=vertical]:min-h-0 data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=horizontal]:h-full data-[panel-group-direction=horizontal]:min-w-0 data-[panel-group-direction=horizontal]:w-double"
         />,
       );
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border p-single">
+      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
         {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
       </ResizablePanel>,
     );
@@ -22985,7 +23155,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
     >
       <LevelProvider level="canvas">
-        <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+        <div ref={modeBodyRef} data-slot="mode-body" className="relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas p-double">
           {body}
         {dragState ? (
           <>
@@ -23245,6 +23415,24 @@ if (import.meta.vitest) {
       expect(screen.getByText("Review Mode")).toBeTruthy();
     });
 
+    it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "a", title: "A" },
+          { id: "b", title: "B" },
+          { id: "c", title: "C" },
+        ],
+        "b",
+      );
+      expect(grid.templateColumns).toBe("auto auto minmax(0, 1fr) auto auto");
+      expect(grid.beforeCol).toBe(1);
+      expect(grid.activeCol).toBe(2);
+      expect(grid.gapCol).toBe(3);
+      expect(grid.afterCol).toBe(4);
+      expect(grid.controlsCol).toBe(5);
+      expect(grid.bodyColumnSpan).toBe("2 / 4");
+    });
+
     it("Mode lays out all windows and marks the active one", () => {
       const { container } = render(
         <div className="h-[400px] w-[600px]">
@@ -23277,8 +23465,14 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("bg-canvas");
-      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("w-max");
-      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("flex-1");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
+      const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
+      expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
+      expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(
+        [...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean),
+      ).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
@@ -23287,6 +23481,10 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-b-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-l-0");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-t-0");
@@ -23297,6 +23495,39 @@ if (import.meta.vitest) {
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-element");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-element");
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-element");
+    });
+
+    it("Mode keeps one canvas inset and one gutter between adjacent stacks", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "left", title: "Left", children: <div>Left Pane</div> },
+              { id: "right", title: "Right", children: <div>Right Pane</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
+                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+              ],
+            }}
+            activeWindowId="left"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const modeBody = container.querySelector('[data-slot="mode-body"]');
+      expect(modeBody?.className).toContain("p-double");
+      const panels = [...container.querySelectorAll('[data-slot="resizable-panel"]')];
+      expect(panels.length).toBeGreaterThanOrEqual(2);
+      for (const panel of panels) {
+        expect(panel.className).not.toContain("p-single");
+        expect(panel.className).not.toContain("p-double");
+      }
+      const horizontalHandle = container.querySelector('[data-slot="resizable-handle"]');
+      expect(horizontalHandle).toBeTruthy();
+      expect(horizontalHandle!.className).toContain("w-double");
     });
 
     it("Mode tab stack shows only the active window body", () => {
@@ -23317,17 +23548,20 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-single");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("z-[2]");
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')?.className).toContain("z-[2]");
       expect(container.querySelector('[data-slot="mode-dock-tab-active-group"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-10");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-20");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-element");
-      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("grid");
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.style.gridColumn).toBe("1 / 4");
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
+      const multiTabBar = container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-tabbar"]');
+      expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-active-base");
-      expect(container.querySelector('[data-slot="mode-dock-tab-active-group"] [data-slot="mode-dock-tab-gap"]')).toBeNull();
       const tabOrder = () =>
         [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
       expect(tabOrder()).toEqual(["a", "b"]);
@@ -23336,6 +23570,39 @@ if (import.meta.vitest) {
       expect(screen.queryByText("Alpha Body")).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.getAttribute("data-window-id")).toBe("b");
       expect(tabOrder()).toEqual(["a", "b"]);
+    });
+
+    it("Mode tab stack places body under active tab and gap only", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "shape", title: "Shape", children: <div>Shape Body</div> },
+              { id: "energy", title: "Energy", children: <div>Energy Body</div> },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "shape" }, { kind: "window", id: "energy" }], activeId: "energy" }}
+            activeWindowId="energy"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "shape", title: "Shape" },
+          { id: "energy", title: "Energy" },
+        ],
+        "energy",
+      );
+      expect(grid.bodyColumnSpan).toBe("2 / 4");
+      const chromeColumn = container.querySelector('[data-slot="mode-dock-chrome-column"]');
+      const stackBody = chromeColumn?.querySelector('[data-slot="mode-dock-stack-body"]');
+      expect(stackBody).toBeTruthy();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-before"]')).toBeTruthy();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tab-active-group"]')).toBeTruthy();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-after"]')).toBeNull();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tab-gap"]')).toBeTruthy();
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
+      expect(screen.getByText("Energy Body")).toBeTruthy();
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
@@ -23531,9 +23798,41 @@ if (import.meta.vitest) {
       expect((screen.getByPlaceholderText("Command") as HTMLInputElement).tabIndex).toBe(-1);
     });
 
-    it("Window anchors engagement in a centered overlay", () => {
+    it("filterEngagementPossibles matches label, detail, and id", () => {
+      const items = [
+        { id: "primitive.box", label: "Box", detail: "b" },
+        { id: "primitive.sphere", label: "Sphere", detail: "s" },
+      ];
+      expect(filterEngagementPossibles("", items)).toHaveLength(2);
+      expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
+    });
+
+    it("Engagement opens autocomplete on Space and selects on Enter when open", async () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const selected: string[] = [];
       const { container } = render(
-        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+        <Engagement
+          active
+          input={{ placeholder: "Type an interaction" }}
+          possibleEngagements={[
+            { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
+            { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
+          ]}
+        />,
+      );
+      const field = screen.getByPlaceholderText("Type an interaction");
+      fireEvent.keyDown(field, { key: " " });
+      await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
+      expect(container.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(selected).toEqual(["primitive.box"]));
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("Window anchors engagement in a centered overlay when active", () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );
@@ -23545,6 +23844,16 @@ if (import.meta.vitest) {
       expect(overlay?.className).toContain("z-window");
       expect(overlay?.className).not.toContain("z-overlay");
       expect(screen.getByText("Idle")).toBeTruthy();
+    });
+
+    it("Window hides engagement overlay when inactive", () => {
+      const { container } = render(
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

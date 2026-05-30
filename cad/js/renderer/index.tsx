@@ -3299,6 +3299,7 @@ export interface InteractionReplEngagementInputs {
   readonly transitions: readonly InteractionKeybindRow[];
   readonly interactions: readonly InteractionReplEngagementInteraction[];
   readonly onTransition: (row: InteractionKeybindRow) => void;
+  readonly onStartInteraction: (interactionId: string) => void;
   readonly onInputChange: (value: string) => void;
   readonly onInputSubmit: (value: string) => void;
 }
@@ -3332,8 +3333,26 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
           onSubmit: inputs.onInputSubmit,
         }
       : undefined;
-  if (options.length === 0 && !input && status.length === 0) return null;
-  return { options: options.length ? options : undefined, input, status: status.length ? status : undefined };
+  const possibleEngagements = inputs.boundInteractionSession
+    ? inputs.transitions.map((row) => ({
+        id: `engagement-possible-transition-${row.eventKind}-${row.key}`,
+        label: `${row.key.toUpperCase()} ${row.label}`,
+        detail: row.eventKind,
+        onSelect: () => inputs.onTransition(row),
+      }))
+    : inputs.interactions.map((interaction) => ({
+        id: interaction.id,
+        label: interaction.label,
+        detail: interaction.key,
+        onSelect: () => inputs.onStartInteraction(interaction.id),
+      }));
+  if (options.length === 0 && !input && status.length === 0 && possibleEngagements.length === 0) return null;
+  return {
+    options: options.length ? options : undefined,
+    input,
+    status: status.length ? status : undefined,
+    possibleEngagements: possibleEngagements.length ? possibleEngagements : undefined,
+  };
 }
 
 /** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
@@ -4147,6 +4166,7 @@ export function InteractionRepl({
         transitions: transitionRows,
         interactions: scopedInteractions,
         onTransition: runTransitionRow,
+        onStartInteraction: (id: string) => onInteractionId(id),
         onInputChange: (value: string) => setCmdLine(replCommandTextWithoutSpaces(value)),
         onInputSubmit: () => submitEngagementLine(),
       }),
@@ -5172,6 +5192,7 @@ if (import.meta.vitest) {
       transitions: [{ eventKind: "confirm", key: "c", label: "Confirm" }],
       interactions: [{ id: "primitive.box", key: "b", label: "Box" }],
       onTransition: () => {},
+      onStartInteraction: () => {},
       onInputChange: () => {},
       onInputSubmit: () => {},
     };
@@ -5193,20 +5214,26 @@ if (import.meta.vitest) {
       expect(spec?.status?.map((row) => row.content)).toEqual(["State: first_corner", "Selected: 2", "OK"]);
       spec?.options?.[0]?.onPress?.();
       expect(transitionRuns).toEqual(["c"]);
+      expect(spec?.possibleEngagements?.[0]?.label).toBe("C Confirm");
     });
 
     it("exposes only a command input while idle so a window can start an interaction", () => {
       const submitted: string[] = [];
+      const started: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
         boundInteractionSession: false,
         interactionId: "",
         onInputSubmit: (value) => submitted.push(value),
+        onStartInteraction: (id) => started.push(id),
       });
       expect(spec?.options).toBeUndefined();
       expect(spec?.input?.placeholder).toBe("Type an interaction");
+      expect(spec?.possibleEngagements?.map((row) => row.label)).toEqual(["Box"]);
       spec?.input?.onSubmit?.("box");
       expect(submitted).toEqual(["box"]);
+      spec?.possibleEngagements?.[0]?.onSelect?.();
+      expect(started).toEqual(["primitive.box"]);
     });
 
     it("returns null when idle with no startable interactions and nothing selected", () => {

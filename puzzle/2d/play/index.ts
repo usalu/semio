@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/board/play/index.ts — Board play shell on `@framework/playground/core`: declarative bodies, LOD measures, toolbar tools (no React).
+// 💻 puzzle/2d/play/index.ts — Puzzle 2D play shell on `@framework/playground/core`: declarative bodies, LOD measures, toolbar tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -495,7 +495,7 @@ export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeB
 
 /** @emoji 🧩 Registers board play window kinds on the supplied controller (layout supplied by host). */
 export function attachBoardPlayWindowKinds(controller: BoardPlayShellController, layout: unknown): AppRuntime {
-	const app = new AppRuntime(PUZZLE_2D_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
+	const app = new AppRuntime(PUZZLE_2D_PLAY_APP_ID, "Puzzle 2D play", undefined, controller, layout as never, []);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
 	return app;
@@ -541,14 +541,14 @@ export interface Puzzle2dPlayExtensionManifest {
 }
 
 export const PUZZLE_2D_PLAY_EXTENSION_MANIFEST: Puzzle2dPlayExtensionManifest = {
-	id: "elements.puzzle-2d-play",
-	label: "Board Play",
+	id: "puzzle.2d.play",
+	label: "Puzzle 2D Play",
 	version: "0.1.0",
 	contributes: {
 		apps: [
 			{
 				id: PUZZLE_2D_PLAY_APP_ID,
-				label: "Board",
+				label: "Puzzle 2D",
 				controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID,
 				defaultLayout: PUZZLE_2D_PLAY_LAYOUT,
 				defaultModeId: "main",

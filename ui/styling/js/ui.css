@@ -799,6 +799,16 @@
 @utility h-single {
   height: var(--spacing-single);
 }
+@utility size-double {
+  width: var(--spacing-double);
+  height: var(--spacing-double);
+}
+@utility w-double {
+  width: var(--spacing-double);
+}
+@utility h-double {
+  height: var(--spacing-double);
+}
 
 @utility size-tiny {
   width: var(--size-tiny);

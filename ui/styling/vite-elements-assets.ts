@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🌐 Vite plugin: serve and copy `elements/assets` at `/assets/*` (fonts, cursors, …). */
+/** @emoji 🌐 Vite plugin: serve and copy `ui/assets` at `/assets/*` (fonts, cursors, …). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -42,7 +42,7 @@ export function playgroundIframeEmbedHeadersPlugin(): Plugin {
   };
 }
 
-function contentTypeForElementsAsset(filePath: string): string | undefined {
+function contentTypeForUiAsset(filePath: string): string | undefined {
   if (filePath.endsWith(".woff2")) {
     return "font/woff2";
   }
@@ -55,7 +55,7 @@ function contentTypeForElementsAsset(filePath: string): string | undefined {
   return undefined;
 }
 
-function createElementsAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunction {
+function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunction {
   const assetsRootResolved = resolve(assetsRoot);
   return (req, res, next) => {
     if (!req.url?.startsWith("/assets/")) {
@@ -69,7 +69,7 @@ function createElementsAssetsMiddleware(assetsRoot: string): Connect.NextHandleF
       next();
       return;
     }
-    const contentType = contentTypeForElementsAsset(filePath);
+    const contentType = contentTypeForUiAsset(filePath);
     if (contentType) {
       res.setHeader("Content-Type", contentType);
     }
@@ -78,12 +78,12 @@ function createElementsAssetsMiddleware(assetsRoot: string): Connect.NextHandleF
 }
 
 /** @emoji 🌐 Vite: serve and copy `ui/assets` at `/assets/*` for palette fonts and cursors. */
-export function elementsAssetsVitePlugin(assetsRoot: string): Plugin[] {
+export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
   let viteRoot = process.cwd();
-  const serveAssets = createElementsAssetsMiddleware(assetsRoot);
+  const serveAssets = createUiAssetsMiddleware(assetsRoot);
   return [
     {
-      name: "elements-assets-serve",
+      name: "ui-assets-serve",
       enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveAssets);
@@ -93,7 +93,7 @@ export function elementsAssetsVitePlugin(assetsRoot: string): Plugin[] {
       },
     },
     {
-      name: "elements-assets-build",
+      name: "ui-assets-build",
       apply: "build",
       enforce: "pre",
       configResolved(config) {
@@ -175,7 +175,7 @@ export type PlaygroundPlayViteOptions = {
 /** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
-  const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
+  const uiAssetsRoot = resolve(repoRoot, "ui/assets");
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
   const playgroundCore = resolve(repoRoot, "framework/product/playground/core/core.ts");
   const platformCore = resolve(repoRoot, "framework/product/platform/core/index.ts");
@@ -206,7 +206,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     publicDir: resolve(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
-    plugins: [...elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react(), playgroundIframeEmbedHeadersPlugin(), playgroundRendererShellEntryPlugin(rendererIndex), ...extraPlugins],
+    plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react(), playgroundIframeEmbedHeadersPlugin(), playgroundRendererShellEntryPlugin(rendererIndex), ...extraPlugins],
     build: playgroundStaticSiteBuildOptions(build),
     server: {
       fs: { allow: [repoRoot] },

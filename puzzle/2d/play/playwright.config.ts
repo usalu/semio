@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/playwright.config.ts — E2E against the Vite board play harness (WebGPU raster).
+// 💻 puzzle/2d/play/playwright.config.ts — E2E against the Vite puzzle 2D play harness (WebGPU raster).
 // #endregion 🧲Header
 
 // #region 🔌Adapters

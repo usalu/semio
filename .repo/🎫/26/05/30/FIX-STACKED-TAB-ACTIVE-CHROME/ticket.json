@@ -1,0 +1,12 @@
+{
+  "title": "Fix Stacked Tab Active Chrome",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When two tabs are stacked in mode dock, window chrome breaks: active mark draws across full width, body frame missing. Fix multi-tab ModeDockTabBar/ModeDockStack layout so active primary stroke wraps only active tab+body column.",
+  "summary": "Fixed multi-tab mode dock chrome: grid columns now order active tab → gap → sibling tabs so body spans active+gap only. Reordered tab bar DOM to match. Disabled bg-active-base fill on stacked tabs so primary stroke uses border classes only.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪a142dfbe12c14fa6a759f3758b50e91f",
+    "⚪94af3799284842bfb9d8120d61c5b5bf"
+  ]
+}

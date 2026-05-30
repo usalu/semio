@@ -250,11 +250,20 @@ export interface WindowEngagementStatus {
   readonly text: string;
 }
 
+/** @emoji 🔎 One engagement autocomplete row mirrored from {@link EngagementSpec.possibleEngagements}. */
+export interface WindowEngagementPossible {
+  readonly id: string;
+  readonly label: string;
+  readonly detail?: string;
+  readonly command?: CommandDescriptor;
+}
+
 /** @emoji 💬 React-neutral floating window engagement (options/input/status) resolved to a UI panel by the renderer. */
 export interface WindowEngagement {
   readonly options?: readonly WindowEngagementOption[];
   readonly input?: WindowEngagementInput;
   readonly status?: readonly WindowEngagementStatus[];
+  readonly possibleEngagements?: readonly WindowEngagementPossible[];
 }
 //#endregion 🔖WindowEngagement
 
@@ -407,9 +416,9 @@ export abstract class Playground {
   registerSurfaceHosts(): void {}
 }
 
-export const PLAYGROUND_LS_THEME = "elements.playground.surface.theme";
-export const PLAYGROUND_LS_DEVICE = "elements.playground.surface.device";
-export const PLAYGROUND_LS_EXPERTISE = "elements.playground.surface.expertise";
+export const PLAYGROUND_LS_THEME = "framework.playground.surface.theme";
+export const PLAYGROUND_LS_DEVICE = "framework.playground.surface.device";
+export const PLAYGROUND_LS_EXPERTISE = "framework.playground.surface.expertise";
 
 export type PlaygroundSurfaceTheme = "system" | "light" | "dark";
 export type PlaygroundSurfaceDevice = "desktop" | "tablet" | "mobile";

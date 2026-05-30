@@ -462,7 +462,13 @@ export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane:
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
-  return { options, input, status };
+  const possibleEngagements = engagement.possibleEngagements?.map((row) => ({
+    id: row.id,
+    label: row.label,
+    detail: row.detail,
+    command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane, possibleId: row.id } },
+  }));
+  return { options, input, status, possibleEngagements };
 }
 //#endregion 🔖Toolbar
 
@@ -561,6 +567,7 @@ export class CadPlayShellController extends Controller {
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
+      case "engagementPossibleSelect":
         this.hostBridge?.runHostCommand(command, args);
         break;
       default:
@@ -1115,6 +1122,7 @@ function PlaySession({
   onDocumentModelChange,
   onSnapshot,
   onEngagementChange,
+  captureGlobalKeys,
   hoveredPickKey,
   onHoveredPickKeyChange,
   onCanvasHoverTarget,
@@ -1605,6 +1613,13 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             engagementSpecRefByPane.current[pane]?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
             break;
           }
+          case "engagementPossibleSelect": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            const possibleId = (args as { possibleId?: string })?.possibleId;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane) || !possibleId) break;
+            engagementSpecRefByPane.current[pane]?.possibleEngagements?.find((row) => row.id === possibleId)?.onSelect?.();
+            break;
+          }
           default:
             break;
         }
@@ -2038,6 +2053,20 @@ if (import.meta.vitest) {
       });
       expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane: "energy" } } });
       expect(mirror?.status?.[0]).toEqual({ id: "state", text: "State: idle" });
+    });
+
+    it("mirrors possible engagements for autocomplete routing", () => {
+      const mirror = cadPlayEngagementMirror(
+        {
+          possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }],
+        },
+        "shape",
+      );
+      expect(mirror?.possibleEngagements?.[0]).toMatchObject({
+        id: "primitive.box",
+        label: "Box",
+        command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } },
+      });
     });
   });
 

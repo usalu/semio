@@ -4,6 +4,7 @@
 
 // #region 🔌Adapters
 import {
+  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -11,6 +12,7 @@ import {
   SelectValue,
   Slider,
   Toggle,
+  Tree,
   cn,
   getLevelBgClass,
   Label,
@@ -32,7 +34,7 @@ import {
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 import type { LucideIcon } from "lucide-react";
-import { Folder, Info } from "lucide-react";
+import { ClipboardList, Folder, Info, Library, ListTree, Settings, Tags } from "lucide-react";
 import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
@@ -48,12 +50,23 @@ import {
   buildCadWindowBody,
   type AppToolCategory,
   type AppTools,
+  type CommandDescriptor,
   type Playground,
   type ResolvedAppState,
   type SidePanelBodyViewContext,
   type SideTabSpec,
   type UiBoardHostSurfaceNode,
+  type UiFieldNode,
+  type UiInputNode,
+  type UiKeyValueNode,
   type UiNode,
+  type UiSectionNode,
+  type UiSelectNode,
+  type UiToggleNode,
+  type UiTreeItemNode,
+  type UiTreeNode,
+  type UiTreeSectionNode,
+  type UiVec3Node,
   type UiScene3DHostSurfaceNode,
   type UiTableHostSurfaceNode,
   type WindowBodyViewContext,
@@ -296,6 +309,112 @@ function stackClass(spec: { direction: "horizontal" | "vertical"; gap?: string; 
   return cnPlay("flex", dir, gap, pad, spec.direction === "vertical" ? "min-h-0 min-w-0" : "min-w-0");
 }
 
+function dispatchUiCommand(bus: CommandBus, descriptor: CommandDescriptor, patch: Record<string, unknown>): void {
+  bus.dispatch(descriptor.controllerId, descriptor.command, { ...(descriptor.args as object | undefined), ...patch });
+}
+
+function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: CommandBus): TreeDataItem[] {
+  return items.map((item) => ({
+    id: item.id,
+    label: item.label,
+    description: item.description,
+    defaultOpen: item.defaultOpen,
+    isSelected: item.selected,
+    items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
+    onClick: item.command
+      ? () => {
+          dispatchUiCommand(commandBus, item.command!, {});
+        }
+      : undefined,
+  }));
+}
+
+function uiTreeSectionsToTreeData(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDataSection[] {
+  return sections.map((section) => ({
+    id: section.id,
+    label: section.label,
+    defaultOpen: section.defaultOpen,
+    items: uiTreeItemsToTreeData(section.items, commandBus),
+  }));
+}
+
+function renderPlaygroundInput(node: UiInputNode, commandBus: CommandBus): React.ReactElement {
+  const commitOnBlur = node.commit === "blur";
+  return (
+    <Input
+      id={node.id}
+      type={node.inputKind === "number" ? "number" : "text"}
+      className="h-medium w-full min-w-0"
+      value={node.value}
+      placeholder={node.placeholder}
+      onChange={
+        commitOnBlur
+          ? undefined
+          : (event) => {
+              const value = node.inputKind === "number" ? Number(event.target.value) : event.target.value;
+              dispatchUiCommand(commandBus, node.onChange, { value });
+            }
+      }
+      onBlur={
+        commitOnBlur
+          ? (event) => {
+              const value = node.inputKind === "number" ? Number(event.target.value) : event.target.value;
+              dispatchUiCommand(commandBus, node.onChange, { value });
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+function renderPlaygroundSelect(node: UiSelectNode, commandBus: CommandBus): React.ReactElement {
+  return (
+    <Select
+      value={node.value || undefined}
+      onValueChange={(value) => dispatchUiCommand(commandBus, node.onChange, { value })}
+    >
+      <SelectTrigger id={node.id} className="h-medium w-full min-w-0" size="sm">
+        <SelectValue placeholder={node.placeholder ?? "Select"} />
+      </SelectTrigger>
+      <SelectContent>
+        {node.items.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function renderPlaygroundVec3(node: UiVec3Node, commandBus: CommandBus): React.ReactElement {
+  const mixed = node.value === null;
+  const axes = ["x", "y", "z"] as const;
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {axes.map((axis, index) => (
+        <Input
+          key={`${node.id}.${axis}`}
+          id={`${node.id}.${axis}`}
+          type="number"
+          className="h-medium w-full min-w-0"
+          value={mixed ? "" : String(node.value![index] ?? 0)}
+          placeholder={mixed ? "—" : axis}
+          disabled={mixed}
+          onChange={(event) => {
+            if (mixed) return;
+            const parsed = Number(event.target.value);
+            if (!Number.isFinite(parsed)) return;
+            const next: [number, number, number] = [...node.value!];
+            next[index] = parsed;
+            dispatchUiCommand(commandBus, node.onChange, { value: next });
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readonly commandBus: CommandBus }): React.ReactElement {
   switch (node.type) {
     case "stack":
@@ -325,6 +444,60 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
+    case "section": {
+      const section = node as UiSectionNode;
+      return (
+        <div className="flex flex-col gap-1" data-ui-section={section.id}>
+          {section.label ? <div className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{section.label}</div> : null}
+          <div className="flex flex-col gap-1">
+            {section.children.map((child, index) => (
+              <UiRenderer key={index} node={child} commandBus={commandBus} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+    case "field": {
+      const field = node as UiFieldNode;
+      return (
+        <div className="flex flex-col gap-half" data-ui-field={field.id}>
+          <Label htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>{field.label}</Label>
+          <UiRenderer node={field.child} commandBus={commandBus} />
+        </div>
+      );
+    }
+    case "input":
+      return renderPlaygroundInput(node as UiInputNode, commandBus);
+    case "select":
+      return renderPlaygroundSelect(node as UiSelectNode, commandBus);
+    case "toggle": {
+      const toggle = node as UiToggleNode;
+      return (
+        <Toggle
+          id={toggle.id}
+          pressed={toggle.pressed}
+          text={toggle.text}
+          onPressedChange={(pressed) => dispatchUiCommand(commandBus, toggle.onChange, { pressed })}
+        />
+      );
+    }
+    case "vec3":
+      return renderPlaygroundVec3(node as UiVec3Node, commandBus);
+    case "keyValue": {
+      const keyValue = node as UiKeyValueNode;
+      return (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
+          {keyValue.entries.map((entry) => (
+            <React.Fragment key={entry.label}>
+              <dt className="text-muted-foreground">{entry.label}</dt>
+              <dd className="tabular-nums">{entry.value}</dd>
+            </React.Fragment>
+          ))}
+        </dl>
+      );
+    }
+    case "tree":
+      return <Tree className="min-h-0 flex-1" sections={uiTreeSectionsToTreeData((node as UiTreeNode).sections, commandBus)} selectionMode="single" />;
     default:
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
@@ -500,9 +673,15 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
-  const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || (status?.length ?? 0) > 0;
+  const possibleEngagements = engagement.possibleEngagements?.map((row) => ({
+    id: row.id,
+    label: row.label,
+    detail: row.detail,
+    onSelect: row.command ? () => bus.dispatch(row.command!.controllerId, row.command!.command, row.command!.args) : undefined,
+  }));
+  const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
   if (!hasContent) return undefined;
-  return { options, input, status };
+  return { options, input, status, possibleEngagements };
 }
 
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
@@ -642,7 +821,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
   const bus = runtime.commandBus;
 
   const workbenchTabs = mergePanelTabs(sideTabsToPlaygroundPanelTabs(activeApp.leftTabs, bus), augmentPanelTabs?.workbench);
-  const detailsTabs = mergePanelTabs(undefined, augmentPanelTabs?.details);
+  const detailsTabs = mergePanelTabs(sideTabsToPlaygroundPanelTabs(activeApp.rightTabs, bus), augmentPanelTabs?.details);
 
   const mergedTools = declareToolsToViewTools(activeApp.tools, bus);
   const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
@@ -778,15 +957,15 @@ export function playgroundPanelSection(id: string, label: string, body: React.Re
 //#endregion 🔖PlaygroundShell
 
 //#region 🔖Mount
-type ElementsDomRoot = HTMLElement & { __elementsPlaygroundRoot?: Root };
+type PlaygroundDomRoot = HTMLElement & { __playgroundRoot?: Root };
 
 /** @emoji 🚀 Mounts an arbitrary React tree into `#root` (or `rootId`) inside {@link PlaygroundShell}. */
 export function mountPlaygroundApp(element: React.ReactElement, rootId = "root"): void {
   if (typeof document === "undefined") return;
-  const rootElement = document.getElementById(rootId) as ElementsDomRoot | null;
+  const rootElement = document.getElementById(rootId) as PlaygroundDomRoot | null;
   if (!rootElement) throw new Error(`React root #${rootId} missing.`);
-  rootElement.__elementsPlaygroundRoot ??= createRoot(rootElement);
-  rootElement.__elementsPlaygroundRoot.render(<PlaygroundShell>{element}</PlaygroundShell>);
+  rootElement.__playgroundRoot ??= createRoot(rootElement);
+  rootElement.__playgroundRoot.render(<PlaygroundShell>{element}</PlaygroundShell>);
 }
 
 /** @emoji 🚀 Alias for {@link mountPlaygroundApp}. */
@@ -795,6 +974,7 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
+import { sceneHostPort } from "@ui/react";
 import { NakaginCapsuleTowerSceneJson as nakaginSceneFixtureJson } from "@puzzle/assets";
 import { PlaySceneCanvas, SceneObjectStateProvider, parseFixtureV1, applyConnectToSceneFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
@@ -806,7 +986,7 @@ import {
   PUZZLE_3D_PLAY_ICON_KINDS,
   PUZZLE_3D_PLAY_ICON_SETTINGS,
   PUZZLE_3D_PLAY_SCENE_SURFACE_ID,
-  PLAY_APP_ID,
+  PUZZLE_3D_PLAY_APP_ID,
   Puzzle3dPlayShellController,
   parseKindCatalogs,
   parseKindCompatibility,
@@ -914,13 +1094,13 @@ export function registerSceneSurfaceHosts(): void {
   const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
   if (fixture) {
     const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
-    for (const url of urls) useGLTF.preload(url);
+    for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
   }
 }
 
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<PlaygroundView runtime={playground.runtime} defaultAppId={PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />, rootId);
+  mountPlaygroundApp(<PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />, rootId);
 }
 
 const scenePlayChromeBoot: PlaygroundChromeBoot = {
@@ -928,7 +1108,7 @@ const scenePlayChromeBoot: PlaygroundChromeBoot = {
   mount: mountPuzzle3dPlayChrome,
 };
 
-/** @emoji 🛝 Scene play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
+/** @emoji 🛝 Puzzle 3D play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
 export function boot3dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, scenePlayChromeBoot, rootId);
 }
@@ -1067,7 +1247,7 @@ function TopologyVolumeSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
   }
   const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.volumeFixture.objects.map((object) => object.meshUrl))], [snapshot.volumeFixture]);
   reactHostPort.useEffect(() => {
-    for (const url of meshUrls) useGLTF.preload(url);
+    for (const url of meshUrls) sceneHostPort.drei.useGLTF.preload(url);
   }, [meshUrls]);
   return (
     <FiveD
@@ -1155,7 +1335,6 @@ export function boot5dPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖Puzzle2dPlayHost
 // #region 🔌Adapters
-import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 import {
   PUZZLE_2D_PLAY_APP_ID,
@@ -3494,7 +3673,7 @@ const boardPlayChromeBoot: PlaygroundChromeBoot = {
   mount: mountBoardPlayChrome,
 };
 
-/** @emoji 🛝 Board play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
+/** @emoji 🛝 Puzzle 2D play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
 export function boot2dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, boardPlayChromeBoot, rootId);
 }
@@ -3572,6 +3751,27 @@ if (import.meta.vitest) {
       ]);
     });
 
+    it("converts possible engagements and dispatches their select command", () => {
+      const bus = new CommandBus();
+      const dispatched: { command: string; args?: unknown }[] = [];
+      bus.register({
+        id: "ctrl",
+        commandBus: bus,
+        dispose() {},
+        run(command: string, args?: unknown) {
+          dispatched.push({ command, args });
+        },
+      } as never);
+      const spec = windowEngagementToGolden(
+        {
+          possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command: { controllerId: "ctrl", command: "start" } }],
+        },
+        bus,
+      );
+      spec?.possibleEngagements?.[0]?.onSelect?.();
+      expect(dispatched).toEqual([{ command: "start", args: undefined }]);
+    });
+
     it("threads engagement through windowKindsToGolden", () => {
       const wk = new WindowKindRuntime("w", "W", "body", undefined, [], {
         status: [{ id: "s", text: "ready" }],
@@ -3638,6 +3838,29 @@ if (import.meta.vitest) {
       } finally {
         unregisterSurfaceBinding(surfaceId);
       }
+    });
+
+    it("renders declarative tree nodes", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const bus = new CommandBus();
+      const html = renderToStaticMarkup(
+        <UiRenderer
+          commandBus={bus}
+          node={{
+            type: "tree",
+            sections: [
+              {
+                id: "root",
+                defaultOpen: true,
+                items: [{ id: "scene", label: "Scene", defaultOpen: true, items: [{ id: "obj.a", label: "Alpha" }] }],
+              },
+            ],
+          }}
+        />,
+      );
+      expect(html).toContain("Scene");
+      expect(html).toContain("Alpha");
+      expect(html).not.toContain("Unsupported UiNode");
     });
 
     it("renders puzzle2d nodes through platform surface bindings", async () => {

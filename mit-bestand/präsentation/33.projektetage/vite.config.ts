@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import {
-	elementsAssetsVitePlugin,
+	uiAssetsVitePlugin,
 	playgroundIframeEmbedHeadersPlugin,
 	playgroundStaticSiteBuildOptions,
 } from "../../../ui/styling/vite-elements-assets.ts";
@@ -13,7 +13,7 @@ import {
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../");
-const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
+const uiAssetsRoot = resolve(repoRoot, "ui/assets");
 const uiReact = resolve(repoRoot, "ui/react/index.tsx");
 
 export default defineConfig({
@@ -21,7 +21,7 @@ export default defineConfig({
 	base: "./",
 	publicDir: resolve(dir, "public"),
 	plugins: [
-		...elementsAssetsVitePlugin(elementsAssetsRoot),
+		...uiAssetsVitePlugin(uiAssetsRoot),
 		tailwindcss(),
 		react(),
 		playgroundIframeEmbedHeadersPlugin(),
