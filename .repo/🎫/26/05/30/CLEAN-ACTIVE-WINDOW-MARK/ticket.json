@@ -1,9 +1,9 @@
 {
   "title": "Clean Active Window Mark",
   "emoji": "✨",
-  "status": "open",
+  "status": "closed",
   "description": "Active window mark should be the same fine line as inactive chrome (1px border-element weight) but with primary (active-base) color instead of a thick ring-2 inset.",
-  "summary": "Multi-tab active chrome uses a stack-level CSS grid: tab bar subgrid places inactive tabs, active tab, gap, and controls in separate columns; stack body spans activeCol through controlsCol so border-active-base left edge aligns with the active tab and continues down (-mt-px) without breaking under sibling tabs.",
+  "summary": "Restored multi-tab split layout + stack CSS grid for continuous active left stroke. Inactive sibling tabs use z-20 (modeDockInactiveTabClass); active tab/chrome/gap/corner use z-10/z-0 so primary frame paints underneath. No cap-wide active border wrapping all tabs.",
   "goal": "🎯ui",
   "sessions": [
     "⚪e0a23a83609c4c48a0babe613be6892b",

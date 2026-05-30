@@ -1818,7 +1818,6 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     commitModelForDefinition,
     handleSnapshotChangeForPane,
     handleEngagementChangeForPane,
-    activeModelDefinitionId,
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
@@ -2064,6 +2063,26 @@ if (import.meta.vitest) {
       expect(calls).toEqual([
         { command: "engagementOption", args: { pane: "shape", optionId: "confirm" } },
         { command: "engagementSubmit", args: { pane: "energy", value: "box" } },
+      ]);
+    });
+  });
+
+  describe("buildCadPlayAppRuntime", () => {
+    it("focuses the pane model definition when the active window changes", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const calls: { command: string; args?: unknown }[] = [];
+      controller.setHostBridge({
+        getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
+        runHostCommand: (command, args) => calls.push({ command, args }),
+      });
+      const app = buildCadPlayAppRuntime(controller);
+      app.onActiveWindowChange?.(CAD_PLAY_ENERGY_WINDOW_ID);
+      expect(calls).toEqual([
+        {
+          command: "focusModelDefinition",
+          args: { modelDefinitionId: cadPlayModelDefinitionIdForPane("energy") },
+        },
       ]);
     });
   });

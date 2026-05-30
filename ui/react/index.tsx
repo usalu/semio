@@ -23214,7 +23214,7 @@ export { Ui };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { render, screen, fireEvent } = await import("@testing-library/react");
+  const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
 
   describe("Shell components", () => {
     it("Ui renders the active app body", () => {
@@ -23336,8 +23336,6 @@ if (import.meta.vitest) {
       expect(screen.queryByText("Alpha Body")).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.getAttribute("data-window-id")).toBe("b");
       expect(tabOrder()).toEqual(["a", "b"]);
-      expect(container.querySelector('[data-slot="mode-dock-tabs-before"]')?.querySelector('[data-window-id="a"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="mode-dock-tab-active-group"]')?.querySelector('[data-window-id="b"]')).toBeTruthy();
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
@@ -23517,6 +23515,20 @@ if (import.meta.vitest) {
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
       expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
+    });
+
+    it("Engagement focuses its input when active", async () => {
+      const { rerender } = render(<Engagement active={false} input={{ id: "engagement-input", placeholder: "Command" }} />);
+      const field = () => screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(document.activeElement).not.toBe(field());
+      rerender(<Engagement active input={{ id: "engagement-input", placeholder: "Command" }} />);
+      await waitFor(() => expect(document.activeElement).toBe(field()));
+      expect(field().tabIndex).toBe(0);
+    });
+
+    it("Engagement input is removed from tab order when inactive", () => {
+      render(<Engagement active={false} input={{ placeholder: "Command" }} />);
+      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).tabIndex).toBe(-1);
     });
 
     it("Window anchors engagement in a centered overlay", () => {

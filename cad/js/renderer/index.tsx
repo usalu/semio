@@ -5143,6 +5143,22 @@ if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
 
+  describe("replIsQueryTypingTarget", () => {
+    it("treats text inputs and engagement fields as typing targets", () => {
+      const input = document.createElement("input");
+      input.type = "text";
+      expect(replIsQueryTypingTarget(input)).toBe(true);
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      expect(replIsQueryTypingTarget(checkbox)).toBe(false);
+      const engagement = document.createElement("div");
+      engagement.setAttribute("data-slot", "engagement");
+      const nested = document.createElement("input");
+      engagement.append(nested);
+      expect(replIsQueryTypingTarget(nested)).toBe(true);
+    });
+  });
+
   describe("buildInteractionReplEngagement", () => {
     const baseInputs: InteractionReplEngagementInputs = {
       showEngagement: true,

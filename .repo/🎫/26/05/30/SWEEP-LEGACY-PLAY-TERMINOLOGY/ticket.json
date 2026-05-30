@@ -1,0 +1,10 @@
+{
+  "title": "Sweep Legacy Play Terminology",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Find and remove legacy terminology across the monorepo (elements play, spatial/r3f package names, @elements/* play hosts, renderer-r3f, dev:spatial, etc.). Align names with current folders: cad/js/renderer/play, puzzle/*/play, framework. Update puzzle and related packages. Run tests.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪7323c150777c45bc99e50328cce5a1ad"
+  ]
+}
