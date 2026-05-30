@@ -12,8 +12,8 @@ import { createPlaygroundPlayViteConfig } from "../../../ui/styling/vite-element
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../../..");
-const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
-const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
+const meshRoot = path.resolve(repoRoot, "semio/assets/semio/metabolism/representations");
+const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/mesh/placeholder.glb");
 const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = path.resolve(repoRoot, "node_modules/three");
 

@@ -68,7 +68,7 @@ export const TOPOLOGY_INDIRECT_CONNECT_GESTURE: TopologyConnectGestureKind = "in
 //#endregion 🔖TopologyPairedPolicy
 
 //#region 🔖TopologyModel
-export type TopologyPresentationMode = "flat" | "volume";
+export type TopologyPresentationMode = "2d" | "3d";
 
 export interface TopologyFlatAnchorAspect {
   readonly angle: number;
@@ -596,7 +596,7 @@ export const FIVE_D_VOLUME_CHROME_DEFAULTS: Pick<VolumeViewProps, "showLodGrid" 
   gridSnapEnabled: true,
 };
 
-/** @emoji 🖼️ Single topology editor (`flat` = @puzzle/2d board, `volume` = @puzzle/3d); pair via {@link TopologyStoreProvider}. */
+/** @emoji 🖼️ Single topology editor (`2d` = @puzzle/2d board, `3d` = @puzzle/3d); pair via {@link TopologyStoreProvider}. */
 export interface FiveDProps {
   readonly mode: TopologyPresentationMode;
   readonly instanceId: string;
@@ -702,7 +702,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
   const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, ...flatRest } = flatExtra;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="flat" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="2d" data-five-d-instance={props.instanceId}>
       <BoardCanvas
         camera={flatRest.camera ?? camera}
         className={["min-h-0 flex-1", props.className, flatRest.className].filter(Boolean).join(" ") || undefined}
@@ -730,7 +730,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
           }
           const prev = store.getSnapshot().connectSession;
           store.setConnectSession({
-            origin: "flat",
+            origin: "2d",
             sourceAnchor: p.source,
             endX: prev?.endX ?? 0,
             endY: prev?.endY ?? 0,
@@ -747,7 +747,7 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
             return;
           }
           store.setConnectSession({
-            origin: prev?.origin ?? "flat",
+            origin: prev?.origin ?? "2d",
             sourceAnchor: p.source,
             endX: prev?.endX ?? 0,
             endY: prev?.endY ?? 0,
@@ -822,7 +822,7 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
         }
         const prev = store.getSnapshot().connectSession;
         store.setConnectSession({
-          origin: "volume",
+          origin: "3d",
           sourceAnchor: p.attracting,
           endX: prev?.endX ?? 0,
           endY: prev?.endY ?? 0,
@@ -841,7 +841,7 @@ const FiveDVolumeInner = reactHostPort.memo(function FiveDVolumeInner(props: Fiv
           return;
         }
         store.setConnectSession({
-          origin: prev?.origin ?? "volume",
+          origin: prev?.origin ?? "3d",
           sourceAnchor: p.attracting,
           endX: prev?.endX ?? 0,
           endY: prev?.endY ?? 0,
@@ -877,7 +877,7 @@ const FiveDVolume = reactHostPort.memo(function FiveDVolume(props: FiveDProps) {
   const snap = useTopologySnapshot();
   const volumeFixture = reactHostPort.useMemo(() => projectVolume(snap.model), [snap.model]);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="volume" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="3d" data-five-d-instance={props.instanceId}>
       <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
         <VolumePartStateProvider fixture={volumeFixture} onConnect={props.volume?.onConnect} onRelocate={props.volume?.onRelocate}>
           <FiveDVolumeInner {...props} />
@@ -887,9 +887,9 @@ const FiveDVolume = reactHostPort.memo(function FiveDVolume(props: FiveDProps) {
   );
 });
 
-/** @emoji 🖼️ Single topology editor surface (`flat` board WASM or `volume` R3F); share state via {@link TopologyStoreProvider}. */
+/** @emoji 🖼️ Single topology editor surface (`2d` board WASM or `3d` R3F); share state via {@link TopologyStoreProvider}. */
 export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
-  if (props.mode === "flat") return <FiveDFlat {...props} />;
+  if (props.mode === "2d") return <FiveDFlat {...props} />;
   return <FiveDVolume {...props} />;
 });
 //#endregion 🔖FiveD

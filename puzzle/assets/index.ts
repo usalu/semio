@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧩 `@puzzle/assets` — builtin puzzle play/story JSON (board, scene, topology); not imported from library packages. */
+/** @emoji 🧩 `@puzzle/assets` — builtin puzzle play/story JSON (board, scene, topology); test-only JSON belongs elsewhere. */
 // #endregion 🧲Header
 
 export { default as NakaginCapsuleTowerBoardJson } from "./nakagin-capsule-tower.board.json";

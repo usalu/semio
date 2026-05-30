@@ -1261,7 +1261,7 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
   }
   return (
     <FiveD
-      mode="flat"
+      mode="2d"
       instanceId="play-board"
       flat={{
         camera: snapshot.boardCamera,
@@ -1286,7 +1286,7 @@ function TopologyVolumeSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
   }, [meshUrls]);
   return (
     <FiveD
-      mode="volume"
+      mode="3d"
       instanceId="play-volume"
       relocateMode={snapshot.relocateMode}
       volume={{

@@ -580,12 +580,12 @@ import {
 } from "@framework/playground/renderer/react/shell";
 import { ListTree, Shapes } from "lucide-react";
 import { defaultConstructRunner } from "@cad/js/query";
-import geometryNakagin from "../../../assets/builtin/geometry.json";
-import geometryLoom from "../../../assets/builtin/geometry-loom.json";
-import geometryRoutes from "../../../assets/builtin/geometry-routes.json";
-import geometrySmallBuilding from "../../../assets/builtin/small-building.model.json";
-import geometryTallBuilding from "../../../assets/builtin/tall-building.model.json";
-import geometryLargeBuilding from "../../../assets/builtin/large-building.model.json";
+import geometryNakagin from "../../../assets/play/geometry.json";
+import geometryLoom from "../../../assets/play/geometry-loom.json";
+import geometryRoutes from "../../../assets/play/geometry-routes.json";
+import geometrySmallBuilding from "../../../assets/play/small-building.model.json";
+import geometryTallBuilding from "../../../assets/play/tall-building.model.json";
+import geometryLargeBuilding from "../../../assets/play/large-building.model.json";
 import { BrepjsKernel } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {

@@ -3,7 +3,7 @@ technology: puzzle
 bundle:
   name: assets
   emoji: 🧩
-  description: Builtin puzzle fixture JSON for play, playground, and storybook.
+  description: Builtin puzzle JSON for play, playground, and storybook.
   kind: assets
 ---
 

@@ -25,7 +25,7 @@ import {
 } from "@semio/ui";
 import * as React from "react";
 
-import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/assets";
+import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio/fixtures";
 
 import { openSessionInMemory, type Store as JsStore } from "@semio/js";
 // #endregion 🔌Adapters

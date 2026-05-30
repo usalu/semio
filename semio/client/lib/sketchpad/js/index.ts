@@ -14633,7 +14633,7 @@ const KitDiagramInner: FC = () => {
     <div ref={boardWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => boardWrapper.current?.focus()}>
       <TopologyStoreProvider store={kitTopologyStore}>
         <FiveD
-          mode="flat"
+          mode="2d"
           instanceId="kit-flat"
           lockedPartIds={lockedBoardNodeIds}
           flat={{
@@ -34906,7 +34906,7 @@ const DesignTopologyBoardWindow = memo(() => {
   const topology = useDesignTopologyAdapter();
   return (
     <FiveD
-      mode="flat"
+      mode="2d"
       instanceId="design-flat"
       flat={{
         camera: topology.boardCamera,
@@ -35042,7 +35042,7 @@ const DesignTopologySceneWindow = memo(() => {
         </Button>
       </div>
       <FiveD
-        mode="volume"
+        mode="3d"
         instanceId="design-volume"
         relocateMode={topology.relocateMode}
         volume={{

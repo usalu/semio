@@ -24,7 +24,7 @@ import {
 } from "@semio/algorithms";
 
 import { MetabolismKit as metabolismKit } from "@semio/assets";
-import { DragDesign, DragOffset, DragPieces } from "@semio/assets";
+import { DragDesign, DragOffset, DragPieces } from "@semio/fixtures";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };
 const defaultPieceIds = pieceIdsFromWire(DragPieces as { pieces?: { id?: string }[] });

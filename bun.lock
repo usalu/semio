@@ -703,6 +703,10 @@
         "vitest": "^4.0.17",
       },
     },
+    "semio/fixtures": {
+      "name": "@semio/fixtures",
+      "version": "1.0.0",
+    },
     "ui/react": {
       "name": "@ui/react",
       "version": "0.1.0",
@@ -1785,6 +1789,8 @@
     "@semio/docs": ["@semio/docs@workspace:semio/client/lib/sketchpad/docs"],
 
     "@semio/engine": ["@semio/engine@workspace:semio/client/bin/engine"],
+
+    "@semio/fixtures": ["@semio/fixtures@workspace:semio/fixtures"],
 
     "@semio/go": ["@semio/go@workspace:semio/client/lib/go"],
 

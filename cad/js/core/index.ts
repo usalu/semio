@@ -5469,9 +5469,9 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 const __cadInteractionE2EFixtureModules = import.meta.vitest
   ? await Promise.all([
-      import("../../assets/builtin/geometry-loom.json"),
-      import("../../assets/builtin/geometry-routes.json"),
-      import("../../assets/builtin/small-building.model.json"),
+      import("../../assets/play/geometry-loom.json"),
+      import("../../assets/play/geometry-routes.json"),
+      import("../../assets/play/small-building.model.json"),
     ])
   : null;
 

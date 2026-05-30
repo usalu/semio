@@ -30,6 +30,7 @@
     "repo/server/*",
     "semio/assets",
     "semio/assets/*",
+    "semio/fixtures",
     "semio/client/bin/*",
     "semio/client/lib/*",
     "semio/client/lib/net/*",
