@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 3d Mesh Serving Fix",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Fix /meshes/*.glb 404 in puzzle 3d play and sketchpad: wrong meshRoot path and missing middleware in sketchpad/5d play.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪e7c36e9f0cee4ad58415f2bebe733a89"
+  ]
+}

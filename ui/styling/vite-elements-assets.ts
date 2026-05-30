@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { cpSync, createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind } from "./playground-embed-url.ts";
@@ -75,6 +76,82 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
     }
     createReadStream(filePath).pipe(res);
   };
+}
+
+/** @emoji 📂 Dev metabolism GLB roots for puzzle 3d `/meshes/*` URLs. */
+export function puzzle3dMetabolismMeshRoots(repoRoot: string): { readonly meshRoot: string; readonly placeholderMesh: string } {
+  return {
+    meshRoot: resolve(repoRoot, "semio/fixtures/kit/dev/metabolism/representations"),
+    placeholderMesh: resolve(repoRoot, "semio/assets/mesh/placeholder.glb"),
+  };
+}
+
+/** @emoji 🌐 Connect middleware: serve metabolism GLBs at `/meshes/<name>.glb`. */
+export function createPuzzle3dMeshesMiddleware(meshRoot: string, placeholderMesh: string): Connect.NextHandleFunction {
+  const meshRootResolved = resolve(meshRoot);
+  const placeholderResolved = resolve(placeholderMesh);
+  return (req, res, next) => {
+    if (!req.url?.startsWith("/meshes/")) {
+      next();
+      return;
+    }
+    const rawName = decodeURIComponent(req.url.slice("/meshes/".length).split(/[?#]/, 1)[0] ?? "");
+    const filePath = rawName === "placeholder.glb" ? placeholderResolved : resolve(meshRootResolved, rawName);
+    if (rawName !== "placeholder.glb") {
+      const relToRoot = relative(meshRootResolved, filePath);
+      if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+        next();
+        return;
+      }
+    } else if (filePath !== placeholderResolved) {
+      next();
+      return;
+    }
+    if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    res.setHeader("Content-Type", "model/gltf-binary");
+    createReadStream(filePath).pipe(res);
+  };
+}
+
+/** @emoji 🧊 Vite: serve and copy metabolism meshes at `/meshes/*` for puzzle 3d play and sketchpad. */
+export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
+  const { meshRoot, placeholderMesh } = puzzle3dMetabolismMeshRoots(repoRoot);
+  const serveMeshes = createPuzzle3dMeshesMiddleware(meshRoot, placeholderMesh);
+  let viteRoot = process.cwd();
+  return [
+    {
+      name: "puzzle-3d-meshes-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveMeshes);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveMeshes);
+      },
+    },
+    {
+      name: "puzzle-3d-meshes-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        if (!existsSync(meshRoot)) {
+          return;
+        }
+        const dest = resolve(viteRoot, "dist", "meshes");
+        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        cpSync(meshRoot, dest, { recursive: true });
+        if (existsSync(placeholderMesh)) {
+          cpSync(placeholderMesh, resolve(dest, "placeholder.glb"));
+        }
+      },
+    },
+  ];
 }
 
 /** @emoji 🌐 Vite: serve and copy `ui/assets` at `/assets/*` for palette fonts and cursors. */
@@ -256,7 +333,15 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
     define: playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : undefined,
-    plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react(), playgroundIframeEmbedHeadersPlugin(), playgroundRendererShellEntryPlugin(rendererIndex), ...extraPlugins],
+    plugins: [
+      ...uiAssetsVitePlugin(uiAssetsRoot),
+      ...(playEntryKind === "3d" || playEntryKind === "5d" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
+      tailwindcss(),
+      react(),
+      playgroundIframeEmbedHeadersPlugin(),
+      playgroundRendererShellEntryPlugin(rendererIndex),
+      ...extraPlugins,
+    ],
     build: playgroundStaticSiteBuildOptions(build),
     server: {
       fs: { allow: [repoRoot] },
@@ -273,6 +358,15 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+  const repoRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
+
+  describe("puzzle3dMetabolismMeshRoots", () => {
+    it("points at dev metabolism representations and shared placeholder", () => {
+      const { meshRoot, placeholderMesh } = puzzle3dMetabolismMeshRoots(repoRoot);
+      expect(existsSync(resolve(meshRoot, "capsule_J.glb"))).toBe(true);
+      expect(existsSync(placeholderMesh)).toBe(true);
+    });
+  });
 
   describe("stripPlaygroundRendererForPuzzleKind", () => {
     const sample = [

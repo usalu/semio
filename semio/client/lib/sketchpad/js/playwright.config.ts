@@ -30,10 +30,12 @@ process.env.NODE_OPTIONS = prevNodeOpts.includes("pw-loader.mjs")
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
-const repoRoot = resolve(__dirname, "..", "..");
-const crossEnvBinCandidates = [resolve(repoRoot, "node_modules/cross-env/dist/bin/cross-env.js"), resolve(repoRoot, "node_modules/cross-env/src/bin/cross-env.js")];
-const crossEnvBin = crossEnvBinCandidates.find((candidate) => existsSync(candidate)) ?? crossEnvBinCandidates[crossEnvBinCandidates.length - 1];
-const viteBin = resolve(repoRoot, "node_modules/vite/bin/vite.js");
+const repoRoot = resolve(__dirname, "../../../../../");
+const viteBinCandidates = [
+  resolve(__dirname, "node_modules/vite/bin/vite.js"),
+  resolve(repoRoot, "node_modules/vite/bin/vite.js"),
+];
+const viteBin = viteBinCandidates.find((candidate) => existsSync(candidate)) ?? viteBinCandidates[0]!;
 const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 
 export default defineConfig({
@@ -63,7 +65,8 @@ export default defineConfig({
 
   webServer: {
     cwd: __dirname,
-    command: `node "${crossEnvBin}" NODE_OPTIONS= node "${viteBin}" preview --port 4181 --host ${previewHost}`,
+    command: `node "${viteBin}" preview --port 4181 --host ${previewHost}`,
+    env: { NODE_OPTIONS: "" },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

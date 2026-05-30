@@ -25,7 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -240,6 +240,7 @@ export default defineConfig(async ({ mode }) => {
     },
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
+      ...puzzle3dMeshesVitePlugin(workspaceRoot),
       stripSketchpadEmbeddedE2ePlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),

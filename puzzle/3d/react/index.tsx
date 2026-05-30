@@ -2704,6 +2704,39 @@ const VORTEX_SCREEN_PICK_RADIUS_PX = 18;
 /** @emoji 🌀 World depth a vortex may sit behind the clicked surface and still be pickable (covers vortices embedded in their own object), beyond which it is treated as occluded by foreground geometry. */
 const VORTEX_PICK_DEPTH_TOLERANCE = 6;
 
+/** @emoji 🌀 Screen-projected vortex candidate for {@link pickNearestScreenVortex}. */
+interface ScreenVortexCandidate {
+  readonly fullId: string;
+  readonly objectId: string;
+  readonly sx: number;
+  readonly sy: number;
+  readonly dist: number;
+}
+
+/**
+ * 🌀 Picks the vortex closest to the cursor in screen space within {@link VORTEX_SCREEN_PICK_RADIUS_PX},
+ * skipping ones occluded by foreground geometry beyond {@link VORTEX_PICK_DEPTH_TOLERANCE} of the clicked surface.
+ */
+function pickNearestScreenVortex(args: {
+  readonly cursorX: number;
+  readonly cursorY: number;
+  readonly surfaceDist: number;
+  readonly candidates: readonly ScreenVortexCandidate[];
+  readonly radiusPx?: number;
+  readonly depthTolerance?: number;
+}): ScreenVortexCandidate | null {
+  const radiusPx = args.radiusPx ?? VORTEX_SCREEN_PICK_RADIUS_PX;
+  const depthTolerance = args.depthTolerance ?? VORTEX_PICK_DEPTH_TOLERANCE;
+  const within = args.candidates
+    .map((c) => ({ c, dpx: Math.hypot(c.sx - args.cursorX, c.sy - args.cursorY) }))
+    .filter((e) => e.dpx <= radiusPx)
+    .sort((a, b) => a.dpx - b.dpx);
+  for (const { c } of within) {
+    if (c.dist <= args.surfaceDist + depthTolerance) return c;
+  }
+  return null;
+}
+
 /**
  * 🌀 Centralized screen-space hover/selection for vortices.
  *
@@ -2749,7 +2782,7 @@ function VortexScreenPick(): null {
     const ndc = new Vector2();
     const projected = new Vector3();
 
-    const pickAt = (clientX: number, clientY: number): VortexScreenTarget | null => {
+    const pickAt = (clientX: number, clientY: number): ScreenVortexCandidate | null => {
       const st = stateRef.current;
       if (st.busy) return null;
       const rect = dom.getBoundingClientRect();
@@ -2757,28 +2790,23 @@ function VortexScreenPick(): null {
       const cursorX = clientX - rect.left;
       const cursorY = clientY - rect.top;
       const camPos = (st.camera as unknown as { position: Vector3 }).position;
-      const candidates: { target: VortexScreenTarget; dpx: number; dist: number }[] = [];
+      const candidates: ScreenVortexCandidate[] = [];
       for (const target of st.collectVortexTargets()) {
         if (st.blockedVortexFullIds.has(target.fullId)) continue;
         projected.copy(target.world).project(st.camera as never);
         if (projected.z > 1) continue;
         const sx = ((projected.x + 1) / 2) * rect.width;
         const sy = ((1 - projected.y) / 2) * rect.height;
-        const dpx = Math.hypot(sx - cursorX, sy - cursorY);
-        if (dpx > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
-        candidates.push({ target, dpx, dist: camPos.distanceTo(target.world) });
+        if (Math.hypot(sx - cursorX, sy - cursorY) > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
+        candidates.push({ fullId: target.fullId, objectId: target.objectId, sx, sy, dist: camPos.distanceTo(target.world) });
       }
       if (candidates.length === 0) return null;
-      candidates.sort((a, b) => a.dpx - b.dpx);
       ndc.x = (cursorX / rect.width) * 2 - 1;
       ndc.y = -(cursorY / rect.height) * 2 + 1;
       raycaster.setFromCamera(ndc, st.camera);
       const objHits = raycaster.intersectObjects(st.collectObjectGroups(), true);
       const surfaceDist = objHits.length > 0 ? objHits[0]!.distance : Infinity;
-      for (const c of candidates) {
-        if (c.dist <= surfaceDist + VORTEX_PICK_DEPTH_TOLERANCE) return c.target;
-      }
-      return null;
+      return pickNearestScreenVortex({ cursorX, cursorY, surfaceDist, candidates });
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -4995,6 +5023,40 @@ if (import.meta.vitest) {
     it("draws vortices at detail bands", () => {
       expect(lodVortexPrimaryVisible(100)).toBe(true);
       expect(lodVortexPrimaryVisible(201)).toBe(false);
+    });
+  });
+  describe("pickNearestScreenVortex", () => {
+    const c = (fullId: string, sx: number, sy: number, dist: number): ScreenVortexCandidate => ({ fullId, objectId: fullId.split(":")[0]!, sx, sy, dist });
+    it("returns null when no candidate sits within the screen radius", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("a:link", 200, 200, 41)] });
+      expect(picked).toBe(null);
+    });
+    it("prefers the candidate closest to the cursor in screen space", () => {
+      const picked = pickNearestScreenVortex({
+        cursorX: 100,
+        cursorY: 100,
+        surfaceDist: 40,
+        candidates: [c("far:link", 110, 110, 41), c("near:link", 102, 100, 41)],
+      });
+      expect(picked?.fullId).toBe("near:link");
+    });
+    it("selects a vortex embedded just behind the clicked surface (within depth tolerance)", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("embedded:link", 100, 100, 42)], depthTolerance: 6 });
+      expect(picked?.fullId).toBe("embedded:link");
+    });
+    it("skips a vortex occluded by foreground geometry beyond the depth tolerance", () => {
+      const picked = pickNearestScreenVortex({ cursorX: 100, cursorY: 100, surfaceDist: 40, candidates: [c("behind:link", 100, 100, 60)], depthTolerance: 6 });
+      expect(picked).toBe(null);
+    });
+    it("falls through to the next nearest candidate when the closest is occluded", () => {
+      const picked = pickNearestScreenVortex({
+        cursorX: 100,
+        cursorY: 100,
+        surfaceDist: 40,
+        candidates: [c("occluded:link", 101, 100, 80), c("visible:link", 105, 100, 41)],
+        depthTolerance: 6,
+      });
+      expect(picked?.fullId).toBe("visible:link");
     });
   });
   describe("lodVortexPickProxy", () => {

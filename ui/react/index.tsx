@@ -15514,13 +15514,21 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
 
 function ResizableHandle({
   className,
+  orientation = "horizontal",
   onMouseDown: externalOnMouseDown,
   onMouseEnter: externalOnMouseEnter,
   onMouseLeave: externalOnMouseLeave,
+  style,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Separator> & { onMouseDown?: React.MouseEventHandler<HTMLDivElement>; onMouseEnter?: React.MouseEventHandler<HTMLDivElement>; onMouseLeave?: React.MouseEventHandler<HTMLDivElement> }) {
+}: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
+  orientation?: "horizontal" | "vertical";
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+}) {
   const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const [isDragging, setIsDragging] = reactHostPort.useState(false);
+  const horizontal = orientation === "horizontal";
 
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     setIsDragging(true);
@@ -15550,15 +15558,22 @@ function ResizableHandle({
   return (
     <ResizablePrimitive.Separator
       data-slot="resizable-handle"
+      data-resize-orientation={orientation}
       className={cn(
-        "relative flex w-px items-center justify-center",
-        "border-r",
-        isDragging || isHovered ? "bg-accent border-accent" : "hover:border-accent",
-        "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize",
+        "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
+        horizontal ? "h-full min-h-0 w-double" : "w-full min-w-0 h-double",
+        isDragging || isHovered ? "bg-accent/25" : "hover:bg-accent/25",
+        horizontal
+          ? "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize"
+          : "before:absolute before:inset-x-0 before:-top-2 before:h-tiny before:cursor-ns-resize",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-single after:-translate-x-1/2",
+        "after:hidden",
         className,
       )}
+      style={{
+        ...(horizontal ? { width: "var(--spacing-double)" } : { height: "var(--spacing-double)" }),
+        ...style,
+      }}
       onMouseDown={handleMouseDown as any}
       onMouseEnter={handleMouseEnter as any}
       onMouseLeave={handleMouseLeave as any}
@@ -22179,7 +22194,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
   return (
     <LevelProvider level="canvas">
-      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-single">
+      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-double">
         {children}
       </div>
     </LevelProvider>
@@ -22190,14 +22205,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ c
  * Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-double">{children}</div>;
 };
 
 /**
  * Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-double">{children}</div>;
 };
 
 // #region 🧭Mode
@@ -22219,12 +22234,8 @@ export interface ModeProps {
 
 //#region 🧭ModeCanvasSpacing
 
-/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same spacing step. */
+/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-double} step. */
 const MODE_CANVAS_INSET_CLASS = "p-double";
-
-function modeCanvasSplitterClass(orientation: "horizontal" | "vertical"): string {
-  return orientation === "horizontal" ? "h-full min-h-0 w-double shrink-0" : "w-full min-h-0 h-double shrink-0";
-}
 
 //#endregion 🧭ModeCanvasSpacing
 
@@ -22963,15 +22974,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
     if (index > 0)
-      panels.push(
-        <ResizableHandle
-          key={`sep-${childPath}`}
-          className={cn(
-            "relative border-0 bg-transparent after:hidden hover:bg-accent/25",
-            modeCanvasSplitterClass(orientation),
-          )}
-        />,
-      );
+      panels.push(<ResizableHandle key={`sep-${childPath}`} orientation={orientation} />);
     panels.push(
       <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
         {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
@@ -23656,6 +23659,38 @@ if (import.meta.vitest) {
       expect(horizontalHandle).toBeTruthy();
       expect(horizontalHandle!.className).toContain("w-double");
       expect(horizontalHandle!.className).not.toContain("data-[panel-group-direction=horizontal]:w-double");
+      expect((horizontalHandle as HTMLElement).style.width).toBe("var(--spacing-double)");
+    });
+
+    it("Mode uses the same gutter for vertical splits as canvas inset", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "top", title: "Top", children: <div>Top Pane</div> },
+              { id: "bottom", title: "Bottom", children: <div>Bottom Pane</div> },
+            ]}
+            layout={{
+              kind: "column",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "top" }], activeId: "top" },
+                { kind: "stack", children: [{ kind: "window", id: "bottom" }], activeId: "bottom" },
+              ],
+            }}
+            activeWindowId="top"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const modeBody = container.querySelector('[data-slot="mode-body"]');
+      expect(modeBody?.className).toContain(MODE_CANVAS_INSET_CLASS);
+      const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+      expect(panelGroup?.getAttribute("data-panel-group-direction")).toBe("vertical");
+      const verticalHandle = container.querySelector('[data-slot="resizable-handle"]') as HTMLElement | null;
+      expect(verticalHandle).toBeTruthy();
+      expect(verticalHandle!.getAttribute("data-resize-orientation")).toBe("vertical");
+      expect(verticalHandle!.className).toContain("h-double");
+      expect(verticalHandle!.style.height).toBe("var(--spacing-double)");
     });
 
     it("Mode tab stack shows only the active window body", () => {

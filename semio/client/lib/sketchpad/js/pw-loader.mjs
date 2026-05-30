@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve as resolvePath } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(resolve(__dirname, "package.json"));
+const require = createRequire(resolvePath(__dirname, "package.json"));
 const esbuild = require("esbuild");
 
 const runEmbeddedTests = process.env.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1";
