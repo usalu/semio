@@ -49,6 +49,12 @@ import {
 	Store,
 	Platform,
 	resolveInitialPanelVisibility,
+	LEFT_PANEL_KINDS,
+	RIGHT_PANEL_KINDS,
+	PANEL_KINDS,
+	panelSide,
+	type PanelKind,
+	type PlatformBreadcrumbItem,
 	AppRuntime,
 	ModeRuntime,
 	resolveCommandPaletteItems,
@@ -131,6 +137,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
 	BasicChatPanel,
+	Breadcrumb,
+	type BreadcrumbItemData,
 	Button,
 	ButtonCycle,
 	ButtonGroup,
@@ -1304,7 +1312,7 @@ export interface PlatformViewProps {
 	resolvedWindowKindsOverride?: UIWindowKindDefinition[];
 	slotToolbar?: React.ReactNode;
 	extraFooterItems?: ChromeFooterRow[];
-	augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
+	augmentPanelTabs?: Partial<Record<PanelKind, SidePanelTabConfig[]>>;
 	initialPanelVisibility?: UIPanelVisibility;
 }
 
@@ -1403,8 +1411,18 @@ export function useUIHistory(initialUri = "/"): {
 			return { entries: [...newEntries, { uri: targetUri }], index: newEntries.length };
 		});
 	}, []);
+	const syncUri = reactHostPort.useCallback((targetUri: string) => {
+		setHistory((prev) => {
+			const existingIndex = prev.entries.findIndex((entry) => entry.uri === targetUri);
+			if (existingIndex >= 0) {
+				return { ...prev, index: existingIndex };
+			}
+			const newEntries = prev.entries.slice(0, prev.index + 1);
+			return { entries: [...newEntries, { uri: targetUri }], index: newEntries.length };
+		});
+	}, []);
 
-	return { history, uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate };
+	return { history, uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate, syncUri };
 }
 
 //#region ­ƒº¬Tests
@@ -2307,126 +2325,70 @@ const ProductFindItemsSync: React.FC<{
 	}, [findItems, onFindSelect, resolvedFindItems, setFindItems, setOnFindItem]);
 	return null;
 };
-const APP_WORKBENCH_TAB_ID = "workbench";
-const APP_DETAILS_TAB_ID = "details";
-const APP_OPTIONS_TAB_ID = "options";
-const APP_CHAT_TAB_ID = "chat";
-type AppPanelKind = "workbench" | "details" | "options" | "chat";
-
-function hasAppPanelValue(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
-  return true;
+function panelKindToggleIcon(kind: PanelKind, tabs: SidePanelTabConfig[]): React.ReactNode {
+	const firstIcon = tabs[0]?.icon;
+	if (firstIcon) return React.createElement(firstIcon as React.ComponentType<{ size?: number }>, { size: 16 });
+	switch (kind) {
+		case "windows":
+			return <LayoutGridIcon size={16} />;
+		case "overview":
+			return <FolderOpenIcon size={16} />;
+		case "workbench":
+			return <Folder size={16} />;
+		case "details":
+			return <Info size={16} />;
+		case "settings":
+			return <Settings2 size={16} />;
+		case "chat":
+			return <MessageSquare size={16} />;
+	}
 }
 
-const AppPanelStatePreview: React.FC<{
-  emptyMessage: string;
-  testId: string;
-  value: unknown;
-}> = ({ emptyMessage, testId, value }) => {
-  if (!hasAppPanelValue(value)) {
-    return <div data-testid={`${testId}.empty`} className="text-sm text-muted-foreground">{emptyMessage}</div>;
-  }
-
-  return (
-    <pre data-testid={testId} className="text-xs leading-relaxed whitespace-pre-wrap break-words rounded-[3px] border bg-window p-small overflow-x-auto">
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
-};
-
-const AppSummaryPanel: React.FC<{
-  activeModeLabel?: string | null;
-  app: ResolvedAppState;
-}> = ({ activeModeLabel, app }) => {
-  return (
-    <div data-testid="app-panel.workbench" className="flex min-h-0 flex-col gap-small text-sm">
-      <div>
-        <div className="font-medium">{app.label}</div>
-        <div className="text-muted-foreground">{activeModeLabel ? `Mode: ${activeModeLabel}` : "Single-mode app"}</div>
-      </div>
-      <div className="grid gap-single text-muted-foreground">
-        <div>{`Windows: ${app.windowKinds.length}`}</div>
-        <div>{`Tools: ${countAppTools(app.tools)}`}</div>
-        <div>{`Left tabs: ${app.leftPanelTabs?.length ?? 0}`}</div>
-        <div>{`Right tabs: ${app.rightPanelTabs?.length ?? 0}`}</div>
-      </div>
-    </div>
-  );
-};
-
-function createDefaultAppHostTabs(app: ResolvedAppState, activeModeLabel?: string | null): SidePanelTabConfig[] {
-  return [
-    staticSidePanelTabDefinition({
-      id: APP_WORKBENCH_TAB_ID,
-      icon: Folder,
-      order: 0,
-      tree: staticTreePanelDefinition({
-        sections: [{ id: `${APP_WORKBENCH_TAB_ID}.summary`, content: <AppSummaryPanel activeModeLabel={activeModeLabel} app={app} /> }],
-      }),
-    }).resolveTab(),
-  ];
+function resolveAppPanelTabsByKind(
+	app: ResolvedAppState,
+	bus: CommandBus,
+	augment?: Partial<Record<PanelKind, SidePanelTabConfig[]>>,
+): Record<PanelKind, SidePanelTabConfig[]> {
+	const grouped = new Map<PanelKind, SideTabSpec[]>();
+	for (const kind of PANEL_KINDS) grouped.set(kind, []);
+	for (const tab of app.panelTabs) {
+		grouped.get(tab.panel)?.push(tab);
+	}
+	const result = {} as Record<PanelKind, SidePanelTabConfig[]>;
+	for (const kind of PANEL_KINDS) {
+		const resolved = sideTabsToPanelTabs(grouped.get(kind) ?? [], bus);
+		result[kind] = mergeConfigEntries(resolved, augment?.[kind]) ?? resolved;
+	}
+	return result;
 }
 
-function createDefaultAppDetailsTabs(app: ResolvedAppState): SidePanelTabConfig[] {
-  return [
-    staticSidePanelTabDefinition({
-      id: APP_DETAILS_TAB_ID,
-      icon: Info,
-      order: 0,
-      tree: staticTreePanelDefinition({
-        sections: [
-          {
-            id: `${APP_DETAILS_TAB_ID}.state`,
-            content: <AppPanelStatePreview emptyMessage="No detail state is available for this app." testId="app-panel.details" value={{ selection: app.selection ?? {}, hover: app.hover ?? {} }} />,
-          },
-        ],
-      }),
-    }).resolveTab(),
-  ];
+function uriToBreadcrumbItems(uri: string, onNavigate: (href: string) => void): BreadcrumbItemData[] {
+	if (uri === "/" || uri === "") {
+		return [{ id: "breadcrumb.root", content: "Home", onNavigate }];
+	}
+	const segments = uri.split("/").filter(Boolean);
+	const items: BreadcrumbItemData[] = [{ id: "breadcrumb.root", content: "Home", onNavigate: () => onNavigate("/") }];
+	let path = "";
+	for (const segment of segments) {
+		path += `/${segment}`;
+		const href = path;
+		items.push({ id: `breadcrumb.${href}`, content: segment, onNavigate: () => onNavigate(href) });
+	}
+	return items;
 }
 
-function createDefaultAppOptionsTabs(app: ResolvedAppState): SidePanelTabConfig[] {
-  return [
-    staticSidePanelTabDefinition({
-      id: APP_OPTIONS_TAB_ID,
-      icon: Settings2,
-      order: 0,
-      tree: staticTreePanelDefinition({
-        sections: [{ id: `${APP_OPTIONS_TAB_ID}.state`, content: <AppPanelStatePreview emptyMessage="No options are available for this app." testId="app-panel.options" value={app.options ?? {}} /> }],
-      }),
-    }).resolveTab(),
-  ];
+function platformBreadcrumbToUiItems(items: readonly PlatformBreadcrumbItem[], onNavigate: (href: string) => void): BreadcrumbItemData[] {
+	return items.map((item, index) => ({
+		id: item.id ?? `breadcrumb.${index}`,
+		content: item.content as React.ReactNode,
+		options: item.options,
+		onNavigate: item.onNavigate ?? onNavigate,
+	}));
 }
 
-function createDefaultAppChatTabs(app: ResolvedAppState): SidePanelTabConfig[] {
-  return [
-    staticSidePanelTabDefinition({
-      id: APP_CHAT_TAB_ID,
-      icon: MessageSquare,
-      order: 0,
-      tree: staticTreePanelDefinition({
-        sections: [{ id: `${APP_CHAT_TAB_ID}.content`, content: <BasicChatPanel id={`app.chat.${app.id}`} title={app.label} /> }],
-      }),
-    }).resolveTab(),
-  ];
-}
-
-function withDefaultAppPanelTabs(app: ResolvedAppState, bus: CommandBus, activeModeLabel?: string | null): Record<AppPanelKind, SidePanelTabConfig[]> {
-	const defaultHostTabs = createDefaultAppHostTabs(app, activeModeLabel);
-	const defaultDetailsTabs = createDefaultAppDetailsTabs(app);
-	const defaultOptionsTabs = createDefaultAppOptionsTabs(app);
-	const defaultChatTabs = createDefaultAppChatTabs(app);
-	const shellLeft = sideTabsToPanelTabs(app.leftTabs, bus);
-	const shellRight = sideTabsToPanelTabs(app.rightTabs, bus);
-	return {
-		workbench: mergeConfigEntries(defaultHostTabs, shellLeft.length ? shellLeft : undefined) ?? defaultHostTabs,
-		details: mergeConfigEntries(defaultDetailsTabs, shellRight.length ? shellRight : undefined) ?? defaultDetailsTabs,
-		options: defaultOptionsTabs,
-		chat: defaultChatTabs,
-	};
+function readBrowserUri(): string {
+	if (typeof window === "undefined") return "/";
+	return `${window.location.pathname}${window.location.search}`;
 }
 
 /**
@@ -2681,6 +2643,62 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 
 //#endregion 🪨ProductShell
 
+/** @emoji 🧭 Wraps {@link PlatformView} with browser History API sync and {@link useUIHistory}. */
+const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavigate" | "canGoBack" | "onGoBack" | "canGoForward" | "onGoForward" | "canGoUp" | "onGoUp">> = ({
+	platform,
+	...rest
+}) => {
+	const { uri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate, syncUri } = useUIHistory(readBrowserUri());
+
+	reactHostPort.useEffect(() => {
+		platform.applyUri?.(uri);
+		platform.uri = uri;
+		platform.canGoBack = canGoBack;
+		platform.canGoForward = canGoForward;
+		platform.canGoUp = canGoUp;
+		if (typeof window !== "undefined") {
+			const current = `${window.location.pathname}${window.location.search}`;
+			if (current !== uri) {
+				window.history.pushState(null, "", uri);
+			}
+		}
+		platform.notify();
+	}, [uri, canGoBack, canGoForward, canGoUp, platform]);
+
+	reactHostPort.useEffect(() => {
+		if (typeof window === "undefined") return;
+		const onPopState = () => {
+			const browserUri = readBrowserUri();
+			syncUri(browserUri);
+		};
+		window.addEventListener("popstate", onPopState);
+		return () => window.removeEventListener("popstate", onPopState);
+	}, [syncUri]);
+
+	const handleNavigate = reactHostPort.useCallback(
+		(targetUri: string) => {
+			navigate(targetUri);
+			platform.onNavigate?.(targetUri);
+		},
+		[navigate, platform],
+	);
+
+	return (
+		<PlatformView
+			platform={platform}
+			uri={uri}
+			onNavigate={handleNavigate}
+			canGoBack={canGoBack}
+			onGoBack={goBack}
+			canGoForward={canGoForward}
+			onGoForward={goForward}
+			canGoUp={canGoUp}
+			onGoUp={goUp}
+			{...rest}
+		/>
+	);
+};
+
 /**
  * Domain-neutral composite component providing a full application shell.
  * The UI only has apps. An app has window kinds (rendered with golden-layout)
@@ -2754,8 +2772,9 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		[platform],
 	);
 	const [mobilePanelVisible, setMobilePanelVisible] = reactHostPort.useState(false);
-	const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = reactHostPort.useState<Exclude<AppPanelKind, "workbench">>("details");
-	const [activeMobilePanelKind, setActiveMobilePanelKind] = reactHostPort.useState<AppPanelKind>("workbench");
+	const [activeDesktopLeftPanelKind, setActiveDesktopLeftPanelKind] = reactHostPort.useState<PanelKind>("workbench");
+	const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = reactHostPort.useState<PanelKind>("details");
+	const [activeMobilePanelKind, setActiveMobilePanelKind] = reactHostPort.useState<PanelKind>("workbench");
 	const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = reactHostPort.useState<string | undefined>(undefined);
 	const [searchOpen, setSearchOpen] = reactHostPort.useState(false);
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
@@ -2764,7 +2783,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
-	}, []);
+	}, [setPanelVisibility]);
 
 	const resolvedApps = platform.apps;
 	const activeAppId = platform.activeAppId;
@@ -2780,19 +2799,26 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	const activeModeId = activeAppBase.getActiveModeId();
 	const activeApp = activeAppBase.resolve(activeModeId);
-	const activeModeLabel = activeAppBase.modes.find((mode) => mode.id === activeModeId)?.label ?? null;
-	const panelTabsBase = withDefaultAppPanelTabs(activeApp, platform.commandBus, activeModeLabel);
-	const panelTabs = {
-		...panelTabsBase,
-		workbench: mergeConfigEntries(panelTabsBase.workbench, augmentPanelTabs?.workbench) ?? panelTabsBase.workbench,
-		details: mergeConfigEntries(panelTabsBase.details, augmentPanelTabs?.details) ?? panelTabsBase.details,
-	};
-	const workbenchTabs = panelTabs.workbench;
-	const detailsTabs = panelTabs.details;
-	const optionsTabs = panelTabs.options;
-	const chatTabs = panelTabs.chat;
-	const activeDesktopRightPanelTabs = activeDesktopRightPanelKind === "details" ? detailsTabs : activeDesktopRightPanelKind === "options" ? optionsTabs : chatTabs;
-	const activeMobilePanelTabs = activeMobilePanelKind === "workbench" ? workbenchTabs : activeMobilePanelKind === "details" ? detailsTabs : activeMobilePanelKind === "options" ? optionsTabs : chatTabs;
+	const panelTabsByKind = resolveAppPanelTabsByKind(activeApp, platform.commandBus, augmentPanelTabs);
+	const leftKindsWithTabs = LEFT_PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
+	const rightKindsWithTabs = RIGHT_PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
+	const panelKindsWithTabs = PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
+
+	reactHostPort.useEffect(() => {
+		if (!leftKindsWithTabs.includes(activeDesktopLeftPanelKind)) {
+			setActiveDesktopLeftPanelKind(leftKindsWithTabs[0] ?? "workbench");
+		}
+		if (!rightKindsWithTabs.includes(activeDesktopRightPanelKind)) {
+			setActiveDesktopRightPanelKind(rightKindsWithTabs[0] ?? "details");
+		}
+		if (!panelKindsWithTabs.includes(activeMobilePanelKind)) {
+			setActiveMobilePanelKind(panelKindsWithTabs[0] ?? "workbench");
+		}
+	}, [activeApp.id, activeModeId, leftKindsWithTabs.join(","), rightKindsWithTabs.join(","), panelKindsWithTabs.join(",")]);
+
+	const leftSidePanelTabs = panelTabsByKind[activeDesktopLeftPanelKind] ?? [];
+	const activeDesktopRightPanelTabs = panelTabsByKind[activeDesktopRightPanelKind] ?? [];
+	const activeMobilePanelTabs = panelTabsByKind[activeMobilePanelKind] ?? [];
 
 	const hasModeNav = activeAppBase.modes.length > 1;
 	const setActiveModeId = (id: string) => {
@@ -2822,12 +2848,20 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	);
 	const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
-	const openDesktopLeftPanel = reactHostPort.useCallback((pressed: boolean) => {
-		setPanelVisibility((prev) => ({ ...prev, leftSidePanel: pressed }));
-	}, []);
+	const openDesktopLeftPanel = reactHostPort.useCallback(
+		(kind: PanelKind, pressed: boolean) => {
+			if (pressed) {
+				setActiveDesktopLeftPanelKind(kind);
+				setPanelVisibility((prev) => ({ ...prev, leftSidePanel: true }));
+				return;
+			}
+			setPanelVisibility((prev) => ({ ...prev, leftSidePanel: kind === activeDesktopLeftPanelKind ? false : prev.leftSidePanel }));
+		},
+		[activeDesktopLeftPanelKind, setPanelVisibility],
+	);
 
 	const openDesktopRightPanel = reactHostPort.useCallback(
-		(kind: Exclude<AppPanelKind, "workbench">, pressed: boolean) => {
+		(kind: PanelKind, pressed: boolean) => {
 			if (pressed) {
 				setActiveDesktopRightPanelKind(kind);
 				setPanelVisibility((prev) => ({ ...prev, rightSidePanel: true }));
@@ -2835,11 +2869,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			}
 			setPanelVisibility((prev) => ({ ...prev, rightSidePanel: kind === activeDesktopRightPanelKind ? false : prev.rightSidePanel }));
 		},
-		[activeDesktopRightPanelKind],
+		[activeDesktopRightPanelKind, setPanelVisibility],
 	);
 
 	const openMobilePanel = reactHostPort.useCallback(
-		(kind: AppPanelKind, pressed: boolean) => {
+		(kind: PanelKind, pressed: boolean) => {
 			if (pressed) {
 				setActiveMobilePanelKind(kind);
 				setMobilePanelVisible(true);
@@ -2851,11 +2885,6 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		},
 		[activeMobilePanelKind],
 	);
-
-	const workbenchIcon = workbenchTabs[0]?.icon ? React.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />;
-	const detailsIcon = detailsTabs[0]?.icon ? React.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />;
-	const optionsIcon = optionsTabs[0]?.icon ? React.createElement(optionsTabs[0].icon, { size: 16 }) : <Settings2 size={16} />;
-	const chatIcon = chatTabs[0]?.icon ? React.createElement(chatTabs[0].icon, { size: 16 }) : <MessageSquare size={16} />;
 
 	const navbarItems: NavbarItem[] = [];
 
@@ -2928,10 +2957,22 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		});
 	}
 
+	const breadcrumbNavigate = reactHostPort.useCallback(
+		(href: string) => {
+			onNavigate?.(href);
+		},
+		[onNavigate],
+	);
+	const breadcrumbItems = reactHostPort.useMemo(() => {
+		const override = platform.breadcrumb?.(uriProp);
+		if (override?.length) return platformBreadcrumbToUiItems(override, breadcrumbNavigate);
+		return uriToBreadcrumbItems(uriProp, breadcrumbNavigate);
+	}, [platform, uriProp, breadcrumbNavigate]);
+
 	navbarItems.push({
-		key: "uri",
+		key: "breadcrumb",
 		className: "flex-1 min-w-0",
-		content: <span className="text-sm text-muted-foreground truncate px-single select-all">{uriProp}</span>,
+		content: <Breadcrumb className="min-w-0" items={breadcrumbItems} />,
 	});
 
 	navbarItems.push({
@@ -2944,28 +2985,40 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		content: <Toggle kind="icon" id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Search size={16} />} />,
 	});
 
-	navbarItems.push({
-		key: "panelToggles",
-		content: (
-			<UIPanelToggleGroup
-				items={
-					resolvedMobile
-						? [
-								{ id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "workbench", onPressedChange: (pressed) => openMobilePanel("workbench", pressed) },
-								{ id: "ui.panelToggle.details", icon: detailsIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "details", onPressedChange: (pressed) => openMobilePanel("details", pressed) },
-								{ id: "ui.panelToggle.options", icon: optionsIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "options", onPressedChange: (pressed) => openMobilePanel("options", pressed) },
-								{ id: "ui.panelToggle.chat", icon: chatIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "chat", onPressedChange: (pressed) => openMobilePanel("chat", pressed) },
-						  ]
-						: [
-								{ id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: panelVisibility.leftSidePanel, onPressedChange: openDesktopLeftPanel },
-								{ id: "ui.panelToggle.details", icon: detailsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "details", onPressedChange: (pressed) => openDesktopRightPanel("details", pressed) },
-								{ id: "ui.panelToggle.options", icon: optionsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "options", onPressedChange: (pressed) => openDesktopRightPanel("options", pressed) },
-								{ id: "ui.panelToggle.chat", icon: chatIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "chat", onPressedChange: (pressed) => openDesktopRightPanel("chat", pressed) },
-						  ]
-				}
-			/>
-		),
+	const panelToggleItems = panelKindsWithTabs.map((kind) => {
+		const tabs = panelTabsByKind[kind];
+		const icon = panelKindToggleIcon(kind, tabs);
+		const side = panelSide(kind);
+		if (resolvedMobile) {
+			return {
+				id: `ui.panelToggle.${kind}`,
+				icon,
+				pressed: mobilePanelVisible && activeMobilePanelKind === kind,
+				onPressedChange: (pressed: boolean) => openMobilePanel(kind, pressed),
+			};
+		}
+		if (side === "left") {
+			return {
+				id: `ui.panelToggle.${kind}`,
+				icon,
+				pressed: panelVisibility.leftSidePanel && activeDesktopLeftPanelKind === kind,
+				onPressedChange: (pressed: boolean) => openDesktopLeftPanel(kind, pressed),
+			};
+		}
+		return {
+			id: `ui.panelToggle.${kind}`,
+			icon,
+			pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === kind,
+			onPressedChange: (pressed: boolean) => openDesktopRightPanel(kind, pressed),
+		};
 	});
+
+	if (panelToggleItems.length > 0) {
+		navbarItems.push({
+			key: "panelToggles",
+			content: <UIPanelToggleGroup items={panelToggleItems} />,
+		});
+	}
 
 	const mergedFooterItems = mergePlatformFooterChromeRows(platform, activeApp, extraFooterItems ?? []);
 
@@ -3022,7 +3075,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					navbarItems={navbarItems}
 					footerItems={mergedFooterItems}
 					slotToolbar={toolbarElement}
-					leftSidePanelTabs={workbenchTabs}
+					leftSidePanelTabs={leftSidePanelTabs}
 					rightSidePanelTabs={activeDesktopRightPanelTabs}
 					mobilePanel={
 						resolvedMobile
@@ -3061,6 +3114,15 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
+	function attachTestPanelTabs(app: AppRuntime): void {
+		app.panelTabs = [
+			{ id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
+			{ id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
+		];
+		registerSidePanelBody("test.platform.panel.workbench", () => <div data-testid="test-panel.workbench" />);
+		registerSidePanelBody("test.platform.panel.details", () => <div data-testid="test-panel.details" />);
+	}
+
 	describe("PlatformView", () => {
 		it("opens side panels when PlatformSpec initialPanelVisibility is set", () => {
 			const wb = new Platform({
@@ -3078,13 +3140,49 @@ if (import.meta.vitest) {
 				new WindowKindRuntime("main", "Main", "test.panel-spec.main"),
 			]);
 			registerWindowBody("test.panel-spec.main", () => <div>Main</div>);
+			attachTestPanelTabs(app);
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
 			expect(markup).toContain('data-panel="leftSidePanel"');
 		});
 
-		it("synthesizes default panel toggles for a single-app workbench", () => {
+		it("hides panel toggles when the active app registers no panel tabs", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.notoggles"),
+			]);
+			registerWindowBody("test.workbench-view.notoggles", () => <div>Main</div>);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
+			expect(markup).not.toContain('id="ui.panelToggle.workbench"');
+		});
+
+		it("renders breadcrumb navigation for the current uri", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.breadcrumb"),
+			]);
+			registerWindowBody("test.workbench-view.breadcrumb", () => <div>Main</div>);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/kits/demo" />);
+			expect(markup).toContain('aria-label="breadcrumb"');
+			expect(markup).toContain("kits");
+		});
+
+		it("shows panel toggles only for registered panel kinds", () => {
 			const wb = new Platform();
 			class TCtrl extends Controller {
 				constructor() {
@@ -3096,12 +3194,14 @@ if (import.meta.vitest) {
 				new WindowKindRuntime("main", "Main", "test.workbench-view.main"),
 			]);
 			registerWindowBody("test.workbench-view.main", () => <div>Main</div>);
+			attachTestPanelTabs(app);
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
 			expect(markup).toContain('data-panel="leftSidePanel"');
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
 			expect(markup).toContain('id="ui.panelToggle.details"');
+			expect(markup).not.toContain('id="ui.panelToggle.settings"');
 		});
 
 		it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
@@ -3199,7 +3299,7 @@ export class ReactUI {
 		}
 		rootElement.__elementsReactRoot ??= createRoot(rootElement);
 		ReactUI.mountedRoot = rootElement.__elementsReactRoot;
-		rootElement.__elementsReactRoot.render(<PlatformView platform={platform} />);
+		rootElement.__elementsReactRoot.render(<PlatformViewWithHistory platform={platform} />);
 	}
 
 	static unmount(rootId = "root"): void {

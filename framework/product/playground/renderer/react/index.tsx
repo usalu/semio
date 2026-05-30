@@ -748,8 +748,20 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
   const activeApp = activeAppBase.resolve(activeModeId);
   const bus = runtime.commandBus;
 
-  const workbenchTabs = mergePanelTabs(sideTabsToPlaygroundPanelTabs(activeApp.leftTabs, bus), augmentPanelTabs?.workbench);
-  const detailsTabs = mergePanelTabs(sideTabsToPlaygroundPanelTabs(activeApp.rightTabs, bus), augmentPanelTabs?.details);
+  const workbenchTabs = mergePanelTabs(
+    sideTabsToPlaygroundPanelTabs(
+      activeApp.panelTabs.filter((tab) => tab.panel === "workbench"),
+      bus,
+    ),
+    augmentPanelTabs?.workbench,
+  );
+  const detailsTabs = mergePanelTabs(
+    sideTabsToPlaygroundPanelTabs(
+      activeApp.panelTabs.filter((tab) => tab.panel === "details"),
+      bus,
+    ),
+    augmentPanelTabs?.details,
+  );
 
   const mergedTools = declareToolsToViewTools(activeApp.tools, bus);
   const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;

@@ -625,6 +625,7 @@ export class CadPlayShellController extends Controller {
       }
       case "focusModelDefinition":
       case "applyTransformation":
+      case "setTransformTool":
       case "saveSelected":
       case "saveInPlay":
       case "saveCurrent":
@@ -1680,9 +1681,12 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             handleLoadRawRequest();
             break;
           case "setTransformTool": {
-            const tool = (args as { tool?: CadTransformGumballMode })?.tool;
+            const { tool, pressed } = args as { tool?: CadTransformGumballMode; pressed?: boolean };
             if (!tool) break;
-            setTransformGumballMode((prev) => (prev === tool ? null : tool));
+            setTransformGumballMode((prev) => {
+              if (pressed === false || prev === tool) return null;
+              return tool;
+            });
             break;
           }
           case "engagementOption": {
@@ -2133,6 +2137,26 @@ if (import.meta.vitest) {
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
       const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
       expect(energyWindow?.measures[0]).toMatchObject({ kind: "select", value: "precise" });
+    });
+  });
+
+  describe("CadPlayShellController transform tools", () => {
+    it("forwards setTransformTool to the host bridge", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const calls: { command: string; args?: unknown }[] = [];
+      controller.setHostBridge({
+        getToolbarState: () => ({
+          activeModelDefinitionId: defaultModelDefinitionId(),
+          selectionCount: 0,
+          transformTool: null,
+          transfersTo: [],
+          transfersFrom: [],
+        }),
+        runHostCommand: (command, args) => calls.push({ command, args }),
+      });
+      controller.run("setTransformTool", { tool: "move", pressed: true });
+      expect(calls).toEqual([{ command: "setTransformTool", args: { tool: "move", pressed: true } }]);
     });
   });
 

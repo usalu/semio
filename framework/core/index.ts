@@ -275,13 +275,26 @@ export interface FindItem {
 //#endregion 🔖CommandsPalette
 
 //#region 🔖SideTab
+/** @emoji 📐 Fixed platform shell panel slot (left: windows/overview/workbench; right: details/settings/chat). */
+export type PanelKind = "windows" | "overview" | "workbench" | "details" | "settings" | "chat";
+
+export const LEFT_PANEL_KINDS: readonly PanelKind[] = ["windows", "overview", "workbench"];
+export const RIGHT_PANEL_KINDS: readonly PanelKind[] = ["details", "settings", "chat"];
+export const PANEL_KINDS: readonly PanelKind[] = [...LEFT_PANEL_KINDS, ...RIGHT_PANEL_KINDS];
+
+/** @emoji ↔️ Returns whether a panel kind is rendered on the left or right side of the canvas. */
+export function panelSide(kind: PanelKind): "left" | "right" {
+	return LEFT_PANEL_KINDS.includes(kind) ? "left" : "right";
+}
+
 /** @emoji 📑 Side panel tab addressing a declarative `bodyKey` tree host. */
 export interface SideTabSpec {
 	readonly id: string;
 	readonly iconId: string;
+	readonly panel: PanelKind;
 	readonly order?: number;
 	readonly bodyKey: string;
-	/** @emoji 🏷️ Workbench/details section title; omit for content-only panel chrome. */
+	/** @emoji 🏷️ Panel section title; omit for content-only panel chrome. */
 	readonly label?: string;
 }
 //#endregion 🔖SideTab
@@ -569,8 +582,7 @@ export class BaseModeRuntime {
 	tools: AppTools = {};
 	windowKinds: BaseWindowKindRuntime[] = [];
 	defaultLayout?: WindowLayout;
-	leftTabs: SideTabSpec[] = [];
-	rightTabs: SideTabSpec[] = [];
+	panelTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
 
 	constructor(
@@ -607,8 +619,7 @@ export interface ResolvedAppState {
 	readonly tools: AppTools | undefined;
 	readonly windowKinds: readonly BaseWindowKindRuntime[];
 	readonly defaultLayout: WindowLayout;
-	readonly leftTabs: SideTabSpec[];
-	readonly rightTabs: SideTabSpec[];
+	readonly panelTabs: SideTabSpec[];
 	readonly footerItems: FooterItem[];
 }
 
@@ -616,8 +627,7 @@ export interface ResolvedAppState {
 export function resolveBaseAppState(app: BaseAppRuntime, requestedModeId?: string | null): ResolvedAppState {
 	const mode = resolveMode(app, requestedModeId);
 	const mergedWindowKinds = mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds;
-	const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
-	const mergedRight = mergeById(app.rightTabs, mode?.rightTabs) ?? app.rightTabs;
+	const mergedPanelTabs = mergeById(app.panelTabs, mode?.panelTabs) ?? app.panelTabs;
 	return {
 		id: app.id,
 		activeModeId: mode?.id ?? null,
@@ -626,8 +636,7 @@ export function resolveBaseAppState(app: BaseAppRuntime, requestedModeId?: strin
 		tools: mergeAppTools(app.tools, mode?.tools),
 		windowKinds: mergedWindowKinds,
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
-		leftTabs: mergedLeft,
-		rightTabs: mergedRight,
+		panelTabs: mergedPanelTabs,
 		footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
 	};
 }
@@ -642,8 +651,7 @@ export class BaseAppRuntime {
 	windowKinds: BaseWindowKindRuntime[] = [];
 	defaultLayout!: WindowLayout;
 	tools: AppTools = {};
-	leftTabs: SideTabSpec[] = [];
-	rightTabs: SideTabSpec[] = [];
+	panelTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
 	readonly controller: Controller;
 
@@ -717,6 +725,16 @@ export function resolveInitialPanelVisibility(
 }
 //#endregion 🔖PanelVisibility
 
+//#region 🔖PlatformBreadcrumb
+/** @emoji 🍞 One breadcrumb segment for {@link Platform.breadcrumb} overrides. */
+export interface PlatformBreadcrumbItem {
+	readonly id?: string;
+	readonly content: unknown;
+	readonly options?: readonly { readonly label: unknown; readonly href: string; readonly id?: string }[];
+	readonly onNavigate?: (href: string) => void;
+}
+//#endregion 🔖PlatformBreadcrumb
+
 //#region 🔖Platform
 /** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
 export class Platform {
@@ -730,6 +748,10 @@ export class Platform {
 	canGoForward = false;
 	canGoUp = false;
 	onNavigate?: (uri: string) => void;
+	/** @emoji 🔗 Product hook: apply URI to platform state (active app, stores) when navigation changes. */
+	applyUri?: (uri: string) => void;
+	/** @emoji 🍞 Optional breadcrumb items for the current URI; default is path segments. */
+	breadcrumb?: (uri: string) => readonly PlatformBreadcrumbItem[];
 	onGoBack?: () => void;
 	onGoForward?: () => void;
 	onGoUp?: () => void;

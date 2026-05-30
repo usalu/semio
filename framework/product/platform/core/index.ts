@@ -528,8 +528,7 @@ export interface ResolvedAppState {
 	readonly commands: SearchItemSpec[];
 	readonly windowKinds: readonly WindowKindRuntime[];
 	readonly defaultLayout: WindowLayout;
-	readonly leftTabs: SideTabSpec[];
-	readonly rightTabs: SideTabSpec[];
+	readonly panelTabs: SideTabSpec[];
 	readonly footerItems: FooterItem[];
 	readonly findItems: FindItem[];
 	readonly onFindSelect?: (itemId: string) => void;
@@ -543,8 +542,7 @@ export interface ResolvedAppState {
 export function resolveAppState(app: AppRuntime, requestedModeId?: string | null): ResolvedAppState {
 	const mode = resolveMode(app, requestedModeId) as ModeRuntime | null;
 	const mergedWindowKinds = mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds;
-	const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
-	const mergedRight = mergeById(app.rightTabs, mode?.rightTabs) ?? app.rightTabs;
+	const mergedPanelTabs = mergeById(app.panelTabs, mode?.panelTabs) ?? app.panelTabs;
 	return {
 		id: app.id,
 		activeModeId: mode?.id ?? null,
@@ -554,8 +552,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
 		commands: mergeSearchItems(app.commands, mode?.commands) ?? app.commands,
 		windowKinds: mergedWindowKinds,
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
-		leftTabs: mergedLeft,
-		rightTabs: mergedRight,
+		panelTabs: mergedPanelTabs,
 		footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
 		findItems: mergeById(app.findItems, mode?.findItems) ?? app.findItems,
 		onFindSelect: mode?.onFindSelect ?? app.onFindSelect,
@@ -686,8 +683,7 @@ export interface ModeDefinition {
 	readonly windowKinds: readonly WindowKindDefinition[];
 	readonly defaultLayout?: WindowLayout;
 	readonly tools?: AppTools;
-	readonly leftTabs?: readonly SideTabSpec[];
-	readonly rightTabs?: readonly SideTabSpec[];
+	readonly panelTabs?: readonly SideTabSpec[];
 }
 
 export interface AppDefinition {
@@ -930,8 +926,7 @@ export class PluginContext {
 			if (spec.defaultModeId) app.defaultModeId = spec.defaultModeId;
 			if (spec.tools) app.tools = spec.tools;
 			if (spec.commands?.length) app.commands = [...spec.commands];
-			if (spec.leftTabs?.length) app.leftTabs = [...spec.leftTabs];
-			if (spec.rightTabs?.length) app.rightTabs = [...spec.rightTabs];
+			if (spec.panelTabs?.length) app.panelTabs = [...spec.panelTabs];
 			if (spec.footerItems?.length) app.footerItems = [...spec.footerItems];
 			if (spec.findItems?.length) app.findItems = [...spec.findItems];
 			for (const modeSpec of spec.modes ?? []) {
@@ -1001,8 +996,7 @@ export interface PluginManifestAppContribute {
 	}[];
 	readonly tools?: AppTools;
 	readonly commands?: readonly SearchItemSpec[];
-	readonly leftTabs?: readonly SideTabSpec[];
-	readonly rightTabs?: readonly SideTabSpec[];
+	readonly panelTabs?: readonly SideTabSpec[];
 	readonly footerItems?: readonly FooterItem[];
 	readonly findItems?: readonly FindItem[];
 }

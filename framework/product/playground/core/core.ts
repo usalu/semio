@@ -310,8 +310,7 @@ export type { ResolvedAppState } from "@framework/core";
 export function resolveAppState(app: AppRuntime, requestedModeId?: string | null): ResolvedAppState {
   const mode = resolveMode(app, requestedModeId);
   const mergedWindowKinds = (mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds) as WindowKindRuntime[];
-  const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
-  const mergedRight = mergeById(app.rightTabs, mode?.rightTabs) ?? app.rightTabs;
+  const mergedPanelTabs = mergeById(app.panelTabs, mode?.panelTabs) ?? app.panelTabs;
   return {
     id: app.id,
     activeModeId: mode?.id ?? null,
@@ -320,8 +319,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
     tools: mergeAppTools(app.tools, mode?.tools),
     windowKinds: mergedWindowKinds,
     defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
-    leftTabs: mergedLeft,
-    rightTabs: mergedRight,
+    panelTabs: mergedPanelTabs,
     footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
   };
 }
@@ -613,8 +611,10 @@ export function buildPlaygroundWorkbenchApp(ids: PlaygroundIds, controller: Play
   const app = new AppRuntime(ids.appId, ids.windowLabel, undefined, controller, layout, [new WindowKindRuntime(ids.windowId, ids.windowLabel, ids.mainBodyKey)]);
   app.defaultModeId = controller.browseMode.id;
   app.addMode(controller.browseMode);
-  app.leftTabs = [{ id: `${ids.appId}.workbench`, iconId: ids.workbenchIconId, order: 0, bodyKey: ids.workbenchTabBodyKey }];
-  app.rightTabs = [{ id: `${ids.appId}.details`, iconId: ids.detailsIconId, order: 0, bodyKey: ids.detailsTabBodyKey }];
+  app.panelTabs = [
+    { id: `${ids.appId}.workbench`, iconId: ids.workbenchIconId, panel: "workbench", order: 0, bodyKey: ids.workbenchTabBodyKey },
+    { id: `${ids.appId}.details`, iconId: ids.detailsIconId, panel: "details", order: 0, bodyKey: ids.detailsTabBodyKey },
+  ];
   controller.commandBus.dispatch(controller.id, "setQuery", { query: options?.initialQuery ?? "" });
   return app;
 }
