@@ -1,0 +1,1 @@
+A product has a purpose and makes it possible to provide infrastructure for more consistent, render-indepenant user interfaces.
