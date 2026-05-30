@@ -1125,8 +1125,7 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 			buildOpts := TreeBuildOptions{
 				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
-					filter.OnlyKinds[TreeNodeDefinition] ||
-					filter.Query != "",
+					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
@@ -1182,8 +1181,7 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			buildOpts := TreeBuildOptions{
 				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
-					filter.OnlyKinds[TreeNodeDefinition] ||
-					filter.Query != "",
+					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
@@ -34745,8 +34743,7 @@ func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	args := getArgs(request)
 	query, _, _ := getStringArg(args, "query")
 	filter := TreeFilter{Query: query}
-	buildOpts := TreeBuildOptions{IncludeSections: query != ""}
-	tree := BuildMonorepoTreeCached(ctx, buildOpts)
+	tree := BuildMonorepoTreeCached(ctx)
 	tree = searchMonorepoTreeWithCache(ctx, tree, query)
 	tree = FilterMonorepoTree(tree, &filter)
 	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
@@ -35495,8 +35492,17 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/assets/repo/") {
 		return true
 	}
-	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") {
+	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") ||
+		strings.Contains(normalized, "/node_modules/") {
 		return true
+	}
+	if normalized == ".git" || strings.HasPrefix(normalized, ".git/") || strings.Contains(normalized, "/.git/") {
+		return true
+	}
+	for _, segment := range []string{"/dist/", "/build/", "/target/", "/__pycache__/", "/.next/", "/coverage/"} {
+		if strings.Contains(normalized, segment) {
+			return true
+		}
 	}
 	base := filepath.Base(normalized)
 	if strings.HasSuffix(base, ".Designer.cs") {

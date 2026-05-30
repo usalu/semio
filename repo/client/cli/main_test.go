@@ -15393,6 +15393,35 @@ func TestSetRootDirResetsGitignoreCache(t *testing.T) {
 	}
 }
 
+func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
+	artifacts := []string{
+		"repo/client/client",
+		"repo/client/client.exe",
+		"repo/server/coordinator/server",
+		"repo/server/coordinator/server.exe",
+		"claude",
+		"claude.exe",
+		"codex",
+		"codex.exe",
+		"copilot",
+		"copilot.exe",
+		"cursor",
+		"cursor.exe",
+		"kiro",
+		"kiro.exe",
+		"mcp",
+		"mcp.exe",
+		"coda/examples/semio-blnbo-roomprogram/.coda/validators/programming",
+		"coda/examples/semio-blnbo-roomprogram/.coda/validators/programming.exe",
+	}
+	ignored := GetGitIgnoredSet(artifacts)
+	for _, path := range artifacts {
+		if !ignored[path] {
+			t.Errorf("expected build artifact %q to be gitignored", path)
+		}
+	}
+}
+
 func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
 	repoRoot := t.TempDir()
 	nested := filepath.Join(repoRoot, "a", "b", "c")
