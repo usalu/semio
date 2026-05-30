@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/react/topology/play/index.ts — Topology play on `@framework/playground`: paired board+scene fixtures, LOD measures, relocate tools (no React).
+// 💻 puzzle/5d/play/index.ts — Topology play on `@framework/playground`: unified topology fixture, LOD measures, relocate tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -137,18 +137,15 @@ export interface TopologyPlaySnapshot {
 }
 
 function loadNakaginTopologyModel(): TopologyV1 {
-  const unified = parseTopologyV1(nakaginTopologyJson as unknown);
-  if (unified) return unified;
-  const board = parseBoardFixtureV1(nakaginBoardJson as unknown);
-  const scene = parseFixtureV1(nakaginSceneJson as unknown);
-  return topologyFromLegacyPair(board!, scene!);
+  const model = parseTopologyV1(nakaginTopologyJson as unknown);
+  if (!model) throw new Error("nakagin-capsule-tower.topology.json must use schema puzzle.5d.topology/v1");
+  return model;
 }
 
 /** @emoji 🎛 Topology play shell controller shared by declarative board and scene windows. */
 export class TopologyPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Topology", undefined);
   readonly topologyStore: TopologyStore = createTopologyStore(loadNakaginTopologyModel());
-  private storeGeneration = 0;
   private relocateMode: SceneRelocateMode = "translate";
   private boardSelected: ReadonlySet<string> = new Set();
   private sceneSelected: string | null = null;
@@ -168,10 +165,7 @@ export class TopologyPlayShellController extends Controller {
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.topologyStore.subscribe(() => {
-      this.storeGeneration += 1;
-      this.emit();
-    });
+    this.topologyStore.subscribe(() => this.emit());
     this.rebuildShellMode();
   }
 
@@ -451,16 +445,29 @@ if (import.meta.vitest) {
       expect(b?.nodes.length).toBeGreaterThan(0);
       expect(s?.objects.length).toBeGreaterThan(0);
     });
-    it("parses nakagin unified topology v1 or legacy pair", () => {
-      const unified = parseTopologyV1(nakaginTopologyJson as unknown);
-      if (unified) {
-        expect(unified.schema).toBe("puzzle.5d.topology/v1");
-        expect(unified.parts.length).toBeGreaterThan(0);
-        return;
-      }
-      const b = parseBoardFixtureV1(nakaginBoardJson as unknown);
-      const s = parseFixtureV1(nakaginSceneJson as unknown);
-      expect(topologyFromLegacyPair(b!, s!).parts.length).toBeGreaterThan(0);
+    it("parses nakagin unified topology v1", () => {
+      const model = parseTopologyV1(nakaginTopologyJson as unknown);
+      expect(model?.schema).toBe("puzzle.5d.topology/v1");
+      expect(model?.parts.length).toBeGreaterThan(0);
+    });
+    it("regenerates nakagin topology fixture when REGENERATE_NAKAGIN_TOPOLOGY=1", async () => {
+      if (process.env.REGENERATE_NAKAGIN_TOPOLOGY !== "1") return;
+      const board = parseBoardFixtureV1(nakaginBoardJson as unknown);
+      const scene = parseFixtureV1(nakaginSceneJson as unknown);
+      expect(board).toBeTruthy();
+      expect(scene).toBeTruthy();
+      const model = {
+        ...topologyFromLegacyPair(board!, scene!),
+        label: "Nakagin capsule tower",
+        meta: {
+          description: "Unified topology source for Nakagin play; flat and spatial views project from this model.",
+        },
+      };
+      const { writeFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      const outPath = join(process.cwd(), "fixtures/nakagin-capsule-tower.topology.json");
+      await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
+      expect(model.parts.length).toBeGreaterThan(0);
     });
     it("shared kinds merge metas like the play harness", () => {
       const sk = topologySharedKindsFromPairedMetas({

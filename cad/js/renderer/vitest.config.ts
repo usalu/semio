@@ -25,7 +25,7 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
+      { find: /^@framework\/playground\/renderer\/react($|\/.*$)/, replacement: rendererIndex },
       { find: /^@framework\/playground$/, replacement: resolve(repoRoot, "framework/playground/core/core.ts") },
       { find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(repoRoot, "framework/playground/core")}/$1` },
       { find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },

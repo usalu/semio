@@ -13,6 +13,6 @@ test("topology play exposes paired FiveD surfaces with shared connect state", as
   await page.goto("/");
   await expect(page.locator('[data-five-d-mode="flat"][data-five-d-instance="play-board"]')).toBeVisible({ timeout: 120_000 });
   await expect(page.locator('[data-five-d-mode="spatial"][data-five-d-instance="play-spatial"]')).toBeVisible({ timeout: 120_000 });
-  await expect(page.locator('[data-five-d-mode="flat"][data-five-d-connect-active="false"]')).toBeVisible();
-  await expect(page.locator('[data-five-d-mode="spatial"][data-five-d-connect-active="false"]')).toBeVisible();
+  await expect(page.locator('[data-five-d-mode="flat"][data-five-d-indirect-active="false"]')).toBeVisible();
+  await expect(page.locator('[data-five-d-mode="spatial"][data-five-d-indirect-active="false"]')).toBeVisible();
 });

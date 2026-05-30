@@ -6132,7 +6132,7 @@ export interface BoardCanvasProps {
   onCamera?: (state: CameraState) => void;
   /** @emoji 🖱️ Right-click surface hit before built-in context UI resolves menu items. */
   onContextMenu?: (payload: BoardEventMap["contextmenu"]) => void;
-  /** @emoji 🪢 Alias for every committed handle link (see {@link BoardCanvasProps.onProximityConnect} / {@link BoardCanvasProps.onIndirectConnect}). */
+  /** @emoji 🪢 Direct handle-to-handle link commit ({@link BoardEventMap.edgeCreate}). */
   onConnect?: (payload: BoardEdgeLinkPayload) => void;
   /** @emoji 📦 Fires once for {@link BoardEventMap.nodeCreate}, {@link BoardEventMap.edgeCreate}, or {@link BoardEventMap.wireCreate}. */
   onCreate?: (payload: BoardStructureCreatePayload) => void;
@@ -6851,8 +6851,6 @@ export function BoardCanvas({
     const unsubs: Array<() => void> = [];
     if (onConnect) {
       unsubs.push(contextRenderer.on("edgeCreate", onConnect));
-      unsubs.push(contextRenderer.on("proximityConnect", onConnect));
-      unsubs.push(contextRenderer.on("indirectConnect", onConnect));
     }
     if (onIndirectConnect) {
       unsubs.push(contextRenderer.on("indirectConnect", onIndirectConnect));

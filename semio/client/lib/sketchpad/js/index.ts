@@ -14134,7 +14134,7 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
 
 const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
 
-/** @emoji ðŸ—ºï¸ Maps kit diagram layout nodes/edges into an `puzzle.2d.fixture/v1` payload for {@link TopologyBoardPane}. */
+/** @emoji ðŸ—ºï¸ Maps kit diagram layout nodes/edges into an `puzzle.2d.fixture/v1` payload for {@link FiveD} flat mode. */
 const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], edges: readonly KitDiagramEdge[]): BoardFixtureV1 => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const boardNodes = nodes.map((node) => {
@@ -34215,7 +34215,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #endregion Â­Æ’ÂºÂ½Diagram
 
 // #region Â­Æ’ÂºÂ®TopologyAdapter
-/** Â­Æ’Ã„Â¼ Design board+scene via {@link TopologyBoardPane} / {@link TopologyScenePane} on @puzzle/5d/react and @puzzle/3d/react. */
+/** Â­Æ’Ã„Â¼ Design board+scene via {@link FiveD} (`flat` / `spatial`) and a shared {@link TopologyStore} on @puzzle/5d/react. */
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH = 96;
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT = 48;
 const SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS = 10;

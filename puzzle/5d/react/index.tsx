@@ -42,6 +42,31 @@ import {
 } from "../../3d/react/index.tsx";
 // #endregion 🔌Adapters
 
+//#region 🔖TopologyPairedPolicy
+/** @emoji 🔗 How a bond is committed: direct handle pick, indirect ring finish, or proximity snap. */
+export type TopologyConnectGestureKind = "direct" | "indirect" | "proximity";
+
+/** @emoji ↔️ True only for {@link TopologyConnectGestureKind.indirect} — the gesture mirrored in {@link TopologyConnectSession}. */
+export function topologyConnectGestureCrossSurface(kind: TopologyConnectGestureKind): boolean {
+  return kind === "indirect";
+}
+
+/** @emoji 📶 Flat (@puzzle/2d) uses six discrete WASM draw LOD tiers from zoom thresholds. */
+export const TOPOLOGY_FLAT_LOD_TIER_COUNT = 6 as const;
+
+/** @emoji 📶 Spatial (@puzzle/3d) uses continuous / camera-driven LOD (`automaticLod`, depth-variable, manual slider). */
+export type TopologySpatialLodPolicy = "continuous";
+
+/** @emoji 🧲 Flat proximity: overlapping compatible handles while **dragging** a node (pointer-up snap). */
+export const TOPOLOGY_FLAT_PROXIMITY_GESTURE: TopologyConnectGestureKind = "proximity";
+
+/** @emoji 🧲 Spatial proximity: compatible vortex within radius while **relocating** (gumball release). */
+export const TOPOLOGY_SPATIAL_PROXIMITY_GESTURE: TopologyConnectGestureKind = "proximity";
+
+/** @emoji 🎯 Indirect link/attraction: start on one surface, finish on a compatible ring on either surface. */
+export const TOPOLOGY_INDIRECT_CONNECT_GESTURE: TopologyConnectGestureKind = "indirect";
+//#endregion 🔖TopologyPairedPolicy
+
 //#region 🔖TopologyModel
 export type TopologyPresentationMode = "flat" | "spatial";
 
@@ -108,6 +133,7 @@ export interface TopologyBondV1 {
   readonly bondKind?: string;
 }
 
+/** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across flat {@link BoardLinkSessionSnapshot} and spatial {@link AttractionSessionSnapshot}. */
 export interface TopologyConnectSession {
   readonly origin: TopologyPresentationMode;
   readonly sourceAnchor: string;
@@ -490,6 +516,7 @@ class TopologyStore {
     this.setSnapshot({ ...this.snapshot, selection });
   }
 
+  /** @emoji 🔗 Sets cross-surface indirect preview state; callers must not use this for proximity snaps. */
   setConnectSession(session: TopologyConnectSession | null): void {
     this.setSnapshot({ ...this.snapshot, connectSession: session });
   }
@@ -554,25 +581,34 @@ export function useTopologySnapshot(): TopologyStoreSnapshot {
 //#region 🔖FiveD
 export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
-export const FIVE_D_LOD_GRID_DEFAULTS = {
+/** @emoji 📶 Flat-only LOD/grid defaults ({@link TOPOLOGY_FLAT_LOD_TIER_COUNT} discrete tiers); do not pass to spatial {@link Scene}. */
+export const FIVE_D_FLAT_LOD_DEFAULTS = {
   lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
   gridFactor: DEFAULT_BOARD_GRID_FACTOR,
   gridSnapEnabled: true,
 } as const;
 
-export const FIVE_D_SPATIAL_CHROME_DEFAULTS: Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "gridSnapEnabled"> = {
+/** @emoji 📶 Alias of {@link FIVE_D_FLAT_LOD_DEFAULTS} for flat board canvases. */
+export const FIVE_D_LOD_GRID_DEFAULTS = FIVE_D_FLAT_LOD_DEFAULTS;
+
+/** @emoji 🎛 Spatial chrome: continuous LOD comes from host `spatial` props; proximity applies on relocate only. */
+export const FIVE_D_SPATIAL_CHROME_DEFAULTS: Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "proximityRelocateEnabled" | "gridSnapEnabled"> = {
   showLodGrid: true,
   proximityRadius: 24,
+  proximityRelocateEnabled: true,
   gridSnapEnabled: true,
 };
 
+/** @emoji 🖼️ Single topology editor (`flat` = @puzzle/2d board, `spatial` = @puzzle/3d scene); pair via {@link TopologyStoreProvider}. */
 export interface FiveDProps {
   readonly mode: TopologyPresentationMode;
   readonly instanceId: string;
   readonly className?: string;
   readonly lockedPartIds?: ReadonlySet<string>;
   readonly relocateMode?: SceneRelocateMode;
+  /** Flat surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
   readonly flat?: Omit<BoardCanvasProps, "children">;
+  /** Spatial surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
   readonly spatial?: Omit<SceneCanvasProps, "children">;
 }
 
@@ -666,14 +702,14 @@ const FiveDFlat = reactHostPort.memo(function FiveDFlat(props: FiveDProps) {
   const markers = reactHostPort.useMemo(() => topologyFlatMarkersFromFixture({ fixture: flatFixture, lockedIds: locked, selectedIds }), [flatFixture, locked, selectedIds]);
   const camera = store.getFlatCamera(props.instanceId);
   const flatExtra = props.flat ?? {};
-  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, onLodChange: onLodChangeHost, ...flatRest } = flatExtra;
+  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, ...flatRest } = flatExtra;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="flat" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="flat" data-five-d-instance={props.instanceId}>
       <BoardCanvas
         camera={flatRest.camera ?? camera}
         className={["min-h-0 flex-1", props.className, flatRest.className].filter(Boolean).join(" ") || undefined}
-        {...FIVE_D_LOD_GRID_DEFAULTS}
+        {...FIVE_D_FLAT_LOD_DEFAULTS}
         kindCatalogs={snap.model.kindCatalogs}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
@@ -767,8 +803,8 @@ const FiveDSpatialInner = reactHostPort.memo(function FiveDSpatialInner(props: F
       {...FIVE_D_SPATIAL_CHROME_DEFAULTS}
       attractionSession={attractionSession}
       blockedVortexFullIds={blockedVortexFullIdsFromAttractions(spatialFixture.attractions)}
-      gridFactor={FIVE_D_LOD_GRID_DEFAULTS.gridFactor}
-      gridSnapEnabled={FIVE_D_LOD_GRID_DEFAULTS.gridSnapEnabled}
+      gridFactor={FIVE_D_FLAT_LOD_DEFAULTS.gridFactor}
+      gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
       kindCatalogs={snap.model.kindCatalogs as SceneKindCatalogBundle | undefined}
       kindCompatibility={snap.model.kindCompatibility as SceneKindCompatEntry[] | undefined}
       relocateMode={props.relocateMode ?? "translate"}
@@ -844,7 +880,7 @@ const FiveDSpatial = reactHostPort.memo(function FiveDSpatial(props: FiveDProps)
   const snap = useTopologySnapshot();
   const spatialFixture = reactHostPort.useMemo(() => projectSpatial(snap.model), [snap.model]);
   return (
-    <div className={FIVE_D_ROOT_CLASS} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="spatial" data-five-d-instance={props.instanceId}>
+    <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-connect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="spatial" data-five-d-instance={props.instanceId}>
       <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
         <SceneObjectStateProvider fixture={spatialFixture} onConnect={props.spatial?.onConnect} onRelocate={props.spatial?.onRelocate}>
           <FiveDSpatialInner {...props} />
@@ -1018,30 +1054,9 @@ export function topologyApplyBoardFixtureCentersToTopLeft<T extends { readonly i
 }
 //#endregion 🔖BoardLayout
 
-export const TOPOLOGY_PANE_ROOT_CLASS = FIVE_D_ROOT_CLASS;
-export const TOPOLOGY_LOD_GRID_DEFAULTS = FIVE_D_LOD_GRID_DEFAULTS;
-export const TOPOLOGY_SCENE_CHROME_DEFAULTS = FIVE_D_SPATIAL_CHROME_DEFAULTS;
-
-/** @emoji 📄 Legacy manifest-only fixture (`puzzle.5d.fixture/v1`). */
-export interface TopologyFixtureV1 {
-  readonly schema: "puzzle.5d.fixture/v1";
-  readonly label?: string;
-  readonly meta?: Record<string, unknown>;
-}
-
-export function parseTopologyFixtureV1(raw: unknown): TopologyFixtureV1 | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown>;
-  if (r.schema !== "puzzle.5d.fixture/v1") return null;
-  return {
-    schema: "puzzle.5d.fixture/v1",
-    ...(typeof r.label === "string" ? { label: r.label } : {}),
-    ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
-  };
-}
-
-export function topologySceneChromeDefaults(): typeof TOPOLOGY_SCENE_CHROME_DEFAULTS {
-  return TOPOLOGY_SCENE_CHROME_DEFAULTS;
+/** @emoji 🎛 Default spatial chrome for topology surfaces (alias of {@link FIVE_D_SPATIAL_CHROME_DEFAULTS}). */
+export function topologySceneChromeDefaults(): typeof FIVE_D_SPATIAL_CHROME_DEFAULTS {
+  return FIVE_D_SPATIAL_CHROME_DEFAULTS;
 }
 
 //#region 🔖BoardMarkers
@@ -1055,7 +1070,7 @@ export interface TopologyBoardWireRecord {
   readonly hidden?: boolean;
 }
 
-/** @emoji ┬¡ãÆ├╣ÔòØ Builds a Fragment of board host markers from a board fixture (same static shape walk as board play). */
+/** @emoji 🧩 Builds board host markers from a board fixture (same static shape walk as board play). */
 export function topologyBoardMarkersFromFixture(props: {
   readonly fixture: BoardFixtureV1;
   readonly lockedIds: ReadonlySet<string>;
@@ -1166,13 +1181,26 @@ export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  describe("parseTopologyFixtureV1", () => {
-    it("accepts manifest", () => {
-      const t = parseTopologyFixtureV1({
-        schema: "puzzle.5d.fixture/v1",
+  describe("topologyConnectGestureCrossSurface", () => {
+    it("only indirect syncs across flat and spatial", () => {
+      expect(topologyConnectGestureCrossSurface("indirect")).toBe(true);
+      expect(topologyConnectGestureCrossSurface("direct")).toBe(false);
+      expect(topologyConnectGestureCrossSurface("proximity")).toBe(false);
+    });
+  });
+
+  describe("parseTopologyV1", () => {
+    it("accepts unified topology", () => {
+      const t = parseTopologyV1({
+        schema: "puzzle.5d.topology/v1",
+        domain: "architecture",
+        flatCamera: { x: 0, y: 0, zoom: 1 },
+        spatialCamera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        parts: [],
+        bonds: [],
         label: "x",
       });
-      expect(t?.schema).toBe("puzzle.5d.fixture/v1");
+      expect(t?.schema).toBe("puzzle.5d.topology/v1");
       expect(t?.label).toBe("x");
     });
   });
@@ -1196,37 +1224,15 @@ if (import.meta.vitest) {
     });
   });
   describe("nakagin topology fixture", () => {
-    it("writes nakagin-capsule-tower.topology.json when PUZZLE_5D_WRITE_NAKAGIN_TOPOLOGY=1", async () => {
-      if (process.env.PUZZLE_5D_WRITE_NAKAGIN_TOPOLOGY !== "1") return;
-      const boardMod = await import("../../2d/play/fixtures/nakagin-capsule-tower.board.json");
-      const sceneMod = await import("../../3d/play/fixtures/nakagin-capsule-tower.scene.json");
-      const board = parseBoardFixtureV1(boardMod.default as unknown);
-      const scene = parseFixtureV1(sceneMod.default as unknown);
-      expect(board).toBeTruthy();
-      expect(scene).toBeTruthy();
-      const model = topologyFromLegacyPair(board!, scene!);
-      const payload = {
-        ...model,
-        label: "Nakagin capsule tower",
-        meta: {
-          description: "Unified topology source for Nakagin play; flat and spatial views project from this model.",
-        },
-      };
-      const path = new URL("../play/fixtures/nakagin-capsule-tower.topology.json", import.meta.url);
-      const { writeFile } = await import("node:fs/promises");
-      await writeFile(path, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-      expect(payload.parts.length).toBeGreaterThan(0);
-    });
-
     it("loads nakagin topology v1 and projects non-empty flat and spatial fixtures", async () => {
       const mod = await import("../play/fixtures/nakagin-capsule-tower.topology.json");
       const model = parseTopologyV1(mod.default as unknown);
-      if (!model) return;
-      const flat = projectFlat(model);
-      const spatial = projectSpatial(model);
+      expect(model).toBeTruthy();
+      const flat = projectFlat(model!);
+      const spatial = projectSpatial(model!);
       expect(flat.nodes.length).toBeGreaterThan(0);
       expect(spatial.objects.length).toBeGreaterThan(0);
-      expect(model.parts.length).toBeGreaterThan(0);
+      expect(model!.parts.length).toBeGreaterThan(0);
     });
   });
 

@@ -90,6 +90,7 @@ export type Quat = readonly [number, number, number, number];
 
 export type RelocateMode = "translate" | "rotate" | "scale";
 export type SelectionMode = "single" | "additive" | "subtractive" | "toggle";
+/** @emoji 🔗 Bond commit kind: `connect` direct pick, `indirect` ring finish (cross-surface via @puzzle/5d TopologyConnectSession), `proximity` relocate-release snap only. */
 export type ConnectKind = "indirect" | "connect" | "proximity";
 export const MESH_STYLE_KINDS = ["original", "neutral", "hovered", "selected", "highlighted", "disabled"] as const;
 /** @emoji ­ƒÄ¿ Homogeneous GLB presentation kind for pooled scene meshes ({@link MeshBody}). */
