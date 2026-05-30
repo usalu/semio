@@ -1299,8 +1299,10 @@ import {
   buildPuzzle2dPlayDetailDeclarativeBody,
   buildPuzzle2dPlaySelectionDeclarativeBody,
   buildPuzzle2dPlayRuntime,
+  filterPuzzle2dPlayStructuralDeleteBatch,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
+  type Puzzle2dPlayStructuralDeleteItem,
 } from "@puzzle/2d/play";
 import {
   mergeKindCatalogBundleByRowId,
@@ -1418,31 +1420,6 @@ function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1): Record<Puzzle2d
   };
 }
 
-type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
-
-/** @emoji 🗑️ Dedupes structural deletes and drops ids absent from the fixture (descriptor resync bursts), keeping real multi-edge node deletes. */
-export function filterPuzzle2dPlayStructuralDeleteBatch(
-  batch: readonly Puzzle2dPlayStructuralDeleteItem[],
-  fixture: Puzzle2dFixtureV1,
-): Puzzle2dPlayStructuralDeleteItem[] {
-  const seen = new Set<string>();
-  const out: Puzzle2dPlayStructuralDeleteItem[] = [];
-  for (const item of batch) {
-    const key = `${item.kind}:${item.id}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    const exists =
-      item.kind === "node" ? fixture.nodes.some((n) => n.id === item.id) : fixture.edges.some((e) => e.id === item.id);
-    if (!exists) {
-      continue;
-    }
-    out.push(item);
-  }
-  return out;
-}
-
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
 const PUZZLE_2D_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
 
@@ -1532,7 +1509,7 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
-  /** @emoji 🗑️ Batches canvas deletes so host resync bursts do not clear the fixture. */
+  /** @emoji 🗑️ Batches canvas structural deletes; drops resync bursts while the fixture graph is mutating. */
   queueStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
   puzzle2dRedrawPlaying: boolean;
@@ -2057,9 +2034,20 @@ const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
     throw new Error("Puzzle 2d play: palette rectangle drag fixture failed validation.");
   })();
 
-/** @emoji 🧩 When {@link PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE} is on meta, returns one node placed at the drop world point; else null so the scene should be replaced. */
-function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
-  if (detail.fixture.meta?.puzzle2dFixtureDragKind !== PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
+function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
+  if (fixture.meta?.puzzle2dFixtureDragKind === PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
+    return true;
+  }
+  if (fixture.nodes.length !== 1 || fixture.edges.length > 0) {
+    return false;
+  }
+  const seedId = fixture.nodes[0]?.id ?? "";
+  return seedId.startsWith("palette-seed-");
+}
+
+/** @emoji 🧩 When the drag payload is a palette seed, returns one node placed at the drop world point; else null so the scene should be replaced. */
+export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
+  if (!isPaletteNodeDragFixture(detail.fixture)) {
     return null;
   }
   const template = detail.fixture.nodes[0];
@@ -2804,6 +2792,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     pruneSelections([id, ...handleIds]);
   }, []);
 
+  const fixtureGraphMutationSuppressRef = reactHostPort.useRef(0);
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
   const queueStructuralDelete = reactHostPort.useCallback(
@@ -2815,6 +2804,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       structuralDeleteFlushScheduledRef.current = true;
       queueMicrotask(() => {
         structuralDeleteFlushScheduledRef.current = false;
+        if (fixtureGraphMutationSuppressRef.current > 0) {
+          structuralDeleteQueueRef.current = [];
+          return;
+        }
         const batch = structuralDeleteQueueRef.current;
         structuralDeleteQueueRef.current = [];
         const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current);
@@ -2830,7 +2823,20 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [applyStructuralDelete],
   );
 
+  reactHostPort.useEffect(() => {
+    if (fixtureGraphMutationSuppressRef.current === 0) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      fixtureGraphMutationSuppressRef.current = 0;
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [fixture]);
+
   const setFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
+    fixtureGraphMutationSuppressRef.current += 1;
     setFixtureState(next);
     setSelectionIdsState(selectionSeedForFixture(next));
     setPreselection(PUZZLE_2D_PRESELECT_EMPTY);
@@ -2841,6 +2847,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   }, []);
 
   const patchFixture = reactHostPort.useCallback((updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {
+    fixtureGraphMutationSuppressRef.current += 1;
     setFixtureState((prev) => updater(prev));
   }, []);
 
@@ -3736,47 +3743,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("filterPuzzle2dPlayStructuralDeleteBatch", () => {
-    it("keeps real multi-edge node deletes and drops resync-only ghost ids", () => {
-      const fixture: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
-        camera: { x: 0, y: 0, zoom: 1 },
-        nodes: [
-          { id: "hub", x: 0, y: 0, radius: 20, handles: [{ id: "hub.h0", angle: 0 }] },
-          { id: "leaf", x: 100, y: 0, radius: 20, handles: [{ id: "leaf.h0", angle: Math.PI }] },
-        ],
-        edges: [
-          { id: "e0", source: "hub.h0", target: "leaf.h0" },
-          { id: "e1", source: "hub.h0", target: "leaf.h0" },
-          { id: "e2", source: "hub.h0", target: "leaf.h0" },
-          { id: "e3", source: "hub.h0", target: "leaf.h0" },
-          { id: "e4", source: "hub.h0", target: "leaf.h0" },
-          { id: "e5", source: "hub.h0", target: "leaf.h0" },
-        ],
-      };
-      const batch = [
-        { kind: "edge" as const, id: "e0" },
-        { kind: "edge" as const, id: "e1" },
-        { kind: "edge" as const, id: "e2" },
-        { kind: "edge" as const, id: "e3" },
-        { kind: "edge" as const, id: "e4" },
-        { kind: "edge" as const, id: "e5" },
-        { kind: "node" as const, id: "leaf" },
-      ];
-      expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
-      expect(
-        filterPuzzle2dPlayStructuralDeleteBatch(
-          [
-            { kind: "edge", id: "ghost-edge" },
-            { kind: "node", id: "ghost-node" },
-            { kind: "edge", id: "e0" },
-          ],
-          fixture,
-        ),
-      ).toEqual([{ kind: "edge", id: "e0" }]);
-    });
-  });
-
   describe("UiRenderer host surfaces", () => {
     it("renders cad nodes through platform surface bindings", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
@@ -3834,6 +3800,27 @@ if (import.meta.vitest) {
       } finally {
         unregisterSurfaceBinding(surfaceId);
       }
+    });
+  });
+
+  describe("mergePaletteNodeFromDrop", () => {
+    it("merges palette circle seed at drop world coordinates", async () => {
+      const { PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE, decodePuzzle2dFixtureFromDragV1, encodePuzzle2dFixtureForDragV1 } = await import("@puzzle/2d/react");
+      const dragFixture = decodePuzzle2dFixtureFromDragV1(
+        encodePuzzle2dFixtureForDragV1({
+          camera: { x: 0, y: 0, zoom: 1 },
+          edges: [],
+          meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
+          nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 24, x: 0, y: 0 }],
+          schema: "puzzle.2d.fixture/v1",
+        }),
+      );
+      expect(dragFixture).not.toBeNull();
+      const merged = mergePaletteNodeFromDrop({ fixture: dragFixture!, screen: { x: 0, y: 0 }, world: { x: 120, y: 80 } });
+      expect(merged).not.toBeNull();
+      expect(merged!.x).toBe(120);
+      expect(merged!.y).toBe(80);
+      expect(merged!.id).not.toBe("palette-seed-circle");
     });
   });
 }

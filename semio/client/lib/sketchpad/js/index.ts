@@ -862,7 +862,9 @@ export class SemioJsKitStore extends SemioKitStore {
 	/** @emoji 🔄 Re-reads kit DTO from rs and notifies subscribers. */
 	async refreshFromJs(): Promise<void> {
 		const kit = await sketchpadKitDtoFromJsStore(this.jsStore);
-		this.replaceKit(sketchpadApplyPortCompatById(kit, this.portCompatById));
+		const fromGraphql = sketchpadExtractPortCompatById(kit);
+		const compat = sketchpadMergePortCompatMaps(this.portCompatById, fromGraphql);
+		this.replaceKit(sketchpadApplyPortCompatById(kit, compat));
 	}
 
 	override dispose(): void {
@@ -1001,9 +1003,14 @@ export async function createSemioKitStoreFromJsStore(
 	const portCompatById = sketchpadExtractPortCompatById(
 		options?.portCompatSource ?? ({ id: "", name: "" } as Kit),
 	);
-	let kit = sketchpadApplyPortCompatById(await sketchpadKitDtoFromJsStore(jsStore), portCompatById);
+	const materializeKit = async (): Promise<Kit> => {
+		const dto = await sketchpadKitDtoFromJsStore(jsStore);
+		const compat = sketchpadMergePortCompatMaps(portCompatById, sketchpadExtractPortCompatById(dto));
+		return sketchpadApplyPortCompatById(dto, compat);
+	};
+	let kit = await materializeKit();
 	const refresh = async (): Promise<void> => {
-		kit = sketchpadApplyPortCompatById(await sketchpadKitDtoFromJsStore(jsStore), portCompatById);
+		kit = await materializeKit();
 	};
 	await refresh();
 	return new SemioJsKitStore(
@@ -1424,6 +1431,16 @@ function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unkno
 	};
 	sketchpadForEachKitPortRecord(kit, remember);
 	return [...byId.values()];
+}
+
+/** @emoji 🔀 Merges port compat maps; later map entries override earlier ones for the same port id. */
+export function sketchpadMergePortCompatMaps(
+	primary: ReadonlyMap<string, readonly { readonly id: string }[]>,
+	overlay: ReadonlyMap<string, readonly { readonly id: string }[]>,
+): Map<string, readonly { readonly id: string }[]> {
+	const merged = new Map(primary);
+	for (const [portId, refs] of overlay) merged.set(portId, refs);
+	return merged;
 }
 
 /** @emoji 🗺️ Collects port {@code compatiblePorts} refs from a kit snapshot (bundle or DTO). */
@@ -3475,6 +3492,15 @@ if (import.meta.vitest) {
 				copatibleWith: { edges: [{ node: { id: "p2" } }] },
 			});
 			expect(sketchpadReadCompatiblePortIds(port)).toEqual(["p2"]);
+		});
+	});
+
+	describe("sketchpadMergePortCompatMaps", () => {
+		it("overlays graphql compat onto bundle-derived compat", () => {
+			const base = new Map<string, readonly { readonly id: string }[]>([["p1", [{ id: "p-old" }]]]);
+			const overlay = new Map<string, readonly { readonly id: string }[]>([["p1", [{ id: "p-new" }]]]);
+			const merged = sketchpadMergePortCompatMaps(base, overlay);
+			expect(merged.get("p1")).toEqual([{ id: "p-new" }]);
 		});
 	});
 

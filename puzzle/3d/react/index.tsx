@@ -3261,6 +3261,21 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 //#region ­ƒîÇVortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
+//#region 🔖VortexPickPriority
+/** @emoji 🎯 World-space depth bias (units) so a vortex pick wins over the object surface it sits on, without hijacking clicks on distant geometry. */
+const VORTEX_PICK_DEPTH_BIAS = 1.5;
+
+/** @emoji 🎯 Mesh raycast biasing vortex hits closer so occluding object meshes do not swallow vortex hover/selection ({@link VORTEX_PICK_DEPTH_BIAS}). */
+function vortexPickRaycast(this: import("three").Mesh, raycaster: Raycaster, intersects: import("three").Intersection[]): void {
+  const local: import("three").Intersection[] = [];
+  Mesh.prototype.raycast.call(this, raycaster, local);
+  for (const hit of local) {
+    hit.distance = Math.max(hit.distance - VORTEX_PICK_DEPTH_BIAS, hit.distance * 0.01);
+    intersects.push(hit);
+  }
+}
+//#endregion
+
 function VortexMeshGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
   const scale = (props.radius / 0.35) * 0.9;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
@@ -3410,6 +3425,16 @@ export const Vortex = reactHostPort.memo(function Vortex(
     commitSelection({ kind: "vortex", fullId });
     setActiveRelocateObjectId(props.objectId);
   }, [commitSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
+
+  const onVortexClick = reactHostPort.useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      if (e.nativeEvent.button !== 0) {
+        return;
+      }
+      e.stopPropagation();
+    },
+    [],
+  );
 
   const onPointerDown = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
