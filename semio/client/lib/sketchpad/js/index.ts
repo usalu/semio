@@ -4,8 +4,8 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Session, Type } from "@semio/js";
-import { Session as SemioSession } from "@semio/js";
+import type { Design, Kit, Session, SetResult, Type } from "@semio/js";
+import { Kit as JsKitEntity, Session as SemioSession } from "@semio/js";
 import { gunzipSync } from "fflate";
 import type { Store as JsKitStore } from "@semio/js";
 import {
@@ -41,6 +41,16 @@ import {
 	type WindowBodyViewContext,
 } from "@framework/platform/core";
 import type { SearchItemSpec } from "@framework/core";
+import type { BoardFixtureV1 } from "@puzzle/2d/react";
+import type { VolumeFixtureV1 } from "@puzzle/3d/react";
+import {
+	createTopologyStore,
+	flatCameraFromPartCenters,
+	flatPartCenterFromTopLeft,
+	topologyCompose,
+	type TopologyStore,
+	type TopologyStoreSnapshot,
+} from "@puzzle/5d/react";
 //#endregion 🔌Adapters
 
 //#region 🔖KitImport
@@ -112,15 +122,45 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
 //#region 🔖KitHost
 export type SketchpadKitPersistenceKind = "temporary" | "file" | "folder" | "remote" | "fixture";
 
-/** @emoji 🏭 Host-provided kit backend factory (Electron, VS Code, browser file picker, …). */
-export type SketchpadKitBackendFactory = () => Promise<SemioKitStoreBackend>;
+/** @emoji 🏭 Host-provided kit open factory (Electron, VS Code, browser file picker, …). */
+export type SketchpadKitBackendFactory = () => Promise<SemioKitStore>;
 
 let sketchpadKitBackendFactories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>> = {};
 
+function sketchpadKitStoreFromFactory(result: SemioKitStore | SemioKitStoreBackend): SemioKitStore {
+	return result instanceof SemioKitStore ? result : new SemioKitStore(result);
+}
+
+function sketchpadPromptServerUrl(preset?: string): string | null {
+	if (typeof window === "undefined" || typeof window.prompt !== "function") return preset ?? null;
+	return window.prompt("Semio store URL", preset ?? "http://localhost:8080");
+}
+
+/** @emoji 🌐 Default browser remote kit factory ({@link Session.openHttp}). */
+export async function sketchpadDefaultRemoteKitFactory(): Promise<SemioKitStore> {
+	const serverUrl = sketchpadPromptServerUrl()?.trim();
+	if (!serverUrl) throw new Error("semio/sketchpad: remote kit open cancelled");
+	return sketchpadOpenRemoteKitStore(serverUrl);
+}
+
+/** @emoji 🌐 Opens an HTTP {@link Session} kit and returns a {@link SemioJsKitStore}. */
+export async function sketchpadOpenRemoteKitStore(serverUrl: string): Promise<SemioJsKitStore> {
+	const session = await SemioSession.openHttp(serverUrl);
+	const stores = await session.stores();
+	const jsStore = stores[0];
+	if (!jsStore) {
+		await session.dispose();
+		throw new Error("semio/sketchpad: remote session has no stores");
+	}
+	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+}
+
 /** @emoji 🔧 Registers host kit open factories used by {@link SketchpadShellController} `openKit` commands. */
 export function configureSketchpadKitFactories(factories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>>): void {
-	sketchpadKitBackendFactories = { ...sketchpadKitBackendFactories, ...factories };
+	sketchpadKitBackendFactories = { remote: sketchpadDefaultRemoteKitFactory, ...sketchpadKitBackendFactories, ...factories };
 }
+
+configureSketchpadKitFactories({});
 
 /** @emoji 📎 Registers a {@link SemioKitStore} on the shell controller. */
 export function attachSketchpadKitStore(
@@ -164,7 +204,9 @@ export async function openSketchpadKitFromImport(
 	const { kit, session } = await importKit(data);
 	const jsStores = await session.stores();
 	const jsStore = jsStores[0];
-	const store = jsStore ? await createSemioKitStoreFromJsStore(jsStore) : new InMemorySemioKitStore(kit);
+	const store = jsStore
+		? await createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() })
+		: new InMemorySemioKitStore(kit);
 	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate });
 	return kit.id;
 }
@@ -244,20 +286,94 @@ export class InMemorySemioKitStore extends SemioKitStore {
 	}
 }
 
-/** @emoji 🌐 SemioKitStore backed by {@link @semio/js} Store (WASM worker / HTTP session). */
-export async function createSemioKitStoreFromJsStore(jsStore: JsKitStore): Promise<SemioKitStore> {
-	let kit = (await jsStore.wip().theKit().kit()) as Kit;
+/** @emoji 🌐 {@link SemioKitStore} backed by {@link @semio/js} with live kit mutations. */
+export class SemioJsKitStore extends SemioKitStore {
+	constructor(
+		backend: SemioKitStoreBackend,
+		readonly jsStore: JsKitStore,
+		private readonly onSessionDispose?: () => void | Promise<void>,
+	) {
+		super(backend);
+	}
+
+	/** @emoji 🏛 WIP {@link JsKitEntity} handle for GraphQL kit commands. */
+	async jsKitEntity(): Promise<JsKitEntity> {
+		return this.jsStore.wip().theKit().kit();
+	}
+
+	/** @emoji 🔄 Re-reads kit DTO from rs and notifies subscribers. */
+	async refreshFromJs(): Promise<void> {
+		this.replaceKit(await sketchpadKitDtoFromJsStore(this.jsStore));
+	}
+
+	override dispose(): void {
+		super.dispose();
+		void this.onSessionDispose?.();
+	}
+}
+
+/** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
+export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<Kit> {
+	const data = await jsStore.readKitInner(
+		`id name description designs { edges { node { id name description unit } } } types { edges { node { id name description unit } } }`,
+	);
+	if (!data) return { id: "", name: "" } as Kit;
+	const nodes = (key: string): readonly Record<string, unknown>[] => {
+		const edges = (data[key] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		return edges.map((edge) => edge.node).filter((node): node is Record<string, unknown> => node != null);
+	};
+	return {
+		id: String(data["id"] ?? ""),
+		name: String(data["name"] ?? ""),
+		description: data["description"] != null ? String(data["description"]) : undefined,
+		designs: nodes("designs") as Design[],
+		types: nodes("types") as Type[],
+	} as Kit;
+}
+
+/** @emoji 🌐 Builds a {@link SemioJsKitStore} from a live {@link @semio/js} store. */
+export async function createSemioKitStoreFromJsStore(
+	jsStore: JsKitStore,
+	options?: { readonly onDispose?: () => void | Promise<void> },
+): Promise<SemioJsKitStore> {
+	let kit = await sketchpadKitDtoFromJsStore(jsStore);
 	const refresh = async (): Promise<void> => {
-		kit = (await jsStore.wip().theKit().kit()) as Kit;
+		kit = await sketchpadKitDtoFromJsStore(jsStore);
 	};
 	await refresh();
-	return new SemioKitStore({
-		getSnapshot: () => ({ kit }),
-		subscribe: (listener) =>
-			jsStore.session.subscribe(() => {
-				void refresh().then(listener);
-			}),
-	});
+	return new SemioJsKitStore(
+		{
+			getSnapshot: () => ({ kit }),
+			replace: (next) => {
+				kit = next;
+			},
+			subscribe: (listener) =>
+				jsStore.session.subscribe(() => {
+					void refresh().then(listener);
+				}),
+		},
+		jsStore,
+		options?.onDispose,
+	);
+}
+
+/** @emoji ⚡ Runs a {@link JsKitEntity} mutation on the active js-backed kit store. */
+export async function executeSketchpadJsKitMutation(
+	kitId: string,
+	run: (kit: JsKitEntity) => Promise<SetResult>,
+	storeOverride?: SemioKitStore,
+): Promise<SetResult> {
+	const store = storeOverride ?? getSketchpadShellController()?.getKitStore(kitId);
+	if (!(store instanceof SemioJsKitStore)) {
+		return { ok: false, error: { kind: "NotSupported", message: "semio/sketchpad: kit is not backed by @semio/js" } };
+	}
+	const result = await run(await store.jsKitEntity());
+	await store.refreshFromJs();
+	return result;
+}
+
+function sketchpadActiveKitIdFromPath(path: string): string | null {
+	return path.split("?")[0]?.match(/^\/kits\/([^/]+)/)?.[1] ?? null;
 }
 
 export function sketchpadKitStoreId(kitId: string): string {
@@ -341,6 +457,187 @@ function sketchpadPanelTextStack(lines: readonly { readonly text: string; readon
 }
 //#endregion 🔖KitHelpers
 
+//#region 🔖Topology
+export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = "topology:";
+
+/** @emoji 🧩 Stable FiveD instance id for kit diagram surfaces. */
+export function sketchpadKitDiagramInstanceId(kitId: string): string {
+	return `${kitId}:kit:diagram`;
+}
+
+/** @emoji 🧩 Stable FiveD instance id for a design scene (volume). */
+export function sketchpadDesignSceneInstanceId(kitId: string, designId: string): string {
+	return `${kitId}:${designId}:scene`;
+}
+
+/** @emoji 🧩 Stable FiveD instance id for a design diagram (flat). */
+export function sketchpadDesignDiagramInstanceId(kitId: string, designId: string): string {
+	return `${kitId}:${designId}:diagram`;
+}
+
+/** @emoji 🔍 Parses sketchpad FiveD {@link Puzzle5dModel.instanceId} segments. */
+export function parseSketchpadPuzzleInstanceId(instanceId: string): {
+	readonly kitId: string | null;
+	readonly designId: string | null;
+	readonly pane: "kit-diagram" | "scene" | "diagram" | null;
+} {
+	const parts = instanceId.split(":");
+	if (parts.length === 3 && parts[1] === "kit" && parts[2] === "diagram") {
+		return { kitId: parts[0] ?? null, designId: null, pane: "kit-diagram" };
+	}
+	if (parts.length === 3 && parts[2] === "scene") {
+		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, pane: "scene" };
+	}
+	if (parts.length === 3 && parts[2] === "diagram") {
+		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, pane: "diagram" };
+	}
+	return { kitId: null, designId: null, pane: null };
+}
+
+export function sketchpadTopologyStoreId(instanceId: string): string {
+	return `${SKETCHPAD_TOPOLOGY_STORE_PREFIX}${instanceId}`;
+}
+
+/** @emoji 🔗 Adapts {@link TopologyStore} for {@link Controller.provideStore}. */
+export class SketchpadTopologyStoreBridge extends Store<TopologyStoreSnapshot> {
+	private detach?: () => void;
+
+	constructor(readonly inner: TopologyStore) {
+		super();
+		this.detach = inner.subscribe(() => this.notify());
+	}
+
+	override getSnapshot(): TopologyStoreSnapshot {
+		return this.inner.getSnapshot();
+	}
+
+	override dispose(): void {
+		this.detach?.();
+		super.dispose();
+	}
+}
+
+function sketchpadEmptyVolumeFixture(): VolumeFixtureV1 {
+	return {
+		schema: "puzzle.3d.fixture/v1",
+		domain: "architecture",
+		camera: { position: [12, 12, 12], target: [0, 0, 0], zoom: 1 },
+		objects: [],
+		attractions: [],
+	};
+}
+
+const SKETCHPAD_KIT_DIAGRAM_NODE_FRAME = { width: 120, height: 48 } as const;
+
+/** @emoji 🗺️ Builds a flat kit topology board from kit types, designs, and piece references. */
+export function sketchpadKitBoardFixtureFromKit(kit: Kit): BoardFixtureV1 {
+	const nodes: BoardFixtureV1["nodes"] = [];
+	const edges: BoardFixtureV1["edges"] = [];
+	const centers: { x: number; y: number }[] = [];
+	let column = 0;
+	for (const type of kit.types ?? []) {
+		const id = `type:${type.id}`;
+		const center = flatPartCenterFromTopLeft({ x: column * 140, y: 0 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
+		centers.push(center);
+		nodes.push({
+			id,
+			shape: "rectangle",
+			width: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.width,
+			height: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.height,
+			x: center.x,
+			y: center.y,
+			text: type.name ?? type.id,
+			nodeKind: "semio.kit.type",
+			root: true,
+			handles: [],
+		});
+		column += 1;
+	}
+	let row = 1;
+	for (const design of kit.designs ?? []) {
+		const id = `design:${design.id}`;
+		const center = flatPartCenterFromTopLeft({ x: column * 140, y: row * 100 }, SKETCHPAD_KIT_DIAGRAM_NODE_FRAME);
+		centers.push(center);
+		nodes.push({
+			id,
+			shape: "rectangle",
+			width: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.width,
+			height: SKETCHPAD_KIT_DIAGRAM_NODE_FRAME.height,
+			x: center.x,
+			y: center.y,
+			text: design.name ?? design.id,
+			nodeKind: "semio.kit.design",
+			root: true,
+			handles: [],
+		});
+		column += 1;
+		if (column > 7) {
+			column = 0;
+			row += 1;
+		}
+	}
+	const edgeIds = new Set<string>();
+	for (const design of kit.designs ?? []) {
+		for (const piece of design.pieces ?? []) {
+			const typeId = piece.type?.id;
+			if (typeId) {
+				const edgeId = `ref-type:${typeId}-design:${design.id}`;
+				if (!edgeIds.has(edgeId)) {
+					edgeIds.add(edgeId);
+					edges.push({ id: edgeId, source: `type:${typeId}`, target: `design:${design.id}` });
+				}
+			}
+		}
+	}
+	return {
+		schema: "puzzle.2d.fixture/v1",
+		camera: flatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
+		nodes,
+		edges,
+	};
+}
+
+/** @emoji 🗺️ Builds a flat design diagram board from design pieces. */
+export function sketchpadDesignBoardFixtureFromDesign(design: Design): BoardFixtureV1 {
+	const pieces = design.pieces ?? [];
+	const centers = pieces.map((piece, index) =>
+		flatPartCenterFromTopLeft({ x: (index % 8) * 100, y: Math.floor(index / 8) * 72 }, { width: 80, height: 40 }),
+	);
+	return {
+		schema: "puzzle.2d.fixture/v1",
+		camera: flatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
+		nodes: pieces.map((piece, index) => {
+			const center = centers[index]!;
+			return {
+				id: `piece:${piece.id}`,
+				shape: "rectangle",
+				width: 80,
+				height: 40,
+				x: center.x,
+				y: center.y,
+				text: piece.name ?? piece.id,
+				nodeKind: "semio.design.piece",
+				root: true,
+				handles: [],
+			};
+		}),
+		edges: [],
+	};
+}
+
+function sketchpadTopologyModelForKitDiagram(kit: Kit) {
+	return topologyCompose(sketchpadKitBoardFixtureFromKit(kit), sketchpadEmptyVolumeFixture());
+}
+
+function sketchpadTopologyModelForDesignScene(design: Design) {
+	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design), sketchpadEmptyVolumeFixture());
+}
+
+function sketchpadTopologyModelForDesignDiagram(design: Design) {
+	return topologyCompose(sketchpadDesignBoardFixtureFromDesign(design), sketchpadEmptyVolumeFixture());
+}
+//#endregion 🔖Topology
+
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "semio.sketchpad.shell";
 const SKETCHPAD_EXTENSION_ID = "semio.sketchpad.builtin";
 export const SKETCHPAD_HOME_APP_ID = "home";
@@ -407,8 +704,17 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 		if (!kitId) return;
 		const store = getSketchpadShellController()?.getKitStore(kitId);
 		if (store) {
-			this.detachKitStore = store.subscribe(() => this.refresh());
+			this.detachKitStore = store.subscribe(() => {
+				this.syncTopologyForSurface();
+				this.refresh();
+			});
+			this.syncTopologyForSurface();
 		}
+	}
+
+	/** @emoji 🔄 Pushes kit/design data into controller-owned topology stores for FiveD surfaces. */
+	protected syncTopologyForSurface(): void {
+		getSketchpadShellController()?.syncTopologyForSurface(this.surfaceId, this.route);
 	}
 
 	dispose(): void {
@@ -498,39 +804,34 @@ export class SketchpadKitTable extends SketchpadRoutedComponent<TableModel> {
 	}
 }
 
-/** @emoji 📋 Kit diagram surface (topology summary as nodes). */
-export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle2dModel> {
+/** @emoji 📋 Kit diagram surface (FiveD flat topology). */
+export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle5dModel> {
 	constructor(platform: Platform) {
-		super("puzzle2d", SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, { nodes: [], edges: [] }, platform);
+		super(
+			"puzzle5d",
+			SKETCHPAD_SURFACE_KIT_DIAGRAM,
+			SKETCHPAD_SHELL_CONTROLLER_ID,
+			{ presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM },
+			platform,
+		);
 	}
 
-	override buildSnapshot(): Puzzle2dModel {
+	override buildSnapshot(): Puzzle5dModel {
 		const { kitId } = this.route;
 		if (!kitId) {
-			return { nodes: [], edges: [], emptyMessage: "Open a kit to view the diagram" };
+			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM, emptyMessage: "Open a kit to view the diagram" };
 		}
 		const store = getSketchpadShellController()?.getKitStore(kitId);
 		if (!store) {
-			return { nodes: [], edges: [], emptyMessage: "Kit loading…" };
+			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM, emptyMessage: "Kit loading…" };
 		}
 		const kit = store.getSnapshot().kit;
-		const types = kit.types ?? [];
-		const designs = kit.designs ?? [];
-		const nodes = [
-			...types.map((t, index) => ({
-				id: `type:${t.id}`,
-				label: t.name ?? t.id,
-				x: (index % 6) * 120,
-				y: Math.floor(index / 6) * 80,
-			})),
-			...designs.map((d, index) => ({
-				id: `design:${d.id}`,
-				label: d.name ?? d.id,
-				x: ((index + types.length) % 6) * 120,
-				y: Math.floor((index + types.length) / 6) * 80 + 100,
-			})),
-		];
-		return { nodes, edges: [], emptyMessage: nodes.length ? undefined : "No types or designs to diagram" };
+		const hasContent = (kit.types?.length ?? 0) + (kit.designs?.length ?? 0) > 0;
+		return {
+			presentation: "flat",
+			instanceId: sketchpadKitDiagramInstanceId(kitId),
+			emptyMessage: hasContent ? undefined : "No types or designs to diagram",
+		};
 	}
 }
 
@@ -553,11 +854,10 @@ export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel
 		}
 		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
 		const design = kit ? findDesignInKit(kit, designId) : undefined;
-		const label = design?.name ?? designId;
 		return {
 			presentation: "volume",
-			instanceId: `${kitId}:${designId}:scene`,
-			emptyMessage: design ? `${label} · ${design.pieces?.length ?? 0} piece(s)` : undefined,
+			instanceId: sketchpadDesignSceneInstanceId(kitId, designId),
+			emptyMessage: design ? undefined : `Design ${designId} not found`,
 		};
 	}
 }
@@ -579,7 +879,13 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
 		if (!kitId || !designId) {
 			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM, emptyMessage: "Open a design to view the diagram" };
 		}
-		return { presentation: "flat", instanceId: `${kitId}:${designId}:diagram` };
+		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
+		const row = kit ? findDesignInKit(kit, designId) : undefined;
+		return {
+			presentation: "flat",
+			instanceId: sketchpadDesignDiagramInstanceId(kitId, designId),
+			emptyMessage: row ? undefined : `Design ${designId} not found`,
+		};
 	}
 }
 
@@ -823,27 +1129,82 @@ export class SketchpadShellController extends Controller {
 		return this.kitKinds.get(kitId);
 	}
 
+	/** @emoji 🗺️ Refreshes topology stores for routed FiveD surfaces (kit diagram, design scene/diagram). */
+	syncTopologyForSurface(
+		surfaceId: string,
+		route: { readonly kitId: string | null; readonly designId: string | null; readonly typeId: string | null },
+	): void {
+		const { kitId, designId } = route;
+		if (!kitId) return;
+		const kit = this.getKitStore(kitId)?.getSnapshot().kit;
+		if (!kit) return;
+		if (surfaceId === SKETCHPAD_SURFACE_KIT_DIAGRAM) {
+			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyModelForKitDiagram(kit));
+			return;
+		}
+		if (!designId) return;
+		const design = findDesignInKit(kit, designId);
+		if (!design) return;
+		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_SCENE) {
+			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyModelForDesignScene(design));
+			return;
+		}
+		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_DIAGRAM) {
+			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyModelForDesignDiagram(design));
+		}
+	}
+
+	private upsertTopologyStore(instanceId: string, model: ReturnType<typeof topologyCompose>): void {
+		const storeId = sketchpadTopologyStoreId(instanceId);
+		const existing = this.getStore(storeId) as SketchpadTopologyStoreBridge | undefined;
+		if (existing) {
+			existing.inner.replaceModel(model);
+			this.emit();
+			return;
+		}
+		this.provideStore(storeId, new SketchpadTopologyStoreBridge(createTopologyStore(model)));
+		this.emit();
+	}
+
 	/** @emoji 📂 Opens a kit via host factories or in-memory import and navigates to it. */
 	async openKit(kind: SketchpadKitPersistenceKind, options?: { readonly serverUrl?: string; readonly importUrl?: string }): Promise<string> {
 		if (options?.importUrl) {
 			return openSketchpadKitFromImport(options.importUrl, { kind, navigate: true });
 		}
+		if (kind === "remote" && options?.serverUrl?.trim()) {
+			const store = await sketchpadOpenRemoteKitStore(options.serverUrl.trim());
+			const kitId = store.getSnapshot().kit.id;
+			this.registerKitStore(kitId, store, { kind });
+			this.navigateTo(`/kits/${kitId}`);
+			return kitId;
+		}
 		const factory = sketchpadKitBackendFactories[kind];
 		if (!factory) {
 			throw new Error(`semio/sketchpad: no kit factory registered for kind "${kind}"`);
 		}
-		const backend = await factory();
-		const kitId = backend.getSnapshot().kit.id;
-		this.registerKitStore(kitId, new SemioKitStore(backend), { kind });
+		const store = sketchpadKitStoreFromFactory(await factory());
+		const kitId = store.getSnapshot().kit.id;
+		this.registerKitStore(kitId, store, { kind });
 		this.navigateTo(`/kits/${kitId}`);
 		return kitId;
 	}
 
-	/** @emoji 🆕 Creates an empty in-memory kit and opens it. */
-	createTemporaryKit(name = "Untitled Kit"): string {
-		const kitId = sketchpadNewKitId();
-		const kit = { id: kitId, name, types: [], designs: [] } as Kit;
-		this.registerKitStore(kitId, new InMemorySemioKitStore(kit), { kind: "temporary" });
+	/** @emoji 🆕 Creates an empty in-memory kit backed by {@link @semio/js} and opens it. */
+	async createTemporaryKit(name = "Untitled Kit"): Promise<string> {
+		const session = await SemioSession.openInMemory();
+		const jsStore = (await session.stores())[0];
+		if (!jsStore) {
+			await session.dispose();
+			throw new Error("semio/sketchpad: createTemporaryKit found no stores");
+		}
+		const store = await createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+		if (name.trim()) {
+			const renamed = await (await store.jsKitEntity()).rename(name.trim());
+			if (!renamed.ok) throw new Error(`semio/sketchpad: rename failed: ${renamed.error?.message ?? "unknown"}`);
+			await store.refreshFromJs();
+		}
+		const kitId = store.getSnapshot().kit.id;
+		this.registerKitStore(kitId, store, { kind: "temporary" });
 		this.navigateTo(`/kits/${kitId}`);
 		return kitId;
 	}
@@ -854,6 +1215,11 @@ export class SketchpadShellController extends Controller {
 		const openKitIds = shell.openKitIds.filter((id) => id !== kitId);
 		this.shellStore.set({ ...shell, openKitIds });
 		this.revokeStore(sketchpadKitStoreId(kitId));
+		for (const storeId of [...this.stores.keys()]) {
+			if (storeId.startsWith(SKETCHPAD_TOPOLOGY_STORE_PREFIX) && storeId.includes(kitId)) {
+				this.revokeStore(storeId);
+			}
+		}
 		this.kitKinds.delete(kitId);
 		const platform = getSketchpadPlatform();
 		const activePath = platform?.uri.split("?")[0] ?? shell.navigationPath;
@@ -909,7 +1275,31 @@ export class SketchpadShellController extends Controller {
 			}
 			case "createTemporaryKit": {
 				const name = (args as { name?: string }).name;
-				this.createTemporaryKit(name);
+				void this.createTemporaryKit(name).catch((error) => {
+					console.error("[semio.sketchpad] createTemporaryKit failed:", error);
+				});
+				break;
+			}
+			case "renameActiveKit": {
+				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
+				const name = (args as { name?: string }).name?.trim();
+				if (!kitId || !name) break;
+				void executeSketchpadJsKitMutation(kitId, (kit) => kit.rename(name))
+					.then((result) => {
+						if (!result.ok) console.error("[semio.sketchpad] renameActiveKit failed:", result.error?.message);
+					})
+					.catch((error) => console.error("[semio.sketchpad] renameActiveKit failed:", error));
+				break;
+			}
+			case "createDesignInActiveKit": {
+				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
+				const designName = (args as { name?: string }).name?.trim() ?? "New design";
+				if (!kitId) break;
+				void executeSketchpadJsKitMutation(kitId, (kit) => kit.createDesign(designName))
+					.then((result) => {
+						if (!result.ok) console.error("[semio.sketchpad] createDesignInActiveKit failed:", result.error?.message);
+					})
+					.catch((error) => console.error("[semio.sketchpad] createDesignInActiveKit failed:", error));
 				break;
 			}
 			case "closeKit": {
@@ -917,8 +1307,7 @@ export class SketchpadShellController extends Controller {
 				break;
 			}
 			case "closeActiveKit": {
-				const path = this.shellStore.get().navigationPath.split("?")[0] ?? "/";
-				const kitId = path.match(/^\/kits\/([^/]+)/)?.[1];
+				const kitId = sketchpadActiveKitIdFromPath(this.shellStore.get().navigationPath);
 				if (kitId) this.closeKit(kitId);
 				break;
 			}
@@ -959,6 +1348,8 @@ function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 	return [
 		sketchpadShellCommand("semio.sketchpad.kit.goHome", "Go to Home", "navigate", { path: "/" }),
 		sketchpadShellCommand("semio.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
+		sketchpadShellCommand("semio.sketchpad.kit.rename", "Rename kit", "renameActiveKit", { name: "Renamed kit" }),
+		sketchpadShellCommand("semio.sketchpad.kit.createDesign", "Create design", "createDesignInActiveKit", { name: "New design" }),
 	];
 }
 
@@ -1041,7 +1432,7 @@ function registerSketchpadWindowBodies(): void {
 		buildTableWindowBody(SKETCHPAD_SURFACE_KIT_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID, "table"),
 	);
 	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () =>
-		buildPuzzle2dWindowBody(SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
+		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
 	);
 	registerWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () =>
 		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
@@ -1187,14 +1578,35 @@ if (import.meta.vitest) {
 			ctrl.dispose();
 		});
 
-		it("createTemporaryKit registers navigable kit", () => {
+		it("createTemporaryKit registers navigable kit", async () => {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => {});
-			const id = ctrl.createTemporaryKit("Test");
+			const id = await ctrl.createTemporaryKit("Test");
 			expect(ctrl.listOpenKitIds()).toContain(id);
 			expect(ctrl.getKitStore(id)?.getSnapshot().kit.name).toBe("Test");
 			expect(ctrl.navigationPath).toBe(`/kits/${id}`);
+			expect(ctrl.getKitStore(id)).toBeInstanceOf(SemioJsKitStore);
 			ctrl.dispose();
+		});
+	});
+
+	describe("executeSketchpadJsKitMutation", () => {
+		it("createDesign updates kit snapshot", async () => {
+			const session = await SemioSession.openInMemory({ timeoutMs: 120_000 });
+			try {
+				const jsStore = (await session.stores())[0]!;
+				const store = await createSemioKitStoreFromJsStore(jsStore);
+				const bus = new CommandBus();
+				const ctrl = new SketchpadShellController(bus, () => {});
+				const kitId = store.getSnapshot().kit.id;
+				ctrl.registerKitStore(kitId, store);
+				const created = await executeSketchpadJsKitMutation(kitId, (kit) => kit.createDesign("Layout A"), store);
+				expect(created.ok).toBe(true);
+				expect(store.getSnapshot().kit.designs?.some((d) => d.name === "Layout A")).toBe(true);
+				ctrl.dispose();
+			} finally {
+				await session.dispose();
+			}
 		});
 	});
 
@@ -1204,5 +1616,70 @@ if (import.meta.vitest) {
 			expect(findDesignInKit(kit, "d1")?.name).toBe("D");
 		});
 	});
+
+	describe("parseSketchpadPuzzleInstanceId", () => {
+		it("parses kit diagram and design panes", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			expect(parseSketchpadPuzzleInstanceId(sketchpadKitDiagramInstanceId(kitId))).toEqual({
+				kitId,
+				designId: null,
+				pane: "kit-diagram",
+			});
+			expect(parseSketchpadPuzzleInstanceId(sketchpadDesignSceneInstanceId(kitId, designId))).toEqual({
+				kitId,
+				designId,
+				pane: "scene",
+			});
+		});
+	});
+
+	describe("sketchpadKitBoardFixtureFromKit", () => {
+		it("materializes type and design nodes", () => {
+			const kit = {
+				id: "k",
+				types: [{ id: "t1", name: "Window" }],
+				designs: [{ id: "d1", name: "Plan", pieces: [{ id: "p1", type: { id: "t1" } }] }],
+			} as Kit;
+			const fixture = sketchpadKitBoardFixtureFromKit(kit);
+			expect(fixture.nodes.some((n) => n.id === "type:t1")).toBe(true);
+			expect(fixture.nodes.some((n) => n.id === "design:d1")).toBe(true);
+			expect(fixture.edges.length).toBeGreaterThan(0);
+		});
+	});
+
+	describe("SketchpadShellController topology", () => {
+		it("upserts topology store for kit diagram surface", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "K",
+					types: [{ id: "t1", name: "T" }],
+					designs: [],
+				} as Kit),
+			);
+			ctrl.syncTopologyForSurface(SKETCHPAD_SURFACE_KIT_DIAGRAM, { kitId, designId: null, typeId: null });
+			const bridge = ctrl.getStore(sketchpadTopologyStoreId(sketchpadKitDiagramInstanceId(kitId))) as SketchpadTopologyStoreBridge;
+			expect(bridge).toBeDefined();
+			expect(bridge!.inner.getSnapshot().model).toBeDefined();
+			ctrl.dispose();
+		});
+	});
 }
 //#endregion 🧪Tests
+
+//#region 🧪E2E
+if (!import.meta.vitest) {
+	const { test, expect } = await import("@playwright/test");
+	test.describe("sketchpad platform", () => {
+		test("home table mounts on root", async ({ page }) => {
+			await page.goto("/");
+			await expect(page.getByText("No kits open")).toBeVisible({ timeout: 120_000 });
+		});
+	});
+}
+//#endregion 🧪E2E

@@ -2287,7 +2287,7 @@ function normalizeAngleRad(t: number): number {
 
 /** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in board space). */
 function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = reactHostPort.useRef<HTMLDivElement | null>(null);
 
   const setFromClient = reactHostPort.useCallback(
     (clientX: number, clientY: number) => {
@@ -2853,7 +2853,7 @@ const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
 
 function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): ReactElement {
   const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
-  const fixtureRef = useRef<BoardFixtureV1>(fixture);
+  const fixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
   const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
   const boardPlayPaneCamerasBaselineRef = reactHostPort.useRef(boardPlayPaneCamerasBaseline);
@@ -2865,7 +2865,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
   const [preselection, setPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
   const [hoveredId, setHoveredId] = reactHostPort.useState<string | null>(null);
   const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<Puzzle2dPlayPaneId | null>(null);
-  const hoverSourcePaneRef = useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
+  const hoverSourcePaneRef = reactHostPort.useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
   const [boardSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
   const [boardSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
@@ -3011,21 +3011,21 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
     setSelectionIdsState((prev) => new Set([...prev].map((id) => (id === replacedId ? replacementId : id))));
   }, []);
 
-  const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
+  const cameraBasisFixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
   const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
   const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
-  const cameraDisplayOverrideRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
+  const cameraDisplayOverrideRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
   const suppressCameraBasisSyncRef = reactHostPort.useRef(false);
-  const cameraPlayEndAnimRafRef = useRef<number | null>(null);
-  const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
-  const boardPlayRedrawCameraChaseRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
+  const cameraPlayEndAnimRafRef = reactHostPort.useRef<number | null>(null);
+  const boardPlayNodesRedrawCameraAnimRafRef = reactHostPort.useRef<number | null>(null);
+  const boardPlayRedrawCameraChaseRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   const lastPlayingForCameraEaseRef = reactHostPort.useRef(false);
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
-  const nodesRedrawEaseFromRef = useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
+  const nodesRedrawEaseFromRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   /** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
   const nodesRedrawEaseGenerationRef = reactHostPort.useRef(0);
 
@@ -3272,7 +3272,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): 
 
   const redrawPlayingRef = reactHostPort.useRef(false);
   const redrawProgressiveEpochRef = reactHostPort.useRef(0);
-  const redrawLoopSnapshotRef = useRef<BoardPlayRedrawLoopSnapshot>({
+  const redrawLoopSnapshotRef = reactHostPort.useRef<BoardPlayRedrawLoopSnapshot>({
     activePaneId: "2d-overview",
     boardRedrawHandlesAfterNodes: false,
     boardRedrawProgressiveAutoStopMs: 3000,

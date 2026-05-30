@@ -12,7 +12,10 @@
 import { mountPlatform } from "@framework/platform/renderer/react";
 import { Kit, KitFullDtoSchema, asKitInstance } from "@semio/react";
 import { attachSketchpadKit, ensureSketchpadPlatform, InMemorySemioKitStore } from "../../lib/sketchpad/js";
+import { registerSketchpadComponentKindRenderers } from "../../lib/sketchpad/js/sketchpad-renderers.tsx";
 // #endregion 🔌Adapters
+
+registerSketchpadComponentKindRenderers();
 
 declare global {
   interface Window {

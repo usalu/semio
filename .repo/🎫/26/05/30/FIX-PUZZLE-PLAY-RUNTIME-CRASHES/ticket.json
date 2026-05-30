@@ -1,0 +1,10 @@
+{
+  "title": "Fix Puzzle Play Runtime Crashes",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix BoardPlayInner crashes: missing BOARD_CAMERA_ZOOM imports and ensure all hooks use reactHostPort.useRef. Verify puzzle 2d/3d play boot end-to-end.",
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪c35ddf74115c4071bba80b6db7d7adfc"
+  ]
+}

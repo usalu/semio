@@ -1597,8 +1597,9 @@ export interface GroundPickPlaneProps {
 
 export function GroundPickPlane({ planeZ = 0, enabled = true, onPick, onContextPick, onPointerMove, pointerMoveEnabled, planeColor = "#7a9dff", planeOpacity = 0.18 }: GroundPickPlaneProps): ReactNode {
   const moveOn = pointerMoveEnabled ?? Boolean(onPointerMove);
+  const pickDownOn = enabled || moveOn;
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-    if (!enabled || !onPick) return;
+    if (!pickDownOn || !onPick) return;
     e.stopPropagation();
     const p = e.point;
     onPick([p.x, p.y, planeZ] as unknown as Vec3);
@@ -2570,9 +2571,9 @@ export type InteractionSpatialViewHostCallbacks = Pick<
 >;
 
 /** @emoji 🖱️ Ground-plane picking is command input and must stay independent from host geometry selection. */
-export function interactionSpatialGroundPickPlaneEnabled(snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">, pickEnabled: boolean, selectionAccept: readonly ModelEntityKind[]): boolean {
+export function interactionSpatialGroundPickPlaneEnabled(snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">, pickEnabled: boolean): boolean {
   const si = snapshot.spatialInteraction;
-  return pickEnabled !== false && si.spatialGroundPick && selectionAccept.length === 0 && !si.pickDisabledStates.includes(snapshot.state);
+  return pickEnabled !== false && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
 }
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
@@ -2647,7 +2648,7 @@ export function InteractionSpatialView({
   const groundMoveOn = si.spatialGroundPick && si.groundPointerMoveStates.includes(snapshot.state) && Boolean(onScenePointerMove);
   const heightMoveOn = si.spatialGroundPick && si.heightDragStates.includes(snapshot.state) && Boolean(onScenePointerMove) && origin !== null && corner !== null;
   const zRodMoveOn = si.spatialGroundPick && si.verticalRodStates.includes(snapshot.state) && Boolean(onScenePointerMove) && origin !== null;
-  const pickPlaneEnabled = interactionSpatialGroundPickPlaneEnabled(snapshot, pickEnabled, selectionAccept);
+  const pickPlaneEnabled = interactionSpatialGroundPickPlaneEnabled(snapshot, pickEnabled);
   reactHostPort.useEffect(() => {
     onPickEnabledChange?.(pickPlaneEnabled);
   }, [pickPlaneEnabled, onPickEnabledChange]);
@@ -5277,7 +5278,7 @@ if (import.meta.vitest) {
       expect(replHostGeometryPickingEnabled("", spec, "first_corner")).toBe(true);
     });
 
-    it("keeps active spatial ground picks enabled when host geometry selection is disabled", () => {
+    it("enables spatial ground pick plane during rubber-band states regardless of host selection accept", () => {
       const snapshot = {
         state: "first_corner",
         spatialInteraction: {
@@ -5289,8 +5290,8 @@ if (import.meta.vitest) {
           heightConfirmState: null,
         },
       } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
-      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true, [])).toBe(true);
-      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true, ["vertex"])).toBe(false);
+      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(true);
+      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, false)).toBe(false);
     });
 
     it("creates snap and selection metadata for geometry targets", () => {

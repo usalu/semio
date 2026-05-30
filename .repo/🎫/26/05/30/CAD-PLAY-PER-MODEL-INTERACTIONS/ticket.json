@@ -3,10 +3,11 @@
   "emoji": "🎮",
   "status": "closed",
   "description": "Wire interaction sessions and window engagement for every spatial play quad pane (shape, building, energy, structure-classic), not only shape.",
-  "summary": "Fixed CAD play infinite React update loop when starting interactions (e.g. Box). Root cause: every InteractionRepl engagement snapshot called setPaneEngagement with a freshly mirrored WindowEngagement object, which always failed reference equality and rebuilt all window kinds + emitted, retriggering engagement sync in a cycle. Added windowEngagementDigest/windowEngagementsEqual for content-based dedup, in-place engagement updates on existing WindowKindRuntime instances with a shallow-copied windowKinds array for golden refresh, and tests. All cad/js/renderer vitest (50) pass.",
+  "summary": "Fixed CAD play box interaction freezing after the first preview point. Root causes: (1) ShellModeCanvas rebuilt fresh viewport children whenever window engagement synced, remounting InteractionRepl/GL and discarding in-flight pointer.down; (2) GroundPickPlane ignored clicks when rubber-band move preview was on but the pick plane was disabled; (3) interactionSpatialGroundPickPlaneEnabled incorrectly required empty selectionAccept. Added resolveShellModeWindowBody cache in ShellModeCanvas, aligned GroundPickPlane click with move preview, decoupled ground pick from selection accept. Tests: cad/js/renderer (50), platform renderer (12).",
   "goal": "🎯r26-02/🎯runningsketchpad",
   "sessions": [
     "⚪d19897e17db5407b954e458cc1d50e23",
-    "⚪82d17a656a5d4092b94eb3ff60c43d38"
+    "⚪82d17a656a5d4092b94eb3ff60c43d38",
+    "⚪18bbf0ab2e764c619f9eb2ad150031e8"
   ]
 }

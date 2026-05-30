@@ -542,19 +542,16 @@
       "name": "@semio/sketchpad",
       "version": "0.1.0",
       "dependencies": {
+        "@framework/core": "workspace:*",
         "@framework/platform/core": "workspace:*",
-        "@framework/platform/renderer/react": "workspace:*",
         "@puzzle/2d/react": "workspace:*",
         "@puzzle/3d/react": "workspace:*",
         "@puzzle/5d/react": "workspace:*",
         "@semio/js": "*",
-        "@semio/react": "*",
-        "@semio/ui": "*",
-        "@ui/react": "workspace:*",
         "fflate": "^0.8.2",
-        "three": "^0.182.0",
       },
       "devDependencies": {
+        "@framework/platform/renderer/react": "workspace:*",
         "@mdx-js/rollup": "^3.1.1",
         "@playwright/test": "^1.57.0",
         "@semio/assets": "^1.0.0",
@@ -4602,8 +4599,6 @@
     "@semio/logo/@types/node": ["@types/node@20.19.41", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-ECymXOukMnOoVkC2bb1Vc/w/836DXncOg5m8Xj1RH7xSHZJWNYY6Zh7EH477vcnD5egKNNfy2RpNOmuChhFPgQ=="],
 
     "@semio/sketchpad/@types/node": ["@types/node@25.9.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg=="],
-
-    "@semio/sketchpad/three": ["three@0.182.0", "", {}, "sha512-GbHabT+Irv+ihI1/f5kIIsZ+Ef9Sl5A1Y7imvS5RQjWgtTPfPnZ43JmlYI7NtCRDK9zir20lQpfg8/9Yd02OvQ=="],
 
     "@semio/ui/react-dom": ["react-dom@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0", "scheduler": "^0.23.2" }, "peerDependencies": { "react": "^18.3.1" } }, "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw=="],
 

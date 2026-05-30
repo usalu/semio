@@ -12,10 +12,13 @@
 import { mountPlatform } from "@framework/platform/renderer/react";
 import {
 	configureSketchpadKitFactories,
+	createSemioKitStoreFromJsStore,
 	ensureSketchpadPlatform,
 	importKit,
-	type SemioKitStoreBackend,
+	InMemorySemioKitStore,
+	type SemioKitStore,
 } from "@semio/sketchpad";
+import { registerSketchpadComponentKindRenderers } from "@semio/sketchpad/renderers";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
@@ -46,36 +49,32 @@ declare global {
 }
 
 configureSketchpadKitFactories({
-  folder: async (): Promise<SemioKitStoreBackend> => {
+  folder: async (): Promise<SemioKitStore> => {
     const e2e = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FOLDER__ : undefined;
     const folder = e2e && e2e.length > 0 ? e2e : await window.kitFolder.selectFolder();
     if (!folder) throw new Error("No folder selected for kit storage");
     await window.kitFolder.addRecentFolder(folder);
     const bytes = await window.kitFolder.readKit(folder);
     if (!bytes) throw new Error(`Could not read kit from folder: ${folder}`);
-    const { kit } = await importKit(bytes);
-    let current = kit;
-    return {
-      getSnapshot: () => ({ kit: current }),
-      replace: (next) => {
-        current = next;
-      },
-    };
+    const { kit, session } = await importKit(bytes);
+    const jsStore = (await session.stores())[0];
+    if (jsStore) {
+      return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+    }
+    return new InMemorySemioKitStore(kit);
   },
-  file: async (): Promise<SemioKitStoreBackend> => {
+  file: async (): Promise<SemioKitStore> => {
     const e2e = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FILE__ : undefined;
     const filePath = e2e && e2e.length > 0 ? e2e : await window.kitFile.selectFile();
     if (!filePath) throw new Error("No file selected for kit storage");
     const json = await window.kitFile.readJson(filePath);
     if (json == null) throw new Error(`Could not read kit file: ${filePath}`);
-    const { kit } = await importKit(new Blob([json], { type: "application/json" }));
-    let current = kit;
-    return {
-      getSnapshot: () => ({ kit: current }),
-      replace: (next) => {
-        current = next;
-      },
-    };
+    const { kit, session } = await importKit(new Blob([json], { type: "application/json" }));
+    const jsStore = (await session.stores())[0];
+    if (jsStore) {
+      return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+    }
+    return new InMemorySemioKitStore(kit);
   },
 });
 
@@ -87,6 +86,8 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-white">Loading sketchpad…</div>,
 );
+
+registerSketchpadComponentKindRenderers();
 
 void (async () => {
   try {

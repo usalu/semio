@@ -725,6 +725,30 @@ function windowControlsToEngagement(controls: UIWindowControl[] | undefined): En
   };
 }
 
+type ShellModeWindowBodyCacheEntry = {
+  readonly component: UIWindowKindDefinition["component"];
+  readonly contextMenu: UIWindowKindDefinition["contextMenu"];
+  readonly body: React.ReactNode;
+};
+
+/** @emoji 🧷 Stable viewport body for one shell window kind (engagement chrome may refresh without remounting GL). */
+export function resolveShellModeWindowBody(cache: Map<string, ShellModeWindowBodyCacheEntry>, windowKind: UIWindowKindDefinition): React.ReactNode {
+  const existing = cache.get(windowKind.id);
+  if (existing && existing.component === windowKind.component && existing.contextMenu === windowKind.contextMenu) {
+    return existing.body;
+  }
+  const WindowComponent = windowKind.component;
+  const body = (
+    <ContextMenu items={windowKind.contextMenu}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <WindowComponent />
+      </div>
+    </ContextMenu>
+  );
+  cache.set(windowKind.id, { component: windowKind.component, contextMenu: windowKind.contextMenu, body });
+  return body;
+}
+
 /** @emoji 🪟 Pure-React resizable mode canvas backed by {@link Mode}. */
 export const ShellModeCanvas: React.FC<{
   windowKinds: UIWindowKindDefinition[];
@@ -732,26 +756,24 @@ export const ShellModeCanvas: React.FC<{
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
 }> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
+  const windowBodyCacheRef = reactHostPort.useRef(new Map<string, ShellModeWindowBodyCacheEntry>());
+  reactHostPort.useLayoutEffect(() => {
+    const liveIds = new Set(windowKinds.map((windowKind) => windowKind.id));
+    for (const windowKindId of windowBodyCacheRef.current.keys()) {
+      if (!liveIds.has(windowKindId)) windowBodyCacheRef.current.delete(windowKindId);
+    }
+  }, [windowKinds]);
   const windows = reactHostPort.useMemo<ModeWindowDescriptor[]>(
     () =>
-      windowKinds.map((windowKind) => {
-        const WindowComponent = windowKind.component;
-        return {
-          id: windowKind.id,
-          title: windowKind.label,
-          showControls: true,
-          controls: windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
-          measures: windowKind.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,
-          engagement: windowKind.engagement ?? windowControlsToEngagement(windowKind.controls),
-          children: (
-            <ContextMenu items={windowKind.contextMenu}>
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <WindowComponent />
-              </div>
-            </ContextMenu>
-          ),
-        };
-      }),
+      windowKinds.map((windowKind) => ({
+        id: windowKind.id,
+        title: windowKind.label,
+        showControls: true,
+        controls: windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
+        measures: windowKind.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,
+        engagement: windowKind.engagement ?? windowControlsToEngagement(windowKind.controls),
+        children: resolveShellModeWindowBody(windowBodyCacheRef.current, windowKind),
+      })),
     [windowKinds],
   );
   const shellLayout = reactHostPort.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
@@ -1797,6 +1819,34 @@ export function UiRenderer({ node, commandBus, platform }: UiRendererProps): Rea
 //#region ­ƒº¬Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("ShellModeCanvas", () => {
+		it("resolveShellModeWindowBody reuses the same body node when only engagement chrome changes", () => {
+			const cache = new Map<string, ShellModeWindowBodyCacheEntry>();
+			const HostA: React.FC = () => <div data-testid="host-a" />;
+			const HostB: React.FC = () => <div data-testid="host-b" />;
+			const first = resolveShellModeWindowBody(cache, {
+				id: "shape",
+				label: "Shape",
+				component: HostA,
+				engagement: { input: { id: "in", value: "" } },
+			});
+			const second = resolveShellModeWindowBody(cache, {
+				id: "shape",
+				label: "Shape",
+				component: HostA,
+				engagement: { input: { id: "in", value: "box" } },
+			});
+			const third = resolveShellModeWindowBody(cache, {
+				id: "shape",
+				label: "Shape",
+				component: HostB,
+				engagement: { input: { id: "in", value: "box" } },
+			});
+			expect(second).toBe(first);
+			expect(third).not.toBe(first);
+		});
+	});
 
 	describe("component kind renderers", () => {
 		it("renders registered table components from platform registry", () => {

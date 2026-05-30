@@ -13,10 +13,12 @@
 // #region 🔌Adapters
 import { mountPlatform } from "@framework/platform/renderer/react";
 import { ensureSketchpadPlatform } from "@semio/sketchpad";
+import { registerSketchpadComponentKindRenderers } from "@semio/sketchpad/renderers";
 // #endregion 🔌Adapters
 
 import "./globals.css";
 
+registerSketchpadComponentKindRenderers();
 void mountPlatform(ensureSketchpadPlatform).catch((err) => {
   console.error("[semio.sketchpad.docs]", err);
 });

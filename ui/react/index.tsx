@@ -19985,12 +19985,12 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
               <ButtonGroupItem
                 key={option.id}
                 id={option.id}
+                icon={option.icon}
+                text={option.label}
                 className={cn(option.pressed && "bg-active-base")}
                 onClick={option.onPress}
                 disabled={option.disabled}
-              >
-                {option.icon ?? option.label}
-              </ButtonGroupItem>
+              />
             ))}
           </ButtonGroup>
         </div>
@@ -22624,7 +22624,8 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-window hover:text-foreground",
         !perTabActiveChrome && "bg-window",
         perTabActiveChrome && activeId !== tab.id && cn(modeDockInactiveTabClass, baselineBottomClass),
-        perTabActiveChrome && activeId === tab.id && modeDockActiveTabClass,
+        perTabActiveChrome && activeId === tab.id && !stackGloballyActive && cn(modeDockInactiveTabClass, baselineBottomClass),
+        perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
         !perTabActiveChrome &&
           activeWindowId === tab.id &&
           "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground",
@@ -22670,7 +22671,13 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     <div
       data-slot="mode-dock-controls-cap"
       className={cn(
-        perTabActiveChrome ? windowControlsCapActiveSplitClass : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass,
+        perTabActiveChrome
+          ? stackGloballyActive
+            ? windowControlsCapActiveSplitClass
+            : windowControlsCapClass
+          : stackGloballyActive
+            ? windowControlsCapActiveClass
+            : windowControlsCapClass,
       )}
     >
       <button
@@ -22709,16 +22716,16 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           {tabs.map((tab, index) => (
             <div
               key={tab.id}
-              data-slot={activeId === tab.id ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
+              data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
               className={cn(
                 "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
-                activeId === tab.id ? "z-10" : "z-20",
+                activeId === tab.id && stackGloballyActive ? "z-10" : "z-20",
               )}
               style={{ gridColumn: chromeGrid.tabCol(index) }}
             >
               {tabInsertIndex === index ? renderInsertSlot(`insert-${index}`) : null}
               {renderTab(tab, index)}
-              {activeId === tab.id ? (
+              {activeId === tab.id && stackGloballyActive ? (
                 <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
               ) : null}
             </div>
@@ -23497,6 +23504,52 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-element");
     });
 
+    it("Mode clears multi-tab active chrome on inactive stacks", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[800px]">
+          <Mode
+            windows={[
+              { id: "a1", title: "A1", children: <div>A1 Body</div> },
+              { id: "a2", title: "A2", children: <div>A2 Body</div> },
+              { id: "b1", title: "B1", children: <div>B1 Body</div> },
+              { id: "b2", title: "B2", children: <div>B2 Body</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                {
+                  kind: "stack",
+                  children: [{ kind: "window", id: "a1" }, { kind: "window", id: "a2" }],
+                  activeId: "a1",
+                },
+                {
+                  kind: "stack",
+                  children: [{ kind: "window", id: "b1" }, { kind: "window", id: "b2" }],
+                  activeId: "b2",
+                },
+              ],
+            }}
+            activeWindowId="b2"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
+      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
+      const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
+      const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
+      expect(inactiveStackTab?.className).toContain("border-element");
+      expect(inactiveStackTab?.className).not.toContain("border-active-base");
+      expect(inactiveStackTab?.className).not.toContain("border-b-0");
+      expect(activeStackTab?.className).toContain("border-active-base");
+      expect(activeStackTab?.className).toContain("border-b-0");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
+    });
+
     it("Mode keeps one canvas inset and one gutter between adjacent stacks", () => {
       const { container } = render(
         <div className="h-[400px] w-[600px]">
@@ -23798,6 +23851,15 @@ if (import.meta.vitest) {
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
       expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
+    });
+
+    it("Engagement option buttons size to label text without clipping", () => {
+      const longLabel = "C Confirm selection";
+      const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, onPress: () => {} }]} />);
+      const item = container.querySelector('[data-slot="button-group-item"]') as HTMLElement;
+      expect(item?.textContent).toContain(longLabel);
+      expect(item?.className).toContain("aspect-auto");
+      expect(item?.className).not.toContain("aspect-square");
     });
 
     it("Engagement focuses its input when active", async () => {

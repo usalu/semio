@@ -1,0 +1,11 @@
+{
+  "title": "Fix Window Stack Active Chrome",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When changing the active window to another window stack, the previous active tab and fullscreen button maintain their active marker incorrectly.",
+  "summary": "Multi-tab Mode dock chrome now gates stack-active tab U-cap, cap corner, active grid cell, and maximize control active styling on stackGloballyActive (activeWindowId matches the stack's active tab). Inactive stacks keep secondary chrome even when they still hold a local activeId. Added vitest covering two adjacent multi-tab stacks.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪8c7697ee93e74a35b66a9ee05bd4ba72"
+  ]
+}
