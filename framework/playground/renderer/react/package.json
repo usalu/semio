@@ -9,9 +9,9 @@
 		".": "./index.tsx",
 		"./shell": "./index.tsx",
 		"./boot": "./index.tsx",
-		"./puzzle/2d": "./puzzle/2d-play-host.tsx",
-		"./puzzle/3d": "./puzzle/3d-play-host.tsx",
-		"./puzzle/5d": "./puzzle/5d-play-host.tsx"
+		"./puzzle/2d": "./index.tsx",
+		"./puzzle/3d": "./index.tsx",
+		"./puzzle/5d": "./index.tsx"
 	},
 	"dependencies": {
 		"@framework/playground": "workspace:*",

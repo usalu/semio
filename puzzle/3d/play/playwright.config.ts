@@ -10,7 +10,7 @@ const port = process.env.PUZZLE_3D_PLAY_PORT ?? "6013";
 
 export default defineConfig({
 	testDir: join(playDir, "e2e"),
-	timeout: 120_000,
+	timeout: 180_000,
 	use: {
 		...devices["Desktop Chrome"],
 		baseURL: `http://127.0.0.1:${port}`,

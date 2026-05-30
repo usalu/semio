@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy> [args…]`. */
-import type { FileLinter } from "../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../repo/lib/js/src/index.ts";
+import type { BundleLinter } from "../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../repo/lib/js/src/index.ts";
 import {
   BundleScript,
@@ -13,12 +13,9 @@ import {
 } from "../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../repo/lib/js/src/index.ts";
 
-export const policyFile = "index.tsx";
-
-export const policy = defineLint("@ui/react-index", (l: FileLinter) => {
+export const policy = defineLint("@ui/react-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
-  const file = l.path();
-  return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
+  return dependencyBoundaryBreachesForBundleDir(repoRoot, l.root());
 });
 
 const storybookEnv = () =>

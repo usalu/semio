@@ -8,12 +8,14 @@
 
 // #endregion 🧲Header
 
-// #region 🗄️Configuration
+// #region 🔌Adapters
 // PostCSS plugin configuration for the js library.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 
 import { Config } from "postcss-load-config";
+// #endregion 🔌Adapters
 
+// #region 🗄️Configuration
 /**
  * PostCSS configuration with the Tailwind CSS PostCSS plugin.
  * Config MUST include the @tailwindcss/postcss plugin.

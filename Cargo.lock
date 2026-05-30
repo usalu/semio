@@ -63,26 +63,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "architect"
-version = "0.1.0"
-dependencies = [
- "async-graphql",
- "console_error_panic_hook",
- "futures-util",
- "js-sys",
- "nom",
- "pin-project-lite",
- "semio",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3700,7 +3680,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "puzzle_board"
+name = "puzzle_2d"
 version = "0.1.0"
 dependencies = [
  "base64",
@@ -4424,6 +4404,26 @@ dependencies = [
  "tower-http 0.5.2",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "semio_query"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "console_error_panic_hook",
+ "futures-util",
+ "js-sys",
+ "nom",
+ "pin-project-lite",
+ "semio",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

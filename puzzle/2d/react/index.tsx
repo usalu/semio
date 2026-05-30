@@ -48,7 +48,7 @@ if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
-	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_board_bg.wasm");
+	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_2d_bg.wasm");
 	initSync({ module: readFileSync(wasmPath) });
 } else {
 	await initBoardWasm();
@@ -1040,7 +1040,7 @@ const BOARD_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, v
 /** @emoji 🎨 Secondary-tinted fill for preselect exit / highlight chrome only. */
 const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
 
-/** @emoji 🎨 Resolves Elements semantic CSS (`elements.css` / `@theme`) for board canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
+/** @emoji 🎨 Resolves UI semantic CSS (`@ui/styling/ui.css` / `@theme`) for 2d canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
 const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],

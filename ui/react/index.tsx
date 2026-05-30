@@ -41,8 +41,28 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
+import {
+  Clone,
+  Edges,
+  GizmoHelper,
+  GizmoViewport,
+  Grid,
+  Line as DreiLine,
+  OrbitControls,
+  Outlines,
+  PerspectiveCamera,
+  Text as DreiText,
+  TransformControls,
+  useGLTF,
+} from "@react-three/drei";
+import {
+  Canvas as ThreeCanvas,
+  createPortal as r3fCreatePortal,
+  ThreeEvent,
+  useFrame,
+  useStore,
+  useThree,
+} from "@react-three/fiber";
 import {
   applyNodeChanges,
   Background,
@@ -152,6 +172,29 @@ export interface ThreeHostPort {
   readonly canvas: typeof ThreeCanvas;
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
 }
+
+/** @emoji 🧊 Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌Adapters). */
+export interface SceneHostPort {
+  readonly fiber: {
+    readonly canvas: typeof ThreeCanvas;
+    readonly createPortal: typeof r3fCreatePortal;
+    readonly useFrame: typeof useFrame;
+    readonly useStore: typeof useStore;
+    readonly useThree: typeof useThree;
+  };
+  readonly drei: {
+    readonly Clone: typeof Clone;
+    readonly Line: typeof DreiLine;
+    readonly OrbitControls: typeof OrbitControls;
+    readonly Outlines: typeof Outlines;
+    readonly PerspectiveCamera: typeof PerspectiveCamera;
+    readonly Text: typeof DreiText;
+    readonly TransformControls: typeof TransformControls;
+    readonly useGLTF: typeof useGLTF;
+    readonly Grid: typeof Grid;
+  };
+  readonly three: typeof THREE;
+}
 // #endregion 🔌Ports
 
 // #region 🔌PortWiring
@@ -187,10 +230,35 @@ export let threeHostPort: ThreeHostPort = {
   drei: { OrbitControls, Grid },
 };
 
+/** @emoji 🔌 Default scene host port wired to fiber/drei/three adapters. */
+export let sceneHostPort: SceneHostPort = {
+  fiber: {
+    canvas: ThreeCanvas,
+    createPortal: r3fCreatePortal,
+    useFrame,
+    useStore,
+    useThree,
+  },
+  drei: {
+    Clone,
+    Line: DreiLine,
+    OrbitControls,
+    Outlines,
+    PerspectiveCamera,
+    Text: DreiText,
+    TransformControls,
+    useGLTF,
+    Grid,
+  },
+  three: THREE,
+};
+
 /** @emoji 🔌 JSX aliases for diagram / R3F hosts (use instead of adapter imports in domain JSX). */
 export const HostReactFlow = flowHostPort.flow;
 export const HostReactFlowProvider = flowHostPort.provider;
 export const HostThreeCanvas = threeHostPort.canvas;
+export const HostSceneCanvas = sceneHostPort.fiber.canvas;
+export type { ThreeEvent };
 // #endregion 🔌PortWiring
 
 // #region 🎼Utilities

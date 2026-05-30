@@ -8,12 +8,14 @@
 
 // #endregion 🧲Header
 
+// #region 🔌Adapters
+import { app, BrowserWindow, dialog, ipcMain, net } from "electron";
+import started from "electron-squirrel-startup";
+// #endregion 🔌Adapters
+
 // #region 🔮Sidecar Bridge
 // Manages the Python sidecar child process over JSON-over-stdio.
 // MUST handle spawning, request/response correlation, heartbeats, timeouts, auto-restart, and event forwarding.
-
-import { app, BrowserWindow, dialog, ipcMain, net } from "electron";
-import started from "electron-squirrel-startup";
 import { ChildProcess, spawn } from "node:child_process";
 import path from "node:path";
 import { createInterface, Interface as ReadlineInterface } from "node:readline";

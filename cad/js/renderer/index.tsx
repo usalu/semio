@@ -5,18 +5,23 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort } from "@ui/react";
-import { Line, OrbitControls, Text } from "@react-three/drei";
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { reactHostPort, sceneHostPort, type ThreeEvent } from "@ui/react";
 import {
 	type CSSProperties,
 	type KeyboardEvent,
 	type ReactNode,
 } from "react";
-import { MOUSE } from "three";
-import * as THREE from "three";
+// #endregion 🔌Adapters
 
+// #region 🔌PortWiring
+const Canvas = sceneHostPort.fiber.canvas;
+const useFrame = sceneHostPort.fiber.useFrame;
+const useThree = sceneHostPort.fiber.useThree;
+const { Line, OrbitControls, Text } = sceneHostPort.drei;
+const THREE = sceneHostPort.three;
+const MOUSE = THREE.MOUSE;
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+// #endregion 🔌PortWiring
 
 import {
 	abortActiveInteractionSession,
@@ -112,7 +117,6 @@ type WireRecord = kernelGeometry.WireRecord;
 
 export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
-// #endregion 🔌Adapters
 
 // #region ⚡R3FPreviewKernel
 /** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */

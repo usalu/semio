@@ -1,7 +1,22 @@
 // #region 🔌Adapters
-import { Button, Input, Label, LevelProvider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, applyElementsSurfaceChrome, getLevelBgClass, reactHostPort, type ElementsSurfaceDevice, type ElementsSurfaceTheme } from "@ui/react";
-import { Clone, Line, OrbitControls, Outlines, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas, createPortal, useFrame, useStore, useThree, type ThreeEvent } from "@react-three/fiber";
+import {
+  Button,
+  Input,
+  Label,
+  LevelProvider,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  applyElementsSurfaceChrome,
+  getLevelBgClass,
+  reactHostPort,
+  sceneHostPort,
+  type ElementsSurfaceDevice,
+  type ElementsSurfaceTheme,
+  type ThreeEvent,
+} from "@ui/react";
 import { Trash2 } from "lucide-react";
 import React, {
   Children,
@@ -11,7 +26,22 @@ import React, {
   type MutableRefObject,
   type ReactNode,
 } from "react";
-import {
+// #endregion 🔌Adapters
+
+// #region 🔌PortWiring
+const Canvas = sceneHostPort.fiber.canvas;
+const createPortal = sceneHostPort.fiber.createPortal;
+const useFrame = sceneHostPort.fiber.useFrame;
+const useStore = sceneHostPort.fiber.useStore;
+const useThree = sceneHostPort.fiber.useThree;
+const Clone = sceneHostPort.drei.Clone;
+const Line = sceneHostPort.drei.Line;
+const OrbitControls = sceneHostPort.drei.OrbitControls;
+const Outlines = sceneHostPort.drei.Outlines;
+const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
+const TransformControls = sceneHostPort.drei.TransformControls;
+const useGLTF = sceneHostPort.drei.useGLTF;
+const {
   Box3,
   BoxGeometry,
   BufferGeometry,
@@ -32,16 +62,16 @@ import {
   PointsMaterial,
   Quaternion,
   Raycaster,
-  Line as ThreeLine,
-  PerspectiveCamera as ThreePerspectiveCamera,
+  Line: ThreeLine,
+  PerspectiveCamera: ThreePerspectiveCamera,
   Vector2,
   Vector3,
-  type Camera,
-  type Object3D,
-  type Scene as ThreeScene,
-  type WebGLRenderer,
-} from "three";
-// #endregion 🔌Adapters
+} = sceneHostPort.three;
+type Camera = import("three").Camera;
+type Object3D = import("three").Object3D;
+type ThreeScene = import("three").Scene;
+type WebGLRenderer = import("three").WebGLRenderer;
+// #endregion 🔌PortWiring
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
@@ -849,6 +879,11 @@ export function parseVortexFullId(full: string): { readonly objectId: string; re
     return { objectId: full, vortexId: "link" };
   }
   return { objectId: full.slice(0, i), vortexId: full.slice(i + 1) };
+}
+
+/** @emoji 🔗 Canonical `objectId:vortexId` for fixture vortex rows. */
+export function sceneVortexFullId(objectId: string, vortexId: string): string {
+  return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
 }
 
 /** @emoji ­ƒò│´©Å True when the object is an explicit or inferred wormhole root. */

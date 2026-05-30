@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@cad/js/renderer",
   "version": "0.1.0",
-  "description": "🧭 R3F adapter for spatial factory snapshots + interaction.",
+  "description": "🧭 R3F adapter for CAD factory snapshots + interaction.",
   "type": "module",
   "private": true,
   "scripts": {

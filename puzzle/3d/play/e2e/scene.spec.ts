@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 function collectSceneConsole(page: Page): string[] {
 	const messages: string[] = [];
@@ -27,37 +27,50 @@ function expectCleanSceneConsole(messages: string[]): void {
 
 const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
 
-async function expectSceneLodReady(page: Page): Promise<void> {
-	await expect
-		.poll(async () => page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 120_000 })
-		.toMatch(SCENE_LOD_NUMERIC);
-	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-lod", SCENE_LOD_NUMERIC);
-}
-
-test("scene play loads canvas and fixture", async ({ page }) => {
-	const messages = collectSceneConsole(page);
+async function waitScenePlayReady(page: Page): Promise<Locator> {
 	await page.goto("/");
 	const sceneRoot = page.locator("[data-scene-root]");
 	await expect(sceneRoot).toBeVisible({ timeout: 120_000 });
 	await expect(sceneRoot).toHaveAttribute("data-scene-domain", "architecture", { timeout: 120_000 });
 	await expect(sceneRoot.locator("canvas")).toBeVisible({ timeout: 120_000 });
-	await expectSceneLodReady(page);
+	return sceneRoot;
+}
+
+async function waitScenePlayHooks(page: Page): Promise<void> {
+	await page.waitForFunction(
+		() => typeof (window as unknown as { __scenePlaySelect?: unknown }).__scenePlaySelect === "function",
+		{ timeout: 120_000 },
+	);
+}
+
+async function ensureDetailsPanelOpen(page: Page): Promise<void> {
+	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
+	if ((await detailsPanelToggle.getAttribute("data-state")) !== "on") {
+		await detailsPanelToggle.click();
+	}
+}
+
+async function expectSceneLodReady(sceneRoot: ReturnType<Page["locator"]>): Promise<void> {
+	await expect(sceneRoot).toHaveAttribute("data-scene-lod", SCENE_LOD_NUMERIC, { timeout: 30_000 });
+}
+
+test("scene play loads canvas and fixture", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	const sceneRoot = await waitScenePlayReady(page);
+	await expectSceneLodReady(sceneRoot);
 	await expect(page.locator('[data-measure-id="puzzle-3d-main-lod"]')).toBeVisible({ timeout: 120_000 });
 	expectCleanSceneConsole(messages);
 });
 
 test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
+	await waitScenePlayReady(page);
+	await ensureDetailsPanelOpen(page);
 	await expect(page.locator('[data-measure-id="puzzle-3d-main-auto"]')).toBeVisible({ timeout: 120_000 });
-	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
-	if ((await detailsPanelToggle.getAttribute("data-state")) === "on") {
-		await detailsPanelToggle.click();
-	}
 	await page.locator("#puzzle-3d-main-auto").click({ timeout: 30_000 });
-	const slider = page.locator('[data-measure-id="puzzle-3d-main-lod"] [role="slider"]');
-	await slider.waitFor({ state: "visible", timeout: 30_000 });
+	const slider = page.locator('[data-measure-id="puzzle-3d-main-lod"] [role="slider"]').first();
+	await slider.scrollIntoViewIfNeeded();
+	await expect(slider).toBeVisible({ timeout: 30_000 });
 	await slider.focus();
 	for (let i = 0; i < 40; i += 1) {
 		await page.keyboard.press("ArrowRight");
@@ -72,12 +85,8 @@ test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 
 test("scene play inspector panel is visible", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	const detailsPanelToggle = page.locator("#playground\\.panel\\.details");
-	if ((await detailsPanelToggle.getAttribute("data-state")) !== "on") {
-		await detailsPanelToggle.click();
-	}
+	await waitScenePlayReady(page);
+	await ensureDetailsPanelOpen(page);
 	await page.locator("#puzzle-3d-play-inspector").click({ timeout: 30_000 });
 	await expect(page.getByText("Inspector", { exact: true })).toBeVisible({ timeout: 30_000 });
 	expectCleanSceneConsole(messages);
@@ -85,9 +94,8 @@ test("scene play inspector panel is visible", async ({ page }) => {
 
 test("scene selection hook updates label", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	await waitScenePlayReady(page);
+	await waitScenePlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
@@ -106,9 +114,8 @@ test("scene selection hook updates label", async ({ page }) => {
 
 test("scene pointer miss clears selection", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	await waitScenePlayReady(page);
+	await waitScenePlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
@@ -135,9 +142,8 @@ test("scene pointer miss clears selection", async ({ page }) => {
 
 test("scene activate hook shows relocate controls without recursion", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	await waitScenePlayReady(page);
+	await waitScenePlayHooks(page);
 	const objectId = "01890804-66f2-4544-98f0-b6f0c0615492";
 	const objectLabel = "J · cs_sl1_d0_t_f4_b_c1";
 	await page.waitForFunction(
@@ -158,9 +164,7 @@ test("scene activate hook shows relocate controls without recursion", async ({ p
 
 test("scene does not return to loading meshes after initial load", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	await waitScenePlayReady(page);
 	await expect(page.getByText("Loading meshes…")).toHaveCount(0, { timeout: 120_000 });
 	await page.waitForTimeout(2000);
 	await expect(page.getByText("Loading meshes…")).toHaveCount(0);
@@ -169,23 +173,20 @@ test("scene does not return to loading meshes after initial load", async ({ page
 
 test("scene click keeps chunked meshes mounted", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	const sceneRoot = await waitScenePlayReady(page);
+	const canvas = sceneRoot.locator("canvas").first();
 	await expect.poll(async () => page.locator("canvas").count()).toBeGreaterThan(0);
 	const before = await page.locator("canvas").count();
-	await page.locator("canvas").first().click({ position: { x: 320, y: 240 } });
-	await expect(page.locator("[data-scene-root]")).toBeVisible();
+	await canvas.click({ position: { x: 320, y: 240 } });
+	await expect(sceneRoot).toBeVisible();
 	await expect.poll(async () => page.locator("canvas").count()).toBe(before);
 	expectCleanSceneConsole(messages);
 });
 
 test("scene camera motion changes canvas pixels", async ({ page }) => {
 	const messages = collectSceneConsole(page);
-	await page.goto("/");
-	const canvas = page.locator("canvas").first();
-	await canvas.waitFor({ state: "visible", timeout: 120_000 });
-	await page.waitForLoadState("networkidle");
+	const sceneRoot = await waitScenePlayReady(page);
+	const canvas = sceneRoot.locator("canvas").first();
 	const box = await canvas.boundingBox();
 	expect(box).not.toBeNull();
 	const cx = box!.x + box!.width * 0.5;

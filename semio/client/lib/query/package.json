@@ -1,6 +1,7 @@
 {
   "name": "@semio/query",
   "version": "0.1.0",
+  "description": "semio · query language (Rust/WASM + native)",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/client/lib/query",
   "projectType": "library",

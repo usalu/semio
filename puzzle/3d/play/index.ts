@@ -40,6 +40,7 @@ import {
   parseFixtureV1,
   parseVortexFullId,
   sceneLodCanvasProps,
+  sceneVortexFullId,
   sliderValueFromLod,
   type AttractionProps,
   type CameraState,
@@ -189,10 +190,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   targetRingCount: 0,
 };
 
-/** @emoji 🔗 Canonical `objectId:vortexId` for fixture vortex rows. */
-export function sceneVortexFullId(objectId: string, vortexId: string): string {
-  return vortexId.includes(":") ? vortexId : `${objectId}:${vortexId}`;
-}
+export { sceneVortexFullId };
 
 /** @emoji 🏷️ Tree/inspector label: trimmed fixture label, else fallback id. */
 export function scenePlayFixtureRowLabel(label: string | undefined, fallbackId: string): string {
@@ -1385,6 +1383,11 @@ if (import.meta.vitest) {
       expect(f?.domain).toBe("architecture");
       expect(f?.attractions).toEqual([]);
       expect(f?.objects.length).toBeGreaterThan(0);
+    });
+
+    it("builds canonical vortex full ids", () => {
+      expect(sceneVortexFullId("obj", "vx")).toBe("obj:vx");
+      expect(sceneVortexFullId("obj", "obj:vx")).toBe("obj:vx");
     });
 
     it("stores nakagin vortex positions in type-local CAD space", () => {

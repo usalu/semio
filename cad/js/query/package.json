@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@cad/js/query",
   "version": "0.1.0",
-  "description": "🔍 Cypher-inspired construct query language for spatial models (Chevrotain AST + kernel index).",
+  "description": "🔍 Cypher-inspired construct query language for CAD models (Chevrotain AST + kernel index).",
   "type": "module",
   "private": true,
   "scripts": {

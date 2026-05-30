@@ -55,7 +55,6 @@ export default defineConfig(async () => {
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../react") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: /^@ui\/react\/elements$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
         { find: "vite/internal", replacement: viteInternalFallback },
       ],

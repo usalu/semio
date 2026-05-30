@@ -226,7 +226,6 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
-        { find: /^@ui\/react\/elements$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
       ],
     },
