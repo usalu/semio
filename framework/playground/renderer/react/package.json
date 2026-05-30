@@ -7,8 +7,8 @@
 	"private": true,
 	"exports": {
 		".": "./index.tsx",
-		"./shell": "./index.tsx",
-		"./boot": "./index.tsx",
+		"./shell": "./shell.tsx",
+		"./boot": "./shell.tsx",
 		"./puzzle/2d": "./index.tsx",
 		"./puzzle/3d": "./index.tsx",
 		"./puzzle/5d": "./index.tsx"

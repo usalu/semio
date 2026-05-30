@@ -10,6 +10,7 @@ const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "node_modules/three");
+const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
 
 export default defineConfig({
 	root,
@@ -21,10 +22,18 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@framework/playground/renderer/react", replacement: resolve(root, "../../../framework/playground/renderer/react/index.tsx") },
-			{ find: "@framework/playground", replacement: resolve(root, "../../../framework/playground/core/core.ts") },
-			{ find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(root, "../../../framework/playground/core")}/$1` },
-			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
+			{ find: "@framework/playground/renderer/react/shell", replacement: resolve(rendererRoot, "shell.tsx") },
+			{ find: "@framework/playground/renderer/react/boot", replacement: resolve(rendererRoot, "shell.tsx") },
+			{ find: "@framework/playground/renderer/react", replacement: resolve(rendererRoot, "index.tsx") },
+			{ find: "@framework/playground", replacement: resolve(repoRoot, "framework/playground/core/core.ts") },
+			{ find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(repoRoot, "framework/playground/core")}/$1` },
+			{ find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
+			{ find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
+			{ find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
+			{ find: "@puzzle/5d/play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
+			{ find: "@puzzle/2d/react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+			{ find: "@puzzle/3d/react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+			{ find: "@puzzle/5d/react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
 			{ find: "@cad/js/core", replacement: resolve(root, "../core/index.ts") },
 			{ find: "@cad/js/kernel/brepjs", replacement: resolve(root, "../kernel/brepjs/index.ts") },
 			{ find: "@cad/js/machine/stately", replacement: resolve(root, "../machine/stately/index.ts") },

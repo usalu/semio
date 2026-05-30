@@ -18925,13 +18925,29 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// ­ƒº¬isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
+// 🧪isTestOrBenchmarkFile reports whether a path conventionally contains tests or benchmarks.
 func isTestOrBenchmarkFile(file string) bool {
 	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
 		return true
 	}
-	lowerPath := strings.ToLower(file)
-	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
+	normalized := strings.ToLower(filepath.ToSlash(file))
+	if strings.Contains(normalized, "/tests/") || strings.Contains(normalized, ".tests/") ||
+		strings.Contains(normalized, "/test/") || strings.Contains(normalized, ".test/") ||
+		strings.Contains(normalized, "/benchmark/") || strings.Contains(normalized, ".benchmark/") {
+		return true
+	}
+	name := filepath.Base(normalized)
+	return strings.HasSuffix(name, "_test.go") ||
+		strings.HasSuffix(name, ".test.ts") ||
+		strings.HasSuffix(name, ".test.tsx") ||
+		strings.HasSuffix(name, ".test.js") ||
+		strings.HasSuffix(name, ".test.jsx") ||
+		strings.HasSuffix(name, ".spec.ts") ||
+		strings.HasSuffix(name, ".spec.tsx") ||
+		strings.HasSuffix(name, ".spec.js") ||
+		strings.HasSuffix(name, ".spec.jsx") ||
+		strings.HasPrefix(name, "test_") ||
+		strings.Contains(name, "benchmark")
 }
 
 // ­ƒôñisExportedDefinition holds the data fields for a isExportedDefinition record.
@@ -19495,38 +19511,6 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 		}
 	}
 	return ctx.FilterIgnored(breachs)
-}
-
-// ­ƒôïCommentTemplateState holds the data fields for a comment template state record.
-type CommentTemplateState struct {
-	ExprDepth int
-}
-
-// ­ƒÆ¼CommentScanState holds the data fields for a comment scan state record.
-type CommentScanState struct {
-	InBlockComment          bool
-	BlockCommentStartLine   int
-	BlockCommentStartIndex  int
-	BlockCommentStartColumn int
-	BlockCommentIsJsDoc     bool
-	BlockCommentHasTodo     bool
-	InSingleQuote           bool
-	InDoubleQuote           bool
-	Templates               []CommentTemplateState
-	Escaped                 bool
-	InTodoBlock             bool
-	InRawBacktick           bool
-	InTripleDouble          bool
-	InTripleSingle          bool
-	InVerbatimString        bool
-}
-
-// ­ƒôíInTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
-func (state *CommentScanState) InTemplateRaw() bool {
-	if len(state.Templates) == 0 {
-		return false
-	}
-	return state.Templates[len(state.Templates)-1].ExprDepth == 0
 }
 
 // ­ƒƒ½commentPolicy holds the data fields for a commentPolicy record.
@@ -20324,7 +20308,7 @@ func dependencyBoundaryPolicy(ctx *PolicyContext) []Breach {
 		if dependencyBoundarySkipFile(file) {
 			continue
 		}
-		manifestDir, thirdParty := loadThirdPartyDepsForFile(file)
+		_, thirdParty := loadThirdPartyDepsForFile(file)
 		if len(thirdParty) == 0 {
 			continue
 		}
@@ -20415,10 +20399,15 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string]struct{}) {
 	deps = make(map[string]struct{})
 	dir := NormalizePath(filepath.Dir(file))
+	if dir == "." {
+		dir = ""
+	}
+	seen := make(map[string]struct{})
 	for {
-		if dir == "." {
-			dir = ""
+		if _, ok := seen[dir]; ok {
+			break
 		}
+		seen[dir] = struct{}{}
 		root := filepath.Join(rootDir, dir)
 		if FileExists(filepath.Join(root, "package.json")) {
 			dependencyBoundaryMergePackageJSON(filepath.Join(root, "package.json"), deps)
@@ -20441,7 +20430,13 @@ func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string
 			dependencyBoundaryMergeCsproj(csprojs[0], deps)
 			return dir, deps
 		}
-		parent := filepath.Dir(dir)
+		if dir == "" {
+			break
+		}
+		parent := NormalizePath(filepath.Dir(dir))
+		if parent == "." {
+			parent = ""
+		}
 		if parent == dir {
 			break
 		}
@@ -20619,7 +20614,7 @@ func parseThirdPartyImportSpecs(importLine, file string) []string {
 	return specs
 }
 
-func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) {
+func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) bool {
 	if spec == "" || strings.HasPrefix(spec, ".") || strings.HasPrefix(spec, "/") {
 		return false
 	}
@@ -37318,22 +37313,6 @@ func collectTestDefinitionsFromContent(content string, normalized string) []Defi
 		return tests
 	}
 	return fallbackTestDefinitionsFromContent(content, normalized)
-}
-
-// 🧪isTestOrBenchmarkFile reports whether a normalized path conventionally contains tests.
-func isTestOrBenchmarkFile(normalized string) bool {
-	name := strings.ToLower(filepath.Base(filepath.ToSlash(normalized)))
-	return strings.HasSuffix(name, "_test.go") ||
-		strings.HasSuffix(name, ".test.ts") ||
-		strings.HasSuffix(name, ".test.tsx") ||
-		strings.HasSuffix(name, ".test.js") ||
-		strings.HasSuffix(name, ".test.jsx") ||
-		strings.HasSuffix(name, ".spec.ts") ||
-		strings.HasSuffix(name, ".spec.tsx") ||
-		strings.HasSuffix(name, ".spec.js") ||
-		strings.HasSuffix(name, ".spec.jsx") ||
-		strings.HasPrefix(name, "test_") ||
-		strings.Contains(name, "benchmark")
 }
 
 func fallbackTestDefinitionsFromContent(content string, normalized string) []Definition {

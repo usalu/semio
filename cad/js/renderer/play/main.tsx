@@ -586,7 +586,7 @@ import {
 	registerUiScene3DSurfaceHost,
 	type SidePanelTabConfig,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground/renderer/react";
+} from "@framework/playground/renderer/react/shell";
 import { ListTree, Shapes } from "lucide-react";
 import { defaultConstructRunner } from "@cad/js/query";
 import geometryNakagin from "../../../fixtures/geometry.json";
