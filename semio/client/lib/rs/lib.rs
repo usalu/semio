@@ -9955,11 +9955,12 @@ pub mod kit_backbone {
         use std::sync::Arc;
         let mut ports_by_id: HashMap<String, Arc<crate::kit::r#type::Port>> = HashMap::new();
         let owner = std::sync::Weak::<crate::kit::r#type::Type>::new();
-        let families = json
+        let families: Vec<crate::external_adapters::serde_json::Value> = json
             .get("families")
             .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .map(|rows| rows.to_vec())
             .unwrap_or_default();
-        for fam in families {
+        for fam in &families {
             let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
                 continue;
             };
@@ -10028,8 +10029,6 @@ pub mod kit_backbone {
             Ok(())
         }
 
-        let resolve_port = |pid: &str| ports_by_id.get(pid).or_else(|| kit_scope_ports.get(pid));
-
         if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
             for p_json in ports_list {
                 remember_port_json(owner.clone(), &mut ports_by_id, kit_scope_ports, p_json).await?;
@@ -10043,6 +10042,12 @@ pub mod kit_backbone {
             }
         }
 
+        let lookup_port = |pid: &str| {
+            ports_by_id
+                .get(pid)
+                .cloned()
+                .or_else(|| kit_scope_ports.get(pid).cloned())
+        };
         if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
             for p_json in ports_list {
                 let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
@@ -10051,8 +10056,8 @@ pub mod kit_backbone {
                 if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
                     for cref in compat_list {
                         if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
-                            if let Some(target) = resolve_port(cid) {
-                                compat.push(target.clone());
+                            if let Some(target) = lookup_port(cid) {
+                                compat.push(target);
                             }
                         }
                     }
@@ -10084,8 +10089,8 @@ pub mod kit_backbone {
                 }
                 if let Some(port_json) = c_json.get("port") {
                     if let Some(pid) = crate::kit_backbone::json_entity_id_ref(port_json) {
-                        if let Some(port) = resolve_port(pid) {
-                            *connector.port.write().await = Some(port.clone());
+                        if let Some(port) = lookup_port(pid) {
+                            *connector.port.write().await = Some(port);
                         }
                     }
                 }

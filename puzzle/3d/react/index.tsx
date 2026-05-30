@@ -3514,7 +3514,6 @@ export const Vortex = reactHostPort.memo(function Vortex(
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
   const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
-  const pickProxy = (drawVortexBody ? false : trackVortexLod ? lodVisual.pickProxy : lodVortexPickProxy(lodCtx.lod)) && !linger;
   const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
@@ -3541,7 +3540,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
   const vis = props.visible !== false;
   const showDirection = vis && isVec3(props.direction);
   return (
-    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
+    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onVortexClick}>
       {showDirection ? (
         <VortexDirectionArrow directionCad={props.direction!} objectOrigin={props.objectOrigin} objectOrientation={props.objectOrientation} radius={r} selected={vortexSelected || highlight !== "none"} />
       ) : null}
@@ -3554,12 +3553,10 @@ export const Vortex = reactHostPort.memo(function Vortex(
       ) : drawVortexBody ? (
         <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} {...vortexPointerHoverHandlers} />
       ) : null}
-      {pickProxy ? (
-        <mesh userData={{ puzzle3dVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>
-          <sphereGeometry args={[r, 12, 12]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-      ) : null}
+      <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
+        <sphereGeometry args={[r * 1.15, 12, 12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+      </mesh>
     </group>
   );
 });

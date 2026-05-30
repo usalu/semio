@@ -447,7 +447,6 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
     case "puzzle2d":
-    case "puzzle2d":
     case "puzzle3d":
     case "puzzle5d":
     case "cad":
