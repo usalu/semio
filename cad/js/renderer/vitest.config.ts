@@ -8,8 +8,8 @@ const root = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(root, "../../..");
 const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
-const threeModule = resolve(repoRoot, "ui/react/node_modules/three/build/three.module.js");
-const threePackageRoot = resolve(repoRoot, "ui/react/node_modules/three");
+const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
+const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 export default defineConfig({
 	root,

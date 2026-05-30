@@ -8,8 +8,8 @@ const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../");
 const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
-const threeModule = resolve(repoRoot, "ui/react/node_modules/three/build/three.module.js");
-const threePackageRoot = resolve(repoRoot, "ui/react/node_modules/three");
+const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
+const threePackageRoot = resolve(repoRoot, "node_modules/three");
 const coreEntry = resolve(dir, "../../core/index.ts");
 const kernelEntry = resolve(dir, "../../kernel/brepjs/index.ts");
 const machineStatelyEntry = resolve(dir, "../../machine/stately/index.ts");
@@ -41,6 +41,8 @@ export default createPlaygroundPlayViteConfig({
 			"three",
 			"@react-three/fiber",
 			"@react-three/drei",
+			"brepjs",
+			"brepjs-opencascade",
 			"golden-layout",
 			"lucide-react",
 			"chevrotain",
