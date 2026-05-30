@@ -597,6 +597,11 @@ export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppR
   app.addMode(controller.mainMode);
   app.leftTabs = [];
   app.rightTabs = [];
+  app.onActiveWindowChange = (windowKindId) => {
+    const pane = cadPlayPaneFromWindowKindId(windowKindId);
+    if (!pane) return;
+    controller.run("focusModelDefinition", { modelDefinitionId: cadPlayModelDefinitionIdForPane(pane) });
+  };
   return app;
 }
 
@@ -1078,6 +1083,7 @@ interface PlaySessionProps {
   readonly onDocumentModelChange: (model: Model) => void;
   readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
   readonly onEngagementChange: (engagement: EngagementSpec | null) => void;
+  readonly captureGlobalKeys: boolean;
   readonly hoveredPickKey: string | null;
   readonly onHoveredPickKeyChange: (key: string | null) => void;
   readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
@@ -1168,6 +1174,7 @@ function PlaySession({
       hideModelDefinitionControls
       onSnapshotChange={onSnapshot}
       onEngagementChange={onEngagementChange}
+      captureGlobalKeys={captureGlobalKeys}
       hoveredPickKey={hoveredPickKey}
       onHoveredPickKeyChange={onHoveredPickKeyChange}
       onHoverTarget={onCanvasHoverTarget}
@@ -1798,8 +1805,9 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     kernel,
     computeModeForPane,
     sessionRestartNonceForPane,
-    focusModelDefinition,
-    flushedModelsByDefinitionId,
+      focusModelDefinition,
+      activeModelDefinitionId,
+      flushedModelsByDefinitionId,
     rendererSelectionByModel,
     setRendererSelectionByModel,
     interactionSelectionByState,
@@ -1810,11 +1818,13 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     commitModelForDefinition,
     handleSnapshotChangeForPane,
     handleEngagementChangeForPane,
+    activeModelDefinitionId,
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
   } = useCadPlayModelSpace();
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
+  const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
   const interactionId = interactionIdForPane(pane);
   const spec = specForPane(pane);
   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
@@ -1869,6 +1879,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
         onDocumentModelChange={commitPaneModel}
         onSnapshot={onSnapshot}
         onEngagementChange={onEngagementChange}
+        captureGlobalKeys={captureGlobalKeys}
         hoveredPickKey={hoveredPickKey}
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
@@ -1972,7 +1983,7 @@ function CadPlayRoot(): ReactNode {
     <CadPlayChromeContext.Provider value={chromeContextValue}>
       <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
         <CadPlayLoadInput />
-        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
+        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} />
       </CadPlayModelSpaceProvider>
     </CadPlayChromeContext.Provider>
   );

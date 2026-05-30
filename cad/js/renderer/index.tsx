@@ -2918,8 +2918,15 @@ function replInteractionIdOnSpace(query: string, matches: readonly ReplSuggestio
   return replInteractionSuggestionOnSpace(query, matches, all)?.interactionId ?? null;
 }
 
-function replIsQueryTypingTarget(t: EventTarget | null): boolean {
-  return t instanceof HTMLTextAreaElement;
+/** @emoji ⌨️ True when the event target is already a text field (skip REPL global key capture). */
+export function replIsQueryTypingTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  if (t instanceof HTMLTextAreaElement) return true;
+  if (t instanceof HTMLInputElement) {
+    const type = (t.type || "text").toLowerCase();
+    return type !== "button" && type !== "checkbox" && type !== "radio" && type !== "file" && type !== "range" && type !== "color";
+  }
+  return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
 }
 
 function replShouldRepeatInteractionOnSpace(
@@ -3179,6 +3186,8 @@ export interface InteractionReplLayoutProps {
   readonly showEngagement?: boolean;
   /** @emoji 📐 Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
   readonly fillHost?: boolean;
+  /** @emoji ⌨️ Registers document-level REPL key capture; disable on inactive hosts (e.g. CAD play quad panes). */
+  readonly captureGlobalKeys?: boolean;
   /** @emoji 🙈 Hides model-definition and transformation dropdowns (e.g. play hosts them in `asideExtra`). */
   readonly hideModelDefinitionControls?: boolean;
   readonly frameloop?: InteractionCanvasProps["frameloop"];
@@ -3400,6 +3409,7 @@ export function InteractionRepl({
   showEngagement = false,
   onEngagementChange,
   fillHost = false,
+  captureGlobalKeys = true,
   asideHost = null,
   hideModelDefinitionControls = false,
   frameloop = "always",
@@ -4166,6 +4176,7 @@ export function InteractionRepl({
   }, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
   reactHostPort.useEffect(() => {
+    if (!captureGlobalKeys) return;
     const onWinCapture = (e: globalThis.KeyboardEvent) => {
       if (e.defaultPrevented || e.isComposing) return;
       const t = e.target;
@@ -4246,7 +4257,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
