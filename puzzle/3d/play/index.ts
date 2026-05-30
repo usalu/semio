@@ -1024,8 +1024,8 @@ export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellControl
 }
 
 /** @emoji 🚀 Creates a {@link Platform} with scene play app registered. */
-export function buildPuzzle3dPlayRuntime(): Platform {
-  const runtime = new Platform();
+export function buildPuzzle3dPlayRuntime(initialPanelVisibility?: { leftSidePanel: boolean; rightSidePanel: boolean }): Platform {
+  const runtime = new Platform({ initialPanelVisibility });
   const controller = new Puzzle3dPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildPuzzle3dPlayAppRuntime(controller));
   return runtime;
@@ -1359,7 +1359,7 @@ export class Playground3d extends Playground {
   ];
 
   createRuntime(): Platform {
-    return buildPuzzle3dPlayRuntime();
+    return buildPuzzle3dPlayRuntime(this.initialPanelVisibility);
   }
 
   registerBodies(): void {

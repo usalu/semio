@@ -41,6 +41,7 @@ import {
   CommandBus,
   Expertise,
   ProductRuntime,
+  resolveInitialPanelVisibility,
   WindowKindRuntime,
   getSidePanelBodyFactory,
   getWindowBodyFactory,
@@ -105,6 +106,7 @@ import {
   declareToolsToViewTools,
   findDefaultActiveWindowKindId,
   listPopulatedToolbarViewCategories,
+  mergePlatformFooterChromeRows,
   registerSurfaceBinding,
   renderComponentHostSurface,
   unregisterSurfaceBinding,
@@ -616,10 +618,19 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
 
   const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
   const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
-  const [panelVisibility, setPanelVisibility] = reactHostPort.useState<PlaygroundPanelVisibility>(() => ({
-    leftSidePanel: initialPanelVisibility?.leftSidePanel ?? false,
-    rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
-  }));
+  const [panelVisibility, setPanelVisibilityState] = reactHostPort.useState<PlaygroundPanelVisibility>(() =>
+    resolveInitialPanelVisibility(initialPanelVisibility, runtime),
+  );
+  const setPanelVisibility = reactHostPort.useCallback(
+    (next: PlaygroundPanelVisibility | ((prev: PlaygroundPanelVisibility) => PlaygroundPanelVisibility)) => {
+      setPanelVisibilityState((prev) => {
+        const resolved = typeof next === "function" ? next(prev) : next;
+        runtime.setPanelVisibility(resolved);
+        return resolved;
+      });
+    },
+    [runtime],
+  );
   const detectedMobile = useMediaQuery(mobileQuery);
   const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
 
@@ -648,14 +659,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
   const goldenWindowKinds = reactHostPort.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
 
   const footerItems: FooterItem[] = [
-    ...(activeApp.footerItems.map((item) => ({
-      id: item.id,
-      text: item.text,
-      order: item.order,
-      className: item.className,
-      disabled: item.disabled,
-      onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
-    })) as FooterItem[]),
+    ...mergePlatformFooterChromeRows(runtime, activeApp),
     ...(extraFooterItems ?? []),
   ].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 

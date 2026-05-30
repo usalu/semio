@@ -11262,6 +11262,41 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
+/** @emoji 📏 Secondary chrome line (`border-element`) for window frames and in-window controls. */
+export const secondaryLineClass = "border-element";
+
+/** @emoji 📏 Primary chrome line (`border-active-base`) recolors the window U-frame when that stack is globally active. */
+export const activeLineClass = "border-active-base";
+
+/** @emoji 📏 Secondary chrome frame (`border border-element`) wrapping window body or caps. */
+export const windowFrameClass = `border ${secondaryLineClass}`;
+
+/** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
+export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+
+/** @emoji 📏 Top cap with primary chrome line when the stack owns the globally active window. */
+export const windowCapFrameActiveClass = `relative z-[2] border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+
+/** @emoji 📏 Canvas gap stroke — horizontal segment of the U between tab and fullscreen caps. */
+export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${secondaryLineClass}`;
+
+/** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
+export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
+
+/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap corners). */
+export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${secondaryLineClass} bg-canvas`;
+
+/** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
+export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-x border-t-0 border-b ${activeLineClass} bg-canvas`;
+
+/** @emoji 📏 L-shaped joint at the bottom-outer corner of a window cap (connects side into gap baseline). */
+export const windowCapCornerClass = (lineClass: string, side: "left" | "right") =>
+  cn(
+    "pointer-events-none absolute bottom-0 z-[3] box-border size-px border-b",
+    side === "left" ? "left-0 border-l" : "right-0 border-r",
+    lineClass,
+  );
+
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
 	switch (level) {
@@ -19864,7 +19899,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-sm ${bgClass}`, active && "ring-2 ring-inset ring-active-base", className)}
+        className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -19885,7 +19920,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {engagement ? (
             <div
               data-slot="window-engagement-overlay"
-              className="pointer-events-none absolute inset-x-0 bottom-[var(--spacing-double)] z-window flex justify-center"
+              className="pointer-events-none absolute inset-0 z-window flex items-center justify-center"
             >
               <Engagement {...engagement} />
             </div>
@@ -21947,8 +21982,6 @@ export interface ModeProps {
   layout?: WindowLayoutNode;
   children?: React.ReactNode;
   className?: string;
-  /** @emoji 🖼 Label shown in each tab stack between tabs and maximize (defaults to `Canvas`). */
-  canvasLabel?: string;
 }
 
 //#region 🧭ModeLayoutUtils
@@ -22319,19 +22352,18 @@ interface ModeDockDragPreviewProps {
 const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, compact = false, tabOnly = false }) => (
   <div
     data-slot="mode-dock-drag-preview"
-    className={cn(
-      "pointer-events-none flex flex-col overflow-hidden border border-element bg-window shadow-lg",
-      compact ? "rounded-sm" : "rounded",
-      className,
-    )}
+    className={cn("pointer-events-none flex flex-col overflow-hidden shadow-lg", compact ? "rounded-sm" : "rounded", className)}
     style={style}
   >
-    <div data-slot="mode-dock-drag-preview-header" className="flex h-medium shrink-0 items-center border-b border-element bg-base px-single text-xs">
-      <span className="truncate">{title}</span>
+    <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
+      <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
     </div>
     {tabOnly ? null : (
-      <div data-slot="mode-dock-drag-preview-body" className={cn("relative min-h-0 flex-1 overflow-hidden bg-window", compact ? "opacity-90" : "opacity-95")}>
-        {content ? <div className="h-full w-full overflow-hidden [&_*]:pointer-events-none">{content}</div> : null}
+      <div
+        data-slot="mode-dock-drag-preview-body"
+        className={cn("relative min-h-0 flex-1 overflow-hidden p-single", windowBodyFrameClass, compact ? "opacity-90" : "opacity-95")}
+      >
+        {content ? <div className="h-full w-full overflow-hidden bg-window [&_*]:pointer-events-none">{content}</div> : null}
       </div>
     )}
   </div>
@@ -22344,7 +22376,6 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
   dropZone: ModeDropZone | null;
-  canvasLabel: string;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22367,6 +22398,10 @@ interface ModeDockTabBarProps {
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
+  const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
+  const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
+  const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
+  const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
   const tabInsertIndex =
     dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
 
@@ -22380,8 +22415,15 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   );
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-window">
-      <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
+    <div ref={ref} data-slot="mode-dock-tabbar" className="flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+      <div
+        data-slot="mode-dock-tab-cap"
+        className={cn(
+          "relative flex min-h-medium w-max max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch",
+          capFrameClass,
+        )}
+      >
+        <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch overflow-x-auto overflow-y-hidden">
         {tabs.flatMap((tab, index) => {
           const nodes: React.ReactNode[] = [];
           if (tabInsertIndex === index) nodes.push(renderInsertSlot(`insert-${index}`));
@@ -22393,12 +22435,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             data-stack-active={activeId === tab.id ? "true" : undefined}
             data-active={activeWindowId === tab.id ? "true" : undefined}
             className={cn(
-              "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half border-r border-element px-single text-xs select-none transition-[margin,padding] duration-150",
-              activeWindowId === tab.id
-                ? "bg-active-base text-active-foreground"
-                : activeId === tab.id
-                  ? "bg-window text-foreground"
-                  : "bg-base text-muted-foreground hover:bg-hover-window",
+              "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half bg-window px-single text-xs text-muted-foreground select-none transition-[margin,padding] duration-150 hover:bg-hover-window hover:text-foreground",
+              activeWindowId === tab.id && "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground",
+              activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
             )}
             onClick={() => onSelectTab(tab.id)}
             onPointerUp={(event) => {
@@ -22428,23 +22467,20 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           return nodes;
         })}
         {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
+        </div>
+        <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right")} aria-hidden />
       </div>
-      <div
-        data-slot="mode-dock-canvas-label"
-        className="flex shrink-0 items-center border-l border-element px-single text-xs text-muted-foreground select-none"
-        aria-hidden
-      >
-        {dock?.canvasLabel ?? "Canvas"}
-      </div>
-      <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
+      <div data-slot="mode-dock-tab-gap" className={cn("relative z-[1] min-h-medium min-w-0 flex-1 bg-canvas", gapFrameClass)} aria-hidden />
+      <div data-slot="mode-dock-controls-cap" className={cn("relative flex shrink-0 items-stretch", capFrameClass)}>
         <button
           type="button"
           data-slot="mode-dock-maximize"
-          className="flex size-medium items-center justify-center hover:bg-hover-window"
+          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
           onClick={() => dock?.toggleMaximize(stackPath)}
         >
           {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
         </button>
+        <div data-slot="mode-dock-controls-cap-corner" className={windowCapCornerClass(frameLineClass, "left")} aria-hidden />
       </div>
     </div>
   );
@@ -22484,10 +22520,14 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
       data-slot="mode-dock-stack"
       data-stack-path={stackPath}
       data-active={stackGloballyActive ? "true" : undefined}
-      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border border-element bg-window shadow-sm"
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent"
     >
       <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
-      <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas p-single">
+      <div
+        ref={bodyRef}
+        data-slot="mode-dock-stack-body"
+        className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}
+      >
         {activeDescriptor ? (
           (() => {
             const { children, engagement, ...windowProps } = activeDescriptor;
@@ -22521,7 +22561,13 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
-    if (index > 0) panels.push(<ResizableHandle key={`sep-${childPath}`} />);
+    if (index > 0)
+      panels.push(
+        <ResizableHandle
+          key={`sep-${childPath}`}
+          className="relative shrink-0 border-0 bg-transparent after:hidden hover:bg-accent/25 data-[panel-group-direction=vertical]:h-single data-[panel-group-direction=vertical]:min-h-0 data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=horizontal]:h-full data-[panel-group-direction=horizontal]:min-w-0 data-[panel-group-direction=horizontal]:w-single"
+        />,
+      );
     panels.push(
       <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border p-single">
         {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
@@ -22544,7 +22590,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 //#endregion 🧭ModeRender
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "", canvasLabel = "Canvas" }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "" }) => {
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -22732,7 +22778,6 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     () => ({
       dragState,
       dropZone,
-      canvasLabel,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -22741,7 +22786,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, dropZone, canvasLabel, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [dragState, dropZone, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
@@ -23067,13 +23112,35 @@ if (import.meta.vitest) {
       expect(screen.getByText("Left Pane")).toBeTruthy();
       expect(screen.getByText("Right Pane")).toBeTruthy();
       expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')?.className).not.toContain("border-active-base");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="right"][data-active="true"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("bg-canvas");
-      expect(container.querySelectorAll('[data-slot="mode-dock-canvas-label"]')).toHaveLength(2);
-      expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')?.textContent).toBe("Canvas");
+      expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("w-max");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("flex-1");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
+      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
+      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-b-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-t-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeTruthy();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeTruthy();
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-element");
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-element");
     });
 
     it("Mode tab stack shows only the active window body", () => {
@@ -23278,7 +23345,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
     });
 
-    it("Window anchors engagement in a bottom overlay with panel spacing", () => {
+    it("Window anchors engagement in a centered overlay", () => {
       const { container } = render(
         <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
@@ -23286,7 +23353,9 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       expect(overlay).toBeTruthy();
-      expect(overlay?.className).toContain("bottom-[var(--spacing-double)]");
+      expect(overlay?.className).toContain("inset-0");
+      expect(overlay?.className).toContain("items-center");
+      expect(overlay?.className).toContain("justify-center");
       expect(overlay?.className).toContain("z-window");
       expect(overlay?.className).not.toContain("z-overlay");
       expect(screen.getByText("Idle")).toBeTruthy();

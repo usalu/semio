@@ -1,0 +1,10 @@
+{
+  "title": "Fix Spatial Play Render Loop",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix React infinite loop in SpatialPlayModelSpaceProvider from uncached AppPointerFocusStore getSnapshot; remove ineffective frame-ancestors CSP meta from cad play index.html.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪f595b9109e234f4b934d2499b5ee753d"
+  ]
+}

@@ -378,8 +378,8 @@ export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellControl
   return app;
 }
 
-export function buildTopologyPlayRuntime(): Platform {
-  const runtime = new Platform();
+export function buildTopologyPlayRuntime(initialPanelVisibility?: { leftSidePanel: boolean; rightSidePanel: boolean }): Platform {
+  const runtime = new Platform({ initialPanelVisibility });
   const controller = new TopologyPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildTopologyPlayAppRuntime(controller));
   return runtime;
@@ -391,7 +391,7 @@ export class Playground5d extends Playground {
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
   createRuntime(): Platform {
-    return buildTopologyPlayRuntime();
+    return buildTopologyPlayRuntime(this.initialPanelVisibility);
   }
 
   registerBodies(): void {

@@ -369,7 +369,7 @@ export class AppPointerFocusStore<TKey> {
 	}
 
 	getSnapshot(): AppPointerFocusSnapshot<TKey> {
-		return this.snapshot();
+		return this.cell.get();
 	}
 
 	setSelection(keys: readonly TKey[]): void {
@@ -613,7 +613,8 @@ export interface PlatformSpec {
 	readonly id: string;
 	readonly name: string;
 	readonly defaultActiveAppId?: string;
-	readonly initialPanelVisibility?: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
+	/** Side panels start hidden unless set; see {@link resolveInitialPanelVisibility}. */
+	readonly initialPanelVisibility?: PanelVisibility;
 	readonly className?: string;
 	readonly mobile?: boolean;
 	readonly mobileQuery?: string;
@@ -623,6 +624,25 @@ export interface PlatformSpec {
 	readonly globalFooterItems?: readonly FooterItem[];
 }
 //#endregion 🔖PlatformSpec
+
+//#region 🔖PanelVisibility
+/** @emoji 📐 Left/right side panel open state for {@link Platform} and product shells. */
+export interface PanelVisibility {
+	readonly leftSidePanel: boolean;
+	readonly rightSidePanel: boolean;
+}
+
+/** @emoji 📐 Resolves initial panel visibility: prop override, then platform spec; default both hidden. */
+export function resolveInitialPanelVisibility(
+	prop?: Partial<PanelVisibility>,
+	platform?: Pick<Platform, "initialPanelVisibility">,
+): PanelVisibility {
+	return {
+		leftSidePanel: prop?.leftSidePanel ?? platform?.initialPanelVisibility?.leftSidePanel ?? false,
+		rightSidePanel: prop?.rightSidePanel ?? platform?.initialPanelVisibility?.rightSidePanel ?? false,
+	};
+}
+//#endregion 🔖PanelVisibility
 
 //#region 🔖Platform
 /** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
@@ -647,15 +667,18 @@ export class Platform {
 	mobile: boolean | undefined;
 	mobileQuery = "(max-width: 767px)";
 	className = "";
-	panelVisibility = { leftSidePanel: false, rightSidePanel: false };
-	initialPanelVisibility?: { leftSidePanel: boolean; rightSidePanel: boolean };
+	panelVisibility: PanelVisibility = { leftSidePanel: false, rightSidePanel: false };
+	initialPanelVisibility?: PanelVisibility;
 	readonly id: string;
 	readonly name: string;
 
 	constructor(spec?: PlatformSpec) {
 		this.id = spec?.id ?? "";
 		this.name = spec?.name ?? "";
-		if (spec?.initialPanelVisibility) this.initialPanelVisibility = spec.initialPanelVisibility;
+		if (spec?.initialPanelVisibility) {
+			this.initialPanelVisibility = { ...spec.initialPanelVisibility };
+			this.panelVisibility = { ...spec.initialPanelVisibility };
+		}
 		if (spec?.className) this.className = spec.className;
 		if (spec?.mobile !== undefined) this.mobile = spec.mobile;
 		if (spec?.mobileQuery) this.mobileQuery = spec.mobileQuery;
@@ -691,8 +714,8 @@ export class Platform {
 		this.notify();
 	}
 
-	setPanelVisibility(next: { leftSidePanel: boolean; rightSidePanel: boolean }): void {
-		this.panelVisibility = next;
+	setPanelVisibility(next: PanelVisibility): void {
+		this.panelVisibility = { ...next };
 		this.notify();
 	}
 }
@@ -829,6 +852,42 @@ if (import.meta.vitest) {
 			const platform = new Platform({ id: "demo", name: "Demo", defaultActiveAppId: "home" });
 			expect(platform.id).toBe("demo");
 			expect(platform.activeAppId).toBe("home");
+		});
+
+		it("defaults side panels hidden", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			expect(platform.panelVisibility).toEqual({ leftSidePanel: false, rightSidePanel: false });
+		});
+
+		it("applies initialPanelVisibility from PlatformSpec", () => {
+			const platform = new Platform({
+				id: "demo",
+				name: "Demo",
+				initialPanelVisibility: { leftSidePanel: true, rightSidePanel: false },
+			});
+			expect(platform.initialPanelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
+			expect(platform.panelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
+		});
+	});
+
+	describe("resolveInitialPanelVisibility", () => {
+		it("prefers prop override over platform spec", () => {
+			const platform = new Platform({
+				id: "demo",
+				name: "Demo",
+				initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true },
+			});
+			expect(resolveInitialPanelVisibility({ leftSidePanel: false }, platform)).toEqual({
+				leftSidePanel: false,
+				rightSidePanel: true,
+			});
+		});
+
+		it("defaults both panels hidden when unset", () => {
+			expect(resolveInitialPanelVisibility(undefined, new Platform({ id: "d", name: "D" }))).toEqual({
+				leftSidePanel: false,
+				rightSidePanel: false,
+			});
 		});
 	});
 

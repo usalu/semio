@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 cad/js/renderer/play/main.tsx — Spatial play shell (headless + React chrome + Vite entry).
+// 💻 cad/js/renderer/play/main.tsx — CAD play shell (headless + React chrome + Vite entry).
 // #endregion 🧲Header
 
 import { AppPointerFocusStore } from "@framework/core";
@@ -58,48 +58,48 @@ import {
   type TransformationSpec,
 } from "@cad/js/core";
 
-/** @emoji ⚡ Per-window compute mode options for spatial play window measures. */
-export const SPATIAL_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
+/** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
+export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
 
 //#region 🔖Ids
-export const SPATIAL_PLAY_APP_ID = "spatial-play";
-export const SPATIAL_PLAY_CONTROLLER_ID = "spatial-play";
-export const SPATIAL_PLAY_HIERARCHY_TAB_ID = "spatial-play-hierarchy";
+export const CAD_PLAY_APP_ID = "cad-play";
+export const CAD_PLAY_CONTROLLER_ID = "cad-play";
+export const CAD_PLAY_HIERARCHY_TAB_ID = "cad-play-hierarchy";
 
 /** @emoji 🖱️ Hover owner id when the workbench hierarchy drives shared pointer focus. */
-export const SPATIAL_PLAY_HOVER_SOURCE_HIERARCHY = "spatial-play-hierarchy";
+export const CAD_PLAY_HOVER_SOURCE_HIERARCHY = "cad-play-hierarchy";
 
 /** @emoji 🖱️ Hover owner id when the 3D canvas drives shared pointer focus. */
-export const SPATIAL_PLAY_HOVER_SOURCE_CANVAS = "spatial-play-canvas";
+export const CAD_PLAY_HOVER_SOURCE_CANVAS = "cad-play-canvas";
 
-export const SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID = "aec.building";
-export const SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
-export const SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
+export const CAD_PLAY_BUILDING_MODEL_DEFINITION_ID = "aec.building";
+export const CAD_PLAY_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
+export const CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
 
-export type SpatialPlayPaneId = "shape" | "building" | "energy" | "structure-classic";
+export type CadPlayPaneId = "shape" | "building" | "energy" | "structure-classic";
 
-export const SPATIAL_PLAY_SHAPE_WINDOW_ID = "spatial-play-shape";
-export const SPATIAL_PLAY_BUILDING_WINDOW_ID = "spatial-play-building";
-export const SPATIAL_PLAY_ENERGY_WINDOW_ID = "spatial-play-energy";
-export const SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID = "spatial-play-structure-classic";
+export const CAD_PLAY_SHAPE_WINDOW_ID = "cad-play-shape";
+export const CAD_PLAY_BUILDING_WINDOW_ID = "cad-play-building";
+export const CAD_PLAY_ENERGY_WINDOW_ID = "cad-play-energy";
+export const CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID = "cad-play-structure-classic";
 
-export const SPATIAL_PLAY_SHAPE_WINDOW_LABEL = "Shape";
-export const SPATIAL_PLAY_BUILDING_WINDOW_LABEL = "Building";
-export const SPATIAL_PLAY_ENERGY_WINDOW_LABEL = "Energy";
-export const SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL = "Structure Classic";
+export const CAD_PLAY_SHAPE_WINDOW_LABEL = "Shape";
+export const CAD_PLAY_BUILDING_WINDOW_LABEL = "Building";
+export const CAD_PLAY_ENERGY_WINDOW_LABEL = "Energy";
+export const CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL = "Structure Classic";
 
-export const SPATIAL_PLAY_SHAPE_BODY_KEY = "spatial.play.shape";
-export const SPATIAL_PLAY_BUILDING_BODY_KEY = "spatial.play.building";
-export const SPATIAL_PLAY_ENERGY_BODY_KEY = "spatial.play.energy";
-export const SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY = "spatial.play.structure-classic";
+export const CAD_PLAY_SHAPE_BODY_KEY = "cad.play.shape";
+export const CAD_PLAY_BUILDING_BODY_KEY = "cad.play.building";
+export const CAD_PLAY_ENERGY_BODY_KEY = "cad.play.energy";
+export const CAD_PLAY_STRUCTURE_CLASSIC_BODY_KEY = "cad.play.structure-classic";
 
-export const SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID = "spatial.play.scene3d/shape";
-export const SPATIAL_PLAY_BUILDING_SCENE_SURFACE_ID = "spatial.play.scene3d/building";
-export const SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID = "spatial.play.scene3d/energy";
-export const SPATIAL_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "spatial.play.scene3d/structure-classic";
+export const CAD_PLAY_SHAPE_SCENE_SURFACE_ID = "cad.play.scene3d/shape";
+export const CAD_PLAY_BUILDING_SCENE_SURFACE_ID = "cad.play.scene3d/building";
+export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
+export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
 
 /** @emoji 🪟 Quad play layout: shape/building left, energy/structure classic right. */
-export const SPATIAL_PLAY_LAYOUT: WindowLayout = {
+export const CAD_PLAY_LAYOUT: WindowLayout = {
   root: {
     kind: "row",
     children: [
@@ -107,19 +107,19 @@ export const SPATIAL_PLAY_LAYOUT: WindowLayout = {
         kind: "column",
         size: 50,
         children: [
-          { kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_SHAPE_WINDOW_ID, SPATIAL_PLAY_SHAPE_WINDOW_LABEL)] },
-          { kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_BUILDING_WINDOW_ID, SPATIAL_PLAY_BUILDING_WINDOW_LABEL)] },
+          { kind: "stack", size: 50, children: [createWindowLayout(CAD_PLAY_SHAPE_WINDOW_ID, CAD_PLAY_SHAPE_WINDOW_LABEL)] },
+          { kind: "stack", size: 50, children: [createWindowLayout(CAD_PLAY_BUILDING_WINDOW_ID, CAD_PLAY_BUILDING_WINDOW_LABEL)] },
         ],
       },
       {
         kind: "column",
         size: 50,
         children: [
-          { kind: "stack", size: 50, children: [createWindowLayout(SPATIAL_PLAY_ENERGY_WINDOW_ID, SPATIAL_PLAY_ENERGY_WINDOW_LABEL)] },
+          { kind: "stack", size: 50, children: [createWindowLayout(CAD_PLAY_ENERGY_WINDOW_ID, CAD_PLAY_ENERGY_WINDOW_LABEL)] },
           {
             kind: "stack",
             size: 50,
-            children: [createWindowLayout(SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID, SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL)],
+            children: [createWindowLayout(CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID, CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL)],
           },
         ],
       },
@@ -127,8 +127,8 @@ export const SPATIAL_PLAY_LAYOUT: WindowLayout = {
   },
 };
 
-const SPATIAL_PLAY_PANE_SPECS: readonly {
-  readonly pane: SpatialPlayPaneId;
+const CAD_PLAY_PANE_SPECS: readonly {
+  readonly pane: CadPlayPaneId;
   readonly windowKindId: string;
   readonly label: string;
   readonly bodyKey: string;
@@ -137,80 +137,80 @@ const SPATIAL_PLAY_PANE_SPECS: readonly {
 }[] = [
   {
     pane: "shape",
-    windowKindId: SPATIAL_PLAY_SHAPE_WINDOW_ID,
-    label: SPATIAL_PLAY_SHAPE_WINDOW_LABEL,
-    bodyKey: SPATIAL_PLAY_SHAPE_BODY_KEY,
-    surfaceId: SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID,
+    windowKindId: CAD_PLAY_SHAPE_WINDOW_ID,
+    label: CAD_PLAY_SHAPE_WINDOW_LABEL,
+    bodyKey: CAD_PLAY_SHAPE_BODY_KEY,
+    surfaceId: CAD_PLAY_SHAPE_SCENE_SURFACE_ID,
     modelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
   },
   {
     pane: "building",
-    windowKindId: SPATIAL_PLAY_BUILDING_WINDOW_ID,
-    label: SPATIAL_PLAY_BUILDING_WINDOW_LABEL,
-    bodyKey: SPATIAL_PLAY_BUILDING_BODY_KEY,
-    surfaceId: SPATIAL_PLAY_BUILDING_SCENE_SURFACE_ID,
-    modelDefinitionId: SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID,
+    windowKindId: CAD_PLAY_BUILDING_WINDOW_ID,
+    label: CAD_PLAY_BUILDING_WINDOW_LABEL,
+    bodyKey: CAD_PLAY_BUILDING_BODY_KEY,
+    surfaceId: CAD_PLAY_BUILDING_SCENE_SURFACE_ID,
+    modelDefinitionId: CAD_PLAY_BUILDING_MODEL_DEFINITION_ID,
   },
   {
     pane: "energy",
-    windowKindId: SPATIAL_PLAY_ENERGY_WINDOW_ID,
-    label: SPATIAL_PLAY_ENERGY_WINDOW_LABEL,
-    bodyKey: SPATIAL_PLAY_ENERGY_BODY_KEY,
-    surfaceId: SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID,
-    modelDefinitionId: SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID,
+    windowKindId: CAD_PLAY_ENERGY_WINDOW_ID,
+    label: CAD_PLAY_ENERGY_WINDOW_LABEL,
+    bodyKey: CAD_PLAY_ENERGY_BODY_KEY,
+    surfaceId: CAD_PLAY_ENERGY_SCENE_SURFACE_ID,
+    modelDefinitionId: CAD_PLAY_ENERGY_MODEL_DEFINITION_ID,
   },
   {
     pane: "structure-classic",
-    windowKindId: SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
-    label: SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL,
-    bodyKey: SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY,
-    surfaceId: SPATIAL_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID,
-    modelDefinitionId: SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+    windowKindId: CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
+    label: CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_LABEL,
+    bodyKey: CAD_PLAY_STRUCTURE_CLASSIC_BODY_KEY,
+    surfaceId: CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID,
+    modelDefinitionId: CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
   },
 ];
 
-/** @emoji 🧭 Maps a spatial play scene surface id to its pane id. */
-export function spatialPlayPaneFromSurfaceId(surfaceId: string): SpatialPlayPaneId | null {
-  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.surfaceId === surfaceId)?.pane ?? null;
+/** @emoji 🧭 Maps a CAD play scene surface id to its pane id. */
+export function cadPlayPaneFromSurfaceId(surfaceId: string): CadPlayPaneId | null {
+  return CAD_PLAY_PANE_SPECS.find((row) => row.surfaceId === surfaceId)?.pane ?? null;
 }
 
-/** @emoji 🧭 Active model definition for a spatial play pane. */
-export function spatialPlayModelDefinitionIdForPane(pane: SpatialPlayPaneId): string {
-  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.modelDefinitionId;
+/** @emoji 🧭 Active model definition for a CAD play pane. */
+export function cadPlayModelDefinitionIdForPane(pane: CadPlayPaneId): string {
+  return CAD_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.modelDefinitionId;
 }
 
 /** @emoji 🌌 Resolves one pane's model from the shared play model space record (viewport binding). */
-export function spatialPlayPaneModel(modelsByDefinitionId: Readonly<Record<string, Model>>, pane: SpatialPlayPaneId): Model {
-  const modelDefinitionId = spatialPlayModelDefinitionIdForPane(pane);
+export function cadPlayPaneModel(modelsByDefinitionId: Readonly<Record<string, Model>>, pane: CadPlayPaneId): Model {
+  const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   return modelsByDefinitionId[modelDefinitionId] ?? new Model();
 }
 
-/** @emoji 🧭 Scene surface id for a spatial play pane. */
-export function spatialPlaySceneSurfaceIdForPane(pane: SpatialPlayPaneId): string {
-  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.surfaceId;
+/** @emoji 🧭 Scene surface id for a CAD play pane. */
+export function cadPlaySceneSurfaceIdForPane(pane: CadPlayPaneId): string {
+  return CAD_PLAY_PANE_SPECS.find((row) => row.pane === pane)!.surfaceId;
 }
 
-/** @emoji 🧭 Maps a spatial play window kind id to its pane id. */
-export function spatialPlayPaneFromWindowKindId(windowKindId: string): SpatialPlayPaneId | null {
-  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.windowKindId === windowKindId)?.pane ?? null;
+/** @emoji 🧭 Maps a CAD play window kind id to its pane id. */
+export function cadPlayPaneFromWindowKindId(windowKindId: string): CadPlayPaneId | null {
+  return CAD_PLAY_PANE_SPECS.find((row) => row.windowKindId === windowKindId)?.pane ?? null;
 }
 
-/** @emoji 🧭 Maps a model definition id to its spatial play pane id. */
-export function spatialPlayPaneForModelDefinition(modelDefinitionId: string): SpatialPlayPaneId | null {
-  return SPATIAL_PLAY_PANE_SPECS.find((row) => row.modelDefinitionId === modelDefinitionId)?.pane ?? null;
+/** @emoji 🧭 Maps a model definition id to its CAD play pane id. */
+export function cadPlayPaneForModelDefinition(modelDefinitionId: string): CadPlayPaneId | null {
+  return CAD_PLAY_PANE_SPECS.find((row) => row.modelDefinitionId === modelDefinitionId)?.pane ?? null;
 }
 
-const SPATIAL_PLAY_PANE_IDS: readonly SpatialPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
+const CAD_PLAY_PANE_IDS: readonly CadPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
 
-function emptyInteractionIdByPane(): Record<SpatialPlayPaneId, string> {
+function emptyInteractionIdByPane(): Record<CadPlayPaneId, string> {
   return { shape: "", building: "", energy: "", "structure-classic": "" };
 }
 
-function emptyInteractionBootIdByPane(): Record<SpatialPlayPaneId, number> {
+function emptyInteractionBootIdByPane(): Record<CadPlayPaneId, number> {
   return { shape: 0, building: 0, energy: 0, "structure-classic": 0 };
 }
 
-function emptySnapshotByPane(): Record<SpatialPlayPaneId, InteractionSnapshot | null> {
+function emptySnapshotByPane(): Record<CadPlayPaneId, InteractionSnapshot | null> {
   return { shape: null, building: null, energy: null, "structure-classic": null };
 }
 
@@ -219,8 +219,8 @@ function isSpatialComputeMode(value: string): value is SpatialComputeMode {
 }
 //#endregion 🔖Ids
 
-//#region 🔖SpatialPlayHierarchy
-function spatialPlayModelDefinitionLabel(modelDefinitionId: string): string {
+//#region 🔖CadPlayHierarchy
+function cadPlayModelDefinitionLabel(modelDefinitionId: string): string {
   const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
   if (manifest?.label?.trim()) {
     return `${manifest.label}`;
@@ -229,12 +229,12 @@ function spatialPlayModelDefinitionLabel(modelDefinitionId: string): string {
   return typologyObjectPascalFromLabel(tail.replace(/[._-]+/g, " "));
 }
 
-function spatialPlaySelectionKey(target: SelectionTarget): string {
+function cadPlaySelectionKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
 /** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision, objects, topology counts). */
-export function spatialPlayModelsDigest(modelsByDefinitionId: Record<string, Model>): string {
+export function cadPlayModelsDigest(modelsByDefinitionId: Record<string, Model>): string {
   return Object.keys(modelsByDefinitionId)
     .sort((a, b) => a.localeCompare(b))
     .map((modelDefinitionId) => {
@@ -245,7 +245,7 @@ export function spatialPlayModelsDigest(modelsByDefinitionId: Record<string, Mod
     .join("|");
 }
 
-type SpatialPlayHierarchyPickContext = {
+type CadPlayHierarchyPickContext = {
   readonly modelDefinitionId: string;
   readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
   readonly isHighlighted: (kind: SelectionTarget["kind"], id: string) => boolean;
@@ -253,48 +253,48 @@ type SpatialPlayHierarchyPickContext = {
   readonly onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void;
 };
 
-function spatialPlayHierarchyHoverHandlers(ctx: SpatialPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
+function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
   return {
     onPointerEnter: () => ctx.onHover(ctx.modelDefinitionId, target),
     onPointerLeave: () => ctx.onHover(ctx.modelDefinitionId, null),
   };
 }
 
-function spatialPlayTopologyTreeItem(node: ModelTopologyHierarchyNode, path: string, ctx: SpatialPlayHierarchyPickContext): TreeDataItem {
-  const childItems = node.children.map((child) => spatialPlayTopologyTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
+function cadPlayTopologyTreeItem(node: ModelTopologyHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
+  const childItems = node.children.map((child) => cadPlayTopologyTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind: node.kind, id: node.id, editable: true };
   return {
-    id: `spatial-play-hierarchy.topology.${path}`,
+    id: `cad-play-hierarchy.topology.${path}`,
     label: `${node.kind} ${node.id}`,
     isSelected: ctx.isSelected(node.kind, node.id),
     isHighlighted: ctx.isHighlighted(node.kind, node.id),
     defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
-    ...spatialPlayHierarchyHoverHandlers(ctx, target),
+    ...cadPlayHierarchyHoverHandlers(ctx, target),
     ...(childItems.length > 0 ? { items: childItems } : {}),
   };
 }
 
-function spatialPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, objectId: string, slot: string, primitiveRef: string, ctx: SpatialPlayHierarchyPickContext): TreeDataItem {
+function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, objectId: string, slot: string, primitiveRef: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
   const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
   const primitiveId = String(primitiveRef);
   const topology = buildModelTopologyHierarchy(model, primitiveId);
-  const topologyItems = (topology?.children ?? []).map((child) => spatialPlayTopologyTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
+  const topologyItems = (topology?.children ?? []).map((child) => cadPlayTopologyTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind, id: primitiveId, editable: true };
   return {
-    id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
+    id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
     label: `${slot}: ${kind} ${primitiveId}`,
     isSelected: ctx.isSelected(kind, primitiveId),
     isHighlighted: ctx.isHighlighted(kind, primitiveId),
     defaultOpen: true,
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
-    ...spatialPlayHierarchyHoverHandlers(ctx, target),
-    items: topologyItems.length ? topologyItems : [{ id: `spatial-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.topology.empty`, label: "(empty)" }],
+    ...cadPlayHierarchyHoverHandlers(ctx, target),
+    items: topologyItems.length ? topologyItems : [{ id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.topology.empty`, label: "(empty)" }],
   };
 }
 
-/** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for spatial play workbench. */
-export function buildSpatialPlayHierarchySections(
+/** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for CAD play workbench. */
+export function buildCadPlayHierarchySections(
   modelsByDefinitionId: Record<string, Model>,
   activeModelDefinitionId: string,
   selection: readonly SelectionTarget[],
@@ -302,7 +302,7 @@ export function buildSpatialPlayHierarchySections(
   hoveredKey: string | null = null,
   onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
 ): TreeDataSection[] {
-  const selectedKeys = new Set(selection.map(spatialPlaySelectionKey));
+  const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
   const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
   const isHighlighted = (kind: SelectionTarget["kind"], id: string): boolean => hoveredKey === `${kind}:${id}`;
   const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
@@ -312,61 +312,61 @@ export function buildSpatialPlayHierarchySections(
     if (!model) {
       continue;
     }
-    const pickCtx: SpatialPlayHierarchyPickContext = { modelDefinitionId, isSelected, isHighlighted, onSelect, onHover };
+    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, isSelected, isHighlighted, onSelect, onHover };
     const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
       const objectId = String(object.id);
       const typologyTail = object.typology.split(".").pop() ?? object.typology;
-      const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => spatialPlayPrimitiveSlotTreeItems(model, modelDefinitionId, objectId, slot, primitiveRef, pickCtx));
+      const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => cadPlayPrimitiveSlotTreeItems(model, modelDefinitionId, objectId, slot, primitiveRef, pickCtx));
       const objectTarget: SelectionTarget = { kind: "object", id: objectId, editable: true };
       return {
-        id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
+        id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
         label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
         description: object.typology,
         isSelected: isSelected("object", objectId),
         isHighlighted: isHighlighted("object", objectId),
         defaultOpen: true,
         onClick: () => onSelect(modelDefinitionId, objectTarget),
-        ...spatialPlayHierarchyHoverHandlers(pickCtx, objectTarget),
-        items: primitiveItems.length ? primitiveItems : [{ id: `spatial-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
+        ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
+        items: primitiveItems.length ? primitiveItems : [{ id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
       };
     });
     modelBranches.push({
-      id: `spatial-play-hierarchy.model.${modelDefinitionId}`,
-      label: spatialPlayModelDefinitionLabel(modelDefinitionId),
+      id: `cad-play-hierarchy.model.${modelDefinitionId}`,
+      label: cadPlayModelDefinitionLabel(modelDefinitionId),
       description: modelDefinitionId,
       defaultOpen: modelDefinitionId === activeModelDefinitionId,
-      items: objectItems.length ? objectItems : [{ id: `spatial-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
+      items: objectItems.length ? objectItems : [{ id: `cad-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
     });
   }
   const modelSpaceRoot: TreeDataItem = {
-    id: "spatial-play-hierarchy.modelspace",
+    id: "cad-play-hierarchy.modelspace",
     label: "ModelSpace",
     defaultOpen: true,
-    items: modelBranches.length ? modelBranches : [{ id: "spatial-play-hierarchy.modelspace.empty", label: "(empty)" }],
+    items: modelBranches.length ? modelBranches : [{ id: "cad-play-hierarchy.modelspace.empty", label: "(empty)" }],
   };
-  return [{ id: "spatial-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }];
+  return [{ id: "cad-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }];
 }
-//#endregion 🔖SpatialPlayHierarchy
+//#endregion 🔖CadPlayHierarchy
 
 //#region 🔖Toolbar
-/** @emoji 🧰 Snapshot for {@link buildSpatialPlayToolbarTools}. */
-export interface SpatialPlayToolbarState {
+/** @emoji 🧰 Snapshot for {@link buildCadPlayToolbarTools}. */
+export interface CadPlayToolbarState {
   readonly activeModelDefinitionId: string;
   readonly selectionCount: number;
   readonly transformsTo: readonly TransformationSpec[];
   readonly transformsFrom: readonly TransformationSpec[];
 }
 
-/** @emoji 🔗 React host bridge for spatial play toolbar commands. */
-export interface SpatialPlayHostBridge {
-  getToolbarState(): SpatialPlayToolbarState;
+/** @emoji 🔗 React host bridge for CAD play toolbar commands. */
+export interface CadPlayHostBridge {
+  getToolbarState(): CadPlayToolbarState;
   runHostCommand(command: string, args?: unknown): void;
 }
 
-/** @emoji 🧰 Playground {@link AppTools} for spatial play (view, save, transform). */
-export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, controllerId: string): AppTools {
+/** @emoji 🧰 Playground {@link AppTools} for CAD play (view, save, transform). */
+export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerId: string): AppTools {
   const viewTools: ToolItem[] = listModelDefinitionManifests().map((row, index) => ({
-    id: `spatial.play.view.${row.id}`,
+    id: `cad.play.view.${row.id}`,
     kind: "toggle",
     text: row.label,
     title: row.id,
@@ -378,7 +378,7 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
   }));
   const saveTools: ToolItem[] = [
     {
-      id: "spatial.play.save.selected",
+      id: "cad.play.save.selected",
       kind: "button",
       label: "Selected",
       order: 0,
@@ -387,7 +387,7 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
       command: "saveSelected",
     },
     {
-      id: "spatial.play.save.modelspace",
+      id: "cad.play.save.modelspace",
       kind: "button",
       label: "Model space",
       order: 1,
@@ -395,7 +395,7 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
       command: "saveInPlay",
     },
     {
-      id: "spatial.play.save.current",
+      id: "cad.play.save.current",
       kind: "button",
       label: "Current",
       order: 2,
@@ -403,7 +403,7 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
       command: "saveCurrent",
     },
     {
-      id: "spatial.play.save.load",
+      id: "cad.play.save.load",
       kind: "button",
       label: "Load",
       order: 3,
@@ -413,7 +413,7 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
   ];
   const transformTools: ToolItem[] = [
     ...state.transformsTo.map((spec, index) => ({
-      id: `spatial.play.transform.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+      id: `cad.play.transform.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
       label: `→ ${spec.label}`,
       title: spec.target.modelDefinition,
@@ -422,9 +422,9 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
       command: "applyTransformation",
       args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
     })),
-    ...(state.transformsTo.length > 0 && state.transformsFrom.length > 0 ? [{ id: "spatial.play.transform.separator", kind: "separator" as const, order: state.transformsTo.length }] : []),
+    ...(state.transformsTo.length > 0 && state.transformsFrom.length > 0 ? [{ id: "cad.play.transform.separator", kind: "separator" as const, order: state.transformsTo.length }] : []),
     ...state.transformsFrom.map((spec, index) => ({
-      id: `spatial.play.transform.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
+      id: `cad.play.transform.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
       label: `← ${spec.label}`,
       title: spec.source.modelDefinition,
@@ -442,14 +442,14 @@ export function buildSpatialPlayToolbarTools(state: SpatialPlayToolbarState, con
 }
 
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
-export function spatialPlayEngagementMirror(engagement: EngagementSpec | null, pane: SpatialPlayPaneId): WindowEngagement | undefined {
+export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane: CadPlayPaneId): WindowEngagement | undefined {
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
     label: option.label,
     pressed: option.pressed,
     disabled: option.disabled,
-    command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane, optionId: option.id } },
+    command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane, optionId: option.id } },
   }));
   const input = engagement.input
     ? {
@@ -457,8 +457,8 @@ export function spatialPlayEngagementMirror(engagement: EngagementSpec | null, p
         value: engagement.input.value,
         placeholder: engagement.input.placeholder,
         disabled: engagement.input.disabled,
-        onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
-        onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
+        onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
+        onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
@@ -467,15 +467,15 @@ export function spatialPlayEngagementMirror(engagement: EngagementSpec | null, p
 //#endregion 🔖Toolbar
 
 //#region 🔖Controller
-/** @emoji 🎛 Spatial play shell controller: quad viewports + playground toolbar categories. */
-export class SpatialPlayShellController extends Controller {
-  readonly mainMode = new ModeRuntime("main", "Spatial", undefined);
-  private hostBridge: SpatialPlayHostBridge | null = null;
-  private computeModeByPane: Record<SpatialPlayPaneId, SpatialComputeMode>;
-  private engagementByPane: Record<SpatialPlayPaneId, WindowEngagement | undefined>;
+/** @emoji 🎛 CAD play shell controller: quad viewports + playground toolbar categories. */
+export class CadPlayShellController extends Controller {
+  readonly mainMode = new ModeRuntime("main", "CAD", undefined);
+  private hostBridge: CadPlayHostBridge | null = null;
+  private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
+  private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
-    super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    super(CAD_PLAY_CONTROLLER_ID, commandBus, hostNotify);
     this.computeModeByPane = {
       shape: "fast",
       building: "fast",
@@ -486,30 +486,30 @@ export class SpatialPlayShellController extends Controller {
     this.rebuildShellMode();
   }
 
-  private computeMeasureForPane(pane: SpatialPlayPaneId): WindowMeasure {
+  private computeMeasureForPane(pane: CadPlayPaneId): WindowMeasure {
     return {
       kind: "select",
       id: `${pane}-compute`,
       label: "Compute",
       value: this.computeModeByPane[pane],
-      items: SPATIAL_PLAY_COMPUTE_MODES.map((mode) => ({
+      items: CAD_PLAY_COMPUTE_MODES.map((mode) => ({
         id: mode,
         value: mode,
         label: mode === "fast" ? "Fast" : "Precise",
       })),
-      onChange: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "setComputeModeForPane", args: { pane } },
+      onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "setComputeModeForPane", args: { pane } },
     };
   }
 
   /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and live interaction engagement per pane. */
   rebuildShellMode(): void {
-    this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map(
+    this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map(
       (row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], this.engagementByPane[row.pane]),
     );
   }
 
   /** @emoji 💬 Sets one pane's interaction engagement (from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
-  setPaneEngagement(pane: SpatialPlayPaneId, engagement: WindowEngagement | undefined): void {
+  setPaneEngagement(pane: CadPlayPaneId, engagement: WindowEngagement | undefined): void {
     if (this.engagementByPane[pane] === engagement) return;
     this.engagementByPane = { ...this.engagementByPane, [pane]: engagement };
     this.rebuildShellMode();
@@ -517,17 +517,17 @@ export class SpatialPlayShellController extends Controller {
   }
 
   /** @emoji ⚡ Returns compute mode for one quad pane. */
-  getComputeModeForPane(pane: SpatialPlayPaneId): SpatialComputeMode {
+  getComputeModeForPane(pane: CadPlayPaneId): SpatialComputeMode {
     return this.computeModeByPane[pane];
   }
 
   /** @emoji ⚡ Snapshot of compute modes for all quad panes. */
-  getComputeModeByPane(): Readonly<Record<SpatialPlayPaneId, SpatialComputeMode>> {
+  getComputeModeByPane(): Readonly<Record<CadPlayPaneId, SpatialComputeMode>> {
     return this.computeModeByPane;
   }
 
   /** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
-  setHostBridge(bridge: SpatialPlayHostBridge | null): void {
+  setHostBridge(bridge: CadPlayHostBridge | null): void {
     this.hostBridge = bridge;
     this.rebuildToolbarTools();
   }
@@ -538,14 +538,14 @@ export class SpatialPlayShellController extends Controller {
       this.mainMode.tools = undefined;
       return;
     }
-    this.mainMode.tools = buildSpatialPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
+    this.mainMode.tools = buildCadPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
   }
 
   override run(command: string, args?: unknown): void {
     switch (command) {
       case "setComputeModeForPane": {
-        const { pane, value } = args as { pane?: SpatialPlayPaneId; value?: string };
-        if (!pane || !SPATIAL_PLAY_PANE_SPECS.some((row) => row.pane === pane)) break;
+        const { pane, value } = args as { pane?: CadPlayPaneId; value?: string };
+        if (!pane || !CAD_PLAY_PANE_SPECS.some((row) => row.pane === pane)) break;
         if (!value || !isSpatialComputeMode(value)) break;
         if (this.computeModeByPane[pane] === value) break;
         this.computeModeByPane = { ...this.computeModeByPane, [pane]: value };
@@ -573,26 +573,26 @@ export class SpatialPlayShellController extends Controller {
 //#endregion 🔖Controller
 
 //#region 🔖Runtime
-function spatialControllerFromContext(ctx: WindowBodyViewContext): SpatialPlayShellController | undefined {
-  return ctx.runtime.getActiveApp()?.controller as SpatialPlayShellController | undefined;
+function cadPlayControllerFromContext(ctx: WindowBodyViewContext): CadPlayShellController | undefined {
+  return ctx.runtime.getActiveApp()?.controller as CadPlayShellController | undefined;
 }
 
-function buildSpatialPlayDeclarativeBodyForPane(pane: SpatialPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
+function buildCadPlayDeclarativeBodyForPane(pane: CadPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
   return (ctx) => {
-    if (!spatialControllerFromContext(ctx)) {
-      return { type: "text", value: "Missing spatial play controller" };
+    if (!cadPlayControllerFromContext(ctx)) {
+      return { type: "text", value: "Missing CAD play controller" };
     }
-    return buildCadWindowBody(spatialPlaySceneSurfaceIdForPane(pane), SPATIAL_PLAY_CONTROLLER_ID);
+    return buildCadWindowBody(cadPlaySceneSurfaceIdForPane(pane), CAD_PLAY_CONTROLLER_ID);
   };
 }
 
-export const buildSpatialPlayShapeDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("shape");
-export const buildSpatialPlayBuildingDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("building");
-export const buildSpatialPlayEnergyDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("energy");
-export const buildSpatialPlayStructureClassicDeclarativeBody = buildSpatialPlayDeclarativeBodyForPane("structure-classic");
+export const buildCadPlayShapeDeclarativeBody = buildCadPlayDeclarativeBodyForPane("shape");
+export const buildCadPlayBuildingDeclarativeBody = buildCadPlayDeclarativeBodyForPane("building");
+export const buildCadPlayEnergyDeclarativeBody = buildCadPlayDeclarativeBodyForPane("energy");
+export const buildCadPlayStructureClassicDeclarativeBody = buildCadPlayDeclarativeBodyForPane("structure-classic");
 
-export function buildSpatialPlayAppRuntime(controller: SpatialPlayShellController): AppRuntime {
-  const app = new AppRuntime(SPATIAL_PLAY_APP_ID, "Spatial play", undefined, controller, SPATIAL_PLAY_LAYOUT as never, controller.mainMode.windowKinds);
+export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppRuntime {
+  const app = new AppRuntime(CAD_PLAY_APP_ID, "CAD play", undefined, controller, CAD_PLAY_LAYOUT as never, controller.mainMode.windowKinds);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
   app.leftTabs = [];
@@ -600,20 +600,20 @@ export function buildSpatialPlayAppRuntime(controller: SpatialPlayShellControlle
   return app;
 }
 
-/** @emoji 📝 Registers spatial play window bodies on the playground host. */
-export function registerSpatialPlayDeclarativeBodies(): void {
-  registerWindowBody(SPATIAL_PLAY_SHAPE_BODY_KEY, buildSpatialPlayShapeDeclarativeBody);
-  registerWindowBody(SPATIAL_PLAY_BUILDING_BODY_KEY, buildSpatialPlayBuildingDeclarativeBody);
-  registerWindowBody(SPATIAL_PLAY_ENERGY_BODY_KEY, buildSpatialPlayEnergyDeclarativeBody);
-  registerWindowBody(SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY, buildSpatialPlayStructureClassicDeclarativeBody);
+/** @emoji 📝 Registers CAD play window bodies on the playground host. */
+export function registerCadPlayDeclarativeBodies(): void {
+  registerWindowBody(CAD_PLAY_SHAPE_BODY_KEY, buildCadPlayShapeDeclarativeBody);
+  registerWindowBody(CAD_PLAY_BUILDING_BODY_KEY, buildCadPlayBuildingDeclarativeBody);
+  registerWindowBody(CAD_PLAY_ENERGY_BODY_KEY, buildCadPlayEnergyDeclarativeBody);
+  registerWindowBody(CAD_PLAY_STRUCTURE_CLASSIC_BODY_KEY, buildCadPlayStructureClassicDeclarativeBody);
 }
 
-/** @emoji 🚀 Creates spatial play {@link Platform} with declarative viewport body registered. */
-export function buildSpatialPlayRuntime(): Platform {
-  registerSpatialPlayDeclarativeBodies();
+/** @emoji 🚀 Creates CAD play {@link Platform} with declarative viewport body registered. */
+export function buildCadPlayRuntime(): Platform {
+  registerCadPlayDeclarativeBodies();
   const runtime = new Platform();
-  const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
-  runtime.addApp(buildSpatialPlayAppRuntime(controller));
+  const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+  runtime.addApp(buildCadPlayAppRuntime(controller));
   return runtime;
 }
 //#endregion 🔖Runtime
@@ -931,7 +931,7 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
   return modelDefinitionId.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "model";
 }
 
-function modelsFromSpatialJson(json: unknown): Record<string, Model> {
+function modelsFromCadJson(json: unknown): Record<string, Model> {
   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
   if (modelSpace) return ensurePlayShapeModel(recordFromModelSpace(modelSpace));
@@ -983,20 +983,20 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
   return withShape;
 }
 
-/** @emoji 🌌 Ensures all four spatial play quad models exist and stay derived from shape. */
-export function ensureSpatialPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
+/** @emoji 🌌 Ensures all four CAD play quad models exist and stay derived from shape. */
+export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
   let next = ensurePlayShapeModel(models);
-  if (!next[SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID]) {
-    next = { ...next, [SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
+  if (!next[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]) {
+    next = { ...next, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
   }
-  next = ensureDerivedModelInSpace(next, SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID);
+  next = ensureDerivedModelInSpace(next, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID);
   next = ensureDerivedModelInSpace(next, "aec.building.structure");
-  next = ensureDerivedModelInSpace(next, SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID);
+  next = ensureDerivedModelInSpace(next, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID);
   return next;
 }
 
 function emptyPlayModels(): Record<string, Model> {
-  return ensureSpatialPlayQuadModels({});
+  return ensureCadPlayQuadModels({});
 }
 
 function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, activeModelDefinitionId: string, liveModel: Model): Model {
@@ -1009,8 +1009,8 @@ function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, ac
   return liveModel;
 }
 
-//#region 🔖SpatialPlayChrome
-export interface SpatialPlayChromeSnapshot {
+//#region 🔖CadPlayChrome
+export interface CadPlayChromeSnapshot {
   readonly modelsByDefinitionId: Record<string, Model>;
   readonly activeModelDefinitionId: string;
   readonly selection: readonly SelectionTarget[];
@@ -1019,40 +1019,40 @@ export interface SpatialPlayChromeSnapshot {
   readonly hoverTarget: (modelDefinitionId: string, target: SelectionTarget | null) => void;
 }
 
-interface SpatialPlayChromeContextValue {
-  readonly snapshot: SpatialPlayChromeSnapshot | null;
-  readonly publishSnapshot: (snapshot: SpatialPlayChromeSnapshot | null) => void;
+interface CadPlayChromeContextValue {
+  readonly snapshot: CadPlayChromeSnapshot | null;
+  readonly publishSnapshot: (snapshot: CadPlayChromeSnapshot | null) => void;
 }
 
-const SpatialPlayChromeContext = reactHostPort.createContext<SpatialPlayChromeContextValue | null>(null);
+const CadPlayChromeContext = reactHostPort.createContext<CadPlayChromeContextValue | null>(null);
 
-function useSpatialPlayChrome(): SpatialPlayChromeContextValue {
-  const value = reactHostPort.useContext(SpatialPlayChromeContext);
+function useCadPlayChrome(): CadPlayChromeContextValue {
+  const value = reactHostPort.useContext(CadPlayChromeContext);
   if (!value) {
-    throw new Error("useSpatialPlayChrome must be used inside SpatialPlayChromeContext.");
+    throw new Error("useCadPlayChrome must be used inside CadPlayChromeContext.");
   }
   return value;
 }
 
-function useSpatialPlayChromePublish(): (snapshot: SpatialPlayChromeSnapshot | null) => void {
-  return useSpatialPlayChrome().publishSnapshot;
+function useCadPlayChromePublish(): (snapshot: CadPlayChromeSnapshot | null) => void {
+  return useCadPlayChrome().publishSnapshot;
 }
 
-class SpatialPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   constructor(private readonly buildSections: () => TreeDataSection[]) {
     super();
   }
 
   resolveTab(): SidePanelTabConfig {
     return {
-      id: SPATIAL_PLAY_HIERARCHY_TAB_ID,
+      id: CAD_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => this.buildSections()),
     };
   }
 }
-//#endregion 🔖SpatialPlayChrome
+//#endregion 🔖CadPlayChrome
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
@@ -1178,19 +1178,19 @@ function PlaySession({
 }
 //#endregion
 
-//#region 🔖SpatialPlayModelSpace
-interface SpatialPlayModelSpaceValue {
+//#region 🔖CadPlayModelSpace
+interface CadPlayModelSpaceValue {
   readonly activeModelDefinitionId: string;
   readonly setActiveModelDefinitionId: (value: string) => void;
   readonly focusModelDefinition: (modelDefinitionId: string) => void;
-  readonly interactionIdForPane: (pane: SpatialPlayPaneId) => string;
-  readonly handleInteractionPickForPane: (pane: SpatialPlayPaneId, id: string) => void;
-  readonly specForPane: (pane: SpatialPlayPaneId) => InteractionSpec;
+  readonly interactionIdForPane: (pane: CadPlayPaneId) => string;
+  readonly handleInteractionPickForPane: (pane: CadPlayPaneId, id: string) => void;
+  readonly specForPane: (pane: CadPlayPaneId) => InteractionSpec;
   readonly documentModel: ModelDocument;
   readonly history: DocumentHistory;
   readonly kernel: InteractionRuntimeOptions["kernel"];
-  readonly computeModeForPane: (pane: SpatialPlayPaneId) => SpatialComputeMode;
-  readonly sessionRestartNonceForPane: (pane: SpatialPlayPaneId) => number;
+  readonly computeModeForPane: (pane: CadPlayPaneId) => SpatialComputeMode;
+  readonly sessionRestartNonceForPane: (pane: CadPlayPaneId) => number;
   readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
   readonly setRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
   readonly interactionSelectionByState: SpatialInteractionSelectionByState;
@@ -1201,8 +1201,8 @@ interface SpatialPlayModelSpaceValue {
   readonly pickGeometry: Model;
   readonly handleModelAttributesChange: (model: Model) => void;
   readonly commitModelForDefinition: (modelDefinitionId: string, model: Model) => void;
-  readonly handleSnapshotChangeForPane: (pane: SpatialPlayPaneId, snapshot: InteractionSnapshot) => void;
-  readonly handleEngagementChangeForPane: (pane: SpatialPlayPaneId, engagement: EngagementSpec | null) => void;
+  readonly handleSnapshotChangeForPane: (pane: CadPlayPaneId, snapshot: InteractionSnapshot) => void;
+  readonly handleEngagementChangeForPane: (pane: CadPlayPaneId, engagement: EngagementSpec | null) => void;
   readonly flushedModelsByDefinitionId: Record<string, Model>;
   readonly playModelSpace: ModelSpace;
   readonly viewObjectCount: number;
@@ -1224,33 +1224,33 @@ interface SpatialPlayModelSpaceValue {
   readonly brepjsKernel: BrepjsKernel;
 }
 
-const SpatialPlayModelSpaceContext = reactHostPort.createContext<SpatialPlayModelSpaceValue | null>(null);
+const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
 
-function useSpatialPlayModelSpace(): SpatialPlayModelSpaceValue {
-  const value = reactHostPort.useContext(SpatialPlayModelSpaceContext);
+function useCadPlayModelSpace(): CadPlayModelSpaceValue {
+  const value = reactHostPort.useContext(CadPlayModelSpaceContext);
   if (!value) {
-    throw new Error("useSpatialPlayModelSpace must be used inside SpatialPlayModelSpaceProvider.");
+    throw new Error("useCadPlayModelSpace must be used inside CadPlayModelSpaceProvider.");
   }
   return value;
 }
 
-function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: { readonly children: ReactNode; readonly runtime: Platform; readonly shellController: SpatialPlayShellController }) {
+function CadPlayModelSpaceProvider({ children, runtime, shellController }: { readonly children: ReactNode; readonly runtime: Platform; readonly shellController: CadPlayShellController }) {
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => runtime.subscribe(onStoreChange),
     () => runtime.generation,
     () => 0,
   );
   void shellGeneration;
-  const computeModeForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
-  const publishSpatialPlayChrome = useSpatialPlayChromePublish();
+  const computeModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
+  const publishCadPlayChrome = useCadPlayChromePublish();
   const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
   if (!pointerFocusRef.current) {
     pointerFocusRef.current = new AppPointerFocusStore<string>();
   }
   const pointerFocus = reactHostPort.useSyncExternalStore(
     (onStoreChange) => pointerFocusRef.current!.cell.subscribe(onStoreChange),
-    () => pointerFocusRef.current!.getSnapshot(),
-    () => pointerFocusRef.current!.getSnapshot(),
+    () => pointerFocusRef.current!.cell.get(),
+    () => pointerFocusRef.current!.cell.get(),
   );
   const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
   const [interactionIdByPane, setInteractionIdByPane] = reactHostPort.useState(emptyInteractionIdByPane);
@@ -1262,10 +1262,10 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
   const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
-  const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<SpatialPlayPaneId, EngagementSpec | null>>>({});
+  const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<CadPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
-  const specForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId): InteractionSpec => {
+  const specForPane = reactHostPort.useCallback((pane: CadPlayPaneId): InteractionSpec => {
     const interactionId = interactionIdByPane[pane];
     return interactionId ? (loadSpatialInteraction(interactionId) ?? PLAY_REPL_SPEC) : PLAY_REPL_SPEC;
   }, [interactionIdByPane]);
@@ -1275,8 +1275,8 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
 
   reactHostPort.useEffect(() => {
     setInteractionIdByPane((prev) => {
-      let next: Record<SpatialPlayPaneId, string> | null = null;
-      for (const row of SPATIAL_PLAY_PANE_SPECS) {
+      let next: Record<CadPlayPaneId, string> | null = null;
+      for (const row of CAD_PLAY_PANE_SPECS) {
         const interactionId = prev[row.pane];
         if (!interactionId) continue;
         const scoped = listSpatialInteractionsForModelDefinition(row.modelDefinitionId);
@@ -1289,10 +1289,10 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   }, [interactionIdByPane]);
 
   reactHostPort.useEffect(() => {
-    setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels(prev));
+    setModelsByDefinitionId((prev) => ensureCadPlayQuadModels(prev));
   }, [activeModelDefinitionId]);
 
-  const handleInteractionPickForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId, id: string) => {
+  const handleInteractionPickForPane = reactHostPort.useCallback((pane: CadPlayPaneId, id: string) => {
     setInteractionIdByPane((prev) => {
       if (id === prev[pane]) {
         setInteractionBootIdByPane((boot) => ({ ...boot, [pane]: boot[pane] + 1 }));
@@ -1314,13 +1314,13 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     } else {
       const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
       if (!asset) return;
-      setModelsByDefinitionId(modelsFromSpatialJson(asset.json));
+      setModelsByDefinitionId(modelsFromCadJson(asset.json));
       setActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(asset.json));
     }
     setModelDefinitionRevision((r) => r + 1);
   }, []);
 
-  const modelsForActiveDefinition = reactHostPort.useMemo(() => ensureSpatialPlayQuadModels(modelsByDefinitionId), [activeModelDefinitionId, modelsByDefinitionId]);
+  const modelsForActiveDefinition = reactHostPort.useMemo(() => ensureCadPlayQuadModels(modelsByDefinitionId), [activeModelDefinitionId, modelsByDefinitionId]);
 
   const activeModel = reactHostPort.useMemo(() => {
     const resolved = modelsForActiveDefinition[activeModelDefinitionId];
@@ -1339,7 +1339,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
 
   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
-    return ensureSpatialPlayQuadModels(flushed);
+    return ensureCadPlayQuadModels(flushed);
   }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
@@ -1349,7 +1349,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
 
   const commitModelForDefinition = reactHostPort.useCallback((modelDefinitionId: string, model: Model) => {
-    setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
+    setModelsByDefinitionId((prev) => ensureCadPlayQuadModels({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
     setModelDefinitionRevision((r) => r + 1);
   }, []);
 
@@ -1357,7 +1357,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     (nextId: string) => {
       setModelsByDefinitionId((prev) => {
         const flushed = flushModelsRecord(prev, activeModelDefinitionId, liveModel);
-        return ensureSpatialPlayQuadModels(flushed);
+        return ensureCadPlayQuadModels(flushed);
       });
       setActiveModelDefinitionId(nextId);
       setModelDefinitionRevision((r) => r + 1);
@@ -1368,7 +1368,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   const focusModelDefinition = reactHostPort.useCallback(
     (modelDefinitionId: string) => {
       if (modelDefinitionId === activeModelDefinitionId) return;
-      setModelsByDefinitionId((prev) => ensureSpatialPlayQuadModels(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
+      setModelsByDefinitionId((prev) => ensureCadPlayQuadModels(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
       setActiveModelDefinitionId(modelDefinitionId);
     },
     [activeModelDefinitionId, liveModel],
@@ -1381,7 +1381,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     [activeModelDefinitionId, commitModelForDefinition],
   );
 
-  const activePane = reactHostPort.useMemo(() => spatialPlayPaneForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
+  const activePane = reactHostPort.useMemo(() => cadPlayPaneForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
   const activeInteractionId = activePane ? interactionIdByPane[activePane] : "";
   const activeSnapshot = activePane ? snapshotByPane[activePane] : null;
   const activeSpec = activePane ? specForPane(activePane) : PLAY_REPL_SPEC;
@@ -1390,7 +1390,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     [activeSnapshot, activeSpec],
   );
   const boundInteractionSession = Boolean(activeInteractionId) && interactionActive;
-  const handleSnapshotChangeForPane = reactHostPort.useCallback((pane: SpatialPlayPaneId, next: InteractionSnapshot) => {
+  const handleSnapshotChangeForPane = reactHostPort.useCallback((pane: CadPlayPaneId, next: InteractionSnapshot) => {
     setSnapshotByPane((prev) => {
       const current = prev[pane];
       if (current && current.revision === next.revision && current.state === next.state) return prev;
@@ -1428,23 +1428,23 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       if (target && modelDefinitionId !== activeModelDefinitionId) {
         handleActiveModelDefinitionChange(modelDefinitionId);
       }
-      pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_HIERARCHY, target ? selectionTargetHoverKey(target) : null);
+      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_HIERARCHY, target ? selectionTargetHoverKey(target) : null);
     },
     [activeModelDefinitionId, handleActiveModelDefinitionChange],
   );
 
   const onCanvasHoverTarget = reactHostPort.useCallback((target: SpatialPickTarget | null) => {
-    pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_CANVAS, target ? spatialPickTargetKey(target) : null);
+    pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, target ? spatialPickTargetKey(target) : null);
   }, []);
 
   const onHoveredPickKeyChange = reactHostPort.useCallback((key: string | null) => {
-    pointerFocusRef.current!.setHoverFromSource(SPATIAL_PLAY_HOVER_SOURCE_CANVAS, key);
+    pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, key);
   }, []);
 
-  const flushedModelsDigest = reactHostPort.useMemo(() => spatialPlayModelsDigest(flushedModelsByDefinitionId), [flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision]);
+  const flushedModelsDigest = reactHostPort.useMemo(() => cadPlayModelsDigest(flushedModelsByDefinitionId), [flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision]);
 
   reactHostPort.useEffect(() => {
-    publishSpatialPlayChrome({
+    publishCadPlayChrome({
       modelsByDefinitionId: flushedModelsByDefinitionId,
       activeModelDefinitionId,
       selection: selectionInScope,
@@ -1452,7 +1452,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       selectTarget: selectHierarchyTarget,
       hoverTarget: hoverHierarchyTarget,
     });
-    return () => publishSpatialPlayChrome(null);
+    return () => publishCadPlayChrome(null);
   }, [
     activeModelDefinitionId,
     flushedModelsByDefinitionId,
@@ -1460,7 +1460,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     hoverHierarchyTarget,
     modelDefinitionRevision,
     pointerFocus.hover,
-    publishSpatialPlayChrome,
+    publishCadPlayChrome,
     selectHierarchyTarget,
     selectionInScope,
   ]);
@@ -1480,7 +1480,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
         setFileStatus(`Transform failed: ${String(error)}`);
         return;
       }
-      setModelsByDefinitionId(ensureSpatialPlayQuadModels(recordFromModelSpace(space)));
+      setModelsByDefinitionId(ensureCadPlayQuadModels(recordFromModelSpace(space)));
       setActiveModelDefinitionId(spec.target.modelDefinition);
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Transformed ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
@@ -1536,9 +1536,9 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   }, []);
 
   const handleEngagementChangeForPane = reactHostPort.useCallback(
-    (pane: SpatialPlayPaneId, engagement: EngagementSpec | null) => {
+    (pane: CadPlayPaneId, engagement: EngagementSpec | null) => {
       engagementSpecRefByPane.current[pane] = engagement;
-      shellController.setPaneEngagement(pane, spatialPlayEngagementMirror(engagement, pane));
+      shellController.setPaneEngagement(pane, cadPlayEngagementMirror(engagement, pane));
     },
     [shellController],
   );
@@ -1580,21 +1580,21 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
             handleLoadRawRequest();
             break;
           case "engagementOption": {
-            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
-            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
             engagementSpecRefByPane.current[pane]?.options?.find((option) => option.id === optionId)?.onPress?.();
             break;
           }
           case "engagementInput": {
-            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
-            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
             engagementSpecRefByPane.current[pane]?.input?.onChange?.((args as { value?: string })?.value ?? "");
             break;
           }
           case "engagementSubmit": {
-            const pane = (args as { pane?: SpatialPlayPaneId })?.pane;
-            if (!pane || !SPATIAL_PLAY_PANE_IDS.includes(pane)) break;
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
             engagementSpecRefByPane.current[pane]?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
             break;
           }
@@ -1636,7 +1636,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
       if (!model) throw new Error("No spatial model found in file.");
       setShapeAssetId("");
       setLoadedRawName(file.name);
-      setModelsByDefinitionId(modelsFromSpatialJson(model.toJSON()));
+      setModelsByDefinitionId(modelsFromCadJson(model.toJSON()));
       setActiveModelDefinitionId(SHAPE_MODEL_DEFINITION_ID);
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Loaded model from ${file.name}.`);
@@ -1647,7 +1647,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     }
   }, []);
 
-  const modelSpaceValue = reactHostPort.useMemo<SpatialPlayModelSpaceValue>(
+  const modelSpaceValue = reactHostPort.useMemo<CadPlayModelSpaceValue>(
     () => ({
       activeModelDefinitionId,
       setActiveModelDefinitionId,
@@ -1733,18 +1733,18 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     ],
   );
 
-  return <SpatialPlayModelSpaceContext.Provider value={modelSpaceValue}>{children}</SpatialPlayModelSpaceContext.Provider>;
+  return <CadPlayModelSpaceContext.Provider value={modelSpaceValue}>{children}</CadPlayModelSpaceContext.Provider>;
 }
 
 /** @emoji 📂 Hidden file input for playground Save → Load. */
-function SpatialPlayLoadInput(): ReactNode {
-  const { loadInputRef, handleLoadRaw } = useSpatialPlayModelSpace();
+function CadPlayLoadInput(): ReactNode {
+  const { loadInputRef, handleLoadRaw } = useCadPlayModelSpace();
   return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
 }
 
 /** @emoji 🎯 Details panel: attribute and property editors for the current selection only. */
-function SpatialPlayDetailsAside(): ReactNode {
-  const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } = useSpatialPlayModelSpace();
+function CadPlayDetailsAside(): ReactNode {
+  const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } = useCadPlayModelSpace();
   if (selectionInScope.length === 0) {
     return <p className="text-muted-foreground leading-snug">Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</p>;
   }
@@ -1757,15 +1757,15 @@ function SpatialPlayDetailsAside(): ReactNode {
 }
 
 /** @emoji 📦 Workbench catalog: shape fixtures and file I/O status (toolbar handles save/load). */
-function SpatialPlayCatalogAside(): ReactNode {
-  const { activeModelDefinitionId, shapeAssetId, handleShapeAssetChange, fileStatus } = useSpatialPlayModelSpace();
+function CadPlayCatalogAside(): ReactNode {
+  const { activeModelDefinitionId, shapeAssetId, handleShapeAssetChange, fileStatus } = useCadPlayModelSpace();
   const statusTone = fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "text-destructive" : "text-muted-foreground";
   return (
     <>
       {isShapeModelDefinition(activeModelDefinitionId) ? (
-        <Label id="spatial.play.catalog.shape" label="Shape asset">
+        <Label id="cad.play.catalog.shape" label="Shape asset">
           <Select value={shapeAssetId || "__none__"} onValueChange={(value) => handleShapeAssetChange(value === "__none__" ? "" : value)}>
-            <SelectTrigger className="h-medium w-full" id="spatial.play.catalog.shape.trigger" size="sm">
+            <SelectTrigger className="h-medium w-full" id="cad.play.catalog.shape.trigger" size="sm">
               <SelectValue placeholder="No asset" />
             </SelectTrigger>
             <SelectContent>
@@ -1789,7 +1789,7 @@ function SpatialPlayCatalogAside(): ReactNode {
 }
 
 /** @emoji 🎮 One quad pane: interaction editing for its model definition with window engagement. */
-function SpatialPlayInteractionPane({ pane }: { readonly pane: SpatialPlayPaneId }): ReactNode {
+function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): ReactNode {
   const {
     interactionIdForPane,
     specForPane,
@@ -1813,11 +1813,11 @@ function SpatialPlayInteractionPane({ pane }: { readonly pane: SpatialPlayPaneId
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
-  } = useSpatialPlayModelSpace();
-  const modelDefinitionId = spatialPlayModelDefinitionIdForPane(pane);
+  } = useCadPlayModelSpace();
+  const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const interactionId = interactionIdForPane(pane);
   const spec = specForPane(pane);
-  const paneModel = spatialPlayPaneModel(flushedModelsByDefinitionId, pane);
+  const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
   const pickGeometry = reactHostPort.useMemo(
     () => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
@@ -1880,101 +1880,101 @@ function SpatialPlayInteractionPane({ pane }: { readonly pane: SpatialPlayPaneId
 //#endregion
 
 //#region 🔖PlaygroundHost
-let spatialPlayChromeRegistered = false;
+let cadPlayChromeRegistered = false;
 
-function registerSpatialPlayChrome(): void {
-  if (spatialPlayChromeRegistered) return;
-  spatialPlayChromeRegistered = true;
+function registerCadPlayChrome(): void {
+  if (cadPlayChromeRegistered) return;
+  cadPlayChromeRegistered = true;
   for (const pane of ["shape", "building", "energy", "structure-classic"] as const) {
-    registerSurfaceBinding(spatialPlaySceneSurfaceIdForPane(pane), SpatialPlaySurfaceHost);
+    registerSurfaceBinding(cadPlaySceneSurfaceIdForPane(pane), CadPlaySurfaceHost);
   }
 }
 
-/** @emoji 🧊 R3F viewport for one spatial play quad pane. */
-function SpatialPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
-  if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
-    return <div className="p-single text-destructive text-xs">Invalid spatial play surface binding</div>;
+/** @emoji 🧊 Viewport for one CAD play quad pane. */
+function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
+  if (node.controllerId !== CAD_PLAY_CONTROLLER_ID) {
+    return <div className="p-single text-destructive text-xs">Invalid CAD play surface binding</div>;
   }
-  const pane = spatialPlayPaneFromSurfaceId(node.surfaceId);
+  const pane = cadPlayPaneFromSurfaceId(node.surfaceId);
   if (!pane) {
-    return <div className="p-single text-destructive text-xs">Unknown spatial play surface</div>;
+    return <div className="p-single text-destructive text-xs">Unknown CAD play surface</div>;
   }
   return (
     <div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">
-      <SpatialPlayInteractionPane pane={pane} />
+      <CadPlayInteractionPane pane={pane} />
     </div>
   );
 }
 
-class SpatialPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
+class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
-      id: "spatial-play-catalog",
+      id: "cad-play-catalog",
       icon: Shapes,
       order: 1,
       tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("spatial-play-catalog.section", "Catalog", <SpatialPlayCatalogAside />)],
+        sections: [playgroundPanelSection("cad-play-catalog.section", "Catalog", <CadPlayCatalogAside />)],
       }),
     };
   }
 }
 
-class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
+class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
-      id: "spatial-play-details",
+      id: "cad-play-details",
       icon: ListTree,
       order: 0,
       tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("spatial-play-details.section", "Selection", <SpatialPlayDetailsAside />)],
+        sections: [playgroundPanelSection("cad-play-details.section", "Selection", <CadPlayDetailsAside />)],
       }),
     };
   }
 }
 
-function SpatialPlayRoot(): ReactNode {
+function CadPlayRoot(): ReactNode {
   const runtimeRef = reactHostPort.useRef<Platform | null>(null);
-  const shellControllerRef = reactHostPort.useRef<SpatialPlayShellController | null>(null);
-  const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<SpatialPlayChromeSnapshot | null>(null);
+  const shellControllerRef = reactHostPort.useRef<CadPlayShellController | null>(null);
+  const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<CadPlayChromeSnapshot | null>(null);
   if (!runtimeRef.current) {
-    registerSpatialPlayChrome();
-    runtimeRef.current = buildSpatialPlayRuntime();
-    runtimeRef.current.setActiveAppId(SPATIAL_PLAY_APP_ID);
-    shellControllerRef.current = runtimeRef.current.getActiveApp()?.controller as SpatialPlayShellController;
+    registerCadPlayChrome();
+    runtimeRef.current = buildCadPlayRuntime();
+    runtimeRef.current.setActiveAppId(CAD_PLAY_APP_ID);
+    shellControllerRef.current = runtimeRef.current.getActiveApp()?.controller as CadPlayShellController;
   }
   const shellController = shellControllerRef.current;
   if (!shellController) {
     return null;
   }
-  const chromeContextValue = reactHostPort.useMemo<SpatialPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
+  const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
   const chromeSnapshotRef = reactHostPort.useRef(chromeSnapshot);
   chromeSnapshotRef.current = chromeSnapshot;
   const chromeKey = chromeSnapshot
-    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.hoveredKey ?? ""}\u0001${spatialPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
+    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.hoveredKey ?? ""}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
     : "";
   const workbenchTabs = reactHostPort.useMemo(
     () => [
-      new SpatialPlayCatalogPanelDefinition().resolveTab(),
+      new CadPlayCatalogPanelDefinition().resolveTab(),
       ...(chromeSnapshot
         ? [
-            new SpatialPlayHierarchyPanelDefinition(() => {
+            new CadPlayHierarchyPanelDefinition(() => {
               const snap = chromeSnapshotRef.current;
               if (!snap) return [];
-              return buildSpatialPlayHierarchySections(snap.modelsByDefinitionId, snap.activeModelDefinitionId, snap.selection, snap.selectTarget, snap.hoveredKey, snap.hoverTarget);
+              return buildCadPlayHierarchySections(snap.modelsByDefinitionId, snap.activeModelDefinitionId, snap.selection, snap.selectTarget, snap.hoveredKey, snap.hoverTarget);
             }).resolveTab(),
           ]
         : []),
     ],
     [chromeSnapshot, chromeKey],
   );
-  const detailsTabs = reactHostPort.useMemo(() => [new SpatialPlayDetailsPanelDefinition().resolveTab()], []);
+  const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition().resolveTab()], []);
   return (
-    <SpatialPlayChromeContext.Provider value={chromeContextValue}>
-      <SpatialPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
-        <SpatialPlayLoadInput />
-        <PlaygroundView runtime={runtimeRef.current} defaultAppId={SPATIAL_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
-      </SpatialPlayModelSpaceProvider>
-    </SpatialPlayChromeContext.Provider>
+    <CadPlayChromeContext.Provider value={chromeContextValue}>
+      <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
+        <CadPlayLoadInput />
+        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />
+      </CadPlayModelSpaceProvider>
+    </CadPlayChromeContext.Provider>
   );
 }
 
@@ -1983,7 +1983,7 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
   if (el) {
     mountPlaygroundApp(
       <StrictMode>
-        <SpatialPlayRoot />
+        <CadPlayRoot />
       </StrictMode>,
     );
   }
@@ -1994,26 +1994,26 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("SpatialPlayShellController compute mode", () => {
+  describe("CadPlayShellController compute mode", () => {
     it("stores independent compute modes per quad pane", () => {
       const runtime = new Platform();
-      const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
       controller.run("setComputeModeForPane", { pane: "energy", value: "precise" });
       expect(controller.getComputeModeForPane("energy")).toBe("precise");
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
-      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
+      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
       expect(energyWindow?.measures[0]).toMatchObject({ kind: "select", value: "precise" });
     });
   });
 
-  describe("spatialPlayEngagementMirror", () => {
+  describe("cadPlayEngagementMirror", () => {
     it("returns undefined for a null engagement", () => {
-      expect(spatialPlayEngagementMirror(null, "shape")).toBeUndefined();
+      expect(cadPlayEngagementMirror(null, "shape")).toBeUndefined();
     });
 
     it("mirrors a ui engagement spec into neutral commands routed to the controller", () => {
-      const mirror = spatialPlayEngagementMirror(
+      const mirror = cadPlayEngagementMirror(
         {
           options: [{ id: "confirm", label: "Confirm", onPress: () => {} }],
           input: { id: "in", value: "box", placeholder: "Type an interaction", onSubmit: () => {} },
@@ -2024,17 +2024,17 @@ if (import.meta.vitest) {
       expect(mirror?.options?.[0]).toMatchObject({
         id: "confirm",
         label: "Confirm",
-        command: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane: "energy", optionId: "confirm" } },
+        command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane: "energy", optionId: "confirm" } },
       });
-      expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: SPATIAL_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane: "energy" } } });
+      expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane: "energy" } } });
       expect(mirror?.status?.[0]).toEqual({ id: "state", text: "State: idle" });
     });
   });
 
-  describe("SpatialPlayShellController engagement", () => {
+  describe("CadPlayShellController engagement", () => {
     it("attaches engagement per pane and routes pane-scoped engagement commands to the host bridge", () => {
       const runtime = new Platform();
-      const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
         getToolbarState: () => ({ activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID, selectionCount: 0, transformsTo: [], transformsFrom: [] }),
@@ -2042,9 +2042,9 @@ if (import.meta.vitest) {
       });
       controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
       controller.setPaneEngagement("energy", { options: [{ id: "wall", label: "Wall" }] });
-      const shapeWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_SHAPE_WINDOW_ID);
-      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_ENERGY_WINDOW_ID);
-      const buildingWindow = controller.mainMode.windowKinds.find((row) => row.id === SPATIAL_PLAY_BUILDING_WINDOW_ID);
+      const shapeWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_SHAPE_WINDOW_ID);
+      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
+      const buildingWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_BUILDING_WINDOW_ID);
       expect(shapeWindow?.engagement?.options?.[0]?.id).toBe("confirm");
       expect(energyWindow?.engagement?.options?.[0]?.id).toBe("wall");
       expect(buildingWindow?.engagement).toBeUndefined();
@@ -2057,65 +2057,65 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("spatialPlayPaneForModelDefinition", () => {
+  describe("cadPlayPaneForModelDefinition", () => {
     it("maps each quad model definition to its pane", () => {
-      expect(spatialPlayPaneForModelDefinition(SHAPE_MODEL_DEFINITION_ID)).toBe("shape");
-      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID)).toBe("building");
-      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID)).toBe("energy");
-      expect(spatialPlayPaneForModelDefinition(SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID)).toBe("structure-classic");
+      expect(cadPlayPaneForModelDefinition(SHAPE_MODEL_DEFINITION_ID)).toBe("shape");
+      expect(cadPlayPaneForModelDefinition(CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toBe("building");
+      expect(cadPlayPaneForModelDefinition(CAD_PLAY_ENERGY_MODEL_DEFINITION_ID)).toBe("energy");
+      expect(cadPlayPaneForModelDefinition(CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID)).toBe("structure-classic");
     });
   });
 
-  describe("buildSpatialPlayToolbarTools", () => {
+  describe("buildCadPlayToolbarTools", () => {
     it("registers view, save, and transform categories", () => {
-      const tools = buildSpatialPlayToolbarTools(
+      const tools = buildCadPlayToolbarTools(
         {
           activeModelDefinitionId: SHAPE_MODEL_DEFINITION_ID,
           selectionCount: 0,
           transformsTo: [],
           transformsFrom: [],
         },
-        SPATIAL_PLAY_CONTROLLER_ID,
+        CAD_PLAY_CONTROLLER_ID,
       );
       expect(tools.view?.length).toBeGreaterThan(0);
-      expect(tools.save?.map((row) => row.id)).toEqual(["spatial.play.save.selected", "spatial.play.save.modelspace", "spatial.play.save.current", "spatial.play.save.load"]);
+      expect(tools.save?.map((row) => row.id)).toEqual(["cad.play.save.selected", "cad.play.save.modelspace", "cad.play.save.current", "cad.play.save.load"]);
       expect(tools.save?.[0]?.disabled).toBe(true);
     });
   });
 
-  describe("spatial play runtime", () => {
+  describe("CAD play runtime", () => {
     it("builds quad viewport bodies for each pane", () => {
-      const runtime = buildSpatialPlayRuntime();
+      const runtime = buildCadPlayRuntime();
       const ctx = { runtime, activeModeId: "main", generation: 0 } as const;
       expect(
-        buildSpatialPlayShapeDeclarativeBody({
+        buildCadPlayShapeDeclarativeBody({
           ...ctx,
-          windowKindId: SPATIAL_PLAY_SHAPE_WINDOW_ID,
-          bodyKey: SPATIAL_PLAY_SHAPE_BODY_KEY,
+          windowKindId: CAD_PLAY_SHAPE_WINDOW_ID,
+          bodyKey: CAD_PLAY_SHAPE_BODY_KEY,
         }),
-      ).toEqual(buildCadWindowBody(SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+      ).toEqual(buildCadWindowBody(CAD_PLAY_SHAPE_SCENE_SURFACE_ID, CAD_PLAY_CONTROLLER_ID));
       expect(
-        buildSpatialPlayEnergyDeclarativeBody({
+        buildCadPlayEnergyDeclarativeBody({
           ...ctx,
-          windowKindId: SPATIAL_PLAY_ENERGY_WINDOW_ID,
-          bodyKey: SPATIAL_PLAY_ENERGY_BODY_KEY,
+          windowKindId: CAD_PLAY_ENERGY_WINDOW_ID,
+          bodyKey: CAD_PLAY_ENERGY_BODY_KEY,
         }),
-      ).toEqual(buildCadWindowBody(SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+      ).toEqual(buildCadWindowBody(CAD_PLAY_ENERGY_SCENE_SURFACE_ID, CAD_PLAY_CONTROLLER_ID));
     });
 
     it("registers four window kinds in quad layout", () => {
-      const app = buildSpatialPlayRuntime().getActiveApp();
-      expect(app?.defaultLayout).toEqual(SPATIAL_PLAY_LAYOUT);
-      expect(app?.windowKinds.map((row) => row.id)).toEqual([SPATIAL_PLAY_SHAPE_WINDOW_ID, SPATIAL_PLAY_BUILDING_WINDOW_ID, SPATIAL_PLAY_ENERGY_WINDOW_ID, SPATIAL_PLAY_STRUCTURE_CLASSIC_WINDOW_ID]);
+      const app = buildCadPlayRuntime().getActiveApp();
+      expect(app?.defaultLayout).toEqual(CAD_PLAY_LAYOUT);
+      expect(app?.windowKinds.map((row) => row.id)).toEqual([CAD_PLAY_SHAPE_WINDOW_ID, CAD_PLAY_BUILDING_WINDOW_ID, CAD_PLAY_ENERGY_WINDOW_ID, CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID]);
     });
 
     it("uses empty declarative side tab slots", () => {
-      const app = buildSpatialPlayRuntime().getActiveApp();
+      const app = buildCadPlayRuntime().getActiveApp();
       expect(app?.leftTabs).toEqual([]);
       expect(app?.rightTabs).toEqual([]);
     });
 
-    it("spatialPlayModelsDigest changes when object rows are added", () => {
+    it("cadPlayModelsDigest changes when object rows are added", () => {
       const model = parseModelJson({
         schema: "spatial.model/v1",
         revision: 0,
@@ -2123,18 +2123,18 @@ if (import.meta.vitest) {
         geometry: { anchors: [], vertices: [], edges: [], wires: [], faces: [], shells: [], solids: [] },
       });
       expect(model).not.toBeNull();
-      const before = spatialPlayModelsDigest({ "spatial.shape": model! });
+      const before = cadPlayModelsDigest({ "spatial.shape": model! });
       model!.objects["box1"] = {
         id: "box1",
         typology: "spatial.shape.primitive.box",
         primitives: { solid: "solid-1" },
       };
       model!.bump();
-      const after = spatialPlayModelsDigest({ "spatial.shape": model! });
+      const after = cadPlayModelsDigest({ "spatial.shape": model! });
       expect(after).not.toBe(before);
     });
 
-    it("buildSpatialPlayHierarchySections lists objects after box commit object binding", async () => {
+    it("buildCadPlayHierarchySections lists objects after box commit object binding", async () => {
       const { BrepjsKernel } = await import("@cad/js/kernel/brepjs");
       const spec = loadSpatialInteraction("primitive.box")!;
       const model = new Model();
@@ -2148,12 +2148,12 @@ if (import.meta.vitest) {
       await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
       await rt.send({ kind: "confirm", modifiers: {} });
-      const sections = buildSpatialPlayHierarchySections({ [SHAPE_MODEL_DEFINITION_ID]: model }, SHAPE_MODEL_DEFINITION_ID, [], () => {});
+      const sections = buildCadPlayHierarchySections({ [SHAPE_MODEL_DEFINITION_ID]: model }, SHAPE_MODEL_DEFINITION_ID, [], () => {});
       const modelBranch = sections[0]?.items?.[0]?.items?.[0];
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
     });
 
-    it("buildSpatialPlayHierarchySections highlights hovered topology keys", async () => {
+    it("buildCadPlayHierarchySections highlights hovered topology keys", async () => {
       const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
       const { applyModelDiff, solidRef } = await import("@cad/js/core");
       const model = new Model();
@@ -2164,13 +2164,13 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(solid) },
       };
-      const sections = buildSpatialPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {}, "object:box1");
+      const sections = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {}, "object:box1");
       const modelBranch = sections[0]?.items?.[0]?.items?.[0];
       const objectNode = modelBranch?.items?.[0];
       expect(objectNode?.isHighlighted).toBe(true);
     });
 
-    it("buildSpatialPlayHierarchySections nests topology under primitive slots", async () => {
+    it("buildCadPlayHierarchySections nests topology under primitive slots", async () => {
       const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
       const { applyModelDiff, solidRef } = await import("@cad/js/core");
       const model = new Model();
@@ -2181,7 +2181,7 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(solid) },
       };
-      const sections = buildSpatialPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+      const sections = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
       const primitiveNode = sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
       expect(primitiveNode?.label).toContain("solid:");
       const shellNode = primitiveNode?.items?.[0];
@@ -2196,7 +2196,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("spatial play typology chrome", () => {
+  describe("CAD play typology chrome", () => {
     it("lists energy typologies from model definition scope", () => {
       const scope = resolveModelDefinitionScope("aec.building.energy");
       const labels = scope.typologies.map((row) => typologyObjectPascalFromLabel(row.label));
@@ -2206,31 +2206,31 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("spatial play shared model space", () => {
-    it("spatialPlayPaneModel keeps each pane bound to its model definition", () => {
+  describe("CAD play shared model space", () => {
+    it("cadPlayPaneModel keeps each pane bound to its model definition", () => {
       const shape = new Model();
       shape.objects["box1"] = { id: "box1", typology: "spatial.shape.primitive.box", primitives: { solid: "solid-1" } };
       const building = new Model();
       building.objects["site1"] = { id: "site1", typology: "aec.building.site", primitives: {} };
-      const models = { [SHAPE_MODEL_DEFINITION_ID]: shape, [SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID]: building };
-      expect(spatialPlayPaneModel(models, "shape").objects["box1"]).toBeDefined();
-      expect(spatialPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
-      expect(spatialPlayPaneModel(models, "shape")).not.toBe(spatialPlayPaneModel(models, "building"));
+      const models = { [SHAPE_MODEL_DEFINITION_ID]: shape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: building };
+      expect(cadPlayPaneModel(models, "shape").objects["box1"]).toBeDefined();
+      expect(cadPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
+      expect(cadPlayPaneModel(models, "shape")).not.toBe(cadPlayPaneModel(models, "building"));
     });
   });
 
-  describe("spatial play model bootstrap", () => {
+  describe("CAD play model bootstrap", () => {
     it("emptyPlayModels always seeds spatial.shape", () => {
       expect(emptyPlayModels()[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
     });
 
-    it("modelsFromSpatialJson on empty model space still seeds spatial.shape", () => {
-      const models = modelsFromSpatialJson(new ModelSpace().toJSON());
+    it("modelsFromCadJson on empty model space still seeds spatial.shape", () => {
+      const models = modelsFromCadJson(new ModelSpace().toJSON());
       expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
     });
 
-    it("modelsFromSpatialJson loads fixture models under spatial.shape", () => {
-      const models = modelsFromSpatialJson(geometrySmallBuilding);
+    it("modelsFromCadJson loads fixture models under spatial.shape", () => {
+      const models = modelsFromCadJson(geometrySmallBuilding);
       expect(models[SHAPE_MODEL_DEFINITION_ID]?.objects).not.toEqual({});
     });
 
@@ -2239,12 +2239,12 @@ if (import.meta.vitest) {
       expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
     });
 
-    it("ensureSpatialPlayQuadModels seeds all four play panes", () => {
-      const models = ensureSpatialPlayQuadModels({});
+    it("ensureCadPlayQuadModels seeds all four play panes", () => {
+      const models = ensureCadPlayQuadModels({});
       expect(models[SHAPE_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
-      expect(models[SPATIAL_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
-      expect(models[SPATIAL_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
-      expect(models[SPATIAL_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
     });
   });
 }

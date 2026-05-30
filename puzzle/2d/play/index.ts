@@ -588,7 +588,7 @@ export class Playground2d extends Playground {
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
 	createRuntime(): Platform {
-		const runtime = new Platform();
+		const runtime = new Platform({ id: this.id, initialPanelVisibility: this.initialPanelVisibility });
 		const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
 		runtime.addApp(buildBoardPlayAppRuntime(ctrl));
 		return runtime;

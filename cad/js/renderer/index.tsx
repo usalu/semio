@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@cad/js/renderer` — R3F renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/spatial.shape/interaction/box.json`. */
+/** @emoji 🎬 `@cad/js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/assets/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -5126,10 +5126,10 @@ export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionI
 // #endregion ­ƒ¬®Repl
 
 // #region ­ƒº¬Tests
-const __spatialR3fTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 
 if (import.meta.vitest) {
-  const { BrepjsKernel, preciseSpatialKernelMath: M } = __spatialR3fTestKernel!;
+  const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
 
   describe("buildInteractionReplEngagement", () => {

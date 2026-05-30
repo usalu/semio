@@ -1,0 +1,11 @@
+{
+  "title": "Framework Default Hidden Panels",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "By default, framework side panels should be hidden. Wire Platform.initialPanelVisibility into views and sync toggles with Platform.panelVisibility.",
+  "summary": "Framework side panels default to hidden. Added PanelVisibility and resolveInitialPanelVisibility in @framework/core; Platform applies PlatformSpec.initialPanelVisibility to panelVisibility. PlatformView and PlaygroundView resolve visibility from props or platform spec and sync toggles via Platform.setPanelVisibility. Play puzzle runtimes pass initialPanelVisibility when opting in.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9f6598b4c0e04f81be848569490ece9c"
+  ]
+}

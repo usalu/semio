@@ -23,6 +23,7 @@ import {
 	CommandBus,
 	Controller,
 	Platform,
+	resolveInitialPanelVisibility,
 	AppRuntime,
 	ModeRuntime,
 	resolveCommandPaletteItems,
@@ -1846,6 +1847,19 @@ export function declarativeFooterToChromeRows(items: readonly DeclarativeFooterI
 	}));
 }
 
+/** @emoji 👣 Merges platform-wide, app, and extra footer rows for {@link ProductShell}. */
+export function mergePlatformFooterChromeRows(
+	platform: Platform,
+	activeApp: { readonly footerItems: readonly DeclarativeFooterItem[] },
+	extraFooterItems: readonly ChromeFooterRow[] = [],
+): ChromeFooterRow[] {
+	return [
+		...declarativeFooterToChromeRows(platform.globalFooterItems, platform.commandBus),
+		...declarativeFooterToChromeRows(activeApp.footerItems, platform.commandBus),
+		...extraFooterItems,
+	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
 function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem {
 	if (item.kind === "separator") {
 		return { id: item.id, kind: "separator", order: item.order };
@@ -2241,7 +2255,7 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 				className={className}
 				mobile={resolvedMobile}
 				navbar={<Navbar items={navbarItems} />}
-				footer={footerItems && footerItems.length > 0 ? <Footer items={footerItems} /> : undefined}
+				footer={<Footer items={footerItems ?? []} />}
 				toolbar={slotToolbar}
 				mobilePanel={
 					resolvedMobile && mobilePanel
@@ -2344,10 +2358,19 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
 	const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
-	const [panelVisibility, setPanelVisibility] = reactHostPort.useState<UIPanelVisibility>(() => ({
-		leftSidePanel: initialPanelVisibility?.leftSidePanel ?? false,
-		rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
-	}));
+	const [panelVisibility, setPanelVisibilityState] = reactHostPort.useState<UIPanelVisibility>(() =>
+		resolveInitialPanelVisibility(initialPanelVisibility, platform),
+	);
+	const setPanelVisibility = reactHostPort.useCallback(
+		(next: UIPanelVisibility | ((prev: UIPanelVisibility) => UIPanelVisibility)) => {
+			setPanelVisibilityState((prev) => {
+				const resolved = typeof next === "function" ? next(prev) : next;
+				platform.setPanelVisibility(resolved);
+				return resolved;
+			});
+		},
+		[platform],
+	);
 	const [mobilePanelVisible, setMobilePanelVisible] = reactHostPort.useState(false);
 	const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = reactHostPort.useState<Exclude<AppPanelKind, "workbench">>("details");
 	const [activeMobilePanelKind, setActiveMobilePanelKind] = reactHostPort.useState<AppPanelKind>("workbench");
@@ -2562,11 +2585,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		),
 	});
 
-	const mergedFooterItems = [
-		...declarativeFooterToChromeRows(platform.globalFooterItems, platform.commandBus),
-		...declarativeFooterToChromeRows(activeApp.footerItems, platform.commandBus),
-		...(extraFooterItems ?? []),
-	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+	const mergedFooterItems = mergePlatformFooterChromeRows(platform, activeApp, extraFooterItems ?? []);
 
 	const searchItemsResolved = reactHostPort.useMemo(
 		() =>
@@ -2661,6 +2680,28 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("PlatformView", () => {
+		it("opens side panels when PlatformSpec initialPanelVisibility is set", () => {
+			const wb = new Platform({
+				id: "panels",
+				name: "Panels",
+				initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true },
+			});
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.panel-spec.main"),
+			]);
+			registerWindowBody("test.panel-spec.main", () => <div>Main</div>);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
+
+			expect(markup).toContain('data-panel="leftSidePanel"');
+		});
+
 		it("synthesizes default panel toggles for a single-app workbench", () => {
 			const wb = new Platform();
 			class TCtrl extends Controller {
@@ -2710,6 +2751,24 @@ if (import.meta.vitest) {
 			expect(resolved.selection).toEqual({ base: true, mode: true });
 			expect(resolved.options).toEqual({ snap: true, isolate: true });
 			expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
+		});
+
+		it("always renders the product footer strip even with no footer items", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.footer.main"),
+			]);
+			registerWindowBody("test.workbench-view.footer.main", () => <div>Main</div>);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
+
+			expect(markup).toContain('id="semio.sketchpad.footer"');
 		});
 
 		it("renders a leading mode dropdown when an app has multiple modes", () => {
