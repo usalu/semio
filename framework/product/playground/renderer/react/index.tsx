@@ -471,9 +471,9 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       const field = node as UiFieldNode;
       return (
         <div className="flex flex-col gap-half" data-ui-field={field.id}>
-          <Label className="text-muted-foreground text-[11px]" htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>
+          <label className="text-muted-foreground text-[11px]" htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>
             {field.label}
-          </Label>
+          </label>
           <UiRenderer node={field.child} commandBus={commandBus} />
         </div>
       );

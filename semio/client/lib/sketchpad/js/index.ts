@@ -311,16 +311,213 @@ export interface SketchpadRouteSelection {
 	readonly connectionIds: readonly string[];
 }
 
+/** @emoji 🏠 Home table UI state (expand, selection, URL-synced filters). */
+export interface SketchpadHomeUiState {
+	readonly expandedRowIds: readonly string[];
+	readonly selectedKitIds: readonly string[];
+	readonly kindFilter: string | null;
+	readonly searchQuery: string;
+	readonly nameFilter: string | null;
+	readonly versionFilter: string | null;
+}
+
 /** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
 export interface SketchpadShellSnapshot {
 	readonly navigationPath: string;
 	readonly panelVisibility: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
 	readonly openKitIds: readonly string[];
 	readonly routeSelection: SketchpadRouteSelection;
+	readonly home: SketchpadHomeUiState;
 }
 
 function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
 	return { pieceIds: [], connectionIds: [] };
+}
+
+function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {
+	return { expandedRowIds: [], selectedKitIds: [], kindFilter: null, searchQuery: "", nameFilter: null, versionFilter: null };
+}
+
+/** @emoji 🔎 Parses home filter query params from a platform URI. */
+export function parseSketchpadHomeQuery(uri: string): SketchpadHomeUiState {
+	const query = uri.includes("?") ? uri.slice(uri.indexOf("?") + 1) : "";
+	const params = new URLSearchParams(query);
+	return {
+		expandedRowIds: params.getAll("e"),
+		selectedKitIds: params.getAll("sel"),
+		kindFilter: params.get("kind"),
+		searchQuery: params.get("q") ?? "",
+		nameFilter: params.get("name"),
+		versionFilter: params.get("version"),
+	};
+}
+
+function sketchpadHomeUriFilters(home: SketchpadHomeUiState): string {
+	const params = new URLSearchParams();
+	if (home.kindFilter) params.set("kind", home.kindFilter);
+	if (home.searchQuery) params.set("q", home.searchQuery);
+	if (home.nameFilter) params.set("name", home.nameFilter);
+	if (home.versionFilter) params.set("version", home.versionFilter);
+	for (const id of home.expandedRowIds) params.append("e", id);
+	for (const id of home.selectedKitIds) params.append("sel", id);
+	const serialized = params.toString();
+	return serialized.length > 0 ? `?${serialized}` : "";
+}
+
+function sketchpadTitleFromDocPath(relativePath: string): string {
+	const segment = relativePath.replace(/\/index$/, "").split("/").pop() ?? relativePath;
+	return segment
+		.split(/[-_]/)
+		.filter((part) => part.length > 0)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
+
+type SketchpadDocPage = { readonly path: string; readonly title: string };
+type SketchpadDocSection = { readonly id: string; readonly label: string; readonly pages: readonly SketchpadDocPage[] };
+
+/** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
+export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
+	const sectionMap = new Map<string, SketchpadDocPage[]>();
+	const glob = (import.meta as ImportMeta & { glob?: (pattern: string) => Record<string, unknown> }).glob;
+	const modules = typeof glob === "function" ? glob("./pages/**/*.mdx") : {};
+	for (const modulePath of Object.keys(modules)) {
+		const relative = modulePath.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
+		const sectionId = relative.split("/")[0] ?? "root";
+		const pages = sectionMap.get(sectionId) ?? [];
+		pages.push({ path: relative, title: sketchpadTitleFromDocPath(relative) });
+		sectionMap.set(sectionId, pages);
+	}
+	if (sectionMap.size === 0) {
+		return [
+			{
+				id: "getting-started",
+				label: "Getting started",
+				pages: [
+					{ path: "getting-started/index", title: "Getting started" },
+					{ path: "getting-started/installation", title: "Installation" },
+				],
+			},
+		];
+	}
+	return [...sectionMap.entries()]
+		.map(([id, pages]) => ({
+			id,
+			label: sketchpadTitleFromDocPath(id),
+			pages: pages.sort((left, right) => left.path.localeCompare(right.path)),
+		}))
+		.sort((left, right) => left.label.localeCompare(right.label));
+}
+
+/** @emoji 🏠 Builds the home table model (docs tree + grouped kits). */
+export function sketchpadBuildHomeTableModel(input: {
+	readonly openKitIds: readonly string[];
+	readonly kitById: (kitId: string) => Kit | undefined;
+	readonly kitKind: (kitId: string) => string;
+	readonly home: SketchpadHomeUiState;
+	readonly docs?: readonly SketchpadDocSection[];
+}): TableModel {
+	const docs = input.docs ?? sketchpadBuildDocsRegistry();
+	const expanded = new Set(input.home.expandedRowIds);
+	const rows: TableModel["rows"][number][] = [];
+	const expandToggle = (rowId: string) => ({
+		command: "toggleHomeRowExpand",
+		args: { rowId },
+	});
+	const docsRootId = "docs-root";
+	rows.push({
+		id: docsRootId,
+		depth: 0,
+		hasChildren: true,
+		expanded: expanded.has(docsRootId),
+		expandToggle: expandToggle(docsRootId),
+		cells: { name: "Documentation", version: "", kind: "docs", updated: "" },
+	});
+	if (expanded.has(docsRootId)) {
+		for (const section of docs) {
+			const sectionId = `docs-section-${section.id}`;
+			rows.push({
+				id: sectionId,
+				depth: 1,
+				hasChildren: section.pages.length > 0,
+				expanded: expanded.has(sectionId),
+				expandToggle: expandToggle(sectionId),
+				cells: { name: section.label, version: "", kind: "docs", updated: "" },
+			});
+			if (expanded.has(sectionId)) {
+				for (const page of section.pages) {
+					rows.push({
+						id: `docs-page-${page.path}`,
+						depth: 2,
+						cells: { name: page.title, version: "", kind: "docs", updated: "" },
+						navigateUri: `/docs/${page.path}`,
+					});
+				}
+			}
+		}
+	}
+	const kitGroups = new Map<string, { readonly kitId: string; readonly kit: Kit; readonly kind: string }[]>();
+	for (const kitId of input.openKitIds) {
+		const kit = input.kitById(kitId);
+		if (!kit) continue;
+		const kind = input.kitKind(kitId) || "temporary";
+		if (input.home.kindFilter && input.home.kindFilter !== kind) continue;
+		const name = kit.name ?? kitId;
+		if (input.home.searchQuery && !name.toLowerCase().includes(input.home.searchQuery.toLowerCase())) continue;
+		if (input.home.nameFilter && name !== input.home.nameFilter) continue;
+		const version = kit.version ?? "";
+		if (input.home.versionFilter && version !== input.home.versionFilter) continue;
+		const group = kitGroups.get(name) ?? [];
+		group.push({ kitId, kit, kind });
+		kitGroups.set(name, group);
+	}
+	for (const [name, group] of [...kitGroups.entries()].sort((left, right) => left[0].localeCompare(right[0]))) {
+		const parentId = `kit-group-${name}`;
+		const defaultKit = group.find((entry) => !entry.kit.version) ?? group[0]!;
+		const hasChildren = group.length > 1;
+		rows.push({
+			id: parentId,
+			depth: 0,
+			hasChildren,
+			expanded: expanded.has(parentId),
+			expandToggle: hasChildren ? expandToggle(parentId) : undefined,
+			cells: {
+				name,
+				version: defaultKit.kit.version ?? "",
+				kind: defaultKit.kind,
+				updated: sketchpadFormatKitTimestamp(defaultKit.kit.updatedAt ?? defaultKit.kit.createdAt),
+			},
+			navigateUri: hasChildren ? undefined : `/kits/${defaultKit.kitId}`,
+		});
+		if (expanded.has(parentId) && hasChildren) {
+			for (const entry of group) {
+				if (entry.kitId === defaultKit.kitId) continue;
+				const versionLabel = entry.kit.version ?? "(default)";
+				rows.push({
+					id: entry.kitId,
+					depth: 1,
+					cells: {
+						name: versionLabel,
+						version: entry.kit.version ?? "",
+						kind: entry.kind,
+						updated: sketchpadFormatKitTimestamp(entry.kit.updatedAt ?? entry.kit.createdAt),
+					},
+					navigateUri: `/kits/${entry.kitId}`,
+				});
+			}
+		}
+	}
+	return {
+		columns: [
+			{ id: "name", label: "Name" },
+			{ id: "version", label: "Version" },
+			{ id: "kind", label: "Kind" },
+			{ id: "updated", label: "Updated" },
+		],
+		rows,
+		selectedRowIds: input.home.selectedKitIds,
+		emptyMessage: rows.length === 0 ? "No kits open — use Open to add kits" : undefined,
+	};
 }
 
 /** @emoji 🔌 Backend contract for {@link SemioKitStore} (memory, WASM worker, HTTP, …). */
@@ -1334,31 +1531,16 @@ export class SketchpadHomeTable extends Table {
 
 	override buildSnapshot(): TableModel {
 		const ctrl = getSketchpadShellController();
-		const ids = ctrl?.listOpenKitIds() ?? [];
-		return {
-			columns: [
-				{ id: "name", label: "Name" },
-				{ id: "version", label: "Version" },
-				{ id: "kind", label: "Kind" },
-				{ id: "updated", label: "Updated" },
-			],
-			rows: ids.map((id) => {
-				let name = id;
-				let version = "";
-				let kind = ctrl?.getKitPersistenceKind(id) ?? "";
-				let updated = "";
-				try {
-					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
-					if (kit?.name) name = kit.name;
-					if (kit?.version) version = kit.version;
-					updated = sketchpadFormatKitTimestamp(kit?.updatedAt ?? kit?.createdAt);
-				} catch {
-					/* kit store may still be opening */
-				}
-				return { id, cells: { name, version, kind, updated }, navigateUri: `/kits/${id}` };
-			}),
-			emptyMessage: "No kits open — use Open to add kits",
-		};
+		if (!ctrl) {
+			return { columns: [], rows: [], emptyMessage: "Platform loading…" };
+		}
+		const shell = ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+		return sketchpadBuildHomeTableModel({
+			openKitIds: ctrl.listOpenKitIds(),
+			kitById: (kitId) => ctrl.getKitStore(kitId)?.getSnapshot().kit,
+			kitKind: (kitId) => ctrl.getKitPersistenceKind(kitId) ?? "",
+			home: shell?.home ?? sketchpadEmptyHomeUiState(),
+		});
 	}
 }
 
@@ -1784,6 +1966,7 @@ export class SketchpadShellController extends Controller {
 			panelVisibility: { leftSidePanel: false, rightSidePanel: false },
 			openKitIds: [],
 			routeSelection: sketchpadEmptyRouteSelection(),
+			home: sketchpadEmptyHomeUiState(),
 		});
 		this.provideStore(SKETCHPAD_SHELL_STORE_SHELL, this.shellStore);
 	}
@@ -1932,9 +2115,26 @@ export class SketchpadShellController extends Controller {
 		this.emit();
 	}
 
+	/** @emoji 🏠 Merges home UI state and syncs `/` query params when on the home route. */
+	updateHome(home: SketchpadHomeUiState): void {
+		const shell = this.shellStore.get();
+		const pathOnly = shell.navigationPath.split("?")[0] ?? "/";
+		const navigationPath = pathOnly === "/" ? `/${sketchpadHomeUriFilters(home)}` : shell.navigationPath;
+		this.shellStore.set({ ...shell, home, navigationPath });
+		if (pathOnly === "/") {
+			const platform = getSketchpadPlatform();
+			if (platform?.onNavigate) platform.onNavigate(navigationPath);
+			else if (platform) applySketchpadUri(platform, navigationPath);
+		}
+		this.emit();
+	}
+
 	/** @emoji 🧭 Navigates to a path (updates shell snapshot; drives platform when mounted). */
 	navigateTo(path: string): void {
-		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection: sketchpadEmptyRouteSelection() });
+		const pathOnly = path.split("?")[0] ?? "/";
+		const shell = this.shellStore.get();
+		const home = pathOnly === "/" ? parseSketchpadHomeQuery(path) : shell.home;
+		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection: sketchpadEmptyRouteSelection(), home });
 		const platform = getSketchpadPlatform();
 		if (!platform) return;
 		if (platform.onNavigate) {

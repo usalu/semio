@@ -225,6 +225,10 @@ export interface TableRowModel {
 	readonly id: string;
 	readonly cells: Readonly<Record<string, string | number | boolean | null>>;
 	readonly navigateUri?: string;
+	readonly depth?: number;
+	readonly hasChildren?: boolean;
+	readonly expanded?: boolean;
+	readonly expandToggle?: { readonly command: string; readonly args?: unknown };
 }
 
 /** @emoji 📊 Render-agnostic tabular view-model for {@link Table}. */

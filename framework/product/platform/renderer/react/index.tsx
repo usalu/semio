@@ -1477,6 +1477,7 @@ export function useControllerStore<TSnapshot>(controller: Controller | undefined
 
 const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }) => {
 	const model = useStore(component as Table);
+	const controllerId = component.controllerId;
 	return (
 		<div className="flex h-full min-h-0 w-full flex-col overflow-auto p-2" data-component-kind="table">
 			{model.columns.length === 0 && model.rows.length === 0 ? (
@@ -1498,17 +1499,47 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 								key={row.id}
 								className={cn(
 									model.selectedRowIds?.includes(row.id) ? "bg-muted/50" : undefined,
-									row.navigateUri ? "cursor-pointer hover:bg-muted/40" : undefined,
+									row.navigateUri || row.expandToggle ? "cursor-pointer hover:bg-muted/40" : undefined,
 								)}
-								onClick={
-									row.navigateUri && platform?.onNavigate
-										? () => platform.onNavigate?.(row.navigateUri!)
-										: undefined
-								}
+								onClick={(event) => {
+									if (row.expandToggle && platform && (event.target as HTMLElement).closest("[data-table-expand]")) {
+										platform.commandBus.dispatch(controllerId, row.expandToggle.command, row.expandToggle.args);
+										return;
+									}
+									if (!row.navigateUri || !platform?.onNavigate) return;
+									if (event.metaKey || event.ctrlKey) {
+										platform.commandBus.dispatch(controllerId, "toggleTableRowSelection", { rowId: row.id });
+										return;
+									}
+									platform.onNavigate(row.navigateUri);
+								}}
 							>
-								{model.columns.map((column) => (
-									<td key={`${row.id}:${column.id}`} className="border-b px-2 py-1">
-										{String(row.cells[column.id] ?? "")}
+								{model.columns.map((column, columnIndex) => (
+									<td
+										key={`${row.id}:${column.id}`}
+										className="border-b px-2 py-1"
+										style={columnIndex === 0 && row.depth ? { paddingLeft: 8 + row.depth * 14 } : undefined}
+									>
+										{columnIndex === 0 && row.hasChildren ? (
+											<span className="inline-flex items-center gap-1">
+												<button
+													type="button"
+													data-table-expand
+													className="inline-flex size-4 shrink-0 items-center justify-center rounded hover:bg-muted"
+													aria-label={row.expanded ? "Collapse" : "Expand"}
+													onClick={(event) => {
+														event.stopPropagation();
+														if (!row.expandToggle || !platform) return;
+														platform.commandBus.dispatch(controllerId, row.expandToggle.command, row.expandToggle.args);
+													}}
+												>
+													{row.expanded ? "▾" : "▸"}
+												</button>
+												<span>{String(row.cells[column.id] ?? "")}</span>
+											</span>
+										) : (
+											String(row.cells[column.id] ?? "")
+										)}
 									</td>
 								))}
 							</tr>

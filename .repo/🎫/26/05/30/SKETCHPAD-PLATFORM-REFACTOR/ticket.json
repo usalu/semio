@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Analyzed index.tsx.old (53k-line React monolith); continued platform+@semio/js sketchpad in index.ts: browser file/folder/remote kit factories, richer GraphQL kit read (design pieces/connections via parent/child, blueprint, version timestamps), home table name/version/kind/updated, kit table with connector counts, importKitFromFile command, workbench/details metadata. 16 vitest tests pass. Dev: bun nx dev @semio/sketchpad.",
+  "summary": "Expanded kit diagram topology to match legacy buildKitDiagramData: types, designs, qualities (key/value), ports (from type ports + connector refs), files, folders, authors, with part-of and reference edges. Extended SKETCHPAD_KIT_READ_INNER GraphQL fragment and DTO parsing. Kit table lists all entity kinds; board node navigation supports query-param routes for non-type/design nodes. Added sketchpadCollectKitPorts helper and tests (18/18 passing).",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -15,6 +15,7 @@
     "⚪5fd75dcf6f0b4f0482e56c085288e938",
     "⚪c488b595150c4898a8ffec5c878986b0",
     "⚪2dc44c792d69459f8b7c8cdeee334497",
-    "⚪67dcb7fb3a494b1196311e7089596471"
+    "⚪67dcb7fb3a494b1196311e7089596471",
+    "⚪f62cebc19b1d4192b204bc377fb71ee1"
   ]
 }

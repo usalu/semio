@@ -40,7 +40,10 @@ import {
 	normalAt,
 	offsetFace,
 	fuseAll,
+	sewShells,
 	shape,
+	solid,
+	solidFromShell,
 	sphere,
 	threePointArc,
 	toGroupedBufferGeometryData,
@@ -1818,6 +1821,34 @@ function extrudeModelWire(
 	const solid = extrude(planar as Parameters<typeof extrude>[0], extrudeDirection(direction, distance));
 	return isOk(solid) ? (solid.value as ValidSolid) : null;
 }
+
+/** @emoji ✅ True when `cell` references at least one face through its shell graph. */
+function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
+	return modelFaceIdsForSolid(model, cell).length > 0;
+}
+
+/** @emoji 🧊 Builds a brepjs `ValidSolid` by sewing model shell faces (follows live vertex positions). */
+function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | null {
+	const brepFaces: Face[] = [];
+	for (const fid of modelFaceIdsForSolid(model, cell)) {
+		const faceRec = geom(model).faces[fid];
+		if (!faceRec) continue;
+		for (const wid of faceRec.wireIds) {
+			const oriented = geomWireToOrientedFace(model, wid);
+			if (!oriented) return null;
+			brepFaces.push(oriented);
+		}
+	}
+	if (brepFaces.length === 0) return null;
+	const welded = solid(brepFaces);
+	if (isOk(welded)) return welded.value;
+	const sewn = sewShells(brepFaces);
+	if (isOk(sewn)) {
+		const fromShell = solidFromShell(sewn.value);
+		if (isOk(fromShell)) return fromShell.value;
+	}
+	return null;
+}
 // #endregion 🔌BrepModelBridge
 
 // #region 🔌BrepjsWasmEngine
@@ -1841,12 +1872,17 @@ class BrepjsWasmEngine {
 	/** @emoji 🧪 Clears solids cache (vitest shared kernel). */
 	resetDerivedPipeline(): void {
 		this.solids.clear();
+		this.meshCache.clear();
 		this.solidsModelKey = null;
 	}
 
 	private modelDerivedKey(model: Model): string {
 		const solids = (Object.keys(geom(model).solids) as SolidRef[]).sort().join(",");
-		return `${model.revision}:${solids}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
+		const vertexDigest = Object.values(geom(model).vertices)
+			.map((v) => `${v.id}:${v.position.map((n) => n.toFixed(4)).join(",")}`)
+			.sort()
+			.join("|");
+		return `${model.revision}:${solids}:${vertexDigest}`;
 	}
 
 	async ensureInit(): Promise<void> {
@@ -1901,8 +1937,8 @@ class BrepjsWasmEngine {
 
 	private readonly meshCache = new Map<string, MeshTransfer>();
 
-	private meshCacheKey(solid: SolidRef, tolerance: number): string {
-		return `${String(solid)}:${tolerance}`;
+	private meshCacheKey(solid: SolidRef, tolerance: number, model?: Model): string {
+		return model ? `${String(solid)}:${tolerance}:r${model.revision}` : `${String(solid)}:${tolerance}`;
 	}
 
 	disposeSolid(solid: SolidRef): void {
@@ -1915,9 +1951,10 @@ class BrepjsWasmEngine {
 
 	async tessellate(solid: SolidRef, tolerance: number, model?: Model): Promise<MeshTransfer> {
 		await this.ensureInit();
+		if (model) await this.syncSolidsFromModel(model);
 		const s = this.solids.get(solid);
 		if (!s) return emptyMeshTransfer();
-		const key = this.meshCacheKey(solid, tolerance);
+		const key = this.meshCacheKey(solid, tolerance, model);
 		const cached = this.meshCache.get(key);
 		if (cached) return cloneMeshTransfer(cached);
 		const solidRecord = model ? geom(model).solids[solid] : undefined;
@@ -1936,6 +1973,10 @@ class BrepjsWasmEngine {
 		if (!rec) return null;
 		const cached = this.solids.get(rec.id);
 		if (cached) return cached;
+		if (solidRecordHasShellTopology(model, rec)) {
+			const fromTopology = solidFromModelTopology(model, rec);
+			if (fromTopology) return fromTopology;
+		}
 		if (rec.solid) return this.solidFromSolidPrimitive(rec.solid);
 		const points = derivedSolidPoints(model, rec);
 		if (points.length > 0) {
@@ -1961,9 +2002,8 @@ class BrepjsWasmEngine {
 		return isOk(fused) ? fused.value : null;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a solid: primitive, fused hull metadata, cache, then brep graph (never AABB for fused hull ids). */
+	/** @emoji 🧊 Authoritative brep for a solid: shell topology, primitive, fused hull metadata, cache, then AABB fallback. */
 	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
-		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const cached = this.solids.get(solid.id);
 		if (cached) return cached;
 		const fusedHull = this.fusedHullBrepFromMetadata(model, solid.id);
@@ -1972,6 +2012,11 @@ class BrepjsWasmEngine {
 			return fusedHull;
 		}
 		if (String(solid.id).startsWith("from_geometry-")) return null;
+		if (solidRecordHasShellTopology(model, solid)) {
+			const fromTopology = solidFromModelTopology(model, solid);
+			if (fromTopology) return fromTopology;
+		}
+		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const points = derivedSolidPoints(model, solid);
 		if (points.length > 0) {
 			const aabb = aabbFromPoints(points, 0);
@@ -1987,6 +2032,7 @@ class BrepjsWasmEngine {
 		const modelKey = this.modelDerivedKey(model);
 		if (this.solidsModelKey === modelKey && this.solids.size > 0) return;
 		this.solids.clear();
+		this.meshCache.clear();
 		for (const cell of Object.values(geom(model).solids)) {
 			const solid = this.solidForSolidRecord(model, cell);
 			if (solid) this.solids.set(cell.id, solid);
@@ -2786,6 +2832,22 @@ if (import.meta.vitest) {
 			expect(meshTransfer.index.length).toBeGreaterThan(0);
 			expect(meshTransfer.position.length).toBeGreaterThan(0);
 			expect(meshTransfer.faceGroups.length).toBeGreaterThan(0);
+		});
+
+		it("syncSolidsFromModel rebuilds box volume after vertex move (topology, not stale primitive)", async () => {
+			const g = new Model();
+			const solid = kernelGeometry.solidRef("moved-box");
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume(solid)).toBeCloseTo(1, 3);
+			const topVertex = Object.keys(g.vertices).find((id) => id.includes("v101")) as VertexRef | undefined;
+			expect(topVertex).toBeDefined();
+			g.vertices[topVertex!] = { ...g.vertices[topVertex!]!, position: [2, 1, 1] };
+			g.bump();
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume(solid)).toBeCloseTo(2, 2);
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
 		});
 
 		it("tessellate maps brep faces to model FaceRef entityIds when model is provided", async () => {
