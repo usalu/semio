@@ -5,181 +5,213 @@
 // #region 🔌Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { cpSync, createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
-import {
-	PLAYGROUND_SITE_DEV_PORTS,
-	PLAYGROUND_SITE_HOSTS,
-	playgroundEmbedUrl,
-	type PlaygroundSiteKind,
-} from "./playground-embed-url.ts";
+import { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind } from "./playground-embed-url.ts";
 // #endregion 🔌Adapters
 
 export { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind };
 
 //#region 🔖ViteElementsAssets
 /** @emoji 📦 Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
-export function playgroundStaticSiteBuildOptions(
-	overrides?: UserConfig["build"],
-): NonNullable<UserConfig["build"]> {
-	return {
-		target: "esnext",
-		outDir: "dist",
-		emptyOutDir: true,
-		...overrides,
-	};
+export function playgroundStaticSiteBuildOptions(overrides?: UserConfig["build"]): NonNullable<UserConfig["build"]> {
+  return {
+    target: "esnext",
+    outDir: "dist",
+    emptyOutDir: true,
+    ...overrides,
+  };
 }
 
 /** @emoji 🖼 Dev/preview CSP so playgrounds can be iframe-embedded locally. */
 export function playgroundIframeEmbedHeadersPlugin(): Plugin {
-	const useHeaders: Connect.NextHandleFunction = (_req, res, next) => {
-		res.setHeader("Content-Security-Policy", "frame-ancestors *");
-		next();
-	};
-	return {
-		name: "playground-iframe-embed-headers",
-		configureServer(server) {
-			server.middlewares.use(useHeaders);
-		},
-		configurePreviewServer(server) {
-			server.middlewares.use(useHeaders);
-		},
-	};
+  const useHeaders: Connect.NextHandleFunction = (_req, res, next) => {
+    res.setHeader("Content-Security-Policy", "frame-ancestors *");
+    next();
+  };
+  return {
+    name: "playground-iframe-embed-headers",
+    configureServer(server) {
+      server.middlewares.use(useHeaders);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(useHeaders);
+    },
+  };
 }
 
 function contentTypeForElementsAsset(filePath: string): string | undefined {
-	if (filePath.endsWith(".woff2")) {
-		return "font/woff2";
-	}
-	if (filePath.endsWith(".svg")) {
-		return "image/svg+xml";
-	}
-	if (filePath.endsWith(".wasm")) {
-		return "application/wasm";
-	}
-	return undefined;
+  if (filePath.endsWith(".woff2")) {
+    return "font/woff2";
+  }
+  if (filePath.endsWith(".svg")) {
+    return "image/svg+xml";
+  }
+  if (filePath.endsWith(".wasm")) {
+    return "application/wasm";
+  }
+  return undefined;
 }
 
 function createElementsAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunction {
-	const assetsRootResolved = resolve(assetsRoot);
-	return (req, res, next) => {
-		if (!req.url?.startsWith("/assets/")) {
-			next();
-			return;
-		}
-		const rel = decodeURIComponent(req.url.slice("/assets/".length).split(/[?#]/, 1)[0] ?? "");
-		const filePath = resolve(assetsRootResolved, rel);
-		const relToRoot = relative(assetsRootResolved, filePath);
-		if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
-			next();
-			return;
-		}
-		const contentType = contentTypeForElementsAsset(filePath);
-		if (contentType) {
-			res.setHeader("Content-Type", contentType);
-		}
-		createReadStream(filePath).pipe(res);
-	};
+  const assetsRootResolved = resolve(assetsRoot);
+  return (req, res, next) => {
+    if (!req.url?.startsWith("/assets/")) {
+      next();
+      return;
+    }
+    const rel = decodeURIComponent(req.url.slice("/assets/".length).split(/[?#]/, 1)[0] ?? "");
+    const filePath = resolve(assetsRootResolved, rel);
+    const relToRoot = relative(assetsRootResolved, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    const contentType = contentTypeForElementsAsset(filePath);
+    if (contentType) {
+      res.setHeader("Content-Type", contentType);
+    }
+    createReadStream(filePath).pipe(res);
+  };
 }
 
 /** @emoji 🌐 Vite: serve and copy `ui/assets` at `/assets/*` for palette fonts and cursors. */
 export function elementsAssetsVitePlugin(assetsRoot: string): Plugin[] {
-	let viteRoot = process.cwd();
-	const serveAssets = createElementsAssetsMiddleware(assetsRoot);
-	return [
-		{
-			name: "elements-assets-serve",
-			enforce: "pre",
-			configureServer(server) {
-				server.middlewares.use(serveAssets);
-			},
-			configurePreviewServer(server) {
-				server.middlewares.use(serveAssets);
-			},
-		},
-		{
-			name: "elements-assets-build",
-			apply: "build",
-			enforce: "pre",
-			configResolved(config) {
-				viteRoot = config.root;
-			},
-			closeBundle() {
-				if (!existsSync(assetsRoot)) {
-					return;
-				}
-				const dest = resolve(viteRoot, "dist", "assets");
-				mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-				cpSync(assetsRoot, dest, { recursive: true });
-			},
-		},
-	];
+  let viteRoot = process.cwd();
+  const serveAssets = createElementsAssetsMiddleware(assetsRoot);
+  return [
+    {
+      name: "elements-assets-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+    },
+    {
+      name: "elements-assets-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        if (!existsSync(assetsRoot)) {
+          return;
+        }
+        const dest = resolve(viteRoot, "dist", "assets");
+        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        cpSync(assetsRoot, dest, { recursive: true });
+      },
+    },
+  ];
 }
 
 /** @emoji 🛝 Shared Vite preset for puzzle play harnesses (assets, renderer subpaths, workspace aliases). */
+const PLAYGROUND_RENDERER_SHELL_SUBPATHS = ["@framework/playground/renderer/react/shell", "@framework/playground/renderer/react/boot"] as const;
+
+const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
+const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
+const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
+
+/** @emoji ✂️ Drops puzzle play hosts from monolithic renderer `index.tsx` (shell + boot + optional vitest). */
+export function stripPlaygroundRendererPuzzleHosts(source: string, options: { readonly includeVitest?: boolean } = {}): string {
+  const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
+  const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
+  const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
+  if (puzzleStart < 0 || bootStart < 0) return source;
+  const bootEnd = testsStart >= 0 ? testsStart : source.length;
+  let out = `${source.slice(0, puzzleStart)}${source.slice(bootStart, bootEnd)}`;
+  if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
+  return out;
+}
+
+/** @emoji 🛝 Vite virtual entry for `/shell` and `/boot` subpaths without pulling puzzle WASM. */
+export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): Plugin {
+  const shellEntryId = `${rendererIndexPath}?playgroundEntry=shell`;
+  return {
+    name: "playground-renderer-shell-entry",
+    enforce: "pre",
+    resolveId(source) {
+      if ((PLAYGROUND_RENDERER_SHELL_SUBPATHS as readonly string[]).includes(source)) return shellEntryId;
+    },
+    load(id) {
+      if (!id.startsWith(rendererIndexPath) || !id.includes("playgroundEntry=shell")) return;
+      return stripPlaygroundRendererPuzzleHosts(readFileSync(rendererIndexPath, "utf8"), { includeVitest: false });
+    },
+  };
+}
+
+/** @emoji 🧪 Vitest load: shell-only slice of renderer `index.tsx` when `PLAYGROUND_RENDERER_SHELL_ONLY=1`. */
+export function playgroundRendererVitestShellOnlyPlugin(rendererIndexPath: string): Plugin {
+  return {
+    name: "playground-renderer-vitest-shell-only",
+    enforce: "pre",
+    load(id) {
+      if (process.env.PLAYGROUND_RENDERER_SHELL_ONLY !== "1") return;
+      const filePath = id.split("?")[0];
+      if (filePath !== rendererIndexPath) return;
+      return stripPlaygroundRendererPuzzleHosts(readFileSync(rendererIndexPath, "utf8"), { includeVitest: true });
+    },
+  };
+}
+
 export type PlaygroundPlayViteOptions = {
-	readonly playDir: string;
-	readonly repoRoot: string;
-	readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
-	readonly extraPlugins?: readonly Plugin[];
-	readonly watchIgnored?: readonly string[];
-	readonly build?: UserConfig["build"];
-	readonly server?: UserConfig["server"];
-	readonly optimizeDeps?: UserConfig["optimizeDeps"];
-	readonly resolveDedupe?: readonly string[];
+  readonly playDir: string;
+  readonly repoRoot: string;
+  readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
+  readonly extraPlugins?: readonly Plugin[];
+  readonly watchIgnored?: readonly string[];
+  readonly build?: UserConfig["build"];
+  readonly server?: UserConfig["server"];
+  readonly optimizeDeps?: UserConfig["optimizeDeps"];
+  readonly resolveDedupe?: readonly string[];
 };
 
 /** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
-	const { playDir, repoRoot, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } =
-		options;
-	const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
-	const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
-	const playgroundCore = resolve(repoRoot, "framework/playground/core/core.ts");
-	const uiReact = resolve(repoRoot, "ui/react/index.tsx");
-	const rendererIndex = resolve(rendererRoot, "index.tsx");
-	const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
-		{ find: "@framework/playground/renderer/react/shell", replacement: resolve(rendererRoot, "shell.tsx") },
-		{ find: "@framework/playground/renderer/react/boot", replacement: resolve(rendererRoot, "shell.tsx") },
-		{ find: "@framework/playground/renderer/react/puzzle/2d", replacement: resolve(rendererRoot, "index.tsx") },
-		{ find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(rendererRoot, "index.tsx") },
-		{ find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "index.tsx") },
-		{ find: "@framework/playground/renderer/react", replacement: rendererIndex },
-		{ find: "@framework/playground", replacement: playgroundCore },
-		{ find: "@ui/react", replacement: uiReact },
-		{ find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
-		{ find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
-		{ find: "@puzzle/5d/play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
-		{ find: "@puzzle/2d/react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
-		{ find: "@puzzle/3d/react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
-		{ find: "@puzzle/5d/react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
-	];
-	return defineConfig({
-		root: playDir,
-		base: "./",
-		publicDir: resolve(playDir, "public"),
-		assetsInclude: ["**/*.wasm"],
-		worker: { format: "es" },
-		plugins: [
-			...elementsAssetsVitePlugin(elementsAssetsRoot),
-			tailwindcss(),
-			react(),
-			playgroundIframeEmbedHeadersPlugin(),
-			...extraPlugins,
-		],
-		build: playgroundStaticSiteBuildOptions(build),
-		server: {
-			fs: { allow: [repoRoot] },
-			...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),
-			...server,
-		},
-		resolve: {
-			alias: [...rendererAliases, ...extraAliases],
-			...(resolveDedupe ? { dedupe: [...resolveDedupe] } : {}),
-		},
-		...(optimizeDeps ? { optimizeDeps } : {}),
-	});
+  const { playDir, repoRoot, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
+  const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
+  const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
+  const playgroundCore = resolve(repoRoot, "framework/playground/core/core.ts");
+  const uiReact = resolve(repoRoot, "ui/react/index.tsx");
+  const rendererIndex = resolve(rendererRoot, "index.tsx");
+  const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
+    { find: "@framework/playground/renderer/react/puzzle/2d", replacement: resolve(rendererRoot, "index.tsx") },
+    { find: "@framework/playground/renderer/react/puzzle/3d", replacement: resolve(rendererRoot, "index.tsx") },
+    { find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "index.tsx") },
+    { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
+    { find: /^@framework\/playground$/, replacement: playgroundCore },
+    { find: "@ui/react", replacement: uiReact },
+    { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
+    { find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
+    { find: "@puzzle/5d/play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
+    { find: "@puzzle/2d/react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+    { find: "@puzzle/3d/react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+    { find: "@puzzle/5d/react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
+  ];
+  return defineConfig({
+    root: playDir,
+    base: "./",
+    publicDir: resolve(playDir, "public"),
+    assetsInclude: ["**/*.wasm"],
+    worker: { format: "es" },
+    plugins: [...elementsAssetsVitePlugin(elementsAssetsRoot), tailwindcss(), react(), playgroundIframeEmbedHeadersPlugin(), playgroundRendererShellEntryPlugin(rendererIndex), ...extraPlugins],
+    build: playgroundStaticSiteBuildOptions(build),
+    server: {
+      fs: { allow: [repoRoot] },
+      ...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),
+      ...server,
+    },
+    resolve: {
+      alias: [...rendererAliases, ...extraAliases],
+      ...(resolveDedupe ? { dedupe: [...resolveDedupe] } : {}),
+    },
+    ...(optimizeDeps ? { optimizeDeps } : {}),
+  });
 }
 //#endregion 🔖ViteElementsAssets

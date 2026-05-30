@@ -22228,7 +22228,7 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
     return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   }
   if (zone.stackPath === sourcePath) {
-    const stackNode = getLayoutNodeAtPath(layout, sourcePath);
+    const stackNode = readLayoutAtPath(layout, sourcePath);
     const childCount = stackNode?.kind === "stack" ? stackNode.children.length : 0;
     const withoutLength = Math.max(0, childCount - 1);
     const toIndex = zone.index < 0 ? tabIndex : Math.min(zone.index, withoutLength);
@@ -22240,12 +22240,18 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   return insertWindowAsTab(without, zone.stackPath, windowId, zone.index < 0 ? undefined : zone.index);
 }
 
+/** @emoji 🪓 Removes the dragged window from the committed layout while it floats on the cursor. */
+function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): WindowLayoutNode {
+  return removeWindowFromLayout(committed, windowId) ?? committed;
+}
+
 //#endregion 🧭ModeDockDrag
 
 //#region 🧭ModeDockDragPreview
 
-const MODE_DRAG_FLOAT_WIDTH = 220;
-const MODE_DRAG_FLOAT_HEIGHT = 148;
+const MODE_DRAG_CURSOR_TAB_WIDTH = 148;
+const MODE_DRAG_CURSOR_OFFSET_X = 12;
+const MODE_DRAG_CURSOR_OFFSET_Y = 14;
 
 interface ModeDockDragPreviewProps {
   title: string;
@@ -22284,6 +22290,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
+  dropZone: ModeDropZone | null;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
@@ -22305,24 +22312,33 @@ interface ModeDockTabBarProps {
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, onSelectTab }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
-  const dragState = dock?.dragState;
+  const tabInsertIndex =
+    dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
+
+  const insertSlot = (
+    <div
+      key="mode-dock-tab-insert-slot"
+      data-slot="mode-dock-tab-insert-slot"
+      className="mx-half my-half h-[calc(100%-4px)] w-[5.5rem] shrink-0 rounded-sm border border-dashed border-accent bg-accent/15"
+      aria-hidden
+    />
+  );
 
   return (
     <div ref={ref} data-slot="mode-dock-tabbar" className="flex h-medium shrink-0 items-stretch border-b border-element bg-base">
       <div data-slot="mode-dock-tabs" className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
-        {tabs.map((tab, index) => {
-          const isDragSource = dragState?.windowId === tab.id && dragState.stackPath === stackPath;
-          return (
+        {tabs.flatMap((tab, index) => {
+          const nodes: React.ReactNode[] = [];
+          if (tabInsertIndex === index) nodes.push(insertSlot);
+          nodes.push(
           <div
             key={tab.id}
             data-slot="mode-dock-tab"
             data-window-id={tab.id}
-            data-drag-source={isDragSource ? "true" : undefined}
             data-active={activeId === tab.id ? "true" : undefined}
             className={cn(
-              "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half border-r border-element px-single text-xs select-none",
+              "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half border-r border-element px-single text-xs select-none transition-[margin,padding] duration-150",
               activeId === tab.id ? "bg-window text-foreground" : "bg-base text-muted-foreground hover:bg-hover-window",
-              isDragSource && "pointer-events-none max-w-0 min-w-0 flex-[0_0_0] overflow-hidden border-0 px-0 opacity-0",
             )}
             onClick={() => onSelectTab(tab.id)}
             onPointerUp={(event) => {
@@ -22347,9 +22363,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             >
               <CloseIcon className="size-tiny" />
             </button>
-          </div>
+          </div>,
           );
+          return nodes;
         })}
+        {tabInsertIndex === tabs.length ? insertSlot : null}
       </div>
       <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
         <button
@@ -22380,7 +22398,6 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const dock = reactHostPort.useContext(ModeDockContext);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const dragState = dock?.dragState;
   const activeId = node.activeId ?? node.children[0]?.id;
   const tabs = node.children.map((child) => ({
     id: child.id,
@@ -22393,13 +22410,12 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   }, [dock, stackPath, node.children.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
-  const hideActiveBody = dragState?.windowId === activeId && dragState.stackPath === stackPath;
 
   return (
     <div data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
       <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
       <div ref={bodyRef} data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {activeDescriptor && !hideActiveBody ? (
+        {activeDescriptor ? (
           (() => {
             const { children, engagement, ...windowProps } = activeDescriptor;
             return (
@@ -22408,9 +22424,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
               </Window>
             );
           })()
-        ) : (
-          <div data-slot="mode-dock-stack-body-placeholder" className="h-full w-full bg-base" />
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -22470,8 +22484,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
+  const layoutStateRef = reactHostPort.useRef(layoutState);
+  const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
   const layoutKeyRef = reactHostPort.useRef(layoutKey);
   const windowsKeyRef = reactHostPort.useRef(windowsKey);
+  layoutStateRef.current = layoutState;
 
   reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
@@ -22579,6 +22596,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       if (pendingDrag && !dragState) {
         const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY);
         if (distance < 6) return;
+        dragLayoutSnapshotRef.current = layoutStateRef.current;
         setDragState({
           windowId: pendingDrag.windowId,
           stackPath: pendingDrag.stackPath,
@@ -22600,6 +22618,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
       if (activePointerId === undefined || event.pointerId !== activePointerId) return;
       if (dragState) finishDrag(dragState, dropZoneRef.current);
+      dragLayoutSnapshotRef.current = null;
       setDragState(null);
       setPendingDrag(null);
       dropZoneRef.current = null;
@@ -22613,6 +22632,25 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     };
   }, [pendingDrag, dragState, finishDrag, refreshDropZone]);
 
+  reactHostPort.useEffect(() => {
+    if (!dragState) return;
+    const cancelDrag = () => {
+      if (dragLayoutSnapshotRef.current) setLayoutState(dragLayoutSnapshotRef.current);
+      dragLayoutSnapshotRef.current = null;
+      setDragState(null);
+      setPendingDrag(null);
+      dropZoneRef.current = null;
+      setDropZone(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      cancelDrag();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dragState]);
+
   const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
@@ -22620,6 +22658,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
+      dropZone,
       registerStackDropTargets,
       startTabDrag,
       clearPendingDrag,
@@ -22628,16 +22667,21 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [dragState, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [dragState, dropZone, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
+
+  const dockOutLayout = reactHostPort.useMemo(
+    () => (dragState ? modeDockOutLayout(layoutState, dragState.windowId) : layoutState),
+    [layoutState, dragState],
+  );
 
   const maximizedStack =
     maximizedStackPath !== null
       ? (() => {
           let found: WindowLayoutStackNode | null = null;
-          mapLayoutStacks(layoutState, (stack, path) => {
+          mapLayoutStacks(dockOutLayout, (stack, path) => {
             if (path === maximizedStackPath) found = stack;
             return stack;
           });
@@ -22652,142 +22696,108 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
       </ModeDockContext.Provider>
     ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(layoutState, "", renderContext)}</ModeDockContext.Provider>
+      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
     ));
 
   const draggedWindow = dragState ? windowsById.get(dragState.windowId) : undefined;
   const draggedPreviewTitle = draggedWindow?.title ?? dragState?.ghostLabel ?? "";
-  const draggedPreviewContent = draggedWindow?.children;
 
   return (
     <div data-slot="mode" data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
-        {dragState && !dropZone ? (
-          <ModeDockDragPreview
-            title={draggedPreviewTitle}
-            content={draggedPreviewContent}
-            style={{
-              position: "fixed",
-              left: dragState.x - MODE_DRAG_FLOAT_WIDTH / 2,
-              top: dragState.y - 18,
-              width: MODE_DRAG_FLOAT_WIDTH,
-              height: MODE_DRAG_FLOAT_HEIGHT,
-              zIndex: 60,
-            }}
-          />
-        ) : null}
-        {dragState && dropZone ? (
-          <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
-            {dropZone.kind === "split" || dropZone.kind === "root-split" ? (
-              <>
-                <div
-                  className="absolute bg-accent/25 border-2 border-accent"
-                  style={(() => {
-                    if (dropZone.kind === "root-split") {
-                      const side = dropZone.side;
-                      if (side === "left") return { left: 0, top: 0, width: "30%", height: "100%" };
-                      if (side === "right") return { right: 0, top: 0, width: "30%", height: "100%" };
-                      if (side === "top") return { left: 0, top: 0, width: "100%", height: "30%" };
-                      return { left: 0, bottom: 0, width: "100%", height: "30%" };
-                    }
+        {dragState ? (
+          <>
+            <ModeDockDragPreview
+              title={draggedPreviewTitle}
+              tabOnly
+              compact
+              style={{
+                position: "fixed",
+                left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
+                top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
+                width: MODE_DRAG_CURSOR_TAB_WIDTH,
+                zIndex: 70,
+              }}
+            />
+            {dropZone ? (
+              <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
+                {dropZone.kind === "split" || dropZone.kind === "root-split" ? (
+                  <div
+                    className="absolute rounded-sm border-2 border-accent bg-accent/20"
+                    style={(() => {
+                      if (dropZone.kind === "root-split") {
+                        const side = dropZone.side;
+                        if (side === "left") return { left: 0, top: 0, width: "30%", height: "100%" };
+                        if (side === "right") return { right: 0, top: 0, width: "30%", height: "100%" };
+                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "30%" };
+                        return { left: 0, bottom: 0, width: "100%", height: "30%" };
+                      }
+                      const elements = stackDropElementsRef.current.get(dropZone.stackPath);
+                      const rect = elements?.body?.getBoundingClientRect();
+                      const modeRect = modeBodyRef.current?.getBoundingClientRect();
+                      if (!rect || !modeRect) return { display: "none" };
+                      const left = rect.left - modeRect.left;
+                      const top = rect.top - modeRect.top;
+                      const edgeX = modeDropEdgeDepth(rect.width);
+                      const edgeY = modeDropEdgeDepth(rect.height);
+                      if (dropZone.side === "left") return { left, top, width: edgeX, height: rect.height };
+                      if (dropZone.side === "right") return { left: left + rect.width - edgeX, top, width: edgeX, height: rect.height };
+                      if (dropZone.side === "top") return { left, top, width: rect.width, height: edgeY };
+                      return { left, top: top + rect.height - edgeY, width: rect.width, height: edgeY };
+                    })()}
+                  />
+                ) : (
+                  (() => {
                     const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                    const rect = elements?.body?.getBoundingClientRect();
+                    const preview = computeTabInsertPreview(elements?.tabBar ?? null, dropZone.index);
+                    const bodyRect = elements?.body?.getBoundingClientRect();
                     const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                    if (!rect || !modeRect) return { display: "none" };
-                    const left = rect.left - modeRect.left;
-                    const top = rect.top - modeRect.top;
-                    const edgeX = modeDropEdgeDepth(rect.width);
-                    const edgeY = modeDropEdgeDepth(rect.height);
-                    if (dropZone.side === "left") return { left, top, width: edgeX, height: rect.height };
-                    if (dropZone.side === "right") return { left: left + rect.width - edgeX, top, width: edgeX, height: rect.height };
-                    if (dropZone.side === "top") return { left, top, width: rect.width, height: edgeY };
-                    return { left, top: top + rect.height - edgeY, width: rect.width, height: edgeY };
-                  })()}
-                />
-                {(() => {
-                  const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                  if (!modeRect) return null;
-                  let previewStyle: React.CSSProperties = { display: "none" };
-                  if (dropZone.kind === "root-split") {
-                    const side = dropZone.side;
-                    const width = modeRect.width * 0.3;
-                    const height = modeRect.height * 0.3;
-                    if (side === "left") previewStyle = { left: 8, top: modeRect.height * 0.35, width: width - 16, height: height };
-                    if (side === "right") previewStyle = { right: 8, top: modeRect.height * 0.35, width: width - 16, height: height };
-                    if (side === "top") previewStyle = { left: modeRect.width * 0.35, top: 8, width: width, height: height - 16 };
-                    if (side === "bottom") previewStyle = { left: modeRect.width * 0.35, bottom: 8, width: width, height: height - 16 };
-                  } else {
-                    const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                    const rect = elements?.body?.getBoundingClientRect();
-                    if (!rect) return null;
-                    const left = rect.left - modeRect.left;
-                    const top = rect.top - modeRect.top;
-                    const edgeX = modeDropEdgeDepth(rect.width);
-                    const edgeY = modeDropEdgeDepth(rect.height);
-                    if (dropZone.side === "left") previewStyle = { left: left + 4, top: top + 4, width: edgeX - 8, height: rect.height - 8 };
-                    if (dropZone.side === "right") previewStyle = { left: left + rect.width - edgeX + 4, top: top + 4, width: edgeX - 8, height: rect.height - 8 };
-                    if (dropZone.side === "top") previewStyle = { left: left + 4, top: top + 4, width: rect.width - 8, height: edgeY - 8 };
-                    if (dropZone.side === "bottom") previewStyle = { left: left + 4, top: top + rect.height - edgeY + 4, width: rect.width - 8, height: edgeY - 8 };
-                  }
-                  return (
-                    <ModeDockDragPreview
-                      title={draggedPreviewTitle}
-                      content={draggedPreviewContent}
-                      className="absolute"
-                      style={previewStyle}
-                      compact
-                    />
-                  );
-                })()}
-              </>
-            ) : (
-              (() => {
-                const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                const preview = computeTabInsertPreview(elements?.tabBar ?? null, dropZone.index);
-                const bodyRect = elements?.body?.getBoundingClientRect();
-                const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                if (!preview || !modeRect) return null;
-                const lineLeft = preview.insertX - modeRect.left - 1;
-                const slotLeft = preview.slotLeft - modeRect.left;
-                const slotTop = preview.top - modeRect.top;
-                const bodyLeft = bodyRect ? bodyRect.left - modeRect.left : 0;
-                const bodyTop = bodyRect ? bodyRect.top - modeRect.top : slotTop + preview.height;
-                const bodyWidth = bodyRect?.width ?? 0;
-                const bodyHeight = bodyRect?.height ?? 0;
-                return (
-                  <>
-                    <div
-                      data-slot="mode-dock-tab-insert-line"
-                      className="absolute w-[2px] rounded-full bg-accent shadow-[0_0_0_1px_var(--accent)]"
-                      style={{ left: lineLeft, top: slotTop + 2, height: preview.height - 4 }}
-                    />
-                    <ModeDockDragPreview
-                      title={draggedPreviewTitle}
-                      tabOnly
-                      compact
-                      className="absolute border-accent shadow-md"
-                      style={{ left: slotLeft, top: slotTop + 1, width: preview.slotWidth, height: preview.height - 2 }}
-                    />
-                    {bodyRect ? (
-                      <div
-                        data-slot="mode-dock-tab-target-body"
-                        className="absolute rounded border-2 border-accent/70 bg-accent/10"
-                        style={{ left: bodyLeft, top: bodyTop, width: bodyWidth, height: bodyHeight }}
-                      />
-                    ) : null}
-                  </>
-                );
-              })()
-            )}
-          </div>
+                    if (!preview || !modeRect) return null;
+                    const lineLeft = preview.insertX - modeRect.left - 1;
+                    const slotTop = preview.top - modeRect.top;
+                    const bodyLeft = bodyRect ? bodyRect.left - modeRect.left : 0;
+                    const bodyTop = bodyRect ? bodyRect.top - modeRect.top : slotTop + preview.height;
+                    const bodyWidth = bodyRect?.width ?? 0;
+                    const bodyHeight = bodyRect?.height ?? 0;
+                    return (
+                      <>
+                        <div
+                          data-slot="mode-dock-tab-insert-line"
+                          className="absolute w-[2px] rounded-full bg-accent shadow-[0_0_0_1px_var(--accent)]"
+                          style={{ left: lineLeft, top: slotTop + 2, height: preview.height - 4 }}
+                        />
+                        {bodyRect ? (
+                          <div
+                            data-slot="mode-dock-tab-target-body"
+                            className="absolute rounded-sm border-2 border-accent/80 bg-accent/10"
+                            style={{ left: bodyLeft, top: bodyTop, width: bodyWidth, height: bodyHeight }}
+                          />
+                        ) : null}
+                      </>
+                    );
+                  })()
+                )}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>
   );
 };
 
-export { Mode, removeWindowFromLayout, splitWithWindow, reconcileWindows, normalizeLayoutToStacks, collapseLayout, computeModeDropZone, computeTabInsertPreview };
+export {
+  Mode,
+  removeWindowFromLayout,
+  splitWithWindow,
+  reconcileWindows,
+  normalizeLayoutToStacks,
+  collapseLayout,
+  computeModeDropZone,
+  computeTabInsertPreview,
+  modeDockOutLayout,
+};
 
 // #endregion 🧭Mode
 
@@ -23043,6 +23053,19 @@ if (import.meta.vitest) {
       expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
       expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
       expect(computeModeDropZone(100, 120, targets, null)).toBeNull();
+    });
+
+    it("modeDockOutLayout removes the dragged window without mutating drop targets", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const dockedOut = modeDockOutLayout(layout, "b");
+      expect(modeCollectWindowIds(dockedOut)).toEqual(["a", "c"]);
+      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
 
     it("removeWindowFromLayout and splitWithWindow mutate the layout tree", () => {

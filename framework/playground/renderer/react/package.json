@@ -1,43 +1,43 @@
 {
-	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/playground/renderer/react",
-	"version": "0.1.0",
-	"description": "framework · React renderer for @framework/playground",
-	"type": "module",
-	"private": true,
-	"exports": {
-		".": "./index.tsx",
-		"./shell": "./shell.tsx",
-		"./boot": "./shell.tsx",
-		"./puzzle/2d": "./index.tsx",
-		"./puzzle/3d": "./index.tsx",
-		"./puzzle/5d": "./index.tsx"
-	},
-	"dependencies": {
-		"@framework/playground": "workspace:*",
-		"@puzzle/2d/play": "workspace:*",
-		"@puzzle/2d/react": "workspace:*",
-		"@puzzle/3d/play": "workspace:*",
-		"@puzzle/3d/react": "workspace:*",
-		"@puzzle/5d/play": "workspace:*",
-		"@puzzle/5d/react": "workspace:*",
-		"@ui/react": "workspace:*",
-		"clsx": "^2.1.1",
-		"lucide-react": "^0.536.0",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-		"tailwind-merge": "^3.3.1"
-	},
-	"devDependencies": {
-		"@types/react": "^19.2.8",
-		"@types/react-dom": "^19.2.3",
-		"typescript": "^5.9.3"
-	},
-	"license": "LGPL-3.0-or-later",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/usalu/semio.git",
-		"directory": "framework/playground/renderer/react"
-	},
-	"bundleKind": "library"
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@framework/playground/renderer/react",
+  "version": "0.1.0",
+  "description": "framework · React renderer for @framework/playground",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.tsx",
+    "./shell": "./index.tsx",
+    "./boot": "./index.tsx",
+    "./puzzle/2d": "./index.tsx",
+    "./puzzle/3d": "./index.tsx",
+    "./puzzle/5d": "./index.tsx"
+  },
+  "dependencies": {
+    "@framework/playground": "workspace:*",
+    "@puzzle/2d/play": "workspace:*",
+    "@puzzle/2d/react": "workspace:*",
+    "@puzzle/3d/play": "workspace:*",
+    "@puzzle/3d/react": "workspace:*",
+    "@puzzle/5d/play": "workspace:*",
+    "@puzzle/5d/react": "workspace:*",
+    "@ui/react": "workspace:*",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.536.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/playground/renderer/react"
+  },
+  "bundleKind": "library"
 }

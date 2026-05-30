@@ -466,6 +466,18 @@ export class TestScript extends Script {
       await this.runStorybookPlaywright();
       return;
     }
+    if (segments[0] === "repo-client") {
+      this.runRepoGoTest("./repo/client/cli", segments.slice(1));
+      return;
+    }
+    if (segments[0] === "repo-mcp") {
+      runCmd("go", ["build", "-o", join(this.root, process.platform === "win32" ? "repo/client/client.exe" : "repo/client/client"), "./repo/client/mcp"], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+      for (const pkg of ["./repo/client/mcp", "./repo/client/mcp/cursor", "./repo/client/mcp/copilot", "./repo/client/mcp/claude", "./repo/client/mcp/codex", "./repo/client/mcp/kiro"]) {
+        runCmd("go", ["build", pkg], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+      }
+      this.runRepoGoTest("./repo/client/cli", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
+      return;
+    }
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/js", "@semio/react"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "semio/graphql:build"], { cwd: this.root });
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
@@ -502,6 +514,13 @@ export class TestScript extends Script {
       if (await this.isTcpPortFree(port, "0.0.0.0")) return port;
     }
     throw new Error(`No free TCP port in ${preferred}..${preferred + span - 1}`);
+  }
+
+  private runRepoGoTest(module: string, extraArgs: string[]): void {
+    runCmd("go", ["test", module, ...extraArgs], {
+      cwd: this.root,
+      env: { ...process.env, GOWORK: join(this.root, "go.work") },
+    });
   }
 
   private async runStorybookPlaywright(): Promise<void> {
@@ -583,21 +602,7 @@ function queryVisualStudio2026InstallPath(): string | undefined {
   if (process.platform !== "win32") return undefined;
   const vswhere = vswhereExecutable();
   if (!existsSync(vswhere)) return undefined;
-  const result = spawnSync(
-    vswhere,
-    [
-      "-latest",
-      "-version",
-      "[18.0,19.0)",
-      "-products",
-      "*",
-      "-requires",
-      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-      "-property",
-      "installationPath",
-    ],
-    { encoding: "utf8" },
-  );
+  const result = spawnSync(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"], { encoding: "utf8" });
   if (result.status !== 0) return undefined;
   const installPath = result.stdout.trim();
   return installPath || undefined;

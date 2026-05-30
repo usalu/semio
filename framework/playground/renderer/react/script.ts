@@ -3,7 +3,7 @@
 import type { BundleLinter } from "../../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBunx, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
 export const policy = defineLint("@framework/playground/renderer/react-bundle", (l: BundleLinter) => {
@@ -13,7 +13,7 @@ export const policy = defineLint("@framework/playground/renderer/react-bundle", 
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments);
+    runBunx(["vitest", "run", "--config", "vitest.config.ts", "--passWithNoTests", ...segments], this.root, devToolingEnv({ PLAYGROUND_RENDERER_SHELL_ONLY: "1" }));
   }
 }
 
