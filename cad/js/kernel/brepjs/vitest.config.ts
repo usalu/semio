@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
-const coreEntry = resolve(root, "../core/index.ts");
+const coreEntry = resolve(root, "../../core/index.ts");
 
 export default defineConfig({
 	root,

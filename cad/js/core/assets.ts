@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 📥ModelDefinitionAssets
-import { registerModelDefinitionAssets } from "./index.ts";
+import { registerModelDefinitionAssets } from "./model-definition-registry.ts";
 
 const typologies = import.meta.glob(["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"], {
   eager: true,

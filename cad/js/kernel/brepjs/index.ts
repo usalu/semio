@@ -4,7 +4,7 @@
 /** @emoji 🧭 `@cad/js/kernel/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
-import "../core/assets.ts";
+import "../../core/assets.ts";
 
 // #region 🔌Adapters
 import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
@@ -89,6 +89,7 @@ import {
 	StepEntityWriter,
 	derivePropertyValue,
 	defaultModelDefinitionId,
+	solidRef,
 	type ObjectRef,
 	type TypologyRef,
 } from "@cad/js/core";
@@ -221,7 +222,7 @@ export function arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number {
 	return sweep;
 }
 
-/** @emoji 🔵 Tessellates a circular arc through `start` and `end` about `center` (Topologic-style CCW sweep). */
+/** @emoji 🔵 Tessellates a circular arc through `start` and `end` about `center` (positive CCW sweep). */
 export function arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 32): readonly Vec3[] {
 	const frame = arcPlaneFrame(center, start, end);
 	if (!frame) return [start, end];
@@ -281,7 +282,7 @@ export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Ve
 	);
 }
 
-/** @emoji ⭕ Tessellates a full circle (`Geom_Circle`) on plane `normal` through `center`. */
+/** @emoji ⭕ Tessellates a full circle on plane `normal` through `center`. */
 export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 64): readonly Vec3[] {
 	const frame = arcFrameFromRadiusPoint(center, vec3Add(center, vec3Scale(vec3Normalize(normal), radius)));
 	if (!frame) return [center];
@@ -299,7 +300,7 @@ export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, s
 	return pts;
 }
 
-/** @emoji 🥚 Tessellates an ellipse (`Geom_Ellipse`) in the plane of `normal` / `majorAxis`. */
+/** @emoji 🥚 Tessellates an ellipse in the plane of `normal` / `majorAxis`. */
 export function ellipseSamplePoints(
 	center: Vec3,
 	normal: Vec3,
@@ -324,7 +325,7 @@ export function ellipseSamplePoints(
 	return pts;
 }
 
-/** @emoji 📈 Centripetal Catmull–Rom samples through `poles` (display / length estimate for `Geom_BSplineCurve`). */
+/** @emoji 📈 Centripetal Catmull–Rom samples through `poles` (display / length estimate for nurbs curves). */
 export function nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 12): readonly Vec3[] {
 	if (poles.length < 2) return poles;
 	if (poles.length === 2) return poles;
@@ -420,14 +421,14 @@ export function edgeSamplePoints(
 	return ends.length >= 2 ? ends : ends;
 }
 
-/** @emoji ⭕ `Geom_Circle` params from center and one on-circle point. */
+/** @emoji ⭕ Circle params from center and one on-circle point. */
 export function circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null {
 	const frame = arcFrameFromRadiusPoint(center, radiusPoint);
 	if (!frame) return null;
 	return { center, normal: frame.normal, radius: frame.radius };
 }
 
-/** @emoji 📈 Builds `EdgeCurve` nurbs from control points (Topologic `EdgeUtility::ByNurbsCurve` subset). */
+/** @emoji 📈 Builds `EdgeCurve` nurbs from control points. */
 export function nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null {
 	if (poles.length < 2) return null;
 	const degree = Math.min(3, poles.length - 1);
@@ -1163,7 +1164,7 @@ export function transformPointsForPreviewKind(
 	return identity;
 }
 
-// #region 🧱TopologyPreviewGeometry
+// #region 🧱PrimitivePreviewGeometry
 function kernelFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
 	const g = geom(model);
 	const pts: Vec3[] = [];
@@ -1178,7 +1179,7 @@ function kernelFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
 	return [...new Map(pts.map((p) => [p.join(","), p])).values()];
 }
 
-/** @emoji 📍 Face vertex centroid for preview topology ops. */
+/** @emoji 📍 Face vertex centroid for preview primitive ops. */
 export function faceCentroid(model: Model, face: FaceRecord): Vec3 | null {
 	const pts = kernelFacePoints(model, face);
 	if (!pts.length) return null;
@@ -1361,7 +1362,7 @@ export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: num
 	const s = length / d;
 	return [anchor[0] + dx * s, anchor[1] + dy * s, anchor[2] + dz * s];
 }
-// #endregion 🧱TopologyPreviewGeometry
+// #endregion 🧱PrimitivePreviewGeometry
 
 /** @emoji 🔌 Precise `SpatialPreviewKernel` (delegates to module functions). */
 export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
@@ -1760,7 +1761,7 @@ function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 // #endregion ♻️BrepjsScratch
 
 // #region 🔌BrepModelBridge
-/** @emoji 🔗 Builds a brepjs `Edge` from a model edge record (OCCT kernel). */
+	/** @emoji 🔗 Builds a brepjs `Edge` from a model edge record. */
 function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	const ids = edge.vertexIds;
 	if (ids.length < 1) return null;
@@ -1789,7 +1790,7 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	return line(p0, p1);
 }
 
-/** @emoji 🔗 Closed planar brepjs face from a model wire (OCCT `wireLoop` + `face`). */
+	/** @emoji 🔗 Closed planar brepjs face from a model wire (`wireLoop` + `face`). */
 function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
 	const w = geom(model).wires[wireId];
 	if (!w?.edgeIds.length) return null;
@@ -1837,12 +1838,12 @@ class BrepjsWasmEngine {
 	private initPromise: Promise<void> | null = null;
 	private seq = 0;
 	private readonly solids = new Map<SolidRef, ValidSolid>();
-	private solidsTopoKey: string | null = null;
+	private solidsModelKey: string | null = null;
 
 	/** @emoji 🧪 Clears solids cache (vitest shared kernel). */
 	resetDerivedPipeline(): void {
 		this.solids.clear();
-		this.solidsTopoKey = null;
+		this.solidsModelKey = null;
 	}
 
 	private modelDerivedKey(model: Model): string {
@@ -1962,7 +1963,7 @@ class BrepjsWasmEngine {
 		return isOk(fused) ? fused.value : null;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a solid: primitive, fused hull metadata, cache, then topology (never AABB for fused hull ids). */
+	/** @emoji 🧊 Authoritative brep for a solid: primitive, fused hull metadata, cache, then brep graph (never AABB for fused hull ids). */
 	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
 		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const cached = this.solids.get(solid.id);
@@ -1986,16 +1987,16 @@ class BrepjsWasmEngine {
 	async syncSolidsFromModel(model: Model): Promise<void> {
 		await this.ensureInit();
 		const modelKey = this.modelDerivedKey(model);
-		if (this.solidsTopoKey === modelKey && this.solids.size > 0) return;
+		if (this.solidsModelKey === modelKey && this.solids.size > 0) return;
 		this.solids.clear();
 		for (const cell of Object.values(geom(model).solids)) {
 			const solid = this.solidForSolidRecord(model, cell);
 			if (solid) this.solids.set(cell.id, solid);
 		}
-		this.solidsTopoKey = modelKey;
+		this.solidsModelKey = modelKey;
 	}
 
-	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `SolidPrimitive` (sphere/cylinder/cone/box). */
+	/** @emoji 🧊 Builds brepjs `ValidSolid` from `SolidPrimitive` (sphere/cylinder/cone/box). */
 	solidFromSolidPrimitive(solid: SolidPrimitive): ValidSolid {
 		if (solid.kind === "sphere") {
 			return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
@@ -2844,6 +2845,32 @@ if (import.meta.vitest) {
 			expect(await kernel.volume(r.solid)).toBeGreaterThan(0);
 		});
 
+		it("topology preview geometry resolves face centroid and fuse external faces", () => {
+			const model = new Model();
+			const west = solidRef("west");
+			const east = solidRef("east");
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, west));
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 1], height: 1 }, east));
+			const westTop = Object.keys(model.faces).find((id) => id.includes("face-top") && id.includes("west"))!;
+			const face = model.faces[westTop as FaceRef]!;
+			const centroid = faceCentroid(model, face);
+			expect(centroid).not.toBeNull();
+			expect(centroid![2]).toBeCloseTo(1, 3);
+			const fused = fuseSolidsToExternalFaces(model, [west, east], {
+				hullSolidId: "hull",
+				contactPairs: [
+					["face-top", "face-bottom"],
+					["face-bottom", "face-top"],
+				],
+				maxSeparation: 0.05,
+			});
+			const westTopFace = Object.keys(model.faces).find((id) => id.includes("west") && id.includes("face-top"))!;
+			const eastBottomFace = Object.keys(model.faces).find((id) => id.includes("east") && id.includes("face-bottom"))!;
+			expect(fused.externalFaces.map(String)).not.toContain(westTopFace);
+			expect(fused.externalFaces.map(String)).not.toContain(eastBottomFace);
+			expect(fused.externalFaces.some((id) => String(id).includes("west") && String(id).includes("face-bottom"))).toBe(true);
+		});
+
 		it("modelObjectAabb follows moved shell vertices when SolidPrimitive is stale", () => {
 			const model = new Model();
 			const cell = kernelGeometry.solidRef("box");
@@ -3001,7 +3028,7 @@ if (import.meta.vitest) {
 			expect(res.diff.edges?.added?.[0]?.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
 		});
 
-		it("executeCommandDiff curve.circle creates closed circle edge with Geom_Circle metadata", async () => {
+		it("executeCommandDiff curve.circle creates closed circle edge with circle metadata", async () => {
 			const res = await kernel.executeCommandDiff("curve.circle", {
 				center: [1, 2, 0],
 				radiusPoint: [4, 2, 0],

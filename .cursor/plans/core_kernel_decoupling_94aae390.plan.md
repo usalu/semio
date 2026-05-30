@@ -13,22 +13,22 @@ todos:
     status: completed
   - id: geometry-kernel
     content: Add geometry primitives (faceNormal/Centroid/areaEstimate, solidFaceIds, fuseSolidsToExternalFaces, projectPointOnScalarAxis, scalarTopOnAxis, clampPointAlongDirection) to SpatialPreviewKernel; move implementations into brepjs kernel; replace core call sites with preview.*.
-    status: in_progress
+    status: completed
   - id: transformation-schema
     content: Extend spatial.transformation/v1 with a declarative derive block (fuse/hull/rules/opening/ensure) in schema + core parser; encode energy from_geometry rules in its transformation.json.
-    status: pending
+    status: completed
   - id: transformation-engine
     content: Replace applyEnergyFromGeometryTransformation + classify/role helpers + applyTransformation special-casing with one generic runTransformation engine that calls kernel primitives; remove all energy/shape literals from core code.
-    status: pending
+    status: completed
   - id: thread-kernel
     content: Thread preview kernel through applyTransformation, ModelSpace.transform, and query runTransformationCall.
-    status: pending
+    status: completed
   - id: dehardcode-ids
     content: Derive default model-definition from a manifest flag; move primitiveKinds/kernel-typology mapping into assets; remove energy/structure substring heuristics and SHAPE_MODEL_DEFINITION_ID/defaultGeometryKernelTypologyIds literals.
-    status: pending
+    status: completed
   - id: tests
     content: Extend core and kernel Tests regions for registry loading, kernel geometry primitives, and data-driven energy transformation; run vitest for core/kernel/query and confirm green.
-    status: pending
+    status: in_progress
   - id: close-ticket
     content: Close the ticket with a summary and all touched files.
     status: pending

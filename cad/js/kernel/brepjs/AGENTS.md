@@ -11,7 +11,7 @@ Face: two-dimensional region from closed wires; flat or undulating geometry.
 Shell: contiguous faces sharing edges; open or closed.
 Cell: three-dimensional region from closed shells.
 CellComplex: contiguous cells sharing faces.
-Cluster: arbitrary nested membership of topologic entities.
+Cluster: arbitrary nested membership of brepjs entities.
 
 Anchor: parametric point on vertex, edge/wire (t), face (u,v), or cell (u,v,w).
 

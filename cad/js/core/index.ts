@@ -1,34 +1,23 @@
 // #region 🧲Header
-/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `spatial/AGENTS.md` and `spatial/assets/modelDefinition`. */
+/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/assets/modelDefinition`. */
 // #endregion 🧲Header
 
-// #region 📥ModelDefinitionRegistry
-/** @emoji 📥 Vite `import.meta.glob` modules registered by `@cad/js/core/assets`. */
-export interface ModelDefinitionAssetModules {
-  readonly typologies: Readonly<Record<string, unknown>>;
-  readonly actions: Readonly<Record<string, unknown>>;
-  readonly interactions: Readonly<Record<string, unknown>>;
-  readonly manifests: Readonly<Record<string, unknown>>;
-  readonly extensions: Readonly<Record<string, unknown>>;
-  readonly attributes: Readonly<Record<string, unknown>>;
-  readonly propertyDefinitions: Readonly<Record<string, unknown>>;
-  readonly properties: Readonly<Record<string, unknown>>;
-  readonly transformations: Readonly<Record<string, unknown>>;
-}
+import "./assets.ts";
+import {
+  modelDefinitionActionCatalog,
+  modelDefinitionAssetModulesSnapshot,
+  modelDefinitionAttributeCatalog,
+  modelDefinitionInteractionCatalog,
+  modelDefinitionManifestCatalog,
+  modelDefinitionPropertyCatalog,
+  modelDefinitionTransformationModules,
+  modelDefinitionTypologyCatalog,
+  registerModelDefinitionAssets,
+  setModelDefinitionAssetsRegisteredHook,
+  type ModelDefinitionAssetModules,
+} from "./model-definition-registry.ts";
 
-const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
-  typologies: {},
-  actions: {},
-  interactions: {},
-  manifests: {},
-  extensions: {},
-  attributes: {},
-  propertyDefinitions: {},
-  properties: {},
-  transformations: {},
-});
-
-let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
+export { registerModelDefinitionAssets, type ModelDefinitionAssetModules };
 
 let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
 let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
@@ -48,40 +37,7 @@ function resetModelDefinitionCaches(): void {
   defaultModelDefinitionIdCache = null;
 }
 
-/** @emoji 📥 Registers model-definition asset modules (typically from `assets.ts` at startup). */
-export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
-  modelDefinitionAssetModules = modules;
-  resetModelDefinitionCaches();
-}
-
-function modelDefinitionTypologyCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.typologies);
-}
-
-function modelDefinitionActionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.actions);
-}
-
-function modelDefinitionInteractionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.interactions);
-}
-
-function modelDefinitionManifestCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionAssetModules.manifests), ...Object.values(modelDefinitionAssetModules.extensions)];
-}
-
-function modelDefinitionAttributeCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.attributes);
-}
-
-function modelDefinitionPropertyCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
-}
-
-function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
-  return modelDefinitionAssetModules.transformations;
-}
-// #endregion 📥ModelDefinitionRegistry
+setModelDefinitionAssetsRegisteredHook(resetModelDefinitionCaches);
 
 // #region 🧮Vec
 /** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
@@ -89,7 +45,7 @@ export type Vec3 = readonly [number, number, number];
 // #endregion 🧮Vec
 
 // #region 🌀EdgeGeometry
-/** @emoji 🌀 OCCT-style edge curve kinds (`Geom_Curve` under a topologic `Edge`). */
+/** @emoji 🌀 Edge curve geometry kinds (`line`, `arc`, `circle`, `ellipse`, `nurbs`). */
 export type EdgeCurve =
   | { readonly kind: "line" }
   | { readonly kind: "arc"; readonly center: Vec3 }
@@ -1007,7 +963,7 @@ export namespace kernelGeometry {
     readonly attachment: AnchorAttachment;
   }
 
-  /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve` (`Geom_Curve` analog). */
+  /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve`. */
   export interface EdgeRecord {
     readonly id: EdgeRef;
     readonly vertexIds: readonly VertexRef[];
@@ -1020,7 +976,7 @@ export namespace kernelGeometry {
     readonly edgeIds: readonly EdgeRef[];
   }
 
-  /** @emoji 🌊 Face-support geometry (`Geom_Surface` under a topologic `Face`). */
+  /** @emoji 🌊 Face-support geometry (`plane`, `cylinder`, `cone`, `sphere`, `torus`, `nurbs`). */
   export type FaceSurface =
     | { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
     | { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
@@ -1249,7 +1205,7 @@ export function hashPrimitivePayload(kind: string, payload: string): GeometryPri
   return `${kind[0]}:${fnv1aHex(payload)}` as GeometryPrimitiveHash;
 }
 
-/** @emoji #️⃣ Hashes a vertex position (`spatial/AGENTS.md` primitive hashing). */
+/** @emoji #️⃣ Hashes a vertex position (`cad/AGENTS.md` primitive hashing). */
 export function hashVertexPosition(position: Vec3): GeometryPrimitiveHash {
   const q = position.map((c) => quantizeCoord(c)) as Vec3;
   return hashPrimitivePayload("vertex", `${q[0]},${q[1]},${q[2]}`);
@@ -1292,10 +1248,10 @@ export function hashAnchorRecord(anchor: AnchorRecord): GeometryPrimitiveHash {
   return hashPrimitivePayload("anchor", `${anchor.position.map((c) => quantizeCoord(c)).join(",")}|${JSON.stringify(anchor.attachment)}`);
 }
 
-/** @emoji #️⃣ Per-topology primitive hashes for one model (`ModelSpace` geometry fingerprint). */
+/** @emoji #️⃣ Per-primitive hashes for one model (`ModelSpace` geometry fingerprint). */
 export type ModelPrimitiveHashes = Readonly<Partial<Record<TypologyPrimitiveKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
 
-/** @emoji #️⃣ Maps topology tables on `model` to content hashes (every vertex and primitive). */
+/** @emoji #️⃣ Maps primitive tables on `model` to content hashes (every vertex and primitive). */
 export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
   const out: Partial<Record<TypologyPrimitiveKind, Record<string, GeometryPrimitiveHash>>> = {};
   const put = (kind: TypologyPrimitiveKind, id: string, hash: GeometryPrimitiveHash): void => {
@@ -1354,7 +1310,7 @@ export class ModelSpace {
     return out;
   }
 
-  /** @emoji #️⃣ Full topology primitive hashes keyed by linked model id. */
+  /** @emoji #️⃣ Full primitive hashes keyed by linked model id. */
   geometryHashesByModel(): Readonly<Record<string, ModelPrimitiveHashes>> {
     const out: Record<string, ModelPrimitiveHashes> = {};
     for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelPrimitives(model);
@@ -1649,7 +1605,7 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
-/** @emoji 🧱 Topology primitive kind allowed on typology objects (`spatial/AGENTS.md`). */
+/** @emoji 🧱 Primitive kind allowed on typology objects (`cad/AGENTS.md`). */
 export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
 
 /** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
@@ -1661,7 +1617,7 @@ export interface ModelDefinitionManifest {
   readonly description?: string;
   readonly kinds: readonly string[];
   readonly default?: boolean;
-  readonly kernelTopologyTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
+  readonly kernelTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
 }
 
 /** @emoji 🧭 Default geometry-edit model definition id (manifest `default: true`). */
@@ -1676,13 +1632,13 @@ export function defaultModelDefinitionId(): string {
 /** @emoji 🧭 True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
 export function isShapeModelDefinition(modelDefinitionId: string | null | undefined): boolean {
   if (modelDefinitionId == null) return true;
-  return kernelTopologyTypologyIds(modelDefinitionId) !== null;
+  return kernelTypologyIds(modelDefinitionId) !== null;
 }
 
-/** @emoji 🪪 Kernel topology typology ids declared on a model-definition manifest. */
-export function kernelTopologyTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | null {
+/** @emoji 🪪 Kernel typology ids per primitive kind on a model-definition manifest. */
+export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | null {
   const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
-  const map = manifest?.kernelTopologyTypologies;
+  const map = manifest?.kernelTypologies;
   if (!map || Object.keys(map).length === 0) return null;
   return map;
 }
@@ -1694,7 +1650,7 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
   if (r.schema !== "spatial.modelDefinition/v1" && r.schema !== "spatial.extension/v1") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.kinds) || r.kinds.length === 0) return null;
-  const kernelTopologyTypologies = parseKernelTopologyTypologies(r.kernelTopologyTypologies);
+  const kernelTypologies = parseKernelTypologies(r.kernelTypologies);
   return {
     schema: "spatial.modelDefinition/v1",
     id: r.id,
@@ -1703,11 +1659,11 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
     description: typeof r.description === "string" ? r.description : undefined,
     kinds: r.kinds as string[],
     ...(r.default === true ? { default: true } : {}),
-    ...(kernelTopologyTypologies ? { kernelTopologyTypologies } : {}),
+    ...(kernelTypologies ? { kernelTypologies } : {}),
   };
 }
 
-function parseKernelTopologyTypologies(raw: unknown): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | undefined {
+function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | undefined {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
   const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
   const out: Partial<Record<TypologyPrimitiveKind, string>> = {};
@@ -1927,7 +1883,7 @@ export function loadPropertyDefinition(propertyId: string): PropertyDefinitionSp
   return shippedPropertyDefinitionCatalog().find((row) => row.id === propertyId) ?? null;
 }
 
-/** @emoji 🧭 Resolves the topology kind referenced by one primitive ref. */
+/** @emoji 🧭 Resolves the primitive kind referenced by one primitive ref. */
 export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): TypologyPrimitiveKind | null {
   if (model.anchors[primitiveRef]) return "anchor";
   if (model.vertices[primitiveRef]) return "vertex";
@@ -1939,25 +1895,25 @@ export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): Typ
   return null;
 }
 
-/** @emoji 🌳 Kernel topology node nested under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
-export interface ModelTopologyHierarchyNode {
+/** @emoji 🌳 Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
+export interface ModelPrimitiveHierarchyNode {
   readonly kind: TypologyPrimitiveKind;
   readonly id: string;
-  readonly children: readonly ModelTopologyHierarchyNode[];
+  readonly children: readonly ModelPrimitiveHierarchyNode[];
 }
 
-function sortedTopologyChildIds(ids: readonly string[]): string[] {
+function sortedPrimitiveChildIds(ids: readonly string[]): string[] {
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
-function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelTopologyHierarchyNode | null {
-  const children: ModelTopologyHierarchyNode[] = [];
+function buildModelPrimitiveHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelPrimitiveHierarchyNode | null {
+  const children: ModelPrimitiveHierarchyNode[] = [];
   switch (kind) {
     case "solid": {
       const solid = model.solids[id];
       if (!solid) return null;
-      for (const shellId of sortedTopologyChildIds(solid.shellIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "shell", shellId);
+      for (const shellId of sortedPrimitiveChildIds(solid.shellIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "shell", shellId);
         if (child) children.push(child);
       }
       break;
@@ -1965,8 +1921,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "shell": {
       const shell = model.shells[id];
       if (!shell) return null;
-      for (const faceId of sortedTopologyChildIds(shell.faceIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "face", faceId);
+      for (const faceId of sortedPrimitiveChildIds(shell.faceIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "face", faceId);
         if (child) children.push(child);
       }
       break;
@@ -1974,8 +1930,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "face": {
       const face = model.faces[id];
       if (!face) return null;
-      for (const wireId of sortedTopologyChildIds(face.wireIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "wire", wireId);
+      for (const wireId of sortedPrimitiveChildIds(face.wireIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "wire", wireId);
         if (child) children.push(child);
       }
       break;
@@ -1983,8 +1939,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "wire": {
       const wire = model.wires[id];
       if (!wire) return null;
-      for (const edgeId of sortedTopologyChildIds(wire.edgeIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "edge", edgeId);
+      for (const edgeId of sortedPrimitiveChildIds(wire.edgeIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "edge", edgeId);
         if (child) children.push(child);
       }
       break;
@@ -1992,8 +1948,8 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
     case "edge": {
       const edge = model.edges[id];
       if (!edge) return null;
-      for (const vertexId of sortedTopologyChildIds(edge.vertexIds)) {
-        const child = buildModelTopologyHierarchyNode(model, "vertex", vertexId);
+      for (const vertexId of sortedPrimitiveChildIds(edge.vertexIds)) {
+        const child = buildModelPrimitiveHierarchyNode(model, "vertex", vertexId);
         if (child) children.push(child);
       }
       break;
@@ -2008,11 +1964,11 @@ function buildModelTopologyHierarchyNode(model: Model, kind: TypologyPrimitiveKi
   return { kind, id, children };
 }
 
-/** @emoji 🌳 Builds nested kernel topology under one object primitive ref in `model`. */
-export function buildModelTopologyHierarchy(model: Model, primitiveRef: string): ModelTopologyHierarchyNode | null {
+/** @emoji 🌳 Builds nested primitive hierarchy under one object primitive ref in `model`. */
+export function buildModelPrimitiveHierarchy(model: Model, primitiveRef: string): ModelPrimitiveHierarchyNode | null {
   const kind = resolvePrimitiveRefKind(model, primitiveRef);
   if (!kind) return null;
-  return buildModelTopologyHierarchyNode(model, kind, primitiveRef);
+  return buildModelPrimitiveHierarchyNode(model, kind, primitiveRef);
 }
 
 /** @emoji ✅ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
@@ -2030,12 +1986,12 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
   return primitiveKinds.length > 0 && primitiveKinds.every((kind) => typologyAllowsPrimitiveKind(typology, kind));
 }
 
-/** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel topology ids; AEC typologies map to `object`). */
+/** @emoji 🧭 Typology → entity kind map for one model definition (`ModelDefinition` includes kernel typology ids; AEC typologies map to `object`). */
 export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId: string): Readonly<Record<string, ModelEntityKind>> {
   const out: Record<string, ModelEntityKind> = {};
-  const kernelTopology = kernelTopologyTypologyIds(modelDefinitionId);
-  if (kernelTopology) {
-    for (const [kind, id] of Object.entries(kernelTopology)) {
+  const kernelTypologies = kernelTypologyIds(modelDefinitionId);
+  if (kernelTypologies) {
+    for (const [kind, id] of Object.entries(kernelTypologies)) {
       if (typeof id === "string" && id.length > 0) out[id] = kind as ModelEntityKind;
     }
     for (const spec of listTypologiesForModelDefinition(modelDefinitionId)) {
@@ -2093,8 +2049,8 @@ export function assertActionAvailableInModelDefinition(actionId: string, activeM
   }
 }
 
-/** @emoji 🧱 Topology entity kinds selectable on factory geometry (excludes typology `object` rows). */
-export const TOPOLOGY_MODEL_ENTITY_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"];
+/** @emoji 🧱 Primitive entity kinds selectable on factory geometry (excludes typology `object` rows). */
+export const PRIMITIVE_MODEL_ENTITY_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"];
 
 /** @emoji ✅ True when `defn` applies to a model entity kind under the active model definition. */
 export function attributeDefinitionAppliesToEntity(defn: AttributeDefinitionSpec, entityKind: ModelEntityKind): boolean {
@@ -2433,9 +2389,10 @@ function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
 function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
   const map = new Map<string, string>();
+  const snapshot = modelDefinitionAssetModulesSnapshot();
   const modules = {
-    ...modelDefinitionAssetModules.manifests,
-    ...modelDefinitionAssetModules.extensions,
+    ...snapshot.manifests,
+    ...snapshot.extensions,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -2457,7 +2414,8 @@ export function modelDefinitionIdFromAssetPath(assetPath: string): string | null
 function typologyOwnerById(): ReadonlyMap<string, string> {
   if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.typologies)) {
+  const snapshot = modelDefinitionAssetModulesSnapshot();
+  for (const [path, raw] of Object.entries(snapshot.typologies)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseTypologySpec(raw);
     if (!owner || !spec) continue;
@@ -2476,7 +2434,8 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
 function actionOwnerById(): ReadonlyMap<string, string> {
   if (actionOwnerByIdCache) return actionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
+  const snapshot = modelDefinitionAssetModulesSnapshot();
+  for (const [path, raw] of Object.entries(snapshot.actions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseActionSpec(raw);
     if (!owner || !spec) continue;
@@ -2507,7 +2466,8 @@ export interface SpatialInteraction {
 function interactionOwnerById(): ReadonlyMap<string, string> {
   if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.interactions)) {
+  const snapshot = modelDefinitionAssetModulesSnapshot();
+  for (const [path, raw] of Object.entries(snapshot.interactions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseInteractionSpec(raw);
     if (!owner || !spec) continue;
@@ -2549,7 +2509,8 @@ export function listSpatialInteractionsForModelDefinition(
 function attributeOwnerById(): ReadonlyMap<string, string> {
   if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.attributes)) {
+  const snapshot = modelDefinitionAssetModulesSnapshot();
+  for (const [path, raw] of Object.entries(snapshot.attributes)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseAttributeDefinitionSpec(raw);
     if (!owner || !spec) continue;
@@ -2568,9 +2529,10 @@ export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: st
 function propertyOwnerById(): ReadonlyMap<string, string> {
   if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
   const map = new Map<string, string>();
+  const snapshot = modelDefinitionAssetModulesSnapshot();
   for (const [path, raw] of Object.entries({
-    ...modelDefinitionAssetModules.propertyDefinitions,
-    ...modelDefinitionAssetModules.properties,
+    ...snapshot.propertyDefinitions,
+    ...snapshot.properties,
   })) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parsePropertyDefinitionSpec(raw);
@@ -2649,7 +2611,8 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
       if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
     }
   }
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
+  const snapshot = modelDefinitionAssetModulesSnapshot();
+  for (const [path, raw] of Object.entries(snapshot.actions)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
@@ -2681,8 +2644,8 @@ export function listSelectionOperationsForModelDefinition(modelDefinitionId: str
 
 /** @emoji 🧭 Selection entity kinds available while a model definition is active (factory primitives + objects). */
 export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
-  const entityKindIds = new Set<string>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
-  const kinds = new Set<ModelEntityKind>([...TOPOLOGY_MODEL_ENTITY_KINDS, "object"]);
+  const entityKindIds = new Set<string>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
+  const kinds = new Set<ModelEntityKind>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object"]);
   for (const defn of listAttributeDefinitionsForModelDefinition(modelDefinitionId)) {
     for (const kind of defn.targets) {
       if (entityKindIds.has(kind)) kinds.add(kind as ModelEntityKind);
@@ -2692,11 +2655,11 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
     }
   }
   const ordered: ModelEntityKind[] = [];
-  for (const kind of TOPOLOGY_MODEL_ENTITY_KINDS) {
+  for (const kind of PRIMITIVE_MODEL_ENTITY_KINDS) {
     if (kinds.has(kind)) ordered.push(kind);
   }
   for (const kind of kinds) {
-    if (!(TOPOLOGY_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) ordered.push(kind);
+    if (!(PRIMITIVE_MODEL_ENTITY_KINDS as readonly string[]).includes(kind)) ordered.push(kind);
   }
   return ordered;
 }
@@ -4002,7 +3965,7 @@ function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTar
   });
 }
 
-/** @emoji 🎯 Primary selection row for attribute editing (topology first, then typology object). */
+/** @emoji 🎯 Primary selection row for attribute editing (primitive first, then typology object). */
 export function primaryAttributeSelectionTarget(selection: readonly SelectionTarget[]): SelectionTarget | null {
   if (!selection.length) return null;
   for (const row of selection) {
@@ -4060,7 +4023,7 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
   return sortSelectionTargets(out);
 }
 
-/** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
+/** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `model`. */
 export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
@@ -5788,7 +5751,6 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦Interactions
 
 // #region 🧪Tests
-import "./assets.ts";
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 const __cadInteractionE2EFixtureModules = import.meta.vitest
   ? await Promise.all([
@@ -5935,11 +5897,11 @@ if (import.meta.vitest) {
       expect(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
-    it("buildModelTopologyHierarchy nests shell through vertex under solid", () => {
+    it("buildModelPrimitiveHierarchy nests shell through vertex under solid", () => {
       const model = new Model();
       const solid = solidRef("box-solid");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
-      const tree = buildModelTopologyHierarchy(model, String(solid));
+      const tree = buildModelPrimitiveHierarchy(model, String(solid));
       expect(tree?.kind).toBe("solid");
       expect(tree?.children).toHaveLength(1);
       const shell = tree!.children[0]!;
@@ -6086,7 +6048,7 @@ if (import.meta.vitest) {
       expect(pts[pts.length - 1]![0]).toBeCloseTo(0, 5);
       expect(pts[pts.length - 1]![1]).toBeCloseTo(2, 5);
     });
-    it("circleSamplePoints and edgeCurveLength for Geom_Circle", () => {
+    it("circleSamplePoints and edgeCurveLength for circle curves", () => {
       const pts = M.circleSamplePoints([0, 0, 0], [0, 0, 1], 2, 64);
       expect(pts.length).toBeGreaterThan(8);
       expect(
@@ -7851,7 +7813,7 @@ if (import.meta.vitest) {
       editable: kind === "surface" || kind === "part" ? false : editable,
     });
 
-    const topoFromFixture = (kind: InteractionE2EFixtureKind): Model => {
+    const modelFromFixture = (kind: InteractionE2EFixtureKind): Model => {
       if (kind === "empty") return new Model();
       const raw = kind === "loom" ? geometryLoomFixtureJson : kind === "routes" ? geometryRoutesFixtureJson : smallBuildingModelFixtureJson;
       return parseModelJson(raw) ?? new Model();
@@ -8308,7 +8270,7 @@ if (import.meta.vitest) {
     });
 
     it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("$id selection action completes on seeded box", async (defn) => {
-      const model = topoFromFixture("empty");
+      const model = modelFromFixture("empty");
       seedBoxCell(model);
       if (defn.kinds?.includes("object")) {
         const solidId = Object.keys(model.solids)[0]!;
@@ -8332,7 +8294,7 @@ if (import.meta.vitest) {
     it.each(e2eCases)("$id completes end-to-end on $fixture fixture", async (row) => {
       const spec = row.spec ?? loadSpatialInteraction(row.id);
       expect(spec).not.toBeNull();
-      const model = topoFromFixture(row.fixture);
+      const model = modelFromFixture(row.fixture);
       if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(model);
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const before = entityCounts(model);

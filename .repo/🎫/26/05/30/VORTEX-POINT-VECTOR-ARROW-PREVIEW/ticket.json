@@ -1,0 +1,10 @@
+{
+  "title": "Vortex Point Vector Arrow Preview",
+  "emoji": "🌀",
+  "status": "open",
+  "description": "Puzzle 3D: extract vortex point and direction from kit type connectors (one-off migration), preview direction arrow in 3D.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8e9d3737c3dd4911b1c3908d933c823b"
+  ]
+}

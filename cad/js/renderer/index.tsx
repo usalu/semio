@@ -40,7 +40,7 @@ import {
   resolveSpatialInteractionKeyForModelDefinition,
   modelDefinitionSelectionEntityKinds,
   modelDefinitionUsesGeometryPicking,
-  TOPOLOGY_MODEL_ENTITY_KINDS,
+  PRIMITIVE_MODEL_ENTITY_KINDS,
   countViewObjectsForModelDefinition,
   primaryAttributeSelectionTarget,
   listAttributeDefinitionsForModelDefinitionEntity,
@@ -577,7 +577,7 @@ export function spatialPickTargetKey(target: SpatialPickTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-/** @emoji 🪪 Stable hover/selection key for a {@link SelectionTarget} (topology kinds use entity kind + id). */
+/** @emoji 🪪 Stable hover/selection key for a {@link SelectionTarget} (primitive kinds use entity kind + id). */
 export function selectionTargetHoverKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
@@ -664,11 +664,11 @@ export function spatialPickKindTogglesFromTypologyFilteredTargets(modelDefinitio
   return merged;
 }
 
-/** @emoji 👁️ Per-topology-primitive on/off map for play chrome (`false` disables show or filter). */
+/** @emoji 👁️ Per-primitive on/off map for play chrome (`false` disables show or filter). */
 export type SpatialPrimitiveToggles = Partial<Record<ModelEntityKind, boolean>>;
 
 /** @emoji 🧱 Factory primitive kinds toggled in play (anchor → solid). */
-export const SPATIAL_PRIMITIVE_KINDS: readonly ModelEntityKind[] = TOPOLOGY_MODEL_ENTITY_KINDS;
+export const SPATIAL_PRIMITIVE_KINDS: readonly ModelEntityKind[] = PRIMITIVE_MODEL_ENTITY_KINDS;
 
 /** @emoji 👁️ Default all factory primitive kinds enabled for show/filter. */
 export function defaultSpatialPrimitiveToggles(): Record<ModelEntityKind, boolean> {
@@ -695,7 +695,7 @@ export function spatialToggleGroupFill<T extends string>(keys: readonly T[], ena
   return Object.fromEntries(keys.map((key) => [key, enabled])) as Record<T, boolean>;
 }
 
-/** @emoji 🧭 Resolves the topology entity kind for a pick target (typology object rows → `null`). */
+/** @emoji 🧭 Resolves the primitive entity kind for a pick target (typology object rows → `null`). */
 export function pickTargetPrimitiveKind(target: SpatialPickTarget): ModelEntityKind | null {
   if (target.kind === "object" && !target.geometryKind) return null;
   return target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind);
@@ -739,7 +739,7 @@ function spatialPickKindsForActiveView(activeModelDefinitionId: string | null): 
   return new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
 }
 
-/** @emoji 👁️ Keeps pick targets allowed by the active model definition (topology + typology objects). */
+/** @emoji 👁️ Keeps pick targets allowed by the active model definition (primitives + typology objects). */
 export function filterSpatialPickTargetsForActiveView(targets: readonly SpatialPickTarget[], activeModelDefinitionId: string | null): SpatialPickTarget[] {
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const allowedPickKinds = spatialPickKindsForActiveView(mdId);
@@ -914,7 +914,7 @@ function modelObjectPickPoints(model: Model, row: SpatialObjectRecord): readonly
   return geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 }
 
-function collectSolidTopologyMemberIds(buckets: ReturnType<typeof geometryBuckets>, solidId: string): ReadonlySet<string> {
+function collectSolidPrimitiveMemberIds(buckets: ReturnType<typeof geometryBuckets>, solidId: string): ReadonlySet<string> {
   const out = new Set<string>();
   const solid = buckets.solids[solidId];
   if (!solid) return out;
@@ -960,7 +960,7 @@ function buildGeometryTypologyIndex(model: Model, modelDefinitionId: string): Re
     for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
       const kind = resolvePrimitiveRefKind(model, primitiveRef);
       if (kind === "solid") {
-        for (const key of collectSolidTopologyMemberIds(buckets, primitiveRef)) out.set(key, row.typology);
+        for (const key of collectSolidPrimitiveMemberIds(buckets, primitiveRef)) out.set(key, row.typology);
         continue;
       }
       out.set(`${kind}:${primitiveRef}`, row.typology);
@@ -993,7 +993,7 @@ function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: st
   return targets;
 }
 
-function appendTopologySpatialPickTargets(targets: SpatialPickTarget[], buckets: ReturnType<typeof geometryBuckets>, entityKinds: ReadonlySet<ModelEntityKind>, geometryTypologyIndex: ReadonlyMap<string, string>): void {
+function appendPrimitiveSpatialPickTargets(targets: SpatialPickTarget[], buckets: ReturnType<typeof geometryBuckets>, entityKinds: ReadonlySet<ModelEntityKind>, geometryTypologyIndex: ReadonlyMap<string, string>): void {
   const withTypology = (target: Omit<SpatialPickTarget, "typologyId"> & { readonly geometryKind: ModelEntityKind }): SpatialPickTarget => ({
     ...target,
     typologyId: geometryTypologyIndex.get(`${target.geometryKind}:${target.id}`),
@@ -1058,7 +1058,7 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
   const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
   const geometryTypologyIndex = buildGeometryTypologyIndex(model, mdId);
   const targets: SpatialPickTarget[] = [];
-  if (modelDefinitionUsesGeometryPicking(mdId)) appendTopologySpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex);
+  if (modelDefinitionUsesGeometryPicking(mdId)) appendPrimitiveSpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex);
   if (entityKinds.has("object") && !isShapeModelDefinition(mdId)) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
   return targets;
 }
@@ -2031,8 +2031,8 @@ export function SpatialPickGeometryLayer({
   readonly hostSelectionEnabled?: boolean;
   readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 }): ReactNode {
-  const topoRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
-  const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, topoRevision, modelDefinitionRevision, activeModelDefinitionId]);
+  const modelRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
+  const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
   const viewTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
   const pinnedTargetKeys = reactHostPort.useMemo(() => {
     const keys = new Set<string>();
@@ -2772,7 +2772,7 @@ function replFirstFaceId(model: Model): string | null {
 }
 
 function replBuildDispatchEvent(row: InteractionKeybindRow, opts: { readonly interactionId: string; readonly model: Model }): InteractionEvent | null {
-  const { interactionId, topo } = opts;
+  const { interactionId, model } = opts;
   if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") return null;
   if (row.eventKind === "selection.changed") {
     if (interactionId === "feature.extrudeWire") {
@@ -5365,7 +5365,7 @@ if (import.meta.vitest) {
       expect(chrome.filterPrimitiveToggles.solid).toBe(true);
     });
 
-    it("filterSpatialPickTargetsForPrimitiveToggles hides topology picks by kind", () => {
+    it("filterSpatialPickTargetsForPrimitiveToggles hides primitive picks by kind", () => {
       const model = new Model();
       model.vertices.v0 = { id: "v0" as VertexRef, position: [0, 0, 0] };
       model.edges.e0 = { id: "e0" as EdgeRef, vertexIds: ["v0" as VertexRef, "v0" as VertexRef], curve: { kind: "line" } };
@@ -5424,7 +5424,7 @@ if (import.meta.vitest) {
       expect(targets.some((t) => t.geometryKind === "shell")).toBe(true);
     });
 
-    it("modelDefinitionPickTargetKinds maps topology entity kinds to pick toggles", () => {
+    it("modelDefinitionPickTargetKinds maps primitive entity kinds to pick toggles", () => {
       expect(modelDefinitionPickTargetKinds(defaultModelDefinitionId()).sort()).toEqual(["edge", "face", "object", "vertex"]);
       expect(modelDefinitionPickTargetKinds("aec.building.structure").sort()).toEqual(["edge", "face", "object", "vertex"]);
     });
@@ -5464,7 +5464,7 @@ if (import.meta.vitest) {
       expect(spatialToggleGroupFill(["a", "b"], false)).toEqual({ a: false, b: false });
     });
 
-    it("filterSpatialPickTargets matches topology geometryKind in selection accept", () => {
+    it("filterSpatialPickTargets matches primitive geometryKind in selection accept", () => {
       const targets: SpatialPickTarget[] = [
         { kind: "face", geometryKind: "shell", id: "sh0", point: [0, 0, 0] },
         { kind: "vertex", geometryKind: "anchor", id: "a0", point: [1, 0, 0] },

@@ -25,7 +25,7 @@ import {
   DocumentHistory,
   defaultModelDefinitionId,
   applyTransformation,
-  buildModelTopologyHierarchy,
+  buildModelPrimitiveHierarchy,
   countViewObjectsForModelDefinition,
   createInteractionRuntime,
   isEmptyModelDiff,
@@ -52,7 +52,7 @@ import {
   type InteractionSnapshot,
   type InteractionSpec,
   type ModelDocument,
-  type ModelTopologyHierarchyNode,
+  type ModelPrimitiveHierarchyNode,
   type SelectionTarget,
   type SpatialComputeMode,
   type TransformationSpec,
@@ -234,7 +234,7 @@ function cadPlaySelectionKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-/** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision, objects, topology counts). */
+/** @emoji 🔢 Digest for hierarchy chrome when {@link Model} instances mutate in place (revision, objects, primitive counts). */
 export function cadPlayModelsDigest(modelsByDefinitionId: Record<string, Model>): string {
   return Object.keys(modelsByDefinitionId)
     .sort((a, b) => a.localeCompare(b))
@@ -261,11 +261,11 @@ function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target:
   };
 }
 
-function cadPlayTopologyTreeItem(node: ModelTopologyHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
-  const childItems = node.children.map((child) => cadPlayTopologyTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
+function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
+  const childItems = node.children.map((child) => cadPlayPrimitiveChildTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind: node.kind, id: node.id, editable: true };
   return {
-    id: `cad-play-hierarchy.topology.${path}`,
+    id: `cad-play-hierarchy.child.${path}`,
     label: `${node.kind} ${node.id}`,
     isSelected: ctx.isSelected(node.kind, node.id),
     isHighlighted: ctx.isHighlighted(node.kind, node.id),
@@ -279,8 +279,8 @@ function cadPlayTopologyTreeItem(node: ModelTopologyHierarchyNode, path: string,
 function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, objectId: string, slot: string, primitiveRef: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
   const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
   const primitiveId = String(primitiveRef);
-  const topology = buildModelTopologyHierarchy(model, primitiveId);
-  const topologyItems = (topology?.children ?? []).map((child) => cadPlayTopologyTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
+  const primitiveHierarchy = buildModelPrimitiveHierarchy(model, primitiveId);
+  const childItems = (primitiveHierarchy?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind, id: primitiveId, editable: true };
   return {
     id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
@@ -290,7 +290,7 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, 
     defaultOpen: true,
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
-    items: topologyItems.length ? topologyItems : [{ id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.topology.empty`, label: "(empty)" }],
+    items: childItems.length ? childItems : [{ id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.child.empty`, label: "(empty)" }],
   };
 }
 
@@ -1512,7 +1512,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     (spec: TransformationSpec) => {
       const space = modelSpaceFromRecord(flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel));
       try {
-        space.transform(spec.source.modelDefinition, spec.target.modelDefinition, spec);
+        space.transform(spec.source.modelDefinition, spec.target.modelDefinition, spec, brepjsKernel);
       } catch (error) {
         setFileStatus(`Transform failed: ${String(error)}`);
         return;
@@ -1522,7 +1522,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Transformed ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
     },
-    [activeModelDefinitionId, liveModel, modelsByDefinitionId],
+    [activeModelDefinitionId, brepjsKernel, liveModel, modelsByDefinitionId],
   );
 
   reactHostPort.useEffect(() => {
@@ -2277,7 +2277,7 @@ if (import.meta.vitest) {
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
     });
 
-    it("buildCadPlayHierarchySections highlights hovered topology keys", async () => {
+    it("buildCadPlayHierarchySections highlights hovered primitive keys", async () => {
       const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
       const { applyModelDiff, solidRef } = await import("@cad/js/core");
       const model = new Model();
@@ -2294,7 +2294,7 @@ if (import.meta.vitest) {
       expect(objectNode?.isHighlighted).toBe(true);
     });
 
-    it("buildCadPlayHierarchySections nests topology under primitive slots", async () => {
+    it("buildCadPlayHierarchySections nests child primitives under primitive slots", async () => {
       const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
       const { applyModelDiff, solidRef } = await import("@cad/js/core");
       const model = new Model();

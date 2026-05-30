@@ -5,7 +5,7 @@
 	"label": "ModelDefinition",
 	"description": "Core model definition assets shipped with the spatial runtime.",
 	"default": true,
-	"kernelTopologyTypologies": {
+	"kernelTypologies": {
 		"anchor": "spatial.shape.kernel.anchor",
 		"vertex": "spatial.shape.kernel.vertex",
 		"edge": "spatial.shape.kernel.edge",
