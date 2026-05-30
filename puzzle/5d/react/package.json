@@ -9,7 +9,6 @@
     "test": "bun nx run @puzzle/5d/react:test"
   },
   "dependencies": {
-    "@puzzle/assets": "workspace:*",
     "@puzzle/2d/react": "workspace:*",
     "@puzzle/3d/react": "workspace:*",
     "@ui/react": "workspace:*",

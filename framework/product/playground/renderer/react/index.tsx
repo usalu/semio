@@ -903,7 +903,7 @@ export const mountReactApp = mountPlaygroundApp;
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
 import { sceneHostPort } from "@ui/react";
-import { NakaginCapsuleTowerSceneJson as nakaginPuzzle3dFixtureJson } from "@puzzle/assets";
+import nakaginPuzzle3dFixtureJson from "../../../../../puzzle/3d/fixture/nakagin-capsule-tower.3d.json";
 import { PlayCanvas, ObjectStateProvider, parseFixtureV1, applyConnectToFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,

@@ -1,7 +1,3 @@
 // #region 🧲Header
-/** @emoji 🧩 `@puzzle/assets` — builtin puzzle play/story JSON (board, scene, topology); test-only JSON belongs elsewhere. */
+/** @emoji 🧩 `@puzzle/assets` — reserved for shipped puzzle media (meshes, icons); play fixtures live under `puzzle/*/fixture/`. */
 // #endregion 🧲Header
-
-export { default as NakaginCapsuleTowerBoardJson } from "./nakagin-capsule-tower.board.json";
-export { default as NakaginCapsuleTowerSceneJson } from "./nakagin-capsule-tower.scene.json";
-export { default as NakaginCapsuleTowerTopologyJson } from "./nakagin-capsule-tower.topology.json";

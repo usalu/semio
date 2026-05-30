@@ -1,7 +1,7 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "Sketchpad is a pure @framework/platform/core product: no React, renderer, or @puzzle/* dependencies. Topology fixtures live on PlatformTopologyStore (controller store topology:\u003cinstanceId\u003e); @framework/platform/renderer/react BuiltinPuzzle5dKindRenderer composes FiveD + TopologyStoreProvider and dispatches applyBoardSelection. Removed sketchpad-renderers.tsx and ./renderers export; boot/desktop/vscode/docs only mountPlatform. Fixed kit GraphQL read fragment for @semio/js schema. All 15 sketchpad vitest tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
@@ -11,6 +11,7 @@
     "⚪f1feea8b515741bf8fb873d4e5c03ca4",
     "⚪d346fdca35604679b9c7df73dd8e574d",
     "⚪00f0be4a9ae14e82bb7ec628f8cf91a8",
-    "⚪c8a67e3c6f71445091437aa82e936a7d"
+    "⚪c8a67e3c6f71445091437aa82e936a7d",
+    "⚪5fd75dcf6f0b4f0482e56c085288e938"
   ]
 }

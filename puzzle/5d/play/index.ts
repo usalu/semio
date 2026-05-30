@@ -24,9 +24,9 @@ import {
 } from "@framework/playground/core";
 
 import { buildBoardPlayHierarchySections } from "../../2d/play/index.ts";
-import { NakaginCapsuleTowerBoardJson as nakaginBoardJson } from "@puzzle/assets";
+import nakaginBoardJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 import { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, boardLodCanvasProps, isBoardDrawLodKind, parseBoardFixtureV1, type BoardDrawLodKind, type BoardFixtureV1, type BoardLodModeKind, type CameraState } from "../../2d/react/index.tsx";
-import { NakaginCapsuleTowerSceneJson as nakaginSceneJson } from "@puzzle/assets";
+import nakaginSceneJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
 import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
   DEFAULT_MANUAL_LOD,
@@ -41,7 +41,7 @@ import {
   type RelocateMode as VolumeRelocateMode,
 } from "../../3d/react/index.tsx";
 import { createStore, parseV1, projectFlat, projectVolume, topologyCompose, sharedKindsFromMetas, type Store as TopologyStore, type StoreSnapshot as TopologyStoreSnapshot, type V1 as TopologyV1 } from "../react/index.tsx";
-import { NakaginCapsuleTowerTopologyJson as nakaginTopologyJson } from "@puzzle/assets";
+import nakaginTopologyJson from "../fixture/nakagin-capsule-tower.5d.json";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";

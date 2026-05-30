@@ -22,7 +22,7 @@ import {
 	boardFixtureMetaKindCompatibility,
 	mergeKindCatalogBundleByRowId,
 } from "../../../../puzzle/2d/index";
-import { NakaginCapsuleTowerBoardJson as nakaginCapsuleTowerBoardFixture } from "@puzzle/assets";
+import nakaginCapsuleTowerBoardFixture from "../../../../puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
 
 const meta = {
 	title: "puzzle/2d",
