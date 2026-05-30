@@ -15,6 +15,10 @@ export default defineConfig({
 			{ find: "@framework/platform/renderer/react", replacement: resolve(root, "index.tsx") },
 			{ find: "@framework/core", replacement: resolve(root, "../../../../core/index.ts") },
 			{ find: "@ui/react", replacement: resolve(root, "../../../../../ui/react/index.tsx") },
+			{ find: "@puzzle/2d/react", replacement: resolve(root, "../../../../../puzzle/2d/react/index.tsx") },
+			{ find: "@puzzle/3d/react", replacement: resolve(root, "../../../../../puzzle/3d/react/index.tsx") },
+			{ find: "@puzzle/5d/react", replacement: resolve(root, "../../../../../puzzle/5d/react/index.tsx") },
+			{ find: "@cad/js/renderer", replacement: resolve(root, "../../../../../cad/js/renderer/index.tsx") },
 		],
 	},
 	test: {
