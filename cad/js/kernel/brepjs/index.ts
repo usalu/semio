@@ -1849,77 +1849,26 @@ function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
 	return modelFaceIdsForSolid(model, cell).length > 0;
 }
 
-/** @emoji ✅ True when box shell corners still form an axis-aligned box (not sheared). */
-function isBoxShellAxisAligned(model: Model, cell: SolidRecord): boolean {
-	if (cell.solid?.kind !== "box") return false;
-	const pfx = `box-${cell.id}`;
-	const read = (suffix: string) => geom(model).vertices[`${pfx}-${suffix}` as VertexRef]?.position;
-	const bottom = [read("v000"), read("v100"), read("v110"), read("v010")];
-	const top = [read("v001"), read("v101"), read("v111"), read("v011")];
-	if (bottom.some((p) => !p) || top.some((p) => !p)) return false;
-	const tol = 1e-4;
-	const uniq = (vals: readonly number[]) => {
-		const out: number[] = [];
-		for (const v of vals) {
-			if (!out.some((x) => Math.abs(x - v) <= tol)) out.push(v);
-		}
-		return out;
-	};
-	const zBottom = uniq(bottom.map((p) => p![2]));
-	const zTop = uniq(top.map((p) => p![2]));
-	if (zBottom.length !== 1 || zTop.length !== 1) return false;
-	if (uniq(bottom.map((p) => p![0])).length > 2 || uniq(bottom.map((p) => p![1])).length > 2) return false;
-	if (uniq(top.map((p) => p![0])).length > 2 || uniq(top.map((p) => p![1])).length > 2) return false;
-	return true;
+/** @emoji 🧊 Builds one brep face from the model face's outer wire (live vertex positions). */
+function brepFaceFromModelFaceRecord(model: Model, faceRec: FaceRecord): Face | null {
+	const wireId = faceRec.wireIds[0];
+	if (!wireId) return null;
+	const oriented = geomWireToOrientedFaceLoose(model, wireId);
+	return oriented;
 }
 
-/** @emoji 📦 Recomputes a box `SolidPrimitive` from live shell vertices (planar box edits). */
-function boxSolidPrimitiveFromShellVertices(model: Model, cell: SolidRecord): SolidPrimitive | null {
-	if (cell.solid?.kind !== "box") return null;
-	if (!isBoxShellAxisAligned(model, cell)) return null;
-	const pfx = `box-${cell.id}`;
-	const read = (suffix: string) => geom(model).vertices[`${pfx}-${suffix}` as VertexRef]?.position;
-	const p000 = read("v000");
-	const p100 = read("v100");
-	const p110 = read("v110");
-	const p010 = read("v010");
-	const p001 = read("v001");
-	const p101 = read("v101");
-	const p111 = read("v111");
-	const p011 = read("v011");
-	if (!p000 || !p100 || !p110 || !p010 || !p001 || !p101 || !p111 || !p011) return null;
-	const bottom = [p000, p100, p110, p010];
-	const top = [p001, p101, p111, p011];
-	const all = [...bottom, ...top];
-	const ax = Math.min(...all.map((p) => p[0]));
-	const ay = Math.min(...all.map((p) => p[1]));
-	const bx = Math.max(...all.map((p) => p[0]));
-	const by = Math.max(...all.map((p) => p[1]));
-	const z0 = Math.min(...bottom.map((p) => p[2]));
-	const z1 = Math.max(...top.map((p) => p[2]));
-	return {
-		kind: "box",
-		cornerA: [ax, ay, z0],
-		cornerB: [bx, by, z0],
-		height: Math.max(z1 - z0, 1e-6),
-	};
-}
-
-/** @emoji 🧊 Builds a brepjs `ValidSolid` by sewing model shell faces (follows live vertex positions). */
+/** @emoji 🧊 Builds a brepjs `ValidSolid` by sewing closed shell faces from model topology. */
 function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | null {
+	const faceIds = modelFaceIdsForSolid(model, cell);
+	if (faceIds.length === 0) return null;
 	const brepFaces: Face[] = [];
-	for (const fid of modelFaceIdsForSolid(model, cell)) {
+	for (const fid of faceIds) {
 		const faceRec = geom(model).faces[fid];
-		if (!faceRec) continue;
-		for (const wid of faceRec.wireIds) {
-			const oriented = geomWireToOrientedFaceLoose(model, wid);
-			if (!oriented) return null;
-			brepFaces.push(oriented);
-		}
+		if (!faceRec) return null;
+		const brepFace = brepFaceFromModelFaceRecord(model, faceRec);
+		if (!brepFace) return null;
+		brepFaces.push(brepFace);
 	}
-	if (brepFaces.length === 0) return null;
-	const welded = solid(brepFaces);
-	if (isOk(welded)) return welded.value;
 	const sewn = sewShells(brepFaces);
 	if (isOk(sewn)) {
 		const fromShell = solidFromShell(sewn.value);
@@ -1928,6 +1877,15 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
 			return isOk(healed) ? healed.value : fromShell.value;
 		}
 	}
+	const welded = solid(brepFaces);
+	return isOk(welded) ? welded.value : null;
+}
+
+/** @emoji 🧊 Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
+function deriveValidSolidFromRecordOrPrimitive(model: Model, cell: SolidRecord, primitiveFrom: (p: SolidPrimitive) => ValidSolid): ValidSolid | null {
+	if (String(cell.id).startsWith("from_geometry-")) return null;
+	if (solidRecordHasShellTopology(model, cell)) return solidFromModelTopology(model, cell);
+	if (cell.solid) return primitiveFrom(cell.solid);
 	return null;
 }
 // #endregion 🔌BrepModelBridge
@@ -1975,16 +1933,6 @@ class BrepjsWasmEngine {
 			);
 		}
 		await this.initPromise;
-	}
-
-	private solidFromAabb(min: Vec3, max: Vec3): ValidSolid {
-		const w = Math.max(max[0] - min[0], 1e-6);
-		const d = Math.max(max[1] - min[1], 1e-6);
-		const h = Math.max(max[2] - min[2], 1e-6);
-		const cx = (min[0] + max[0]) / 2;
-		const cy = (min[1] + max[1]) / 2;
-		const cz = (min[2] + max[2]) / 2;
-		return box(w, d, h, { at: [cx, cy, cz], centered: true });
 	}
 
 	private solidFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): ValidSolid {
@@ -2048,27 +1996,13 @@ class BrepjsWasmEngine {
 		return transfer;
 	}
 
-	/** @emoji 🧊 Brep for one shape source solid (primitive or cached; no fused-hull metadata). */
+	/** @emoji 🧊 Brep for one shape source solid (topology or primitive; no fused-hull metadata). */
 	private brepForShapeSourceSolid(model: Model, solidId: SolidRef): ValidSolid | null {
 		const rec = geom(model).solids[solidId];
 		if (!rec) return null;
 		const cached = this.solids.get(rec.id);
 		if (cached) return cached;
-		if (solidRecordHasShellTopology(model, rec)) {
-			const fromTopology = solidFromModelTopology(model, rec);
-			if (fromTopology) return fromTopology;
-			if (isBoxShellAxisAligned(model, rec)) {
-				const syncedBox = boxSolidPrimitiveFromShellVertices(model, rec);
-				if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
-			}
-		}
-		if (rec.solid) return this.solidFromSolidPrimitive(rec.solid);
-		const points = derivedSolidPoints(model, rec);
-		if (points.length > 0) {
-			const aabb = aabbFromPoints(points, 0);
-			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
-		}
-		return null;
+		return deriveValidSolidFromRecordOrPrimitive(model, rec, (p) => this.solidFromSolidPrimitive(p));
 	}
 
 	/** @emoji 🧊 Boolean-union brep for energy hull rows tagged with `fuseSourceSolidIds` metadata. */
@@ -2087,7 +2021,7 @@ class BrepjsWasmEngine {
 		return isOk(fused) ? fused.value : null;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a solid: shell topology, primitive, fused hull metadata, cache, then AABB fallback. */
+	/** @emoji 🧊 Authoritative brep for a solid: fused hull metadata, shell topology, else analytic primitive. */
 	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
 		const cached = this.solids.get(solid.id);
 		if (cached) return cached;
@@ -2096,24 +2030,7 @@ class BrepjsWasmEngine {
 			this.solids.set(solid.id, fusedHull);
 			return fusedHull;
 		}
-		if (String(solid.id).startsWith("from_geometry-")) return null;
-		if (solidRecordHasShellTopology(model, solid)) {
-			const fromTopology = solidFromModelTopology(model, solid);
-			if (fromTopology) return fromTopology;
-			if (isBoxShellAxisAligned(model, solid)) {
-				const syncedBox = boxSolidPrimitiveFromShellVertices(model, solid);
-				if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
-			}
-		}
-		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
-		const points = derivedSolidPoints(model, solid);
-		if (points.length > 0) {
-			const aabb = aabbFromPoints(points, 0);
-			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
-		}
-		const aabb = modelObjectAabb(model, solid);
-		if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
-		return null;
+		return deriveValidSolidFromRecordOrPrimitive(model, solid, (p) => this.solidFromSolidPrimitive(p));
 	}
 
 	async syncSolidsFromModel(model: Model): Promise<void> {
@@ -2936,6 +2853,22 @@ if (import.meta.vitest) {
 			g.bump();
 			await kernel.syncSolidsFromModel(g);
 			expect(await kernel.volume(solid)).toBeCloseTo(2, 2);
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
+		});
+
+		it("syncSolidsFromModel follows sheared box shell (not axis-aligned primitive proxy)", async () => {
+			const g = new Model();
+			const solid = kernelGeometry.solidRef("sheared-box");
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			const corner = g.vertices["box-sheared-box-v111" as VertexRef];
+			expect(corner).toBeDefined();
+			g.vertices["box-sheared-box-v111" as VertexRef] = { id: corner!.id, position: [1.4, 1.2, 1] };
+			g.bump();
+			await kernel.syncSolidsFromModel(g);
+			const vol = await kernel.volume(solid);
+			expect(vol).toBeGreaterThan(1.05);
+			expect(vol).toBeLessThan(1.35);
 			const mesh = await kernel.tessellate(solid, 1e-3, g);
 			expect(mesh.index.length).toBeGreaterThan(0);
 		});

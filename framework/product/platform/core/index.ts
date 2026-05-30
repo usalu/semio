@@ -76,7 +76,7 @@ export interface UiTableHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
-/** @emoji 📋 Host-bound 2D puzzle board surface. */
+/** @emoji 📋 Host-bound 2D puzzle surface. */
 export interface UiPuzzle2dHostSurfaceNode {
 	readonly type: "puzzle2d";
 	readonly componentKind: "puzzle2d";
@@ -257,7 +257,7 @@ export interface Puzzle2dEdgeModel {
 	readonly targetId: string;
 }
 
-/** @emoji 📋 Render-agnostic 2D board view-model for {@link Puzzle2d}. */
+/** @emoji 📋 Render-agnostic 2D puzzle view-model for {@link Puzzle2d}. */
 export interface Puzzle2dModel {
 	readonly nodes: readonly Puzzle2dNodeModel[];
 	readonly edges: readonly Puzzle2dEdgeModel[];
@@ -374,7 +374,7 @@ export class Table extends Component<TableModel> {
 	}
 }
 
-/** @emoji 📋 2D puzzle board surface component base class. */
+/** @emoji 📋 2D puzzle surface component base class. */
 export class Puzzle2d extends Component<Puzzle2dModel> {
 	constructor(surfaceId: string, controllerId: string, initialSnapshot: Puzzle2dModel = { nodes: [], edges: [] }) {
 		super("puzzle2d", surfaceId, controllerId, initialSnapshot);

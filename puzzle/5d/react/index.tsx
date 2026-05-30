@@ -16,7 +16,7 @@ import {
   BUILTIN_PORT_HANDLE_KIND,
   fixtureMetaKindCatalogBundle,
   parsePuzzle2dFixtureV1,
-  type CameraState as BoardCameraState,
+  type CameraState as Puzzle2dCameraState,
   type Puzzle2dCanvasProps,
   type Puzzle2dFixtureV1,
   type Puzzle2dForceGraphLayoutOptions,
@@ -167,7 +167,7 @@ export interface V1 {
   readonly meta?: Record<string, unknown>;
   readonly kindCatalogs?: KindCatalogBundle;
   readonly kindCompatibility?: readonly KindCompatEntry[];
-  readonly camera2d: BoardCameraState;
+  readonly camera2d: Puzzle2dCameraState;
   readonly camera3d: Puzzle3dFixtureV1["camera"];
   readonly parts: readonly PartV1[];
   readonly ties: readonly TieV1[];
@@ -194,7 +194,7 @@ export function parseV1(raw: unknown): V1 | null {
   if (r.schema !== "puzzle.5d/v1") return null;
   if (!Array.isArray(r.parts) || !Array.isArray(r.ties)) return null;
   const domain = typeof r.domain === "string" ? (r.domain as DomainKind) : "architecture";
-  const flatCam = r.camera2d as BoardCameraState | undefined;
+  const flatCam = r.camera2d as Puzzle2dCameraState | undefined;
   const volumeCam = r.camera3d as Puzzle3dFixtureV1["camera"] | undefined;
   if (!flatCam || !volumeCam) return null;
   return {
@@ -454,7 +454,7 @@ export interface StoreSnapshot {
   readonly model: V1;
   readonly selection: SelectionSnapshot;
   readonly connectSession: ConnectSession | null;
-  readonly cameras: Readonly<Record<string, { readonly "2d": BoardCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
+  readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
 }
 
 export class Store {
@@ -491,7 +491,7 @@ export class Store {
     return this.snapshot.model;
   }
 
-  get2dCamera(instanceId: string): BoardCameraState {
+  get2dCamera(instanceId: string): Puzzle2dCameraState {
     return this.snapshot.cameras[instanceId]?.["2d"] ?? this.snapshot.model.camera2d;
   }
 
@@ -499,7 +499,7 @@ export class Store {
     return this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
   }
 
-  set2dCamera(instanceId: string, camera: BoardCameraState): void {
+  set2dCamera(instanceId: string, camera: Puzzle2dCameraState): void {
     const prev = this.snapshot.cameras[instanceId];
     this.setSnapshot({
       ...this.snapshot,
@@ -1219,7 +1219,7 @@ export function sharedKindsFromMetas(inp: { readonly meta2d: Record<string, unkn
 }
 //#endregion 🔖KindMeta
 
-//#region 🔖BoardLayout
+//#region 🔖Puzzle2dLayout
 /** @emoji 🔗 Default separator for 2d handle ids (`piece::connector`). */
 export const FLAT_HANDLE_COMPOUND_SEPARATOR = "::";
 
@@ -1228,7 +1228,7 @@ export function flatHandleCompoundId(left: string, right: string, separator: str
   return `${left}${separator}${right}`;
 }
 
-/** @emoji ┬¡ãÆ├Â├¼ Parses a compound board handle id into left/right parts. */
+/** @emoji ┬¡ãÆ├Â├¼ Parses a compound puzzle 2d handle id into left/right parts. */
 export function flatParseHandleCompoundId(value: string, separator: string = FLAT_HANDLE_COMPOUND_SEPARATOR): { left: string; right: string } | null {
   const separatorIndex = value.indexOf(separator);
   if (separatorIndex <= 0 || separatorIndex >= value.length - separator.length) return null;
@@ -1284,8 +1284,8 @@ export function puzzle2dForceGraphOptions(weights: DiagramForceWeights): Puzzle2
   };
 }
 
-/** @emoji ┬¡ãÆ├┤├Ç Centers the board camera on the average of node centers. */
-export function camera2dFromPartCenters(centers: readonly { x: number; y: number }[]): BoardCameraState {
+/** @emoji ┬¡ãÆ├┤├Ç Centers the puzzle 2d camera on the average of node centers. */
+export function camera2dFromPartCenters(centers: readonly { x: number; y: number }[]): Puzzle2dCameraState {
   if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
   const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
   const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
@@ -1309,14 +1309,14 @@ export function flatApplyFixtureCentersToTopLeft<T extends { readonly id: string
     };
   });
 }
-//#endregion 🔖BoardLayout
+//#endregion 🔖Puzzle2dLayout
 
 /** @emoji 🎛 Default 3d chrome for puzzle 5d surfaces (alias of {@link FIVE_D_3D_CHROME_DEFAULTS}). */
 export function chrome3dDefaults(): typeof FIVE_D_3D_CHROME_DEFAULTS {
   return FIVE_D_3D_CHROME_DEFAULTS;
 }
 
-//#region 🔖BoardMarkers
+//#region 🔖Puzzle2dMarkers
 export interface FlatWireRecord {
   readonly id: string;
   readonly source: string;
@@ -1431,7 +1431,7 @@ export function flatMarkersFromFixture(props: {
     </>
   );
 }
-//#endregion 🔖BoardMarkers
+//#endregion 🔖Puzzle2dMarkers
 
 export { DEFAULT_PUZZLE_2D_GRID_FACTOR, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixtureV1, parseFixtureV1 };
 

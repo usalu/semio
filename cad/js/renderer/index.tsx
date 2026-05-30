@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, Input, Label, reactHostPort, sceneHostPort, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -1127,6 +1127,7 @@ export function createSpatialPickEvent(kind: SpatialPickKind, point: Vec3, targe
 
 // #region 🖼️DisplayPrimitives
 function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
+  const palette = spatialSceneColors();
   const p = item.params;
   const edgeGeo = reactHostPort.useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), []);
   if (!p) return null;
@@ -1141,16 +1142,24 @@ function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
     <group position={position} scale={scale}>
       <mesh raycast={raycastNone}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={archived ? "#5a8c6a" : "#7ab0ff"} emissive={archived ? "#0a2818" : "#102a66"} emissiveIntensity={archived ? 0.22 : 0.35} transparent opacity={archived ? 0.38 : 0.52} depthWrite={false} />
+        <meshStandardMaterial
+          color={archived ? palette.archived : palette.committed}
+          emissive={archived ? palette.archivedEmissive : palette.committedEmissive}
+          emissiveIntensity={archived ? 0.22 : 0.35}
+          transparent
+          opacity={archived ? 0.38 : 0.52}
+          depthWrite={false}
+        />
       </mesh>
       <lineSegments raycast={raycastNone} geometry={edgeGeo}>
-        <lineBasicMaterial color={archived ? "#a8d4b8" : "#ffffff"} transparent opacity={archived ? 0.55 : 0.85} />
+        <lineBasicMaterial color={archived ? palette.archived : palette.committedWire} transparent opacity={archived ? 0.55 : 0.85} />
       </lineSegments>
     </group>
   );
 }
 
 function PointItem({ item }: { readonly item: DisplayItem }): ReactNode {
+  const palette = spatialSceneColors();
   const pos = readVec3(item.params?.position);
   if (!pos) return null;
   const cursor = item.role === "cursor";
@@ -1158,7 +1167,11 @@ function PointItem({ item }: { readonly item: DisplayItem }): ReactNode {
   return (
     <mesh position={pos} raycast={raycastNone}>
       <sphereGeometry args={[r, 16, 16]} />
-      <meshStandardMaterial color={cursor ? "#66e8ff" : "#ffcc66"} emissive={cursor ? "#003844" : "#553300"} emissiveIntensity={cursor ? 0.45 : 0.35} />
+      <meshStandardMaterial
+        color={cursor ? palette.hovered : palette.construction}
+        emissive={cursor ? palette.hoveredEmissive : palette.constructionEmissive}
+        emissiveIntensity={cursor ? 0.45 : 0.35}
+      />
     </mesh>
   );
 }
@@ -1187,7 +1200,7 @@ function LinearHandleItem({ item }: { readonly item: DisplayItem }): ReactNode {
         [origin[0], origin[1], origin[2]],
         [x1, y1, z1],
       ]}
-      color="#ffff88"
+      color={spatialSceneColors().dimension}
       lineWidth={2}
       dashed={false}
     />
@@ -1195,6 +1208,7 @@ function LinearHandleItem({ item }: { readonly item: DisplayItem }): ReactNode {
 }
 
 function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
+  const palette = spatialSceneColors();
   const p = item.params;
   if (!p) return null;
   const a = readVec3(p.from);
@@ -1209,7 +1223,7 @@ function SegmentItem({ item }: { readonly item: DisplayItem }): ReactNode {
         [a[0], a[1], a[2]],
         [b[0], b[1], b[2]],
       ]}
-      color={guide ? "#5a7088" : heightLine ? "#66e8ff" : "#88eeff"}
+      color={guide ? palette.guide : heightLine ? palette.hovered : palette.accent}
       lineWidth={guide ? 1 : heightLine ? 2.5 : 2}
       dashed={guide}
       {...(guide ? { dashSize: 0.12, gapSize: 0.08 } : {})}
@@ -1225,7 +1239,7 @@ function LabelItem({ item }: { readonly item: DisplayItem }): ReactNode {
   if (!pos || typeof text !== "string") return null;
   return (
     <reactHostPort.Suspense fallback={null}>
-      <Text position={pos} fontSize={0.22} color="#f4f4ff" anchorX="left" anchorY="bottom" raycast={raycastNone}>
+      <Text position={pos} fontSize={0.22} color={spatialSceneColors().foreground} anchorX="left" anchorY="bottom" raycast={raycastNone}>
         {text}
       </Text>
     </reactHostPort.Suspense>
@@ -1658,16 +1672,162 @@ export interface InteractionSpatialViewTheme {
 }
 
 export const defaultInteractionSpatialViewTheme: InteractionSpatialViewTheme = {
-  background: "#080810",
   ambientIntensity: 0.45,
   directionalIntensity: 1.1,
   directionalPosition: [12, 18, 10],
   gridDivisions: 40,
   gridSize: 40,
-  groundPlaneColor: "#7a9dff",
   groundPlaneOpacity: 0.18,
 };
 // #endregion 🎨HostCustomization
+
+// #region 🎨SpatialSceneColors
+/** @emoji 🎨 Resolved product palette for spatial canvas materials (no ad-hoc hex in hosts). */
+export interface SpatialSceneColorPalette {
+  readonly canvas: string;
+  readonly accent: string;
+  readonly accentEmissive: string;
+  readonly accentSecondary: string;
+  readonly accentSecondaryEmissive: string;
+  readonly foreground: string;
+  readonly muted: string;
+  readonly mutedEmissive: string;
+  readonly selected: string;
+  readonly selectedEmissive: string;
+  readonly hovered: string;
+  readonly hoveredEmissive: string;
+  readonly vertex: string;
+  readonly vertexEmissive: string;
+  readonly edge: string;
+  readonly edgeEmissive: string;
+  readonly object: string;
+  readonly objectEmissive: string;
+  readonly face: string;
+  readonly faceEmissive: string;
+  readonly gridMajor: string;
+  readonly gridMinor: string;
+  readonly groundPlane: string;
+  readonly archived: string;
+  readonly archivedEmissive: string;
+  readonly ghost: string;
+  readonly committed: string;
+  readonly committedEmissive: string;
+  readonly committedWire: string;
+  readonly dimension: string;
+  readonly guide: string;
+  readonly construction: string;
+  readonly constructionEmissive: string;
+}
+
+const SPATIAL_SCENE_COLOR_FALLBACK: SpatialSceneColorPalette = {
+  canvas: "#e8e8e8",
+  accent: "#c9a227",
+  accentEmissive: "#3d3010",
+  accentSecondary: "#8a8a8a",
+  accentSecondaryEmissive: "#2a2a2a",
+  foreground: "#1a1a1a",
+  muted: "#6b6b6b",
+  mutedEmissive: "#2a2a2a",
+  selected: "#c9a227",
+  selectedEmissive: "#3d3010",
+  hovered: "#a08020",
+  hoveredEmissive: "#302808",
+  vertex: "#1a1a1a",
+  vertexEmissive: "#404040",
+  edge: "#4a4a4a",
+  edgeEmissive: "#2a2a2a",
+  object: "#6b6b6b",
+  objectEmissive: "#2a2a2a",
+  face: "#8a8a8a",
+  faceEmissive: "#333333",
+  gridMajor: "#b0b0b0",
+  gridMinor: "#d8d8d8",
+  groundPlane: "#c9a227",
+  archived: "#6b8a72",
+  archivedEmissive: "#1a2820",
+  ghost: "#8a8a8a",
+  committed: "#8a8a8a",
+  committedEmissive: "#2a2a2a",
+  committedWire: "#d0d0d0",
+  dimension: "#1a1a1a",
+  guide: "#6b6b6b",
+  construction: "#c9a227",
+  constructionEmissive: "#3d3010",
+};
+
+function readSpatialCssColor(variable: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback;
+  const resolved = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  return resolved || fallback;
+}
+
+let spatialSceneColorCache: SpatialSceneColorPalette | null = null;
+
+/** @emoji 🎨 Reads `--canvas`, `--accent`, and selection tokens for Three.js materials. */
+export function spatialSceneColors(): SpatialSceneColorPalette {
+  if (spatialSceneColorCache) return spatialSceneColorCache;
+  const accent = readSpatialCssColor("--accent", SPATIAL_SCENE_COLOR_FALLBACK.accent);
+  const accentSecondary = readSpatialCssColor("--accent-secondary", SPATIAL_SCENE_COLOR_FALLBACK.accentSecondary);
+  const foreground = readSpatialCssColor("--foreground", SPATIAL_SCENE_COLOR_FALLBACK.foreground);
+  const muted = readSpatialCssColor("--muted-foreground", SPATIAL_SCENE_COLOR_FALLBACK.muted);
+  const selected = readSpatialCssColor("--color-changed-selected", accent);
+  const hovered = readSpatialCssColor("--color-changed-hovered", accentSecondary);
+  spatialSceneColorCache = {
+    canvas: readSpatialCssColor("--canvas", SPATIAL_SCENE_COLOR_FALLBACK.canvas),
+    accent,
+    accentEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.accentEmissive),
+    accentSecondary,
+    accentSecondaryEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.accentSecondaryEmissive),
+    foreground,
+    muted,
+    mutedEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.mutedEmissive),
+    selected,
+    selectedEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.selectedEmissive),
+    hovered,
+    hoveredEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.hoveredEmissive),
+    vertex: foreground,
+    vertexEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.vertexEmissive),
+    edge: readSpatialCssColor("--border-color", SPATIAL_SCENE_COLOR_FALLBACK.edge),
+    edgeEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.edgeEmissive),
+    object: muted,
+    objectEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.objectEmissive),
+    face: accentSecondary,
+    faceEmissive: readSpatialCssColor("--hover-window", SPATIAL_SCENE_COLOR_FALLBACK.faceEmissive),
+    gridMajor: readSpatialCssColor("--border-color", SPATIAL_SCENE_COLOR_FALLBACK.gridMajor),
+    gridMinor: readSpatialCssColor("--muted", SPATIAL_SCENE_COLOR_FALLBACK.gridMinor),
+    groundPlane: accent,
+    archived: readSpatialCssColor("--success-border", SPATIAL_SCENE_COLOR_FALLBACK.archived),
+    archivedEmissive: readSpatialCssColor("--success-foreground", SPATIAL_SCENE_COLOR_FALLBACK.archivedEmissive),
+    ghost: muted,
+    committed: accentSecondary,
+    committedEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.committedEmissive),
+    committedWire: readSpatialCssColor("--foreground", SPATIAL_SCENE_COLOR_FALLBACK.committedWire),
+    dimension: foreground,
+    guide: muted,
+    construction: accent,
+    constructionEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.constructionEmissive),
+  };
+  return spatialSceneColorCache;
+}
+
+/** @emoji 🔄 Clears cached CSS palette (tests or theme switches). */
+export function resetSpatialSceneColorCache(): void {
+  spatialSceneColorCache = null;
+}
+
+function spatialSceneColorToHex(color: string): number {
+  return new THREE.Color(color).getHex();
+}
+
+const cadChromePopoverClass = "border-border bg-popover text-popover-foreground shadow-md rounded-md border p-single";
+const cadChromeMenuButtonClass =
+  "flex w-full cursor-pointer items-center gap-single rounded-sm px-single py-half text-left text-xs text-foreground hover:bg-accent hover:text-accent-foreground";
+const cadChromePanelAsideClass = "border-border bg-panel text-foreground flex shrink-0 flex-col gap-single overflow-auto border-l p-double relative z-[2]";
+const cadChromeTagClass = "border-border inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs";
+const cadChromeTagOnClass = "bg-accent text-accent-foreground";
+const cadChromeTagOffClass = "bg-muted text-muted-foreground";
+const cadFieldClass = "h-medium w-full";
+// #endregion 🎨SpatialSceneColors
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
 export function InteractionDisplay({ model, geometry, renderItem }: { readonly model: DisplayModel; readonly geometry?: SpatialPickGeometry | null; readonly renderItem?: SpatialDisplayItemRenderer }): ReactNode {
@@ -1703,7 +1863,8 @@ export interface GroundPickPlaneProps {
   readonly planeOpacity?: number;
 }
 
-export function GroundPickPlane({ planeZ = 0, enabled = true, onPick, onContextPick, onPointerMove, pointerMoveEnabled, planeColor = "#7a9dff", planeOpacity = 0.18 }: GroundPickPlaneProps): ReactNode {
+export function GroundPickPlane({ planeZ = 0, enabled = true, onPick, onContextPick, onPointerMove, pointerMoveEnabled, planeColor, planeOpacity = 0.18 }: GroundPickPlaneProps): ReactNode {
+  const resolvedPlaneColor = planeColor ?? spatialSceneColors().groundPlane;
   const moveOn = pointerMoveEnabled ?? Boolean(onPointerMove);
   const pickDownOn = enabled || moveOn;
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
@@ -1727,7 +1888,7 @@ export function GroundPickPlane({ planeZ = 0, enabled = true, onPick, onContextP
   return (
     <mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onContextMenu={onContextMenu} onPointerMove={onPointerMoveH}>
       <planeGeometry args={[120, 120]} />
-      <meshBasicMaterial transparent opacity={planeOpacity} color={planeColor} side={THREE.DoubleSide} />
+      <meshBasicMaterial transparent opacity={planeOpacity} color={resolvedPlaneColor} side={THREE.DoubleSide} />
     </mesh>
   );
 }
@@ -1960,12 +2121,13 @@ function spatialPickTargetsFromRay(ray: THREE.Ray, targets: readonly SpatialPick
 }
 
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
-  if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
-  if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
-  if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
-  if (target.kind === "edge") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
-  if (target.kind === "object" && !target.geometryKind) return { color: "#8ad4ff", emissive: "#103850", opacity: 0.28, lineWidth: 7 };
-  return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
+  const palette = spatialSceneColors();
+  if (selected) return { color: palette.selected, emissive: palette.selectedEmissive, opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
+  if (hovered) return { color: palette.hovered, emissive: palette.hoveredEmissive, opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
+  if (target.kind === "vertex") return { color: palette.vertex, emissive: palette.vertexEmissive, opacity: 1, lineWidth: 5 };
+  if (target.kind === "edge") return { color: palette.edge, emissive: palette.edgeEmissive, opacity: 0.8, lineWidth: 5 };
+  if (target.kind === "object" && !target.geometryKind) return { color: palette.object, emissive: palette.objectEmissive, opacity: 0.28, lineWidth: 7 };
+  return { color: palette.face, emissive: palette.faceEmissive, opacity: 0.16, lineWidth: 5 };
 }
 
 function selectionTargetPickKind(target: SelectionTarget): SpatialPickTargetKind | null {
@@ -2627,7 +2789,7 @@ export function InteractionCanvas({
       onLostPointerCapture={(event) => onLostPointerCapture?.(event.nativeEvent)}
       onCreated={({ camera, gl: renderer }) => onCanvasReady?.({ camera, domElement: renderer.domElement })}
     >
-      <color attach="background" args={[background ?? "#080810"]} />
+      {background ? <color attach="background" args={[background]} /> : null}
       {children}
     </Canvas>
   );
@@ -2745,7 +2907,8 @@ export function InteractionSpatialView({
   const gridDivisions = resolvedTheme.gridDivisions ?? 40;
   const gridSize = resolvedTheme.gridSize ?? 40;
   const gridHelper = reactHostPort.useMemo(() => {
-    const g = new THREE.GridHelper(gridSize, gridDivisions, 0x3a3a55, 0x1c1c28);
+    const palette = spatialSceneColors();
+    const g = new THREE.GridHelper(gridSize, gridDivisions, spatialSceneColorToHex(palette.gridMajor), spatialSceneColorToHex(palette.gridMinor));
     g.rotation.x = Math.PI / 2;
     g.position.set(0, 0, 0.002);
     g.traverse((obj) => {
@@ -2810,7 +2973,7 @@ export function InteractionSpatialView({
         onContextPick={onGroundContextEvent}
         onPointerMove={onScenePointerMoveEvent}
         pointerMoveEnabled={groundMoveOn}
-        planeColor={resolvedTheme.groundPlaneColor}
+        planeColor={resolvedTheme.groundPlaneColor ?? spatialSceneColors().groundPlane}
         planeOpacity={resolvedTheme.groundPlaneOpacity}
       />
       <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />

@@ -253,7 +253,7 @@ export function registerUiPuzzle3dSurfaceHost(surfaceId: string, Component: Puzz
 
 export { registerSurfaceBinding, unregisterSurfaceBinding };
 
-/** @emoji 📋 Binds `surfaceId` from {@link UiPuzzle2dHostSurfaceNode} to a host board canvas. */
+/** @emoji 📋 Binds `surfaceId` from {@link UiPuzzle2dHostSurfaceNode} to a puzzle 2d canvas. */
 export function registerUiPuzzle2dSurfaceHost(surfaceId: string, Component: Puzzle2dSurfaceHost): void {
   puzzle2dSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
@@ -1685,7 +1685,7 @@ function puzzle2dPlayRedrawLayoutOpts(
 // #endregion 🔖PlayRedrawHelpers
 
 // #region 🔖SettingsPanel
-/** @emoji ⚙️ Board play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
+/** @emoji ⚙️ Puzzle 2d play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
 function Puzzle2dPlaySettingsPanel(): ReactElement {
   const {
     activePaneId,
@@ -1729,7 +1729,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
       <div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Redraw</div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
         <div className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">Redraw nodes</div>
-        <Label id="board.play.settings.redraw.mode" label="Layout kind">
+        <Label id="puzzle2d.play.settings.redraw.mode" label="Layout kind">
           <Select onValueChange={(v) => setPuzzle2dRedrawMode(v as Puzzle2dRedrawModeKind)} value={puzzle2dRedrawMode}>
             <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-redraw-mode" size="sm">
               <SelectValue />
@@ -1752,11 +1752,11 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
             Progressive iterations while play is on (graph ramps up; tree still one pass per frame)
           </label>
         </div>
-        <Label id="board.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
+        <Label id="puzzle2d.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
           <Slider id="puzzle-2d-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[puzzle2dRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setPuzzle2dRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
         </Label>
         {puzzle2dRedrawMode === "force-graph" ? (
-          <Label id="board.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
+          <Label id="puzzle2d.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
             <Slider id="puzzle-2d-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[puzzle2dRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setPuzzle2dRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
           </Label>
         ) : (
@@ -1765,29 +1765,29 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
         {puzzle2dRedrawMode === "force-graph" ? (
           <>
             <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Graph</div>
-            <Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
+            <Label id="puzzle2d.play.settings.force.fullIterations" label="Iterations (apply once)">
               <Slider id="puzzle-2d-play-slider-force-full-iters" max={720} min={24} step={4} value={[forceLayoutFullIterations]} onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)} />
             </Label>
-            <Label id="board.play.settings.force.idealEdge" label="Ideal edge (px)">
+            <Label id="puzzle2d.play.settings.force.idealEdge" label="Ideal edge (px)">
               <Slider id="puzzle-2d-play-slider-force-ideal" max={160} min={20} step={2} value={[forceLayoutIdealEdgeLength]} onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)} />
             </Label>
-            <Label id="board.play.settings.force.repulsion" label="Repulsion (medium 80, ±40)">
+            <Label id="puzzle2d.play.settings.force.repulsion" label="Repulsion (medium 80, ±40)">
               <Slider id="puzzle-2d-play-slider-force-repulsion" max={120} min={40} step={2} value={[forceLayoutRepulsionStrength]} onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 80)} />
             </Label>
-            <Label id="board.play.settings.force.gravity" label="Gravity">
+            <Label id="puzzle2d.play.settings.force.gravity" label="Gravity">
               <Slider id="puzzle-2d-play-slider-force-gravity" max={0.05} min={0} step={0.002} value={[forceLayoutGravity]} onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)} />
             </Label>
           </>
         ) : (
           <>
             <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Tree</div>
-            <Label id="board.play.settings.tree.layerSpacing" label="Layer spacing (px)">
+            <Label id="puzzle2d.play.settings.tree.layerSpacing" label="Layer spacing (px)">
               <Slider id="puzzle-2d-play-slider-tree-layer" max={280} min={40} step={4} value={[treeLayoutLayerSpacing]} onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)} />
             </Label>
-            <Label id="board.play.settings.tree.siblingGap" label="Sibling gap (px)">
+            <Label id="puzzle2d.play.settings.tree.siblingGap" label="Sibling gap (px)">
               <Slider id="puzzle-2d-play-slider-tree-sibling" max={120} min={0} step={2} value={[treeLayoutSiblingGap]} onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)} />
             </Label>
-            <Label id="board.play.settings.tree.direction" label="Direction">
+            <Label id="puzzle2d.play.settings.tree.direction" label="Direction">
               <Select onValueChange={(v) => setTreeLayoutDirection(v as Puzzle2dHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
                 <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-tree-direction" size="sm">
                   <SelectValue />
@@ -1962,7 +1962,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
 
 function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_SURFACE_ID) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid board surface binding</div>;
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 2d surface binding</div>;
   }
   const paneId = node.paneId as Puzzle2dPlayPaneId;
   return <Puzzle2dPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "2d-overview"} />;
@@ -1997,7 +1997,7 @@ const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
     schema: "puzzle.2d.fixture/v1",
   }) ??
   (() => {
-    throw new Error("Board play: palette circle drag fixture failed validation.");
+    throw new Error("Puzzle 2d play: palette circle drag fixture failed validation.");
   })();
 
 const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
@@ -2019,7 +2019,7 @@ const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
     schema: "puzzle.2d.fixture/v1",
   }) ??
   (() => {
-    throw new Error("Board play: palette rectangle drag fixture failed validation.");
+    throw new Error("Puzzle 2d play: palette rectangle drag fixture failed validation.");
   })();
 
 /** @emoji 🧩 When {@link PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE} is on meta, returns one node placed at the drop world point; else null so the scene should be replaced. */
@@ -2065,7 +2065,7 @@ function Puzzle2dFixturePaletteDraggable(props: { fixture: Puzzle2dFixtureV1; la
 }
 // #endregion 🔖PaletteFixtureShelf
 
-/** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
+/** @emoji 📥 Left rail: drag the active graph onto a puzzle 2d pane (in-app MIME payload, not filesystem JSON files). */
 function Puzzle2dFixtureLibraryPanel(): ReactElement {
   const { fixture } = usePuzzle2dPlayShell();
 
@@ -2095,7 +2095,7 @@ function Puzzle2dFixtureLibraryPanel(): ReactElement {
       </div>
       <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
         <p className="font-medium">Active graph</p>
-        <p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
+        <p className="text-muted-foreground text-xs">Drag onto any puzzle 2d tab to load this graph (same payload for all panes).</p>
       </div>
       <div className="border-element space-y-1 rounded border p-2 text-xs">
         <div className="text-muted-foreground">Loaded</div>
@@ -2179,7 +2179,7 @@ function normalizeAngleRad(t: number): number {
   return x;
 }
 
-/** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in board space). */
+/** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in puzzle 2d space). */
 function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
   const ref = reactHostPort.useRef<HTMLDivElement | null>(null);
 
@@ -2914,7 +2914,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
   const suppressCameraBasisSyncRef = reactHostPort.useRef(false);
   const cameraPlayEndAnimRafRef = reactHostPort.useRef<number | null>(null);
-  const boardPlayNodesRedrawCameraAnimRafRef = reactHostPort.useRef<number | null>(null);
+  const puzzle2dPlayNodesRedrawCameraAnimRafRef = reactHostPort.useRef<number | null>(null);
   const puzzle2dPlayRedrawCameraChaseRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   const lastPlayingForCameraEaseRef = reactHostPort.useRef(false);
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
@@ -2970,9 +2970,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
         cameraPlayEndAnimRafRef.current = null;
       }
-      if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-        cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-        boardPlayNodesRedrawCameraAnimRafRef.current = null;
+      if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+        cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+        puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
       }
       setCameraDisplayOverrideByPane(null);
       suppressCameraBasisSyncRef.current = false;
@@ -3024,9 +3024,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
           cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
           cameraPlayEndAnimRafRef.current = null;
         }
-        if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-          cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-          boardPlayNodesRedrawCameraAnimRafRef.current = null;
+        if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+          cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+          puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
         }
       };
     }
@@ -3045,9 +3045,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     const to = triptychCamerasFromFixture(snapshotFixture);
     const postPlayEasePaneId = activePaneIdRef.current;
     suppressCameraBasisSyncRef.current = true;
-    if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-      cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-      boardPlayNodesRedrawCameraAnimRafRef.current = null;
+    if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+      cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+      puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
     }
     nodesRedrawEaseGenerationRef.current += 1;
     setCameraDisplayOverrideByPane(from);
@@ -3109,9 +3109,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       return;
     }
     const generationAtStart = nodesRedrawEaseGenerationRef.current;
-    if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-      cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-      boardPlayNodesRedrawCameraAnimRafRef.current = null;
+    if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+      cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+      puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
     }
     const snapshotFixture = fixtureRef.current;
     const from: Record<Puzzle2dPlayPaneId, CameraState> = {
@@ -3134,7 +3134,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       if (elapsed >= total) {
         const endCameras = blendTriptychCamerasActivePaneOnly(from, to, 1, nodesRedrawEasePaneId);
         setPuzzle2dPlayPaneCamerasBaseline(endCameras);
-        boardPlayNodesRedrawCameraAnimRafRef.current = null;
+        puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
         nodesRedrawEaseFromRef.current = null;
         return;
       }
@@ -3142,13 +3142,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
         setPuzzle2dPlayPaneCamerasBaseline(blendTriptychCamerasActivePaneOnly(from, to, u, nodesRedrawEasePaneId));
       }
-      boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
+      puzzle2dPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
     };
-    boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
+    puzzle2dPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
     return () => {
-      if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-        cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-        boardPlayNodesRedrawCameraAnimRafRef.current = null;
+      if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+        cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+        puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
       }
     };
   }, [nodesRedrawCameraEaseTick]);
@@ -3158,9 +3158,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       return;
     }
     nodesRedrawEaseGenerationRef.current += 1;
-    if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-      cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-      boardPlayNodesRedrawCameraAnimRafRef.current = null;
+    if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+      cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+      puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
     }
   }, [cameraDisplayOverrideByPane]);
 
@@ -3207,9 +3207,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   }, [patchFixture]);
 
   const applyPuzzle2dRedrawOnce = reactHostPort.useCallback(() => {
-    if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-      cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-      boardPlayNodesRedrawCameraAnimRafRef.current = null;
+    if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
+      cancelAnimationFrame(puzzle2dPlayNodesRedrawCameraAnimRafRef.current);
+      puzzle2dPlayNodesRedrawCameraAnimRafRef.current = null;
     }
     nodesRedrawEaseGenerationRef.current += 1;
     nodesRedrawEaseFromRef.current = {
@@ -3736,7 +3736,7 @@ if (import.meta.vitest) {
   });
 
   describe("puzzle 2d play cameras", () => {
-    it("imports board camera zoom limits used by host clamping", async () => {
+    it("imports puzzle 2d camera zoom limits used by host clamping", async () => {
       const { PUZZLE_2D_CAMERA_ZOOM_MIN, PUZZLE_2D_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
       expect(PUZZLE_2D_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
       expect(PUZZLE_2D_CAMERA_ZOOM_MAX).toBeGreaterThan(PUZZLE_2D_CAMERA_ZOOM_MIN);
@@ -3788,7 +3788,7 @@ if (import.meta.vitest) {
       const { buildPuzzle2dWindowBody } = await import("@framework/playground/core");
       const surfaceId = "playground.test/puzzle2d";
       function TestBoardHost(): React.ReactElement {
-        return <div data-host="puzzle2d">board canvas</div>;
+        return <div data-host="puzzle2d">puzzle 2d canvas</div>;
       }
       registerSurfaceBinding(surfaceId, TestBoardHost);
       try {

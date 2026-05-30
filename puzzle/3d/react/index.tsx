@@ -145,10 +145,10 @@ export const PUZZLE_3D_LOD_EPSILON = 0.01;
 /** @emoji 📐 Attraction snap is disabled at or above this coarse scene LOD (≈ 1:1000). */
 export const PUZZLE_3D_ATTRACTION_SNAP_MAX_LOD = 1000;
 
-/** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
+/** @emoji 📐 Large LOD grid quantum in world units (puzzle 2d `PUZZLE_2D_LOD_GRID_MAJOR_QUANTUM`). */
 export const LOD_GRID_MAJOR_QUANTUM = 10;
 
-/** @emoji 📐 Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
+/** @emoji 📐 Default grid factor (puzzle 2d `DEFAULT_PUZZLE_2D_GRID_FACTOR`). */
 export const DEFAULT_LOD_GRID_FACTOR = 10;
 
 export interface VortexProps {
@@ -470,11 +470,11 @@ export interface CanvasProps {
   lodDistanceReference?: number;
   /** @emoji 📐 Clamp range for manual LOD slider UI. */
   availableLodRange?: { readonly min: number; readonly max: number };
-  /** @emoji ­ƒôÉ Multiplier for LOD grid steps (board `grid_factor`). */
+  /** @emoji ­ƒôÉ Multiplier for LOD grid steps (puzzle 2d `grid_factor`). */
   gridFactor?: number;
   /** @emoji ­ƒôÉ When true, draw a world `GridHelper` stepped by the current LOD band grid. */
   showLodGrid?: boolean;
-  /** @emoji ­ƒº▓ When true, translate relocate snaps to the finest visible LOD grid step (board `grid_snap_enabled`). */
+  /** @emoji ­ƒº▓ When true, translate relocate snaps to the finest visible LOD grid step (puzzle 2d `grid_snap_enabled`). */
   gridSnapEnabled?: boolean;
   onCamera?: (s: CameraState) => void;
   /** @emoji 📶 Emits whenever the resolved scene-level LOD changes. */

@@ -22,7 +22,6 @@ import {
 	platformTopologyStoreId,
 	PLATFORM_TOPOLOGY_STORE_PREFIX,
 	Table,
-	buildCadWindowBody,
 	buildPanelWindowBody,
 	buildPuzzle2dWindowBody,
 	buildPuzzle5dWindowBody,
@@ -261,26 +260,87 @@ export function sketchpadConfigureBrowserKitFactories(): void {
 }
 
 let sketchpadHomeDropzoneInstalled = false;
+let sketchpadHomeDropzoneDragDepth = 0;
 
-/** @emoji 📥 Installs a document-level drop handler on `/` that imports kit archives. */
+const SKETCHPAD_HOME_DROPZONE_OVERLAY_ID = "semio-sketchpad-home-dropzone-overlay";
+
+/** @emoji 🏠 Home table surface id (dropzone host binds in {@link boot.ts}). */
+export const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
+
+function sketchpadHomeRouteActive(): boolean {
+	return (getSketchpadPlatform()?.uri.split("?")[0] ?? "/") === "/";
+}
+
+function sketchpadTransferHasKitArchive(transfer: DataTransfer | null): boolean {
+	if (!transfer) return false;
+	if (transfer.types.includes("Files")) return true;
+	const file = transfer.files?.[0];
+	if (!file) return false;
+	return /\.(semio\.)?zip$/i.test(file.name) || file.type.includes("zip");
+}
+
+/** @emoji 🖼️ Toggles the full-screen home kit import drop overlay. */
+export function sketchpadSetHomeDropzoneOverlayVisible(visible: boolean): void {
+	if (typeof document === "undefined") return;
+	let overlay = document.getElementById(SKETCHPAD_HOME_DROPZONE_OVERLAY_ID);
+	if (!overlay && visible) {
+		overlay = document.createElement("div");
+		overlay.id = SKETCHPAD_HOME_DROPZONE_OVERLAY_ID;
+		overlay.setAttribute("data-testid", "sketchpad-home-dropzone-overlay");
+		overlay.className =
+			"pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm";
+		const inner = document.createElement("div");
+		inner.className = "flex flex-col items-center gap-2 px-6 text-center";
+		const title = document.createElement("p");
+		title.className = "text-lg font-medium";
+		title.textContent = "Drop kit archive";
+		const hint = document.createElement("p");
+		hint.className = "text-sm text-muted-foreground";
+		hint.textContent = "Release a .zip or .semio.zip file to import";
+		inner.append(title, hint);
+		overlay.append(inner);
+		document.body.appendChild(overlay);
+	}
+	if (overlay) overlay.classList.toggle("hidden", !visible);
+}
+
+/** @emoji 📥 Installs document-level home drag/drop (overlay + kit import on `/`). */
 export function sketchpadInstallHomeDropzone(): void {
 	if (typeof window === "undefined" || sketchpadHomeDropzoneInstalled) return;
 	sketchpadHomeDropzoneInstalled = true;
-	window.addEventListener("dragover", (event) => {
-		const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
-		if (path !== "/") return;
+	const onDragEnter = (event: DragEvent) => {
+		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadTransferHasKitArchive(event.dataTransfer)) return;
 		event.preventDefault();
-	});
-	window.addEventListener("drop", (event) => {
-		const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
-		if (path !== "/") return;
+		sketchpadHomeDropzoneDragDepth += 1;
+		sketchpadSetHomeDropzoneOverlayVisible(true);
+	};
+	const onDragOver = (event: DragEvent) => {
+		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadTransferHasKitArchive(event.dataTransfer)) return;
 		event.preventDefault();
+	};
+	const onDragLeave = (event: DragEvent) => {
+		if (!sketchpadHomeRouteActive()) return;
+		if (sketchpadHomeDropzoneDragDepth <= 0) return;
+		sketchpadHomeDropzoneDragDepth -= 1;
+		if (sketchpadHomeDropzoneDragDepth === 0) sketchpadSetHomeDropzoneOverlayVisible(false);
+	};
+	const onDrop = (event: DragEvent) => {
+		if (!sketchpadHomeRouteActive()) return;
+		event.preventDefault();
+		sketchpadHomeDropzoneDragDepth = 0;
+		sketchpadSetHomeDropzoneOverlayVisible(false);
 		const file = event.dataTransfer?.files?.[0];
 		if (!file) return;
 		const ctrl = getSketchpadShellController();
 		if (!ctrl) return;
 		ctrl.run("importKitFromDrop", { file });
-	});
+	};
+	window.addEventListener("dragenter", onDragEnter);
+	window.addEventListener("dragover", onDragOver);
+	window.addEventListener("dragleave", onDragLeave);
+	window.addEventListener("drop", onDrop);
 }
 
 /** @emoji 📎 Registers a {@link SemioKitStore} on the shell controller. */
@@ -993,6 +1053,25 @@ export function sketchpadResolvePieceMeshUrl(
 	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
 }
 
+/** @emoji 🧊 Picks the primary representation mesh URL for a kit kind. */
+export function sketchpadResolveTypeMeshUrl(
+	type: Type,
+	kit: Kit,
+	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
+): string {
+	const reps = (type.representations ?? []) as readonly { readonly file?: unknown; readonly tags?: unknown }[];
+	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
+	const untagged =
+		reps.find((rep) => {
+			const tags = rep.tags as { items?: readonly unknown[] } | readonly unknown[] | undefined;
+			if (Array.isArray(tags)) return tags.length === 0;
+			return !tags?.items?.length;
+		}) ?? reps[0];
+	const fileId = sketchpadReadEntityId(untagged?.file);
+	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
+	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
+}
+
 function sketchpadNewKitId(): string {
 	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
 		return crypto.randomUUID();
@@ -1074,23 +1153,32 @@ export function sketchpadDesignDiagramInstanceId(kitId: string, designId: string
 	return `${kitId}:${designId}:diagram`;
 }
 
+/** @emoji 🧩 Stable FiveD instance id for a type CAD scene (volume). */
+export function sketchpadTypeSceneInstanceId(kitId: string, typeId: string): string {
+	return `${kitId}:type:${typeId}:scene`;
+}
+
 /** @emoji 🔍 Parses sketchpad FiveD {@link Puzzle5dModel.instanceId} segments. */
 export function parseSketchpadPuzzleInstanceId(instanceId: string): {
 	readonly kitId: string | null;
 	readonly designId: string | null;
-	readonly pane: "kit-diagram" | "scene" | "diagram" | null;
+	readonly typeId: string | null;
+	readonly pane: "kit-diagram" | "scene" | "diagram" | "type-scene" | null;
 } {
 	const parts = instanceId.split(":");
 	if (parts.length === 3 && parts[1] === "kit" && parts[2] === "diagram") {
-		return { kitId: parts[0] ?? null, designId: null, pane: "kit-diagram" };
+		return { kitId: parts[0] ?? null, designId: null, typeId: null, pane: "kit-diagram" };
+	}
+	if (parts.length === 4 && parts[1] === "type" && parts[3] === "scene") {
+		return { kitId: parts[0] ?? null, designId: null, typeId: parts[2] ?? null, pane: "type-scene" };
 	}
 	if (parts.length === 3 && parts[2] === "scene") {
-		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, pane: "scene" };
+		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, typeId: null, pane: "scene" };
 	}
 	if (parts.length === 3 && parts[2] === "diagram") {
-		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, pane: "diagram" };
+		return { kitId: parts[0] ?? null, designId: parts[1] ?? null, typeId: null, pane: "diagram" };
 	}
-	return { kitId: null, designId: null, pane: null };
+	return { kitId: null, designId: null, typeId: null, pane: null };
 }
 
 /** @emoji 🔑 Delegates to {@link platformTopologyStoreId}. */
@@ -1538,11 +1626,11 @@ function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number
 }
 
 /** @emoji 🧭 Maps kit diagram node ids to sketchpad routes. */
-export function sketchpadPathFromDiagramNodeId(kitId: string, boardNodeId: string): string | null {
-	const sep = boardNodeId.indexOf(":");
+export function sketchpadPathFromDiagramNodeId(kitId: string, diagramNodeId: string): string | null {
+	const sep = diagramNodeId.indexOf(":");
 	if (sep <= 0) return null;
-	const kind = boardNodeId.slice(0, sep);
-	const id = boardNodeId.slice(sep + 1);
+	const kind = diagramNodeId.slice(0, sep);
+	const id = diagramNodeId.slice(sep + 1);
 	if (kind === "type") return `/kits/${kitId}/types/${id}`;
 	if (kind === "design") return `/kits/${kitId}/designs/${id}`;
 	if (kind === "quality" || kind === "port" || kind === "file" || kind === "folder" || kind === "author") {
@@ -1552,13 +1640,13 @@ export function sketchpadPathFromDiagramNodeId(kitId: string, boardNodeId: strin
 }
 
 /** @emoji 🧭 Navigates from the first recognized kit diagram selection entry. */
-export function sketchpadNavigateFromDiagramSelection(instanceId: string, boardIds: readonly string[]): void {
+export function sketchpadNavigateFromDiagramSelection(instanceId: string, puzzle2dIds: readonly string[]): void {
 	const { kitId, pane } = parseSketchpadPuzzleInstanceId(instanceId);
 	if (!kitId || pane !== "kit-diagram") return;
 	const ctrl = getSketchpadShellController();
 	if (!ctrl) return;
-	for (const boardId of boardIds) {
-		const path = sketchpadPathFromDiagramNodeId(kitId, boardId);
+	for (const diagramId of puzzle2dIds) {
+		const path = sketchpadPathFromDiagramNodeId(kitId, diagramId);
 		if (path) {
 			ctrl.navigateTo(path);
 			return;
@@ -1569,26 +1657,26 @@ export function sketchpadNavigateFromDiagramSelection(instanceId: string, boardI
 /** @emoji 🎯 Applies FiveD puzzle2d/volume selection (kit navigation or design piece/connection selection). */
 export function sketchpadApplyPuzzle2dSelection(
 	instanceId: string,
-	boardIds: readonly string[],
+	puzzle2dIds: readonly string[],
 	controller?: SketchpadShellController,
 ): void {
 	const scope = parseSketchpadPuzzleInstanceId(instanceId);
 	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
 	if (scope.pane === "kit-diagram") {
-		if (boardIds.length === 1) {
-			const path = sketchpadPathFromDiagramNodeId(scope.kitId, boardIds[0]!);
+		if (puzzle2dIds.length === 1) {
+			const path = sketchpadPathFromDiagramNodeId(scope.kitId, puzzle2dIds[0]!);
 			if (path) {
 				ctrl.navigateTo(path);
 				return;
 			}
 		}
-		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitDiagramNodeIds: [...boardIds] });
+		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitDiagramNodeIds: [...puzzle2dIds] });
 		return;
 	}
 	if (scope.pane === "diagram" || scope.pane === "scene") {
-		const pieceIds = boardIds.filter((id) => id.length > 0 && !id.includes(":"));
-		const connectionIds = boardIds.filter((id) => id.includes("semio.connection") || id.startsWith("connection:"));
+		const pieceIds = puzzle2dIds.filter((id) => id.length > 0 && !id.includes(":"));
+		const connectionIds = puzzle2dIds.filter((id) => id.includes("semio.connection") || id.startsWith("connection:"));
 		ctrl.setRouteSelection({ pieceIds, connectionIds });
 	}
 }
@@ -1713,6 +1801,37 @@ function sketchpadTopologyPayloadForDesignScene(design: Design, kit?: Kit): Plat
 function sketchpadTopologyPayloadForDesignDiagram(design: Design, kit?: Kit): PlatformTopologyPayload {
 	return sketchpadTopologyPayload(sketchpadDesignPuzzle2dFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
 }
+
+/** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (type CAD scene). */
+export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixtureV1 {
+	const fileUrls = sketchpadKitFileUrlById(kit);
+	return {
+		schema: "puzzle.3d.fixture/v1",
+		domain: "architecture",
+		camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
+		objects: [
+			{
+				id: type.id,
+				objectKind: "semio.type",
+				meshUrl: sketchpadResolveTypeMeshUrl(type, kit, fileUrls),
+				origin: [0, 0, 0] as [number, number, number],
+				orientation: [0, 0, 0, 1] as [number, number, number, number],
+				scale: [1, 1, 1] as [number, number, number, number],
+				label: type.name ?? type.id,
+				vortices: [],
+			},
+		],
+		attractions: [],
+	};
+}
+
+function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureFromType(type, kit));
+}
+
+function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
+	return { schema: "puzzle.2d.fixture/v1", camera: { x: 0, y: 0, zoom: 1 }, nodes: [], edges: [] };
+}
 //#endregion 🔖Topology
 
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "semio.sketchpad.shell";
@@ -1737,7 +1856,6 @@ const SKETCHPAD_SURFACE_DESIGN_SCENE = "semio.sketchpad.surface.design.scene/v1"
 const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "semio.sketchpad.surface.design.diagram/v1";
 const SKETCHPAD_SURFACE_WORKBENCH = "semio.sketchpad.surface.workbench/v1";
 const SKETCHPAD_SURFACE_DETAILS = "semio.sketchpad.surface.details/v1";
-const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "semio.sketchpad.surface.type.scene/v1";
 export const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
 const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v1";
@@ -2021,24 +2139,29 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
 	}
 }
 
-/** @emoji 📐 Type CAD surface. */
-export class SketchpadTypeCad extends SketchpadRoutedComponent<CadModel> {
+/** @emoji 📐 Type CAD scene (5D volume with representation mesh). */
+export class SketchpadTypeScene extends SketchpadRoutedComponent<Puzzle5dModel> {
 	constructor(platform: Platform) {
-		super("cad", SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, {}, platform);
+		super(
+			"puzzle5d",
+			SKETCHPAD_SURFACE_TYPE_SCENE,
+			SKETCHPAD_SHELL_CONTROLLER_ID,
+			{ presentation: "volume", instanceId: SKETCHPAD_SURFACE_TYPE_SCENE },
+			platform,
+		);
 	}
 
-	override buildSnapshot(): CadModel {
+	override buildSnapshot(): Puzzle5dModel {
 		const { kitId, typeId } = this.route;
 		if (!kitId || !typeId) {
-			return { emptyMessage: "Open a type to view the CAD scene" };
+			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_TYPE_SCENE, emptyMessage: "Open a type to view the CAD scene" };
 		}
 		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
 		const type = kit ? findTypeInKit(kit, typeId) : undefined;
 		return {
-			instanceId: `${kitId}:${typeId}`,
-			emptyMessage: type
-				? `${type.name ?? typeId} · ${type.representations?.length ?? 0} representation(s)`
-				: `Type ${typeId}`,
+			presentation: "volume",
+			instanceId: sketchpadTypeSceneInstanceId(kitId, typeId),
+			emptyMessage: type ? undefined : `Type ${typeId} not found`,
 		};
 	}
 }
@@ -2177,8 +2300,8 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				{ text: "Kit diagram", emphasize: true },
 				{ text: `${diagramSelected.length} node(s) selected` },
 			];
-			for (const boardId of diagramSelected.slice(0, 6)) {
-				lines.push({ text: boardId });
+			for (const diagramId of diagramSelected.slice(0, 6)) {
+				lines.push({ text: diagramId });
 			}
 			if (diagramSelected.length > 6) lines.push({ text: "…" });
 			return sketchpadPanelTextStack(lines);
@@ -2275,7 +2398,7 @@ class SketchpadPlatformComponents {
 			new SketchpadKitDiagram(platform),
 			new SketchpadDesignScene(platform),
 			new SketchpadDesignDiagram(platform),
-			new SketchpadTypeCad(platform),
+			new SketchpadTypeScene(platform),
 			new SketchpadDocsPanel(platform),
 			new SketchpadFeedbackPanel(platform),
 			new SketchpadWorkbenchPanel(platform),
@@ -2355,17 +2478,24 @@ export class SketchpadShellController extends Controller {
 		return this.kitKinds.get(kitId);
 	}
 
-	/** @emoji 🗺️ Refreshes topology stores for routed FiveD surfaces (kit diagram, design scene/diagram). */
+	/** @emoji 🗺️ Refreshes topology stores for routed FiveD surfaces (kit diagram, design/type scene/diagram). */
 	syncTopologyForSurface(
 		surfaceId: string,
 		route: { readonly kitId: string | null; readonly designId: string | null; readonly typeId: string | null },
 	): void {
-		const { kitId, designId } = route;
+		const { kitId, designId, typeId } = route;
 		if (!kitId) return;
 		const kit = this.getKitStore(kitId)?.getSnapshot().kit;
 		if (!kit) return;
 		if (surfaceId === SKETCHPAD_SURFACE_KIT_DIAGRAM) {
 			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyPayloadForKitDiagram(kit));
+			return;
+		}
+		if (surfaceId === SKETCHPAD_SURFACE_TYPE_SCENE && typeId) {
+			const type = findTypeInKit(kit, typeId);
+			if (type) {
+				this.upsertTopologyStore(sketchpadTypeSceneInstanceId(kitId, typeId), sketchpadTopologyPayloadForTypeScene(type, kit));
+			}
 			return;
 		}
 		if (!designId) return;
@@ -2621,9 +2751,9 @@ export class SketchpadShellController extends Controller {
 				this.setRouteSelection(args as SketchpadRouteSelection);
 				break;
 			}
-			case "applyBoardSelection": {
-				const payload = args as { instanceId: string; boardIds: readonly string[] };
-				sketchpadApplyPuzzle2dSelection(payload.instanceId, payload.boardIds);
+			case "applyPuzzle2dSelection": {
+				const payload = args as { instanceId: string; puzzle2dIds: readonly string[] };
+				sketchpadApplyPuzzle2dSelection(payload.instanceId, payload.puzzle2dIds);
 				break;
 			}
 			case "createTemporaryKit": {
@@ -2819,7 +2949,9 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () =>
 		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
 	);
-	registerWindowBody(SKETCHPAD_BODY_TYPE, () => buildCadWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID));
+	registerWindowBody(SKETCHPAD_BODY_TYPE, () =>
+		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
+	);
 	registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerSidePanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {

@@ -49,7 +49,7 @@ export { BoardSession };
 // #endregion 🔖GpuWasmBridge
 
 //#region 🔖Kinds
-export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
+export type Puzzle2dSceneObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type Puzzle2dSelectionMethod = "lasso" | "rectangle";
 export type Puzzle2dSelectionMode = "additive" | "default" | "invertive" | "subtractive";
@@ -117,7 +117,7 @@ export interface EdgeKind {
   stroke?: string;
 }
 
-/** @emoji 📚 Central WASM+host registries for semantic board kinds (omit slices to leave prior catalog entries untouched when pushing partial updates is not supported — always send full merged bundle from callers). */
+/** @emoji 📚 Central WASM+host registries for semantic puzzle 2d kinds (omit slices to leave prior catalog entries untouched when pushing partial updates is not supported — always send full merged bundle from callers). */
 export interface KindCatalogBundle {
   edges?: readonly EdgeKind[];
   handles?: readonly HandleKind[];
@@ -348,7 +348,7 @@ export function puzzle2dElementInteractionChrome(selectionIds: Iterable<string>,
 }
 
 /** @emoji 🎨 Resolves headless / fallback style key from interaction chrome flags (selected beats highlighted). */
-export function puzzle2dObjectChromeStyleKey(base: "edge" | "handle" | "node", object: BoardObject): string {
+export function puzzle2dObjectChromeStyleKey(base: "edge" | "handle" | "node", object: Puzzle2dSceneObject): string {
   if (object.selected) {
     return `${base}.selected`;
   }
@@ -359,7 +359,7 @@ export function puzzle2dObjectChromeStyleKey(base: "edge" | "handle" | "node", o
 }
 
 /** @emoji 🎨 Style key from committed selection / preselect only (not scene object flags). */
-export function boardInteractionChromeStyleKey(base: "edge" | "handle" | "node", id: string, chrome: { highlightedIds: Set<string>; selectedIds: Set<string> }): string {
+export function puzzle2dInteractionChromeStyleKey(base: "edge" | "handle" | "node", id: string, chrome: { highlightedIds: Set<string>; selectedIds: Set<string> }): string {
   if (chrome.selectedIds.has(id)) {
     return `${base}.selected`;
   }
@@ -479,7 +479,7 @@ export interface Puzzle2dFixtureEdgeV1 {
   target: string;
 }
 
-/** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative board scenes. */
+/** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative puzzle 2d scenes. */
 export interface Puzzle2dFixtureV1 {
   camera: CameraState;
   edges: Puzzle2dFixtureEdgeV1[];
@@ -490,7 +490,7 @@ export interface Puzzle2dFixtureV1 {
 
 // #region 🏷️IconSelectorMode
 
-/** @emoji 🎛️ Board `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
+/** @emoji 🎛️ Puzzle 2d `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
 export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
 
 function stripLegacyImageDataPrefixForBoardIcon(raw: string): string {
@@ -514,7 +514,7 @@ function looksLikeAsciiCatalogishVectorStemForBoardIcon(s: string): boolean {
   return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored board icon string (align with `board_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
+/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored puzzle 2d icon string (align with `puzzle2d_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
 export function classifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
   const t = raw.trim();
   if (t === "") {
@@ -717,7 +717,7 @@ export interface Puzzle2dEventMap {
   wireDestroy: Puzzle2dGraphWireIdPayload;
 }
 
-export interface BoardObjectOptions {
+export interface Puzzle2dSceneObjectOptions {
   draggable?: boolean;
   highlighted?: boolean;
   id: string;
@@ -728,7 +728,7 @@ export interface BoardObjectOptions {
 }
 
 /** @emoji 🔵 World-space circle node (center + radius). */
-export type CircleNodeOptions = BoardObjectOptions & {
+export type CircleNodeOptions = Puzzle2dSceneObjectOptions & {
   handles?: Puzzle2dSceneHandle[];
   /** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
   iconKind?: string;
@@ -752,7 +752,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 };
 
 /** @emoji 🟩 World-space axis-aligned rectangle node (center + full width and height). */
-export type RectangleNodeOptions = BoardObjectOptions & {
+export type RectangleNodeOptions = Puzzle2dSceneObjectOptions & {
   handles?: Puzzle2dSceneHandle[];
   height: number;
   /** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
@@ -779,13 +779,13 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 /** @emoji 🧩 Constructor payload for {@link Node} (circle or rectangle). */
 export type NodeOptions = CircleNodeOptions | RectangleNodeOptions;
 
-export interface HandleOptions extends BoardObjectOptions {
+export interface HandleOptions extends Puzzle2dSceneObjectOptions {
   angle: number;
   /** @emoji 🎨 Optional CSS hex fill overriding the handle-kind catalog color on the WASM host. */
   color?: string | null;
   /** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
   iconKind?: string;
-  /** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
+  /** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link Puzzle2dSceneObject.kind}). */
   handleKind: string;
   node: Puzzle2dSceneNode;
   radius?: number;
@@ -841,13 +841,13 @@ export interface Puzzle2dWireProps {
   visible?: boolean;
 }
 
-export interface EdgeOptions extends BoardObjectOptions {
+export interface EdgeOptions extends Puzzle2dSceneObjectOptions {
   edgeKind?: string;
   source: Puzzle2dSceneHandle;
   target: Puzzle2dSceneHandle;
 }
 
-export interface WireOptions extends BoardObjectOptions {
+export interface WireOptions extends Puzzle2dSceneObjectOptions {
   endX?: number | null;
   endY?: number | null;
   source: Puzzle2dSceneHandle;
@@ -883,7 +883,7 @@ export const PUZZLE_2D_CAMERA_ZOOM_MAX = 32;
 const MIN_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MAX;
 
-/** @emoji ⌨️ True when Delete/Backspace should reach the board instead of staying in a focused text control. */
+/** @emoji ⌨️ True when Delete/Backspace should reach the puzzle 2d canvas instead of staying in a focused text control. */
 function shouldBoardHandleDeleteShortcut(): boolean {
   const el = document.activeElement;
   if (!el || !(el instanceof HTMLElement)) {
@@ -962,14 +962,14 @@ export type Puzzle2dDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "
 /** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
 export const PUZZLE_2D_LOD_MODE_AUTOMATIC = "automatic" as const;
 
-/** @emoji 📶 Board play / window LOD select value (`automatic` or a pinned {@link Puzzle2dDrawLodKind}). */
+/** @emoji 📶 Puzzle 2d play / window LOD select value (`automatic` or a pinned {@link Puzzle2dDrawLodKind}). */
 export type Puzzle2dLodModeKind = typeof PUZZLE_2D_LOD_MODE_AUTOMATIC | Puzzle2dDrawLodKind;
 
-const BOARD_DRAW_LOD_KINDS: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const PUZZLE_2D_DRAW_LOD_KINDS: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 /** @emoji ✅ True when `label` is a pinned WASM draw LOD tier. */
 export function isPuzzle2dDrawLodKind(label: string): label is Puzzle2dDrawLodKind {
-  return (BOARD_DRAW_LOD_KINDS as readonly string[]).includes(label);
+  return (PUZZLE_2D_DRAW_LOD_KINDS as readonly string[]).includes(label);
 }
 
 /** @emoji 📶 Maps a window LOD select value to {@link Puzzle2dCanvasProps} LOD fields. */
@@ -986,7 +986,7 @@ export function puzzle2dLodAutomaticSelectLabel(effectiveTier: Puzzle2dDrawLodKi
 }
 
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
-const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
+const PUZZLE_2D_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
   edge: { stroke: "#7b827d", strokeWidth: 2 },
   "edge.highlighted": { stroke: "#34d1bf", strokeWidth: 2 },
   "edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
@@ -998,17 +998,17 @@ const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
   "node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
 };
 
-const DEFAULT_STYLES: Record<string, Puzzle2dStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
+const DEFAULT_STYLES: Record<string, Puzzle2dStyle> = PUZZLE_2D_STYLES_HEADLESS_FALLBACK;
 
-//#region 🎨ElementsUiBoardPaint
+//#region 🎨ElementsUiPuzzle2dPaint
 /** @emoji 🎨 Elements semantic tokens for committed selection chrome (primary, not secondary). */
-const BOARD_CSS_COLOR_PRIMARY = "var(--color-primary)";
-const BOARD_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
+const PUZZLE_2D_CSS_COLOR_PRIMARY = "var(--color-primary)";
+const PUZZLE_2D_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
 /** @emoji 🎨 Secondary-tinted fill for preselect exit / highlight chrome only. */
-const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+const PUZZLE_2D_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
 
 /** @emoji 🎨 Resolves UI semantic CSS (`@ui/styling/ui.css` / `@theme`) for 2d canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
-const BOARD_VELLO_THEME_FALLBACK_RGBA = {
+const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
   rasterClear: [247, 243, 227, 255] as [number, number, number, number],
   gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
   edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
@@ -1047,7 +1047,7 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
   selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
 };
 
-function boardParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
+function puzzle2dParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
   const m = css.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+%?)\s*)?\)/u);
   if (!m) {
     return fallback;
@@ -1068,7 +1068,7 @@ function boardParseCssColorToRgba8888(css: string, fallback: [number, number, nu
   return [r, g, b, a];
 }
 
-function boardProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
+function puzzle2dProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
   if (typeof document === "undefined") {
     return "";
   }
@@ -1081,10 +1081,10 @@ function boardProbeCssComputed(property: "color" | "backgroundColor", value: str
   return out;
 }
 
-function boardDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle> {
-  const f = BOARD_STYLES_HEADLESS_FALLBACK;
+function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle> {
+  const f = PUZZLE_2D_STYLES_HEADLESS_FALLBACK;
   const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
-    const raw = boardProbeCssComputed(prop, expr);
+    const raw = puzzle2dProbeCssComputed(prop, expr);
     if (!raw || raw === "rgba(0, 0, 0, 0)") {
       return fb;
     }
@@ -1096,20 +1096,20 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle>
       stroke: c("color", "var(--color-secondary)", f["edge.highlighted"]?.stroke ?? "#34d1bf"),
       strokeWidth: 2,
     },
-    "edge.selected": { stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
+    "edge.selected": { stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
     handle: {
       fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
       stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
       strokeWidth: 2,
     },
     "handle.highlighted": {
-      fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#c4e4d5"),
+      fill: c("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#c4e4d5"),
       stroke: c("color", "var(--color-secondary)", f["handle.highlighted"]?.stroke ?? "#34d1bf"),
       strokeWidth: 1.5,
     },
     "handle.selected": {
-      fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#ff344f"),
-      stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["handle.selected"].stroke ?? "#ff344f"),
+      fill: c("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#ff344f"),
+      stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["handle.selected"].stroke ?? "#ff344f"),
       strokeWidth: 2,
     },
     node: {
@@ -1118,60 +1118,60 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle>
       strokeWidth: 2,
     },
     "node.highlighted": {
-      fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#c4e4d5"),
+      fill: c("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#c4e4d5"),
       stroke: c("color", "var(--color-secondary)", f["node.highlighted"]?.stroke ?? "#34d1bf"),
       strokeWidth: 2,
     },
     "node.selected": {
-      fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
-      stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["node.selected"].stroke ?? "#ff344f"),
+      fill: c("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
+      stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["node.selected"].stroke ?? "#ff344f"),
       strokeWidth: 3,
     },
   };
 }
 
-function serializeElementsBoardVelloThemeJson(): string {
-  const fb = BOARD_VELLO_THEME_FALLBACK_RGBA;
+function serializePuzzle2dVelloThemeJson(): string {
+  const fb = PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA;
   const pc = (prop: "color" | "backgroundColor", expr: string, fall: [number, number, number, number]): number[] => {
-    const raw = boardProbeCssComputed(prop, expr);
-    return [...boardParseCssColorToRgba8888(raw, fall)];
+    const raw = puzzle2dProbeCssComputed(prop, expr);
+    return [...puzzle2dParseCssColorToRgba8888(raw, fall)];
   };
   const payload = {
     rasterClear: pc("backgroundColor", "var(--base)", fb.rasterClear),
     gridMinorStroke: (() => {
-      const border = boardParseCssColorToRgba8888(boardProbeCssComputed("color", "var(--color-border)"), [fb.gridMinorStroke[0], fb.gridMinorStroke[1], fb.gridMinorStroke[2], 255]);
+      const border = puzzle2dParseCssColorToRgba8888(puzzle2dProbeCssComputed("color", "var(--color-border)"), [fb.gridMinorStroke[0], fb.gridMinorStroke[1], fb.gridMinorStroke[2], 255]);
       return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
     })(),
     edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
     edgeStrokeHovered: pc("color", "var(--color-hover-base)", fb.edgeStrokeHovered),
-    edgeStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.edgeStrokeSelected),
+    edgeStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.edgeStrokeSelected),
     edgeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.edgeStrokeSelectionExit),
     edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
     nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
     nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
     nodeFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.nodeFillHovered),
     nodeStrokeHovered: pc("color", "var(--color-hover-base)", fb.nodeStrokeHovered),
-    nodeFillSelected: pc("backgroundColor", BOARD_CSS_SELECTED_FILL, fb.nodeFillSelected),
-    nodeStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.nodeStrokeSelected),
-    nodeFillSelectionExit: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit),
+    nodeFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, fb.nodeFillSelected),
+    nodeStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.nodeStrokeSelected),
+    nodeFillSelectionExit: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit),
     nodeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.nodeStrokeSelectionExit),
     nodeFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.nodeFillDisabled),
     nodeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.nodeStrokeDisabled),
-    indirectHandleFill: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.indirectHandleFill),
+    indirectHandleFill: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.indirectHandleFill),
     indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
     handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
     handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
     handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
     handleStrokeHovered: pc("color", "var(--color-hover-base)", fb.handleStrokeHovered),
-    handleFillSelected: pc("backgroundColor", BOARD_CSS_COLOR_PRIMARY, fb.handleFillSelected),
-    handleStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.handleStrokeSelected),
-    handleFillSelectionExit: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.handleFillSelectionExit),
+    handleFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.handleFillSelected),
+    handleStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.handleStrokeSelected),
+    handleFillSelectionExit: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.handleFillSelectionExit),
     handleStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.handleStrokeSelectionExit),
     handleFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.handleFillDisabled),
     handleStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.handleStrokeDisabled),
     wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
     wireStrokeHovered: pc("color", "var(--color-hover-base)", fb.wireStrokeHovered),
-    wireStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.wireStrokeSelected),
+    wireStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.wireStrokeSelected),
     wireStrokeHighlighted: pc("color", "var(--color-secondary)", fb.wireStrokeHighlighted),
     wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
     selectionPreviewFill: pc("backgroundColor", "color-mix(in oklab, var(--color-accent) 14%, transparent)", fb.selectionPreviewFill),
@@ -1179,7 +1179,7 @@ function serializeElementsBoardVelloThemeJson(): string {
   };
   return JSON.stringify(payload);
 }
-//#endregion 🎨ElementsUiBoardPaint
+//#endregion 🎨ElementsUiPuzzle2dPaint
 
 /** @emoji 🧭 Caption anchor inside the node box (compass, origin at node center). */
 export const PUZZLE_2D_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
@@ -1189,10 +1189,10 @@ export type Puzzle2dNodeTextAlignment = (typeof PUZZLE_2D_NODE_TEXT_ALIGNMENTS)[
 export const PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT: Puzzle2dNodeTextAlignment = "w";
 
 /** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
-export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
+export const PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT = 14;
 
 /** @emoji 🔤 Default sans stack for overlay captions. */
-export const BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT = "system-ui,Segoe UI,sans-serif";
+export const PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT = "system-ui,Segoe UI,sans-serif";
 
 /** @emoji ✅ True when `value` is a known {@link Puzzle2dNodeTextAlignment} token. */
 export function isPuzzle2dNodeTextAlignment(value: string): value is Puzzle2dNodeTextAlignment {
@@ -1200,7 +1200,7 @@ export function isPuzzle2dNodeTextAlignment(value: string): value is Puzzle2dNod
 }
 
 /** @emoji 🖋️ Builds a `CanvasRenderingContext2D.font` string from size and family. */
-export function boardBuildCanvasFontSpec(px: number, fontFamily: string): string {
+export function puzzle2dBuildCanvasFontSpec(px: number, fontFamily: string): string {
   return `${px}px ${fontFamily}`;
 }
 
@@ -1542,7 +1542,7 @@ export const PUZZLE_2D_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v
 /** @emoji 🧩 `Puzzle2dFixtureV1.meta.puzzle2dFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
 export const PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
 
-/** @emoji 📍 Payload for board canvas fixture drops: scene plus pointer in canvas CSS space and mapped world coordinates. */
+/** @emoji 📍 Payload for puzzle 2d canvas fixture drops: scene plus pointer in canvas CSS space and mapped world coordinates. */
 export interface Puzzle2dFixtureDropDetail {
   fixture: Puzzle2dFixtureV1;
   screen: { x: number; y: number };
@@ -1583,7 +1583,7 @@ export function computeHandleTangent(angle: number): Point {
 }
 
 /** @emoji 📏 Largest font size (px) so a single-line string fits `maxW`×`maxH` in layout pixels (binary search). */
-export function boardFitTextFontPx(ctx: CanvasTextMeasuring, text: string, maxW: number, maxH: number, minPx: number, maxPx: number, fontFamily: string = BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT): number {
+export function puzzle2dFitTextFontPx(ctx: CanvasTextMeasuring, text: string, maxW: number, maxH: number, minPx: number, maxPx: number, fontFamily: string = PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT): number {
   const lo = Math.max(4, minPx);
   const hi = Math.max(lo, maxPx);
   let best = lo;
@@ -1591,7 +1591,7 @@ export function boardFitTextFontPx(ctx: CanvasTextMeasuring, text: string, maxW:
   let high = hi;
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
-    ctx.font = boardBuildCanvasFontSpec(mid, fontFamily);
+    ctx.font = puzzle2dBuildCanvasFontSpec(mid, fontFamily);
     const w = ctx.measureText(text).width;
     const h = mid * 1.2;
     if (w <= maxW && h <= maxH) {
@@ -1605,7 +1605,7 @@ export function boardFitTextFontPx(ctx: CanvasTextMeasuring, text: string, maxW:
 }
 
 /** @emoji ✂️ Single-line tail truncation with `…` so measured width ≤ `maxWidth` (`ctx.font` must be set). */
-export function boardEllipsisTextToWidth(ctx: CanvasTextMeasuring, text: string, maxWidth: number): string {
+export function puzzle2dEllipsisTextToWidth(ctx: CanvasTextMeasuring, text: string, maxWidth: number): string {
   if (text === "") {
     return text;
   }
@@ -1667,7 +1667,7 @@ export function puzzle2dNodeTextPlacementAnchor(centerX: number, centerY: number
   }
 }
 
-/** @emoji 🧾 Minimal 2D canvas text metrics surface for {@link boardFitTextFontPx}. */
+/** @emoji 🧾 Minimal 2D canvas text metrics surface for {@link puzzle2dFitTextFontPx}. */
 export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
@@ -1753,8 +1753,8 @@ class TypedEmitter<TEvents extends object> {
 //#endregion 🔖Stores
 
 //#region 🔖Objects
-/** 🧱 Base retained board object with scene identity and shared flags. */
-export class BoardObject {
+/** 🧱 Base retained scene object with scene identity and shared flags. */
+export class Puzzle2dSceneObject {
   draggable: boolean;
   highlighted: boolean;
   parent: Puzzle2dScene | null = null;
@@ -1767,7 +1767,7 @@ export class BoardObject {
 
   constructor(
     public readonly id: string,
-    options: BoardObjectOptions,
+    options: Puzzle2dSceneObjectOptions,
   ) {
     this.draggable = options.draggable ?? false;
     this.highlighted = options.highlighted ?? false;
@@ -1777,8 +1777,8 @@ export class BoardObject {
     this.visible = options.visible ?? true;
   }
 
-  get kind(): BoardObjectKind {
-    throw new Error("BoardObject.kind must be implemented by subclasses.");
+  get kind(): Puzzle2dSceneObjectKind {
+    throw new Error("Puzzle2dSceneObject.kind must be implemented by subclasses.");
   }
 
   attachRenderer(renderer: Puzzle2dRenderer | null): void {
@@ -1790,8 +1790,8 @@ export class BoardObject {
   }
 }
 
-/** 🟠 Board node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
-export class Puzzle2dSceneNode extends BoardObject {
+/** 🟠 Puzzle 2d node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
+export class Puzzle2dSceneNode extends Puzzle2dSceneObject {
   handles: Puzzle2dSceneHandle[] = [];
   height: number;
   radius: number;
@@ -1832,9 +1832,9 @@ export class Puzzle2dSceneNode extends BoardObject {
     this.iconKind = typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
     this.textAutofit = options.textAutofit ?? false;
     this.textAlignment = options.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT;
-    this.textFontFamily = typeof options.textFontFamily === "string" && options.textFontFamily.trim() !== "" ? options.textFontFamily.trim() : BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+    this.textFontFamily = typeof options.textFontFamily === "string" && options.textFontFamily.trim() !== "" ? options.textFontFamily.trim() : PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT;
     const rawSize = options.textFontSize;
-    this.textFontSize = typeof rawSize === "number" && Number.isFinite(rawSize) && rawSize > 0 ? rawSize : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
+    this.textFontSize = typeof rawSize === "number" && Number.isFinite(rawSize) && rawSize > 0 ? rawSize : PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT;
     if (options.shape === "rectangle") {
       this.shape = "rectangle";
       this.width = options.width;
@@ -1851,7 +1851,7 @@ export class Puzzle2dSceneNode extends BoardObject {
     }
   }
 
-  get kind(): BoardObjectKind {
+  get kind(): Puzzle2dSceneObjectKind {
     return "node";
   }
 
@@ -1907,7 +1907,7 @@ export class Puzzle2dSceneNode extends BoardObject {
 }
 
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
-export class Puzzle2dSceneHandle extends BoardObject {
+export class Puzzle2dSceneHandle extends Puzzle2dSceneObject {
   angle: number;
   /** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
   color: string | null;
@@ -1929,7 +1929,7 @@ export class Puzzle2dSceneHandle extends BoardObject {
     this.node.attachHandle(this);
   }
 
-  get kind(): BoardObjectKind {
+  get kind(): Puzzle2dSceneObjectKind {
     return "handle";
   }
 
@@ -1948,7 +1948,7 @@ export class Puzzle2dSceneHandle extends BoardObject {
 }
 
 /** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
-export class Puzzle2dSceneEdge extends BoardObject {
+export class Puzzle2dSceneEdge extends Puzzle2dSceneObject {
   /** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
   edgeKind: string;
   source: Puzzle2dSceneHandle;
@@ -1962,7 +1962,7 @@ export class Puzzle2dSceneEdge extends BoardObject {
     this.edgeKind = ek;
   }
 
-  get kind(): BoardObjectKind {
+  get kind(): Puzzle2dSceneObjectKind {
     return "edge";
   }
 
@@ -1978,7 +1978,7 @@ export class Puzzle2dSceneEdge extends BoardObject {
 }
 
 /** 🧵 Transient cubic from one {@link Handle} to another handle or a free world point (in‑progress link drag). */
-export class Puzzle2dSceneWire extends BoardObject {
+export class Puzzle2dSceneWire extends Puzzle2dSceneObject {
   endX: number | null;
   endY: number | null;
   source: Puzzle2dSceneHandle;
@@ -1998,7 +1998,7 @@ export class Puzzle2dSceneWire extends BoardObject {
     this.endY = typeof ey === "number" && Number.isFinite(ey) ? ey : null;
   }
 
-  get kind(): BoardObjectKind {
+  get kind(): Puzzle2dSceneObjectKind {
     return "wire";
   }
 
@@ -2029,10 +2029,10 @@ export class Puzzle2dSceneWire extends BoardObject {
 }
 //#endregion 🔖Objects
 
-type BoardNodeObject = Puzzle2dSceneNode;
-type BoardHandleObject = Puzzle2dSceneHandle;
-type BoardEdgeObject = Puzzle2dSceneEdge;
-type BoardWireObject = Puzzle2dSceneWire;
+type Puzzle2dNodeObject = Puzzle2dSceneNode;
+type Puzzle2dHandleObject = Puzzle2dSceneHandle;
+type Puzzle2dEdgeObject = Puzzle2dSceneEdge;
+type Puzzle2dWireObject = Puzzle2dSceneWire;
 
 //#region 🔖Scene
 /** 🧭 Retained scene catalog owning nodes, handles, edges, and wires by stable id. */
@@ -2051,7 +2051,7 @@ export class Puzzle2dScene {
     }
   }
 
-  add(object: BoardObject): this {
+  add(object: Puzzle2dSceneObject): this {
     if (object instanceof Puzzle2dSceneNode) {
       const prior = this.nodes.get(object.id);
       if (prior && prior !== object) {
@@ -2122,7 +2122,7 @@ export class Puzzle2dScene {
     return this;
   }
 
-  remove(object: BoardObject): this {
+  remove(object: Puzzle2dSceneObject): this {
     if (object instanceof Puzzle2dSceneNode) {
       for (const edge of Array.from(this.edges.values())) {
         if (edge.source.node === object || edge.target.node === object) {
@@ -2206,11 +2206,11 @@ export class Puzzle2dScene {
     });
   }
 
-  getObjectById(id: string): BoardObject | undefined {
+  getObjectById(id: string): Puzzle2dSceneObject | undefined {
     return this.nodes.get(id) ?? this.handles.get(id) ?? this.edges.get(id) ?? this.wires.get(id);
   }
 
-  getAllObjects(): BoardObject[] {
+  getAllObjects(): Puzzle2dSceneObject[] {
     return [...this.nodes.values(), ...this.handles.values(), ...this.edges.values(), ...this.wires.values()];
   }
 }
@@ -2244,7 +2244,7 @@ function sortedStringArraysEqual(a: string[], b: string[]): boolean {
   return true;
 }
 
-function boardGraphNodeSig(node: Puzzle2dSceneNode): string {
+function puzzle2dGraphNodeSig(node: Puzzle2dSceneNode): string {
   return JSON.stringify({
     draggable: node.draggable,
     height: node.height,
@@ -2266,7 +2266,7 @@ function boardGraphNodeSig(node: Puzzle2dSceneNode): string {
   });
 }
 
-function boardGraphEdgeSig(edge: Puzzle2dSceneEdge): string {
+function puzzle2dGraphEdgeSig(edge: Puzzle2dSceneEdge): string {
   return JSON.stringify({
     source: edge.source.id,
     id: edge.id,
@@ -2277,7 +2277,7 @@ function boardGraphEdgeSig(edge: Puzzle2dSceneEdge): string {
   });
 }
 
-function boardGraphWireSig(wire: Puzzle2dSceneWire): string {
+function puzzle2dGraphWireSig(wire: Puzzle2dSceneWire): string {
   return JSON.stringify({
     endX: wire.endX,
     endY: wire.endY,
@@ -2315,15 +2315,15 @@ export function computePuzzle2dGraphObservationSnapshot(scene: Puzzle2dScene): P
   const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(e.source.node.id)).map((e) => e.id));
   const nodeSigById = new Map<string, string>();
   for (const node of scene.nodes.values()) {
-    nodeSigById.set(node.id, boardGraphNodeSig(node));
+    nodeSigById.set(node.id, puzzle2dGraphNodeSig(node));
   }
   const edgeSigById = new Map<string, string>();
   for (const edge of scene.edges.values()) {
-    edgeSigById.set(edge.id, boardGraphEdgeSig(edge));
+    edgeSigById.set(edge.id, puzzle2dGraphEdgeSig(edge));
   }
   const wireSigById = new Map<string, string>();
   for (const wire of scene.wires.values()) {
-    wireSigById.set(wire.id, boardGraphWireSig(wire));
+    wireSigById.set(wire.id, puzzle2dGraphWireSig(wire));
   }
   return { childEdgeIds, childNodeIds, edgeSigById, nodeSigById, parentEdgeIds, rootIds, wireSigById };
 }
@@ -2344,7 +2344,7 @@ function summarizeRasterSurfaceFailure(err: unknown): string {
   }
 }
 
-function boardAbbreviateCaption(raw: string, maxChars: number): string {
+function puzzle2dAbbreviateCaption(raw: string, maxChars: number): string {
   return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
@@ -2358,13 +2358,13 @@ export function puzzle2dTextOverlayCaptionForLod(raw: string, lod: Puzzle2dDrawL
     return null;
   }
   if (lod === "compact" || lod === "normal") {
-    return boardAbbreviateCaption(t, 8);
+    return puzzle2dAbbreviateCaption(t, 8);
   }
   if (lod === "detail") {
-    return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 8 : 10);
+    return puzzle2dAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 8 : 10);
   }
   if (lod === "micro") {
-    return boardAbbreviateCaption(t, 12);
+    return puzzle2dAbbreviateCaption(t, 12);
   }
   return null;
 }
@@ -2378,11 +2378,11 @@ export function puzzle2dHandleOverlayCaptionForLod(raw: string, lod: Puzzle2dDra
   if (lod !== "detail" && lod !== "micro") {
     return null;
   }
-  return boardAbbreviateCaption(t, lod === "detail" ? 6 : 8);
+  return puzzle2dAbbreviateCaption(t, lod === "detail" ? 6 : 8);
 }
 
 /** @emoji 🧩 Resolves a handle-kind catalog label for overlay captions. */
-export function boardHandleKindOverlayLabel(handleKind: string, catalogs: KindCatalogBundle): string {
+export function puzzle2dHandleKindOverlayLabel(handleKind: string, catalogs: KindCatalogBundle): string {
   const id = handleKind.trim();
   if (id === "") {
     return "";
@@ -3267,10 +3267,10 @@ export class Puzzle2dRenderer {
       if (node.textAutofit) {
         base.textAutofit = true;
       }
-      if (node.textFontFamily !== BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) {
+      if (node.textFontFamily !== PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT) {
         base.textFontFamily = node.textFontFamily;
       }
-      if (node.textFontSize !== BOARD_NODE_TEXT_FONT_PX_DEFAULT) {
+      if (node.textFontSize !== PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT) {
         base.textFontSize = node.textFontSize;
       }
       if (node.textAlignment !== PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) {
@@ -3353,7 +3353,7 @@ export class Puzzle2dRenderer {
       return;
     }
     try {
-      const json = serializeElementsBoardVelloThemeJson();
+      const json = serializePuzzle2dVelloThemeJson();
       if (json !== this.lastVelloThemeJson) {
         this.lastVelloThemeJson = json;
         this.session.setVelloThemeJson(json);
@@ -3361,7 +3361,7 @@ export class Puzzle2dRenderer {
     } catch {
       this.lastVelloThemeJson = "";
     }
-    const styles = boardDefaultStylesFromElementsUiTokens();
+    const styles = puzzle2dDefaultStylesFromElementsUiTokens();
     for (const [key, value] of Object.entries(styles)) {
       this.styles.set(key, value);
     }
@@ -3659,15 +3659,15 @@ export class Puzzle2dRenderer {
         continue;
       }
       const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
-      const style = this.getStyle(node.style, boardInteractionChromeStyleKey("node", node.id, chrome));
+      const style = this.getStyle(node.style, puzzle2dInteractionChromeStyleKey("node", node.id, chrome));
       const family = node.textFontFamily;
-      ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
+      ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
       if (node.textAutofit) {
-        const fontPx = boardFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
-        ctx.font = boardBuildCanvasFontSpec(fontPx, family);
+        const fontPx = puzzle2dFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
+        ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
         let line = caption;
         if (ctx.measureText(line).width > maxW) {
-          line = boardEllipsisTextToWidth(ctx, caption, maxW);
+          line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
         }
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -3675,8 +3675,8 @@ export class Puzzle2dRenderer {
         continue;
       }
       const fontPx = node.textFontSize;
-      ctx.font = boardBuildCanvasFontSpec(fontPx, family);
-      const line = boardEllipsisTextToWidth(ctx, caption, maxW);
+      ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
+      const line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
       const anchor = puzzle2dNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
       ctx.textAlign = anchor.textAlign;
       ctx.textBaseline = anchor.textBaseline;
@@ -3685,7 +3685,7 @@ export class Puzzle2dRenderer {
     const drawHandleLabels = lod === "detail" || lod === "micro";
     if (drawHandleLabels) {
       const handleFontPx = lod === "detail" ? 10 : 11;
-      ctx.font = boardBuildCanvasFontSpec(handleFontPx, BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT);
+      ctx.font = puzzle2dBuildCanvasFontSpec(handleFontPx, PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       for (const handle of this.scene.handles.values()) {
@@ -3696,7 +3696,7 @@ export class Puzzle2dRenderer {
         if (!node.visible) {
           continue;
         }
-        const rawLabel = boardHandleKindOverlayLabel(handle.handleKind, this.kindCatalogsBundle);
+        const rawLabel = puzzle2dHandleKindOverlayLabel(handle.handleKind, this.kindCatalogsBundle);
         const caption = puzzle2dHandleOverlayCaptionForLod(rawLabel, lod);
         if (caption === null) {
           continue;
@@ -3710,8 +3710,8 @@ export class Puzzle2dRenderer {
         const outward = len > 1e-6 ? 10 / len : 0;
         const labelX = handleScreen.x + dx * outward;
         const labelY = handleScreen.y + dy * outward;
-        const style = this.getStyle(handle.style, boardInteractionChromeStyleKey("handle", handle.id, chrome));
-        ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
+        const style = this.getStyle(handle.style, puzzle2dInteractionChromeStyleKey("handle", handle.id, chrome));
+        ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
         ctx.fillText(caption, labelX, labelY);
       }
     }
@@ -3971,7 +3971,7 @@ export class Puzzle2dRenderer {
     this.drawLodStore.setSnapshot(lod, (left, right) => left === right);
     this.canvas.dataset.boardLod = lod;
     this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
-    this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
+    this.canvas.dataset.puzzle2dZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
     this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
     this.canvas.dataset.boardHover = this.hoveredId ?? "";
     this.canvas.setAttribute("data-puzzle2d-camera", `${this.camera.x},${this.camera.y}`);
@@ -4130,7 +4130,7 @@ if (boardVitest) {
     await ensurePuzzle2dWasmLoaded();
   });
 
-  describe("boardFitTextFontPx", () => {
+  describe("puzzle2dFitTextFontPx", () => {
     it("chooses the largest font bounded by line height and measured width", () => {
       const state = { font: "" };
       const ctx: CanvasTextMeasuring = {
@@ -4146,18 +4146,18 @@ if (boardVitest) {
           return { width: size * text.length };
         },
       };
-      const fit = boardFitTextFontPx(ctx, "aa", 100, 24, 4, 200, "monospace");
+      const fit = puzzle2dFitTextFontPx(ctx, "aa", 100, 24, 4, 200, "monospace");
       expect(fit).toBe(20);
     });
   });
 
-  describe("boardEllipsisTextToWidth", () => {
+  describe("puzzle2dEllipsisTextToWidth", () => {
     it("returns the original string when it already fits", () => {
       const ctx: CanvasTextMeasuring = {
         font: "14px monospace",
         measureText: (t: string) => ({ width: t.length * 7 }),
       };
-      expect(boardEllipsisTextToWidth(ctx, "short", 400)).toBe("short");
+      expect(puzzle2dEllipsisTextToWidth(ctx, "short", 400)).toBe("short");
     });
 
     it("truncates with an ellipsis when the string is too wide", () => {
@@ -4165,7 +4165,7 @@ if (boardVitest) {
         font: "10px monospace",
         measureText: (t: string) => ({ width: t.length * 8 }),
       };
-      const out = boardEllipsisTextToWidth(ctx, "abcdefghij", 50);
+      const out = puzzle2dEllipsisTextToWidth(ctx, "abcdefghij", 50);
       expect(out.endsWith("…")).toBe(true);
       expect(ctx.measureText(out).width).toBeLessThanOrEqual(50);
       expect(out.length).toBeLessThan("abcdefghij".length + 1);
@@ -4220,7 +4220,7 @@ if (boardVitest) {
     return { canvas, context };
   }
 
-  describe("board hover publication", () => {
+  describe("puzzle2d hover publication", () => {
     it("emits hover with hit id and pointer/world coordinates after pointermove", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -4240,7 +4240,7 @@ if (boardVitest) {
     });
   });
 
-  describe("board geometry helpers", () => {
+  describe("puzzle2d geometry helpers", () => {
     it("places cubic edge control arms along circle normals at the anchors", () => {
       const sourceNode = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
       const targetNode = new Puzzle2dSceneNode({ id: "b", radius: 40, x: 300, y: 0 });
@@ -4339,7 +4339,7 @@ if (boardVitest) {
     });
   });
 
-  describe("board scene", () => {
+  describe("puzzle2d scene", () => {
     it("stores nodes, handles, and edges with stable ids and emits edge creation", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -4474,7 +4474,7 @@ if (boardVitest) {
       renderer.dispose();
     });
 
-    it("does not delete the board selection while a text field owns focus", () => {
+    it("does not delete the puzzle 2d selection while a text field owns focus", () => {
       const { canvas } = createMockCanvas();
       document.body.appendChild(canvas);
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -4739,14 +4739,14 @@ if (boardVitest) {
       renderer.dispose();
     });
 
-    it("boardInteractionChromeStyleKey follows selection ids not stale scene flags", () => {
+    it("puzzle2dInteractionChromeStyleKey follows selection ids not stale scene flags", () => {
       const node = new Puzzle2dSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
       node.selected = true;
       node.highlighted = false;
       const chrome = puzzle2dElementInteractionChrome([], PUZZLE_2D_PRESELECT_EMPTY);
-      expect(boardInteractionChromeStyleKey("node", node.id, chrome)).toBe("node");
+      expect(puzzle2dInteractionChromeStyleKey("node", node.id, chrome)).toBe("node");
       const chromeSel = puzzle2dElementInteractionChrome(["solo"], PUZZLE_2D_PRESELECT_EMPTY);
-      expect(boardInteractionChromeStyleKey("node", node.id, chromeSel)).toBe("node.selected");
+      expect(puzzle2dInteractionChromeStyleKey("node", node.id, chromeSel)).toBe("node.selected");
     });
 
     it("stale silent selection sync undoes background deselect until controlled prop updates", () => {
@@ -4980,7 +4980,7 @@ if (boardVitest) {
       expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
     });
 
-    it("classifies board icon selector modes for UI tabs", () => {
+    it("classifies puzzle 2d icon selector modes for UI tabs", () => {
       expect(classifyPuzzle2dIconSelectorMode("")).toBe("math");
       expect(classifyPuzzle2dIconSelectorMode("typst:$x$")).toBe("math");
       expect(classifyPuzzle2dIconSelectorMode("$x$")).toBe("math");
@@ -5267,7 +5267,7 @@ if (boardVitest) {
     });
   });
 
-  describe("board directed graph observation", () => {
+  describe("puzzle2d directed graph observation", () => {
     it("computes subtree from roots along directed edges", () => {
       const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const root = new Puzzle2dSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
@@ -5357,7 +5357,7 @@ if (boardVitest) {
 
 let boardSchedulerPriority = NoEventPriority;
 
-/** @emoji 🧩 Static host surface required by the secondary renderer beyond board scene mutations. */
+/** @emoji 🧩 Static host surface required by the secondary renderer beyond puzzle 2d scene mutations. */
 export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   HostTransitionContext: reactHostPort.createContext(null) as never,
   NotPendingTransition: null,
@@ -5372,13 +5372,13 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   canHydrateTextInstance: () => false,
   clearSuspenseBoundary: () => {},
   cloneHiddenInstance: () => {
-    throw new Error("Board host: cloneHiddenInstance unsupported");
+    throw new Error("Puzzle 2d host: cloneHiddenInstance unsupported");
   },
   cloneHiddenTextInstance: () => {
-    throw new Error("Board host: cloneHiddenTextInstance unsupported");
+    throw new Error("Puzzle 2d host: cloneHiddenTextInstance unsupported");
   },
   cloneInstance: () => {
-    throw new Error("Board host: cloneInstance unsupported");
+    throw new Error("Puzzle 2d host: cloneInstance unsupported");
   },
   commitHydratedActivityInstance: () => null,
   commitHydratedContainer: () => null,
@@ -5602,9 +5602,9 @@ function applyNodeProps(renderer: Puzzle2dRenderer, instance: Puzzle2dSceneNode,
   instance.root = props.root === true;
   instance.textAutofit = props.textAutofit ?? false;
   instance.textAlignment = props.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT;
-  instance.textFontFamily = typeof props.textFontFamily === "string" && props.textFontFamily.trim() !== "" ? props.textFontFamily.trim() : BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+  instance.textFontFamily = typeof props.textFontFamily === "string" && props.textFontFamily.trim() !== "" ? props.textFontFamily.trim() : PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT;
   const psz = props.textFontSize;
-  instance.textFontSize = typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
+  instance.textFontSize = typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT;
   instance.iconKind = typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
   const nk = typeof props.nodeKind === "string" ? props.nodeKind.trim() : "";
   instance.nodeKind = nk;
@@ -5731,8 +5731,8 @@ function propsEqualNode(a: Puzzle2dSceneNodeOptions, b: Puzzle2dSceneNodeOptions
     a.text !== b.text ||
     (a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
     (a.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) ||
-    (a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
-    (a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
+    (a.textFontFamily ?? PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? PUZZLE_2D_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
+    (a.textFontSize ?? PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT) ||
     (a.root === true) !== (b.root === true) ||
     (a.iconKind ?? "") !== (b.iconKind ?? "") ||
     (a.nodeKind ?? "").trim() !== (b.nodeKind ?? "").trim()
@@ -6739,7 +6739,7 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
 //#endregion 🔖HostMountBridge
 
 //#region 🔖Canvas
-/** 🖼️ React board root that keeps the hot path inside the imperative renderer. */
+/** 🖼️ React puzzle 2d root that keeps the hot path inside the imperative renderer. */
 export function Puzzle2dCanvas({
   camera,
   children,
@@ -7464,7 +7464,7 @@ export function usePreselection(): Puzzle2dPreselectSnapshot {
   return reactHostPort.useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
-/** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
+/** 📡 Bind a puzzle 2d event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
 export function usePuzzle2dEvent<TKey extends keyof Puzzle2dEventMap>(name: TKey, handler: (payload: Puzzle2dEventMap[TKey]) => void): void {
   const renderer = useBoard();
   reactHostPort.useEffect(() => renderer.on(name, handler), [handler, name, renderer]);
@@ -7549,7 +7549,7 @@ if (boardReactVitest) {
     return null;
   }
 
-  describe("board react helpers", () => {
+  describe("puzzle2d react helpers", () => {
     it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);

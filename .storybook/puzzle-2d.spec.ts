@@ -7,7 +7,7 @@
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-type BoardCanvasDebugElement = HTMLCanvasElement & {
+type Puzzle2dCanvasDebugElement = HTMLCanvasElement & {
 	__boardRenderer?: {
 		resolveHit?: (point: { x: number; y: number }) => { id: string } | null;
 		scene: {
@@ -39,14 +39,14 @@ async function clickCanvasNormalized(page: Page, canvas: Locator, nx: number, ny
 	});
 }
 
-async function boardObjectClientPoint(page: Page, objectId: string): Promise<{ clientX: number; clientY: number }> {
+async function puzzle2dObjectClientPoint(page: Page, objectId: string): Promise<{ clientX: number; clientY: number }> {
 	const point = await page.evaluate((nextObjectId) => {
 		const element = document.querySelector('[data-testid="board-canvas"]');
 		if (!(element instanceof HTMLCanvasElement)) {
 			return null;
 		}
-		const boardElement = element as BoardCanvasDebugElement;
-		const renderer = boardElement.__boardRenderer;
+		const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
+		const renderer = puzzle2dElement.__boardRenderer;
 		const object = renderer?.scene.getObjectById(nextObjectId);
 		if (!renderer || !object) {
 			return null;
@@ -56,7 +56,7 @@ async function boardObjectClientPoint(page: Page, objectId: string): Promise<{ c
 			return null;
 		}
 		const screenPoint = renderer.worldToScreen(worldPoint);
-		const rect = boardElement.getBoundingClientRect();
+		const rect = puzzle2dElement.getBoundingClientRect();
 		return {
 			clientX: rect.left + screenPoint.x,
 			clientY: rect.top + screenPoint.y,
@@ -66,7 +66,7 @@ async function boardObjectClientPoint(page: Page, objectId: string): Promise<{ c
 	return point!;
 }
 
-async function expectBoardObjectHit(page: Page, objectId: string): Promise<void> {
+async function expectPuzzle2dSceneObjectHit(page: Page, objectId: string): Promise<void> {
 	await expect
 		.poll(async () =>
 			page.evaluate((nextObjectId) => {
@@ -74,8 +74,8 @@ async function expectBoardObjectHit(page: Page, objectId: string): Promise<void>
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
-				const boardElement = element as BoardCanvasDebugElement;
-				const renderer = boardElement.__boardRenderer;
+				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
+				const renderer = puzzle2dElement.__boardRenderer;
 				const object = renderer?.scene.getObjectById(nextObjectId);
 				if (!renderer || !object || !renderer.resolveHit) {
 					return null;
@@ -90,9 +90,9 @@ async function expectBoardObjectHit(page: Page, objectId: string): Promise<void>
 		.toBe(objectId);
 }
 
-async function clickBoardObject(page: Page, objectId: string): Promise<void> {
-	await expectBoardObjectHit(page, objectId);
-	const point = await boardObjectClientPoint(page, objectId);
+async function clickPuzzle2dSceneObject(page: Page, objectId: string): Promise<void> {
+	await expectPuzzle2dSceneObjectHit(page, objectId);
+	const point = await puzzle2dObjectClientPoint(page, objectId);
 	await page.mouse.click(point.clientX, point.clientY);
 }
 
@@ -116,21 +116,21 @@ function cubicBezierPoint(curve: { p0: Point; p1: Point; p2: Point; p3: Point },
 	};
 }
 
-async function boardEdgeMidClientPoint(page: Page, edgeId: string): Promise<{ clientX: number; clientY: number }> {
+async function puzzle2dEdgeMidClientPoint(page: Page, edgeId: string): Promise<{ clientX: number; clientY: number }> {
 	const point = await page.evaluate((nextEdgeId) => {
 		const element = document.querySelector('[data-testid="board-canvas"]');
 		if (!(element instanceof HTMLCanvasElement)) {
 			return null;
 		}
-		const boardElement = element as BoardCanvasDebugElement;
-		const renderer = boardElement.__boardRenderer;
+		const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
+		const renderer = puzzle2dElement.__boardRenderer;
 		const edge = renderer?.scene.edges.get(nextEdgeId);
 		if (!renderer || !edge) {
 			return null;
 		}
 		const mid = cubicBezierPoint(edge.curve, 0.5);
 		const screenPoint = renderer.worldToScreen(mid);
-		const rect = boardElement.getBoundingClientRect();
+		const rect = puzzle2dElement.getBoundingClientRect();
 		return {
 			clientX: rect.left + screenPoint.x,
 			clientY: rect.top + screenPoint.y,
@@ -189,7 +189,7 @@ test("board default: selection, zoom in stays on detail LOD while raising zoom",
 	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(initialZoom).toBeCloseTo(1, 1);
 
-	await clickBoardObject(page, "alpha");
+	await clickPuzzle2dSceneObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha");
 
 	for (let index = 0; index < 18; index += 1) {
@@ -205,7 +205,7 @@ test("board default: selection, zoom in stays on detail LOD while raising zoom",
 
 test("board default: deletes selected node after Delete and keeps scene in sync", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
-	await clickBoardObject(page, "beta");
+	await clickPuzzle2dSceneObject(page, "beta");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "beta");
 	await page.keyboard.press("Delete");
 	await expect
@@ -215,8 +215,8 @@ test("board default: deletes selected node after Delete and keeps scene in sync"
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
-				const boardElement = element as BoardCanvasDebugElement;
-				return boardElement.__boardRenderer?.scene.getObjectById("beta") ? "present" : "absent";
+				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
+				return puzzle2dElement.__boardRenderer?.scene.getObjectById("beta") ? "present" : "absent";
 			}),
 		)
 		.toBe("absent");
@@ -225,7 +225,7 @@ test("board default: deletes selected node after Delete and keeps scene in sync"
 
 test("board default: deletes selected edge after Delete", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
-	const mid = await boardEdgeMidClientPoint(page, "link-1");
+	const mid = await puzzle2dEdgeMidClientPoint(page, "link-1");
 	await page.mouse.click(mid.clientX, mid.clientY);
 	await expect(canvas).toHaveAttribute("data-2d-selection", "link-1");
 	await page.keyboard.press("Delete");
@@ -236,8 +236,8 @@ test("board default: deletes selected edge after Delete", async ({ page }) => {
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
-				const boardElement = element as BoardCanvasDebugElement;
-				return boardElement.__boardRenderer?.scene.edges.has("link-1") ? "present" : "absent";
+				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
+				return puzzle2dElement.__boardRenderer?.scene.edges.has("link-1") ? "present" : "absent";
 			}),
 		)
 		.toBe("absent");
@@ -260,7 +260,7 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 		const screenY = py - rect.top;
 		const width = el.clientWidth;
 		const height = el.clientHeight;
-		const zoom = Number(el.dataset.boardZoom ?? "1");
+		const zoom = Number(el.dataset.puzzle2dZoom ?? "1");
 		const [camXRaw, camYRaw] = (el.getAttribute("data-board-camera") ?? "0,0").split(",");
 		const camX = Number(camXRaw);
 		const camY = Number(camYRaw);
@@ -287,7 +287,7 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 		const screenY = py - rect.top;
 		const width = el.clientWidth;
 		const height = el.clientHeight;
-		const zoom = Number(el.dataset.boardZoom ?? "1");
+		const zoom = Number(el.dataset.puzzle2dZoom ?? "1");
 		const [camXRaw, camYRaw] = (el.getAttribute("data-board-camera") ?? "0,0").split(",");
 		const camX = Number(camXRaw);
 		const camY = Number(camYRaw);
@@ -307,7 +307,7 @@ test("board nakagin fixture: json scene hub piece selects", async ({ page }) => 
 	const canvas = await expectBoardStory(page, "puzzle-2d--nakagin-capsule-tower-flat-selection");
 	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
-	await clickBoardObject(page, nakaginCapsuleTowerHubPieceId);
+	await clickPuzzle2dSceneObject(page, nakaginCapsuleTowerHubPieceId);
 	await expect(canvas).toHaveAttribute("data-2d-selection", nakaginCapsuleTowerHubPieceId);
 });
 
@@ -316,9 +316,9 @@ test("board world-clip: raster mode, node selection, handle hit", async ({ page 
 	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "world-clip");
 
-	await clickBoardObject(page, "alpha");
+	await clickPuzzle2dSceneObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha");
 
-	await clickBoardObject(page, "alpha.out");
+	await clickPuzzle2dSceneObject(page, "alpha.out");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha.out");
 });

@@ -1577,7 +1577,7 @@ const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node })
 	if (model.nodes.length === 0 && model.edges.length === 0) {
 		return (
 			<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
-				{model.emptyMessage ?? "Empty board"}
+				{model.emptyMessage ?? "Empty puzzle 2d"}
 			</div>
 		);
 	}
@@ -1630,9 +1630,9 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "flat"
 				? {
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "applyBoardSelection", {
+							commandBus.dispatch(component.controllerId, "applyPuzzle2dSelection", {
 								instanceId,
-								boardIds: snapshot.ids,
+								puzzle2dIds: snapshot.ids,
 							});
 						},
 					}
@@ -1644,9 +1644,9 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "volume"
 				? {
 						onSelect: (snapshot: Puzzle3dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "applyBoardSelection", {
+							commandBus.dispatch(component.controllerId, "applyPuzzle2dSelection", {
 								instanceId,
-								boardIds: [...snapshot.objectIds, ...snapshot.vortexIds, ...snapshot.attractionIds],
+								puzzle2dIds: [...snapshot.objectIds, ...snapshot.vortexIds, ...snapshot.attractionIds],
 							});
 						},
 					}
