@@ -443,12 +443,13 @@ import {
 	buildPuzzle5dWindowBody,
 	buildCadWindowBody,
 	buildPanelWindowBody,
+	Component,
 	Table,
 	Puzzle2d,
-	Puzzle3d,
 	Puzzle5d,
 	Cad,
 	Panel,
+	type ComponentKind,
 	buildTableWindowBody,
 	createDefaultLayout,
 	createTabStackLayout,
@@ -22095,6 +22096,30 @@ const AppRouter: FC = () => {
 // #endregion ðŸ•°ï¸App Router
 
 //#region ðŸ”–SketchpadDeclarativeShell
+//#region 🔖SketchpadRouteScope
+/** @emoji 🧭 Kit/design/type ids parsed from a sketchpad URL path (render-agnostic). */
+function parseSketchpadRouteScopeFromPath(path: string): {
+	readonly kitId: string | null;
+	readonly designId: string | null;
+	readonly typeId: string | null;
+	readonly docsPath: string;
+} {
+	const pathParts = path.split("/").filter((part) => part.length > 0);
+	const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+	if (pathParts[0] === "docs") {
+		const docsPath = pathParts.slice(1).join("/") || "index";
+		return { kitId: null, designId: null, typeId: null, docsPath };
+	}
+	if (pathParts[0] !== "kits") {
+		return { kitId: null, designId: null, typeId: null, docsPath: "index" };
+	}
+	const kitId = pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
+	const designId = pathParts[2] === "designs" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
+	const typeId = pathParts[2] === "types" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
+	return { kitId, designId, typeId, docsPath: "index" };
+}
+//#endregion 🔖SketchpadRouteScope
+
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "semio.sketchpad.shell";
 const SKETCHPAD_EXTENSION_ID = "semio.sketchpad.builtin";
 export const SKETCHPAD_HOME_APP_ID = "home";
@@ -22123,6 +22148,271 @@ const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v
 const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
 const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
 
+//#region 🔖SketchpadPlatformComponents
+abstract class SketchpadRoutedComponent<TModel> extends Component<TModel> {
+	protected route = parseSketchpadRouteScopeFromPath("/");
+	private readonly detachRoute: () => void;
+	private readonly detachKitRegistry?: () => void;
+
+	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialModel: TModel, platform: Platform) {
+		super(componentKind, surfaceId, controllerId, initialModel);
+		this.route = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
+		this.detachRoute = platform.subscribe(() => {
+			const nextRoute = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
+			if (
+				nextRoute.kitId !== this.route.kitId ||
+				nextRoute.designId !== this.route.designId ||
+				nextRoute.typeId !== this.route.typeId ||
+				nextRoute.docsPath !== this.route.docsPath
+			) {
+				this.route = nextRoute;
+				this.refresh();
+			}
+		});
+		const registry = getKitRegistryBridge() as { subscribe?: (listener: () => void) => () => void } | null;
+		if (registry?.subscribe) {
+			this.detachKitRegistry = registry.subscribe(() => this.refresh());
+		}
+	}
+
+	dispose(): void {
+		this.detachRoute();
+		this.detachKitRegistry?.();
+	}
+}
+
+/** @emoji 🏠 Home kits table backed by the kit registry bridge. */
+export class SketchpadHomeTable extends Table {
+	constructor(platform: Platform) {
+		super(SKETCHPAD_SURFACE_HOME_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID);
+		platform.subscribe(() => this.refresh());
+		const registry = getKitRegistryBridge() as { subscribe?: (listener: () => void) => () => void } | null;
+		if (registry?.subscribe) {
+			registry.subscribe(() => this.refresh());
+		}
+	}
+
+	override buildModel(): TableModel {
+		const registry = getKitRegistryBridge();
+		const ids = registry?.list() ?? [];
+		return {
+			columns: [
+				{ id: "name", label: "Name" },
+				{ id: "kind", label: "Kind" },
+			],
+			rows: ids.map((id) => {
+				let name = id;
+				let kind = "";
+				try {
+					const snapshot = registry?.get(id)?.store?.getSnapshot?.();
+					const kit = snapshot?.kit as Kit | undefined;
+					if (kit?.name) name = kit.name;
+					kind = (registry?.get(id) as { kind?: string } | undefined)?.kind ?? "";
+				} catch {
+					/* registry row may still be opening */
+				}
+				return { id, cells: { name, kind } };
+			}),
+			emptyMessage: "No kits open — use Open to add kits",
+		};
+	}
+}
+
+/** @emoji 📊 Active kit table surface. */
+export class SketchpadKitTable extends SketchpadRoutedComponent<TableModel> {
+	constructor(platform: Platform) {
+		super("table", SKETCHPAD_SURFACE_KIT_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID, { columns: [], rows: [] }, platform);
+	}
+
+	override buildModel(): TableModel {
+		const { kitId } = this.route;
+		if (!kitId) {
+			return { columns: [], rows: [], emptyMessage: "Open a kit to view the table" };
+		}
+		const registry = getKitRegistryBridge();
+		const store = registry?.get(kitId)?.store;
+		if (!store) {
+			return { columns: [], rows: [], emptyMessage: "Kit loading…" };
+		}
+		const kit = store.getSnapshot().kit as Kit;
+		const types = kit.types ?? [];
+		const designs = kit.designs ?? [];
+		return {
+			columns: [
+				{ id: "name", label: "Name" },
+				{ id: "kind", label: "Kind" },
+			],
+			rows: [
+				...types.map((t) => ({ id: `type:${t.name}`, cells: { name: t.name, kind: "type" } })),
+				...designs.map((d) => ({ id: `design:${d.name}`, cells: { name: d.name, kind: "design" } })),
+			],
+			emptyMessage: "No types or designs in this kit",
+		};
+	}
+}
+
+/** @emoji 📋 Kit diagram surface (topology summary as nodes). */
+export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle2dModel> {
+	constructor(platform: Platform) {
+		super("puzzle2d", SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, { nodes: [], edges: [] }, platform);
+	}
+
+	override buildModel(): Puzzle2dModel {
+		const { kitId } = this.route;
+		if (!kitId) {
+			return { nodes: [], edges: [], emptyMessage: "Open a kit to view the diagram" };
+		}
+		const registry = getKitRegistryBridge();
+		const store = registry?.get(kitId)?.store;
+		if (!store) {
+			return { nodes: [], edges: [], emptyMessage: "Kit loading…" };
+		}
+		const kit = store.getSnapshot().kit as Kit;
+		const nodes = (kit.types ?? []).map((t, index) => ({
+			id: `type:${t.name}`,
+			label: t.name,
+			x: (index % 6) * 120,
+			y: Math.floor(index / 6) * 80,
+		}));
+		return { nodes, edges: [], emptyMessage: nodes.length ? undefined : "No types to diagram" };
+	}
+}
+
+/** @emoji 🎬 Design scene (5D volume). */
+export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel> {
+	constructor(platform: Platform) {
+		super(
+			"puzzle5d",
+			SKETCHPAD_SURFACE_DESIGN_SCENE,
+			SKETCHPAD_SHELL_CONTROLLER_ID,
+			{ presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE },
+			platform,
+		);
+	}
+
+	override buildModel(): Puzzle5dModel {
+		const { kitId, designId } = this.route;
+		if (!kitId || !designId) {
+			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE, emptyMessage: "Open a design to view the scene" };
+		}
+		return { presentation: "volume", instanceId: `${kitId}:${designId}:scene` };
+	}
+}
+
+/** @emoji 📐 Design diagram (5D flat). */
+export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dModel> {
+	constructor(platform: Platform) {
+		super(
+			"puzzle5d",
+			SKETCHPAD_SURFACE_DESIGN_DIAGRAM,
+			SKETCHPAD_SHELL_CONTROLLER_ID,
+			{ presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM },
+			platform,
+		);
+	}
+
+	override buildModel(): Puzzle5dModel {
+		const { kitId, designId } = this.route;
+		if (!kitId || !designId) {
+			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM, emptyMessage: "Open a design to view the diagram" };
+		}
+		return { presentation: "flat", instanceId: `${kitId}:${designId}:diagram` };
+	}
+}
+
+/** @emoji 📐 Type CAD surface. */
+export class SketchpadTypeCad extends SketchpadRoutedComponent<CadModel> {
+	constructor(platform: Platform) {
+		super("cad", SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, {}, platform);
+	}
+
+	override buildModel(): CadModel {
+		const { kitId, typeId } = this.route;
+		if (!kitId || !typeId) {
+			return { emptyMessage: "Open a type to view the CAD scene" };
+		}
+		return { instanceId: `${kitId}:${typeId}` };
+	}
+}
+
+/** @emoji 📄 Docs panel surface. */
+export class SketchpadDocsPanel extends SketchpadRoutedComponent<PanelModel> {
+	constructor(platform: Platform) {
+		super("panel", SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "Docs" } }, platform);
+	}
+
+	override buildModel(): PanelModel {
+		return {
+			body: {
+				type: "stack",
+				direction: "vertical",
+				padding: "standard",
+				children: [
+					{ type: "text", value: `Docs · ${this.route.docsPath}`, emphasize: true },
+					{ type: "text", value: "Navigate to /docs/… to browse documentation." },
+				],
+			},
+		};
+	}
+}
+
+/** @emoji 💬 Feedback panel surface. */
+export class SketchpadFeedbackPanel extends Panel {
+	constructor(_platform: Platform) {
+		super(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID, {
+			body: {
+				type: "stack",
+				direction: "vertical",
+				padding: "standard",
+				children: [
+					{ type: "text", value: "Feedback", emphasize: true },
+					{ type: "text", value: "Send feedback from the footer or command palette." },
+				],
+			},
+		});
+	}
+}
+
+/** @emoji 🧩 Workbench side panel placeholder. */
+class SketchpadWorkbenchPanel extends Panel {
+	constructor() {
+		super(SKETCHPAD_SURFACE_PANEL_MAIN, SKETCHPAD_SHELL_CONTROLLER_ID, {
+			body: { type: "text", value: "Workbench panel" },
+		});
+	}
+}
+
+/** @emoji 🧱 Registers all sketchpad {@link Component} instances on a {@link Platform}. */
+class SketchpadPlatformComponents {
+	readonly components: readonly Component<unknown>[];
+
+	constructor(platform: Platform) {
+		this.components = [
+			new SketchpadHomeTable(platform),
+			new SketchpadKitTable(platform),
+			new SketchpadKitDiagram(platform),
+			new SketchpadDesignScene(platform),
+			new SketchpadDesignDiagram(platform),
+			new SketchpadTypeCad(platform),
+			new SketchpadDocsPanel(platform),
+			new SketchpadFeedbackPanel(platform),
+			new SketchpadWorkbenchPanel(),
+		];
+		for (const component of this.components) {
+			registerPlatformComponent(platform, component);
+			component.refresh();
+		}
+		platform.subscribe(() => {
+			for (const component of this.components) {
+				component.refresh();
+			}
+		});
+	}
+}
+
+let sketchpadPlatformComponents: SketchpadPlatformComponents | null = null;
+//#endregion 🔖SketchpadPlatformComponents
+
 /** @emoji 🧭 Kit/design/type ids parsed from the current sketchpad URL. */
 function useSketchpadRouteScope(): {
 	readonly kitId: string | null;
@@ -22131,21 +22421,7 @@ function useSketchpadRouteScope(): {
 	readonly docsPath: string;
 } {
 	const navigation = useNavigation();
-	return useMemo(() => {
-		const pathParts = navigation.split("/").filter((part) => part.length > 0);
-		const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-		if (pathParts[0] === "docs") {
-			const docsPath = pathParts.slice(1).join("/") || "index";
-			return { kitId: null, designId: null, typeId: null, docsPath };
-		}
-		if (pathParts[0] !== "kits") {
-			return { kitId: null, designId: null, typeId: null, docsPath: "index" };
-		}
-		const kitId = pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
-		const designId = pathParts[2] === "designs" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
-		const typeId = pathParts[2] === "types" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
-		return { kitId, designId, typeId, docsPath: "index" };
-	}, [navigation]);
+	return useMemo(() => parseSketchpadRouteScopeFromPath(navigation), [navigation]);
 }
 
 /** @emoji ðŸ§­ Routes sketchpad navigation and panel chrome through {@link CommandBus}. */
@@ -22179,24 +22455,6 @@ let sketchpadPlatformSingleton: Platform | null = null;
 let sketchpadPluginHostSingleton: PluginHost | null = null;
 let sketchpadShellReady: Promise<Platform> | null = null;
 let sketchpadChromeRegistered = false;
-let renderDesignSceneSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Design scene loading…</div>
-);
-let renderDesignDiagramSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Design diagram loading…</div>
-);
-let renderHomeTableSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Home table loading…</div>
-);
-let renderTypeSceneSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Type scene loading…</div>
-);
-let renderDocsPageSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Docs loading…</div>
-);
-let renderFeedbackFormSurface: () => React.ReactNode = () => (
-	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Feedback loading…</div>
-);
 
 function sketchpadAppIdFromPath(path: string): string {
 	const pathParts = path.split("/").filter((part) => part.length > 0);
@@ -22308,7 +22566,6 @@ function registerSketchpadSurfaceHosts(): void {
 	if (sketchpadChromeRegistered) return;
 	sketchpadChromeRegistered = true;
 	registerSketchpadDeclarativeBodies();
-	registerSketchpadUiSurfaceHosts();
 }
 
 const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
@@ -22329,9 +22586,11 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	} satisfies PluginModule);
 	await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
 	platform.activeAppId = SKETCHPAD_HOME_APP_ID;
+	sketchpadPlatformComponents = new SketchpadPlatformComponents(platform);
 	platform.notify();
 	sketchpadPlatformSingleton = platform;
 	sketchpadPluginHostSingleton = host;
+	console.log("[DEBUG] sketchpad platform components registered", platform.getComponent(SKETCHPAD_SURFACE_HOME_TABLE)?.componentKind);
 	return platform;
 }
 
@@ -22525,97 +22784,6 @@ const UtilityFallbackSettingsContent: FC<{ appType: string }> = ({ appType }) =>
     </TreeStateProvider>
   );
 };
-
-const SketchpadKitTableSurfaceHost: FC<{ readonly node: UiTableHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid kit table surface</div>;
-	const kitId = useActiveKitTab()?.id ?? "";
-	if (!kitId) return <div className="p-2 text-xs text-muted-foreground">No active kit</div>;
-	return (
-		<KitTabContextProvider id={kitId}>
-			<TableWindow />
-		</KitTabContextProvider>
-	);
-};
-
-const SketchpadKitDiagramSurfaceHost: FC<{ readonly node: UiPuzzle2dHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid kit diagram surface</div>;
-	const kitId = useActiveKitTab()?.id ?? "";
-	if (!kitId) return <div className="p-2 text-xs text-muted-foreground">No active kit</div>;
-	return (
-		<KitTabContextProvider id={kitId}>
-			<KitDiagramWindow />
-		</KitTabContextProvider>
-	);
-};
-
-const SketchpadDesignSceneSurfaceHost: FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid design scene surface</div>;
-	return <div className="h-full min-h-0 w-full">{renderDesignSceneSurface()}</div>;
-};
-
-const SketchpadDesignDiagramSurfaceHost: FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid design diagram surface</div>;
-	return <div className="h-full min-h-0 w-full">{renderDesignDiagramSurface()}</div>;
-};
-
-const SketchpadHomeTableSurfaceHost: FC<{ readonly node: UiTableHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid home table surface</div>;
-	return <div className="h-full min-h-0 w-full">{renderHomeTableSurface()}</div>;
-};
-
-const SketchpadTypeSceneSurfaceHost: FC<{ readonly node: UiCadHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid type scene surface</div>;
-	return <div className="h-full min-h-0 w-full">{renderTypeSceneSurface()}</div>;
-};
-
-const SketchpadDocsPageSurfaceHost: FC<{ readonly node: UiPanelHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid docs page surface</div>;
-	return <div className="h-full min-h-0 w-full overflow-auto">{renderDocsPageSurface()}</div>;
-};
-
-const SketchpadFeedbackFormSurfaceHost: FC<{ readonly node: UiPanelHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid feedback form surface</div>;
-	return <div className="h-full min-h-0 w-full overflow-auto">{renderFeedbackFormSurface()}</div>;
-};
-
-const SketchpadPanelMainSurfaceHost: FC<{ readonly node: UiPanelHostSurfaceNode }> = ({ node }) => {
-	if (node.controllerId !== SKETCHPAD_SHELL_CONTROLLER_ID) return <div className="p-2 text-xs text-muted-foreground">Invalid panel surface</div>;
-	const appType = useAppType();
-	return <DynamicPanelTabContent panelKey={appType === "kit" ? "workbench" : "details"} />;
-};
-
-/** @emoji 🎛️ Mounts legacy app chrome (toolbars, panels) while declarative WorkbenchView hosts window bodies. */
-const SketchpadDeclarativeAppChrome: FC = () => {
-	const appType = useAppType();
-	switch (appType) {
-		case "home":
-			return <Home chromeOnly />;
-		case "kit":
-			return <MultiWindowApp chromeOnly />;
-		case "design":
-			return <DesignApp chromeOnly />;
-		case "type":
-			return <TypeApp chromeOnly />;
-		case "docs":
-			return <DocsApp chromeOnly />;
-		case "feedback":
-			return <Feedback chromeOnly />;
-		default:
-			return null;
-	}
-};
-
-function registerSketchpadUiSurfaceHosts(): void {
-	registerSurfaceBinding(SKETCHPAD_SURFACE_KIT_TABLE, SketchpadKitTableSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_KIT_DIAGRAM, SketchpadKitDiagramSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SketchpadDesignDiagramSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_DESIGN_SCENE, SketchpadDesignSceneSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_TYPE_SCENE, SketchpadTypeSceneSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_PANEL_MAIN, SketchpadPanelMainSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_HOME_TABLE, SketchpadHomeTableSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsPageSurfaceHost);
-	registerSurfaceBinding(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormSurfaceHost);
-}
 
 const LayoutWrapper: FC = () => {
   const location = useLocation();
@@ -23204,7 +23372,6 @@ const LayoutWrapper: FC = () => {
       >
         <LevelProvider level="base">
           <ToolbarContextHost>
-            <SketchpadDeclarativeAppChrome />
             <SketchpadDeclarativeProductHost
               toolbarSlot={
                 panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "docs" ? (
@@ -35136,9 +35303,6 @@ const TypeSurfaceSceneBody: FC = () => {
 	);
 };
 
-renderTypeSceneSurface = () => <TypeSurfaceSceneBody />;
-
-
 /** @emoji 🎬 Design scene window body for declarative WorkbenchView hosts. */
 const DesignSurfaceSceneBody: FC = () => {
 	const { kitId, designId } = useSketchpadRouteScope();
@@ -35180,9 +35344,6 @@ const DesignSurfaceDiagramBody: FC = () => {
 	);
 };
 
-renderDesignSceneSurface = () => <DesignSurfaceSceneBody />;
-renderDesignDiagramSurface = () => <DesignSurfaceDiagramBody />;
-
 /** @emoji 📄 Docs page body for declarative WorkbenchView hosts. */
 const DocsSurfacePageBody: FC = () => {
 	const { docsPath } = useSketchpadRouteScope();
@@ -35212,8 +35373,6 @@ const DocsSurfacePageBody: FC = () => {
 	if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
 	return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;
 };
-
-renderDocsPageSurface = () => <DocsSurfacePageBody />;
 
 // #endregion Â­Æ’Âºâ”Windows
 
@@ -44448,7 +44607,6 @@ const HomeSurfaceTableBody: FC = () => (
 	</HomeDropZone>
 );
 
-renderHomeTableSurface = () => <HomeSurfaceTableBody />;
 /**
  * Home holds the data fields for a Home record.
  **/
@@ -45055,7 +45213,6 @@ const FeedbackForm: FC = () => {
 
 // #region Â­Æ’Ã»â–“Â´Â©Ã…App
 // MUST integrate feedback app with toolbar and layout canvas.
-renderFeedbackFormSurface = () => <FeedbackForm />;
 
 /**
  * FeedbackToolbar holds the data fields for a FeedbackToolbar record.

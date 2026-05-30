@@ -6,18 +6,19 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for board play playground wiring (`play/index.ts`). */
+/** @emoji 🧪 Vitest for board play playground wiring (`play/play.ts`). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
 			"@framework/playground/core": resolve(root, "../../../framework/product/playground/core/core.ts"),
+			"@framework/platform/core": resolve(root, "../../../framework/product/platform/core/index.ts"),
 			"@puzzle/2d/react": resolve(root, "../react/index.tsx"),
 		},
 	},
 	test: {
 		environment: "node",
-		include: ["index.ts"],
+		include: ["play.ts"],
 		passWithNoTests: false,
 	},
 });

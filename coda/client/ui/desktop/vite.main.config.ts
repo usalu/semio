@@ -21,7 +21,7 @@ export default defineConfig({
   build: {
     outDir: ".vite/build",
     lib: {
-      entry: "main.ts",
+      entry: "index.ts",
       formats: ["cjs"],
       fileName: () => "main.js",
     },

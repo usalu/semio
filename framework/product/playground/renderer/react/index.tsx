@@ -1119,7 +1119,7 @@ const puzzle3dPlayChromeBoot: PlaygroundChromeBoot = {
   mount: mountPuzzle3dPlayChrome,
 };
 
-/** @emoji 🛝 Puzzle 3D play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/main.ts`). */
+/** @emoji 🛝 Puzzle 3D play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/index.ts`). */
 export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, puzzle3dPlayChromeBoot, rootId);
 }
@@ -1334,7 +1334,7 @@ const topologyPlayChromeBoot: PlaygroundChromeBoot = {
   mount: mountTopologyPlayChrome,
 };
 
-/** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/main.ts`). */
+/** @emoji 🛝 Topology play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/index.ts`). */
 export function boot5dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, topologyPlayChromeBoot, rootId);
 }
@@ -3684,7 +3684,7 @@ const boardPlayChromeBoot: PlaygroundChromeBoot = {
   mount: mountBoardPlayChrome,
 };
 
-/** @emoji 🛝 Puzzle 2D play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/main.ts`). */
+/** @emoji 🛝 Puzzle 2D play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/index.ts`). */
 export function boot2dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, boardPlayChromeBoot, rootId);
 }

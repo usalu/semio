@@ -10,22 +10,22 @@ todos:
     status: completed
   - id: sketchpad-domain-pure
     content: "Make sketchpad domain layer pure-TS: replace React-hook kit reads with @semio/react store-client subscriptions; convert shell/navigation/panel controllers to pure-TS Controllers driving Platform URI/active-app/panels."
-    status: in_progress
+    status: completed
   - id: sketchpad-kit-components
     content: Implement KitTable (Table) and KitDiagram (Puzzle2d) subclasses producing models from kit store client + route scope, porting MultiWindowApp/kit-diagram rendering logic.
-    status: pending
+    status: completed
   - id: sketchpad-design-type-components
     content: Implement DesignScene/DesignDiagram (Puzzle5d) and TypeCad (Cad) subclasses producing models, porting DesignApp/TypeApp/FiveD rendering logic.
-    status: pending
+    status: completed
   - id: sketchpad-home-docs-feedback
     content: Implement HomeTable (Table) and DocsPanel/FeedbackPanel (Panel) subclasses producing models, porting Home/Docs/Feedback rendering logic.
-    status: pending
+    status: completed
   - id: sketchpad-assembly-boot
     content: Rewrite buildSketchpadPlatform to register apps + component instances + pure-TS controllers; boot via React renderer mountPlatform; delete legacy Sketchpad/LayoutWrapper/*Config/*App/render*Surface/router/golden-layout/XState shell.
-    status: pending
+    status: completed
   - id: tests-verify
     content: Update embedded Playwright tests in index.ts for the new shell; run framework vitest + sketchpad Playwright; verify each app renders via Platform at runtime with [DEBUG] logs; confirm sketchpad definition is render-agnostic.
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

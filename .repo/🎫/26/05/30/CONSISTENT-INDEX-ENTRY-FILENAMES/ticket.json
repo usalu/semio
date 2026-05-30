@@ -1,0 +1,10 @@
+{
+  "title": "Consistent Index Entry Filenames",
+  "emoji": "📛",
+  "status": "open",
+  "description": "Rename entry files (main.tsx, main.ts) to index.tsx/index.ts across play packages and CAD renderer; update HTML, vite, vitest, package exports, and references.",
+  "goal": "🎯refactoring",
+  "sessions": [
+    "⚪272cdc72fab64d09acedcd67a167de73"
+  ]
+}

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 cad/js/renderer/play/main.tsx — CAD play shell (headless + React chrome + Vite entry).
+// 💻 cad/js/renderer/play/index.tsx — CAD play shell (headless + React chrome + Vite entry).
 // #endregion 🧲Header
 
 import { AppPointerFocusStore } from "@framework/core";

@@ -899,6 +899,25 @@ if (import.meta.vitest) {
 			expect(platform.initialPanelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
 			expect(platform.panelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
 		});
+
+		it("registers render-agnostic surface components by surface id", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			let model = "a";
+			platform.registerComponent({
+				surfaceId: "surface/demo",
+				componentKind: "table",
+				subscribe: (listener) => {
+					listener();
+					return () => undefined;
+				},
+				getModel: () => model,
+			});
+			expect(platform.getComponent("surface/demo")?.getModel()).toBe("a");
+			model = "b";
+			expect(platform.getComponent("surface/demo")?.getModel()).toBe("b");
+			platform.unregisterComponent("surface/demo");
+			expect(platform.getComponent("surface/demo")).toBeUndefined();
+		});
 	});
 
 	describe("resolveInitialPanelVisibility", () => {
