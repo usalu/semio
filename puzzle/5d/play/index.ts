@@ -5,7 +5,7 @@
 import {
   CommandBus,
   Controller,
-  ProductRuntime,
+  Platform,
   AppRuntime,
   ModeRuntime,
   WindowKindRuntime,
@@ -378,8 +378,8 @@ export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellControl
   return app;
 }
 
-export function buildTopologyPlayRuntime(): ProductRuntime {
-  const runtime = new ProductRuntime();
+export function buildTopologyPlayRuntime(): Platform {
+  const runtime = new Platform();
   const controller = new TopologyPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildTopologyPlayAppRuntime(controller));
   return runtime;
@@ -390,7 +390,7 @@ export class Playground5d extends Playground {
   readonly id = PUZZLE_5D_PLAY_APP_ID;
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
-  createRuntime(): ProductRuntime {
+  createRuntime(): Platform {
     return buildTopologyPlayRuntime();
   }
 

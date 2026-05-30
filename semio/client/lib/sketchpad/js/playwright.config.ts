@@ -38,7 +38,7 @@ const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1
 
 export default defineConfig({
   testDir: __dirname,
-  testMatch: ["index.tsx"],
+  testMatch: ["index.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

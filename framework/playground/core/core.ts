@@ -53,20 +53,18 @@ export interface UiSeparatorNode {
   readonly type: "separator";
 }
 
-/** @emoji 🧊 Host-bound 3D surface; renderer maps `surfaceId` to the canvas implementation. */
-export interface UiScene3DHostSurfaceNode {
-  readonly type: "scene3d";
-  readonly surfaceId: string;
-  readonly controllerId: string;
-}
+export type {
+  UiPuzzle2dHostSurfaceNode,
+  UiPuzzle3dHostSurfaceNode,
+  UiPuzzle5dHostSurfaceNode,
+  UiCadHostSurfaceNode,
+} from "@framework/platform/core";
 
-/** @emoji 📋 Host-bound 2D board canvas; `paneId` selects the window slot. */
-export interface UiBoardHostSurfaceNode {
-  readonly type: "board";
-  readonly surfaceId: string;
-  readonly controllerId: string;
-  readonly paneId: string;
-}
+/** @emoji 📋 Playground alias for {@link UiPuzzle2dHostSurfaceNode}. */
+export type UiBoardHostSurfaceNode = import("@framework/platform/core").UiPuzzle2dHostSurfaceNode;
+
+/** @emoji 🧊 Playground alias for {@link UiPuzzle3dHostSurfaceNode}. */
+export type UiScene3DHostSurfaceNode = import("@framework/platform/core").UiPuzzle3dHostSurfaceNode;
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
@@ -169,6 +167,8 @@ export type UiNode =
   | UiSeparatorNode
   | UiScene3DHostSurfaceNode
   | UiBoardHostSurfaceNode
+  | import("@framework/platform/core").UiPuzzle5dHostSurfaceNode
+  | import("@framework/platform/core").UiCadHostSurfaceNode
   | UiTableHostSurfaceNode
   | UiSectionNode
   | UiFieldNode
@@ -190,29 +190,34 @@ export function playgroundTreePanelRootItems(sectionId: string, items: readonly 
   };
 }
 
-/** @emoji 🧊 Canonical fullscreen 3D window body: only the infinite scene canvas. */
-export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
-  return { type: "scene3d", surfaceId, controllerId };
-}
+import {
+  buildPuzzle2dWindowBody,
+  buildPuzzle3dWindowBody,
+  isCanvasOnlyWindowBody,
+} from "@framework/platform/core";
 
-/** @emoji 📋 Canonical fullscreen 2D window body: only the infinite board canvas. */
+export {
+  buildPuzzle2dWindowBody,
+  buildPuzzle3dWindowBody,
+  buildPuzzle5dWindowBody,
+  buildCadWindowBody,
+  isCanvasOnlyWindowBody,
+  Platform,
+} from "@framework/platform/core";
+
+/** @emoji 📋 Playground alias for {@link buildPuzzle2dWindowBody}. */
 export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
-  return { type: "board", surfaceId, controllerId, paneId };
+  return buildPuzzle2dWindowBody(surfaceId, controllerId, paneId);
 }
 
-/** @emoji ✅ True when a window body is a lone surface or a short error `text` node. */
-export function isCanvasOnlyWindowBody(node: UiNode): boolean {
-  if (node.type === "text" || node.type === "scene3d" || node.type === "board" || node.type === "table") return true;
-  if (node.type === "stack" && node.padding === "none" && node.children.length === 1) {
-    const child = node.children[0];
-    return child.type === "scene3d" || child.type === "board" || child.type === "table";
-  }
-  return false;
+/** @emoji 🧊 Playground alias for {@link buildPuzzle3dWindowBody}. */
+export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
+  return buildPuzzle3dWindowBody(surfaceId, controllerId);
 }
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
   if (isCanvasOnlyWindowBody(node)) return;
-  throw new Error(`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}".`);
+  throw new Error(`Declarative window body "${bodyKey}" must be a single canvas component surface (optional none padding stack wrapper). Found "${node.type}".`);
 }
 //#endregion 🔖UiNode
 
@@ -623,47 +628,9 @@ export class AppRuntime {
 }
 //#endregion 🔖AppRuntime
 
-//#region 🔖ProductRuntime
-export class ProductRuntime {
-  readonly commandBus = new CommandBus();
-  private readonly listeners = new Set<PlaygroundSubscriber>();
-  readonly apps: AppRuntime[] = [];
-  activeAppId = "";
-  generation = 0;
-  mobile: boolean | undefined;
-  className = "";
-  panelVisibility = { leftSidePanel: false, rightSidePanel: false };
-
-  notify(): void {
-    this.generation++;
-    for (const listener of this.listeners) listener();
-  }
-
-  subscribe(listener: PlaygroundSubscriber): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  addApp(app: AppRuntime): void {
-    this.apps.push(app);
-    if (!this.activeAppId) this.activeAppId = app.id;
-    this.notify();
-  }
-
-  getActiveApp(): AppRuntime | undefined {
-    return this.apps.find((app) => app.id === this.activeAppId) ?? this.apps[0];
-  }
-
-  setActiveAppId(id: string): void {
-    this.activeAppId = id;
-    this.notify();
-  }
-}
-//#endregion 🔖ProductRuntime
-
 //#region 🔖WindowBodyViewContext
 export interface WindowBodyViewContext {
-  readonly runtime: ProductRuntime;
+  readonly runtime: Platform;
   readonly windowKindId: string;
   readonly bodyKey: string;
   readonly activeModeId: string | null;
@@ -724,15 +691,15 @@ export interface PlaygroundKeybinding {
 /** @emoji 🛝 React-free playground definition: runtime, declarative bodies, optional surface host registration. */
 export abstract class Playground {
   abstract readonly id: string;
-  private runtimeMemo: ProductRuntime | null = null;
+  private runtimeMemo: Platform | null = null;
 
-  /** @emoji 🚀 Lazily built {@link ProductRuntime} from {@link createRuntime}. */
-  get runtime(): ProductRuntime {
+  /** @emoji 🚀 Lazily built {@link Platform} from {@link createRuntime}. */
+  get runtime(): Platform {
     this.runtimeMemo ??= this.createRuntime();
     return this.runtimeMemo;
   }
 
-  abstract createRuntime(): ProductRuntime;
+  abstract createRuntime(): Platform;
   abstract registerBodies(): void;
 
   readonly initialPanelVisibility?: PlaygroundPanelVisibility;
@@ -1006,9 +973,9 @@ export function registerPlaygroundDeclarativeBodies(ids: PlaygroundIds, options?
   registerSidePanelBody(ids.detailsTabBodyKey, options?.buildDetailsPanel ?? ((ctx) => buildPlaygroundDetailsPanelBody(ids, ctx)));
 }
 
-/** @emoji 🚀 Creates a {@link ProductRuntime} with one playground app. */
-export function createPlaygroundWorkbench(ids: PlaygroundIds, controller: PlaygroundController<string>, options?: BuildPlaygroundWorkbenchAppOptions): ProductRuntime {
-  const runtime = new ProductRuntime();
+/** @emoji 🚀 Creates a {@link Platform} with one playground app. */
+export function createPlaygroundWorkbench(ids: PlaygroundIds, controller: PlaygroundController<string>, options?: BuildPlaygroundWorkbenchAppOptions): Platform {
+  const runtime = new Platform();
   runtime.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
   return runtime;
 }
@@ -1018,15 +985,15 @@ export interface BootstrapPlaygroundWorkbenchOptions extends BuildPlaygroundWork
   readonly registerDeclarativeBodies?: boolean;
   readonly declarativeBodies?: RegisterPlaygroundDeclarativeBodiesOptions;
   /** @emoji 🧱 Reuse an existing product runtime shell (controller must use its {@link CommandBus}). */
-  readonly runtime?: ProductRuntime;
+  readonly runtime?: Platform;
 }
 
 /** @emoji 🚀 One-shot playground setup: optional declarative registration + one playground app. */
-export function bootstrapPlaygroundWorkbench(ids: PlaygroundIds, controller: PlaygroundController<string>, options?: BootstrapPlaygroundWorkbenchOptions): ProductRuntime {
+export function bootstrapPlaygroundWorkbench(ids: PlaygroundIds, controller: PlaygroundController<string>, options?: BootstrapPlaygroundWorkbenchOptions): Platform {
   if (options?.registerDeclarativeBodies !== false) {
     registerPlaygroundDeclarativeBodies(ids, options?.declarativeBodies);
   }
-  const runtime = options?.runtime ?? new ProductRuntime();
+  const runtime = options?.runtime ?? new Platform();
   runtime.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
   return runtime;
 }
@@ -1089,7 +1056,7 @@ if (import.meta.vitest) {
   describe("PlaygroundController", () => {
     it("tracks query and clears selection when kind is hidden", () => {
       const bus = new CommandBus();
-      const wb = new ProductRuntime();
+      const wb = new Platform();
       const ctrl = new DemoPlaygroundController(bus, () => wb.notify());
       wb.addApp(buildPlaygroundWorkbenchApp(TEST_IDS, ctrl));
       bus.dispatch(TEST_IDS.controllerId, "setSelectedId", { id: "entity-a" });
@@ -1121,7 +1088,7 @@ if (import.meta.vitest) {
   describe("registerPlaygroundDeclarativeBodies", () => {
     it("registers scene3d main window and table side panels", () => {
       const bus = new CommandBus();
-      const wb = new ProductRuntime();
+      const wb = new Platform();
       const ctrl = new DemoPlaygroundController(bus, () => wb.notify());
       wb.addApp(buildPlaygroundWorkbenchApp(TEST_IDS, ctrl));
       registerPlaygroundDeclarativeBodies(TEST_IDS);

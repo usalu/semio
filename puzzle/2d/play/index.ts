@@ -7,7 +7,7 @@ import {
 	Controller,
 	Playground,
 	registerWindowBody,
-	ProductRuntime,
+	Platform,
 	AppRuntime,
 	ModeRuntime,
 	WindowKindRuntime,
@@ -573,10 +573,10 @@ export const boardPlayPlugin: { readonly id: string; activate(context: BoardPlay
 	},
 };
 
-/** @emoji 🚀 Creates a {@link ProductRuntime} with board play app + declarative bodies registered. */
-export function buildBoardPlayRuntime(): ProductRuntime {
+/** @emoji 🚀 Creates a {@link Platform} with board play app + declarative bodies registered. */
+export function buildBoardPlayRuntime(): Platform {
 	registerBoardPlayDeclarativeBodies();
-	const runtime = new ProductRuntime();
+	const runtime = new Platform();
 	const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
 	runtime.addApp(buildBoardPlayAppRuntime(ctrl));
 	return runtime;
@@ -587,8 +587,8 @@ export class Playground2d extends Playground {
 	readonly id = PUZZLE_2D_PLAY_APP_ID;
 	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
-	createRuntime(): ProductRuntime {
-		const runtime = new ProductRuntime();
+	createRuntime(): Platform {
+		const runtime = new Platform();
 		const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
 		runtime.addApp(buildBoardPlayAppRuntime(ctrl));
 		return runtime;

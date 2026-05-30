@@ -28,7 +28,6 @@ const LazySketchpad = lazy(() =>
     mod.appRegistry.register(mod.feedbackConfig);
     mod.appRegistry.register(mod.homeConfig);
     mod.appRegistry.register(mod.kitConfig);
-    mod.appRegistry.register(mod.qualityConfig);
     mod.appRegistry.register(mod.typeConfig);
     return { default: mod.Sketchpad };
   }),

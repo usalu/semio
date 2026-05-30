@@ -33,6 +33,40 @@ type CjsFacadeResolveOpts = {
   schedulerEntry: string;
 };
 
+/** @emoji 🧱 Pre-transforms workspace TypeScript sources so Rollup import analysis accepts JSX and types. */
+function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
+  const root = workspaceRoot.replace(/\\/g, "/");
+  return {
+    name: "semio-monorepo-workspace-transform",
+    enforce: "pre",
+    async transform(code, id) {
+      const file = id.replace(/\\/g, "/");
+      if (file.includes("/node_modules/")) return;
+      const allowed =
+        file.startsWith(`${root}/framework/`) ||
+        file.startsWith(`${root}/puzzle/`) ||
+        file.startsWith(`${root}/ui/react/`) ||
+        file.startsWith(`${root}/cad/`) ||
+        file.startsWith(`${root}/semio/client/lib/sketchpad/`) ||
+        file.startsWith(`${root}/semio/client/lib/react/`) ||
+        file.startsWith(`${root}/semio/assets/`) ||
+        file.startsWith(`${root}/framework/playground/`);
+      if (!allowed) return;
+      if (!/\.(tsx?|mts|cts)$/.test(file)) return;
+      const loader = file.endsWith(".tsx") || (file.endsWith(".ts") && /<[A-Za-z/]/.test(code)) ? "tsx" : "ts";
+      const esbuild = await import("esbuild");
+      const result = await esbuild.transform(code, {
+        loader,
+        jsx: "automatic",
+        format: "esm",
+        sourcefile: id,
+        target: "es2022",
+      });
+      return { code: result.code, map: result.map || undefined };
+    },
+  };
+}
+
 function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
   return {
     name: "semio-react-cjs-facades",
@@ -118,14 +152,27 @@ export default defineConfig(async ({ mode }) => {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
-        { find: "@semio/react", replacement: path.resolve(__dirname, "../../react/logic") },
+        { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
         // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
         // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
         { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../react/rendering") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+        { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
+        { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
+        { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/platform/core/index.ts") },
+        { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/platform/renderer/react/index.tsx") },
+        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/playground/core/core.ts") },
+        {
+          find: "@framework/playground/renderer/react",
+          replacement: path.resolve(__dirname, "../../../../../framework/playground/renderer/react/index.tsx"),
+        },
+        { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
+        { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
+        { find: "@puzzle/5d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
+        { find: "@cad/js/renderer", replacement: path.resolve(__dirname, "../../../../../cad/js/renderer/index.tsx") },
         { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/board/index.ts") },
         { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
         { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },
@@ -138,6 +185,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
+      monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
       {
@@ -148,7 +196,7 @@ export default defineConfig(async ({ mode }) => {
         }),
         enforce: "pre",
       },
-      react(),
+      react({ include: [/\.(tsx?|jsx?)$/, /[\\/]puzzle[\\/].*\.tsx$/] }),
       wasm(),
       topLevelAwait(), // needed for older browsers to run wasm
       {

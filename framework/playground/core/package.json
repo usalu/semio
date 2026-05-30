@@ -9,6 +9,7 @@
 		".": "./core.ts"
 	},
 	"dependencies": {
+		"@framework/platform/core": "workspace:*",
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.536.0",

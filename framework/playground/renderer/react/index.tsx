@@ -46,7 +46,7 @@ import { twMerge } from "tailwind-merge";
 import {
   APP_TOOL_CATEGORY_ORDER,
   CommandBus,
-  ProductRuntime,
+  Platform,
   WindowKindRuntime,
   getSidePanelBodyFactory,
   getWindowBodyFactory,
@@ -74,7 +74,7 @@ export type {
   Controller,
   ModeRuntime,
   FooterItem as PlaygroundDeclarativeFooterItem,
-  ProductRuntime,
+  Platform,
   ResolvedAppState,
   SidePanelBodyViewContext,
   SideTabSpec,
@@ -91,7 +91,7 @@ export {
   CommandBus,
   ModeRuntime,
   PlaygroundController,
-  ProductRuntime,
+  Platform,
   WindowKindRuntime,
   buildScene3dWindowBody,
   createDefaultLayout,
@@ -233,6 +233,8 @@ const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 export function registerUiScene3DSurfaceHost(surfaceId: string, Component: Scene3DSurfaceHost): void {
   scene3dSurfaceHosts.set(surfaceId, Component);
 }
+
+export { registerSurfaceBinding } from "@framework/platform/renderer/react";
 
 /** @emoji 📋 Binds `surfaceId` from {@link UiBoardHostSurfaceNode} to a host board canvas. */
 export function registerUiBoardSurfaceHost(surfaceId: string, Component: BoardSurfaceHost): void {
@@ -780,7 +782,7 @@ export interface PlaygroundPanelVisibility {
 }
 
 export interface PlaygroundContextValue {
-  runtime: ProductRuntime;
+  runtime: Platform;
   activeAppId: string;
   activeApp: ResolvedAppState;
   activeModeId: string | null;
@@ -788,7 +790,7 @@ export interface PlaygroundContextValue {
 
 export const PlaygroundContext = reactHostPort.createContext<PlaygroundContextValue | undefined>(undefined);
 
-/** @emoji 🪝 Returns the active {@link ProductRuntime} from the nearest {@link PlaygroundView}. */
+/** @emoji 🪝 Returns the active {@link Platform} from the nearest {@link PlaygroundView}. */
 export function useApp(): PlaygroundContextValue {
   const ctx = reactHostPort.useContext(PlaygroundContext);
   if (!ctx) throw new Error("useApp must be used within PlaygroundView");
@@ -796,7 +798,7 @@ export function useApp(): PlaygroundContextValue {
 }
 
 export interface PlaygroundViewProps {
-  readonly runtime: ProductRuntime;
+  readonly runtime: Platform;
   readonly defaultAppId?: string;
   readonly className?: string;
   readonly mobile?: boolean;
@@ -1313,7 +1315,7 @@ export function registerTopologyPlaySurfaceHosts(): void {
   registerWindowBody(PUZZLE_5D_PLAY_VOLUME_BODY_KEY, buildTopologyVolumeDeclarativeBody);
 }
 
-function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
+function TopologyPlayChrome({ runtime }: { readonly runtime: Platform }): React.ReactElement {
   const generation = reactHostPort.useSyncExternalStore(
     (listener) => runtime.subscribe(listener),
     () => runtime.generation,
@@ -3014,7 +3016,7 @@ interface BoardPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
 
-function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntime }): ReactElement {
+function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): ReactElement {
   const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
   const fixtureRef = useRef<BoardFixtureV1>(fixture);
   fixtureRef.current = fixture;
@@ -3887,7 +3889,7 @@ function BoardPlayInner({ boardRuntime }: { readonly boardRuntime: ProductRuntim
   );
 }
 
-function BoardPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): ReactElement {
+function BoardPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
   return (
     <LevelProvider level="window">
       <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>

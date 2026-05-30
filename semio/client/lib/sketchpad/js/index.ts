@@ -22319,7 +22319,6 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	platform.notify();
 	sketchpadPlatformSingleton = platform;
 	sketchpadPluginHostSingleton = host;
-	console.log("[DEBUG] buildSketchpadPlatform ready", platform.id, platform.apps.map((a) => a.id));
 	return platform;
 }
 
@@ -34895,7 +34894,6 @@ const useDesignTopologyAdapter = () => {
     onSceneCamera,
     onSceneConnect,
     onSceneSelect,
-    onSceneRelocate,
   };
 };
 

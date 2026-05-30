@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "semio",
@@ -163,7 +162,11 @@
       "name": "@framework/platform/renderer/react",
       "version": "0.1.0",
       "dependencies": {
+        "@cad/js/renderer": "workspace:*",
         "@framework/platform/core": "workspace:*",
+        "@puzzle/2d/react": "workspace:*",
+        "@puzzle/3d/react": "workspace:*",
+        "@puzzle/5d/react": "workspace:*",
         "@ui/react": "workspace:*",
         "clsx": "^2.1.1",
         "fuse.js": "^7.1.0",
@@ -182,6 +185,7 @@
       "name": "@framework/playground/core",
       "version": "0.1.0",
       "dependencies": {
+        "@framework/platform/core": "workspace:*",
         "@ui/react": "workspace:*",
         "clsx": "^2.1.1",
         "lucide-react": "^0.536.0",
@@ -199,6 +203,8 @@
       "name": "@framework/playground/renderer/react",
       "version": "0.1.0",
       "dependencies": {
+        "@framework/platform/core": "workspace:*",
+        "@framework/platform/renderer/react": "workspace:*",
         "@framework/playground/core": "workspace:*",
         "@puzzle/2d/play": "workspace:*",
         "@puzzle/2d/react": "workspace:*",
@@ -530,6 +536,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@framework/platform/core": "workspace:*",
+        "@framework/platform/renderer/react": "workspace:*",
         "@puzzle/2d/react": "workspace:*",
         "@puzzle/3d/react": "workspace:*",
         "@puzzle/5d/react": "workspace:*",
@@ -677,6 +684,7 @@
       "dependencies": {
         "@mdx-js/react": "^3.1.1",
         "@microlink/react-json-view": "^1.31.18",
+        "@semio/fixtures": "workspace:*",
         "@semio/js": "*",
         "@semio/react": "*",
         "@semio/ui": "*",
@@ -803,9 +811,9 @@
   },
   "overrides": {
     "@semio/assets": "workspace:*",
-    "@semio/js": "workspace:*",
-    "diff": "^8.0.3",
     "tmp": "^0.2.5",
+    "diff": "^8.0.3",
+    "@semio/js": "workspace:*",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],

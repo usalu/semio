@@ -1,6 +1,5 @@
-@import "../../react/rendering/globals.css";
+@import "../../../../../ui/react/globals.css";
 @import "@xyflow/react/dist/style.css";
-@source "../../../../../elements/client/lib/react";
-@source "../../react/rendering";
+@source "../../../../../ui/react";
 @source "../../js";
 @source ".";

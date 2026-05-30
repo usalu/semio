@@ -13,25 +13,25 @@ todos:
     status: completed
   - id: renderer-components
     content: Add @puzzle/* and @cad/* deps to the react renderer; replace per-surface host registries with a built-in componentKind->component map + registerSurfaceBinding adapter seam; rename ProductView->PlatformView and update UiRenderer.
-    status: in_progress
+    status: completed
   - id: sketchpad-platform
     content: Replace ensureSketchpadDeclarativeShell/manifest/body/surface registration with buildSketchpadPlatform() returning new Platform({...}); render via PlatformView; update boot + Sketchpad export.
-    status: pending
+    status: completed
   - id: sketchpad-slice
     content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio/react."
-    status: pending
+    status: completed
   - id: sketchpad-rest
     content: Re-wire remaining apps (design/type/quality/docs/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
-    status: pending
+    status: completed
   - id: consumers-build
     content: Update desktop/vscode consumers and fix sketchpad package.json exports (index.tsx->index.ts) and project.json cwd (react->js); grep+fix all stale ProductRuntime/board/scene3d references.
-    status: pending
+    status: completed
   - id: tests-run
     content: Extend framework vitest inline tests and sketchpad embedded Playwright tests (no new files); run both and verify runtime with [DEBUG] logs.
-    status: pending
+    status: completed
   - id: close-ticket
     content: Remove [DEBUG] logs, close the ticket with summary and all touched files; open follow-up tickets for deferred apps and the svelte renderer.
-    status: pending
+    status: completed
 isProject: false
 ---
 

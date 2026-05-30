@@ -9,7 +9,7 @@ import {
   Expertise,
   ModeRuntime,
   Playground,
-  ProductRuntime,
+  Platform,
   WindowKindRuntime,
   buildPlaygroundBrowseFilterTools,
   buildPlaygroundBrowseSelectionTools,
@@ -1023,9 +1023,9 @@ export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellControl
   return app;
 }
 
-/** @emoji 🚀 Creates a {@link ProductRuntime} with scene play app registered. */
-export function buildPuzzle3dPlayRuntime(): ProductRuntime {
-  const runtime = new ProductRuntime();
+/** @emoji 🚀 Creates a {@link Platform} with scene play app registered. */
+export function buildPuzzle3dPlayRuntime(): Platform {
+  const runtime = new Platform();
   const controller = new Puzzle3dPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildPuzzle3dPlayAppRuntime(controller));
   return runtime;
@@ -1358,7 +1358,7 @@ export class Playground3d extends Playground {
     { key: "Backspace", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
   ];
 
-  createRuntime(): ProductRuntime {
+  createRuntime(): Platform {
     return buildPuzzle3dPlayRuntime();
   }
 
@@ -1401,7 +1401,7 @@ if (import.meta.vitest) {
 
     it("patchFixture bumps revision only when structure changes", () => {
       const bus = new CommandBus();
-      const wb = new ProductRuntime();
+      const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const base = ctrl.getFixture();
       expect(base).not.toBeNull();
@@ -1420,7 +1420,7 @@ if (import.meta.vitest) {
 
     it("noteSelection notifies snapshot listeners without shell generation", () => {
       const trackingBus = new CommandBus();
-      const trackingWb = new ProductRuntime();
+      const trackingWb = new Platform();
       let shellNotifyCount = 0;
       const trackingCtrl = new Puzzle3dPlayShellController(trackingBus, () => {
         shellNotifyCount += 1;
@@ -1452,7 +1452,7 @@ if (import.meta.vitest) {
 
     it("deleteSelection removes selected fixture rows and clears selection", () => {
       const bus = new CommandBus();
-      const wb = new ProductRuntime();
+      const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const before = ctrl.getSnapshot().fixture;
       expect(before).not.toBeNull();
@@ -1553,7 +1553,7 @@ if (import.meta.vitest) {
 
     it("declarative window body is a lone scene3d surface", () => {
       const bus = new CommandBus();
-      const wb = new ProductRuntime();
+      const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
       const tree = buildPuzzle3dPlayDeclarativeBody({

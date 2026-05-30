@@ -5,11 +5,11 @@
 import {
   CommandBus,
   Controller,
-  ProductRuntime,
+  Platform,
   AppRuntime,
   ModeRuntime,
   WindowKindRuntime,
-  buildScene3dWindowBody,
+  buildCadWindowBody,
   createWindowLayout,
   registerWindowBody,
   type AppTools,
@@ -527,7 +527,7 @@ function buildSpatialPlayDeclarativeBodyForPane(pane: SpatialPlayPaneId): (ctx: 
     if (!spatialControllerFromContext(ctx)) {
       return { type: "text", value: "Missing spatial play controller" };
     }
-    return buildScene3dWindowBody(spatialPlaySceneSurfaceIdForPane(pane), SPATIAL_PLAY_CONTROLLER_ID);
+    return buildCadWindowBody(spatialPlaySceneSurfaceIdForPane(pane), SPATIAL_PLAY_CONTROLLER_ID);
   };
 }
 
@@ -553,10 +553,10 @@ export function registerSpatialPlayDeclarativeBodies(): void {
   registerWindowBody(SPATIAL_PLAY_STRUCTURE_CLASSIC_BODY_KEY, buildSpatialPlayStructureClassicDeclarativeBody);
 }
 
-/** @emoji 🚀 Creates spatial play {@link ProductRuntime} with declarative viewport body registered. */
-export function buildSpatialPlayRuntime(): ProductRuntime {
+/** @emoji 🚀 Creates spatial play {@link Platform} with declarative viewport body registered. */
+export function buildSpatialPlayRuntime(): Platform {
   registerSpatialPlayDeclarativeBodies();
-  const runtime = new ProductRuntime();
+  const runtime = new Platform();
   const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildSpatialPlayAppRuntime(controller));
   return runtime;
@@ -574,10 +574,9 @@ import {
   PureSidePanelTabDefinition,
   StaticTreePanelDefinition,
   mountPlaygroundApp,
-  registerUiScene3DSurfaceHost,
   type SidePanelTabConfig,
-  type UiScene3DHostSurfaceNode,
 } from "@framework/playground/renderer/react/shell";
+import { registerSurfaceBinding, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
 import { ListTree, Shapes } from "lucide-react";
 import { defaultConstructRunner } from "@cad/js/query";
 import geometryNakagin from "../../../assets/play/geometry.json";
@@ -1155,7 +1154,7 @@ function useSpatialPlayModelSpace(): SpatialPlayModelSpaceValue {
   return value;
 }
 
-function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: { readonly children: ReactNode; readonly runtime: ProductRuntime; readonly shellController: SpatialPlayShellController }) {
+function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: { readonly children: ReactNode; readonly runtime: Platform; readonly shellController: SpatialPlayShellController }) {
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => runtime.subscribe(onStoreChange),
     () => runtime.generation,
@@ -1767,12 +1766,12 @@ function registerSpatialPlayChrome(): void {
   if (spatialPlayChromeRegistered) return;
   spatialPlayChromeRegistered = true;
   for (const pane of ["shape", "building", "energy", "structure-classic"] as const) {
-    registerUiScene3DSurfaceHost(spatialPlaySceneSurfaceIdForPane(pane), SpatialPlaySurfaceHost);
+    registerSurfaceBinding(spatialPlaySceneSurfaceIdForPane(pane), SpatialPlaySurfaceHost);
   }
 }
 
 /** @emoji 🧊 R3F viewport for one spatial play quad pane. */
-function SpatialPlaySurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): ReactNode {
+function SpatialPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
   if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
     return <div style={{ padding: 8, fontSize: 12, color: "#f88" }}>Invalid spatial play surface binding</div>;
   }
@@ -1824,7 +1823,7 @@ class SpatialPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function SpatialPlayRoot(): ReactNode {
-  const runtimeRef = reactHostPort.useRef<ProductRuntime | null>(null);
+  const runtimeRef = reactHostPort.useRef<Platform | null>(null);
   const shellControllerRef = reactHostPort.useRef<SpatialPlayShellController | null>(null);
   const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<SpatialPlayChromeSnapshot | null>(null);
   if (!runtimeRef.current) {
@@ -1895,7 +1894,7 @@ if (import.meta.vitest) {
 
   describe("SpatialPlayShellController compute mode", () => {
     it("stores independent compute modes per quad pane", () => {
-      const runtime = new ProductRuntime();
+      const runtime = new Platform();
       const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
       controller.run("setComputeModeForPane", { pane: "energy", value: "precise" });
@@ -1925,7 +1924,7 @@ if (import.meta.vitest) {
 
   describe("SpatialPlayShellController engagement", () => {
     it("attaches the shape engagement only to the shape window and routes engagement commands to the host bridge", () => {
-      const runtime = new ProductRuntime();
+      const runtime = new Platform();
       const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
@@ -1973,14 +1972,14 @@ if (import.meta.vitest) {
           windowKindId: SPATIAL_PLAY_SHAPE_WINDOW_ID,
           bodyKey: SPATIAL_PLAY_SHAPE_BODY_KEY,
         }),
-      ).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+      ).toEqual(buildCadWindowBody(SPATIAL_PLAY_SHAPE_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
       expect(
         buildSpatialPlayEnergyDeclarativeBody({
           ...ctx,
           windowKindId: SPATIAL_PLAY_ENERGY_WINDOW_ID,
           bodyKey: SPATIAL_PLAY_ENERGY_BODY_KEY,
         }),
-      ).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+      ).toEqual(buildCadWindowBody(SPATIAL_PLAY_ENERGY_SCENE_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
     });
 
     it("registers four window kinds in quad layout", () => {
