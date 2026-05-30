@@ -6,7 +6,7 @@
     "y": 0,
     "zoom": 0.2407
   },
-  "spatialCamera": {
+  "volumeCamera": {
     "position": [
       420,
       -420,
@@ -41,7 +41,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -57,7 +57,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -20.75,
           -3.6499999999999986,
@@ -94,7 +94,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -110,7 +110,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.849999999999999,
@@ -147,7 +147,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -163,7 +163,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -200,7 +200,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -216,7 +216,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -253,7 +253,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -269,7 +269,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -306,7 +306,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -322,7 +322,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.55,
@@ -359,7 +359,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -375,7 +375,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -412,7 +412,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -428,7 +428,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.849999999999999,
@@ -465,7 +465,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -481,7 +481,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.05,
@@ -518,7 +518,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -534,7 +534,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999998,
@@ -571,7 +571,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -587,7 +587,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.849999999999999,
@@ -624,7 +624,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -640,7 +640,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999988,
@@ -677,7 +677,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -693,7 +693,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.85,
@@ -730,7 +730,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -746,7 +746,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -5.549999999999999,
@@ -783,7 +783,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -799,7 +799,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -836,7 +836,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -852,7 +852,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -889,7 +889,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -905,7 +905,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -6.349999999999999,
@@ -942,7 +942,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -958,7 +958,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.55,
@@ -995,7 +995,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -1011,7 +1011,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -1048,7 +1048,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -1064,7 +1064,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.849999999999999,
@@ -1100,7 +1100,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -1123,7 +1123,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1146,7 +1146,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1169,7 +1169,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1192,7 +1192,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1215,7 +1215,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1238,7 +1238,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1261,7 +1261,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1284,7 +1284,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1307,7 +1307,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -1323,7 +1323,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -1360,7 +1360,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -1376,7 +1376,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.75,
@@ -1413,7 +1413,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -1429,7 +1429,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999998,
@@ -1466,7 +1466,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -1482,7 +1482,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999999,
@@ -1518,7 +1518,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -1541,7 +1541,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1564,7 +1564,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1587,7 +1587,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1610,7 +1610,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1633,7 +1633,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1656,7 +1656,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1679,7 +1679,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -1702,7 +1702,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -1725,7 +1725,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -1741,7 +1741,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999998,
@@ -1778,7 +1778,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -1794,7 +1794,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -20.75,
           -3.6499999999999977,
@@ -1831,7 +1831,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -1847,7 +1847,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -1884,7 +1884,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -1900,7 +1900,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999996,
@@ -1937,7 +1937,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -1953,7 +1953,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -1990,7 +1990,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -2006,7 +2006,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -2043,7 +2043,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -2059,7 +2059,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.85,
@@ -2096,7 +2096,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -2112,7 +2112,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -2149,7 +2149,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -2165,7 +2165,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999998,
@@ -2201,7 +2201,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -2224,7 +2224,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2247,7 +2247,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2270,7 +2270,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2293,7 +2293,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2316,7 +2316,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2339,7 +2339,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2362,7 +2362,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2385,7 +2385,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -2401,7 +2401,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -2436,7 +2436,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               5.6,
               -1.3,
@@ -2452,7 +2452,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -15.85,
           -8.1,
@@ -2488,7 +2488,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -2511,7 +2511,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2534,7 +2534,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2557,7 +2557,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2580,7 +2580,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2603,7 +2603,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2626,7 +2626,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2649,7 +2649,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2672,7 +2672,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2695,7 +2695,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -2711,7 +2711,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -2748,7 +2748,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -2764,7 +2764,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999983,
@@ -2801,7 +2801,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -2817,7 +2817,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.55,
@@ -2854,7 +2854,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -2870,7 +2870,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -2906,7 +2906,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -2929,7 +2929,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2952,7 +2952,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -2975,7 +2975,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -2998,7 +2998,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -3021,7 +3021,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -3044,7 +3044,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -3067,7 +3067,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -3090,7 +3090,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -3113,7 +3113,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -3129,7 +3129,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999998,
@@ -3166,7 +3166,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3182,7 +3182,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,
@@ -3219,7 +3219,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -3235,7 +3235,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -5.549999999999998,
@@ -3272,7 +3272,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3288,7 +3288,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.849999999999998,
@@ -3325,7 +3325,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3341,7 +3341,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999988,
@@ -3378,7 +3378,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3394,7 +3394,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999998,
@@ -3431,7 +3431,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3447,7 +3447,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -3484,7 +3484,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3500,7 +3500,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -3.45,
           -5.549999999999999,
@@ -3537,7 +3537,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3553,7 +3553,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -20.75,
           -3.6499999999999995,
@@ -3590,7 +3590,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -3606,7 +3606,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999983,
@@ -3643,7 +3643,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3659,7 +3659,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -3696,7 +3696,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3712,7 +3712,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -3749,7 +3749,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3765,7 +3765,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.85,
@@ -3802,7 +3802,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3818,7 +3818,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -3855,7 +3855,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -3871,7 +3871,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.55,
@@ -3908,7 +3908,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -3924,7 +3924,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -6.15,
           -2.8499999999999983,
@@ -3961,7 +3961,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -3977,7 +3977,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,
@@ -4014,7 +4014,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -4030,7 +4030,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999983,
@@ -4067,7 +4067,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -4083,7 +4083,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -6.15,
           -2.8499999999999983,
@@ -4120,7 +4120,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -4136,7 +4136,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -20.75,
           -3.649999999999998,
@@ -4172,7 +4172,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -4195,7 +4195,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4218,7 +4218,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4241,7 +4241,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4264,7 +4264,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4287,7 +4287,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4310,7 +4310,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4333,7 +4333,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4356,7 +4356,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4379,7 +4379,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -4395,7 +4395,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -4432,7 +4432,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -4448,7 +4448,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.05,
@@ -4485,7 +4485,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -4501,7 +4501,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -4538,7 +4538,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -4554,7 +4554,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -4591,7 +4591,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -4607,7 +4607,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -4643,7 +4643,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -4666,7 +4666,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4689,7 +4689,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4712,7 +4712,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4735,7 +4735,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4758,7 +4758,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4781,7 +4781,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4804,7 +4804,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -4827,7 +4827,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -4850,7 +4850,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -4866,7 +4866,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -4903,7 +4903,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -4919,7 +4919,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -4954,7 +4954,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               5.6,
               -1.3,
@@ -4970,7 +4970,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -15.85,
           -8.099999999999998,
@@ -5007,7 +5007,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -5023,7 +5023,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -5060,7 +5060,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -5076,7 +5076,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -5113,7 +5113,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -5129,7 +5129,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999996,
@@ -5165,7 +5165,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -5188,7 +5188,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5211,7 +5211,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5234,7 +5234,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5257,7 +5257,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5280,7 +5280,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5303,7 +5303,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5326,7 +5326,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5349,7 +5349,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5372,7 +5372,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -5388,7 +5388,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -5424,7 +5424,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -5447,7 +5447,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5470,7 +5470,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5493,7 +5493,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5516,7 +5516,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5539,7 +5539,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5562,7 +5562,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5585,7 +5585,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -5608,7 +5608,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -5631,7 +5631,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -5647,7 +5647,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999998,
@@ -5684,7 +5684,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -5700,7 +5700,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -5737,7 +5737,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -5753,7 +5753,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999998,
@@ -5789,7 +5789,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -5805,7 +5805,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999998,
@@ -5842,7 +5842,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -5858,7 +5858,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999983,
@@ -5895,7 +5895,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -5911,7 +5911,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -5948,7 +5948,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -5964,7 +5964,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -6001,7 +6001,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -6017,7 +6017,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -6054,7 +6054,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -6070,7 +6070,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999988,
@@ -6107,7 +6107,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -6123,7 +6123,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -3.45,
           -5.549999999999998,
@@ -6159,7 +6159,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -6182,7 +6182,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6205,7 +6205,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6228,7 +6228,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6251,7 +6251,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6274,7 +6274,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6297,7 +6297,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6320,7 +6320,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6343,7 +6343,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6366,7 +6366,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -6382,7 +6382,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999998,
@@ -6419,7 +6419,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -6435,7 +6435,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.75,
@@ -6472,7 +6472,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -6488,7 +6488,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -6525,7 +6525,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -6541,7 +6541,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -6578,7 +6578,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -6594,7 +6594,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.85,
@@ -6630,7 +6630,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -6653,7 +6653,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6676,7 +6676,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6699,7 +6699,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6722,7 +6722,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6745,7 +6745,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6768,7 +6768,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6791,7 +6791,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6814,7 +6814,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -6830,7 +6830,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999998,
@@ -6865,7 +6865,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               5.6,
               -1.3,
@@ -6881,7 +6881,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -15.85,
           -8.099999999999998,
@@ -6917,7 +6917,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -6940,7 +6940,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -6963,7 +6963,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -6986,7 +6986,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7009,7 +7009,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7032,7 +7032,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7055,7 +7055,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7078,7 +7078,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7101,7 +7101,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7124,7 +7124,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -7140,7 +7140,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999998,
@@ -7176,7 +7176,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -7.5,
               -7.7,
@@ -7199,7 +7199,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -7.5,
               -7.7,
@@ -7215,7 +7215,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           0,
           0,
@@ -7252,7 +7252,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -7268,7 +7268,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.849999999999999,
@@ -7305,7 +7305,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -7321,7 +7321,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -7358,7 +7358,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -7374,7 +7374,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.85,
@@ -7411,7 +7411,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -7427,7 +7427,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -7464,7 +7464,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -7480,7 +7480,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -6.15,
           -2.849999999999999,
@@ -7517,7 +7517,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -7533,7 +7533,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -6.349999999999999,
@@ -7570,7 +7570,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -7586,7 +7586,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -7623,7 +7623,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -7639,7 +7639,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -7676,7 +7676,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -7692,7 +7692,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999998,
@@ -7728,7 +7728,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -7751,7 +7751,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7774,7 +7774,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7797,7 +7797,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7820,7 +7820,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7843,7 +7843,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7866,7 +7866,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7889,7 +7889,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -7912,7 +7912,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -7935,7 +7935,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -7951,7 +7951,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -7988,7 +7988,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -8004,7 +8004,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,
@@ -8041,7 +8041,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -8057,7 +8057,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,
@@ -8094,7 +8094,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -8110,7 +8110,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -8147,7 +8147,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -8163,7 +8163,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -6.349999999999999,
@@ -8200,7 +8200,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -8216,7 +8216,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.55,
@@ -8253,7 +8253,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -8269,7 +8269,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999998,
@@ -8306,7 +8306,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -8322,7 +8322,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -6.15,
           -2.8499999999999996,
@@ -8358,7 +8358,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -8381,7 +8381,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8404,7 +8404,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8427,7 +8427,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8450,7 +8450,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8473,7 +8473,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8496,7 +8496,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8519,7 +8519,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8542,7 +8542,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8565,7 +8565,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -8581,7 +8581,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -8617,7 +8617,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -8640,7 +8640,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8663,7 +8663,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8686,7 +8686,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8709,7 +8709,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8732,7 +8732,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8755,7 +8755,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8778,7 +8778,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -8801,7 +8801,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -8824,7 +8824,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -8840,7 +8840,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999998,
@@ -8877,7 +8877,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -8893,7 +8893,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.849999999999999,
@@ -8930,7 +8930,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -8946,7 +8946,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -8983,7 +8983,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -8999,7 +8999,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,
@@ -9036,7 +9036,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -9052,7 +9052,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.75,
@@ -9089,7 +9089,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -9105,7 +9105,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -9142,7 +9142,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -9158,7 +9158,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -6.349999999999998,
@@ -9195,7 +9195,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -9211,7 +9211,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -3.6499999999999986,
@@ -9247,7 +9247,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -9270,7 +9270,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9293,7 +9293,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9316,7 +9316,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9339,7 +9339,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9362,7 +9362,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9385,7 +9385,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9408,7 +9408,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9431,7 +9431,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9454,7 +9454,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -9470,7 +9470,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999999,
@@ -9506,7 +9506,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -9529,7 +9529,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9552,7 +9552,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9575,7 +9575,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9598,7 +9598,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9621,7 +9621,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9644,7 +9644,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -9667,7 +9667,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -9690,7 +9690,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -9706,7 +9706,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -9743,7 +9743,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -9759,7 +9759,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.049999999999999,
@@ -9796,7 +9796,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -9812,7 +9812,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -6.349999999999998,
@@ -9848,7 +9848,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -9864,7 +9864,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.6999999999999975,
@@ -9901,7 +9901,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -9917,7 +9917,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.849999999999998,
@@ -9954,7 +9954,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -9970,7 +9970,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -10007,7 +10007,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10023,7 +10023,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.849999999999998,
@@ -10060,7 +10060,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -10076,7 +10076,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -6.15,
           -2.8499999999999988,
@@ -10113,7 +10113,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10129,7 +10129,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -10166,7 +10166,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -10182,7 +10182,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -10219,7 +10219,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10235,7 +10235,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -10272,7 +10272,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -10288,7 +10288,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999998,
@@ -10325,7 +10325,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10341,7 +10341,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.849999999999998,
@@ -10377,7 +10377,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -10400,7 +10400,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -10423,7 +10423,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -10446,7 +10446,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -10469,7 +10469,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -10492,7 +10492,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -10515,7 +10515,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -10538,7 +10538,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -10561,7 +10561,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -10584,7 +10584,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -10600,7 +10600,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -10637,7 +10637,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -10653,7 +10653,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -5.549999999999998,
@@ -10690,7 +10690,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10706,7 +10706,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -10743,7 +10743,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10759,7 +10759,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -3.45,
           -5.549999999999999,
@@ -10796,7 +10796,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -10812,7 +10812,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -23.45,
           -6.349999999999999,
@@ -10849,7 +10849,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -10865,7 +10865,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.85,
@@ -10902,7 +10902,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -10918,7 +10918,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -10955,7 +10955,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -10971,7 +10971,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -11008,7 +11008,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -11024,7 +11024,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -9.849999999999998,
@@ -11061,7 +11061,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -11077,7 +11077,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.849999999999998,
@@ -11114,7 +11114,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -11130,7 +11130,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.55,
@@ -11167,7 +11167,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11183,7 +11183,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999999,
@@ -11220,7 +11220,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -11236,7 +11236,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -11273,7 +11273,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -11289,7 +11289,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999998,
@@ -11326,7 +11326,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -11342,7 +11342,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -12.549999999999999,
@@ -11379,7 +11379,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -11395,7 +11395,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.55,
@@ -11432,7 +11432,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -11448,7 +11448,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -11485,7 +11485,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11501,7 +11501,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -11538,7 +11538,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -11554,7 +11554,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.849999999999999,
@@ -11591,7 +11591,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11607,7 +11607,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -9.849999999999998,
@@ -11644,7 +11644,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -11660,7 +11660,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -11697,7 +11697,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -11713,7 +11713,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999988,
@@ -11750,7 +11750,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11766,7 +11766,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -5.549999999999999,
@@ -11803,7 +11803,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -11819,7 +11819,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999998,
@@ -11856,7 +11856,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -11872,7 +11872,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -11909,7 +11909,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11925,7 +11925,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -3.649999999999999,
@@ -11962,7 +11962,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -11978,7 +11978,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -5.549999999999999,
@@ -12015,7 +12015,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -12031,7 +12031,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.549999999999999,
@@ -12068,7 +12068,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -12084,7 +12084,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.8499999999999983,
@@ -12121,7 +12121,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -12137,7 +12137,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -22.65,
           -9.849999999999998,
@@ -12174,7 +12174,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -12190,7 +12190,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -11.749999999999998,
@@ -12227,7 +12227,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -12243,7 +12243,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -12280,7 +12280,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -12296,7 +12296,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -3.649999999999998,
@@ -12333,7 +12333,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -12349,7 +12349,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -5.35,
           -3.649999999999999,
@@ -12386,7 +12386,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -12402,7 +12402,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -12.549999999999999,
@@ -12439,7 +12439,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -12455,7 +12455,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999996,
@@ -12492,7 +12492,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -12508,7 +12508,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999988,
@@ -12544,7 +12544,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -12567,7 +12567,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12590,7 +12590,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12613,7 +12613,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12636,7 +12636,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12659,7 +12659,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12682,7 +12682,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12705,7 +12705,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12728,7 +12728,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12751,7 +12751,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -12767,7 +12767,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -18.6,
           -7.699999999999999,
@@ -12803,7 +12803,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -12826,7 +12826,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12849,7 +12849,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12872,7 +12872,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12895,7 +12895,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12918,7 +12918,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12941,7 +12941,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -12964,7 +12964,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               2.75,
               0.9,
@@ -12987,7 +12987,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.9,
               2.75,
@@ -13010,7 +13010,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0,
               0,
@@ -13026,7 +13026,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -7.5,
           -7.699999999999998,
@@ -13063,7 +13063,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -13079,7 +13079,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -19.95,
           -2.8499999999999988,
@@ -13116,7 +13116,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -13132,7 +13132,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -20.75,
           -3.6499999999999986,
@@ -13169,7 +13169,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -13185,7 +13185,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -12.55,
@@ -13222,7 +13222,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -13238,7 +13238,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999983,
@@ -13275,7 +13275,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -13291,7 +13291,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -2.65,
           -9.05,
@@ -13328,7 +13328,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -13344,7 +13344,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999998,
@@ -13381,7 +13381,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               1.3,
               -1.25,
@@ -13397,7 +13397,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -11.55,
           -5.549999999999998,
@@ -13434,7 +13434,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               0.45,
               -2.1,
@@ -13450,7 +13450,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -8.85,
           -2.8499999999999988,
@@ -13487,7 +13487,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -13503,7 +13503,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -3.45,
           -5.549999999999998,
@@ -13540,7 +13540,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -0.45,
               -2.1,
@@ -13556,7 +13556,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -17.25,
           -2.8499999999999996,
@@ -13593,7 +13593,7 @@
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
             "radius": 3
           },
-          "spatial": {
+          "volume": {
             "position": [
               -1.3,
               -1.25,
@@ -13609,7 +13609,7 @@
           }
         }
       ],
-      "spatial": {
+      "volume": {
         "origin": [
           -14.55,
           -5.549999999999999,

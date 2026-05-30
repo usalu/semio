@@ -2,7 +2,13 @@
   "title": "Unified 5D Topology Component",
   "status": "closed",
   "description": "Single neutral TopologyV1 model, shared TopologyStore, FiveD flat|spatial, paired connect/LOD semantics across @puzzle/2d and @puzzle/3d.",
-  "summary": "TopologyPairedPolicy documents LOD (6 flat tiers vs spatial continuous) and connect gestures (indirect cross-surface via TopologyConnectSession; proximity local to flat drag / spatial relocate). Fixed BoardCanvas onConnect to edgeCreate only. FiveD flat/spatial LOD defaults split; spatial proximityRelocateEnabled explicit. data-five-d-indirect-active for e2e.",
-  "files": ["puzzle/5d/react/index.tsx", "puzzle/5d/play/e2e/topology.spec.ts", "puzzle/2d/react/index.tsx", "puzzle/3d/react/index.tsx", ".repo/🎫/26/05/30/UNIFIED-5D-TOPOLOGY-COMPONENT/ticket.json"],
+  "summary": "Removed legacy topology naming: topologyCompose (was topologyFromLegacyPair), flat/spatial meta and helper names, topologySharedKindsFromMetas, spatialChromeDefaults, data-five-d-indirect-active only. Sketchpad and play updated. All 5d tests pass.",
+  "files": [
+    "puzzle/5d/react/index.tsx",
+    "puzzle/5d/play/index.ts",
+    "puzzle/5d/play/e2e/topology.spec.ts",
+    "semio/client/lib/sketchpad/js/index.ts",
+    ".repo/🎫/26/05/30/UNIFIED-5D-TOPOLOGY-COMPONENT/ticket.json"
+  ],
   "goal": "🎯puzzle🎯5d"
 }

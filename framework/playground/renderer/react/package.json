@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@framework/playground": "workspace:*",
+    "@puzzle/assets": "workspace:*",
     "@puzzle/2d/play": "workspace:*",
     "@puzzle/2d/react": "workspace:*",
     "@puzzle/3d/play": "workspace:*",

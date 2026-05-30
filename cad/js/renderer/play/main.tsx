@@ -15,6 +15,7 @@ import {
   type AppTools,
   type ToolItem,
   type WindowBodyViewContext,
+  type WindowEngagement,
   type WindowMeasure,
   type UiNode,
   type WindowLayout,
@@ -394,6 +395,7 @@ export class SpatialPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Spatial", undefined);
   private hostBridge: SpatialPlayHostBridge | null = null;
   private computeModeByPane: Record<SpatialPlayPaneId, SpatialComputeMode>;
+  private shapeEngagement: WindowEngagement | undefined;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(SPATIAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -421,9 +423,18 @@ export class SpatialPlayShellController extends Controller {
     };
   }
 
-  /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures. */
+  /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and the shape pane's live interaction engagement. */
   rebuildShellMode(): void {
-    this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map((row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)]));
+    this.mainMode.windowKinds = SPATIAL_PLAY_PANE_SPECS.map(
+      (row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], row.pane === "shape" ? this.shapeEngagement : undefined),
+    );
+  }
+
+  /** @emoji 💬 Sets the shape pane's interaction engagement (built from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
+  setShapeEngagement(engagement: WindowEngagement | undefined): void {
+    this.shapeEngagement = engagement;
+    this.rebuildShellMode();
+    this.emit();
   }
 
   /** @emoji ⚡ Returns compute mode for one quad pane. */
@@ -468,6 +479,9 @@ export class SpatialPlayShellController extends Controller {
       case "saveInPlay":
       case "saveCurrent":
       case "loadRawRequest":
+      case "engagementOption":
+      case "engagementInput":
+      case "engagementSubmit":
         this.hostBridge?.runHostCommand(command, args);
         break;
       default:
@@ -527,7 +541,7 @@ export function buildSpatialPlayRuntime(): ProductRuntime {
 
 import "./globals.css";
 // #region 🔌Adapters
-import { getLevelBgClass, LevelProvider, reactHostPort, type TreeDataItem, type TreeDataSection } from "@ui/react";
+import { getLevelBgClass, LevelProvider, reactHostPort, type EngagementSpec, type TreeDataItem, type TreeDataSection } from "@ui/react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 import {
@@ -542,12 +556,12 @@ import {
 } from "@framework/playground/renderer/react/shell";
 import { ListTree, Shapes } from "lucide-react";
 import { defaultConstructRunner } from "@cad/js/query";
-import geometryNakagin from "../../../fixtures/geometry.json";
-import geometryLoom from "../../../fixtures/geometry-loom.json";
-import geometryRoutes from "../../../fixtures/geometry-routes.json";
-import geometrySmallBuilding from "../../../fixtures/small-building.model.json";
-import geometryTallBuilding from "../../../fixtures/tall-building.model.json";
-import geometryLargeBuilding from "../../../fixtures/large-building.model.json";
+import geometryNakagin from "../../../assets/builtin/geometry.json";
+import geometryLoom from "../../../assets/builtin/geometry-loom.json";
+import geometryRoutes from "../../../assets/builtin/geometry-routes.json";
+import geometrySmallBuilding from "../../../assets/builtin/small-building.model.json";
+import geometryTallBuilding from "../../../assets/builtin/tall-building.model.json";
+import geometryLargeBuilding from "../../../assets/builtin/large-building.model.json";
 import { BrepjsKernel } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
@@ -979,6 +993,7 @@ interface PlaySessionProps {
   readonly pickGeometry: Model;
   readonly onDocumentModelChange: (model: Model) => void;
   readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
+  readonly onEngagementChange: (engagement: EngagementSpec | null) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1004,6 +1019,7 @@ function PlaySession({
   pickGeometry,
   onDocumentModelChange,
   onSnapshot,
+  onEngagementChange,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1057,6 +1073,7 @@ function PlaySession({
       onApplyTransformation={onApplyTransformation}
       hideModelDefinitionControls
       onSnapshotChange={onSnapshot}
+      onEngagementChange={onEngagementChange}
     />
   );
 }
@@ -1133,6 +1150,7 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
   const [snapshot, setSnapshot] = reactHostPort.useState<InteractionSnapshot | null>(null);
+  const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const spec = reactHostPort.useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
@@ -1349,6 +1367,14 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
     loadInputRef.current?.click();
   }, []);
 
+  const handleEngagementChange = reactHostPort.useCallback(
+    (engagement: EngagementSpec | null) => {
+      engagementSpecRef.current = engagement;
+      shellController.setShapeEngagement(spatialPlayEngagementMirror(engagement));
+    },
+    [shellController],
+  );
+
   reactHostPort.useEffect(() => {
     const bridge = {
       getToolbarState: () => ({
@@ -1384,6 +1410,17 @@ function SpatialPlayModelSpaceProvider({ children, runtime, shellController }: {
             break;
           case "loadRawRequest":
             handleLoadRawRequest();
+            break;
+          case "engagementOption": {
+            const optionId = (args as { optionId?: string })?.optionId;
+            engagementSpecRef.current?.options?.find((option) => option.id === optionId)?.onPress?.();
+            break;
+          }
+          case "engagementInput":
+            engagementSpecRef.current?.input?.onChange?.((args as { value?: string })?.value ?? "");
+            break;
+          case "engagementSubmit":
+            engagementSpecRef.current?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
             break;
           default:
             break;

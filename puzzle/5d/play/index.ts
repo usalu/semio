@@ -23,9 +23,9 @@ import {
 } from "@framework/playground";
 
 import { buildBoardPlayHierarchySections } from "../../2d/play/index.ts";
-import nakaginBoardJson from "../../2d/play/fixtures/nakagin-capsule-tower.board.json";
+import { NakaginCapsuleTowerBoardJson as nakaginBoardJson } from "@puzzle/assets";
 import { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, boardLodCanvasProps, isBoardDrawLodKind, parseBoardFixtureV1, type BoardDrawLodKind, type BoardFixtureV1, type BoardLodModeKind, type CameraState } from "../../2d/react/index.tsx";
-import nakaginSceneJson from "../../3d/play/fixtures/nakagin-capsule-tower.scene.json";
+import { NakaginCapsuleTowerSceneJson as nakaginSceneJson } from "@puzzle/assets";
 import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
   DEFAULT_MANUAL_LOD,
@@ -36,23 +36,23 @@ import {
   parseFixtureV1,
   sceneLodCanvasProps,
   sliderValueFromLod,
-  type FixtureV1 as SceneFixtureV1,
-  type RelocateMode as SceneRelocateMode,
+  type FixtureV1 as VolumeFixtureV1,
+  type RelocateMode as VolumeRelocateMode,
 } from "../../3d/react/index.tsx";
-import { createTopologyStore, parseTopologyV1, projectFlat, projectSpatial, topologyFromLegacyPair, topologySharedKindsFromPairedMetas, type TopologyStore, type TopologyV1 } from "../react/index.tsx";
-import nakaginTopologyJson from "./fixtures/nakagin-capsule-tower.topology.json";
+import { createTopologyStore, parseTopologyV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type TopologyStore, type TopologyV1 } from "../react/index.tsx";
+import { NakaginCapsuleTowerTopologyJson as nakaginTopologyJson } from "@puzzle/assets";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_CONTROLLER_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_BOARD_WINDOW_ID = "puzzle-5d-2d";
-export const PUZZLE_5D_PLAY_SCENE_WINDOW_ID = "puzzle-5d-3d";
+export const PUZZLE_5D_PLAY_VOLUME_WINDOW_ID = "puzzle-5d-3d";
 export const PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL = "Puzzle 2d";
-export const PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL = "Puzzle 3d";
+export const PUZZLE_5D_PLAY_VOLUME_WINDOW_LABEL = "Puzzle 3d";
 export const PUZZLE_5D_PLAY_BOARD_BODY_KEY = "puzzle.5d.play.board";
-export const PUZZLE_5D_PLAY_SCENE_BODY_KEY = "puzzle.5d.play.scene";
+export const PUZZLE_5D_PLAY_VOLUME_BODY_KEY = "puzzle.5d.play.volume";
 export const PUZZLE_5D_PLAY_BOARD_SURFACE_ID = "puzzle.5d.play.board/v1";
-export const PUZZLE_5D_PLAY_SCENE_SURFACE_ID = "puzzle.5d.play.scene/v1";
+export const PUZZLE_5D_PLAY_VOLUME_SURFACE_ID = "puzzle.5d.play.volume/v1";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 
 const PUZZLE_5D_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
@@ -61,12 +61,12 @@ const PUZZLE_5D_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", 
 //#region 🔖TopologyPlayHierarchy
 export interface TopologyPlayHierarchySelectHandlers {
   readonly onSelectBoard: (id: string) => void;
-  readonly onSelectSceneObject: (objectId: string) => void;
-  readonly onSelectSceneVortex: (vortexFullId: string) => void;
-  readonly onSelectSceneAttraction: (attractionId: string) => void;
+  readonly onSelectVolumeObject: (objectId: string) => void;
+  readonly onSelectVolumeVortex: (vortexFullId: string) => void;
+  readonly onSelectVolumeAttraction: (attractionId: string) => void;
 }
 
-/** @emoji 🌳 Paired topology tree: manifest → Board + Scene composition subtrees. */
+/** @emoji 🌳 Paired topology tree: manifest → Board + Volume composition subtrees. */
 export function buildTopologyPlayHierarchySections(snapshot: TopologyPlaySnapshot, handlers: TopologyPlayHierarchySelectHandlers): UiTreeNode {
   const branches: UiTreeItemNode[] = [];
   if (snapshot.boardFixture) {
@@ -78,14 +78,14 @@ export function buildTopologyPlayHierarchySections(snapshot: TopologyPlaySnapsho
       items: boardRoot?.items ?? [{ id: "puzzle-5d-play-hierarchy.board.empty", label: "(empty)" }],
     });
   }
-  if (snapshot.sceneFixture) {
-    const sceneSelection = snapshot.sceneSelected ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.sceneSelected] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
-    const sceneRoot = buildPuzzle3dPlayHierarchyTree(snapshot.sceneFixture, sceneSelection).sections[0]?.items?.[0];
+  if (snapshot.volumeFixture) {
+    const volumeSelection = snapshot.volumeSelected ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.volumeSelected] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
+    const volumeRoot = buildPuzzle3dPlayHierarchyTree(snapshot.volumeFixture, volumeSelection).sections[0]?.items?.[0];
     branches.push({
-      id: "puzzle-5d-play-hierarchy.scene",
-      label: "Scene",
+      id: "puzzle-5d-play-hierarchy.volume",
+      label: "Volume",
       defaultOpen: true,
-      items: sceneRoot?.items ?? [{ id: "puzzle-5d-play-hierarchy.scene.empty", label: "(empty)" }],
+      items: volumeRoot?.items ?? [{ id: "puzzle-5d-play-hierarchy.volume.empty", label: "(empty)" }],
     });
   }
   const topologyRoot: UiTreeItemNode = {
@@ -116,24 +116,24 @@ function sameCamera(a: CameraState | null, b: CameraState): boolean {
 export interface TopologyPlaySnapshot {
   readonly manifestLabel: string | undefined;
   readonly boardFixture: BoardFixtureV1 | null;
-  readonly sceneFixture: SceneFixtureV1 | null;
+  readonly volumeFixture: VolumeFixtureV1 | null;
   readonly boardSelected: ReadonlySet<string>;
   readonly boardCamera: CameraState | null;
-  readonly sceneCamera: CameraState | null;
-  readonly sceneSelected: string | null;
-  readonly relocateMode: SceneRelocateMode;
-  readonly sceneLodTag: number;
+  readonly volumeCamera: CameraState | null;
+  readonly volumeSelected: string | null;
+  readonly relocateMode: VolumeRelocateMode;
+  readonly volumeLodTag: number;
   readonly boardLodTag: BoardDrawLodKind;
   readonly boardLodProps: ReturnType<typeof boardLodCanvasProps>;
-  readonly sceneLodProps: ReturnType<typeof sceneLodCanvasProps>;
-  readonly sceneAutomaticLod: boolean;
-  readonly sceneDepthVariableLod: boolean;
-  readonly sceneLodSlider: number;
-  readonly sharedKinds: ReturnType<typeof topologySharedKindsFromPairedMetas>;
+  readonly volumeLodProps: ReturnType<typeof sceneLodCanvasProps>;
+  readonly volumeAutomaticLod: boolean;
+  readonly volumeDepthVariableLod: boolean;
+  readonly volumeLodSlider: number;
+  readonly sharedKinds: ReturnType<typeof topologySharedKindsFromMetas>;
   readonly connectBoard: number;
-  readonly connectScene: number;
+  readonly connectVolume: number;
   readonly proximityBoard: number;
-  readonly proximityScene: number;
+  readonly proximityVolume: number;
 }
 
 function loadNakaginTopologyModel(): TopologyV1 {
@@ -142,26 +142,26 @@ function loadNakaginTopologyModel(): TopologyV1 {
   return model;
 }
 
-/** @emoji 🎛 Topology play shell controller shared by declarative board and scene windows. */
+/** @emoji 🎛 Topology play shell controller shared by declarative board and volume windows. */
 export class TopologyPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Topology", undefined);
   readonly topologyStore: TopologyStore = createTopologyStore(loadNakaginTopologyModel());
-  private relocateMode: SceneRelocateMode = "translate";
+  private relocateMode: VolumeRelocateMode = "translate";
   private boardSelected: ReadonlySet<string> = new Set();
-  private sceneSelected: string | null = null;
+  private volumeSelected: string | null = null;
   private boardCamera: CameraState | null = { ...this.topologyStore.getModel().flatCamera };
-  private sceneCamera: CameraState | null = { ...this.topologyStore.getModel().spatialCamera };
-  private sceneLodTag = DEFAULT_MANUAL_LOD;
-  private sceneAutomaticLod = true;
-  private sceneDepthVariableLod = false;
-  private sceneManualLod = DEFAULT_MANUAL_LOD;
-  private sceneLodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
+  private volumeCamera: CameraState | null = { ...this.topologyStore.getModel().volumeCamera };
+  private volumeLodTag = DEFAULT_MANUAL_LOD;
+  private volumeAutomaticLod = true;
+  private volumeDepthVariableLod = false;
+  private volumeManualLod = DEFAULT_MANUAL_LOD;
+  private volumeLodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
   private boardLodTag: BoardDrawLodKind = "normal";
   private boardLodMode: BoardLodModeKind = BOARD_LOD_MODE_AUTOMATIC;
   private connectBoard = 0;
-  private connectScene = 0;
+  private connectVolume = 0;
   private proximityBoard = 0;
-  private proximityScene = 0;
+  private proximityVolume = 0;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -195,32 +195,32 @@ export class TopologyPlayShellController extends Controller {
     };
   }
 
-  private sceneLodMeasures(): readonly WindowMeasure[] {
+  private volumeLodMeasures(): readonly WindowMeasure[] {
     return [
       {
         kind: "toggle",
-        id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-auto`,
+        id: `${PUZZLE_5D_PLAY_VOLUME_WINDOW_ID}-auto`,
         label: "LOD",
         text: "Auto zoom",
-        pressed: this.sceneAutomaticLod,
-        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneAutoLod" },
+        pressed: this.volumeAutomaticLod,
+        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setVolumeAutoLod" },
       },
       {
         kind: "toggle",
-        id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-depth`,
+        id: `${PUZZLE_5D_PLAY_VOLUME_WINDOW_ID}-depth`,
         text: "Depth-variable",
-        pressed: this.sceneDepthVariableLod,
-        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneDepthLod" },
+        pressed: this.volumeDepthVariableLod,
+        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setVolumeDepthLod" },
       },
       {
         kind: "slider",
-        id: `${PUZZLE_5D_PLAY_SCENE_WINDOW_ID}-lod`,
-        label: formatSceneLod(this.sceneLodTag),
-        value: this.sceneLodSlider,
+        id: `${PUZZLE_5D_PLAY_VOLUME_WINDOW_ID}-lod`,
+        label: formatSceneLod(this.volumeLodTag),
+        value: this.volumeLodSlider,
         min: SCENE_LOD_SLIDER_MIN,
         max: SCENE_LOD_SLIDER_MAX,
         step: 1,
-        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setSceneManualLod" },
+        onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "setVolumeManualLod" },
       },
     ];
   }
@@ -228,7 +228,7 @@ export class TopologyPlayShellController extends Controller {
   getWindowKinds(): readonly WindowKindRuntime[] {
     return [
       new WindowKindRuntime(PUZZLE_5D_PLAY_BOARD_WINDOW_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL, PUZZLE_5D_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
-      new WindowKindRuntime(PUZZLE_5D_PLAY_SCENE_WINDOW_ID, PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL, PUZZLE_5D_PLAY_SCENE_BODY_KEY, undefined, [...this.sceneLodMeasures()]),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_VOLUME_WINDOW_ID, PUZZLE_5D_PLAY_VOLUME_WINDOW_LABEL, PUZZLE_5D_PLAY_VOLUME_BODY_KEY, undefined, [...this.volumeLodMeasures()]),
     ];
   }
 
@@ -241,23 +241,23 @@ export class TopologyPlayShellController extends Controller {
         else changed = false;
         break;
       }
-      case "setSceneAutoLod": {
+      case "setVolumeAutoLod": {
         const pressed = (args as { pressed?: boolean }).pressed;
-        if (typeof pressed === "boolean" && this.sceneAutomaticLod !== pressed) this.sceneAutomaticLod = pressed;
+        if (typeof pressed === "boolean" && this.volumeAutomaticLod !== pressed) this.volumeAutomaticLod = pressed;
         else changed = false;
         break;
       }
-      case "setSceneDepthLod": {
+      case "setVolumeDepthLod": {
         const pressed = (args as { pressed?: boolean }).pressed;
-        if (typeof pressed === "boolean" && this.sceneDepthVariableLod !== pressed) this.sceneDepthVariableLod = pressed;
+        if (typeof pressed === "boolean" && this.volumeDepthVariableLod !== pressed) this.volumeDepthVariableLod = pressed;
         else changed = false;
         break;
       }
-      case "setSceneManualLod": {
+      case "setVolumeManualLod": {
         const value = (args as { value?: number }).value;
         if (typeof value === "number" && Number.isFinite(value)) {
-          this.sceneLodSlider = value;
-          this.sceneManualLod = lodFromSliderValue(value);
+          this.volumeLodSlider = value;
+          this.volumeManualLod = lodFromSliderValue(value);
         } else changed = false;
         break;
       }
@@ -267,10 +267,10 @@ export class TopologyPlayShellController extends Controller {
         else changed = false;
         break;
       }
-      case "setSceneLodTag": {
+      case "setVolumeLodTag": {
         const lod = (args as { lod: number }).lod;
         if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
-          this.sceneLodTag = lod;
+          this.volumeLodTag = lod;
         }
         changed = false;
         break;
@@ -281,9 +281,9 @@ export class TopologyPlayShellController extends Controller {
         else changed = false;
         break;
       }
-      case "setSceneSelection": {
+      case "setVolumeSelection": {
         const selected = (args as { objectIds: readonly string[] }).objectIds[0] ?? null;
-        if (this.sceneSelected !== selected) this.sceneSelected = selected;
+        if (this.volumeSelected !== selected) this.volumeSelected = selected;
         else changed = false;
         break;
       }
@@ -293,14 +293,14 @@ export class TopologyPlayShellController extends Controller {
         else changed = false;
         break;
       }
-      case "setSceneCamera": {
+      case "setVolumeCamera": {
         const camera = (args as { camera: CameraState }).camera;
-        if (!sameCamera(this.sceneCamera, camera)) this.sceneCamera = { ...camera };
+        if (!sameCamera(this.volumeCamera, camera)) this.volumeCamera = { ...camera };
         else changed = false;
         break;
       }
       case "setRelocateMode": {
-        const mode = (args as { mode: SceneRelocateMode }).mode;
+        const mode = (args as { mode: VolumeRelocateMode }).mode;
         if (this.relocateMode !== mode) this.relocateMode = mode;
         else changed = false;
         break;
@@ -308,14 +308,14 @@ export class TopologyPlayShellController extends Controller {
       case "noteBoardConnect":
         this.connectBoard += 1;
         break;
-      case "noteSceneConnect":
-        this.connectScene += 1;
+      case "noteVolumeConnect":
+        this.connectVolume += 1;
         break;
       case "noteBoardProximity":
         this.proximityBoard += 1;
         break;
-      case "noteSceneProximity":
-        this.proximityScene += 1;
+      case "noteVolumeProximity":
+        this.proximityVolume += 1;
         break;
       default:
         changed = false;
@@ -330,32 +330,32 @@ export class TopologyPlayShellController extends Controller {
   getSnapshot(): TopologyPlaySnapshot {
     const model = this.topologyStore.getModel();
     const boardFixture = projectFlat(model);
-    const sceneFixture = projectSpatial(model);
+    const volumeFixture = projectVolume(model);
     return {
       manifestLabel: model.label,
       boardFixture,
-      sceneFixture,
+      volumeFixture,
       boardSelected: this.boardSelected,
       boardCamera: this.boardCamera,
-      sceneCamera: this.sceneCamera,
-      sceneSelected: this.sceneSelected,
+      volumeCamera: this.volumeCamera,
+      volumeSelected: this.volumeSelected,
       relocateMode: this.relocateMode,
-      sceneLodTag: this.sceneLodTag,
+      volumeLodTag: this.volumeLodTag,
       boardLodTag: this.boardLodTag,
       boardLodProps: boardLodCanvasProps(this.boardLodMode),
-      sceneLodProps: sceneLodCanvasProps({
-        automaticLod: this.sceneAutomaticLod,
-        depthVariableLod: this.sceneDepthVariableLod,
-        manualLod: this.sceneManualLod,
+      volumeLodProps: sceneLodCanvasProps({
+        automaticLod: this.volumeAutomaticLod,
+        depthVariableLod: this.volumeDepthVariableLod,
+        manualLod: this.volumeManualLod,
       }),
-      sceneAutomaticLod: this.sceneAutomaticLod,
-      sceneDepthVariableLod: this.sceneDepthVariableLod,
-      sceneLodSlider: this.sceneLodSlider,
-      sharedKinds: topologySharedKindsFromPairedMetas({ boardMeta: boardFixture.meta, sceneMeta: sceneFixture.meta }),
+      volumeAutomaticLod: this.volumeAutomaticLod,
+      volumeDepthVariableLod: this.volumeDepthVariableLod,
+      volumeLodSlider: this.volumeLodSlider,
+      sharedKinds: topologySharedKindsFromMetas({ flatMeta: boardFixture.meta, volumeMeta: volumeFixture.meta }),
       connectBoard: this.connectBoard,
-      connectScene: this.connectScene,
+      connectVolume: this.connectVolume,
       proximityBoard: this.proximityBoard,
-      proximityScene: this.proximityScene,
+      proximityVolume: this.proximityVolume,
     };
   }
 }
@@ -368,7 +368,7 @@ export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellControl
     "Topology play",
     undefined,
     controller,
-    createDefaultLayout([PUZZLE_5D_PLAY_BOARD_WINDOW_ID, PUZZLE_5D_PLAY_SCENE_WINDOW_ID], "row", [50, 50], [PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL, PUZZLE_5D_PLAY_SCENE_WINDOW_LABEL]) as never,
+    createDefaultLayout([PUZZLE_5D_PLAY_BOARD_WINDOW_ID, PUZZLE_5D_PLAY_VOLUME_WINDOW_ID], "row", [50, 50], [PUZZLE_5D_PLAY_BOARD_WINDOW_LABEL, PUZZLE_5D_PLAY_VOLUME_WINDOW_LABEL]) as never,
     controller.getWindowKinds(),
   );
   app.defaultModeId = controller.mainMode.id;
@@ -401,18 +401,18 @@ export class Playground5d extends Playground {
 //#endregion 🔖TopologyPlayRuntime
 
 //#region 🔖DeclarativeBodies
-export function buildTopologyBoardDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
+export function buildTopologyFlatDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = topologyControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
   if (!snap?.boardFixture) return { type: "text", value: "Invalid board fixture" };
   return buildBoardWindowBody(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_ID);
 }
 
-export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
+export function buildTopologyVolumeDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = topologyControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
-  if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
-  return buildScene3dWindowBody(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
+  if (!snap?.volumeFixture) return { type: "text", value: "Invalid volume fixture" };
+  return buildScene3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
 }
 //#endregion 🔖DeclarativeBodies
 
@@ -420,26 +420,26 @@ export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): U
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("topology play hierarchy", () => {
-    it("buildTopologyPlayHierarchySections includes Board and Scene branches", () => {
+    it("buildTopologyPlayHierarchySections includes Board and Volume branches", () => {
       const runtime = buildTopologyPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController;
       expect(controller).toBeTruthy();
       const tree = buildTopologyPlayHierarchySections(controller!.getSnapshot(), {
         onSelectBoard: () => {},
-        onSelectSceneObject: () => {},
-        onSelectSceneVortex: () => {},
-        onSelectSceneAttraction: () => {},
+        onSelectVolumeObject: () => {},
+        onSelectVolumeVortex: () => {},
+        onSelectVolumeAttraction: () => {},
       });
       const topologyRoot = tree.sections[0]?.items?.[0];
       expect(topologyRoot?.label).toBeTruthy();
       const labels = topologyRoot?.items?.map((row) => row.label);
       expect(labels).toContain("Board");
-      expect(labels).toContain("Scene");
+      expect(labels).toContain("Volume");
     });
   });
 
   describe("topology play fixtures", () => {
-    it("parses nakagin board and scene", () => {
+    it("parses nakagin board and volume fixture", () => {
       const b = parseBoardFixtureV1(nakaginBoardJson as unknown);
       const s = parseFixtureV1(nakaginSceneJson as unknown);
       expect(b?.nodes.length).toBeGreaterThan(0);
@@ -457,43 +457,43 @@ if (import.meta.vitest) {
       expect(board).toBeTruthy();
       expect(scene).toBeTruthy();
       const model = {
-        ...topologyFromLegacyPair(board!, scene!),
+        ...topologyCompose(board!, scene!),
         label: "Nakagin capsule tower",
         meta: {
-          description: "Unified topology source for Nakagin play; flat and spatial views project from this model.",
+          description: "Unified topology source for Nakagin play; flat and volume views project from this model.",
         },
       };
       const { writeFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
-      const outPath = join(process.cwd(), "fixtures/nakagin-capsule-tower.topology.json");
+      const outPath = join(process.cwd(), "../assets/nakagin-capsule-tower.topology.json");
       await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
       expect(model.parts.length).toBeGreaterThan(0);
     });
     it("shared kinds merge metas like the play harness", () => {
-      const sk = topologySharedKindsFromPairedMetas({
-        boardMeta: undefined,
-        sceneMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
+      const sk = topologySharedKindsFromMetas({
+        flatMeta: undefined,
+        volumeMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
       });
       expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
     });
-    it("builds declarative board and scene canvas-only bodies", () => {
+    it("builds declarative board and volume canvas-only bodies", () => {
       const wb = buildTopologyPlayRuntime();
-      const board = buildTopologyBoardDeclarativeBody({
+      const board = buildTopologyFlatDeclarativeBody({
         runtime: wb,
         windowKindId: PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
         bodyKey: PUZZLE_5D_PLAY_BOARD_BODY_KEY,
         activeModeId: "main",
         generation: 0,
       });
-      const scene = buildTopologySceneDeclarativeBody({
+      const scene = buildTopologyVolumeDeclarativeBody({
         runtime: wb,
-        windowKindId: PUZZLE_5D_PLAY_SCENE_WINDOW_ID,
-        bodyKey: PUZZLE_5D_PLAY_SCENE_BODY_KEY,
+        windowKindId: PUZZLE_5D_PLAY_VOLUME_WINDOW_ID,
+        bodyKey: PUZZLE_5D_PLAY_VOLUME_BODY_KEY,
         activeModeId: "main",
         generation: 0,
       });
       expect(board).toEqual(buildBoardWindowBody(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_BOARD_WINDOW_ID));
-      expect(scene).toEqual(buildScene3dWindowBody(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
+      expect(scene).toEqual(buildScene3dWindowBody(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID));
     });
   });
 }

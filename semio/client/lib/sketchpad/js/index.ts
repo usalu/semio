@@ -153,16 +153,16 @@ import {
   FiveD,
   TopologyStoreProvider,
   createTopologyStore,
-  topologyFromLegacyPair,
-  topologyApplyBoardFixtureCentersToTopLeft,
-  topologyBoardCameraFromCenters,
-  topologyBoardCenterFromTopLeft,
-  topologyBoardCompoundId,
-  topologyBoardConnectorAngle,
-  topologyKitBoardHandleAngle,
-  topologyDiagramForceGraphOptions,
-  topologyParseBoardCompoundId,
-  topologySceneChromeDefaults,
+  topologyCompose,
+  flatApplyFixtureCentersToTopLeft,
+  flatCameraFromPartCenters,
+  flatPartCenterFromTopLeft,
+  flatHandleCompoundId,
+  flatHandleConnectorAngle,
+  kitFlatHandleAngle,
+  flatDiagramForceGraphOptions,
+  flatParseHandleCompoundId,
+  volumeChromeDefaults,
 } from "@puzzle/5d/react";
 import { gunzipSync } from "fflate";
 
@@ -14142,10 +14142,10 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     const frame = getKitDiagramNodeFrameForKind(kind);
     const strategy = getKitDiagramShapeStrategy(kind);
     const shape: "circle" | "rectangle" = strategy.id === "circle" ? "circle" : "rectangle";
-    const center = topologyBoardCenterFromTopLeft(node.position, frame);
+    const center = flatPartCenterFromTopLeft(node.position, frame);
     const handles = SKETCHPAD_KIT_BOARD_HANDLE_SIDES.map((side) => ({
-      id: topologyBoardCompoundId(node.id, side),
-      angle: topologyKitBoardHandleAngle(side, shape),
+      id: flatHandleCompoundId(node.id, side),
+      angle: kitFlatHandleAngle(side, shape),
       handleKind: `semio.kit.${kind}`,
       radius: 4,
     }));
@@ -14190,15 +14190,15 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
       );
       return {
         id: edge.id,
-        source: topologyBoardCompoundId(edge.source, anchors.source.localPoint.side),
-        target: topologyBoardCompoundId(edge.target, anchors.target.localPoint.side),
+        source: flatHandleCompoundId(edge.source, anchors.source.localPoint.side),
+        target: flatHandleCompoundId(edge.target, anchors.target.localPoint.side),
       };
     })
     .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
   return {
     schema: "puzzle.2d.fixture/v1",
-    camera: topologyBoardCameraFromCenters(
-      nodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+    camera: flatCameraFromPartCenters(
+      nodes.map((node) => flatPartCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
     ),
     nodes: boardNodes,
     edges: boardEdges,
@@ -14484,15 +14484,15 @@ const KitDiagramInner: FC = () => {
   const selectedBoardIds = useMemo(() => sketchpadKitSelectionToBoardIds(selection), [selection]);
   const lockedBoardNodeIds = useMemo(() => (isHandTool ? new Set(diagramNodes.map((node) => node.id)) : new Set<string>()), [isHandTool, diagramNodes]);
   const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() =>
-    topologyBoardCameraFromCenters(
-      diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+    flatCameraFromPartCenters(
+      diagramNodes.map((node) => flatPartCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
     ),
   );
 
   useEffect(() => {
     setBoardCamera(
-      topologyBoardCameraFromCenters(
-        diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+      flatCameraFromPartCenters(
+        diagramNodes.map((node) => flatPartCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
       ),
     );
   }, [baseNodeIdsKey]);
@@ -14517,9 +14517,9 @@ const KitDiagramInner: FC = () => {
   useEffect(() => {
     if (diagramNodesRef.current.length === 0) return;
     const fixture = sketchpadKitBuildBoardFixture(diagramNodesRef.current, diagramEdgesRef.current);
-    const laid = layoutBoardFixtureForceGraph(fixture, topologyDiagramForceGraphOptions(diagramForceConfig));
+    const laid = layoutBoardFixtureForceGraph(fixture, flatDiagramForceGraphOptions(diagramForceConfig));
     commitDiagramNodes(
-      topologyApplyBoardFixtureCentersToTopLeft(diagramNodesRef.current, laid, (node) =>
+      flatApplyFixtureCentersToTopLeft(diagramNodesRef.current, laid, (node) =>
         getKitDiagramNodeFrameForKind(node.data.kind),
       ),
     );
@@ -14607,7 +14607,7 @@ const KitDiagramInner: FC = () => {
       objects: [],
       attractions: [],
     };
-    return createTopologyStore(topologyFromLegacyPair(boardFixture, emptyScene));
+    return createTopologyStore(topologyCompose(boardFixture, emptyScene));
   }, [boardFixture]);
 
   const sketchpadCommands = useSketchpadCommands();
@@ -34215,7 +34215,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #endregion Â­Æ’ÂºÂ½Diagram
 
 // #region Â­Æ’ÂºÂ®TopologyAdapter
-/** Â­Æ’Ã„Â¼ Design board+scene via {@link FiveD} (`flat` / `spatial`) and a shared {@link TopologyStore} on @puzzle/5d/react. */
+/** Â­Æ’Ã„Â¼ Design flat+volume via {@link FiveD} (`flat` / `volume`) and a shared {@link TopologyStore} on @puzzle/5d/react. */
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH = 96;
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT = 48;
 const SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS = 10;
@@ -34233,19 +34233,19 @@ const readSketchpadEntityId = (value: unknown): string | undefined => {
 };
 
 const parseSketchpadTopologyBoardHandleId = (value: string): { pieceId: string; connectorId: string } | null => {
-  const parsed = topologyParseBoardCompoundId(value);
+  const parsed = flatParseHandleCompoundId(value);
   if (!parsed) return null;
   return { pieceId: parsed.left, connectorId: parsed.right };
 };
 
 const parseSketchpadTopologySceneFullId = (value: string): { pieceId: string; connectorId: string } | null => {
-  const parsed = topologyParseBoardCompoundId(value, ":");
+  const parsed = flatParseHandleCompoundId(value, ":");
   if (!parsed) return null;
   return { pieceId: parsed.left, connectorId: parsed.right };
 };
 
 const sketchpadTopologyBoardHandleOffset = (index: number, total: number): { x: number; y: number } => {
-  const angle = topologyBoardConnectorAngle(index, total);
+  const angle = flatHandleConnectorAngle(index, total);
   const radius = Math.max(SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH, SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT) * 0.5;
   return {
     x: Math.cos(angle) * radius,
@@ -34254,7 +34254,7 @@ const sketchpadTopologyBoardHandleOffset = (index: number, total: number): { x: 
 };
 
 const sketchpadTopologySceneVortexOffset = (index: number, total: number): [number, number, number] => {
-  const angle = topologyBoardConnectorAngle(index, total);
+  const angle = flatHandleConnectorAngle(index, total);
   return [Math.cos(angle) * 0.75, 0, Math.sin(angle) * 0.75];
 };
 
@@ -34409,8 +34409,8 @@ const sketchpadTopologyBuildBoardFixture = (args: {
           root: !args.placementByPiece.get(piece.id)?.parentPieceId,
           nodeKind: readSketchpadEntityId(piece.design) ? "semio.design" : "semio.type",
           handles: connectors.map((connector, connectorIndex) => ({
-            id: topologyBoardCompoundId(piece.id, connector.id),
-            angle: topologyBoardConnectorAngle(connectorIndex, connectors.length),
+            id: flatHandleCompoundId(piece.id, connector.id),
+            angle: flatHandleConnectorAngle(connectorIndex, connectors.length),
             radius: SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS,
             handleKind: "semio.connector",
           })),
@@ -34428,8 +34428,8 @@ const sketchpadTopologyBuildBoardFixture = (args: {
           if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
           return {
             id: connection.id,
-            source: topologyBoardCompoundId(sourcePieceId, sourceConnectorId),
-            target: topologyBoardCompoundId(targetPieceId, targetConnectorId),
+            source: flatHandleCompoundId(sourcePieceId, sourceConnectorId),
+            target: flatHandleCompoundId(targetPieceId, targetConnectorId),
             edgeKind: "semio.connection",
           };
         })
@@ -34864,7 +34864,7 @@ const useDesignTopologyAdapter = () => {
   }, []);
 
   const topologyStore = useMemo(() => {
-    const model = topologyFromLegacyPair(boardFixture, sceneFixture);
+    const model = topologyCompose(boardFixture, sceneFixture);
     if (!activeDesignId) {
       return createTopologyStore(model);
     }
@@ -35042,16 +35042,16 @@ const DesignTopologySceneWindow = memo(() => {
         </Button>
       </div>
       <FiveD
-        mode="spatial"
-        instanceId="design-spatial"
+        mode="volume"
+        instanceId="design-volume"
         relocateMode={topology.relocateMode}
-        spatial={{
+        volume={{
           camera: topology.sceneCamera,
           onCamera: topology.onSceneCamera,
           onSelect: topology.onSceneSelect,
           onConnect: topology.onSceneConnect,
           onRelocate: topology.onSceneRelocate,
-          ...topologySceneChromeDefaults(),
+          ...volumeChromeDefaults(),
         }}
       />
     </div>

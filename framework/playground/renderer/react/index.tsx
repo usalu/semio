@@ -1003,7 +1003,7 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
-import nakaginSceneFixtureJson from "../../../../puzzle/3d/play/fixtures/nakagin-capsule-tower.scene.json";
+import { NakaginCapsuleTowerSceneJson as nakaginSceneFixtureJson } from "@puzzle/assets";
 import { PlaySceneCanvas, SceneObjectStateProvider, parseFixtureV1, applyConnectToSceneFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,
@@ -1152,14 +1152,14 @@ import {
   PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
   PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
   PUZZLE_5D_PLAY_CONTROLLER_ID,
-  PUZZLE_5D_PLAY_SCENE_BODY_KEY,
-  PUZZLE_5D_PLAY_SCENE_SURFACE_ID,
+  PUZZLE_5D_PLAY_VOLUME_BODY_KEY,
+  PUZZLE_5D_PLAY_VOLUME_SURFACE_ID,
   PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
   TopologyPlayShellController,
-  buildTopologyBoardDeclarativeBody,
+  buildTopologyFlatDeclarativeBody,
   buildTopologyPlayHierarchySections,
   buildTopologyPlayRuntime,
-  buildTopologySceneDeclarativeBody,
+  buildTopologyVolumeDeclarativeBody,
   type TopologyPlaySnapshot,
 } from "@puzzle/5d/play";
 // #endregion 🔌Adapters
@@ -1194,8 +1194,8 @@ function TopologyPlayStatusPanel(): React.ReactElement {
         <dd>{snapshot.boardSelected.size} id(s)</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground font-medium">Scene selection</dt>
-        <dd>{snapshot.sceneSelected ?? "—"}</dd>
+        <dt className="text-muted-foreground font-medium">Volume selection</dt>
+        <dd>{snapshot.volumeSelected ?? "—"}</dd>
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Relocate</dt>
@@ -1204,13 +1204,13 @@ function TopologyPlayStatusPanel(): React.ReactElement {
       <div>
         <dt className="text-muted-foreground font-medium">Connect events</dt>
         <dd>
-          board {snapshot.connectBoard} · scene {snapshot.connectScene}
+          board {snapshot.connectBoard} · volume {snapshot.connectVolume}
         </dd>
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Proximity events</dt>
         <dd>
-          board {snapshot.proximityBoard} · scene {snapshot.proximityScene}
+          board {snapshot.proximityBoard} · volume {snapshot.proximityVolume}
         </dd>
       </div>
     </dl>
@@ -1275,25 +1275,25 @@ function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceN
   );
 }
 
-function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
+function TopologyVolumeSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
   const { controller, snapshot } = useTopologyPlaySnapshot();
-  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_SCENE_SURFACE_ID || !controller || !snapshot?.sceneFixture || !snapshot.sceneCamera || !snapshot.boardFixture) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid topology scene binding</div>;
+  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_VOLUME_SURFACE_ID || !controller || !snapshot?.volumeFixture || !snapshot.volumeCamera || !snapshot.boardFixture) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid topology volume binding</div>;
   }
-  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.sceneFixture.objects.map((object) => object.meshUrl))], [snapshot.sceneFixture]);
+  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.volumeFixture.objects.map((object) => object.meshUrl))], [snapshot.volumeFixture]);
   reactHostPort.useEffect(() => {
     for (const url of meshUrls) useGLTF.preload(url);
   }, [meshUrls]);
   return (
     <FiveD
-      mode="spatial"
-      instanceId="play-spatial"
+      mode="volume"
+      instanceId="play-volume"
       relocateMode={snapshot.relocateMode}
-      spatial={{
-        ...snapshot.sceneLodProps,
-        camera: snapshot.sceneCamera ?? snapshot.sceneFixture.camera,
-        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteSceneConnect"),
-        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteSceneProximity"),
+      volume={{
+        ...snapshot.volumeLodProps,
+        camera: snapshot.volumeCamera ?? snapshot.volumeFixture.camera,
+        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteVolumeConnect"),
+        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "noteVolumeProximity"),
       }}
     />
   );
@@ -1303,14 +1303,14 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 //#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers topology play board+scene surface hosts (called from `@framework/playground/renderer/react`). */
+/** @emoji 🧊 Registers topology play flat+volume surface hosts (called from `@framework/playground/renderer/react`). */
 export function registerTopologyPlaySurfaceHosts(): void {
   if (topologyPlayChromeRegistered) return;
   topologyPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_BOARD_SURFACE_ID, TopologyBoardSurfaceHost);
-  registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_SCENE_SURFACE_ID, TopologySceneSurfaceHost);
-  registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyBoardDeclarativeBody);
-  registerWindowBody(PUZZLE_5D_PLAY_SCENE_BODY_KEY, buildTopologySceneDeclarativeBody);
+  registerUiScene3DSurfaceHost(PUZZLE_5D_PLAY_VOLUME_SURFACE_ID, TopologyVolumeSurfaceHost);
+  registerWindowBody(PUZZLE_5D_PLAY_BOARD_BODY_KEY, buildTopologyFlatDeclarativeBody);
+  registerWindowBody(PUZZLE_5D_PLAY_VOLUME_BODY_KEY, buildTopologyVolumeDeclarativeBody);
 }
 
 function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): React.ReactElement {
@@ -1323,7 +1323,7 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
   const controller = runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
   const snapshot = controller?.getSnapshot() ?? null;
   const bus = runtime.commandBus;
-  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.sceneSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}` : "";
+  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.volumeSelected ?? ""}\u0001${[...snapshot.boardSelected].sort().join(",")}` : "";
   const workbenchTabs = reactHostPort.useMemo(
     () =>
       snapshot && controller
@@ -1331,9 +1331,9 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: ProductRuntime }): 
             new TopologyPlayHierarchyPanelDefinition(() =>
               buildTopologyPlayHierarchySections(snapshot, {
                 onSelectBoard: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setBoardSelection", { ids: [id] }),
-                onSelectSceneObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setSceneSelection", { objectIds: [objectId] }),
-                onSelectSceneVortex: () => {},
-                onSelectSceneAttraction: () => {},
+                onSelectVolumeObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "setVolumeSelection", { objectIds: [objectId] }),
+                onSelectVolumeVortex: () => {},
+                onSelectVolumeAttraction: () => {},
               }),
             ).resolveTab(),
           ]
@@ -1412,7 +1412,6 @@ import {
   BoardPaneChrome,
   BoardStructuralDeleteReporter,
   BoardPlayRedrawProgressReset,
-  nakaginBoardMarkers,
   type BoardFixtureV1,
   type BoardFixtureNodeV1,
   type BoardFixtureRectangleNodeV1,
@@ -1429,7 +1428,7 @@ import {
 import type { Playground } from "@framework/playground";
 // #endregion 🔌Adapters
 
-const NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
+const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
 
 // #region 🔖Kinds
 export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
@@ -1950,7 +1949,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function nakaginBoardMarkers(fixture: BoardFixtureV1): ReactElement {
+function boardFixtureMarkers(fixture: BoardFixtureV1): ReactElement {
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   return (
@@ -2118,7 +2117,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
         fixtureDragDrop
         gridSnapEnabled={boardGridSnapEnabled}
         hoveredId={hoveredId}
-        kindCatalogs={NAKAGIN_PUZZLE_2D_PLAY_KIND_CATALOGS}
+        kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -2133,7 +2132,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
       >
         <BoardStructuralDeleteReporter />
         <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture)}
+        {boardFixtureMarkers(fixture)}
       </BoardCanvas>
     </BoardPaneChrome>
   );

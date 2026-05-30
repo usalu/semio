@@ -3,10 +3,6 @@
 // #endregion 🧲Header
 
 // #region 📥ModelDefinitionAssets
-import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
-import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";
-import smallBuildingModelFixtureJson from "../../fixtures/small-building.model.json";
-
 const modelDefinitionTypologyModules = import.meta.glob(
   ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
   {
@@ -5471,9 +5467,19 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 
 // #region 🧪Tests
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __cadInteractionE2EFixtureModules = import.meta.vitest
+  ? await Promise.all([
+      import("../../assets/builtin/geometry-loom.json"),
+      import("../../assets/builtin/geometry-routes.json"),
+      import("../../assets/builtin/small-building.model.json"),
+    ])
+  : null;
 
 if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath } = __spatialCoreTestKernel!;
+  const geometryLoomFixtureJson = __cadInteractionE2EFixtureModules![0].default;
+  const geometryRoutesFixtureJson = __cadInteractionE2EFixtureModules![1].default;
+  const smallBuildingModelFixtureJson = __cadInteractionE2EFixtureModules![2].default;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = import.meta.vitest;
 

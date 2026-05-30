@@ -25,7 +25,7 @@ import {
 	type WindowLayout,
 } from "@framework/playground";
 
-import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
+import { NakaginCapsuleTowerBoardJson as nakaginFixtureJson } from "@puzzle/assets";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardFixtureNodeCaption,

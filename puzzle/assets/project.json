@@ -1,0 +1,14 @@
+{
+  "name": "@puzzle/assets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/assets",
+        "command": "bun -e \"console.log('@puzzle/assets is a source-only workspace and does not require a build step.')\"",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

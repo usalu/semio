@@ -10,6 +10,7 @@
     "framework/platform/renderer/react",
     "framework/playground/core",
     "framework/playground/renderer/react",
+    "puzzle/assets",
     "puzzle/2d/react",
     "puzzle/2d/play",
     "puzzle/3d/react",

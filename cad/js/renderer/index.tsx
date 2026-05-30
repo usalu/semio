@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Engagement, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -3156,6 +3156,8 @@ export interface InteractionReplHostCallbacks {
   readonly onUndo?: () => void;
   readonly onRedo?: () => void;
   readonly onSnapshotChange?: (snapshot: InteractionSnapshot) => void;
+  /** @emoji 💬 Publishes the window engagement spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} engagement slot. */
+  readonly onEngagementChange?: (engagement: EngagementSpec | null) => void;
   readonly onEscape?: () => void;
   readonly onApplyTransformation?: (spec: TransformationSpec) => void;
   /** @emoji 🧲 Geometry used for pick targets (defaults to `geometry`; use spatial.shape geometry when the active model is typology-only). */
@@ -3168,7 +3170,7 @@ export interface InteractionReplLayoutProps {
   readonly rootStyle?: CSSProperties;
   readonly asideStyle?: CSSProperties;
   readonly showAside?: boolean;
-  /** @emoji 💬 Renders the floating {@link Engagement} panel (interaction options/input/status) over the viewport. */
+  /** @emoji 💬 Builds the window {@link EngagementSpec} (interaction options/input/status) and publishes it via {@link InteractionReplHostCallbacks.onEngagementChange}. */
   readonly showEngagement?: boolean;
   /** @emoji 📐 Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
   readonly fillHost?: boolean;
@@ -3283,12 +3285,11 @@ export interface InteractionReplEngagementInputs {
   readonly transitions: readonly InteractionKeybindRow[];
   readonly interactions: readonly InteractionReplEngagementInteraction[];
   readonly onTransition: (row: InteractionKeybindRow) => void;
-  readonly onInteraction: (id: string) => void;
   readonly onInputChange: (value: string) => void;
   readonly onInputSubmit: (value: string) => void;
 }
 
-/** @emoji 💬 Builds the floating {@link EngagementSpec} for a renderer window: idle lists startable interactions, an active session lists its transitions, plus a command input and state/selection/response status. */
+/** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, idle exposes a command input to start one, plus state/selection/response status. */
 export function buildInteractionReplEngagement(inputs: InteractionReplEngagementInputs): EngagementSpec | null {
   if (!inputs.showEngagement) return null;
   const options = inputs.boundInteractionSession
@@ -3297,11 +3298,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
         label: `${row.key.toUpperCase()} ${row.label}`,
         onPress: () => inputs.onTransition(row),
       }))
-    : inputs.interactions.map((interaction) => ({
-        id: `engagement-interaction-${interaction.id}`,
-        label: `${interaction.key.toUpperCase()} ${interaction.label}`,
-        onPress: () => inputs.onInteraction(interaction.id),
-      }));
+    : [];
   const status: { id: string; content: ReactNode }[] = [];
   if (inputs.interactionId) status.push({ id: "engagement-state", content: `State: ${inputs.state}` });
   if (inputs.selectionCount > 0) status.push({ id: "engagement-selection", content: `Selected: ${inputs.selectionCount}` });
@@ -3312,7 +3309,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
     });
   }
   const input =
-    options.length > 0 || inputs.boundInteractionSession
+    inputs.boundInteractionSession || inputs.interactions.length > 0
       ? {
           id: "engagement-input",
           value: inputs.cmdLine,
@@ -3396,6 +3393,7 @@ export function InteractionRepl({
   asideStyle,
   showAside = true,
   showEngagement = false,
+  onEngagementChange,
   fillHost = false,
   asideHost = null,
   hideModelDefinitionControls = false,
@@ -4134,12 +4132,15 @@ export function InteractionRepl({
         transitions: transitionRows,
         interactions: scopedInteractions,
         onTransition: runTransitionRow,
-        onInteraction: onInteractionId,
         onInputChange: (value: string) => setCmdLine(replCommandTextWithoutSpaces(value)),
         onInputSubmit: () => submitEngagementLine(),
       }),
-    [showEngagement, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, onInteractionId, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
+    [showEngagement, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
   );
+
+  reactHostPort.useEffect(() => {
+    onEngagementChange?.(engagementSpec);
+  }, [engagementSpec, onEngagementChange]);
 
   reactHostPort.useEffect(() => {
     const state = snapshot.state;
@@ -4398,7 +4399,6 @@ export function InteractionRepl({
             })}
           </div>
         ) : null}
-        {showEngagement && engagementSpec ? <Engagement {...engagementSpec} /> : null}
       </div>
       {showAside ? (
         <aside
@@ -5138,7 +5138,6 @@ if (import.meta.vitest) {
       transitions: [{ eventKind: "confirm", key: "c", label: "Confirm" }],
       interactions: [{ id: "primitive.box", key: "b", label: "Box" }],
       onTransition: () => {},
-      onInteraction: () => {},
       onInputChange: () => {},
       onInputSubmit: () => {},
     };
@@ -5162,18 +5161,18 @@ if (import.meta.vitest) {
       expect(transitionRuns).toEqual(["c"]);
     });
 
-    it("lists startable interactions while idle so a window can begin one", () => {
-      const started: string[] = [];
+    it("exposes only a command input while idle so a window can start an interaction", () => {
+      const submitted: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
         boundInteractionSession: false,
         interactionId: "",
-        onInteraction: (id) => started.push(id),
+        onInputSubmit: (value) => submitted.push(value),
       });
-      expect(spec?.options?.[0]?.label).toBe("B Box");
+      expect(spec?.options).toBeUndefined();
       expect(spec?.input?.placeholder).toBe("Type an interaction");
-      spec?.options?.[0]?.onPress?.();
-      expect(started).toEqual(["primitive.box"]);
+      spec?.input?.onSubmit?.("box");
+      expect(submitted).toEqual(["box"]);
     });
 
     it("returns null when idle with no startable interactions and nothing selected", () => {

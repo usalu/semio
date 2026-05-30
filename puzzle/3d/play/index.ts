@@ -58,7 +58,7 @@ import {
   type VortexProps,
   type WireKindCatalogEntry,
 } from "../react/index.tsx";
-import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
+import { NakaginCapsuleTowerSceneJson as nakaginSceneFixtureJson } from "@puzzle/assets";
 
 //#region 🧾Meta
 function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
