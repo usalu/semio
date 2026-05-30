@@ -39,6 +39,7 @@ import {
 	meshEdges,
 	normalAt,
 	offsetFace,
+	fuseAll,
 	shape,
 	sphere,
 	threePointArc,
@@ -1719,11 +1720,48 @@ class BrepjsWasmEngine {
 		return transfer;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a solid: analytic `SolidPrimitive`, then cache, then model-graph hull. */
+	/** @emoji 🧊 Brep for one shape source solid (primitive or cached; no fused-hull metadata). */
+	private brepForShapeSourceSolid(model: Model, solidId: SolidRef): ValidSolid | null {
+		const rec = geom(model).solids[solidId];
+		if (!rec) return null;
+		const cached = this.solids.get(rec.id);
+		if (cached) return cached;
+		if (rec.solid) return this.solidFromSolidPrimitive(rec.solid);
+		const points = derivedSolidPoints(model, rec);
+		if (points.length > 0) {
+			const aabb = aabbFromPoints(points, 0);
+			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
+		}
+		return null;
+	}
+
+	/** @emoji 🧊 Boolean-union brep for energy hull rows tagged with `fuseSourceSolidIds` metadata. */
+	private fusedHullBrepFromMetadata(model: Model, hullId: SolidRef): ValidSolid | null {
+		const meta = model.metadata.get(String(hullId));
+		const raw = meta?.fuseSourceSolidIds;
+		if (!Array.isArray(raw) || raw.length === 0) return null;
+		const shapes: ValidSolid[] = [];
+		for (const sid of raw) {
+			const brep = this.brepForShapeSourceSolid(model, sid as SolidRef);
+			if (brep) shapes.push(brep);
+		}
+		if (shapes.length === 0) return null;
+		if (shapes.length === 1) return shapes[0]!;
+		const fused = fuseAll(shapes);
+		return isOk(fused) ? fused.value : null;
+	}
+
+	/** @emoji 🧊 Authoritative brep for a solid: primitive, fused hull metadata, cache, then topology (never AABB for fused hull ids). */
 	solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
 		if (solid.solid) return this.solidFromSolidPrimitive(solid.solid);
 		const cached = this.solids.get(solid.id);
 		if (cached) return cached;
+		const fusedHull = this.fusedHullBrepFromMetadata(model, solid.id);
+		if (fusedHull) {
+			this.solids.set(solid.id, fusedHull);
+			return fusedHull;
+		}
+		if (String(solid.id).startsWith("from_geometry-")) return null;
 		const points = derivedSolidPoints(model, solid);
 		if (points.length > 0) {
 			const aabb = aabbFromPoints(points, 0);
@@ -2658,6 +2696,16 @@ if (import.meta.vitest) {
 				height: 1,
 			});
 			expect(await kernel.solidVolume(cell)).toBeCloseTo(await kernel.volume(cell), 6);
+		});
+
+		it("syncSolidsFromModel fuses from_geometry hull metadata into one solid volume", async () => {
+			const g = new Model();
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("west")));
+			applyModelDiff(g, boxModelDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 1 }, solidRef("east")));
+			g.metadata.setField("from_geometry-hull", "fuseSourceSolidIds", ["west", "east"]);
+			g.solids["from_geometry-hull" as SolidRef] = { id: "from_geometry-hull" as SolidRef, shellIds: [] };
+			await kernel.syncSolidsFromModel(g);
+			expect(await kernel.volume("from_geometry-hull" as SolidRef)).toBeCloseTo(2, 3);
 		});
 
 		it("adjacentSolids lists other solids sharing any face", async () => {

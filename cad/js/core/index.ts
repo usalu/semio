@@ -2048,17 +2048,12 @@ export async function derivePropertyValue(
 ): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
   const primaryPrimitiveRef = objectPrimaryPrimitiveRef(ctx.object);
-  if (defn.id === "spatial.shape.volume") {
+  if (defn.id === "spatial.shape.volume" || defn.id === "energy.heatedvolume") {
     const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
-    if (kind !== "solid") return { volume: 0 };
-    const volume = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
-    return { volume };
-  }
-  if (defn.id === "energy.heatedvolume") {
-    const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
-    if (kind !== "solid") return { heatedvolume: 0 };
-    const heatedvolume = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
-    return { heatedvolume };
+    if (kind !== "solid") return defn.id === "energy.heatedvolume" ? { heatedvolume: 0 } : { volume: 0 };
+    await ctx.kernel.syncSolidsFromModel(ctx.model);
+    const amount = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
+    return defn.id === "energy.heatedvolume" ? { heatedvolume: amount } : { volume: amount };
   }
   const output = defn.output ?? {};
   return { ...output };
@@ -2658,27 +2653,6 @@ function transformationFaceNormal(model: Model, face: FaceRecord): Vec3 | null {
   return transformationFaceNormalFromId(String(face.id));
 }
 
-function transformationFaceAreaEstimate(model: Model, face: FaceRecord): number {
-  const c = transformationFaceCentroid(model, face);
-  const n = transformationFaceNormal(model, face);
-  if (!c || !n) return 0;
-  let maxU = 0;
-  let maxV = 0;
-  for (const wid of face.wireIds) {
-    for (const eid of model.wires[wid]?.edgeIds ?? []) {
-      for (const vid of model.edges[eid]?.vertexIds ?? []) {
-        const p = model.vertices[vid]?.position;
-        if (!p) continue;
-        const du = Math.abs((p[0] - c[0]) * n[1] - (p[1] - c[1]) * n[0]);
-        const dv = Math.abs(p[2] - c[2]);
-        maxU = Math.max(maxU, du);
-        maxV = Math.max(maxV, dv);
-      }
-    }
-  }
-  return maxU * maxV * 4;
-}
-
 function solidFaceIds(model: Model, solidId: string): readonly FaceRef[] {
   const solid = model.solids[solidId];
   if (!solid) return [];
@@ -2708,75 +2682,71 @@ function collectShapeSolidRefs(model: Model): readonly SolidRef[] {
   return [...refs].sort().map((id) => id as SolidRef);
 }
 
-function facePlaneOffset(normal: Vec3, centroid: Vec3): number {
-  return normal[0] * centroid[0] + normal[1] * centroid[1] + normal[2] * centroid[2];
-}
-
-function faceDominantAxis(normal: Vec3): "x" | "y" | "z" {
-  const ax = Math.abs(normal[0]);
-  const ay = Math.abs(normal[1]);
-  const az = Math.abs(normal[2]);
-  if (az >= ax && az >= ay) return "z";
-  if (ay >= ax) return "y";
-  return "x";
-}
-
-function facePlaneLocation(normal: Vec3, centroid: Vec3): number {
-  const axis = faceDominantAxis(normal);
-  return axis === "x" ? centroid[0] : axis === "y" ? centroid[1] : centroid[2];
-}
-
-function facesAreContactPair(a: { readonly normal: Vec3; readonly centroid: Vec3 }, b: { readonly normal: Vec3; readonly centroid: Vec3 }): boolean {
+function facesAreContactPair(
+  a: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
+  b: { readonly face: FaceRef; readonly solid: string; readonly centroid: Vec3 },
+): boolean {
+  if (a.solid === b.solid) return false;
+  const aId = String(a.face);
+  const bId = String(b.face);
+  const contactPairs: readonly (readonly [string, string])[] = [
+    ["face-top", "face-bottom"],
+    ["face-bottom", "face-top"],
+  ];
+  let suffixMatch = false;
+  for (const [suffixA, suffixB] of contactPairs) {
+    if (aId.endsWith(suffixA) && bId.endsWith(suffixB)) {
+      suffixMatch = true;
+      break;
+    }
+  }
+  if (!suffixMatch) return false;
   const sep = Math.hypot(a.centroid[0] - b.centroid[0], a.centroid[1] - b.centroid[1], a.centroid[2] - b.centroid[2]);
-  if (sep > 1e-2) return false;
-  const dot = a.normal[0] * b.normal[0] + a.normal[1] * b.normal[1] + a.normal[2] * b.normal[2];
-  return Math.abs(dot) > 0.85;
+  return sep <= 0.05;
 }
 
 function fuseShapeSolidsToExternalFaces(model: Model, solidRefs: readonly SolidRef[]): { readonly hullSolid: SolidRef; readonly externalFaces: readonly FaceRef[] } {
-  type FaceDesc = { readonly solid: string; readonly face: FaceRef; readonly normal: Vec3; readonly centroid: Vec3; readonly area: number };
-  const descriptors: FaceDesc[] = [];
-  for (const solidId of solidRefs) {
-    for (const faceId of solidFaceIds(model, solidId)) {
-      const face = model.faces[faceId];
-      if (!face) continue;
-      const normal = transformationFaceNormal(model, face);
-      const centroid = transformationFaceCentroid(model, face);
-      if (!normal || !centroid) continue;
-      descriptors.push({ solid: solidId, face: faceId, normal, centroid, area: transformationFaceAreaEstimate(model, face) });
-    }
-  }
   const allFaces = solidRefs.flatMap((solidId) => solidFaceIds(model, solidId));
   const internal = new Set<string>();
-  for (let i = 0; i < descriptors.length; i++) {
-    for (let j = i + 1; j < descriptors.length; j++) {
-      const a = descriptors[i]!;
-      const b = descriptors[j]!;
-      if (a.solid === b.solid) continue;
-      if (!facesAreContactPair(a, b)) continue;
-      internal.add(String(a.face));
-      internal.add(String(b.face));
+  for (let i = 0; i < solidRefs.length; i++) {
+    for (let j = i + 1; j < solidRefs.length; j++) {
+      const solidA = solidRefs[i]!;
+      const solidB = solidRefs[j]!;
+      for (const faceA of solidFaceIds(model, solidA)) {
+        const centroidA = transformationFaceCentroid(model, model.faces[faceA]!);
+        if (!centroidA) continue;
+        for (const faceB of solidFaceIds(model, solidB)) {
+          const centroidB = transformationFaceCentroid(model, model.faces[faceB]!);
+          if (!centroidB) continue;
+          if (!facesAreContactPair({ face: faceA, solid: solidA, centroid: centroidA }, { face: faceB, solid: solidB, centroid: centroidB })) continue;
+          internal.add(String(faceA));
+          internal.add(String(faceB));
+        }
+      }
     }
   }
   const externalFaces = allFaces.filter((faceId) => !internal.has(String(faceId)));
-  const hullSolid =
-    solidRefs.length === 1
-      ? solidRefs[0]!
-      : (() => {
-          const shellId = "from_geometry-shell" as ShellRef;
-          const solidId = "from_geometry-hull" as SolidRef;
-          if (!model.shells[shellId]) {
-            model.shells[shellId] = { id: shellId, faceIds: externalFaces };
-          }
-          if (!model.solids[solidId]) {
-            model.solids[solidId] = { id: solidId, shellIds: [shellId] };
-          }
-          return solidId;
-        })();
+  const hullSolid: SolidRef = solidRefs.length === 1 ? solidRefs[0]! : ("from_geometry-hull" as SolidRef);
   return { hullSolid, externalFaces };
 }
 
 type EnergySurfaceRole = "roof" | "baseplate" | "slab" | "externalwall" | "window";
+
+function facePlaneGroupKey(normal: Vec3, centroid: Vec3): string {
+  const ax = Math.abs(normal[0]);
+  const ay = Math.abs(normal[1]);
+  const az = Math.abs(normal[2]);
+  if (az >= ax && az >= ay) {
+    const sign = normal[2] >= 0 ? "+" : "-";
+    return `z:${Math.round(centroid[2] * 1000)}:${sign}`;
+  }
+  if (ax >= ay) {
+    const sign = normal[0] >= 0 ? "+" : "-";
+    return `x:${Math.round(centroid[0] * 1000)}:${sign}`;
+  }
+  const sign = normal[1] >= 0 ? "+" : "-";
+  return `y:${Math.round(centroid[1] * 1000)}:${sign}`;
+}
 
 function classifyEnergySurfaceRole(normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): EnergySurfaceRole {
   const ax = Math.abs(normal[0]);
@@ -2836,6 +2806,10 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
   }
   const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
   const { hullSolid, externalFaces } = fuseShapeSolidsToExternalFaces(target, solidRefs);
+  if (solidRefs.length > 1) {
+    target.metadata.setField(String(hullSolid), "fuseSourceSolidIds", solidRefs.map(String));
+    target.solids[hullSolid] = { id: hullSolid, shellIds: [] };
+  }
   const centroids: Vec3[] = [];
   const faceMeta: { readonly face: FaceRef; readonly normal: Vec3; readonly centroid: Vec3 }[] = [];
   for (const faceId of externalFaces) {
@@ -2865,17 +2839,25 @@ export function applyEnergyFromGeometryTransformation(source: Model): Model {
     primitives: { solid: String(hullSolid) },
     attributes: { sourceObjectIds, fusedSolidIds: solidRefs.map(String) },
   };
+  const groupedFaces = new Map<string, { readonly role: EnergySurfaceRole; readonly typology: TypologyRef; readonly faces: FaceRef[] }>();
   for (const row of faceMeta) {
     const role = faceHasOpeningAttribute(source, row.face) ? "window" : classifyEnergySurfaceRole(row.normal, row.centroid, zMin, zMax, zTol);
     const typology = energyTypologyForRole(role);
-    const index = roleCounts.get(typology) ?? 0;
-    roleCounts.set(typology, index + 1);
-    const objectId = transformationObjectId(typology, index);
+    const mergeGroup = role === "externalwall" || role === "slab";
+    const groupKey = mergeGroup ? `${typology}:${facePlaneGroupKey(row.normal, row.centroid)}` : `${typology}:${String(row.face)}`;
+    const existing = groupedFaces.get(groupKey);
+    if (existing) existing.faces.push(row.face);
+    else groupedFaces.set(groupKey, { role, typology, faces: [row.face] });
+  }
+  for (const group of groupedFaces.values()) {
+    const index = roleCounts.get(group.typology) ?? 0;
+    roleCounts.set(group.typology, index + 1);
+    const objectId = transformationObjectId(group.typology, index);
     target.objects[objectId] = {
       id: objectId,
-      typology,
-      primitives: { face: String(row.face) },
-      attributes: { sourceObjectIds, surfaceRole: role },
+      typology: group.typology,
+      primitives: { face: String(group.faces[0]!) },
+      attributes: { sourceObjectIds, surfaceRole: group.role, faceIds: group.faces.map(String) },
     };
   }
   if (!roleCounts.has("energy.energy.windows")) {
@@ -3272,6 +3254,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number>;
   edgeLength(e: EdgeRef, model: Model): Promise<number>;
   faceArea(f: FaceRef, model: Model): Promise<number>;
+  syncSolidsFromModel(model: Model): Promise<void>;
   solidVolume(c: SolidRef): Promise<number>;
   adjacentSolids(solid: SolidRef, model: Model): Promise<readonly SolidRef[]>;
   sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
@@ -5843,6 +5826,7 @@ if (import.meta.vitest) {
       };
       const defn = loadPropertyDefinition("spatial.shape.volume")!;
       const kernel = {
+        syncSolidsFromModel: async () => {},
         solidVolume: async () => 42,
       } as unknown as SpatialKernel;
       const out = await derivePropertyValue(defn, { model, kernel, object });
@@ -6012,7 +5996,7 @@ if (import.meta.vitest) {
       const spec = loadTransformation("aec.building.energy.from_geometry")!;
       const source = new Model();
       applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("lower")));
-      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 0], height: 1 }, solidRef("upper")));
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 1], cornerB: [1, 1, 1], height: 1 }, solidRef("upper")));
       source.objects["lower"] = {
         id: "lower" as ObjectRef,
         typology: "spatial.shape.primitive.box" as TypologyRef,
@@ -6023,31 +6007,43 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: "upper" },
       };
-      expect(solidFaceIds(source, solidRef("lower")).length).toBe(6);
-      expect(solidFaceIds(source, solidRef("upper")).length).toBe(6);
-      const shapeSolidRefs = collectShapeSolidRefs(source);
-      expect(shapeSolidRefs).toEqual([solidRef("lower"), solidRef("upper")]);
-      const probe = new Model();
-      probe.vertices = source.vertices;
-      probe.edges = source.edges;
-      probe.wires = source.wires;
-      probe.faces = source.faces;
-      probe.shells = { ...source.shells };
-      probe.solids = { ...source.solids };
-      const { externalFaces: probeExternal } = fuseShapeSolidsToExternalFaces(probe, shapeSolidRefs);
-      expect(probeExternal.length).toBe(10);
-      const target = applyEnergyFromGeometryTransformation(source);
-      expect(target.solids["from_geometry-hull"]).toBeTruthy();
-      const energyObjects = listModelObjectsForModelDefinition(target, "aec.building.energy");
-      expect(energyObjects.length).toBeGreaterThanOrEqual(6);
-      const walls = energyObjects.filter((row) => row.typology === "energy.energy.externalwall");
-      expect(walls).toHaveLength(4);
-      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
-      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);
-      const slabLike = listModelObjectsForModelDefinition(target, "aec.building.energy").filter(
-        (row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull",
-      );
-      expect(slabLike).toHaveLength(0);
+      const target = applyTransformation(spec, source);
+      expect(target.solids["from_geometry-hull"]?.shellIds).toEqual([]);
+      expect(target.metadata.get("from_geometry-hull")?.fuseSourceSolidIds).toEqual(["lower", "upper"]);
+      expect(target.objects["energy.energy.hull"]?.primitives.solid).toBe("from_geometry-hull");
+      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-upper-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-lower-face-bottom");
+      expect(
+        listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall"),
+      ).toHaveLength(4);
+      expect(
+        listModelObjectsForModelDefinition(target, "aec.building.energy").filter(
+          (row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull",
+        ),
+      ).toHaveLength(0);
+      expect(target.objects["box-lower-face-top"]).toBeUndefined();
+      expect(target.objects["box-upper-face-bottom"]).toBeUndefined();
+    });
+    it("from_geometry hull heated volume is boolean union not vertex AABB", async () => {
+      const spec = loadTransformation("aec.building.energy.from_geometry")!;
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("west")));
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 1 }, solidRef("east")));
+      source.objects["west"] = {
+        id: "west" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "west" },
+      };
+      source.objects["east"] = {
+        id: "east" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: "east" },
+      };
+      const target = applyTransformation(spec, source);
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const hull = target.objects["energy.energy.hull"]!;
+      const heated = await derivePropertyValue(loadPropertyDefinition("energy.heatedvolume")!, { model: target, kernel, object: hull });
+      expect(heated.heatedvolume).toBeCloseTo(2, 3);
     });
   });
 
