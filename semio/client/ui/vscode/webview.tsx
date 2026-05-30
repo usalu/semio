@@ -20,7 +20,8 @@ import {
   Kit,
   KitFullDtoSchema,
 } from "@semio/react";
-import { Sketchpad, ensureSketchpadDeclarativeShell } from "../../lib/sketchpad/js";
+import { ensureSketchpadPlatform } from "../../lib/sketchpad/js";
+import { Sketchpad } from "../../lib/sketchpad/js/shell.tsx";
 import { createRoot } from "react-dom/client";
 
 declare global {
@@ -31,7 +32,7 @@ declare global {
   }
 }
 
-void ensureSketchpadDeclarativeShell();
+void ensureSketchpadPlatform();
 
 async function boot() {
   const vscodeApi = window.__SEMIO_VSCODE_API__;

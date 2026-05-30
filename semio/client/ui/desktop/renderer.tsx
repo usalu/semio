@@ -22,7 +22,7 @@ import "./globals.css";
 
 // 🎨Lazy-load the heavy sketchpad module (500KB+) to avoid blocking the renderer.
 const LazySketchpad = lazy(() =>
-  import("../sketchpad").then((mod) => {
+  import("@semio/sketchpad/shell").then((mod) => {
     mod.appRegistry.register(mod.designConfig);
     mod.appRegistry.register(mod.docsConfig);
     mod.appRegistry.register(mod.feedbackConfig);

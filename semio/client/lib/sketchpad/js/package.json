@@ -6,7 +6,9 @@
   "type": "module",
   "description": "semio ⋅ sketchpad",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./shell": "./shell.tsx",
+    "./boot": "./boot.ts"
   },
   "dependencies": {
     "@puzzle/2d/react": "workspace:*",
@@ -14,7 +16,6 @@
     "@puzzle/5d/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@framework/platform/core": "workspace:*",
-    "@framework/platform/renderer/react": "workspace:*",
     "fflate": "^0.8.2",
     "@semio/js": "*",
     "@semio/react": "*",

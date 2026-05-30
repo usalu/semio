@@ -13,7 +13,7 @@
 // Entrypoint MUST render into the root element defined in the docs index.html.
 
 // #region 🔌Adapters
-import { Sketchpad } from "../js";
+import { Sketchpad } from "../js/shell.tsx";
 import React from "react";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters

@@ -4463,7 +4463,7 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
 //#region ðŸ”–SketchpadDeclarativeShell
 //#region 🔖SketchpadRouteScope
 /** @emoji 🧭 Kit/design/type ids parsed from a sketchpad URL path (render-agnostic). */
-function parseSketchpadRouteScopeFromPath(path: string): {
+export function parseSketchpadRouteScopeFromPath(path: string): {
 	readonly kitId: string | null;
 	readonly designId: string | null;
 	readonly typeId: string | null;
@@ -4837,7 +4837,7 @@ let sketchpadPluginHostSingleton: PluginHost | null = null;
 let sketchpadShellReady: Promise<Platform> | null = null;
 let sketchpadChromeRegistered = false;
 
-function sketchpadAppIdFromPath(path: string): string {
+export function sketchpadAppIdFromPath(path: string): string {
 	const pathParts = path.split("/").filter((part) => part.length > 0);
 	const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 	if (pathParts[0] === "docs") return SKETCHPAD_DOCS_APP_ID;

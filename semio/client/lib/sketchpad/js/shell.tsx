@@ -6,38 +6,22 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Main sketchpad container managing app tabs, panels and window layout.
+// React shell for sketchpad (boot, layout, providers). Platform + domain live in `./index.ts`.
 
-
-export {
-	buildSketchpadPlatform,
-	ensureSketchpadPlatform,
-	ensureSketchpadDeclarativeShell,
-	getSketchpadPlatform,
-	getSketchpadProductRuntime,
-	setSketchpadKitRegistryBridge,
-	getKitRegistryBridge,
-	SketchpadHomeTable,
-	SketchpadKitTable,
-	SketchpadKitDiagram,
-	SketchpadDesignScene,
-	SketchpadDesignDiagram,
-	SketchpadTypeCad,
-	SketchpadDocsPanel,
-	SketchpadFeedbackPanel,
-	SKETCHPAD_SHELL_CONTROLLER_ID,
-	SKETCHPAD_HOME_APP_ID,
-	SKETCHPAD_KIT_APP_ID,
-	SKETCHPAD_DESIGN_APP_ID,
-	SKETCHPAD_TYPE_APP_ID,
-	SKETCHPAD_DOCS_APP_ID,
-	SKETCHPAD_FEEDBACK_APP_ID,
+import {
 	decodeKitSemioEnvelopeToFullFromValue,
+	ensureSketchpadPlatform,
+	getKitRegistryBridge,
+	getSketchpadPlatform,
 	importKit,
+	parseSketchpadRouteScopeFromPath,
+	setSketchpadKitRegistryBridge,
+	sketchpadAppIdFromPath,
+	type SketchpadKitRegistryBridge,
 	type SketchpadKitStoreFactory,
-} from "@semio/sketchpad";
+} from "./index.ts";
 
-// #endregion ðŸ§²Header
+// #endregion 🧲Header
 // #region ðŸŽ¨Sketchpad
 // #region 🔌Adapters
 // External and internal module imports.
@@ -22035,6 +22019,23 @@ export const LayoutCanvas: FC<{
 
 // #endregion ðŸ“¡Canvas
 
+//#region 🔖SketchpadRouteScopeReact
+/** @emoji 🧭 Kit/design/type ids from the current React Router location. */
+function useSketchpadRouteScope(): ReturnType<typeof parseSketchpadRouteScopeFromPath> {
+	const location = useLocation();
+	return useMemo(() => parseSketchpadRouteScopeFromPath(location.pathname), [location.pathname]);
+}
+
+/** @emoji 🌉 Mirrors {@link useKitRegistrySafe} into the render-agnostic {@link getKitRegistryBridge}. */
+const SketchpadKitRegistryBridgeSync: FC = () => {
+	const reg = useKitRegistrySafe();
+	useEffect(() => {
+		setSketchpadKitRegistryBridge(reg as unknown as SketchpadKitRegistryBridge | null);
+		return () => setSketchpadKitRegistryBridge(null);
+	}, [reg]);
+	return null;
+};
+//#endregion 🔖SketchpadRouteScopeReact
 
 type SketchpadDeclarativeProductHostProps = {
 	readonly toolbarSlot: React.ReactNode;
@@ -22063,7 +22064,7 @@ const SketchpadDeclarativeProductHost: FC<SketchpadDeclarativeProductHostProps> 
 	onGoUp,
 	augmentPanelTabs,
 }) => {
-	const [platform, setPlatform] = useState<Platform | null>(sketchpadPlatformSingleton);
+	const [platform, setPlatform] = useState<Platform | null>(getSketchpadPlatform());
 	useEffect(() => {
 		let cancelled = false;
 		void ensureSketchpadPlatform().then((wb) => {
@@ -44796,7 +44797,8 @@ const isVscodeWebview = typeof globalThis !== "undefined" && typeof (globalThis 
  * Future host flow (strict layering â”¬Âº5.2): `const attach = useAttachBackbone(); await attach({ dev: { filePath } }); await attach({ local: { folderPath } }); await attach({ remote: { serverUrl } });`
  * Ã”Ã‡Ã¶ implemented in `@semio/react` once per-entity JS stores land; sketchpad stays picker/factory Ã”Ã¥Ã† registry until then.
  */
-async function boot() {
+/** @emoji 🚀 Boots the sketchpad React shell into `#root`. */
+export async function bootSketchpadShell(): Promise<void> {
   let fileKitStoreFactory: SketchpadKitStoreFactory | undefined;
   let remoteKitStoreFactory: SketchpadKitStoreFactory | undefined;
   let vscodeInitial: ExtendedInitialState | undefined;
@@ -44840,13 +44842,7 @@ async function boot() {
   );
 }
 
-// Auto-boot only in standalone mode. In VS Code webview, webview.tsx handles its own boot.
-// The extension host injects __SEMIO_VSCODE_API__ in the head before module scripts run.
-if (typeof document !== "undefined" && document.getElementById("root") && !isVscodeWebview) {
-  void boot().catch((err) => {
-    console.error("[semio.sketchpad boot]", err);
-  });
-}
+export { ensureSketchpadPlatform as ensureSketchpadDeclarativeShell } from "./index.ts";
 // #endregion Â­Æ’Ã„Ã¥Entrypoint
 
 // #region Â­Æ’Ã´Ã‰Tests
