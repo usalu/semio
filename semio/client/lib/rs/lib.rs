@@ -16199,27 +16199,32 @@ mod tests {
                 },
                 "designs": { "items": [] }
             });
-            let install_m = format!(
-                r#"mutation {{ session {{ store(id: "test-store") {{ installProjection(json: {}) {{ ok errors {{ message }} }} }} }} }}"#,
-                crate::external_adapters::serde_json::to_string(&projection).expect("projection json")
-            );
-            let res = schema.execute(Request::new(&install_m)).await;
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let q = r#"query {
                 session {
-                    stores {
-                        edges {
-                            node {
-                                wip {
-                                    theKit {
-                                        kit {
-                                            types {
-                                                edges {
-                                                    node {
-                                                        connectors { edges { node { id port { id copatibleWith { edges { node { id } } } } } } }
-                                                        ports { edges { node { id copatibleWith { edges { node { id } } } } } }
-                                                    }
-                                                }
+                    store(id: "test-store") {
+                        wip {
+                            theKit {
+                                kit {
+                                    types {
+                                        edges {
+                                            node {
+                                                connectors { edges { node { id port { id copatibleWith { edges { node { id } } } } } } }
+                                                ports { edges { node { id copatibleWith { edges { node { id } } } } } }
                                             }
                                         }
                                     }
@@ -16232,7 +16237,7 @@ mod tests {
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read ports: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let type_node = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["types"]["edges"][0]["node"];
+            let type_node = &read_json["session"]["store"]["wip"]["theKit"]["kit"]["types"]["edges"][0]["node"];
             let connector_port = &type_node["connectors"]["edges"][0]["node"]["port"];
             assert_eq!(connector_port["id"], "p1");
             let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");

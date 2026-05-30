@@ -6020,13 +6020,15 @@ function mountWire(renderer: Puzzle2dRenderer, wireHost: Puzzle2dHostWire): void
 function replaceNodeImpl(renderer: Puzzle2dRenderer, host: Puzzle2dHostTreeNode, nextProps: Puzzle2dSceneNodeOptions): void {
   if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
     renderer.batch(() => {
-      for (const handleHost of host.handleChildren) {
-        if (handleHost.impl?.parent) {
-          renderer.scene.remove(handleHost.impl);
+      renderer.runWithoutSceneDeleteEvents(() => {
+        for (const handleHost of host.handleChildren) {
+          if (handleHost.impl?.parent) {
+            renderer.scene.remove(handleHost.impl);
+          }
+          handleHost.impl = null;
         }
-        handleHost.impl = null;
-      }
-      renderer.scene.remove(host.impl);
+        renderer.scene.remove(host.impl);
+      });
       host.impl = newPuzzle2dNodeFromProps(nextProps);
       renderer.scene.add(host.impl);
       for (const handleHost of host.handleChildren) {
@@ -6768,7 +6770,9 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
     for (const nodeDescriptor of descriptor.nodes) {
       let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
       if (existingNode instanceof Puzzle2dSceneNode && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
-        renderer.scene.remove(existingNode);
+        renderer.runWithoutSceneDeleteEvents(() => {
+          renderer.scene.remove(existingNode);
+        });
         existingNode = undefined;
       }
       const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
@@ -8185,6 +8189,30 @@ if (puzzle2dReactVitest) {
       expect(secondNode).not.toBe(firstNode);
       expect((secondNode as Puzzle2dSceneNode).shape).toBe("rectangle");
       expect((secondNode as Puzzle2dSceneNode).width).toBe(40);
+      renderer.dispose();
+    });
+
+    it("sync shape replacement does not emit nodeDelete", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const nodeDeletes: string[] = [];
+      renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      syncPuzzle2dScene(
+        renderer,
+        buildPuzzle2dSceneDescriptor(
+          <Node id="a" radius={20} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>,
+        ),
+      );
+      syncPuzzle2dScene(
+        renderer,
+        buildPuzzle2dSceneDescriptor(
+          <Node height={30} id="a" shape="rectangle" width={40} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>,
+        ),
+      );
+      expect(nodeDeletes).toEqual([]);
       renderer.dispose();
     });
 

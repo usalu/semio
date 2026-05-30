@@ -1550,7 +1550,7 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
       order: 0,
-      tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
+      tree: new CallbackTreePanelDefinition(() => this.buildTree().sections as TreeDataSection[]),
     };
   }
 }
@@ -1586,7 +1586,7 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
       id: "puzzle-2d-play-inspector",
       icon: ClipboardList,
       order: 0,
-      tree: new StaticTreePanelDefinition({ sections: this.buildSections() }),
+      tree: new CallbackTreePanelDefinition(() => this.buildSections()),
     };
   }
 }
@@ -3475,21 +3475,25 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
-  const puzzle2dPlaySelectionKey = reactHostPort.useMemo(() => [...selectionIds].sort().join("\0"), [selectionIds]);
-  const puzzle2dPlayFixtureKey = reactHostPort.useMemo(() => `${shellValue.fixture.nodes.map((node) => node.id).join(",")}\u0001${shellValue.fixture.edges.map((edge) => edge.id).join(",")}`, [shellValue.fixture]);
-  const puzzle2dPlayLibraryTab = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition().resolveTab(), []);
-  const puzzle2dPlayHierarchyTab = reactHostPort.useMemo(
-    () => new Puzzle2dPlayHierarchyPanelDefinition(() => buildPuzzle2dPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id]))).resolveTab(),
-    [puzzle2dPlaySelectionKey, puzzle2dPlayFixtureKey],
+  const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(
+    () =>
+      new Puzzle2dPlayHierarchyPanelDefinition(() =>
+        buildPuzzle2dPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id])),
+      ),
+    [],
   );
-  const puzzle2dPlaySettingsTab = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition().resolveTab(), []);
-  const puzzle2dPlayInspectorTab = reactHostPort.useMemo(() => new Puzzle2dPlayInspectorPanelDefinition(() => buildPuzzle2dPlayInspectorSections(shellValueRef.current)).resolveTab(), [puzzle2dPlaySelectionKey]);
+  const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
+  const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
+  const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(
+    () => new Puzzle2dPlayInspectorPanelDefinition(() => buildPuzzle2dPlayInspectorSections(shellValueRef.current)),
+    [],
+  );
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [puzzle2dPlayHierarchyTab, puzzle2dPlayLibraryTab],
-      details: [puzzle2dPlayInspectorTab, puzzle2dPlaySettingsTab],
+      workbench: [puzzle2dPlayHierarchyPanel, puzzle2dPlayLibraryPanel],
+      details: [puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
     }),
-    [puzzle2dPlayHierarchyTab, puzzle2dPlayInspectorTab, puzzle2dPlaySettingsTab, puzzle2dPlayLibraryTab],
+    [puzzle2dPlayHierarchyPanel, puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel, puzzle2dPlayLibraryPanel],
   );
 
   return (

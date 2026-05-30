@@ -4755,6 +4755,39 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 export function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
   const { setActiveRelocateObjectId, clearSelection } = useRegistryInteraction();
   const setSelectedId = props.setSelectedId;
+  const debugThree = useThree();
+  reactHostPort.useEffect(() => {
+    const w = window as unknown as { __puzzle3dDebugPick?: (x: number, y: number) => unknown };
+    w.__puzzle3dDebugPick = (x: number, y: number) => {
+      const gl = debugThree.gl;
+      const camera = debugThree.camera;
+      const scene = debugThree.scene;
+      const rect = gl.domElement.getBoundingClientRect();
+      const ndc = new Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
+      const ray = new Raycaster();
+      ray.setFromCamera(ndc, camera);
+      const hits = ray.intersectObjects(scene.children, true);
+      return hits.slice(0, 10).map((h) => {
+        let o: { userData?: Record<string, unknown>; parent?: unknown } | null = h.object as never;
+        const info: Record<string, unknown> = { d: Number(h.distance.toFixed(2)) };
+        while (o) {
+          if (o.userData?.puzzle3dVortexFullId) {
+            info.vortex = o.userData.puzzle3dVortexFullId;
+            break;
+          }
+          if (o.userData?.puzzle3dObjectId) {
+            info.object = o.userData.puzzle3dObjectId;
+            break;
+          }
+          o = o.parent as never;
+        }
+        return info;
+      });
+    };
+    return () => {
+      delete (window as unknown as { __puzzle3dDebugPick?: unknown }).__puzzle3dDebugPick;
+    };
+  }, [debugThree]);
   reactHostPort.useEffect(() => {
     const w = window as unknown as {
       __puzzle3dPlaySelect?: (id: string) => void;
