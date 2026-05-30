@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio/rs-wasm` router: `bun ./script.ts <wasm|build|test>`. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {

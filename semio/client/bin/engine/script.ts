@@ -3,7 +3,7 @@
 import { execFileSync, execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, copyFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
 
 class DevMcpScript extends BundleScript {
   run(): void {

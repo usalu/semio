@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // #endregion 🔌Adapters
 
-import { listScopesByFile } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { listScopesByFile } from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

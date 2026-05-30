@@ -3,7 +3,7 @@
 import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../repo/lib/js/src/index.ts";
 
 const yakWin8 = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 const yakWin7 = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";

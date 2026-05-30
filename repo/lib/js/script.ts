@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@repo/lib` router: `bun ./script.ts lint` runs the package lint target via Nx from the monorepo root. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "./src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "./src/index.ts";
 
 class LintScript extends BundleScript {
   run(): void {

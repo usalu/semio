@@ -2,7 +2,7 @@
 /** @emoji ⚙️ Reads `elements/lib/styling/tokens.json`; emits palette CSS under `generated/` and `Elements.Styling/Generated/Palette.g.cs`. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
 
 const stylingRoot = import.meta.dir;
 const tokensPath = join(stylingRoot, "tokens.json");

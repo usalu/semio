@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // #endregion 🔌Adapters
 
-import { listWarnings } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { listWarnings } from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

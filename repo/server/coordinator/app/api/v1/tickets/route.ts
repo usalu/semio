@@ -20,9 +20,9 @@ import {
   insertTicketFiles,
   listClaimsByTicket,
   type Ticket,
-} from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
-import { publishEvent } from "@/lib/events";
+} from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
+import { publishEvent } from "@/lib";
 // #endregion 🔌Adapters
 
 // 🎫#region 🎄Schemas

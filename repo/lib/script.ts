@@ -4,7 +4,7 @@ import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { FolderLinter } from "./js/src/linter.ts";
 import { getWorkspaceRoot } from "./js/src/cli.ts";
-import { runPolicyOnlyMain } from "./js/src/bundle-script.ts";
+import { runPolicyOnlyMain } from "./js/src/index.ts";
 import { defineLint } from "./js/src/script.ts";
 
 export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {

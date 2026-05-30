@@ -953,11 +953,6 @@ export function parseUnifiedDiff(patch: string): DiffFile[] {
 // #endregion 🔖parsing
 
 // #region 🔖auth
-// #region 🔌Adapters
-import { createHash } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
-// #endregion 🔌Adapters
-
 // 🔷#region 🩻Hashing
 export function hashApiKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");
@@ -1022,9 +1017,6 @@ export function isAuthError(
 // #endregion 🔖auth
 
 // #region 🔖events
-// #region 🔌Adapters
-// #endregion 🔌Adapters
-
 // #region 🌡️Publish
 // Publish an event: persist to DB and queue Discord delivery.
 

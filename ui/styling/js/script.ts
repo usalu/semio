@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@ui/styling` task router: `bun ./script.ts <generate|fonts>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
 import { fetchElementsFonts, generateStylingArtifacts } from "../script.ts";
 
 class GenerateScript extends BundleScript {

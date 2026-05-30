@@ -8,9 +8,8 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./bundle-script.ts";
-import { defineLint } from "./script.ts";
-import type { FileLinter } from "./linter.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./index.ts";
+import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForFile,
   isAdapterBoundaryFile,

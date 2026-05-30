@@ -11,10 +11,10 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 // #endregion 🔌Adapters
 
-import { replaceScopes } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
-import { publishEvent } from "@/lib/events";
-import { buildScopesForFile } from "@/lib/parsing";
+import { replaceScopes } from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
+import { publishEvent } from "@/lib";
+import { buildScopesForFile } from "@/lib";
 
 const REPO_ROOT = process.env.SEMIO_SERVER_REPO_ROOT || process.cwd();
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Coordinator package router: `bun ./script.ts build`. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../lib/js/src/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {

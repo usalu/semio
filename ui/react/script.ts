@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy> [args…]`. */
-import type { FileLinter } from "../../repo/lib/js/src/linter.ts";
-import { dependencyBoundaryBreachesForFile } from "../../repo/lib/js/src/dependency-boundary.ts";
-import { getWorkspaceRoot } from "../../repo/lib/js/src/cli.ts";
+import type { FileLinter } from "../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../repo/lib/js/src/index.ts";
+import { getWorkspaceRoot } from "../../repo/lib/js/src/index.ts";
 import {
   BundleScript,
   ScriptRouter,
@@ -10,8 +10,8 @@ import {
   runBundleScriptMain,
   runBunx,
   spawnBunx,
-} from "../../repo/lib/js/src/bundle-script.ts";
-import { defineLint } from "../../repo/lib/js/src/script.ts";
+} from "../../repo/lib/js/src/index.ts";
+import { defineLint } from "../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.tsx";
 

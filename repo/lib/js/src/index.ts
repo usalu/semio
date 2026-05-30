@@ -3,6 +3,13 @@
 // AGPL-3.0 — @repo/lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
 //#endregion 🧲Header
 
+//#region 🔌Adapters
+import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, normalize, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+//#endregion 🔌Adapters
+
 //#region 🔖breach
 /** 🚫BreachRecord is one policy lint finding from `script.ts` (serialized to cache JSON). */
 export type BreachPriority = "high" | "medium" | "low";
@@ -24,11 +31,6 @@ export type BreachRecord = {
 //#endregion 🔖breach
 
 //#region 🔖cli
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 /** 🔎Resolves monorepo root (directory containing root package.json named `semio`). */
 export function getWorkspaceRoot(): string {
   const fromEnv = process.env.REPO_ROOT?.trim();
@@ -116,9 +118,6 @@ export function getLibRoot(): string {
 //#endregion 🔖cli
 
 //#region 🔖linter
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
 const NODE_QUERY = `
 query NodeQ($id: ID!) {
   node(id: $id) {
@@ -447,9 +446,6 @@ export function defineLint<T extends BaseLinter>(_tag: string, fn: LintFn<T>): L
 //#endregion 🔖script
 
 //#region 🔖dependency-boundary
-import { readFileSync, existsSync } from "node:fs";
-import { dirname, join, normalize } from "node:path";
-
 const ADAPTER_MARKERS = [
   "//#region 🔌adapter",
   "// #region 🔌adapter",
@@ -590,10 +586,6 @@ export function dependencyBoundaryBreachesForFile(
 //#endregion 🔖dependency-boundary
 
 //#region 🔖policy-runner
-import { readFileSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
-import { pathToFileURL } from "node:url";
-
 export type LintScriptModule = {
   policy?: LintFn<never>;
 };
@@ -726,9 +718,15 @@ export async function runPolicyExit(scriptPath: string): Promise<void> {
 }
 //#endregion 🔖policy-runner
 
-//#region 🔖policy-cli
-import { fileURLToPath } from "node:url";
+//#region 🔖runner
+export {
+  type ResolvedLintEntity,
+  resolvePolicyScriptEntity as resolveLintScriptEntity,
+  runPolicyScript as runLintScript,
+};
+//#endregion 🔖runner
 
+//#region 🔖policy-cli
 /** 🚪When argv contains `policy`, runs this bundle's policy lint and exits. */
 export async function dispatchPolicyArgv(segments: string[], scriptUrl: string): Promise<boolean> {
   if (segments[0] !== "policy") return false;
@@ -737,21 +735,7 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 }
 //#endregion 🔖policy-cli
 
-//#region 🔖runner
-export {
-  type ResolvedLintEntity,
-  resolvePolicyScriptEntity as resolveLintScriptEntity,
-  runPolicyScript as runLintScript,
-  scriptExportsPolicy,
-} from "./policy-runner.ts";
-//#endregion 🔖runner
-
 //#region 🔖bundle-script
-import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
 //#region 🔖Script
 /** 🧭Bundle command; `run` receives argv segments after the subcommand (e.g. `dev mcp` → `["mcp"]`). */
 export abstract class Script {

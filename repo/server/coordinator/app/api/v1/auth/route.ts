@@ -10,8 +10,8 @@ import { z } from "zod";
 import { randomBytes } from "crypto";
 // #endregion 🔌Adapters
 
-import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib/db";
-import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@/lib/auth";
+import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib";
+import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@/lib";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

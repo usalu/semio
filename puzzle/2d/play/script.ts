@@ -11,7 +11,7 @@ import {
   runPlaywright,
   runViteBunxDev,
   runVitest,
-} from "../../../repo/lib/js/src/bundle-script.ts";
+} from "../../../repo/lib/js/src/index.ts";
 
 const wasmScript = join(import.meta.dir, "../rs/script.ts");
 

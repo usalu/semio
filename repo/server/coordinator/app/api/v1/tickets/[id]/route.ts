@@ -8,8 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // #endregion 🔌Adapters
 
-import { getTicket, listClaimsByTicket } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { getTicket, listClaimsByTicket, requireAuth, isAuthError } from "@/lib";
 
 export async function GET(
   request: NextRequest,

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio/sketchpad-js` policy router: `bun ./script.ts policy`. */
-import type { FileLinter } from "../../../../../repo/lib/js/src/linter.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../../repo/lib/js/src/dependency-boundary.ts";
-import { getWorkspaceRoot } from "../../../../../repo/lib/js/src/cli.ts";
-import { runPolicyOnlyMain } from "../../../../../repo/lib/js/src/bundle-script.ts";
-import { defineLint } from "../../../../../repo/lib/js/src/script.ts";
+import type { FileLinter } from "../../../../../repo/lib/js/src/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../../repo/lib/js/src/index.ts";
+import { getWorkspaceRoot } from "../../../../../repo/lib/js/src/index.ts";
+import { runPolicyOnlyMain } from "../../../../../repo/lib/js/src/index.ts";
+import { defineLint } from "../../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.ts";
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Repo CLI bundle policy: `bun ./script.ts policy` lints `main.go`. */
-import type { FileLinter } from "../../lib/js/src/linter.ts";
-import { runPolicyOnlyMain } from "../../lib/js/src/bundle-script.ts";
-import { defineLint } from "../../lib/js/src/script.ts";
+import type { FileLinter } from "../../lib/js/src/index.ts";
+import { runPolicyOnlyMain } from "../../lib/js/src/index.ts";
+import { defineLint } from "../../lib/js/src/index.ts";
 
 export const policyFile = "main.go";
 

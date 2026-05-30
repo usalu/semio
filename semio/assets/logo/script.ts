@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
 
 // #endregion 🔌Adapters
 

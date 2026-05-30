@@ -2,7 +2,7 @@
 /** 🧭 GraphQL schema bundle router: `bun ./script.ts build`. */
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {

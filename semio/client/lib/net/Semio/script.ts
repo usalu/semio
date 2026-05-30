@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Semio.NET build router: `bun ./script.ts build`. */
 import { spawnSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/src/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {

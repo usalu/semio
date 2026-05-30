@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 Sketchpad play router: `bun ./script.ts dev [vite args…]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/src/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {

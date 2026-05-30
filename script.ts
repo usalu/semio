@@ -3,7 +3,7 @@
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
 import { spawn, spawnSync } from "node:child_process";
-import { Script, ScriptRouter, devToolingEnv, dispatchSubcommand, runCmd, runWorkspaceScriptMain, tryRun } from "./repo/lib/js/src/bundle-script.ts";
+import { Script, ScriptRouter, devToolingEnv, dispatchSubcommand, runCmd, runWorkspaceScriptMain, tryRun } from "./repo/lib/js/src/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";

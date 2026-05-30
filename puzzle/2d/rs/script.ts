@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@puzzle/2d/rs` router: `bun ./script.ts wasm`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/bundle-script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {

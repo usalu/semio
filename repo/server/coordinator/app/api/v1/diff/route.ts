@@ -17,10 +17,10 @@ import {
   newId,
   type Warning,
   type Scope,
-} from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
-import { publishEvent } from "@/lib/events";
-import { parseUnifiedDiff, buildScopesForFile } from "@/lib/parsing";
+} from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
+import { publishEvent } from "@/lib";
+import { parseUnifiedDiff, buildScopesForFile } from "@/lib";
 import { readFileSync } from "fs";
 import { join } from "path";
 

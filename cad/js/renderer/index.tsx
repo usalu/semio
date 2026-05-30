@@ -3217,7 +3217,7 @@ function SpatialChromeMasterToggle({
 	readonly onEnabledChange: (enabled: boolean) => void;
 	readonly ariaLabel: string;
 }): ReactNode {
-	const inputRef = useRef<HTMLInputElement>(null);
+	const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
 	reactHostPort.useEffect(() => {
 		if (inputRef.current) inputRef.current.indeterminate = state === "partial";
 	}, [state]);
@@ -4004,18 +4004,18 @@ export function InteractionRepl({
 	reactHostPort.useEffect(() => {
 		onSnapshotChange?.(snapshot);
 	}, [snapshot, onSnapshotChange]);
-	const cmdRef = useRef<HTMLInputElement>(null);
+	const cmdRef = reactHostPort.useRef<HTMLInputElement>(null);
 	const numericEntryPrevStateRef = reactHostPort.useRef(snapshot.state);
 	const setCmdLineRef = reactHostPort.useRef(setCmdLine);
 	const rendererSelectionByModelRef = reactHostPort.useRef(rendererSelectionByModel);
 	const suppressAutoStartOnceRef = reactHostPort.useRef(false);
-	const lastViewsRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number; readonly activeModelDefinitionId: string | null }>({
+	const lastViewsRefreshRef = reactHostPort.useRef<{ readonly model: Model | null; readonly revision: number; readonly activeModelDefinitionId: string | null }>({
 		model: null,
 		revision: -1,
 		activeModelDefinitionId: null,
 	});
-	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
-	const dragCleanupRef = useRef<(() => void) | null>(null);
+	const dragSelectionRef = reactHostPort.useRef<SpatialDragSelectionState | null>(null);
+	const dragCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = reactHostPort.useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const boundInteractionSession = Boolean(interactionId) && interactionActive;

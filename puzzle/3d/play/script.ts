@@ -9,7 +9,7 @@ import {
   runPlaywright,
   runViteBunxDev,
   runVitest,
-} from "../../../repo/lib/js/src/bundle-script.ts";
+} from "../../../repo/lib/js/src/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
