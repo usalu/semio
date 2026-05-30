@@ -1,0 +1,6 @@
+{
+  "title": "Unified 5D Topology Component",
+  "status": "open",
+  "description": "Single neutral TopologyV1 model (Part/Anchor/Bond), shared TopologyStore, FiveD mode=flat|spatial component, cross-surface connect gestures, migrate playground and sketchpad.",
+  "goal": "🎯puzzle🎯5d"
+}

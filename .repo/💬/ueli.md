@@ -802,6 +802,14 @@ Then use the prop for all the features.
 
 ---
 
+5d is a single react component that can be switched between 2d and 3d (dont add toggles etc because the components that use this will set all props, control the state, etc).
+Make sure to conceptually align the two data models into a single one (e.g. kinds etc)
+Make sure to use neutral terminology that neither uses 2d nor 3d terminology but neutral.
+The 5d allows editing either in 2d or 3d and 2d updates 3d and vice versa.
+The component must be usable several times (e.g. one 2d and one 3d window and then features should be usable in both e.g. indirect connect when started in 2d also previews in 3d and can be terminated there)
+
+---
+
 Create elements topology
 elements\client\lib\topology\react\index.tsx
 elements\client\lib\topology\play\index.html
