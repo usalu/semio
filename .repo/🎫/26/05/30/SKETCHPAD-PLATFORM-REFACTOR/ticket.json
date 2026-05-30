@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "FiveD platform renderer: map flat/volume presentation to 2d/3d mode; wire puzzle2d.onSelect and puzzle3d.onSelect to applyBoardSelection (volume passes objectIds, vortexIds, attractionIds). Kit diagram: port union-find (compatiblePorts + shared code) and type↔type compat edges. Tests: 26/26 sketchpad vitest.",
+  "summary": "Home: full-screen drop overlay on `/` during kit archive drag (depth counter + data-testid). Type app: SketchpadTypeScene uses Puzzle5d volume with sketchpadTypeVolumeFixtureFromType / sketchpadResolveTypeMeshUrl and topology sync on type route; window body is puzzle5d not cad placeholder. parseSketchpadPuzzleInstanceId gains type-scene pane. 28/28 sketchpad tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -20,6 +20,7 @@
     "⚪45cb01f69a6944bdab704d1c83055c10",
     "⚪502b471a512846c9a0569cc2508a9335",
     "⚪d63d75d879354bdc834a07661fd0c3a3",
-    "⚪fd954b0e516d448ca6cbaec69e827743"
+    "⚪fd954b0e516d448ca6cbaec69e827743",
+    "⚪758cf088bce34dc2a88d78a358750dc8"
   ]
 }

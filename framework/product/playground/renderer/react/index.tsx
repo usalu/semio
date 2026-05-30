@@ -2908,7 +2908,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const cameraBasisFixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link puzzle2dPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
-  const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
+  const prevPuzzle2dRedrawPlayingRef = reactHostPort.useRef(false);
   const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   const cameraDisplayOverrideRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
@@ -2960,7 +2960,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   }, [fixture, puzzle2dRedrawPlaying]);
 
   reactHostPort.useEffect(() => {
-    const prevPlaying = prevBoardRedrawPlayingRef.current;
+    const prevPlaying = prevPuzzle2dRedrawPlayingRef.current;
     const playJustStarted = puzzle2dRedrawPlaying && !prevPlaying;
 
     if (playJustStarted) {
@@ -2989,7 +2989,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         cameraPlayEndAnimRafRef.current = null;
       }
     }
-    prevBoardRedrawPlayingRef.current = puzzle2dRedrawPlaying;
+    prevPuzzle2dRedrawPlayingRef.current = puzzle2dRedrawPlaying;
   }, [puzzle2dRedrawPlaying, fixture]);
 
   reactHostPort.useEffect(() => {
@@ -3787,10 +3787,10 @@ if (import.meta.vitest) {
       const { renderToStaticMarkup } = await import("react-dom/server");
       const { buildPuzzle2dWindowBody } = await import("@framework/playground/core");
       const surfaceId = "playground.test/puzzle2d";
-      function TestBoardHost(): React.ReactElement {
+      function TestPuzzle2dHost(): React.ReactElement {
         return <div data-host="puzzle2d">puzzle 2d canvas</div>;
       }
-      registerSurfaceBinding(surfaceId, TestBoardHost);
+      registerSurfaceBinding(surfaceId, TestPuzzle2dHost);
       try {
         const html = renderToStaticMarkup(
           <UiRenderer node={buildPuzzle2dWindowBody(surfaceId, "ctrl", "pane")} commandBus={new CommandBus()} />,

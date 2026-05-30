@@ -28,7 +28,7 @@ class Puzzle2dEventBindingController {
 }
 
 // #region 🔖GpuWasmBridge
-import initBoardWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
+import initPuzzle2dWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
   const { readFileSync } = await import("node:fs");
@@ -37,12 +37,12 @@ if (typeof process !== "undefined" && process.env.VITEST === "true") {
   const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_2d_bg.wasm");
   initSync({ module: readFileSync(wasmPath) });
 } else {
-  await initBoardWasm();
+  await initPuzzle2dWasm();
 }
 
 /** @emoji 🌐 Idempotent: resolves after the wasm-bindgen `web` target has finished instantiating. */
 export async function ensurePuzzle2dWasmLoaded(): Promise<void> {
-  await initBoardWasm();
+  await initPuzzle2dWasm();
 }
 
 export { BoardSession };
@@ -493,17 +493,17 @@ export interface Puzzle2dFixtureV1 {
 /** @emoji 🎛️ Puzzle 2d `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
 export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
 
-function stripLegacyImageDataPrefixForBoardIcon(raw: string): string {
+function stripLegacyImageDataPrefixForPuzzle2dIcon(raw: string): string {
   const t = raw.trim();
   return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
 }
 
-function isRasterDataUrlPayloadForBoardIcon(s: string): boolean {
+function isRasterDataUrlPayloadForPuzzle2dIcon(s: string): boolean {
   const u = s.trim().toLowerCase();
   return u.startsWith("data:image/png;base64,") || u.startsWith("data:image/jpeg;base64,") || u.startsWith("data:image/jpg;base64,");
 }
 
-function looksLikeAsciiCatalogishVectorStemForBoardIcon(s: string): boolean {
+function looksLikeAsciiCatalogishVectorStemForPuzzle2dIcon(s: string): boolean {
   const t = s.trim();
   if (t === "") {
     return false;
@@ -514,7 +514,7 @@ function looksLikeAsciiCatalogishVectorStemForBoardIcon(s: string): boolean {
   return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored puzzle 2d icon string (align with `puzzle2d_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
+/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored puzzle 2d icon string (align with `puzzle2d_resolve_icon_kind` in `puzzle/2d/rs/lib.rs`). */
 export function classifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
   const t = raw.trim();
   if (t === "") {
@@ -527,13 +527,13 @@ export function classifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelec
     return "emoji";
   }
   const lower = t.toLowerCase();
-  if (lower.startsWith("data:") || isRasterDataUrlPayloadForBoardIcon(stripLegacyImageDataPrefixForBoardIcon(t))) {
+  if (lower.startsWith("data:") || isRasterDataUrlPayloadForPuzzle2dIcon(stripLegacyImageDataPrefixForPuzzle2dIcon(t))) {
     return "data";
   }
   if (lower.startsWith("<?xml") || lower.includes("<svg")) {
     return "vector";
   }
-  if (looksLikeAsciiCatalogishVectorStemForBoardIcon(t)) {
+  if (looksLikeAsciiCatalogishVectorStemForPuzzle2dIcon(t)) {
     return "vector";
   }
   return "emoji";
@@ -884,7 +884,7 @@ const MIN_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MAX;
 
 /** @emoji ⌨️ True when Delete/Backspace should reach the puzzle 2d canvas instead of staying in a focused text control. */
-function shouldBoardHandleDeleteShortcut(): boolean {
+function shouldPuzzle2dHandleDeleteShortcut(): boolean {
   const el = document.activeElement;
   if (!el || !(el instanceof HTMLElement)) {
     return true;
@@ -1314,7 +1314,7 @@ export function normalizePuzzle2dSelectionProp(value: Puzzle2dSelectionSnapshot 
   return createSelectionSnapshot(value.ids);
 }
 
-/** @emoji 🧩 Normalizes {@link Puzzle2dPreselectSnapshot} props for controlled board interaction state. */
+/** @emoji 🧩 Normalizes {@link Puzzle2dPreselectSnapshot} props for controlled puzzle 2d interaction state. */
 export function normalizePuzzle2dPreselectProp(value: Puzzle2dPreselectSnapshot | undefined): Puzzle2dPreselectSnapshot {
   if (value === undefined) {
     return PUZZLE_2D_PRESELECT_EMPTY;
@@ -2910,18 +2910,18 @@ export class Puzzle2dRenderer {
     this.emitter.emit(name, payload);
   }
 
-  private enqueueBoardGraphObservationFlush(): void {
+  private enqueuePuzzle2dGraphObservationFlush(): void {
     if (this.graphObservationFlushPending) {
       return;
     }
     this.graphObservationFlushPending = true;
     queueMicrotask(() => {
       this.graphObservationFlushPending = false;
-      this.flushBoardGraphObservation();
+      this.flushPuzzle2dGraphObservation();
     });
   }
 
-  private flushBoardGraphObservation(): void {
+  private flushPuzzle2dGraphObservation(): void {
     const prev = this.lastGraphObservation;
     if (prev === null) {
       this.lastGraphObservation = computePuzzle2dGraphObservationSnapshot(this.scene);
@@ -3024,7 +3024,7 @@ export class Puzzle2dRenderer {
     } finally {
       this.batchDepth -= 1;
       if (this.batchDepth === 0) {
-        this.enqueueBoardGraphObservationFlush();
+        this.enqueuePuzzle2dGraphObservationFlush();
       }
       if (this.batchDepth === 0 && this.invalidated) {
         this.invalidate();
@@ -3101,7 +3101,7 @@ export class Puzzle2dRenderer {
     if (this.batchDepth > 0) {
       return;
     }
-    this.enqueueBoardGraphObservationFlush();
+    this.enqueuePuzzle2dGraphObservationFlush();
     this.invalidate();
   }
 
@@ -3345,7 +3345,7 @@ export class Puzzle2dRenderer {
     return JSON.stringify({ nodes, handles, edges, wires });
   }
 
-  private syncBoardAppearanceFromDocument(): void {
+  private syncPuzzle2dAppearanceFromDocument(): void {
     if (this.renderMode === "headless-test") {
       return;
     }
@@ -3455,7 +3455,7 @@ export class Puzzle2dRenderer {
       }
     }
     this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
-    this.syncBoardAppearanceFromDocument();
+    this.syncPuzzle2dAppearanceFromDocument();
     this.applyWasmDrainToScene(this.session.drainEventsJson());
   }
 
@@ -3609,7 +3609,7 @@ export class Puzzle2dRenderer {
       }
     } finally {
       this.suppressSceneToWasmPush = false;
-      this.enqueueBoardGraphObservationFlush();
+      this.enqueuePuzzle2dGraphObservationFlush();
       if (graphMutatedForHostMerge) {
         this.bumpWasmHostSceneMergeResyncEpoch();
       }
@@ -3930,7 +3930,7 @@ export class Puzzle2dRenderer {
       }
       return;
     }
-    if (!shouldBoardHandleDeleteShortcut()) {
+    if (!shouldPuzzle2dHandleDeleteShortcut()) {
       return;
     }
     if (event.key !== "Delete" && event.key !== "Backspace") {
@@ -3948,32 +3948,32 @@ export class Puzzle2dRenderer {
       return;
     }
     if (this.renderMode === "headless-test") {
-      this.canvas.dataset.boardSurfaceState = "off";
-      delete this.canvas.dataset.boardSurfaceFailure;
+      this.canvas.dataset.puzzle2dSurfaceState = "off";
+      delete this.canvas.dataset.puzzle2dSurfaceFailure;
     } else if (this.gpuSurfaceUnavailable) {
-      this.canvas.dataset.boardSurfaceState = "error";
+      this.canvas.dataset.puzzle2dSurfaceState = "error";
       if (this.gpuSurfaceErrorDetail) {
-        this.canvas.dataset.boardSurfaceFailure = this.gpuSurfaceErrorDetail.slice(0, 512);
+        this.canvas.dataset.puzzle2dSurfaceFailure = this.gpuSurfaceErrorDetail.slice(0, 512);
       }
     } else if (this.gpuSurfacePresentedFrame && this.readGpuReady()) {
-      this.canvas.dataset.boardSurfaceState = "ready";
-      delete this.canvas.dataset.boardSurfaceFailure;
+      this.canvas.dataset.puzzle2dSurfaceState = "ready";
+      delete this.canvas.dataset.puzzle2dSurfaceFailure;
     } else if (this.gpuSurfaceInitPromise) {
-      this.canvas.dataset.boardSurfaceState = "init";
-      delete this.canvas.dataset.boardSurfaceFailure;
+      this.canvas.dataset.puzzle2dSurfaceState = "init";
+      delete this.canvas.dataset.puzzle2dSurfaceFailure;
     } else {
-      this.canvas.dataset.boardSurfaceState = "pending";
-      delete this.canvas.dataset.boardSurfaceFailure;
+      this.canvas.dataset.puzzle2dSurfaceState = "pending";
+      delete this.canvas.dataset.puzzle2dSurfaceFailure;
     }
-    this.canvas.dataset.boardRaster = "gpu";
-    this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
+    this.canvas.dataset.puzzle2dRaster = "gpu";
+    this.canvas.dataset.puzzle2dWorldTiling = this.worldRasterTiling;
     const lod = this.effectiveDrawLodLabel();
     this.drawLodStore.setSnapshot(lod, (left, right) => left === right);
-    this.canvas.dataset.boardLod = lod;
-    this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
+    this.canvas.dataset.puzzle2dLod = lod;
+    this.canvas.dataset.puzzle2dSceneNodeCount = String(this.scene.nodes.size);
     this.canvas.dataset.puzzle2dZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
-    this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
-    this.canvas.dataset.boardHover = this.hoveredId ?? "";
+    this.canvas.dataset.puzzle2dSelection = sortedSelectionIds(this.selectionIds).join(",");
+    this.canvas.dataset.puzzle2dHover = this.hoveredId ?? "";
     this.canvas.setAttribute("data-puzzle2d-camera", `${this.camera.x},${this.camera.y}`);
   }
 
@@ -4112,7 +4112,7 @@ export class Puzzle2dRenderer {
 //#endregion 🔖Renderer
 
 //#region 🔖Vitest
-const boardVitest = (
+const puzzle2dVitest = (
   import.meta as ImportMeta & {
     vitest?: {
       describe: typeof import("vitest").describe;
@@ -4123,8 +4123,8 @@ const boardVitest = (
   }
 ).vitest;
 
-if (boardVitest) {
-  const { beforeAll, describe, expect, it, vi } = boardVitest;
+if (puzzle2dVitest) {
+  const { beforeAll, describe, expect, it, vi } = puzzle2dVitest;
 
   beforeAll(async () => {
     await ensurePuzzle2dWasmLoaded();
@@ -5355,10 +5355,10 @@ if (boardVitest) {
 }
 //#endregion 🔖Vitest
 
-let boardSchedulerPriority = NoEventPriority;
+let puzzle2dSchedulerPriority = NoEventPriority;
 
 /** @emoji 🧩 Static host surface required by the secondary renderer beyond puzzle 2d scene mutations. */
-export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
+export const PUZZLE_2D_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   HostTransitionContext: reactHostPort.createContext(null) as never,
   NotPendingTransition: null,
   acquireResource: () => null,
@@ -5446,14 +5446,14 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   resolveEventType: () => null,
   resolveSingletonInstance: () => null,
   setCurrentUpdatePriority(p: number) {
-    boardSchedulerPriority = p;
+    puzzle2dSchedulerPriority = p;
   },
   getCurrentUpdatePriority() {
-    return boardSchedulerPriority;
+    return puzzle2dSchedulerPriority;
   },
   resolveUpdatePriority() {
-    if (boardSchedulerPriority !== NoEventPriority) {
-      return boardSchedulerPriority;
+    if (puzzle2dSchedulerPriority !== NoEventPriority) {
+      return puzzle2dSchedulerPriority;
     }
     const w = globalThis as typeof globalThis & { event?: Event };
     const t = w.event?.type;
@@ -5486,7 +5486,7 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   clearSuspenseBoundaryFromContainer: () => {},
 };
 
-function reportBoardHostUncaughtError(error: unknown, errorInfo: { componentStack?: string | null }): void {
+function reportPuzzle2dHostUncaughtError(error: unknown, errorInfo: { componentStack?: string | null }): void {
   const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
   if (report) {
     report(error);
@@ -5495,7 +5495,7 @@ function reportBoardHostUncaughtError(error: unknown, errorInfo: { componentStac
   console.error(error, errorInfo.componentStack ?? "");
 }
 
-function reportBoardHostCaughtError(error: unknown, errorInfo: { componentStack?: string | null; errorBoundary?: unknown }): void {
+function reportPuzzle2dHostCaughtError(error: unknown, errorInfo: { componentStack?: string | null; errorBoundary?: unknown }): void {
   const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
   if (report) {
     report(error);
@@ -5504,7 +5504,7 @@ function reportBoardHostCaughtError(error: unknown, errorInfo: { componentStack?
   console.error(error, errorInfo.componentStack ?? "", errorInfo.errorBoundary ?? "");
 }
 
-function reportBoardHostRecoverableError(error: unknown): void {
+function reportPuzzle2dHostRecoverableError(error: unknown): void {
   const report = (globalThis as typeof globalThis & { reportError?: (e: unknown) => void }).reportError;
   if (report) {
     report(error);
@@ -5521,39 +5521,39 @@ export const PUZZLE_2D_HOST_WIRE = "puzzle.2d/wire";
 
 export type Puzzle2dHostType = typeof PUZZLE_2D_HOST_NODE | typeof PUZZLE_2D_HOST_HANDLE | typeof PUZZLE_2D_HOST_EDGE | typeof PUZZLE_2D_HOST_WIRE;
 
-interface BoardHostNode {
+interface Puzzle2dHostTreeNode {
   kind: "node";
   impl: Puzzle2dSceneNode;
   renderer: Puzzle2dRenderer;
-  readonly handleChildren: Set<BoardHostHandle>;
+  readonly handleChildren: Set<Puzzle2dHostHandle>;
 }
 
-interface BoardHostHandle {
+interface Puzzle2dHostHandle {
   kind: "handle";
   impl: Puzzle2dSceneHandle | null;
   props: Puzzle2dHandleProps;
   renderer: Puzzle2dRenderer;
 }
 
-interface BoardHostEdge {
+interface Puzzle2dHostEdge {
   kind: "edge";
   impl: Puzzle2dSceneEdge | null;
   props: Puzzle2dEdgeProps;
   renderer: Puzzle2dRenderer;
 }
 
-interface BoardHostWire {
+interface Puzzle2dHostWire {
   kind: "wire";
   impl: Puzzle2dSceneWire | null;
   props: Puzzle2dWireProps;
   renderer: Puzzle2dRenderer;
 }
 
-export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge | BoardHostWire;
+export type Puzzle2dHostInstance = Puzzle2dHostTreeNode | Puzzle2dHostHandle | Puzzle2dHostEdge | Puzzle2dHostWire;
 //#endregion 🔖HostKinds
 
 //#region 🔖PropApply
-function newBoardNodeFromProps(props: Puzzle2dSceneNodeOptions): Puzzle2dSceneNode {
+function newPuzzle2dNodeFromProps(props: Puzzle2dSceneNodeOptions): Puzzle2dSceneNode {
   if (props.shape === "rectangle") {
     return new Puzzle2dSceneNode({
       draggable: props.draggable ?? true,
@@ -5753,7 +5753,7 @@ function propsEqualNode(a: Puzzle2dSceneNodeOptions, b: Puzzle2dSceneNodeOptions
 //#endregion 🔖PropApply
 
 //#region 🔖MountHelpers
-function mountHandleUnderNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNode, handleHost: BoardHostHandle): void {
+function mountHandleUnderNode(renderer: Puzzle2dRenderer, nodeHost: Puzzle2dHostTreeNode, handleHost: Puzzle2dHostHandle): void {
   if (handleHost.impl?.parent) {
     return;
   }
@@ -5766,7 +5766,7 @@ function mountHandleUnderNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNod
   renderer.invalidate();
 }
 
-function mountNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNode): void {
+function mountNode(renderer: Puzzle2dRenderer, nodeHost: Puzzle2dHostTreeNode): void {
   if (nodeHost.impl.parent) {
     return;
   }
@@ -5776,7 +5776,7 @@ function mountNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNode): void {
   renderer.invalidate();
 }
 
-function mountEdge(renderer: Puzzle2dRenderer, edgeHost: BoardHostEdge): void {
+function mountEdge(renderer: Puzzle2dRenderer, edgeHost: Puzzle2dHostEdge): void {
   if (edgeHost.impl?.parent) {
     return;
   }
@@ -5796,7 +5796,7 @@ function mountEdge(renderer: Puzzle2dRenderer, edgeHost: BoardHostEdge): void {
   renderer.invalidate();
 }
 
-function mountWire(renderer: Puzzle2dRenderer, wireHost: BoardHostWire): void {
+function mountWire(renderer: Puzzle2dRenderer, wireHost: Puzzle2dHostWire): void {
   if (wireHost.impl?.parent) {
     return;
   }
@@ -5836,7 +5836,7 @@ function mountWire(renderer: Puzzle2dRenderer, wireHost: BoardHostWire): void {
   renderer.invalidate();
 }
 
-function replaceNodeImpl(renderer: Puzzle2dRenderer, host: BoardHostNode, nextProps: Puzzle2dSceneNodeOptions): void {
+function replaceNodeImpl(renderer: Puzzle2dRenderer, host: Puzzle2dHostTreeNode, nextProps: Puzzle2dSceneNodeOptions): void {
   if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
     renderer.batch(() => {
       for (const handleHost of host.handleChildren) {
@@ -5846,7 +5846,7 @@ function replaceNodeImpl(renderer: Puzzle2dRenderer, host: BoardHostNode, nextPr
         handleHost.impl = null;
       }
       renderer.scene.remove(host.impl);
-      host.impl = newBoardNodeFromProps(nextProps);
+      host.impl = newPuzzle2dNodeFromProps(nextProps);
       renderer.scene.add(host.impl);
       for (const handleHost of host.handleChildren) {
         mountHandleUnderNode(renderer, host, handleHost);
@@ -5865,7 +5865,7 @@ function isPuzzle2dRenderer(value: unknown): value is Puzzle2dRenderer {
   return value instanceof Puzzle2dRenderer;
 }
 
-function appendToBoardParent(parent: Puzzle2dRenderer | BoardHostInstance, child: BoardHostInstance): void {
+function appendToPuzzle2dHostParent(parent: Puzzle2dRenderer | Puzzle2dHostInstance, child: Puzzle2dHostInstance): void {
   const renderer = child.renderer;
   if (isPuzzle2dRenderer(parent)) {
     if (child.kind === "node") {
@@ -5882,16 +5882,16 @@ function appendToBoardParent(parent: Puzzle2dRenderer | BoardHostInstance, child
   }
 }
 
-function detachHandleFromNode(nodeHost: BoardHostNode, handleHost: BoardHostHandle): void {
+function detachHandleFromNode(nodeHost: Puzzle2dHostTreeNode, handleHost: Puzzle2dHostHandle): void {
   nodeHost.handleChildren.delete(handleHost);
 }
 
-const boardEmptyHostContext = Object.freeze({});
+const puzzle2dEmptyHostContext = Object.freeze({});
 //#endregion 🔖MountHelpers
 
 //#region 🔖HostMountInternals
-const boardSceneHost = Reconciler({
-  ...BOARD_HOST_MOUNT_DEFAULTS,
+const puzzle2dSceneHost = Reconciler({
+  ...PUZZLE_2D_HOST_MOUNT_DEFAULTS,
   supportsMutation: true,
   supportsPersistence: false,
   supportsHydration: false,
@@ -5906,13 +5906,13 @@ const boardSceneHost = Reconciler({
   scheduleTimeout: setTimeout,
   cancelTimeout: clearTimeout,
 
-  getRootHostContext: () => boardEmptyHostContext,
-  getChildHostContext: () => boardEmptyHostContext,
+  getRootHostContext: () => puzzle2dEmptyHostContext,
+  getChildHostContext: () => puzzle2dEmptyHostContext,
 
   createInstance(type, props, rootContainer) {
     const renderer = rootContainer;
     if (type === PUZZLE_2D_HOST_NODE) {
-      return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as NodeOptions), renderer };
+      return { kind: "node", handleChildren: new Set(), impl: newPuzzle2dNodeFromProps(props as NodeOptions), renderer };
     }
     if (type === PUZZLE_2D_HOST_HANDLE) {
       return { kind: "handle", impl: null, props: props as Puzzle2dHandleProps, renderer };
@@ -5933,11 +5933,11 @@ const boardSceneHost = Reconciler({
   shouldSetTextContent: () => false,
 
   appendInitialChild(parent, child) {
-    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
+    appendToPuzzle2dHostParent(parent as Puzzle2dRenderer | Puzzle2dHostInstance, child);
   },
 
   appendChild(parent, child) {
-    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
+    appendToPuzzle2dHostParent(parent as Puzzle2dRenderer | Puzzle2dHostInstance, child);
   },
 
   appendChildToContainer(container, child) {
@@ -5951,7 +5951,7 @@ const boardSceneHost = Reconciler({
   },
 
   insertBefore(parent, child, _beforeChild) {
-    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
+    appendToPuzzle2dHostParent(parent as Puzzle2dRenderer | Puzzle2dHostInstance, child);
   },
 
   insertInContainerBefore(container, child, _beforeChild) {
@@ -5980,7 +5980,7 @@ const boardSceneHost = Reconciler({
 
   removeChildFromContainer(container, child) {
     if (child.kind === "node") {
-      const nh = child as BoardHostNode;
+      const nh = child as Puzzle2dHostTreeNode;
       for (const h of [...nh.handleChildren]) {
         detachHandleFromNode(nh, h);
         if (h.impl?.parent) {
@@ -6004,7 +6004,7 @@ const boardSceneHost = Reconciler({
     container.invalidate();
   },
 
-  /** @emoji 🧹 No-op: host stack calls this on root before mutation; scene graph is driven by append/remove only (see {@link unmountBoardHostMount}). */
+  /** @emoji 🧹 No-op: host stack calls this on root before mutation; scene graph is driven by append/remove only (see {@link unmountPuzzle2dHostMount}). */
   clearContainer(_container: Puzzle2dRenderer) {},
 
   finalizeInitialChildren() {
@@ -6042,7 +6042,7 @@ const boardSceneHost = Reconciler({
     if (type === PUZZLE_2D_HOST_NODE) {
       const next = nextProps as NodeOptions;
       const prev = oldProps as NodeOptions;
-      const host = instance as BoardHostNode;
+      const host = instance as Puzzle2dHostTreeNode;
       if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(next)) {
         replaceNodeImpl(renderer, host, next);
         return;
@@ -6057,7 +6057,7 @@ const boardSceneHost = Reconciler({
       return;
     }
     if (type === PUZZLE_2D_HOST_HANDLE) {
-      const h = instance as BoardHostHandle;
+      const h = instance as Puzzle2dHostHandle;
       h.props = nextProps as Puzzle2dHandleProps;
       if (!h.impl) {
         return;
@@ -6070,7 +6070,7 @@ const boardSceneHost = Reconciler({
       return;
     }
     if (type === PUZZLE_2D_HOST_EDGE) {
-      const e = instance as BoardHostEdge;
+      const e = instance as Puzzle2dHostEdge;
       e.props = nextProps as Puzzle2dEdgeProps;
       const from = renderer.scene.getObjectById(e.props.source);
       const to = renderer.scene.getObjectById(e.props.target);
@@ -6089,7 +6089,7 @@ const boardSceneHost = Reconciler({
       return;
     }
     if (type === PUZZLE_2D_HOST_WIRE) {
-      const w = instance as BoardHostWire;
+      const w = instance as Puzzle2dHostWire;
       w.props = nextProps as Puzzle2dWireProps;
       const from = renderer.scene.getObjectById(w.props.source);
       if (!(from instanceof Puzzle2dSceneHandle)) {
@@ -6142,35 +6142,35 @@ const boardSceneHost = Reconciler({
   requestPaint() {},
 } as never);
 
-export type BoardHostMount = ReturnType<typeof boardSceneHost.createContainer>;
+export type Puzzle2dHostMount = ReturnType<typeof puzzle2dSceneHost.createContainer>;
 
 /** @emoji 🌱 Creates a legacy-mode host mount bound to {@link Puzzle2dRenderer} for synchronous subtree commits with DOM `act()`. */
-export function createBoardHostMount(renderer: Puzzle2dRenderer): BoardHostMount {
-  return boardSceneHost.createContainer(
+export function createPuzzle2dHostMount(renderer: Puzzle2dRenderer): Puzzle2dHostMount {
+  return puzzle2dSceneHost.createContainer(
     renderer,
     LegacyRoot,
     null,
     false,
     null,
-    "board:",
-    reportBoardHostUncaughtError,
-    reportBoardHostCaughtError,
-    reportBoardHostRecoverableError,
+    "puzzle2d:",
+    reportPuzzle2dHostUncaughtError,
+    reportPuzzle2dHostCaughtError,
+    reportPuzzle2dHostRecoverableError,
     undefined,
   );
 }
 
 /** @emoji 🔄 Schedules host work and ties post-commit to {@link Puzzle2dRenderer.invalidate}. */
-export function updateBoardHostMount(root: BoardHostMount, element: ReactElement | null, parent: null): void {
-  boardSceneHost.updateContainer(element, root, parent, () => {
+export function updatePuzzle2dHostMount(root: Puzzle2dHostMount, element: ReactElement | null, parent: null): void {
+  puzzle2dSceneHost.updateContainer(element, root, parent, () => {
     const renderer = root.containerInfo;
     renderer.invalidate();
   });
 }
 
 /** @emoji 🧹 Unmounts the host subtree without disposing {@link Puzzle2dRenderer}. */
-export function unmountBoardHostMount(root: BoardHostMount): void {
-  updateBoardHostMount(root, null, null);
+export function unmountPuzzle2dHostMount(root: Puzzle2dHostMount): void {
+  updatePuzzle2dHostMount(root, null, null);
   const renderer = root.containerInfo as Puzzle2dRenderer;
   renderer.runWithoutSceneDeleteEvents(() => {
     renderer.scene.clear();
@@ -6178,7 +6178,7 @@ export function unmountBoardHostMount(root: BoardHostMount): void {
   renderer.invalidate();
 }
 
-export { boardSceneHost };
+export { puzzle2dSceneHost };
 //#endregion 🔖HostMountInternals
 
 // #region 🎨ReactCanvas
@@ -6289,7 +6289,7 @@ export interface Puzzle2dCanvasProps {
   worldRasterTiling?: WorldRasterTilingKind;
 }
 
-export type BoardNodeCircleProps = {
+export type Puzzle2dNodeCircleProps = {
   children?: ReactNode;
   contextMenu?: ContextMenuItem[];
   draggable?: boolean;
@@ -6320,7 +6320,7 @@ export type BoardNodeCircleProps = {
   y: number;
 };
 
-export type BoardNodeRectangleProps = {
+export type Puzzle2dNodeRectangleProps = {
   children?: ReactNode;
   contextMenu?: ContextMenuItem[];
   draggable?: boolean;
@@ -6352,10 +6352,10 @@ export type BoardNodeRectangleProps = {
   y: number;
 };
 
-/** @emoji 🟠 Declarative node marker: {@link BoardNodeCircleProps} or {@link BoardNodeRectangleProps}. */
-export type BoardNodeProps = BoardNodeCircleProps | BoardNodeRectangleProps;
+/** @emoji 🟠 Declarative node marker: {@link Puzzle2dNodeCircleProps} or {@link Puzzle2dNodeRectangleProps}. */
+export type Puzzle2dNodeProps = Puzzle2dNodeCircleProps | Puzzle2dNodeRectangleProps;
 
-export interface NodeDescriptor extends BoardNodeProps {
+export interface NodeDescriptor extends Puzzle2dNodeProps {
   handles: HandleDescriptor[];
 }
 
@@ -6385,7 +6385,7 @@ let activePuzzle2dRenderer: Puzzle2dRenderer | null = null;
 /** 🟠 Host intrinsic for the secondary puzzle2d host; assign to JSX {@link PUZZLE_2D_HOST_NODE}. */
 export const Node = PUZZLE_2D_HOST_NODE;
 
-/** 🟣 Host intrinsic for board handles nested under {@link Node}. */
+/** 🟣 Host intrinsic for puzzle 2d handles nested under {@link Node}. */
 export const Handle = PUZZLE_2D_HOST_HANDLE;
 
 /** 🪢 Host intrinsic for directed edges between handle ids. */
@@ -6395,13 +6395,13 @@ export const Edge = PUZZLE_2D_HOST_EDGE;
 export const Wire = PUZZLE_2D_HOST_WIRE;
 
 /** @emoji 🗼 Optional per-id context menus when building {@link puzzle2dFixtureSceneMarkers}. */
-export interface BoardFixtureSceneMarkersOptions {
+export interface Puzzle2dFixtureSceneMarkersOptions {
   edgeContextMenuForId?: (edgeId: string) => ContextMenuItem[] | undefined;
   nodeContextMenuForId?: (nodeId: string) => ContextMenuItem[] | undefined;
 }
 
 /** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link Puzzle2dCanvas} `children` from {@link Puzzle2dFixtureV1} (Fragment of host markers only). */
-export function puzzle2dFixtureSceneMarkers(fixture: Puzzle2dFixtureV1, options?: BoardFixtureSceneMarkersOptions): ReactElement {
+export function puzzle2dFixtureSceneMarkers(fixture: Puzzle2dFixtureV1, options?: Puzzle2dFixtureSceneMarkersOptions): ReactElement {
   const nodeMenu = options?.nodeContextMenuForId;
   const edgeMenu = options?.edgeContextMenuForId;
   return (
@@ -6495,7 +6495,7 @@ export function buildPuzzle2dSceneDescriptor(children: ReactNode): Puzzle2dScene
         return;
       }
       if (child.type === PUZZLE_2D_HOST_NODE) {
-        const props = child.props as BoardNodeProps;
+        const props = child.props as Puzzle2dNodeProps;
         const handles: HandleDescriptor[] = [];
         appendHandleDescriptors(props.children, props.id, handles);
         descriptor.nodes.push({ ...props, handles });
@@ -6592,7 +6592,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
       }
       const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
       const { handles: _handles, ...nodeProps } = nodeDescriptor;
-      const node = resolvedExisting instanceof Puzzle2dSceneNode ? resolvedExisting : newBoardNodeFromProps(nodeProps);
+      const node = resolvedExisting instanceof Puzzle2dSceneNode ? resolvedExisting : newPuzzle2dNodeFromProps(nodeProps);
       if (!(resolvedExisting instanceof Puzzle2dSceneNode)) {
         renderer.scene.add(node);
       }
@@ -6696,8 +6696,8 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 
 //#region 🔖HostMountBridge
 /** @emoji 🌉 Secondary host root per {@link Puzzle2dRenderer}; scene sync runs on `children` changes and on {@link Puzzle2dRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
-function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: Puzzle2dRenderer }): null {
-  const hostMountRef = reactHostPort.useRef<BoardHostMount | null>(null);
+function Puzzle2dHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: Puzzle2dRenderer }): null {
+  const hostMountRef = reactHostPort.useRef<Puzzle2dHostMount | null>(null);
   const mountedRendererRef = reactHostPort.useRef<Puzzle2dRenderer | null>(null);
   const Bridge = useHostMountBridge();
   const wasmHostSceneMergeResyncEpoch = reactHostPort.useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
@@ -6705,13 +6705,13 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
   reactHostPort.useLayoutEffect(() => {
     if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
       if (hostMountRef.current) {
-        unmountBoardHostMount(hostMountRef.current);
+        unmountPuzzle2dHostMount(hostMountRef.current);
         hostMountRef.current = null;
       }
-      hostMountRef.current = createBoardHostMount(renderer);
+      hostMountRef.current = createPuzzle2dHostMount(renderer);
       mountedRendererRef.current = renderer;
     }
-    updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
+    updatePuzzle2dHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
     const jsxDescriptor = buildPuzzle2dSceneDescriptor(children);
     syncPuzzle2dScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
   }, [children, renderer, wasmHostSceneMergeResyncEpoch]);
@@ -6726,7 +6726,7 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
   reactHostPort.useLayoutEffect(
     () => () => {
       if (hostMountRef.current) {
-        unmountBoardHostMount(hostMountRef.current);
+        unmountPuzzle2dHostMount(hostMountRef.current);
         hostMountRef.current = null;
         mountedRendererRef.current = null;
       }
@@ -6820,7 +6820,7 @@ export function Puzzle2dCanvas({
   const resolvedSelection = selectionControlled ? normalizePuzzle2dSelectionProp(selection) : uncontrolledSelection;
   const resolvedPreselection = preselectionControlled ? normalizePuzzle2dPreselectProp(preselection) : uncontrolledPreselection;
   const resolvedHoveredId = hoveredControlled ? (hoveredIdProp ?? null) : uncontrolledHoveredId;
-  const boardTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
+  const puzzle2dTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
   const [surfaceContextMenu, setSurfaceContextMenu] = reactHostPort.useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
   const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
   const fileDragDepthRef = reactHostPort.useRef(0);
@@ -6918,7 +6918,7 @@ export function Puzzle2dCanvas({
         next.set(e.id, e.contextMenu);
       }
     }
-    boardTargetMenusRef.current = next;
+    puzzle2dTargetMenusRef.current = next;
   }, [children, contextRenderer]);
 
   reactHostPort.useEffect(() => {
@@ -7158,7 +7158,7 @@ export function Puzzle2dCanvas({
     }
     return contextRenderer.on("contextmenu", (payload) => {
       onContextMenu?.(payload);
-      const items = payload.id ? (boardTargetMenusRef.current.get(payload.id) ?? []) : (contextMenu ?? []);
+      const items = payload.id ? (puzzle2dTargetMenusRef.current.get(payload.id) ?? []) : (contextMenu ?? []);
       if (!items.length) {
         return;
       }
@@ -7400,8 +7400,8 @@ export function Puzzle2dCanvas({
         {contextRenderer ? (
           <>
             <HostMountProvider>
-              <BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />
-              {onLodChange ? <BoardDrawLodReporter onLodChange={onLodChange} /> : null}
+              <Puzzle2dHostSubtree camera={camera} children={children} renderer={contextRenderer} />
+              {onLodChange ? <Puzzle2dDrawLodReporter onLodChange={onLodChange} /> : null}
             </HostMountProvider>
             {companions}
           </>
@@ -7424,8 +7424,8 @@ export function Puzzle2dCanvas({
 
 //#region 🔖Hooks
 /** @emoji 📶 Subscribes to {@link Puzzle2dRenderer} draw LOD band changes for window measure labels. */
-export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Puzzle2dDrawLodKind) => void }): null {
-  const renderer = useBoard();
+export function Puzzle2dDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Puzzle2dDrawLodKind) => void }): null {
+  const renderer = usePuzzle2dRenderer();
   const lod = reactHostPort.useSyncExternalStore(renderer.subscribeDrawLod, renderer.getDrawLodSnapshot, renderer.getDrawLodSnapshot);
   reactHostPort.useEffect(() => {
     onLodChange?.(lod);
@@ -7434,7 +7434,7 @@ export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Puzz
 }
 
 /** 🎯 Access the imperative puzzle 2d renderer from within Puzzle2dCanvas descendants (DOM or secondary host tree). */
-export function useBoard(): Puzzle2dRenderer {
+export function usePuzzle2dRenderer(): Puzzle2dRenderer {
   const renderer = reactHostPort.useContext(Puzzle2dContext);
   if (renderer) {
     return renderer;
@@ -7442,48 +7442,48 @@ export function useBoard(): Puzzle2dRenderer {
   if (activePuzzle2dRenderer) {
     return activePuzzle2dRenderer;
   }
-  throw new Error("useBoard must be used inside Puzzle2dCanvas.");
+  throw new Error("usePuzzle2dRenderer must be used inside Puzzle2dCanvas.");
 }
 
 /** 📷 Read and update camera state through an external store subscription. */
 export function useCamera(): [CameraState, (camera: CameraState) => void] {
-  const renderer = useBoard();
+  const renderer = usePuzzle2dRenderer();
   const snapshot = reactHostPort.useSyncExternalStore(renderer.subscribeCamera, renderer.getCameraSnapshot, renderer.getCameraSnapshot);
   return [snapshot, (nextCamera) => renderer.setCamera(nextCamera.x, nextCamera.y, nextCamera.zoom)];
 }
 
 /** ✅ Subscribe to semantic selection ids without pushing React through the drag hot path. */
 export function useSelection(): Puzzle2dSelectionSnapshot {
-  const renderer = useBoard();
+  const renderer = usePuzzle2dRenderer();
   return reactHostPort.useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
 /** @emoji 👁️ Subscribe to area-select preview ids (and anchor-removed ids) on the active puzzle 2d renderer. */
 export function usePreselection(): Puzzle2dPreselectSnapshot {
-  const renderer = useBoard();
+  const renderer = usePuzzle2dRenderer();
   return reactHostPort.useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
 /** 📡 Bind a puzzle 2d event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
 export function usePuzzle2dEvent<TKey extends keyof Puzzle2dEventMap>(name: TKey, handler: (payload: Puzzle2dEventMap[TKey]) => void): void {
-  const renderer = useBoard();
+  const renderer = usePuzzle2dRenderer();
   reactHostPort.useEffect(() => renderer.on(name, handler), [handler, name, renderer]);
 }
 
 /** ⏱️ Subscribe to imperative frame callbacks emitted after each render pass. */
 export function useFrame(callback: (state: FrameState, dt: number) => void): void {
-  const renderer = useBoard();
+  const renderer = usePuzzle2dRenderer();
   reactHostPort.useEffect(() => renderer.subscribeFrame(callback), [callback, renderer]);
 }
 
-/** 🔄 Imperatively request another render for the active board root. */
+/** 🔄 Imperatively request another render for the active puzzle 2d root. */
 export function invalidate(renderer?: Puzzle2dRenderer): void {
   (renderer ?? activePuzzle2dRenderer)?.invalidate();
 }
 //#endregion 🔖Hooks
 
 //#region 🔖Vitest
-const boardReactVitest = (
+const puzzle2dReactVitest = (
   import.meta as ImportMeta & {
     vitest?: {
       afterEach: typeof import("vitest").afterEach;
@@ -7495,8 +7495,8 @@ const boardReactVitest = (
   }
 ).vitest;
 
-if (boardReactVitest) {
-  const { afterEach, beforeAll, describe, expect, it, vi } = boardReactVitest;
+if (puzzle2dReactVitest) {
+  const { afterEach, beforeAll, describe, expect, it, vi } = puzzle2dReactVitest;
   (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
   beforeAll(async () => {
@@ -7544,7 +7544,7 @@ if (boardReactVitest) {
     document.body.innerHTML = "";
   });
 
-  function BoardSelectListenerStub(): null {
+  function Puzzle2dSelectListenerStub(): null {
     usePuzzle2dEvent("select", () => undefined);
     return null;
   }
@@ -7560,10 +7560,10 @@ if (boardReactVitest) {
       expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);
     });
 
-    it("createBoardHostMount registers React 19 error reporters on the host root", () => {
+    it("createPuzzle2dHostMount registers React 19 error reporters on the host root", () => {
       const canvas = document.createElement("canvas");
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
-      const mount = createBoardHostMount(renderer);
+      const mount = createPuzzle2dHostMount(renderer);
       expect(typeof mount.onUncaughtError).toBe("function");
       expect(typeof mount.onCaughtError).toBe("function");
       expect(typeof mount.onRecoverableError).toBe("function");
@@ -7870,9 +7870,9 @@ if (boardReactVitest) {
 
     it("secondary host mounts handle under node without Puzzle2dCanvas", () => {
       const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
-      const hostMount = createBoardHostMount(renderer);
+      const hostMount = createPuzzle2dHostMount(renderer);
       act(() => {
-        updateBoardHostMount(
+        updatePuzzle2dHostMount(
           hostMount,
           createElement(PUZZLE_2D_HOST_NODE, { draggable: true, id: "host-a-node", radius: 10, selected: false, visible: true, x: 0, y: 0 }, createElement(PUZZLE_2D_HOST_HANDLE, { angle: 0, id: "host-a-handle", selected: false, visible: true })),
           null,
@@ -7880,7 +7880,7 @@ if (boardReactVitest) {
       });
       expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(Puzzle2dSceneNode);
       expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(Puzzle2dSceneHandle);
-      unmountBoardHostMount(hostMount);
+      unmountPuzzle2dHostMount(hostMount);
       renderer.dispose();
     });
 
@@ -8127,7 +8127,7 @@ if (boardReactVitest) {
       restoreCanvas();
     });
 
-    it("defers Puzzle2dCanvas children until the renderer exists so useBoard hooks do not throw", async () => {
+    it("defers Puzzle2dCanvas children until the renderer exists so usePuzzle2dRenderer hooks do not throw", async () => {
       const restoreCanvas = installCanvasStub();
       const container = document.createElement("div");
       document.body.appendChild(container);
@@ -8136,7 +8136,7 @@ if (boardReactVitest) {
       await act(async () => {
         root.render(
           <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
-            <BoardSelectListenerStub />
+            <Puzzle2dSelectListenerStub />
             <Node draggable id="a" radius={12} x={0} y={0}>
               <Handle handleKind="port" angle={0} id="a:h0" />
             </Node>

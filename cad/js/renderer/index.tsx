@@ -1291,6 +1291,7 @@ function GeometryTargetWireframes({
 }
 
 function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly geometry?: SpatialPickGeometry | null }): ReactNode {
+  const palette = spatialSceneColors();
   const p = item.params;
   if (!p) return null;
   const previewKind = typeof p.previewKind === "string" ? p.previewKind : "preview";
@@ -1302,22 +1303,20 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
   const from = readVec3(p.from) ?? prevPoint;
   const linePoints = points.length ? [...points, ...(cursor ? [cursor] : [])] : from && cursor ? [from, cursor] : [];
   const ghost = previewKind === "move-preview" || previewKind === "copy-preview" || previewKind === "mirror-preview";
-  const wireColor = previewKind === "selected-objects" || previewKind.endsWith("-selection") ? "#ffcc66" : ghost ? "#7ab0ff" : "#88eeff";
+  const wireColor = previewKind === "selected-objects" || previewKind.endsWith("-selection") ? palette.construction : ghost ? palette.committed : palette.accent;
   const wireOpacity = ghost ? 0.92 : 0.78;
-  const meshColor = ghost ? "#4a6088" : wireColor;
-  const meshOpacity = ghost ? 0.28 : 0.42;
   if (geometry && targets.length && previewKindUsesGeometryWireframe(previewKind)) {
     return (
       <group>
-        {ghost ? <GeometryTargetWireframes geometry={geometry} targets={targets} transform={(pt) => pt} color="#4a6088" opacity={0.35} /> : null}
+        {ghost ? <GeometryTargetWireframes geometry={geometry} targets={targets} transform={(pt) => pt} color={palette.ghost} opacity={0.35} /> : null}
         <GeometryTargetWireframes geometry={geometry} targets={targets} transform={transform} color={wireColor} opacity={wireOpacity} />
         {from ? (
           <mesh position={from} raycast={raycastNone}>
             <sphereGeometry args={[0.05, 12, 12]} />
-            <meshStandardMaterial color="#ff9966" emissive="#442200" emissiveIntensity={0.4} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.4} />
           </mesh>
         ) : null}
-        {linePoints.length >= 2 ? <Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#ffff88" lineWidth={2} /> : null}
+        {linePoints.length >= 2 ? <Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.dimension} lineWidth={2} /> : null}
       </group>
     );
   }
@@ -1328,11 +1327,11 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
         <group>
           <mesh position={sphere.position} raycast={raycastNone}>
             <sphereGeometry args={[sphere.radius, 32, 16]} />
-            <meshStandardMaterial color="#7ab0ff" emissive="#102a66" emissiveIntensity={0.28} transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={palette.committed} emissive={palette.committedEmissive} emissiveIntensity={0.28} transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={sphere.position} raycast={raycastNone}>
             <sphereGeometry args={[sphere.radius, 32, 16]} />
-            <meshBasicMaterial color="#d7ecff" wireframe transparent opacity={0.55} depthWrite={false} />
+            <meshBasicMaterial color={palette.committedWire} wireframe transparent opacity={0.55} depthWrite={false} />
           </mesh>
           <Line
             raycast={raycastNone}
@@ -1340,7 +1339,7 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
               [sphere.position[0], sphere.position[1], sphere.position[2]],
               [cursor[0], cursor[1], cursor[2]],
             ]}
-            color="#ffff88"
+            color={palette.dimension}
             lineWidth={1.5}
             dashed
             dashSize={0.08}
@@ -1348,7 +1347,7 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
           />
           <mesh position={sphere.position} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
         </group>
       );
@@ -1367,14 +1366,14 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
       }
       return (
         <group>
-          <Line raycast={raycastNone} points={circlePts} color="#88eeff" lineWidth={2} />
+          <Line raycast={raycastNone} points={circlePts} color={palette.accent} lineWidth={2} />
           <Line
             raycast={raycastNone}
             points={[
               [center[0], center[1], center[2]],
               [cursor[0], cursor[1], cursor[2]],
             ]}
-            color="#ffff88"
+            color={palette.dimension}
             lineWidth={1.5}
             dashed
             dashSize={0.08}
@@ -1382,7 +1381,7 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
           />
           <mesh position={center} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
         </group>
       );
@@ -1396,14 +1395,14 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
     if (arcPts.length >= 2) {
       return (
         <group>
-          <Line raycast={raycastNone} points={arcPts.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} />
+          <Line raycast={raycastNone} points={arcPts.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.accent} lineWidth={2} />
           <Line
             raycast={raycastNone}
             points={[
               [center[0], center[1], center[2]],
               [start[0], start[1], start[2]],
             ]}
-            color="#ffff88"
+            color={palette.dimension}
             lineWidth={1.5}
             dashed
             dashSize={0.08}
@@ -1415,7 +1414,7 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
               [center[0], center[1], center[2]],
               [arcEnd[0], arcEnd[1], arcEnd[2]],
             ]}
-            color="#ffff88"
+            color={palette.dimension}
             lineWidth={1.5}
             dashed
             dashSize={0.08}
@@ -1423,15 +1422,15 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
           />
           <mesh position={center} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
           <mesh position={start} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
           <mesh position={arcEnd} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#88eeff" emissive="#113344" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accentEmissive} emissiveIntensity={0.35} />
           </mesh>
         </group>
       );
@@ -1446,17 +1445,17 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
     const placedCount = cursor ? splinePoints.length - 1 : splinePoints.length;
     return (
       <group>
-        <Line raycast={raycastNone} points={sampled} color="#88eeff" lineWidth={2} />
+        <Line raycast={raycastNone} points={sampled} color={palette.accent} lineWidth={2} />
         {splinePoints.slice(0, placedCount).map((v, i) => (
           <mesh key={i} position={[v.x, v.y, v.z]} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
-            <meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+            <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
         ))}
       </group>
     );
   }
-  return <group>{linePoints.length >= 2 ? <Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} /> : null}</group>;
+  return <group>{linePoints.length >= 2 ? <Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.accent} lineWidth={2} /> : null}</group>;
 }
 
 function EntityHighlightItem({ item, geometry }: { readonly item: DisplayItem; readonly geometry?: SpatialPickGeometry | null }): ReactNode {
@@ -1467,13 +1466,13 @@ function EntityHighlightItem({ item, geometry }: { readonly item: DisplayItem; r
   const kind = (entity as { kind?: unknown }).kind;
   const id = (entity as { id?: unknown }).id;
   if (typeof kind !== "string" || typeof id !== "string") return null;
-  return <GeometryTargetWireframes geometry={geometry} targets={[{ kind: kind as ModelEntityKind, id }]} transform={(pt) => pt} color="#ffcc66" opacity={0.85} />;
+  return <GeometryTargetWireframes geometry={geometry} targets={[{ kind: kind as ModelEntityKind, id }]} transform={(pt) => pt} color={spatialSceneColors().construction} opacity={0.85} />;
 }
 
 function CurveItem({ item }: { readonly item: DisplayItem }): ReactNode {
   const points = readVec3Array(item.params?.points);
   if (points.length < 2) return null;
-  return <Line raycast={raycastNone} points={points.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} />;
+  return <Line raycast={raycastNone} points={points.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.accent} lineWidth={2} />;
 }
 
 function isMeshTransferLike(v: unknown): v is MeshTransfer {
@@ -1913,7 +1912,17 @@ function HeightDragSurface({ origin, corner, enabled, onPointerMove }: { readonl
   return (
     <mesh position={[xPlane, corner[1], zMid]} rotation={[0, Math.PI / 2, 0]} onPointerMove={onMove} renderOrder={2}>
       <planeGeometry args={[zSpan, ySpan]} />
-      <meshStandardMaterial transparent opacity={0.38} color="#3ecf9f" emissive="#0a3020" emissiveIntensity={0.25} roughness={0.88} metalness={0.08} depthWrite={false} side={THREE.DoubleSide} />
+      <meshStandardMaterial
+        transparent
+        opacity={0.38}
+        color={spatialSceneColors().accent}
+        emissive={spatialSceneColors().accentEmissive}
+        emissiveIntensity={0.25}
+        roughness={0.88}
+        metalness={0.08}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -1930,7 +1939,7 @@ function VerticalZDragRod({ origin, enabled, onPointerMove }: { readonly origin:
   return (
     <mesh position={[origin[0], origin[1], origin[2] + h / 2]} rotation={[Math.PI / 2, 0, 0]} onPointerMove={onMove} renderOrder={3}>
       <cylinderGeometry args={[0.14, 0.14, h, 10]} />
-      <meshStandardMaterial transparent opacity={0.14} color="#55aaff" depthWrite={false} side={THREE.DoubleSide} />
+      <meshStandardMaterial transparent opacity={0.14} color={spatialSceneColors().accentSecondary} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
   );
 }
@@ -2265,7 +2274,7 @@ function GeometryFactoryWireframeLayer({ geometry, visible = true }: { readonly 
   if (!visible || !edgeGeometry) return null;
   return (
     <lineSegments geometry={edgeGeometry} raycast={raycastNone} renderOrder={0}>
-      <lineBasicMaterial color="#b8c8e8" transparent opacity={0.72} depthTest />
+      <lineBasicMaterial color={spatialSceneColors().committedWire} transparent opacity={0.72} depthTest />
     </lineSegments>
   );
 }
@@ -2439,7 +2448,7 @@ function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTra
   if (!visible) return null;
   return (
     <lineSegments geometry={geometry} raycast={raycastNone}>
-      <lineBasicMaterial color="#000000" depthTest />
+      <lineBasicMaterial color={spatialSceneColors().foreground} depthTest />
     </lineSegments>
   );
 }
@@ -2500,10 +2509,10 @@ export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces 
           }
         >
           <meshStandardMaterial
-            color={data.color ?? "#9ad1ff"}
+            color={data.color ?? spatialSceneColors().committed}
             metalness={0}
             roughness={0.45}
-            emissive={data.color ?? "#9ad1ff"}
+            emissive={data.color ?? spatialSceneColors().committedEmissive}
             emissiveIntensity={0.08}
             side={THREE.DoubleSide}
             polygonOffset
@@ -4606,20 +4615,11 @@ export function InteractionRepl({
 
   return (
     <div
-      style={{
-        display: "flex",
-        flexDirection: fillHost ? "column" : "row",
-        height: fillHost ? "100%" : "100vh",
-        minHeight: 0,
-        width: "100%",
-        fontFamily: "system-ui",
-        color: "#e8e8f0",
-        background: "#080810",
-        ...rootStyle,
-      }}
+      className={cn("bg-background text-foreground flex min-h-0 w-full font-sans", fillHost ? "h-full flex-col" : "h-screen flex-row")}
+      style={rootStyle}
     >
-      <div style={{ flex: 1, minWidth: 0, minHeight: 0, position: "relative" }}>
-        <InteractionCanvas {...canvasOverrides} frameloop={frameloop} onCanvasReady={handleCanvasReady}>
+      <div className="relative min-h-0 min-w-0 flex-1">
+        <InteractionCanvas {...canvasOverrides} frameloop={frameloop} className={cn("bg-canvas", canvasOverrides?.className)} onCanvasReady={handleCanvasReady}>
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView
             previewKernel={rt.previewKernel()}
@@ -4657,14 +4657,9 @@ export function InteractionRepl({
         </InteractionCanvas>
         {dragSelection && dragOverlayRect ? (
           <svg
+            className={cn("pointer-events-none absolute inset-0 z-[4] h-full w-full", dragSelection.coverage === "partial" ? "text-accent" : "text-foreground")}
             width="100%"
             height="100%"
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 4,
-            }}
           >
             {dragSelection.method === "rectangle" ? (
               <rect
@@ -4672,16 +4667,14 @@ export function InteractionRepl({
                 y={Math.min(dragOverlayPoints[0]?.y ?? 0, dragOverlayPoints[1]?.y ?? 0)}
                 width={Math.abs((dragOverlayPoints[1]?.x ?? 0) - (dragOverlayPoints[0]?.x ?? 0))}
                 height={Math.abs((dragOverlayPoints[1]?.y ?? 0) - (dragOverlayPoints[0]?.y ?? 0))}
-                fill="rgba(102, 232, 255, 0.12)"
-                stroke={dragSelection.coverage === "partial" ? "#66e8ff" : "#ffdf7a"}
+                className="fill-current/10 stroke-current"
                 strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
                 strokeWidth={1.5}
               />
             ) : (
               <polygon
                 points={dragOverlayPoints.map((point) => `${point.x},${point.y}`).join(" ")}
-                fill="rgba(102, 232, 255, 0.12)"
-                stroke={dragSelection.coverage === "partial" ? "#66e8ff" : "#ffdf7a"}
+                className="fill-current/10 stroke-current"
                 strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
                 strokeWidth={1.5}
               />
@@ -4691,22 +4684,13 @@ export function InteractionRepl({
         {selectionMenu ? (
           <div
             onPointerDown={(e) => e.stopPropagation()}
+            className={cn("fixed z-[10080] w-[220px] max-h-[210px] overflow-y-auto", cadChromePopoverClass)}
             style={{
-              position: "fixed",
               left: Math.min(selectionMenu.client.x + 8, window.innerWidth - 230),
               top: Math.min(selectionMenu.client.y + 8, window.innerHeight - 220),
-              width: 220,
-              maxHeight: 210,
-              overflowY: "auto",
-              background: "#10101a",
-              border: "1px solid #4c5a78",
-              borderRadius: 7,
-              boxShadow: "0 10px 28px rgba(0,0,0,0.55)",
-              zIndex: 10080,
-              padding: 4,
             }}
           >
-            <div style={{ fontSize: 11, opacity: 0.7, padding: "4px 6px" }}>Select target</div>
+            <div className="text-muted-foreground px-single py-half text-2xs">Select target</div>
             {selectionMenu.targets.map((target) => {
               const key = spatialPickTargetKey(target);
               const active = hoveredPickKey === key;
@@ -4714,6 +4698,7 @@ export function InteractionRepl({
                 <button
                   key={key}
                   type="button"
+                  className={cn(cadChromeMenuButtonClass, active && "bg-accent text-accent-foreground")}
                   onPointerEnter={() => setHoveredPickKey(effectiveSelectionKindToggles[target.kind] !== false ? key : null)}
                   onPointerLeave={() => setHoveredPickKey(null)}
                   onPointerDown={(e) => {
@@ -4721,30 +4706,9 @@ export function InteractionRepl({
                     e.stopPropagation();
                     dispatchSelectionTargets([target], selectionMenu.modifiers, selectionMenu.point);
                   }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    border: "none",
-                    borderRadius: 5,
-                    padding: "6px 7px",
-                    textAlign: "left",
-                    background: active ? "#233b5d" : "transparent",
-                    color: "#e8e8f0",
-                    cursor: "pointer",
-                    fontSize: 12,
-                  }}
                 >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: 8,
-                      height: 8,
-                      borderRadius: 2,
-                      marginRight: 6,
-                      background: targetStyle(target, false, false).color,
-                    }}
-                  />
-                  <span style={{ opacity: 0.7 }}>{target.kind}</span> <code style={{ color: "#ffffff" }}>{target.id}</code>
+                  <span className="mr-single inline-block size-2 rounded-xs" style={{ background: targetStyle(target, false, false).color }} />
+                  <span className="text-muted-foreground">{target.kind}</span> <code className="text-foreground">{target.id}</code>
                 </button>
               );
             })}

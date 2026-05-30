@@ -31,7 +31,6 @@ import {
 	registerPlatformComponent,
 	registerSidePanelBody,
 	registerWindowBody,
-	type CadModel,
 	type ComponentKind,
 	type PanelModel,
 	type PlatformSpec,
@@ -3178,13 +3177,48 @@ if (import.meta.vitest) {
 			expect(parseSketchpadPuzzleInstanceId(sketchpadKitDiagramInstanceId(kitId))).toEqual({
 				kitId,
 				designId: null,
+				typeId: null,
 				pane: "kit-diagram",
 			});
 			expect(parseSketchpadPuzzleInstanceId(sketchpadDesignSceneInstanceId(kitId, designId))).toEqual({
 				kitId,
 				designId,
+				typeId: null,
 				pane: "scene",
 			});
+			const typeId = "22222222-3333-4444-5555-666666666666";
+			expect(parseSketchpadPuzzleInstanceId(sketchpadTypeSceneInstanceId(kitId, typeId))).toEqual({
+				kitId,
+				designId: null,
+				typeId,
+				pane: "type-scene",
+			});
+		});
+	});
+
+	describe("sketchpadTypeVolumeFixtureFromType", () => {
+		it("places one mesh object at the origin", () => {
+			const kit = {
+				id: "k",
+				types: [{ id: "t1", name: "Chair", representations: [{ file: { id: "f1" } }] }],
+				files: [{ id: "f1", path: "files/chair.glb" }],
+			} as Kit;
+			const volume = sketchpadTypeVolumeFixtureFromType(kit.types![0]!, kit);
+			expect(volume.objects).toHaveLength(1);
+			expect(volume.objects[0]?.id).toBe("t1");
+			expect(volume.objects[0]?.meshUrl).toContain("chair.glb");
+		});
+	});
+
+	describe("sketchpadSetHomeDropzoneOverlayVisible", () => {
+		it("creates and toggles the overlay element", () => {
+			if (typeof document === "undefined") return;
+			sketchpadSetHomeDropzoneOverlayVisible(true);
+			const overlay = document.getElementById(SKETCHPAD_HOME_DROPZONE_OVERLAY_ID);
+			expect(overlay).toBeTruthy();
+			expect(overlay?.classList.contains("hidden")).toBe(false);
+			sketchpadSetHomeDropzoneOverlayVisible(false);
+			expect(overlay?.classList.contains("hidden")).toBe(true);
 		});
 	});
 

@@ -8,7 +8,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 type Puzzle2dCanvasDebugElement = HTMLCanvasElement & {
-	__boardRenderer?: {
+	__puzzle2dRenderer?: {
 		resolveHit?: (point: { x: number; y: number }) => { id: string } | null;
 		scene: {
 			edges: Map<string, { curve: { p0: Point; p1: Point; p2: Point; p3: Point } }>;
@@ -41,12 +41,12 @@ async function clickCanvasNormalized(page: Page, canvas: Locator, nx: number, ny
 
 async function puzzle2dObjectClientPoint(page: Page, objectId: string): Promise<{ clientX: number; clientY: number }> {
 	const point = await page.evaluate((nextObjectId) => {
-		const element = document.querySelector('[data-testid="board-canvas"]');
+		const element = document.querySelector('[data-testid="puzzle2d-canvas"]');
 		if (!(element instanceof HTMLCanvasElement)) {
 			return null;
 		}
 		const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
-		const renderer = puzzle2dElement.__boardRenderer;
+		const renderer = puzzle2dElement.__puzzle2dRenderer;
 		const object = renderer?.scene.getObjectById(nextObjectId);
 		if (!renderer || !object) {
 			return null;
@@ -70,12 +70,12 @@ async function expectPuzzle2dSceneObjectHit(page: Page, objectId: string): Promi
 	await expect
 		.poll(async () =>
 			page.evaluate((nextObjectId) => {
-				const element = document.querySelector('[data-testid="board-canvas"]');
+				const element = document.querySelector('[data-testid="puzzle2d-canvas"]');
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
 				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
-				const renderer = puzzle2dElement.__boardRenderer;
+				const renderer = puzzle2dElement.__puzzle2dRenderer;
 				const object = renderer?.scene.getObjectById(nextObjectId);
 				if (!renderer || !object || !renderer.resolveHit) {
 					return null;
@@ -118,12 +118,12 @@ function cubicBezierPoint(curve: { p0: Point; p1: Point; p2: Point; p3: Point },
 
 async function puzzle2dEdgeMidClientPoint(page: Page, edgeId: string): Promise<{ clientX: number; clientY: number }> {
 	const point = await page.evaluate((nextEdgeId) => {
-		const element = document.querySelector('[data-testid="board-canvas"]');
+		const element = document.querySelector('[data-testid="puzzle2d-canvas"]');
 		if (!(element instanceof HTMLCanvasElement)) {
 			return null;
 		}
 		const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
-		const renderer = puzzle2dElement.__boardRenderer;
+		const renderer = puzzle2dElement.__puzzle2dRenderer;
 		const edge = renderer?.scene.edges.get(nextEdgeId);
 		if (!renderer || !edge) {
 			return null;
@@ -170,23 +170,23 @@ async function expectBoardStory(page: Page, storyId: string): Promise<Locator> {
 		const root = document.querySelector("#storybook-root");
 		return !!root && root.childElementCount > 0;
 	});
-	const canvas = page.getByTestId("board-canvas");
+	const canvas = page.getByTestId("puzzle2d-canvas");
 	await expect(canvas).toBeVisible();
 	await expect
-		.poll(async () => canvas.getAttribute("data-board-zoom"), { timeout: 30000 })
+		.poll(async () => canvas.getAttribute("data-puzzle2d-zoom"), { timeout: 30000 })
 		.toMatch(/\d+(\.\d+)?/);
 	expect(pageErrors.map((error) => error.message)).toEqual([]);
 	expect(significantConsoleErrors(consoleErrors)).toEqual([]);
 	return canvas;
 }
 
-test("board default: selection, zoom in stays on detail LOD while raising zoom", async ({ page }) => {
+test("puzzle2d default: selection, zoom in stays on detail LOD while raising zoom", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
-	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
-	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
-	await expect(canvas).toHaveAttribute("data-board-lod", "detail");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-raster", "gpu");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-world-tiling", "none");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-lod", "detail");
 
-	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
+	const initialZoom = Number(await canvas.getAttribute("data-puzzle2d-zoom"));
 	expect(initialZoom).toBeCloseTo(1, 1);
 
 	await clickPuzzle2dSceneObject(page, "alpha");
@@ -195,15 +195,15 @@ test("board default: selection, zoom in stays on detail LOD while raising zoom",
 	for (let index = 0; index < 18; index += 1) {
 		await wheelOnCanvasNormalized(page, canvas, 0.5, 0.5, -120);
 	}
-	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("detail");
-	const zoomed = Number(await canvas.getAttribute("data-board-zoom"));
+	await expect.poll(async () => canvas.getAttribute("data-puzzle2d-lod")).toBe("detail");
+	const zoomed = Number(await canvas.getAttribute("data-puzzle2d-zoom"));
 	expect(zoomed).toBeGreaterThan(initialZoom);
 
 	await clickCanvasNormalized(page, canvas, 0.04, 0.04);
 	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
-test("board default: deletes selected node after Delete and keeps scene in sync", async ({ page }) => {
+test("puzzle2d default: deletes selected node after Delete and keeps scene in sync", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
 	await clickPuzzle2dSceneObject(page, "beta");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "beta");
@@ -211,19 +211,19 @@ test("board default: deletes selected node after Delete and keeps scene in sync"
 	await expect
 		.poll(async () =>
 			page.evaluate(() => {
-				const element = document.querySelector('[data-testid="board-canvas"]');
+				const element = document.querySelector('[data-testid="puzzle2d-canvas"]');
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
 				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
-				return puzzle2dElement.__boardRenderer?.scene.getObjectById("beta") ? "present" : "absent";
+				return puzzle2dElement.__puzzle2dRenderer?.scene.getObjectById("beta") ? "present" : "absent";
 			}),
 		)
 		.toBe("absent");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
-test("board default: deletes selected edge after Delete", async ({ page }) => {
+test("puzzle2d default: deletes selected edge after Delete", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
 	const mid = await puzzle2dEdgeMidClientPoint(page, "link-1");
 	await page.mouse.click(mid.clientX, mid.clientY);
@@ -232,26 +232,26 @@ test("board default: deletes selected edge after Delete", async ({ page }) => {
 	await expect
 		.poll(async () =>
 			page.evaluate(() => {
-				const element = document.querySelector('[data-testid="board-canvas"]');
+				const element = document.querySelector('[data-testid="puzzle2d-canvas"]');
 				if (!(element instanceof HTMLCanvasElement)) {
 					return null;
 				}
 				const puzzle2dElement = element as Puzzle2dCanvasDebugElement;
-				return puzzle2dElement.__boardRenderer?.scene.edges.has("link-1") ? "present" : "absent";
+				return puzzle2dElement.__puzzle2dRenderer?.scene.edges.has("link-1") ? "present" : "absent";
 			}),
 		)
 		.toBe("absent");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "");
 });
 
-test("board default: zoom out to overview LOD while preserving wheel anchor", async ({ page }) => {
+test("puzzle2d default: zoom out to overview LOD while preserving wheel anchor", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--default");
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
 	const [cx, cy] = viewportCenterOfCanvasBox(box!);
 
 	const worldBefore = await page.evaluate(([px, py]) => {
-		const el = document.querySelector("[data-testid=\"board-canvas\"]") as HTMLCanvasElement | null;
+		const el = document.querySelector("[data-testid=\"puzzle2d-canvas\"]") as HTMLCanvasElement | null;
 		if (!el) {
 			return null;
 		}
@@ -261,7 +261,7 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 		const width = el.clientWidth;
 		const height = el.clientHeight;
 		const zoom = Number(el.dataset.puzzle2dZoom ?? "1");
-		const [camXRaw, camYRaw] = (el.getAttribute("data-board-camera") ?? "0,0").split(",");
+		const [camXRaw, camYRaw] = (el.getAttribute("data-puzzle2d-camera") ?? "0,0").split(",");
 		const camX = Number(camXRaw);
 		const camY = Number(camYRaw);
 		return {
@@ -275,10 +275,10 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 		await page.mouse.move(cx, cy);
 		await page.mouse.wheel(0, 140);
 	}
-	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("overview");
+	await expect.poll(async () => canvas.getAttribute("data-puzzle2d-lod")).toBe("overview");
 
 	const worldAfter = await page.evaluate(([px, py]) => {
-		const el = document.querySelector("[data-testid=\"board-canvas\"]") as HTMLCanvasElement | null;
+		const el = document.querySelector("[data-testid=\"puzzle2d-canvas\"]") as HTMLCanvasElement | null;
 		if (!el) {
 			return null;
 		}
@@ -288,7 +288,7 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 		const width = el.clientWidth;
 		const height = el.clientHeight;
 		const zoom = Number(el.dataset.puzzle2dZoom ?? "1");
-		const [camXRaw, camYRaw] = (el.getAttribute("data-board-camera") ?? "0,0").split(",");
+		const [camXRaw, camYRaw] = (el.getAttribute("data-puzzle2d-camera") ?? "0,0").split(",");
 		const camX = Number(camXRaw);
 		const camY = Number(camYRaw);
 		return {
@@ -303,18 +303,18 @@ test("board default: zoom out to overview LOD while preserving wheel anchor", as
 
 const nakaginCapsuleTowerHubPieceId = "9d18882e-d90b-40de-a171-47cb4564ffa6";
 
-test("board nakagin fixture: json scene hub piece selects", async ({ page }) => {
+test("puzzle2d nakagin fixture: json scene hub piece selects", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--nakagin-capsule-tower-flat-selection");
-	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
-	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-raster", "gpu");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-world-tiling", "none");
 	await clickPuzzle2dSceneObject(page, nakaginCapsuleTowerHubPieceId);
 	await expect(canvas).toHaveAttribute("data-2d-selection", nakaginCapsuleTowerHubPieceId);
 });
 
-test("board world-clip: raster mode, node selection, handle hit", async ({ page }) => {
+test("puzzle2d world-clip: raster mode, node selection, handle hit", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "puzzle-2d--world-tile-clip");
-	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
-	await expect(canvas).toHaveAttribute("data-board-world-tiling", "world-clip");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-raster", "gpu");
+	await expect(canvas).toHaveAttribute("data-puzzle2d-world-tiling", "world-clip");
 
 	await clickPuzzle2dSceneObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-2d-selection", "alpha");
