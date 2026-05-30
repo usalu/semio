@@ -1,9 +1,9 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Sketchpad platform refactor: copatibleWith on Port in @semio/rs with projection hydration; sketchpad GraphQL fragment and DTO mapping; kit diagram port compat; route selection in URL; import status UI; FiveD puzzle2d/3d selection on platform. WASM rebuilt. Sketchpad vitest 34/34. Rs unit test hydrate_type_from_snapshot_wires_ports_and_copatible_with replaces flaky GraphQL read test.",
+  "summary": "Extended sketchpad kit port compat to kit-level families (metabolism Nakagin ports live on families[].ports, not type.ports): sketchpadReadKitFamilyRows, sketchpadForEachKitPortRecord, family-aware collect/apply/extract and diagram compat edges. Tests 36/36. Prior session: copatibleWith on Port in rs, WASM rebuild, platform FiveD selection.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -23,6 +23,8 @@
     "⚪fd954b0e516d448ca6cbaec69e827743",
     "⚪758cf088bce34dc2a88d78a358750dc8",
     "⚪fc2b6a63f37641ba8c483720a29f3b6a",
-    "⚪47234f85dd014934a78d380bb10b6299"
+    "⚪47234f85dd014934a78d380bb10b6299",
+    "⚪6c766e1ab24b4f47a4a14e26f21235e1",
+    "⚪f15f6be93a5348a1b4dbcddafe163dc3"
   ]
 }

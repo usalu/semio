@@ -184,6 +184,8 @@ import {
 	useMediaQuery,
 	type ContextMenuItem,
 	type NavbarItem,
+	Expertise,
+	useElementsSurfaceChrome,
 	reactHostPort,
 } from "@ui/react";
 // #endregion 🔌Adapters
@@ -2110,7 +2112,37 @@ export function resolveElementIcon(iconId: string): React.ReactNode | undefined 
 
 const shellTabIcons = new Map<string, LucideIcon>();
 
-/** @emoji ­ƒû╝ Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
+const PANEL_KIND_LUCIDE: Record<PanelKind, LucideIcon> = {
+	windows: LayoutGridIcon,
+	overview: FolderOpenIcon,
+	workbench: Folder,
+	details: Info,
+	settings: Settings2,
+	chat: MessageSquare,
+};
+
+/** @emoji 🖼️ Ready-made Lucide icon for a {@link PanelKind} navbar toggle or tab fallback. */
+function renderPanelKindIcon(kind: PanelKind, size = 16): React.ReactNode {
+	const Icon = PANEL_KIND_LUCIDE[kind];
+	return Icon ? <Icon size={size} /> : null;
+}
+
+/** @emoji 🔍 Resolves a tab icon from registry, then falls back to the panel kind default. */
+function resolveTabIconNode(iconId: string, panelKind: PanelKind, size = 16): React.ReactNode {
+	const node = elementIconNodes.get(iconId);
+	if (node) {
+		return (
+			<span className="inline-flex items-center justify-center" style={{ width: size, height: size }}>
+				{node}
+			</span>
+		);
+	}
+	const Lucide = shellTabIcons.get(iconId);
+	if (Lucide) return <Lucide size={size} />;
+	return renderPanelKindIcon(panelKind, size);
+}
+
+/** @emoji ­ƒû� Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
 export function registerTabIcon(iconId: string, Icon: LucideIcon): void {
 	shellTabIcons.set(iconId, Icon);
 }
@@ -2269,18 +2301,9 @@ export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], b
 	});
 }
 
-function shellTabIconComponent(iconId: string): React.ComponentType<{ size?: number }> {
+function shellTabIconComponent(iconId: string, panelKind: PanelKind): React.ComponentType<{ size?: number }> {
 	return function ShellResolvedTabIcon({ size = 16 }: { size?: number }) {
-		const node = elementIconNodes.get(iconId);
-		if (node) {
-			return (
-				<span className="inline-flex items-center justify-center" style={{ width: size, height: size }}>
-					{node}
-				</span>
-			);
-		}
-		const Lucide = shellTabIcons.get(iconId);
-		return Lucide ? <Lucide size={size} /> : <span style={{ display: "inline-block", width: size }} data-missing-icon={iconId} />;
+		return <>{resolveTabIconNode(iconId, panelKind, size)}</>;
 	};
 }
 
@@ -2294,7 +2317,7 @@ export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], bus: CommandBu
 			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
 		return {
 			id: tab.id,
-			icon: shellTabIconComponent(tab.iconId),
+			icon: shellTabIconComponent(tab.iconId, tab.panel),
 			order: tab.order ?? orderIndex,
 			tree: { sections: [{ id: `${tab.id}.body`, content: <Body /> }] },
 		};
@@ -2393,22 +2416,8 @@ const ProductFindItemsSync: React.FC<{
 	return null;
 };
 function panelKindToggleIcon(kind: PanelKind, tabs: SidePanelTabConfig[]): React.ReactNode {
-	const firstIcon = tabs[0]?.icon;
-	if (firstIcon) return React.createElement(firstIcon as React.ComponentType<{ size?: number }>, { size: 16 });
-	switch (kind) {
-		case "windows":
-			return <LayoutGridIcon size={16} />;
-		case "overview":
-			return <FolderOpenIcon size={16} />;
-		case "workbench":
-			return <Folder size={16} />;
-		case "details":
-			return <Info size={16} />;
-		case "settings":
-			return <Settings2 size={16} />;
-		case "chat":
-			return <MessageSquare size={16} />;
-	}
+	void tabs;
+	return renderPanelKindIcon(kind, 16);
 }
 
 function resolveAppPanelTabsByKind(
@@ -3269,6 +3278,35 @@ if (import.meta.vitest) {
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
 			expect(markup).toContain('id="ui.panelToggle.details"');
 			expect(markup).not.toContain('id="ui.panelToggle.settings"');
+			expect(markup).not.toContain("data-missing-icon");
+			expect(markup).toContain('lucide lucide-folder');
+			expect(markup).toContain('lucide lucide-info');
+		});
+
+		it("renders panel kind icons for unregistered tab iconIds", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.icons"),
+			]);
+			registerWindowBody("test.workbench-view.icons", () => <div>Main</div>);
+			app.panelTabs = [
+				{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
+				{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
+			];
+			registerSidePanelBody("test.platform.panel.workbench", () => <div />);
+			registerSidePanelBody("test.platform.panel.details", () => <div />);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
+
+			expect(markup).toContain('lucide lucide-folder');
+			expect(markup).toContain('lucide lucide-info');
+			expect(markup).not.toContain("data-missing-icon");
 		});
 
 		it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
@@ -3346,6 +3384,25 @@ if (import.meta.vitest) {
 
 //#endregion ­ƒôªworkbench-view.tsx
 
+//#region 🔖PlatformShell
+/** @emoji 🌓 Fixed surface chrome for every product shell (system theme, desktop device). */
+export const PLATFORM_SYSTEM_SURFACE_CHROME = {
+	theme: "system" as const,
+	device: "desktop" as const,
+	expertise: Expertise.NORMAL,
+};
+
+/** @emoji 🛝 Applies system theme, level chrome, and full-viewport layout for {@link PlatformView}. */
+export function PlatformShell({ children }: { readonly children: React.ReactNode }): React.ReactElement {
+	useElementsSurfaceChrome(PLATFORM_SYSTEM_SURFACE_CHROME);
+	return (
+		<LevelProvider level="window">
+			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>{children}</div>
+		</LevelProvider>
+	);
+}
+//#endregion 🔖PlatformShell
+
 //#region ­ƒôªworkbench-mount.tsx
 type ElementsDomRoot = HTMLElement & { __elementsReactRoot?: Root };
 
@@ -3366,7 +3423,11 @@ export class ReactUI {
 		}
 		rootElement.__elementsReactRoot ??= createRoot(rootElement);
 		ReactUI.mountedRoot = rootElement.__elementsReactRoot;
-		rootElement.__elementsReactRoot.render(<PlatformViewWithHistory platform={platform} />);
+		rootElement.__elementsReactRoot.render(
+			<PlatformShell>
+				<PlatformViewWithHistory platform={platform} />
+			</PlatformShell>,
+		);
 	}
 
 	static unmount(rootId = "root"): void {

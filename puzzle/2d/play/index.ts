@@ -602,6 +602,31 @@ export class Playground2d extends Playground {
 }
 //#endregion 🔖Extension
 
+export type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
+
+/** @emoji 🗑️ Dedupes structural deletes and drops ids absent from the fixture (descriptor resync bursts), keeping real multi-edge node deletes. */
+export function filterPuzzle2dPlayStructuralDeleteBatch(
+	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
+	fixture: Puzzle2dFixtureV1,
+): Puzzle2dPlayStructuralDeleteItem[] {
+	const seen = new Set<string>();
+	const out: Puzzle2dPlayStructuralDeleteItem[] = [];
+	for (const item of batch) {
+		const key = `${item.kind}:${item.id}`;
+		if (seen.has(key)) {
+			continue;
+		}
+		seen.add(key);
+		const exists =
+			item.kind === "node" ? fixture.nodes.some((n) => n.id === item.id) : fixture.edges.some((e) => e.id === item.id);
+		if (!exists) {
+			continue;
+		}
+		out.push(item);
+	}
+	return out;
+}
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -670,6 +695,47 @@ if (import.meta.vitest) {
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+		});
+	});
+
+	describe("filterPuzzle2dPlayStructuralDeleteBatch", () => {
+		it("keeps real multi-edge node deletes and drops resync-only ghost ids", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{ id: "hub", x: 0, y: 0, radius: 20, handles: [{ id: "hub.h0", angle: 0 }] },
+					{ id: "leaf", x: 100, y: 0, radius: 20, handles: [{ id: "leaf.h0", angle: Math.PI }] },
+				],
+				edges: [
+					{ id: "e0", source: "hub.h0", target: "leaf.h0" },
+					{ id: "e1", source: "hub.h0", target: "leaf.h0" },
+					{ id: "e2", source: "hub.h0", target: "leaf.h0" },
+					{ id: "e3", source: "hub.h0", target: "leaf.h0" },
+					{ id: "e4", source: "hub.h0", target: "leaf.h0" },
+					{ id: "e5", source: "hub.h0", target: "leaf.h0" },
+				],
+			};
+			const batch = [
+				{ kind: "edge" as const, id: "e0" },
+				{ kind: "edge" as const, id: "e1" },
+				{ kind: "edge" as const, id: "e2" },
+				{ kind: "edge" as const, id: "e3" },
+				{ kind: "edge" as const, id: "e4" },
+				{ kind: "edge" as const, id: "e5" },
+				{ kind: "node" as const, id: "leaf" },
+			];
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
+			expect(
+				filterPuzzle2dPlayStructuralDeleteBatch(
+					[
+						{ kind: "edge", id: "ghost-edge" },
+						{ kind: "node", id: "ghost-node" },
+						{ kind: "edge", id: "e0" },
+					],
+					fixture,
+				),
+			).toEqual([{ kind: "edge", id: "e0" }]);
 		});
 	});
 }

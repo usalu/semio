@@ -1344,53 +1344,85 @@ function sketchpadKitDiagramPortLabel(port: Record<string, unknown>): string {
 	if (typeof label === "string" && label.length > 0) return label;
 	const code = port["code"];
 	if (typeof code === "string" && code.length > 0) return code;
+	const name = port["name"];
+	if (typeof name === "string" && name.length > 0) return name;
 	return String(port["id"] ?? "");
 }
 
-/** @emoji 🔌 Collects unique ports declared on kit kinds (type-owned ports and connector port refs). */
-export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: string; readonly name: string }[] {
-	const byId = new Map<string, { id: string; name: string }>();
-	const remember = (port: unknown) => {
-		if (port == null || typeof port !== "object") return;
-		const row = port as Record<string, unknown>;
-		const id = sketchpadReadEntityId(row);
-		if (!id || byId.has(id)) return;
-		byId.set(id, { id, name: sketchpadKitDiagramPortLabel(row) });
-	};
+/** @emoji 👨‍👩‍👦 Reads kit-level {@code families} rows from a denormalized bundle or projection DTO. */
+export function sketchpadReadKitFamilyRows(kit: Kit): readonly Record<string, unknown>[] {
+	const raw = (kit as { families?: unknown }).families;
+	if (raw == null) return [];
+	const asRow = (entry: unknown): entry is Record<string, unknown> =>
+		entry != null && typeof entry === "object" && !Array.isArray(entry);
+	if (Array.isArray(raw)) return raw.filter(asRow);
+	if (typeof raw === "object") {
+		const items = (raw as { items?: readonly unknown[] }).items;
+		if (Array.isArray(items)) return items.filter(asRow);
+	}
+	return [];
+}
+
+function sketchpadReadFamilyPortRows(family: Record<string, unknown>): readonly Record<string, unknown>[] {
+	const raw = family["ports"];
+	if (raw == null) return [];
+	const asRow = (entry: unknown): entry is Record<string, unknown> =>
+		entry != null && typeof entry === "object" && !Array.isArray(entry);
+	if (Array.isArray(raw)) return raw.filter(asRow);
+	if (typeof raw === "object") {
+		const items = (raw as { items?: readonly unknown[] }).items;
+		if (Array.isArray(items)) return items.filter(asRow);
+	}
+	return [];
+}
+
+function sketchpadForEachKitPortRecord(kit: Kit, visit: (port: Record<string, unknown>) => void): void {
 	for (const type of kit.types ?? []) {
-		for (const port of (type as { ports?: readonly unknown[] }).ports ?? []) remember(port);
+		for (const port of (type as { ports?: readonly unknown[] }).ports ?? []) {
+			if (port != null && typeof port === "object" && !Array.isArray(port)) visit(port as Record<string, unknown>);
+		}
 		for (const connector of type.connectors ?? []) {
-			remember((connector as { port?: unknown }).port);
+			const port = (connector as { port?: unknown }).port;
+			if (port != null && typeof port === "object" && !Array.isArray(port)) visit(port as Record<string, unknown>);
 		}
 	}
+	for (const family of sketchpadReadKitFamilyRows(kit)) {
+		for (const port of sketchpadReadFamilyPortRows(family)) visit(port);
+	}
+}
+
+/** @emoji 🔌 Collects unique ports on kit kinds, connectors, and kit-level families (metabolism). */
+export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: string; readonly name: string }[] {
+	const byId = new Map<string, { id: string; name: string }>();
+	const remember = (port: Record<string, unknown>) => {
+		const id = sketchpadReadEntityId(port);
+		if (!id || byId.has(id)) return;
+		byId.set(id, { id, name: sketchpadKitDiagramPortLabel(port) });
+	};
+	sketchpadForEachKitPortRecord(kit, remember);
 	return [...byId.values()];
 }
 
 function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unknown>[] {
 	const byId = new Map<string, Record<string, unknown>>();
-	const remember = (port: unknown) => {
-		if (port == null || typeof port !== "object") return;
-		const row = port as Record<string, unknown>;
-		const id = sketchpadReadEntityId(row);
+	const remember = (port: Record<string, unknown>) => {
+		const id = sketchpadReadEntityId(port);
 		if (!id) return;
 		const prev = byId.get(id);
 		if (!prev) {
-			byId.set(id, { ...row });
+			byId.set(id, { ...port });
 			return;
 		}
 		const mergedCompat = new Set<string>();
 		for (const ref of sketchpadReadCompatiblePortIds(prev)) mergedCompat.add(ref);
-		for (const ref of sketchpadReadCompatiblePortIds(row)) mergedCompat.add(ref);
+		for (const ref of sketchpadReadCompatiblePortIds(port)) mergedCompat.add(ref);
 		byId.set(id, {
 			...prev,
-			...row,
+			...port,
 			compatiblePorts: [...mergedCompat].map((compatId) => ({ id: compatId })),
 		});
 	};
-	for (const type of kit.types ?? []) {
-		for (const port of (type as { ports?: readonly unknown[] }).ports ?? []) remember(port);
-		for (const connector of type.connectors ?? []) remember((connector as { port?: unknown }).port);
-	}
+	sketchpadForEachKitPortRecord(kit, remember);
 	return [...byId.values()];
 }
 
@@ -1427,7 +1459,15 @@ export function sketchpadApplyPortCompatById(
 			port: enrichPort((connector as { port?: unknown }).port),
 		})),
 	}));
-	return { ...kit, types } as Kit;
+	const familyRows = sketchpadReadKitFamilyRows(kit);
+	const families =
+		familyRows.length === 0
+			? undefined
+			: familyRows.map((family) => ({
+					...family,
+					ports: sketchpadReadFamilyPortRows(family).map(enrichPort),
+				}));
+	return { ...kit, types, ...(families != null ? { families } : {}) } as Kit;
 }
 
 function sketchpadReadCompatiblePortIds(port: Record<string, unknown>): readonly string[] {
@@ -3458,6 +3498,51 @@ if (import.meta.vitest) {
 			const merged = sketchpadApplyPortCompatById(graphqlKit, compat);
 			const fixture = sketchpadKitPuzzle2dFixtureFromKit(merged);
 			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
+		});
+
+		it("reads port compat from kit families and wires type adjacency via connectors", () => {
+			const bundle = {
+				id: "k",
+				families: [
+					{
+						id: "fam1",
+						name: "Tower",
+						ports: [
+							{ id: "p1", name: "core bottom", compatiblePorts: [{ id: "p2" }] },
+							{ id: "p2", name: "core top", compatiblePorts: [{ id: "p1" }] },
+						],
+					},
+				],
+				types: [
+					{ id: "t1", connectors: [{ port: { id: "p1" } }] },
+					{ id: "t2", connectors: [{ port: { id: "p2" } }] },
+				],
+			} as Kit;
+			const compat = sketchpadExtractPortCompatById(bundle);
+			expect(compat.size).toBe(2);
+			const graphqlKit = {
+				id: "k",
+				types: [
+					{ id: "t1", connectors: [{ port: { id: "p1" } }] },
+					{ id: "t2", connectors: [{ port: { id: "p2" } }] },
+				],
+			} as Kit;
+			const merged = sketchpadApplyPortCompatById(graphqlKit, compat);
+			expect(sketchpadCollectKitPorts(merged).map((p) => p.id).sort()).toEqual(["p1", "p2"]);
+			const fixture = sketchpadKitPuzzle2dFixtureFromKit(merged);
+			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
+		});
+	});
+
+	describe("sketchpadReadKitFamilyRows", () => {
+		it("accepts denormalized arrays and block items", () => {
+			const fromArray = sketchpadReadKitFamilyRows({ id: "k", families: [{ id: "f1" }] } as Kit);
+			expect(fromArray).toHaveLength(1);
+			const fromBlock = sketchpadReadKitFamilyRows({
+				id: "k",
+				families: { items: [{ id: "f2" }] },
+			} as Kit);
+			expect(fromBlock[0]?.["id"]).toBe("f2");
 		});
 	});
 

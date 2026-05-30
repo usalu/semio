@@ -1418,6 +1418,31 @@ function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1): Record<Puzzle2d
   };
 }
 
+type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
+
+/** @emoji 🗑️ Dedupes structural deletes and drops ids absent from the fixture (descriptor resync bursts), keeping real multi-edge node deletes. */
+export function filterPuzzle2dPlayStructuralDeleteBatch(
+  batch: readonly Puzzle2dPlayStructuralDeleteItem[],
+  fixture: Puzzle2dFixtureV1,
+): Puzzle2dPlayStructuralDeleteItem[] {
+  const seen = new Set<string>();
+  const out: Puzzle2dPlayStructuralDeleteItem[] = [];
+  for (const item of batch) {
+    const key = `${item.kind}:${item.id}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    const exists =
+      item.kind === "node" ? fixture.nodes.some((n) => n.id === item.id) : fixture.edges.some((e) => e.id === item.id);
+    if (!exists) {
+      continue;
+    }
+    out.push(item);
+  }
+  return out;
+}
+
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
 const PUZZLE_2D_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
 
@@ -1507,6 +1532,8 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
+  /** @emoji 🗑️ Batches canvas deletes so host resync bursts do not clear the fixture. */
+  queueStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
   puzzle2dRedrawPlaying: boolean;
   setPuzzle2dRedrawPlaying: (value: boolean) => void;
@@ -1862,7 +1889,8 @@ function puzzle2dPlayLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: 
 function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
   const {
     activePaneId,
-    applyStructuralDelete,
+    patchFixture,
+    queueStructuralDelete,
     puzzle2dGridSnapEnabled,
     puzzle2dLodModeByPane,
     puzzle2dRedrawPlaying,
@@ -1919,18 +1947,21 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
       if (!acceptCanvasStructuralDeleteRef.current || payload.kind === "wire") {
         return;
       }
-      applyStructuralDelete(payload.kind, payload.id);
+      queueStructuralDelete(payload.kind, payload.id);
     },
-    [applyStructuralDelete],
+    [queueStructuralDelete],
   );
   const onCanvasDrag = reactHostPort.useCallback(
-    (_payload: { id: string }) => {
-      if (!puzzle2dRedrawPlaying) {
-        return;
+    (payload: { id: string; x: number; y: number }) => {
+      patchFixture((prev) => ({
+        ...prev,
+        nodes: prev.nodes.map((n) => (n.id === payload.id ? { ...n, x: payload.x, y: payload.y } : n)),
+      }));
+      if (puzzle2dRedrawPlaying) {
+        resetPuzzle2dRedrawProgressiveEpoch();
       }
-      resetPuzzle2dRedrawProgressiveEpoch();
     },
-    [puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
+    [patchFixture, puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
   );
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
@@ -2773,7 +2804,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     pruneSelections([id, ...handleIds]);
   }, []);
 
-  const structuralDeleteQueueRef = reactHostPort.useRef<Array<{ kind: "edge" | "node"; id: string }>>([]);
+  const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
   const queueStructuralDelete = reactHostPort.useCallback(
     (kind: "edge" | "node", id: string) => {
@@ -2786,11 +2817,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         structuralDeleteFlushScheduledRef.current = false;
         const batch = structuralDeleteQueueRef.current;
         structuralDeleteQueueRef.current = [];
-        if (batch.length > 4) {
-          return;
-        }
-        for (const item of batch) {
-          applyStructuralDelete(item.kind, item.id);
+        const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current);
+        for (const item of pending) {
+          if (item.kind === "edge") {
+            applyStructuralDelete("edge", item.id);
+            continue;
+          }
+          applyStructuralDelete("node", item.id);
         }
       });
     },
@@ -3294,6 +3327,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       applyPuzzle2dRedrawHandlesOnce,
       applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
+      queueStructuralDelete,
       puzzle2dRedrawHandlesAfterNodes,
       puzzle2dRedrawMode,
       puzzle2dRedrawPlayMaxItersPerFrame,
@@ -3354,6 +3388,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       applyPuzzle2dRedrawHandlesOnce,
       applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
+      queueStructuralDelete,
       puzzle2dRedrawHandlesAfterNodes,
       puzzle2dRedrawMode,
       puzzle2dRedrawPlayMaxItersPerFrame,
@@ -3698,6 +3733,47 @@ if (import.meta.vitest) {
       const { PUZZLE_2D_CAMERA_ZOOM_MIN, PUZZLE_2D_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
       expect(PUZZLE_2D_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
       expect(PUZZLE_2D_CAMERA_ZOOM_MAX).toBeGreaterThan(PUZZLE_2D_CAMERA_ZOOM_MIN);
+    });
+  });
+
+  describe("filterPuzzle2dPlayStructuralDeleteBatch", () => {
+    it("keeps real multi-edge node deletes and drops resync-only ghost ids", () => {
+      const fixture: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "hub", x: 0, y: 0, radius: 20, handles: [{ id: "hub.h0", angle: 0 }] },
+          { id: "leaf", x: 100, y: 0, radius: 20, handles: [{ id: "leaf.h0", angle: Math.PI }] },
+        ],
+        edges: [
+          { id: "e0", source: "hub.h0", target: "leaf.h0" },
+          { id: "e1", source: "hub.h0", target: "leaf.h0" },
+          { id: "e2", source: "hub.h0", target: "leaf.h0" },
+          { id: "e3", source: "hub.h0", target: "leaf.h0" },
+          { id: "e4", source: "hub.h0", target: "leaf.h0" },
+          { id: "e5", source: "hub.h0", target: "leaf.h0" },
+        ],
+      };
+      const batch = [
+        { kind: "edge" as const, id: "e0" },
+        { kind: "edge" as const, id: "e1" },
+        { kind: "edge" as const, id: "e2" },
+        { kind: "edge" as const, id: "e3" },
+        { kind: "edge" as const, id: "e4" },
+        { kind: "edge" as const, id: "e5" },
+        { kind: "node" as const, id: "leaf" },
+      ];
+      expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
+      expect(
+        filterPuzzle2dPlayStructuralDeleteBatch(
+          [
+            { kind: "edge", id: "ghost-edge" },
+            { kind: "node", id: "ghost-node" },
+            { kind: "edge", id: "e0" },
+          ],
+          fixture,
+        ),
+      ).toEqual([{ kind: "edge", id: "e0" }]);
     });
   });
 

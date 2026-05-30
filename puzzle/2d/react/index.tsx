@@ -8081,6 +8081,30 @@ if (puzzle2dReactVitest) {
       renderer.dispose();
     });
 
+    it("host marker replacement does not emit nodeDelete", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const nodeDeletes: string[] = [];
+      renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      const hostMount = createPuzzle2dHostMount(renderer);
+      act(() => {
+        updatePuzzle2dHostMount(
+          hostMount,
+          createElement(PUZZLE_2D_HOST_NODE, { id: "host-a", radius: 10, x: 0, y: 0 }, createElement(PUZZLE_2D_HOST_HANDLE, { angle: 0, id: "host-a.h" })),
+          null,
+        );
+      });
+      act(() => {
+        updatePuzzle2dHostMount(
+          hostMount,
+          createElement(PUZZLE_2D_HOST_NODE, { height: 20, id: "host-b", shape: "rectangle", width: 30, x: 1, y: 2 }, createElement(PUZZLE_2D_HOST_HANDLE, { angle: 0, id: "host-b.h" })),
+          null,
+        );
+      });
+      expect(nodeDeletes).toEqual([]);
+      unmountPuzzle2dHostMount(hostMount);
+      renderer.dispose();
+    });
+
     it("mounts handle children for flat host markers", async () => {
       const restoreCanvas = installCanvasStub();
       const container = document.createElement("div");

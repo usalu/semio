@@ -4817,16 +4817,41 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
       const rect2 = gl.domElement.getBoundingClientRect();
       (scene as unknown as { updateMatrixWorld: (f?: boolean) => void }).updateMatrixWorld(true);
       const screens: unknown[] = [];
+      let onScreen = 0;
+      let visibleUnoccluded = 0;
+      const visibleSamples: unknown[] = [];
       for (const m of meshes) {
-        const mm = m as unknown as { getWorldPosition: (v: Vector3) => Vector3 };
+        const mm = m as unknown as { getWorldPosition: (v: Vector3) => Vector3; userData: Record<string, unknown> };
+        const fid = mm.userData.puzzle3dVortexFullId as string;
         const p = mm.getWorldPosition(new Vector3());
         const proj = p.clone().project(camera as never);
         if (proj.z > 1) continue;
         const sx = rect2.left + ((proj.x + 1) / 2) * rect2.width;
         const sy = rect2.top + ((1 - proj.y) / 2) * rect2.height;
         if (sx < rect2.left || sx > rect2.left + rect2.width || sy < rect2.top || sy > rect2.top + rect2.height) continue;
-        screens.push({ fullId: (m as unknown as { userData: Record<string, unknown> }).userData.puzzle3dVortexFullId, sx: Math.round(sx), sy: Math.round(sy) });
-        if (screens.length >= 6) break;
+        onScreen += 1;
+        if (screens.length < 6) screens.push({ fullId: fid, sx: Math.round(sx), sy: Math.round(sy) });
+        const ndc2 = new Vector2(proj.x, proj.y);
+        const ray2 = new Raycaster();
+        (ray2.layers as unknown as { enableAll: () => void }).enableAll();
+        ray2.setFromCamera(ndc2, camera);
+        const allHits = ray2.intersectObjects(scene.children, true);
+        if (allHits.length) {
+          let node: { userData?: Record<string, unknown>; parent?: unknown } | null = allHits[0].object as never;
+          let nearestFid: string | null = null;
+          while (node) {
+            if (node.userData?.puzzle3dVortexFullId) {
+              nearestFid = node.userData.puzzle3dVortexFullId as string;
+              break;
+            }
+            if (node.userData?.puzzle3dObjectId) break;
+            node = node.parent as never;
+          }
+          if (nearestFid === fid) {
+            visibleUnoccluded += 1;
+            if (visibleSamples.length < 4) visibleSamples.push({ fullId: fid, sx: Math.round(sx), sy: Math.round(sy) });
+          }
+        }
       }
       return {
         vortexMeshCount: meshes.length,
@@ -4836,6 +4861,9 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
         sampleLayerMask: sample?.layers?.mask,
         cameraLayerMask: camMaskHolder.layers?.mask,
         vortexRayHits,
+        onScreen,
+        visibleUnoccluded,
+        visibleSamples,
         screens,
       };
     };
