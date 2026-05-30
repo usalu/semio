@@ -1676,7 +1676,7 @@ export const defaultInteractionSpatialViewTheme: InteractionSpatialViewTheme = {
   directionalPosition: [12, 18, 10],
   gridDivisions: 40,
   gridSize: 40,
-  groundPlaneOpacity: 0.18,
+  groundPlaneOpacity: 0,
 };
 // #endregion 🎨HostCustomization
 
@@ -1741,7 +1741,7 @@ const SPATIAL_SCENE_COLOR_FALLBACK: SpatialSceneColorPalette = {
   faceEmissive: "#333333",
   gridMajor: "#b0b0b0",
   gridMinor: "#d8d8d8",
-  groundPlane: "#c9a227",
+  groundPlane: "#b0b0b0",
   archived: "#6b8a72",
   archivedEmissive: "#1a2820",
   ghost: "#8a8a8a",
@@ -1793,8 +1793,8 @@ export function spatialSceneColors(): SpatialSceneColorPalette {
     face: accentSecondary,
     faceEmissive: readSpatialCssColor("--hover-window", SPATIAL_SCENE_COLOR_FALLBACK.faceEmissive),
     gridMajor: readSpatialCssColor("--border-color", SPATIAL_SCENE_COLOR_FALLBACK.gridMajor),
-    gridMinor: readSpatialCssColor("--muted", SPATIAL_SCENE_COLOR_FALLBACK.gridMinor),
-    groundPlane: accent,
+    gridMinor: readSpatialCssColor("--muted-foreground", SPATIAL_SCENE_COLOR_FALLBACK.gridMinor),
+    groundPlane: readSpatialCssColor("--border-color", SPATIAL_SCENE_COLOR_FALLBACK.groundPlane),
     archived: readSpatialCssColor("--success-border", SPATIAL_SCENE_COLOR_FALLBACK.archived),
     archivedEmissive: readSpatialCssColor("--success-foreground", SPATIAL_SCENE_COLOR_FALLBACK.archivedEmissive),
     ghost: muted,
@@ -5613,7 +5613,12 @@ if (import.meta.vitest) {
       expect(palette.accent).toBeTruthy();
       expect(palette.construction).toBe(palette.accent);
       expect(palette.selected).toBeTruthy();
+      expect(palette.groundPlane).not.toBe(palette.accent);
       resetSpatialSceneColorCache();
+    });
+
+    it("defaultInteractionSpatialViewTheme hides the factory ground plane tint", () => {
+      expect(defaultInteractionSpatialViewTheme.groundPlaneOpacity).toBe(0);
     });
   });
 }

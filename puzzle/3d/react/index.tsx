@@ -2752,7 +2752,7 @@ function VortexScreenPick(): null {
   const invalidate = useThree((s) => s.invalidate);
   const { collectVortexTargets, collectObjectGroups, blockedVortexFullIds } = useRegistryCore();
   const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const { setHover } = useRegistryHover();
+  const { setHover, hoverTarget } = useRegistryHover();
   const { attractionDragActive, attractionIndirectPickAwait } = useRegistryDrag();
 
   const stateRef = reactHostPort.useRef({
@@ -2765,6 +2765,7 @@ function VortexScreenPick(): null {
     invalidate,
     camera,
     busy: false,
+    hoverTarget: hoverTarget as HoverTarget | null,
   });
   stateRef.current.collectVortexTargets = collectVortexTargets;
   stateRef.current.collectObjectGroups = collectObjectGroups;
@@ -2775,6 +2776,7 @@ function VortexScreenPick(): null {
   stateRef.current.invalidate = invalidate;
   stateRef.current.camera = camera;
   stateRef.current.busy = attractionDragActive || attractionIndirectPickAwait !== null;
+  stateRef.current.hoverTarget = hoverTarget as HoverTarget | null;
 
   reactHostPort.useEffect(() => {
     const dom = gl.domElement;
@@ -2824,6 +2826,7 @@ function VortexScreenPick(): null {
       if (e.button !== 0) return;
       const st = stateRef.current;
       const hit = pickAt(e.clientX, e.clientY);
+      (window as unknown as { __p3dLastClick?: unknown }).__p3dLastClick = hit ? { fullId: hit.fullId, objectId: hit.objectId } : "miss"; // [DEBUG]
       if (!hit) return;
       e.stopImmediatePropagation();
       e.preventDefault();
@@ -2832,11 +2835,34 @@ function VortexScreenPick(): null {
       st.invalidate();
     };
 
+    // [DEBUG] expose vortex client-space positions + current hover for live verification
+    (window as unknown as { __p3dDebugVortexScreens?: () => unknown }).__p3dDebugVortexScreens = () => {
+      const st = stateRef.current;
+      const rect = dom.getBoundingClientRect();
+      const out: Array<{ fullId: string; objectId: string; sx: number; sy: number }> = [];
+      for (const target of st.collectVortexTargets()) {
+        if (st.blockedVortexFullIds.has(target.fullId)) continue;
+        projected.copy(target.world).project(st.camera as never);
+        if (projected.z > 1) continue;
+        out.push({
+          fullId: target.fullId,
+          objectId: target.objectId,
+          sx: ((projected.x + 1) / 2) * rect.width + rect.left,
+          sy: ((1 - projected.y) / 2) * rect.height + rect.top,
+        });
+      }
+      return out;
+    };
+    (window as unknown as { __p3dDebugHover?: () => unknown }).__p3dDebugHover = () => stateRef.current.hoverTarget ?? null; // [DEBUG]
+
     window.addEventListener("pointermove", onPointerMove);
     dom.addEventListener("click", onClickCapture, true);
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       dom.removeEventListener("click", onClickCapture, true);
+      delete (window as unknown as { __p3dDebugVortexScreens?: unknown }).__p3dDebugVortexScreens; // [DEBUG]
+      delete (window as unknown as { __p3dDebugHover?: unknown }).__p3dDebugHover; // [DEBUG]
+      delete (window as unknown as { __p3dLastClick?: unknown }).__p3dLastClick; // [DEBUG]
     };
   }, [gl]);
 
