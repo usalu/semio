@@ -1308,6 +1308,7 @@ import {
   classifyElementsBoardIconSelectorMode,
   parseBoardFixtureV1,
   BoardCanvas,
+  useBoardEvent,
   Node,
   Handle,
   Edge,
@@ -1876,7 +1877,7 @@ function boardFixtureMarkers(fixture: BoardFixtureV1): ReactElement {
   );
 }
 
-/** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. Renders outside {@link BoardCanvas} so shell context stays on the DOM tree (not the board host reconciler). */
+/** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. Mount via {@link BoardCanvasProps.companions} (DOM tree + board context, not host subtree). */
 function BoardStructuralDeleteReporter(): null {
   const { applyStructuralDelete } = useBoardPlayShell();
   const onEdgeDelete = reactHostPort.useCallback(
@@ -1896,7 +1897,7 @@ function BoardStructuralDeleteReporter(): null {
   return null;
 }
 
-/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. Renders outside {@link BoardCanvas} (DOM tree only). */
+/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. Mount via {@link BoardCanvasProps.companions}. */
 function BoardPlayRedrawProgressReset(): null {
   const { boardRedrawPlaying, resetBoardRedrawProgressiveEpoch } = useBoardPlayShell();
   const handler = reactHostPort.useCallback(() => {
@@ -1976,10 +1977,14 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dP
   );
   return (
     <BoardPaneChrome paneId={paneId}>
-      <BoardStructuralDeleteReporter />
-      <BoardPlayRedrawProgressReset />
       <BoardCanvas
         {...lodProps}
+        companions={
+          <>
+            <BoardStructuralDeleteReporter />
+            <BoardPlayRedrawProgressReset />
+          </>
+        }
         onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"

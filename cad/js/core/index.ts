@@ -1284,6 +1284,30 @@ export class Model {
   }
 }
 
+/** @emoji 🗑️ Removes object rows by id; geometry primitives stay intact so linked topology remains valid. */
+export function deleteObjectsFromModel(model: Model, objectIds: readonly string[]): readonly string[] {
+  const removed: string[] = [];
+  for (const id of objectIds) {
+    if (!model.objects[id]) continue;
+    delete model.objects[id];
+    removed.push(id);
+  }
+  if (removed.length > 0) model.bump();
+  return removed;
+}
+
+/** @emoji 🪪 Object ids from selection eligible for deletion (excludes geometry primitives). */
+export function deletableObjectIdsFromSelection(selection: readonly SelectionTarget[]): readonly string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const target of selection) {
+    if (target.kind !== "object" || seen.has(target.id)) continue;
+    seen.add(target.id);
+    ids.push(target.id);
+  }
+  return ids;
+}
+
 /** @emoji #️⃣ Stable FNV-1a digest for canonical geometry fingerprints. */
 export function fnv1aHex(input: string): string {
   let h = 0x811c9dc5;
@@ -7206,6 +7230,27 @@ if (import.meta.vitest) {
       expect(Object.keys(g.faces).length).toBe(6);
       expect(Object.keys(g.shells).length).toBe(1);
       expect(Object.keys(g.solids)).toEqual(["box-solid"]);
+    });
+
+    it("deleteObjectsFromModel removes object rows but keeps geometry primitives", () => {
+      const g = new Model();
+      applyModelDiff(g, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-solid")));
+      g.objects["box-a"] = { id: "box-a" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      g.objects["box-b"] = { id: "box-b" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      const removed = deleteObjectsFromModel(g, ["box-a", "missing"]);
+      expect(removed).toEqual(["box-a"]);
+      expect(g.objects["box-a"]).toBeUndefined();
+      expect(g.objects["box-b"]).toBeTruthy();
+      expect(Object.keys(g.solids)).toEqual(["box-solid"]);
+    });
+
+    it("deletableObjectIdsFromSelection keeps only object targets", () => {
+      const selection: SelectionTarget[] = [
+        { kind: "object", id: "box-a", editable: true },
+        { kind: "solid", id: "box-solid", editable: true },
+        { kind: "object", id: "box-a", editable: true },
+      ];
+      expect(deletableObjectIdsFromSelection(selection)).toEqual(["box-a"]);
     });
   });
   describe("@cad/js/core selection filter", () => {

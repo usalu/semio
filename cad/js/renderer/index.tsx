@@ -3304,6 +3304,8 @@ export interface InteractionReplHostCallbacks {
   /** @emoji 💬 Publishes the window engagement spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} engagement slot. */
   readonly onEngagementChange?: (engagement: EngagementSpec | null) => void;
   readonly onEscape?: () => void;
+  /** @emoji 🗑️ Delete/Backspace when deletable selection exists; return true when handled. */
+  readonly onDeleteSelection?: () => boolean;
   readonly onApplyTransformation?: (spec: TransformationSpec) => void;
   /** @emoji 🧲 Geometry used for pick targets (defaults to `geometry`; use spatial.shape geometry when the active model is typology-only). */
   readonly pickGeometry?: SpatialPickGeometry | null;
@@ -3558,6 +3560,7 @@ export function InteractionRepl({
   onRedo,
   onSnapshotChange,
   onEscape,
+  onDeleteSelection,
   rootStyle,
   asideStyle,
   showAside = true,
@@ -4363,6 +4366,11 @@ export function InteractionRepl({
         onRedo?.();
         return;
       }
+      if ((e.key === "Delete" || e.key === "Backspace") && !e.ctrlKey && !e.metaKey && !e.altKey && onDeleteSelection?.()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         e.stopPropagation();
@@ -4419,7 +4427,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {

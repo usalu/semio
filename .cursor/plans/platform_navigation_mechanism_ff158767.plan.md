@@ -22,10 +22,10 @@ todos:
     status: completed
   - id: sketchpad
     content: "Sketchpad: convert apps to panelTabs with panel kinds, set platform.applyUri, remove wireSketchpadBrowserNavigation, optional breadcrumb override"
-    status: in_progress
+    status: completed
   - id: tests
     content: Extend existing vitest test regions for toggles/breadcrumb/settings/history; typecheck + run suites + runtime verify in sketchpad
-    status: pending
+    status: completed
 isProject: false
 ---
 

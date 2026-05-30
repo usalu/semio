@@ -6132,6 +6132,8 @@ import { createRoot } from "react-dom/client";
 export interface BoardCanvasProps {
   camera?: Partial<CameraState>;
   children?: ReactNode;
+  /** @emoji 🎧 DOM-tree descendants with {@link BoardContext} (e.g. {@link useBoardEvent}); not mounted in the board host reconciler. */
+  companions?: ReactNode;
   className?: string;
   contextMenu?: ContextMenuItem[];
   /** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
@@ -6615,6 +6617,7 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
 export function BoardCanvas({
   camera,
   children,
+  companions,
   className,
   contextMenu,
   fixtureDragDrop,
@@ -7269,10 +7272,13 @@ export function BoardCanvas({
         <canvas className="min-h-0 min-w-0 flex-1 touch-none" data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
         {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 min-h-0 min-w-0" data-testid="board-text-overlay" ref={textOverlayCanvasRef} />}
         {contextRenderer ? (
-          <HostMountProvider>
-            <BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />
-            {onLodChange ? <BoardDrawLodReporter onLodChange={onLodChange} /> : null}
-          </HostMountProvider>
+          <>
+            <HostMountProvider>
+              <BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />
+              {onLodChange ? <BoardDrawLodReporter onLodChange={onLodChange} /> : null}
+            </HostMountProvider>
+            {companions}
+          </>
         ) : null}
         <ContextMenuController
           items={surfaceContextMenu?.items ?? []}

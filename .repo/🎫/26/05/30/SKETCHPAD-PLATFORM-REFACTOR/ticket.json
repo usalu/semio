@@ -1,7 +1,7 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "Fixed sketchpad dev runtime: import getPlatformControllerById in platform renderer BuiltinPuzzle5dKindRenderer; cap gql collect_la_paths recursion (stack overflow on session subscribe after installProjection); serve ui/assets fonts via uiAssetsVitePlugin (fixes OTS/sfnt HTML-as-font). WASM rebuilt. 15 sketchpad vitest tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
@@ -13,6 +13,7 @@
     "⚪00f0be4a9ae14e82bb7ec628f8cf91a8",
     "⚪c8a67e3c6f71445091437aa82e936a7d",
     "⚪5fd75dcf6f0b4f0482e56c085288e938",
-    "⚪c488b595150c4898a8ffec5c878986b0"
+    "⚪c488b595150c4898a8ffec5c878986b0",
+    "⚪2dc44c792d69459f8b7c8cdeee334497"
   ]
 }

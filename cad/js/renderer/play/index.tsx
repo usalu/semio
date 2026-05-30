@@ -59,6 +59,8 @@ import {
   applyModelDiff,
   type CadTransformGumballMode,
   type ModelDiff,
+  deleteObjectsFromModel,
+  deletableObjectIdsFromSelection,
 } from "@cad/js/core";
 
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
@@ -630,6 +632,7 @@ export class CadPlayShellController extends Controller {
       case "saveInPlay":
       case "saveCurrent":
       case "loadRawRequest":
+      case "deleteSelection":
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
@@ -668,8 +671,7 @@ export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppR
   const app = new AppRuntime(CAD_PLAY_APP_ID, "CAD play", undefined, controller, CAD_PLAY_LAYOUT as never, controller.mainMode.windowKinds);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
-  app.leftTabs = [];
-  app.rightTabs = [];
+  app.panelTabs = [];
   app.onActiveWindowChange = (windowKindId) => {
     const pane = cadPlayPaneFromWindowKindId(windowKindId);
     if (!pane) return;
@@ -1163,6 +1165,7 @@ interface PlaySessionProps {
   readonly autoFitBehavior?: "initial" | "always";
   readonly transformGumballMode: CadTransformGumballMode | null;
   readonly onTransformGumballCommit: (diff: ModelDiff) => void;
+  readonly onDeleteSelection: () => boolean;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1197,6 +1200,7 @@ function PlaySession({
   autoFitBehavior = "initial",
   transformGumballMode,
   onTransformGumballCommit,
+  onDeleteSelection,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1259,6 +1263,7 @@ function PlaySession({
       autoFitBehavior={autoFitBehavior}
       transformGumballMode={transformGumballMode}
       onTransformGumballCommit={onTransformGumballCommit}
+      onDeleteSelection={onDeleteSelection}
     />
   );
 }
@@ -1311,6 +1316,7 @@ interface CadPlayModelSpaceValue {
   readonly transformGumballMode: CadTransformGumballMode | null;
   readonly setTransformGumballMode: (value: CadTransformGumballMode | null) => void;
   readonly handleTransformGumballCommit: (modelDefinitionId: string, diff: ModelDiff) => void;
+  readonly handleDeleteSelection: () => boolean;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1513,6 +1519,17 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     [currentSelection, selectionKinds],
   );
 
+  const handleDeleteSelection = reactHostPort.useCallback((): boolean => {
+    if (boundInteractionSession) return false;
+    const objectIds = deletableObjectIdsFromSelection(selectionInScope);
+    if (objectIds.length === 0) return false;
+    const model = Model.fromJSON(liveModel.toJSON());
+    deleteObjectsFromModel(model, objectIds);
+    commitModelForDefinition(activeModelDefinitionId, model);
+    setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, activeModelDefinitionId, []));
+    return true;
+  }, [activeModelDefinitionId, boundInteractionSession, commitModelForDefinition, liveModel, selectionInScope]);
+
   const selectHierarchyTarget = reactHostPort.useCallback(
     (modelDefinitionId: string, target: SelectionTarget) => {
       if (modelDefinitionId !== activeModelDefinitionId) {
@@ -1680,6 +1697,9 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
           case "loadRawRequest":
             handleLoadRawRequest();
             break;
+          case "deleteSelection":
+            handleDeleteSelection();
+            break;
           case "setTransformTool": {
             const { tool, pressed } = args as { tool?: CadTransformGumballMode; pressed?: boolean };
             if (!tool) break;
@@ -1722,7 +1742,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     };
     shellController.setHostBridge(bridge);
     return () => shellController.setHostBridge(null);
-  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, transformGumballMode]);
+  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, transformGumballMode]);
 
   const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1811,6 +1831,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       transformGumballMode,
       setTransformGumballMode,
       handleTransformGumballCommit,
+      handleDeleteSelection,
     }),
     [
       activeModelDefinitionId,
@@ -1852,6 +1873,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       brepjsKernel,
       transformGumballMode,
       handleTransformGumballCommit,
+      handleDeleteSelection,
     ],
   );
 
@@ -1938,6 +1960,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     onHoveredPickKeyChange,
     transformGumballMode,
     handleTransformGumballCommit,
+    handleDeleteSelection,
   } = useCadPlayModelSpace();
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
@@ -2006,6 +2029,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
         autoFitMeshes={autoFitMeshes}
         transformGumballMode={transformGumballMode}
         onTransformGumballCommit={onTransformGumballCommit}
+        onDeleteSelection={handleDeleteSelection}
       />
     </div>
   );
@@ -2157,6 +2181,44 @@ if (import.meta.vitest) {
       });
       controller.run("setTransformTool", { tool: "move", pressed: true });
       expect(calls).toEqual([{ command: "setTransformTool", args: { tool: "move", pressed: true } }]);
+    });
+
+    it("forwards deleteSelection to the host bridge", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const calls: string[] = [];
+      controller.setHostBridge({
+        getToolbarState: () => ({
+          activeModelDefinitionId: defaultModelDefinitionId(),
+          selectionCount: 1,
+          transformTool: null,
+          transfersTo: [],
+          transfersFrom: [],
+        }),
+        runHostCommand: (command) => calls.push(command),
+      });
+      controller.run("deleteSelection");
+      expect(calls).toEqual(["deleteSelection"]);
+    });
+  });
+
+  describe("cad play delete selection", () => {
+    it("deleteObjectsFromModel removes selected objects but keeps solid primitives", async () => {
+      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
+      const { applyModelDiff, solidRef } = await import("@cad/js/core");
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-solid")));
+      model.objects["box-a"] = { id: "box-a" as never, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      model.objects["box-b"] = { id: "box-b" as never, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      const selection: SelectionTarget[] = [
+        { kind: "object", id: "box-a", editable: true },
+        { kind: "solid", id: "box-solid", editable: true },
+      ];
+      const objectIds = deletableObjectIdsFromSelection(selection);
+      deleteObjectsFromModel(model, objectIds);
+      expect(model.objects["box-a"]).toBeUndefined();
+      expect(model.objects["box-b"]).toBeTruthy();
+      expect(Object.keys(model.solids)).toEqual(["box-solid"]);
     });
   });
 
@@ -2342,8 +2404,7 @@ if (import.meta.vitest) {
 
     it("uses empty declarative side tab slots", () => {
       const app = buildCadPlayRuntime().getActiveApp();
-      expect(app?.leftTabs).toEqual([]);
-      expect(app?.rightTabs).toEqual([]);
+      expect(app?.panelTabs).toEqual([]);
     });
 
     it("cadPlayModelsDigest changes when object rows are added", () => {

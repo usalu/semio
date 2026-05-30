@@ -504,8 +504,7 @@ export function attachBoardPlayWindowKinds(controller: BoardPlayShellController,
 /** @emoji 🧩 Builds the board play {@link AppRuntime}; side panels are tree tabs via {@link PlaygroundView} `augmentPanelTabs` only. */
 export function buildBoardPlayAppRuntime(controller: BoardPlayShellController): AppRuntime {
 	const app = attachBoardPlayWindowKinds(controller, PUZZLE_2D_PLAY_LAYOUT);
-	app.leftTabs = [];
-	app.rightTabs = [];
+	app.panelTabs = [];
 	return app;
 }
 
@@ -655,8 +654,7 @@ if (import.meta.vitest) {
 		it("buildBoardPlayRuntime wires main mode and empty side tab slots", () => {
 			const runtime = buildBoardPlayRuntime();
 			const app = runtime.getActiveApp();
-			expect(app?.leftTabs).toEqual([]);
-			expect(app?.rightTabs).toEqual([]);
+			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
 		});
 	});

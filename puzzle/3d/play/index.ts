@@ -1037,13 +1037,11 @@ export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellControl
   ]);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
-  app.leftTabs = [
-    { id: PUZZLE_3D_PLAY_HIERARCHY_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_HIERARCHY, order: 0, bodyKey: PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY },
-    { id: PUZZLE_3D_PLAY_KINDS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_KINDS, order: 1, bodyKey: PUZZLE_3D_PLAY_KINDS_BODY_KEY },
-  ];
-  app.rightTabs = [
-    { id: PUZZLE_3D_PLAY_INSPECTOR_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_INSPECTOR, order: 0, bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY, label: "Inspector" },
-    { id: PUZZLE_3D_PLAY_SETTINGS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_SETTINGS, order: 1, bodyKey: PUZZLE_3D_PLAY_SETTINGS_BODY_KEY, label: "Settings" },
+  app.panelTabs = [
+    { id: PUZZLE_3D_PLAY_HIERARCHY_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_HIERARCHY, panel: "workbench", order: 0, bodyKey: PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_KINDS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_KINDS, panel: "workbench", order: 1, bodyKey: PUZZLE_3D_PLAY_KINDS_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_INSPECTOR_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_INSPECTOR, panel: "details", order: 0, bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY, label: "Inspector" },
+    { id: PUZZLE_3D_PLAY_SETTINGS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_SETTINGS, panel: "settings", order: 0, bodyKey: PUZZLE_3D_PLAY_SETTINGS_BODY_KEY, label: "Settings" },
   ];
   return app;
 }

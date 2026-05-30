@@ -41,10 +41,12 @@ import {
 	type Puzzle2dModel,
 	type Puzzle5dModel,
 	type TableModel,
+	type SideTabSpec,
 	type UiNode,
 	type WindowBodyViewContext,
+	getPlatformControllerById,
 } from "@framework/platform/core";
-import type { SearchItemSpec } from "@framework/core";
+import type { PlatformBreadcrumbItem, SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
 
 //#region 🔖KitImport
@@ -954,6 +956,7 @@ const SKETCHPAD_SURFACE_HOME_TABLE = "semio.sketchpad.surface.home.table/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "semio.sketchpad.surface.type.scene/v1";
 const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
 const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v1";
+const SKETCHPAD_PANEL_WINDOWS_BODY = "semio.sketchpad.panel.windows";
 const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
 const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
 
@@ -1654,7 +1657,6 @@ let sketchpadPlatformSingleton: Platform | null = null;
 let sketchpadPluginHostSingleton: PluginHost | null = null;
 let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
-let sketchpadPopstateBound = false;
 
 function sketchpadShellCommand(
 	id: string,
@@ -1685,6 +1687,21 @@ function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 	];
 }
 
+function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
+	return [
+		{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY },
+		{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY },
+	];
+}
+
+function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
+	return [
+		{ id: "windows", iconId: "semio.sketchpad.icon.windows", panel: "windows", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY },
+		{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY },
+		{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY },
+	];
+}
+
 function buildSketchpadExtensionManifest(): PluginManifest {
 	return {
 		id: SKETCHPAD_EXTENSION_ID,
@@ -1698,8 +1715,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					windowKinds: [{ id: "home-main", label: "Home", bodyKey: SKETCHPAD_BODY_HOME }],
 					defaultLayout: createTabStackLayout(["home-main"], ["Home"]),
 					commands: sketchpadHomeCommands(),
-					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
+					panelTabs: sketchpadHomePanelTabs(),
 				},
 				{
 					id: SKETCHPAD_KIT_APP_ID,
@@ -1711,8 +1727,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					],
 					defaultLayout: createDefaultLayout(["table", "diagram"], "row", [50, 50], ["Table", "Diagram"]),
 					commands: sketchpadKitAppCommands(),
-					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
+					panelTabs: sketchpadKitPanelTabs(),
 				},
 				{
 					id: SKETCHPAD_DESIGN_APP_ID,
@@ -1723,8 +1738,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_DESIGN_DIAGRAM },
 					],
 					defaultLayout: createDefaultLayout(["scene", "diagram"], "row", [60, 40], ["Scene", "Diagram"]),
-					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
+					panelTabs: sketchpadKitPanelTabs(),
 				},
 				{
 					id: SKETCHPAD_TYPE_APP_ID,
@@ -1732,8 +1746,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 					windowKinds: [{ id: "type-main", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE }],
 					defaultLayout: createTabStackLayout(["type-main"], ["Type"]),
-					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
+					panelTabs: sketchpadKitPanelTabs(),
 				},
 				{
 					id: SKETCHPAD_DOCS_APP_ID,
@@ -1775,6 +1788,20 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_TYPE, () => buildCadWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
+	registerSidePanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {
+		const app = ctx.platform.getActiveApp();
+		const windowKinds = app?.windowKinds ?? [];
+		return {
+			type: "stack",
+			direction: "vertical",
+			gap: "tight",
+			children: windowKinds.map((windowKind) => ({
+				type: "text",
+				value: windowKind.label,
+				dataAttributes: { "data-window-kind-id": windowKind.id },
+			})),
+		};
+	});
 	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, () =>
 		buildPanelWindowBody(SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, "workbench"),
 	);
@@ -1791,19 +1818,44 @@ function applySketchpadUri(platform: Platform, uri: string): void {
 	platform.notify();
 }
 
-function wireSketchpadBrowserNavigation(platform: Platform): void {
-	platform.onNavigate = (uri) => {
-		if (typeof window !== "undefined" && window.location.pathname + window.location.search !== uri) {
-			window.history.pushState(null, "", uri);
+function isSketchpadUuid(value: string): boolean {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/** @emoji 🍞 Friendly breadcrumb labels for kit routes. */
+function sketchpadBreadcrumb(platform: Platform, uri: string): PlatformBreadcrumbItem[] {
+	const path = uri.split("?")[0] ?? "/";
+	const segments = path.split("/").filter(Boolean);
+	const items: PlatformBreadcrumbItem[] = [{ id: "root", content: "Home" }];
+	let cumulative = "";
+	for (let index = 0; index < segments.length; index++) {
+		const segment = segments[index] ?? "";
+		cumulative += `/${segment}`;
+		const href = cumulative;
+		let label: string = segment;
+		if (segment === "kits") {
+			label = "Kits";
+		} else if (segment === "designs") {
+			label = "Designs";
+		} else if (segment === "types") {
+			label = "Types";
+		} else if (isSketchpadUuid(segment)) {
+			const scope = parseSketchpadRouteScopeFromPath(path);
+			const controller = getPlatformControllerById(platform, SKETCHPAD_SHELL_CONTROLLER_ID) as SketchpadShellController | undefined;
+			const kitStore =
+				scope.kitId && controller ? (controller.getStore<SketchpadKitSnapshot>(`${SKETCHPAD_KIT_STORE_PREFIX}${scope.kitId}`) as SemioKitStore | undefined) : undefined;
+			const kit = kitStore?.getSnapshot().kit;
+			if (scope.designId && kit) {
+				label = findDesignInKit(kit, scope.designId)?.name ?? segment;
+			} else if (scope.typeId && kit) {
+				label = findTypeInKit(kit, scope.typeId)?.name ?? segment;
+			} else if (scope.kitId && kit) {
+				label = kit.name ?? segment;
+			}
 		}
-		applySketchpadUri(platform, uri);
-	};
-	if (typeof window === "undefined" || sketchpadPopstateBound) return;
-	sketchpadPopstateBound = true;
-	window.addEventListener("popstate", () => {
-		const uri = `${window.location.pathname}${window.location.search}`;
-		applySketchpadUri(platform, uri);
-	});
+		items.push({ id: href, content: label });
+	}
+	return items;
 }
 
 const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
@@ -1825,10 +1877,9 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	} satisfies PluginModule);
 	await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
 	new SketchpadPlatformComponents(platform);
-	wireSketchpadBrowserNavigation(platform);
-	if (typeof window !== "undefined" && window.location) {
-		applySketchpadUri(platform, `${window.location.pathname}${window.location.search}`);
-	} else {
+	platform.applyUri = (uri) => applySketchpadUri(platform, uri);
+	platform.breadcrumb = (uri) => sketchpadBreadcrumb(platform, uri);
+	if (typeof window === "undefined") {
 		platform.activeAppId = SKETCHPAD_HOME_APP_ID;
 		platform.notify();
 	}

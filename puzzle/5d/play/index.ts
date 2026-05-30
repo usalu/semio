@@ -398,8 +398,7 @@ export function buildPuzzle5dPlayAppRuntime(controller: Puzzle5dPlayShellControl
   );
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
-  app.leftTabs = [];
-  app.rightTabs = [];
+  app.panelTabs = [];
   return app;
 }
 
