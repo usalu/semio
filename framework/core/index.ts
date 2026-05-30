@@ -279,6 +279,8 @@ export interface SideTabSpec {
 	readonly iconId: string;
 	readonly order?: number;
 	readonly bodyKey: string;
+	/** @emoji 🏷️ Workbench/details section title; omit for content-only panel chrome. */
+	readonly label?: string;
 }
 //#endregion 🔖SideTab
 

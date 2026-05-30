@@ -11298,19 +11298,15 @@ export const windowCapCornerClass = (lineClass: string, side: "left" | "right", 
     lineClass,
   );
 
-/** @emoji 📐 Grid tracks for multi-tab active chrome so the primary stroke runs tab-left through body-left. */
+/** @emoji 📐 Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
   readonly templateColumns: string;
-  readonly beforeCol?: number;
   readonly activeCol: number;
   readonly gapCol: number;
-  readonly afterCol?: number;
   readonly controlsCol: number;
   readonly bodyColumnSpan: string;
   readonly activeTabIndex: number;
-  readonly tabsBefore: readonly { id: string; title: string }[];
-  readonly tabsAfter: readonly { id: string; title: string }[];
-  readonly stackActiveTab?: { id: string; title: string };
+  readonly tabCol: (tabIndex: number) => number;
 }
 
 /** @emoji 📐 Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
@@ -11319,43 +11315,28 @@ export function modeDockChromeGridPlacement(
   activeId: string | undefined,
 ): ModeDockChromeGrid {
   const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeId));
-  const tabsBefore = tabs.slice(0, activeTabIndex);
-  const tabsAfter = tabs.slice(activeTabIndex + 1);
-  const templateParts: string[] = [];
-  if (tabsBefore.length > 0) templateParts.push("auto");
-  templateParts.push("auto");
-  templateParts.push("minmax(0, 1fr)");
-  if (tabsAfter.length > 0) templateParts.push("auto");
-  templateParts.push("auto");
-  let col = 1;
-  const beforeCol = tabsBefore.length > 0 ? col++ : undefined;
-  const activeCol = col++;
-  const gapCol = col++;
-  const afterCol = tabsAfter.length > 0 ? col++ : undefined;
-  const controlsCol = col++;
-  const bodyEndLine = afterCol ?? controlsCol;
+  const gapCol = tabs.length + 1;
+  const controlsCol = tabs.length + 2;
+  const activeCol = activeTabIndex + 1;
+  const templateParts = [...tabs.map(() => "max-content"), "minmax(0, 1fr)", "max-content"];
   return {
     templateColumns: templateParts.join(" "),
-    beforeCol,
     activeCol,
     gapCol,
-    afterCol,
     controlsCol,
-    bodyColumnSpan: `${activeCol} / ${bodyEndLine}`,
+    bodyColumnSpan: `${activeCol} / ${gapCol + 1}`,
     activeTabIndex,
-    tabsBefore,
-    tabsAfter,
-    stackActiveTab: tabs[activeTabIndex],
+    tabCol: (tabIndex) => tabIndex + 1,
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — full pill above the active U-frame baseline. */
+/** @emoji 📏 Inactive sibling tab — three-sided pill above the active U-frame baseline (no bottom stroke). */
 export const modeDockInactiveTabClass =
-  "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
+  "relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-element bg-window";
 
-/** @emoji 📏 Stack-active tab — open bottom edge merges into the body; top/left primary stroke only. */
+/** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body (no bottom stroke). */
 export const modeDockActiveTabClass =
-  "relative z-20 box-border min-h-medium shrink-0 border-t border-l !border-r-0 !border-b-0 border-active-base bg-window";
+  "relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-active-base bg-window";
 
 /** @emoji 📏 Maximize cap on the right of the gap (secondary chrome line). */
 export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
@@ -16913,8 +16894,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDrop,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const localizedLabel = id ? useLabel(id) : undefined;
-  const displayLabel = label !== undefined ? label : localizedLabel;
+  const suppressLocalizedLabel = label === "";
+  const resolvedLabel = label === "" ? undefined : label;
+  const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? useLabel(id) : undefined;
+  const displayLabel = resolvedLabel ?? localizedLabel;
   assertNoNestedTreeSections(children, "TreeSection");
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
@@ -22606,10 +22589,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
   const tabInsertIndex =
     dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
-  const activeTabIndex = chromeGrid?.activeTabIndex ?? Math.max(0, tabs.findIndex((tab) => tab.id === activeId));
-  const tabsBefore = chromeGrid?.tabsBefore ?? tabs;
-  const tabsAfter = chromeGrid?.tabsAfter ?? [];
-  const stackActiveTab = chromeGrid?.stackActiveTab ?? tabs[activeTabIndex];
 
   const renderInsertSlot = (slotKey: string) => (
     <div
@@ -22700,7 +22679,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     />
   );
 
-  if (perTabActiveChrome && stackActiveTab && chromeGrid && chromeBody) {
+  if (perTabActiveChrome && chromeGrid && chromeBody) {
     return (
       <div
         data-slot="mode-dock-chrome-column"
@@ -22713,41 +22692,32 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           className="grid min-h-medium min-w-0 items-stretch"
           style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: chromeGrid.templateColumns }}
         >
-          {chromeGrid.beforeCol !== undefined && tabsBefore.length > 0 ? (
+          {tabs.map((tab, index) => (
             <div
-              data-slot="mode-dock-tabs-before"
-              className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
-              style={{ gridColumn: chromeGrid.beforeCol }}
+              key={tab.id}
+              data-slot={activeId === tab.id ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
+              className={cn(
+                "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
+                activeId === tab.id ? "z-10" : "z-20",
+              )}
+              style={{ gridColumn: chromeGrid.tabCol(index) }}
             >
-              {renderTabsWithInserts(tabsBefore, 0)}
+              {tabInsertIndex === index ? renderInsertSlot(`insert-${index}`) : null}
+              {renderTab(tab, index)}
+              {activeId === tab.id ? (
+                <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
+              ) : null}
             </div>
-          ) : null}
-          <div
-            data-slot="mode-dock-tab-active-group"
-            className="relative z-10 flex min-h-medium min-w-0 shrink-0 items-stretch overflow-visible"
-            style={{ gridColumn: chromeGrid.activeCol }}
-          >
-            {renderTabsWithInserts([stackActiveTab], activeTabIndex)}
-            <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
-          </div>
-          <div className="relative z-0 min-h-medium min-w-0" style={{ gridColumn: chromeGrid.gapCol }}>
-            {tabGap}
-          </div>
-          {chromeGrid.afterCol !== undefined && tabsAfter.length > 0 ? (
-            <div
-              data-slot="mode-dock-tabs-after"
-              className="relative z-20 flex min-h-medium items-stretch overflow-x-auto overflow-y-hidden"
-              style={{ gridColumn: chromeGrid.afterCol }}
-            >
-              {renderTabsWithInserts(tabsAfter, activeTabIndex + 1)}
-              {tabInsertIndex === tabs.length ? renderInsertSlot("insert-end") : null}
-            </div>
-          ) : tabInsertIndex === tabs.length ? (
-            <div className="relative z-20 flex min-h-medium items-stretch" style={{ gridColumn: chromeGrid.gapCol }}>
+          ))}
+          {tabInsertIndex === tabs.length ? (
+            <div className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: chromeGrid.gapCol }}>
               {renderInsertSlot("insert-end")}
             </div>
           ) : null}
-          <div className="relative z-10 flex min-h-medium items-stretch" style={{ gridColumn: chromeGrid.controlsCol }}>
+          <div className="relative z-0 min-h-medium min-w-0" style={{ gridColumn: chromeGrid.gapCol }}>
+            {tabGap}
+          </div>
+          <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: chromeGrid.controlsCol }}>
             {controlsCap}
           </div>
         </div>
@@ -23424,13 +23394,29 @@ if (import.meta.vitest) {
         ],
         "b",
       );
-      expect(grid.templateColumns).toBe("auto auto minmax(0, 1fr) auto auto");
-      expect(grid.beforeCol).toBe(1);
+      expect(grid.templateColumns).toBe("max-content max-content max-content minmax(0, 1fr) max-content");
+      expect(grid.tabCol(0)).toBe(1);
+      expect(grid.tabCol(1)).toBe(2);
+      expect(grid.tabCol(2)).toBe(3);
       expect(grid.activeCol).toBe(2);
-      expect(grid.gapCol).toBe(3);
-      expect(grid.afterCol).toBe(4);
+      expect(grid.gapCol).toBe(4);
       expect(grid.controlsCol).toBe(5);
-      expect(grid.bodyColumnSpan).toBe("2 / 4");
+      expect(grid.bodyColumnSpan).toBe("2 / 5");
+    });
+
+    it("modeDockChromeGridPlacement keeps every tab left of the flex gap", () => {
+      const grid = modeDockChromeGridPlacement(
+        [
+          { id: "a", title: "A" },
+          { id: "b", title: "B" },
+          { id: "c", title: "C" },
+        ],
+        "b",
+      );
+      expect(grid.tabCol(0)).toBeLessThan(grid.gapCol);
+      expect(grid.tabCol(1)).toBeLessThan(grid.gapCol);
+      expect(grid.tabCol(2)).toBeLessThan(grid.gapCol);
+      expect(grid.gapCol).toBeLessThan(grid.controlsCol);
     });
 
     it("Mode lays out all windows and marks the active one", () => {
@@ -23549,9 +23535,12 @@ if (import.meta.vitest) {
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')?.className).toContain("z-[2]");
-      expect(container.querySelector('[data-slot="mode-dock-tab-active-group"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-r");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-b-0");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-element");
@@ -23597,12 +23586,16 @@ if (import.meta.vitest) {
       const chromeColumn = container.querySelector('[data-slot="mode-dock-chrome-column"]');
       const stackBody = chromeColumn?.querySelector('[data-slot="mode-dock-stack-body"]');
       expect(stackBody).toBeTruthy();
-      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-before"]')).toBeTruthy();
-      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tab-active-group"]')).toBeTruthy();
+      expect(chromeColumn?.querySelectorAll('[data-slot="mode-dock-tab-cell"], [data-slot="mode-dock-tab-active-cell"]').length).toBe(2);
+      expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-before"]')).toBeNull();
       expect(chromeColumn?.querySelector('[data-slot="mode-dock-tabs-after"]')).toBeNull();
       expect(chromeColumn?.querySelector('[data-slot="mode-dock-tab-gap"]')).toBeTruthy();
       expect(chromeColumn?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect(screen.getByText("Energy Body")).toBeTruthy();
+      const bodyRow = chromeColumn?.querySelector('[data-slot="mode-dock-stack-body"]')?.parentElement;
+      expect(bodyRow?.className).toContain("flex");
+      expect(bodyRow?.className).toContain("flex-col");
+      expect(bodyRow?.className).toContain("min-h-0");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {

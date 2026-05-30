@@ -1017,8 +1017,8 @@ export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellControl
     { id: PUZZLE_3D_PLAY_KINDS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_KINDS, order: 1, bodyKey: PUZZLE_3D_PLAY_KINDS_BODY_KEY },
   ];
   app.rightTabs = [
-    { id: PUZZLE_3D_PLAY_INSPECTOR_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_INSPECTOR, order: 0, bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY },
-    { id: PUZZLE_3D_PLAY_SETTINGS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_SETTINGS, order: 1, bodyKey: PUZZLE_3D_PLAY_SETTINGS_BODY_KEY },
+    { id: PUZZLE_3D_PLAY_INSPECTOR_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_INSPECTOR, order: 0, bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY, label: "Inspector" },
+    { id: PUZZLE_3D_PLAY_SETTINGS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_SETTINGS, order: 1, bodyKey: PUZZLE_3D_PLAY_SETTINGS_BODY_KEY, label: "Settings" },
   ];
   return app;
 }

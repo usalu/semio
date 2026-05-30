@@ -332,7 +332,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 function uiTreeSectionsToTreeData(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDataSection[] {
   return sections.map((section) => ({
     id: section.id,
-    label: section.label,
+    label: section.label ?? "",
     defaultOpen: section.defaultOpen,
     items: uiTreeItemsToTreeData(section.items, commandBus),
   }));
@@ -417,14 +417,23 @@ function renderPlaygroundVec3(node: UiVec3Node, commandBus: CommandBus): React.R
 
 export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readonly commandBus: CommandBus }): React.ReactElement {
   switch (node.type) {
-    case "stack":
+    case "stack": {
+      const stack = node;
+      const isFormStack = stack.direction === "vertical" && stack.padding === "standard" && !stack.children.some(isPlaygroundCanvasHostChild);
       return (
-        <div className={cnPlay(stackClass(node), node.direction === "vertical" && node.children.some(isPlaygroundCanvasHostChild) && "relative min-h-0 flex-1")}>
-          {node.children.map((child, index) => (
+        <div
+          className={cnPlay(
+            stackClass(stack),
+            stack.direction === "vertical" && stack.children.some(isPlaygroundCanvasHostChild) && "relative min-h-0 flex-1",
+            isFormStack && "gap-single overflow-auto",
+          )}
+        >
+          {stack.children.map((child, index) => (
             <UiRenderer key={index} node={child} commandBus={commandBus} />
           ))}
         </div>
       );
+    }
     case "text":
       return <span className="text-muted-foreground px-1 text-xs">{node.value}</span>;
     case "button":
@@ -447,9 +456,9 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "section": {
       const section = node as UiSectionNode;
       return (
-        <div className="flex flex-col gap-1" data-ui-section={section.id}>
+        <div className="border-element/60 flex flex-col gap-single rounded-md border p-single" data-ui-section={section.id}>
           {section.label ? <div className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{section.label}</div> : null}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-single">
             {section.children.map((child, index) => (
               <UiRenderer key={index} node={child} commandBus={commandBus} />
             ))}
@@ -461,7 +470,9 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       const field = node as UiFieldNode;
       return (
         <div className="flex flex-col gap-half" data-ui-field={field.id}>
-          <Label htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>{field.label}</Label>
+          <Label className="text-muted-foreground text-[11px]" htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>
+            {field.label}
+          </Label>
           <UiRenderer node={field.child} commandBus={commandBus} />
         </div>
       );
@@ -497,7 +508,11 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       );
     }
     case "tree":
-      return <Tree className="min-h-0 flex-1" sections={uiTreeSectionsToTreeData((node as UiTreeNode).sections, commandBus)} selectionMode="single" />;
+      return (
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData((node as UiTreeNode).sections, commandBus)} selectionMode="single" showLines />
+        </div>
+      );
     default:
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
@@ -700,13 +715,20 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
   return tabs.map((tab, orderIndex) => {
     const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
     const Body = declarativeFactory ? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey) : () => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>;
+    const panelBody = (
+      <PlaygroundPanelBody>
+        <Body />
+      </PlaygroundPanelBody>
+    );
+    const sectionLabel = tab.label?.trim();
+    const sections: TreeDataSection[] = sectionLabel
+      ? [{ id: `${tab.id}.section`, label: sectionLabel, defaultOpen: true, content: panelBody }]
+      : [{ id: `${tab.id}.body`, label: "", defaultOpen: true, content: panelBody }];
     return resolveSidePanelTabSource({
       id: tab.id,
       icon: shellTabIconComponent(tab.iconId),
       order: tab.order ?? orderIndex,
-      tree: staticTreePanelDefinition({
-        sections: [playgroundPanelSection(`${tab.id}.host`, tab.id, <Body />)],
-      }),
+      tree: staticTreePanelDefinition({ sections }),
     });
   });
 }
@@ -942,7 +964,7 @@ export function PlaygroundShell({ children }: { readonly children: React.ReactNo
 
 /** @emoji 📦 Standard side-panel body; playgrounds must not use inline styles on panel chrome. */
 export function PlaygroundPanelBody({ children }: { readonly children: React.ReactNode }): React.ReactElement {
-  return <div className="flex min-h-0 flex-col gap-double p-single text-xs text-foreground">{children}</div>;
+  return <div className="text-foreground flex min-h-0 min-w-0 flex-1 flex-col gap-single overflow-hidden p-single text-xs">{children}</div>;
 }
 
 /** @emoji 🌲 Content-only tree section for playground workbench/details panels. */
