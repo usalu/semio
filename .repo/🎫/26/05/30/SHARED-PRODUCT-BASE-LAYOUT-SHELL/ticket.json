@@ -1,0 +1,7 @@
+{
+  "title": "Shared Product Base Layout Shell",
+  "status": "open",
+  "description": "Extract duplicated navbar/canvas/footer + floating left/right side-panel shell into ProductShell in @framework/platform/renderer/react; PlatformView and PlaygroundView become thin wrappers.",
+  "goal": "🎯AI-OPTIMIZED-REPO",
+  "sessions": []
+}

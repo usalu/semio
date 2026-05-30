@@ -112,9 +112,14 @@ export {
   buildCadWindowBody,
 } from "@framework/playground/core";
 import {
+  ProductShell,
+  declareToolsToViewTools,
+  findDefaultActiveWindowKindId,
+  listPopulatedToolbarViewCategories,
   registerSurfaceBinding,
   renderComponentHostSurface,
   unregisterSurfaceBinding,
+  UIToolbar,
   type UiComponentHostSurfaceNode,
 } from "@framework/platform/renderer/react";
 
@@ -207,49 +212,6 @@ function resolveSidePanelTabSource(tab: SidePanelTabConfig | SidePanelTabDefinit
   resolveTreePanelSource(config.tree);
   return config;
 }
-
-//#region 🔖LayoutGolden
-function convertFrameworkLayoutNodeToShellLayout(node: WindowLayout["root"]): ShellWindowLayoutNode {
-  if (node.kind === "stack") {
-    return {
-      kind: "stack",
-      size: node.size,
-      children: node.children.map((child) => ({ kind: "window", id: child.windowKindId, title: child.title })),
-    };
-  }
-  return {
-    kind: node.kind,
-    size: node.size,
-    children: node.children.map((child) => convertFrameworkLayoutNodeToShellLayout(child)),
-  };
-}
-
-function convertFrameworkLayoutToShellLayout(layout: WindowLayout): ShellWindowLayoutNode {
-  return convertFrameworkLayoutNodeToShellLayout(layout.root);
-}
-
-function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
-  const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
-  const visit = (node: WindowLayout["root"]): string | null => {
-    if (node.kind === "stack") {
-      for (const child of node.children) {
-        if (allowed.has(child.windowKindId)) return child.windowKindId;
-      }
-      return null;
-    }
-    for (const child of node.children) {
-      const match = visit(child);
-      if (match) return match;
-    }
-    return null;
-  };
-  if (layout) {
-    const match = visit(layout.root);
-    if (match) return match;
-  }
-  return windowKinds[0]?.id ?? null;
-}
-//#endregion 🔖LayoutGolden
 
 //#region 🔖UiRenderer
 type Scene3DSurfaceHost = React.ComponentType<{ readonly node: UiScene3DHostSurfaceNode }>;

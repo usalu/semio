@@ -672,7 +672,8 @@ function convertFrameworkLayoutNodeToShellLayout(node: WindowLayoutNode): ShellW
   };
 }
 
-function convertFrameworkLayoutToShellLayout(layout: WindowLayout): ShellWindowLayoutNode {
+/** @emoji 🧭 Converts {@link WindowLayout} to the shell {@link Mode} layout tree. */
+export function convertFrameworkLayoutToShellLayout(layout: WindowLayout): ShellWindowLayoutNode {
   return convertFrameworkLayoutNodeToShellLayout(layout.root);
 }
 
@@ -690,7 +691,7 @@ function windowControlsToEngagement(controls: UIWindowControl[] | undefined): En
 }
 
 /** @emoji 🪟 Pure-React resizable mode canvas backed by {@link Mode}. */
-const ShellModeCanvas: React.FC<{
+export const ShellModeCanvas: React.FC<{
   windowKinds: UIWindowKindDefinition[];
   defaultLayout: WindowLayout;
   activeWindowId: string | null;
@@ -1656,7 +1657,8 @@ export function registerWindowBody(bodyKey: string, Component: React.ComponentTy
 
 const sidePanelBodyByKey = new Map<string, React.ComponentType<unknown>>();
 
-function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
+/** @emoji 🎯 Picks the initial active window kind from layout or the first registered kind. */
+export function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
 	const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
 	const visit = (node: WindowLayout["root"]): string | null => {
 		if (node.kind === "stack") {
@@ -2059,6 +2061,231 @@ const UIPanelToggleGroup: React.FC<{
   </div>
 );
 
+//#region 🪨ProductShell
+
+/** @emoji 🪨 Shared product base layout: navbar, floating side panels, window canvas, footer, optional toolbar/search/find. */
+export interface ProductShellProps {
+	readonly platform: Platform;
+	readonly defaultAppId?: string;
+	readonly className?: string;
+	readonly mobile?: boolean;
+	readonly mobileQuery?: string;
+	readonly initialPanelVisibility?: UIPanelVisibility;
+	readonly navbarItems: NavbarItem[];
+	readonly footerItems?: ChromeFooterRow[];
+	readonly slotToolbar?: React.ReactNode;
+	readonly leftSidePanelTabs: SidePanelTabConfig[];
+	readonly rightSidePanelTabs: SidePanelTabConfig[];
+	readonly mobilePanel?: {
+		readonly visible: boolean;
+		readonly tabs: SidePanelTabConfig[];
+		readonly activeTabId?: string;
+		readonly onActiveTabChange?: (tabId: string) => void;
+	};
+	readonly panelVisibility: UIPanelVisibility;
+	readonly leftPanelSize: number;
+	readonly onLeftPanelSizeChange: (size: number) => void;
+	readonly rightPanelSize: number;
+	readonly onRightPanelSizeChange: (size: number) => void;
+	readonly goldenWindowKinds: UIWindowKindDefinition[];
+	readonly defaultLayout: WindowLayout;
+	readonly activeWindowKindId: string | null;
+	readonly onActiveWindowKindChange: (windowKindId: string) => void;
+	readonly multiApp?: boolean;
+	readonly activeModeId?: string | null;
+	readonly onActiveModeChange?: (modeId: string) => void;
+	readonly searchItems?: UISearchItem[];
+	readonly searchOpen?: boolean;
+	readonly onSearchOpenChange?: (open: boolean) => void;
+	readonly findOpen?: boolean;
+	readonly onFindOpenChange?: (open: boolean) => void;
+}
+
+/** @emoji 🪨 Navbar + canvas (windows) + footer with left/right panels floating over the canvas. */
+export const ProductShell: React.FC<ProductShellProps> = ({
+	platform,
+	defaultAppId,
+	className,
+	mobile,
+	mobileQuery = "(max-width: 767px)",
+	initialPanelVisibility,
+	navbarItems,
+	footerItems,
+	slotToolbar,
+	leftSidePanelTabs,
+	rightSidePanelTabs,
+	mobilePanel,
+	panelVisibility,
+	leftPanelSize,
+	onLeftPanelSizeChange,
+	rightPanelSize,
+	onRightPanelSizeChange,
+	goldenWindowKinds,
+	defaultLayout,
+	activeWindowKindId,
+	onActiveWindowKindChange,
+	multiApp = true,
+	activeModeId,
+	onActiveModeChange,
+	searchItems,
+	searchOpen: searchOpenProp,
+	onSearchOpenChange,
+	findOpen: findOpenProp,
+	onFindOpenChange,
+}) => {
+	reactHostPort.useEffect(() => {
+		if (defaultAppId) platform.setActiveAppId(defaultAppId);
+	}, [defaultAppId, platform]);
+
+	const detectedMobile = useMediaQuery(mobileQuery);
+	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
+	const [internalSearchOpen, setInternalSearchOpen] = reactHostPort.useState(false);
+	const searchOpen = searchOpenProp ?? internalSearchOpen;
+	const setSearchOpen = onSearchOpenChange ?? setInternalSearchOpen;
+	const findOpen = findOpenProp ?? false;
+
+	useCommandHotkey(
+		"ctrl+p,meta+p",
+		() => {
+			const activeEl = document.activeElement as HTMLElement | null;
+			if (!searchOpen && activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
+				return;
+			}
+			setSearchOpen(!searchOpen);
+		},
+		{ preventDefault: true, enableOnFormTags: true },
+		[searchOpen, setSearchOpen],
+	);
+	useCommandHotkey(
+		"ctrl+f,meta+f",
+		() => {
+			if (onFindOpenChange) onFindOpenChange(!findOpen);
+		},
+		{ preventDefault: true, enableOnFormTags: true },
+		[findOpen, onFindOpenChange],
+	);
+
+	const resolvedApps = platform.apps;
+	const activeAppId = platform.activeAppId;
+	const setActiveAppId = reactHostPort.useCallback(
+		(id: string) => {
+			platform.setActiveAppId(id);
+		},
+		[platform],
+	);
+
+	const activeAppBase = platform.getActiveApp();
+	if (!activeAppBase) return null;
+
+	const activeApp = activeAppBase.resolve(activeModeId ?? activeAppBase.getActiveModeId());
+
+	const canvasNode = multiApp ? (
+		<Ui
+			apps={resolvedApps.map((app) => ({
+				id: app.id,
+				label: app.label,
+				icon: app.iconId ? resolveElementIcon(app.iconId) : undefined,
+				children: (
+					<App
+						modes={app.modes.length > 0 ? app.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: app.id, label: app.label, children: null }]}
+						activeModeId={app.id === activeAppId ? (activeModeId ?? app.modes[0]?.id ?? app.id) : (app.modes[0]?.id ?? app.id)}
+						onActiveModeChange={app.id === activeAppId ? onActiveModeChange : undefined}
+						chrome={false}
+					>
+						{app.id === activeAppId ? (
+							<ShellModeCanvas
+								windowKinds={goldenWindowKinds}
+								defaultLayout={defaultLayout}
+								activeWindowId={activeWindowKindId}
+								onActiveWindowChange={onActiveWindowKindChange}
+							/>
+						) : null}
+					</App>
+				),
+			}))}
+			activeAppId={activeAppId}
+			onActiveAppChange={setActiveAppId}
+			chrome={false}
+		/>
+	) : (
+		<Ui
+			apps={[
+				{
+					id: activeApp.id,
+					label: activeApp.label,
+					icon: activeApp.iconId ? resolveElementIcon(activeApp.iconId) : undefined,
+					children: (
+						<App
+							modes={activeAppBase.modes.length > 0 ? activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: activeApp.id, label: activeApp.label, children: null }]}
+							activeModeId={activeModeId ?? activeAppBase.modes[0]?.id ?? activeApp.id}
+							onActiveModeChange={onActiveModeChange}
+							chrome={false}
+						>
+							<ShellModeCanvas
+								windowKinds={goldenWindowKinds}
+								defaultLayout={defaultLayout}
+								activeWindowId={activeWindowKindId}
+								onActiveWindowChange={onActiveWindowKindChange}
+							/>
+						</App>
+					),
+				},
+			]}
+			activeAppId={activeAppId}
+			chrome={false}
+		/>
+	);
+
+	return (
+		<>
+			<Layout
+				className={className}
+				mobile={resolvedMobile}
+				navbar={<Navbar items={navbarItems} />}
+				footer={footerItems && footerItems.length > 0 ? <Footer items={footerItems} /> : undefined}
+				toolbar={slotToolbar}
+				mobilePanel={
+					resolvedMobile && mobilePanel
+						? {
+								visible: mobilePanel.visible,
+								activeTabId: mobilePanel.activeTabId,
+								onActiveTabChange: mobilePanel.onActiveTabChange,
+								tabs: mobilePanel.tabs,
+							}
+						: undefined
+				}
+				leftSidePanel={
+					!resolvedMobile && leftSidePanelTabs.length > 0
+						? {
+								position: "left" as const,
+								visible: panelVisibility.leftSidePanel,
+								size: leftPanelSize,
+								onSizeChange: onLeftPanelSizeChange,
+								tabs: leftSidePanelTabs,
+							}
+						: undefined
+				}
+				rightSidePanel={
+					!resolvedMobile && rightSidePanelTabs.length > 0
+						? {
+								position: "right" as const,
+								visible: panelVisibility.rightSidePanel,
+								size: rightPanelSize,
+								onSizeChange: onRightPanelSizeChange,
+								tabs: rightSidePanelTabs,
+							}
+						: undefined
+				}
+				canvas={canvasNode}
+			/>
+			{searchItems && searchItems.length > 0 ? <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} /> : null}
+			{onFindOpenChange ? <UIFind open={findOpen} onOpenChange={onFindOpenChange} /> : null}
+		</>
+	);
+};
+
+//#endregion 🪨ProductShell
+
 /**
  * Domain-neutral composite component providing a full application shell.
  * The UI only has apps. An app has window kinds (rendered with golden-layout)
@@ -2130,27 +2357,6 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
-
-	useCommandHotkey(
-		"ctrl+p,meta+p",
-		() => {
-			const activeEl = document.activeElement as HTMLElement | null;
-			if (!searchOpen && activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
-				return;
-			}
-			setSearchOpen((previousValue) => !previousValue);
-		},
-		{ preventDefault: true, enableOnFormTags: true },
-		[searchOpen],
-	);
-	useCommandHotkey(
-		"ctrl+f,meta+f",
-		() => {
-			setFindOpen((previousValue) => !previousValue);
-		},
-		{ preventDefault: true, enableOnFormTags: true },
-		[],
-	);
 
 	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
@@ -2407,12 +2613,17 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		>
 			<UIFindProvider>
 				<ProductFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
-				<Layout
+				<ProductShell
+					platform={platform}
+					defaultAppId={defaultAppId}
 					className={className}
 					mobile={resolvedMobile}
-					navbar={<Navbar items={navbarItems} />}
-					footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
-					toolbar={toolbarElement}
+					mobileQuery={mobileQuery}
+					navbarItems={navbarItems}
+					footerItems={mergedFooterItems}
+					slotToolbar={toolbarElement}
+					leftSidePanelTabs={workbenchTabs}
+					rightSidePanelTabs={activeDesktopRightPanelTabs}
 					mobilePanel={
 						resolvedMobile
 							? {
@@ -2420,67 +2631,27 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 									activeTabId: mobilePanelActiveTabId,
 									onActiveTabChange: setMobilePanelActiveTabId,
 									tabs: activeMobilePanelTabs,
-							  }
+								}
 							: undefined
 					}
-					leftSidePanel={
-						!resolvedMobile
-							? {
-									position: "left" as const,
-									visible: panelVisibility.leftSidePanel,
-									size: leftPanelSize,
-									onSizeChange: setLeftPanelSize,
-									tabs: workbenchTabs,
-							  }
-							: undefined
-					}
-					rightSidePanel={
-						!resolvedMobile
-							? {
-									position: "right" as const,
-									visible: panelVisibility.rightSidePanel,
-									size: rightPanelSize,
-									onSizeChange: setRightPanelSize,
-									tabs: activeDesktopRightPanelTabs,
-							  }
-							: undefined
-					}
-					canvas={
-						<Ui
-							apps={resolvedApps.map((app) => ({
-								id: app.id,
-								label: app.label,
-								icon: app.iconId ? resolveElementIcon(app.iconId) : undefined,
-								children: (
-									<App
-										modes={
-											app.modes.length > 0
-												? app.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null }))
-												: [{ id: app.id, label: app.label, children: null }]
-										}
-										activeModeId={app.id === activeAppId ? (activeModeId ?? app.modes[0]?.id ?? app.id) : (app.modes[0]?.id ?? app.id)}
-										onActiveModeChange={app.id === activeAppId ? setActiveModeId : undefined}
-										chrome={false}
-									>
-										{app.id === activeAppId ? (
-											<ShellModeCanvas
-												windowKinds={goldenWindowKinds}
-												defaultLayout={activeApp.defaultLayout as WindowLayout}
-												activeWindowId={activeWindowKindId}
-												onActiveWindowChange={handleActiveWindowChange}
-											/>
-										) : null}
-									</App>
-								),
-							}))}
-							activeAppId={activeAppId}
-							onActiveAppChange={setActiveAppId}
-							chrome={false}
-						/>
-					}
+					panelVisibility={panelVisibility}
+					leftPanelSize={leftPanelSize}
+					onLeftPanelSizeChange={setLeftPanelSize}
+					rightPanelSize={rightPanelSize}
+					onRightPanelSizeChange={setRightPanelSize}
+					goldenWindowKinds={goldenWindowKinds}
+					defaultLayout={activeApp.defaultLayout as WindowLayout}
+					activeWindowKindId={activeWindowKindId}
+					onActiveWindowKindChange={handleActiveWindowChange}
+					multiApp
+					activeModeId={activeModeId}
+					onActiveModeChange={setActiveModeId}
+					searchItems={searchItemsResolved.length > 0 ? searchItemsResolved : undefined}
+					searchOpen={searchOpen}
+					onSearchOpenChange={setSearchOpen}
+					findOpen={findOpen}
+					onFindOpenChange={setFindOpen}
 				/>
-				{searchItemsResolved.length > 0 && <UISearch items={searchItemsResolved} open={searchOpen} onOpenChange={setSearchOpen} />}
-				<UIFind open={findOpen} onOpenChange={setFindOpen} />
 			</UIFindProvider>
 		</AppContext.Provider>
 	);
