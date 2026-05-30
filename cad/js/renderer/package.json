@@ -11,6 +11,9 @@
     "test": "bun nx run @cad/js/renderer:test"
   },
   "dependencies": {
+    "@framework/core": "workspace:*",
+    "@framework/platform/core": "workspace:*",
+    "@framework/platform/renderer/react": "workspace:*",
     "@framework/playground/core": "workspace:*",
     "@framework/playground/renderer/react": "workspace:*",
     "@ui/react": "workspace:*",

@@ -11,7 +11,7 @@ const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "node_modules/three");
-const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
+const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
 const rendererIndex = resolve(rendererRoot, "index.tsx");
 
 export default defineConfig({
@@ -26,8 +26,11 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: /^@framework\/playground\/renderer\/react($|\/.*$)/, replacement: rendererIndex },
-      { find: /^@framework\/playground\/core$/, replacement: resolve(repoRoot, "framework/playground/core/core.ts") },
-      { find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(repoRoot, "framework/playground/core")}/$1` },
+      { find: /^@framework\/playground\/core$/, replacement: resolve(repoRoot, "framework/product/playground/core/core.ts") },
+      { find: /^@framework\/platform\/core$/, replacement: resolve(repoRoot, "framework/product/platform/core/index.ts") },
+      { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
+      { find: /^@framework\/core$/, replacement: resolve(repoRoot, "framework/core/index.ts") },
+      { find: /^@framework\/playground\/(.*)$/, replacement: `${resolve(repoRoot, "framework/product/playground/core")}/$1` },
       { find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
       { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
       { find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },

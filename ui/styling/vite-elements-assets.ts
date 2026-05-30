@@ -176,8 +176,11 @@ export type PlaygroundPlayViteOptions = {
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const elementsAssetsRoot = resolve(repoRoot, "ui/assets");
-  const rendererRoot = resolve(repoRoot, "framework/playground/renderer/react");
-  const playgroundCore = resolve(repoRoot, "framework/playground/core/core.ts");
+  const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
+  const playgroundCore = resolve(repoRoot, "framework/product/playground/core/core.ts");
+  const platformCore = resolve(repoRoot, "framework/product/platform/core/index.ts");
+  const platformRenderer = resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx");
+  const frameworkCore = resolve(repoRoot, "framework/core/index.ts");
   const uiReact = resolve(repoRoot, "ui/react/index.tsx");
   const rendererIndex = resolve(rendererRoot, "index.tsx");
   const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
@@ -186,6 +189,9 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     { find: "@framework/playground/renderer/react/puzzle/5d", replacement: resolve(rendererRoot, "index.tsx") },
     { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
     { find: /^@framework\/playground\/core$/, replacement: playgroundCore },
+    { find: /^@framework\/platform\/core$/, replacement: platformCore },
+    { find: /^@framework\/platform\/renderer\/react$/, replacement: platformRenderer },
+    { find: /^@framework\/core$/, replacement: frameworkCore },
     { find: "@ui/react", replacement: uiReact },
     { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
     { find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },

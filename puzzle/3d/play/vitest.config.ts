@@ -11,7 +11,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@framework/playground/core": resolve(root, "../../../framework/playground/core/core.ts"),
+			"@framework/playground/core": resolve(root, "../../../framework/product/playground/core/core.ts"),
 			"@puzzle/3d/react": resolve(root, "../react/index.tsx"),
 		},
 	},

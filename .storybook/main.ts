@@ -26,8 +26,8 @@ const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
 
 const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
-const frameworkPlaygroundDir = resolve(repoRootPath, "framework/playground/core");
-const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/playground/renderer/react");
+const frameworkPlaygroundDir = resolve(repoRootPath, "framework/product/playground/core");
+const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/playground/renderer/react");
 const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
 const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");

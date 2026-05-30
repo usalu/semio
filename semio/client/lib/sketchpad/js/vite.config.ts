@@ -50,7 +50,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
         file.startsWith(`${root}/semio/client/lib/sketchpad/`) ||
         file.startsWith(`${root}/semio/client/lib/react/`) ||
         file.startsWith(`${root}/semio/assets/`) ||
-        file.startsWith(`${root}/framework/playground/`);
+        file.startsWith(`${root}/framework/product/playground/`);
       if (!allowed) return;
       if (!/\.(tsx?|mts|cts)$/.test(file)) return;
       const loader = file.endsWith(".tsx") || (file.endsWith(".ts") && /<[A-Za-z/]/.test(code)) ? "tsx" : "ts";
@@ -162,12 +162,13 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/platform/core/index.ts") },
-        { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/platform/renderer/react/index.tsx") },
-        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/playground/core/core.ts") },
+        { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
+        { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
+        { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
+        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/core.ts") },
         {
           find: "@framework/playground/renderer/react",
-          replacement: path.resolve(__dirname, "../../../../../framework/playground/renderer/react/index.tsx"),
+          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
         },
         { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
         { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
