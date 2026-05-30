@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🚀 Vite entry: generic {@link PlatformView} via {@link mountPlatform}. */
+/** @emoji 🚀 Vite entry: {@link mountPlatform} + sketchpad {@link Platform}. */
 // #endregion 🧲Header
 
 import "./globals.css";

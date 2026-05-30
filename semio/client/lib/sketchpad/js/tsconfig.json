@@ -14,7 +14,10 @@
       "@semio/react": ["../../react/logic"],
       "@semio/react/*": ["../../react/logic/*"],
       "@semio/rs-wasm": ["../../rs/pkg/semio.d.ts"],
-      "@semio/rs-wasm/*": ["../../rs/pkg/*"]
+      "@semio/rs-wasm/*": ["../../rs/pkg/*"],
+      "@framework/core": ["../../../../../framework/core/index.ts"],
+      "@framework/platform/core": ["../../../../../framework/product/platform/core/index.ts"],
+      "@framework/platform/renderer/react": ["../../../../../framework/product/platform/renderer/react/index.tsx"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
   }

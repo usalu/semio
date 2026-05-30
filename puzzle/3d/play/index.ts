@@ -6,6 +6,7 @@ import {
   AppRuntime,
   CommandBus,
   Controller,
+  Store,
   Expertise,
   ModeRuntime,
   Playground,
@@ -542,6 +543,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.targetRingCount = 0;
     this.rebuildShellMode();
     this.rebuildSnapshotCache();
+    this.provideStore(PUZZLE_3D_PLAY_STORE_ID, new Puzzle3dPlaySnapshotStore(this));
   }
 
   /** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */
@@ -1004,6 +1006,27 @@ export interface Puzzle3dPlaySnapshot {
   readonly indirectCount: number;
   readonly compatibleObjectsCount: number;
   readonly targetRingCount: number;
+}
+
+export const PUZZLE_3D_PLAY_STORE_ID = "play";
+
+/** @emoji 🔗 Adapts {@link Puzzle3dPlayShellController} snapshot API to {@link Store}. */
+class Puzzle3dPlaySnapshotStore extends Store<Puzzle3dPlaySnapshot> {
+  private detach?: () => void;
+
+  constructor(private readonly ctrl: Puzzle3dPlayShellController) {
+    super();
+    this.detach = ctrl.subscribeSnapshot(() => this.notify());
+  }
+
+  override getSnapshot(): Puzzle3dPlaySnapshot {
+    return this.ctrl.getSnapshot();
+  }
+
+  override dispose(): void {
+    this.detach?.();
+    super.dispose();
+  }
 }
 
 export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {

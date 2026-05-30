@@ -146,7 +146,7 @@ function loadNakaginTopologyModel(): TopologyV1 {
 export const TOPOLOGY_PLAY_STORE_ID = "topology";
 
 /** @emoji 🔗 Adapts {@link TopologyStore} to {@link Store} for controller-owned registration. */
-class TopologyStoreBridge extends Store<TopologyStoreSnapshot> {
+export class TopologyStoreBridge extends Store<TopologyStoreSnapshot> {
   private detach?: () => void;
 
   constructor(readonly inner: TopologyStore) {

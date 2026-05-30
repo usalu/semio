@@ -125,8 +125,13 @@ import {
   renderComponentHostSurface,
   unregisterSurfaceBinding,
   UIToolbar,
+  useControllerStore,
+  useStore,
   type UiComponentHostSurfaceNode,
 } from "@framework/platform/renderer/react";
+
+export { useControllerStore, useStore } from "@framework/platform/renderer/react";
+export type { Store } from "@framework/playground/core";
 
 function cnPlay(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -999,6 +1004,7 @@ import {
   PUZZLE_3D_PLAY_ICON_SETTINGS,
   PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
   PUZZLE_3D_PLAY_APP_ID,
+  PUZZLE_3D_PLAY_STORE_ID,
   Puzzle3dPlayShellController,
   parseKindCatalogs,
   parseKindCompatibility,
@@ -1013,11 +1019,7 @@ function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
 
 function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
   const ctrl = usePuzzle3dPlayController();
-  return reactHostPort.useSyncExternalStore(
-    (onStoreChange) => (ctrl ? ctrl.subscribeSnapshot(onStoreChange) : () => {}),
-    () => ctrl?.getSnapshot() ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-    () => PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-  );
+  return useControllerStore(ctrl, PUZZLE_3D_PLAY_STORE_ID) ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT;
 }
 
 function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
@@ -1136,10 +1138,12 @@ import {
   PUZZLE_5D_PLAY_BOARD_SURFACE_ID,
   PUZZLE_5D_PLAY_BOARD_WINDOW_ID,
   PUZZLE_5D_PLAY_CONTROLLER_ID,
+  TOPOLOGY_PLAY_STORE_ID,
   PUZZLE_5D_PLAY_VOLUME_BODY_KEY,
   PUZZLE_5D_PLAY_VOLUME_SURFACE_ID,
   PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
   TopologyPlayShellController,
+  TopologyStoreBridge,
   buildTopologyFlatDeclarativeBody,
   buildTopologyPlayHierarchySections,
   buildTopologyPlayRuntime,
@@ -1322,7 +1326,9 @@ function TopologyPlayChrome({ runtime }: { readonly runtime: Platform }): React.
   if (!controller) {
     return shell;
   }
-  return <TopologyStoreProvider store={controller.topologyStore}>{shell}</TopologyStoreProvider>;
+  const topologyBridge = controller.getStore(TOPOLOGY_PLAY_STORE_ID) as TopologyStoreBridge | undefined;
+  const topologyStore = topologyBridge?.inner ?? controller.topologyStore;
+  return <TopologyStoreProvider store={topologyStore}>{shell}</TopologyStoreProvider>;
 }
 
 /** @emoji 🚀 Mounts topology play chrome for a {@link Playground}. */

@@ -2,9 +2,7 @@
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Electron renderer: mounts sketchpad via generic {@link mountPlatform}.
+// Electron renderer: configures kit factories then mounts sketchpad via {@link mountPlatform}.
 
 // #endregion 🧲Header
 
@@ -12,7 +10,12 @@
 
 // #region 🔌Adapters
 import { mountPlatform } from "@framework/platform/renderer/react";
-import { ensureSketchpadPlatform } from "@semio/sketchpad";
+import {
+	configureSketchpadKitFactories,
+	ensureSketchpadPlatform,
+	importKit,
+	type SemioKitStoreBackend,
+} from "@semio/sketchpad";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
@@ -20,6 +23,8 @@ import "./globals.css";
 
 declare global {
   interface Window {
+    __SEMIO_E2E_KIT_FOLDER__?: string;
+    __SEMIO_E2E_KIT_FILE__?: string;
     windowControls: {
       minimize(): Promise<unknown>;
       maximize(): Promise<unknown>;
@@ -28,8 +33,51 @@ declare global {
     os: {
       getUserId(): Promise<string>;
     };
+    kitFolder: {
+      selectFolder(): Promise<string | null>;
+      readKit(folderPath: string): Promise<ArrayBuffer | null>;
+      addRecentFolder(folderPath: string): Promise<void>;
+    };
+    kitFile: {
+      selectFile(): Promise<string | null>;
+      readJson(filePath: string): Promise<string | null>;
+    };
   }
 }
+
+configureSketchpadKitFactories({
+  folder: async (): Promise<SemioKitStoreBackend> => {
+    const e2e = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FOLDER__ : undefined;
+    const folder = e2e && e2e.length > 0 ? e2e : await window.kitFolder.selectFolder();
+    if (!folder) throw new Error("No folder selected for kit storage");
+    await window.kitFolder.addRecentFolder(folder);
+    const bytes = await window.kitFolder.readKit(folder);
+    if (!bytes) throw new Error(`Could not read kit from folder: ${folder}`);
+    const { kit } = await importKit(bytes);
+    let current = kit;
+    return {
+      getSnapshot: () => ({ kit: current }),
+      replace: (next) => {
+        current = next;
+      },
+    };
+  },
+  file: async (): Promise<SemioKitStoreBackend> => {
+    const e2e = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FILE__ : undefined;
+    const filePath = e2e && e2e.length > 0 ? e2e : await window.kitFile.selectFile();
+    if (!filePath) throw new Error("No file selected for kit storage");
+    const json = await window.kitFile.readJson(filePath);
+    if (json == null) throw new Error(`Could not read kit file: ${filePath}`);
+    const { kit } = await importKit(new Blob([json], { type: "application/json" }));
+    let current = kit;
+    return {
+      getSnapshot: () => ({ kit: current }),
+      replace: (next) => {
+        current = next;
+      },
+    };
+  },
+});
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

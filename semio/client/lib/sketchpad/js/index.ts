@@ -4,7 +4,10 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Type } from "@semio/js";
+import type { Design, Kit, Session, Type } from "@semio/js";
+import { Session as SemioSession } from "@semio/js";
+import { gunzipSync } from "fflate";
+import type { Store as JsKitStore } from "@semio/js";
 import {
 	CommandBus,
 	Component,
@@ -37,7 +40,128 @@ import {
 	type UiNode,
 	type WindowBodyViewContext,
 } from "@framework/platform/core";
+import type { SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
+
+//#region 🔖KitImport
+type SemioBundleJson = Record<string, unknown>;
+
+/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL install payloads. */
+function semioDenormalizeBundleValue(v: unknown): unknown {
+	if (v == null || typeof v !== "object") return v;
+	if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
+	const o = v as SemioBundleJson;
+	if (Array.isArray(o["items"])) return (o["items"] as unknown[]).map(semioDenormalizeBundleValue);
+	if (Array.isArray(o["edges"])) {
+		const out: unknown[] = [];
+		for (const e of o["edges"] as unknown[]) {
+			if (e != null && typeof e === "object" && !Array.isArray(e) && "node" in (e as SemioBundleJson)) {
+				out.push(semioDenormalizeBundleValue((e as SemioBundleJson)["node"]));
+			}
+		}
+		return out;
+	}
+	const flat: SemioBundleJson = {};
+	for (const [k, val] of Object.entries(o)) flat[k] = semioDenormalizeBundleValue(val) as never;
+	return flat;
+}
+
+/** @emoji 🧾 Lifts `*.kit.semio.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists. */
+export function decodeKitSemioEnvelopeToFullFromValue(v: unknown): unknown {
+	let inner: unknown = v;
+	if (inner && typeof inner === "object" && !Array.isArray(inner)) {
+		const top = inner as SemioBundleJson;
+		if (top["initialKit"] != null && typeof top["initialKit"] === "object" && !Array.isArray(top["initialKit"])) {
+			inner = top["initialKit"];
+		} else if (top["wip"] != null && typeof top["wip"] === "object" && !Array.isArray(top["wip"])) {
+			const wr = (top["wip"] as SemioBundleJson)["initialKit"];
+			if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
+		}
+	}
+	return semioDenormalizeBundleValue(inner);
+}
+
+/** @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
+export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit; session: Session }> {
+	let bytes: Uint8Array;
+	if (typeof data === "string") {
+		const res = await fetch(data);
+		bytes = new Uint8Array(await res.arrayBuffer());
+	} else if (data instanceof ArrayBuffer) {
+		bytes = new Uint8Array(data);
+	} else {
+		bytes = new Uint8Array(await data.arrayBuffer());
+	}
+	if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+		bytes = gunzipSync(bytes);
+	}
+	const text = new TextDecoder().decode(bytes);
+	const plainUnknown = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
+	const payload = typeof plainUnknown === "object" && plainUnknown != null ? JSON.stringify(plainUnknown) : String(plainUnknown);
+	const session = await SemioSession.openInMemory();
+	const stores = await session.stores();
+	if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after openInMemory");
+	const store = stores[0]!;
+	const installed = await store.installProjection(payload);
+	if (!installed.ok) throw new Error(`semio/sketchpad: importKit installProjection failed: ${installed.error?.message ?? "unknown"}`);
+	const kit = await store.wip().theKit().kit();
+	return { kit, session };
+}
+//#endregion 🔖KitImport
+
+//#region 🔖KitHost
+export type SketchpadKitPersistenceKind = "temporary" | "file" | "folder" | "remote" | "fixture";
+
+/** @emoji 🏭 Host-provided kit backend factory (Electron, VS Code, browser file picker, …). */
+export type SketchpadKitBackendFactory = () => Promise<SemioKitStoreBackend>;
+
+let sketchpadKitBackendFactories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>> = {};
+
+/** @emoji 🔧 Registers host kit open factories used by {@link SketchpadShellController} `openKit` commands. */
+export function configureSketchpadKitFactories(factories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>>): void {
+	sketchpadKitBackendFactories = { ...sketchpadKitBackendFactories, ...factories };
+}
+
+/** @emoji 📎 Attaches a kit backend to the shell controller and optionally navigates to it. */
+export function attachSketchpadKit(
+	kitId: string,
+	backend: SemioKitStoreBackend,
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+): void {
+	const ctrl = getSketchpadShellController();
+	if (!ctrl) throw new Error("semio/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
+	const store = new SemioKitStore(backend);
+	ctrl.registerKitStore(kitId, store, { kind: options?.kind });
+	if (options?.navigate !== false) {
+		const platform = getSketchpadPlatform();
+		platform?.onNavigate?.(`/kits/${kitId}`);
+	}
+}
+
+/** @emoji 📦 Imports kit bytes/URL and registers them on the active platform. */
+export async function openSketchpadKitFromImport(
+	data: ArrayBuffer | Blob | File | string,
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+): Promise<string> {
+	const { kit } = await importKit(data);
+	attachSketchpadKit(kit.id, new InMemorySemioKitStore(kit), { kind: options?.kind ?? "fixture", navigate: options?.navigate });
+	return kit.id;
+}
+
+const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/assets/semio/metabolism/wip/initialKit/kit.semio.json";
+
+/** @emoji 🧪 Loads the metabolism fixture when no kits are open (dev browser only). */
+export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
+	const ctrl = getSketchpadShellController();
+	if (!ctrl || ctrl.listOpenKitIds().length > 0) return null;
+	try {
+		return await openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_KIT_URL, { kind: "fixture", navigate: true });
+	} catch (error) {
+		console.warn("[semio.sketchpad] dev fixture kit failed to load:", error);
+		return null;
+	}
+}
+//#endregion 🔖KitHost
 
 //#region 🔖KitStore
 export const SKETCHPAD_SHELL_STORE_SHELL = "shell";
@@ -97,6 +221,22 @@ export class InMemorySemioKitStore extends SemioKitStore {
 			},
 		});
 	}
+}
+
+/** @emoji 🌐 SemioKitStore backed by {@link @semio/js} Store (WASM worker / HTTP session). */
+export async function createSemioKitStoreFromJsStore(jsStore: JsKitStore): Promise<SemioKitStore> {
+	let kit = (await jsStore.wip().theKit().kit()) as Kit;
+	const refresh = async (): Promise<void> => {
+		kit = (await jsStore.wip().theKit().kit()) as Kit;
+	};
+	await refresh();
+	return new SemioKitStore({
+		getSnapshot: () => ({ kit }),
+		subscribe: (listener) =>
+			jsStore.session.subscribe(() => {
+				void refresh().then(listener);
+			}),
+	});
 }
 
 export function sketchpadKitStoreId(kitId: string): string {
@@ -246,7 +386,7 @@ export class SketchpadHomeTable extends Table {
 			],
 			rows: ids.map((id) => {
 				let name = id;
-				const kind = "";
+				let kind = ctrl?.getKitPersistenceKind(id) ?? "";
 				try {
 					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
 					if (kit?.name) name = kit.name;
@@ -506,6 +646,28 @@ export class SketchpadShellController extends Controller {
 		return this.getStore<SketchpadKitSnapshot>(sketchpadKitStoreId(kitId)) as SemioKitStore | undefined;
 	}
 
+	/** @emoji 🏷️ Persistence kind recorded when the kit was opened. */
+	getKitPersistenceKind(kitId: string): string | undefined {
+		return this.kitKinds.get(kitId);
+	}
+
+	/** @emoji 📂 Opens a kit via host factories or in-memory import and navigates to it. */
+	async openKit(kind: SketchpadKitPersistenceKind, options?: { readonly serverUrl?: string; readonly importUrl?: string }): Promise<string> {
+		if (options?.importUrl) {
+			return openSketchpadKitFromImport(options.importUrl, { kind, navigate: true });
+		}
+		const factory = sketchpadKitBackendFactories[kind];
+		if (!factory) {
+			throw new Error(`semio/sketchpad: no kit factory registered for kind "${kind}"`);
+		}
+		const backend = await factory();
+		const kitId = backend.getSnapshot().kit.id;
+		this.registerKitStore(kitId, new SemioKitStore(backend), { kind });
+		const platform = getSketchpadPlatform();
+		platform?.onNavigate?.(`/kits/${kitId}`);
+		return kitId;
+	}
+
 	override run(command: string, args?: unknown): void {
 		const shell = this.shellStore.get();
 		switch (command) {
@@ -518,6 +680,19 @@ export class SketchpadShellController extends Controller {
 				this.shellStore.set({
 					...shell,
 					panelVisibility: { ...shell.panelVisibility, [panel]: !shell.panelVisibility[panel] },
+				});
+				break;
+			}
+			case "openKit": {
+				const payload = args as { kind: SketchpadKitPersistenceKind; serverUrl?: string; importUrl?: string };
+				void this.openKit(payload.kind, { serverUrl: payload.serverUrl, importUrl: payload.importUrl }).catch((error) => {
+					console.error("[semio.sketchpad] openKit failed:", error);
+				});
+				break;
+			}
+			case "importFixtureKit": {
+				void seedSketchpadDevFixtureKitIfEmpty().catch((error) => {
+					console.warn("[semio.sketchpad] importFixtureKit failed:", error);
 				});
 				break;
 			}
@@ -534,6 +709,42 @@ let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
 let sketchpadPopstateBound = false;
 
+function sketchpadHomeCommands(): readonly SearchItemSpec[] {
+	return [
+		{
+			id: "semio.sketchpad.home.openFixture",
+			label: "Open metabolism fixture",
+			category: "Kit",
+			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+			command: "importFixtureKit",
+		},
+		{
+			id: "semio.sketchpad.home.openFolder",
+			label: "Open folder kit",
+			category: "Kit",
+			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+			command: "openKit",
+			args: { kind: "folder" },
+		},
+		{
+			id: "semio.sketchpad.home.openFile",
+			label: "Open file kit",
+			category: "Kit",
+			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+			command: "openKit",
+			args: { kind: "file" },
+		},
+		{
+			id: "semio.sketchpad.home.openRemote",
+			label: "Open remote kit",
+			category: "Kit",
+			controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+			command: "openKit",
+			args: { kind: "remote" },
+		},
+	];
+}
+
 function buildSketchpadExtensionManifest(): PluginManifest {
 	return {
 		id: SKETCHPAD_EXTENSION_ID,
@@ -546,6 +757,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 					windowKinds: [{ id: "home-main", label: "Home", bodyKey: SKETCHPAD_BODY_HOME }],
 					defaultLayout: createTabStackLayout(["home-main"], ["Home"]),
+					commands: sketchpadHomeCommands(),
 					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
 					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
 				},
@@ -634,6 +846,7 @@ function applySketchpadUri(platform: Platform, uri: string): void {
 	const path = uri.split("?")[0] ?? "/";
 	platform.uri = uri;
 	platform.activeAppId = sketchpadAppIdFromPath(path);
+	platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path });
 	platform.notify();
 }
 
@@ -680,6 +893,9 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	}
 	sketchpadPlatformSingleton = platform;
 	sketchpadPluginHostSingleton = host;
+	if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+		void seedSketchpadDevFixtureKitIfEmpty();
+	}
 	return platform;
 }
 
@@ -702,3 +918,44 @@ export const ensureSketchpadDeclarativeShell = ensureSketchpadPlatform;
 
 /** @emoji 🔍 @deprecated Use {@link getSketchpadPlatform}. */
 export const getSketchpadProductRuntime = getSketchpadPlatform;
+
+//#region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("SemioKitStore", () => {
+		it("InMemorySemioKitStore exposes kit snapshot", () => {
+			const store = new InMemorySemioKitStore({ id: "k1", name: "Demo" } as Kit);
+			expect(store.getSnapshot().kit.name).toBe("Demo");
+		});
+	});
+
+	describe("SketchpadShellController stores", () => {
+		it("provideStore registers shell and kit stores", () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitStore = new InMemorySemioKitStore({ id: "k1", name: "A" } as Kit);
+			ctrl.registerKitStore("k1", kitStore, { kind: "temporary" });
+			expect(ctrl.getStore(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot().openKitIds).toEqual(["k1"]);
+			expect(ctrl.getKitStore("k1")?.getSnapshot().kit.name).toBe("A");
+			expect(ctrl.getKitPersistenceKind("k1")).toBe("temporary");
+			ctrl.dispose();
+		});
+	});
+
+	describe("decodeKitSemioEnvelopeToFullFromValue", () => {
+		it("unwraps wip.initialKit envelope", () => {
+			const inner = decodeKitSemioEnvelopeToFullFromValue({ wip: { initialKit: { id: "k", name: "N" } } });
+			expect((inner as { id: string }).id).toBe("k");
+		});
+	});
+
+	describe("sketchpadAppIdFromPath", () => {
+		it("resolves design app from kit route", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			expect(sketchpadAppIdFromPath(`/kits/${kitId}/designs/${designId}`)).toBe(SKETCHPAD_DESIGN_APP_ID);
+		});
+	});
+}
+//#endregion 🧪Tests

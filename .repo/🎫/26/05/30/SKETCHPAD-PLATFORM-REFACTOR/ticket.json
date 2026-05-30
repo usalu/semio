@@ -3,6 +3,9 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Clean rewrite: deleted 53k-line shell.tsx. @semio/sketchpad index.ts is ~600 lines of pure Platform product (Component subclasses, window bodies, kit registry bridge, browser navigation). Boot is boot.ts calling mountPlatform(ensureSketchpadPlatform) only. Desktop, docs, vscode use generic platform renderer. Legacy sync/xstate/GoldenLayout removed; kit open/commands return via future platform contributions.",
-  "goal": "🎯r2602/🎯runningsketchpad"
+  "summary": "Continued clean rewrite using index.tsx.old as reference: added importKit/decodeKitSemioEnvelope, configureSketchpadKitFactories, attachSketchpadKit, openSketchpadKitFromImport, seedSketchpadDevFixtureKitIfEmpty, home app platform commands (open folder/file/remote/fixture), SketchpadShellController.openKit async via host factories. Desktop wires Electron folder/file factories; VS Code attaches InMemorySemioKitStore from injected JSON. Dev auto-loads metabolism fixture. 4 vitest tests pass. index.tsx.old retained for further porting.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪cf127c05a58a49ee9af34eb7e31c47a5"
+  ]
 }

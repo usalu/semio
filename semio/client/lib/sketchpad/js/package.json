@@ -10,8 +10,10 @@
     "./boot": "./boot.ts"
   },
   "dependencies": {
+    "@framework/core": "workspace:*",
     "@framework/platform/core": "workspace:*",
-    "@semio/js": "*"
+    "@semio/js": "*",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "@framework/platform/renderer/react": "workspace:*",
