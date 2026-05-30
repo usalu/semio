@@ -60,7 +60,7 @@ import {
   type ResolvedAppState,
   type SidePanelBodyViewContext,
   type SideTabSpec,
-  type UiBoardHostSurfaceNode,
+  type UiPuzzle2dHostSurfaceNode,
   type UiFieldNode,
   type UiInputNode,
   type UiKeyValueNode,
@@ -231,15 +231,15 @@ function resolveSidePanelTabSource(tab: SidePanelTabConfig | SidePanelTabDefinit
 
 //#region 🔖UiRenderer
 type Puzzle3dSurfaceHost = React.ComponentType<{ readonly node: UiPuzzle3dHostSurfaceNode }>;
-type BoardSurfaceHost = React.ComponentType<{ readonly node: UiBoardHostSurfaceNode }>;
+type Puzzle2dSurfaceHost = React.ComponentType<{ readonly node: UiPuzzle2dHostSurfaceNode }>;
 type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
 type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
 
 const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
-const boardSurfaceHosts = new Map<string, BoardSurfaceHost>();
+const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["board", "puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -253,9 +253,9 @@ export function registerUiPuzzle3dSurfaceHost(surfaceId: string, Component: Puzz
 
 export { registerSurfaceBinding, unregisterSurfaceBinding };
 
-/** @emoji 📋 Binds `surfaceId` from {@link UiBoardHostSurfaceNode} to a host board canvas. */
-export function registerUiBoardSurfaceHost(surfaceId: string, Component: BoardSurfaceHost): void {
-  boardSurfaceHosts.set(surfaceId, Component);
+/** @emoji 📋 Binds `surfaceId` from {@link UiPuzzle2dHostSurfaceNode} to a host board canvas. */
+export function registerUiPuzzle2dSurfaceHost(surfaceId: string, Component: Puzzle2dSurfaceHost): void {
+  puzzle2dSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -266,8 +266,8 @@ export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSu
 }
 
 function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): React.ReactElement {
-  if (node.type === "board") {
-    const Host = boardSurfaceHosts.get(node.surfaceId);
+  if (node.type === "puzzle2d") {
+    const Host = puzzle2dSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
@@ -446,7 +446,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       );
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
-    case "board":
+    case "puzzle2d":
     case "puzzle2d":
     case "puzzle3d":
     case "puzzle5d":
@@ -1013,6 +1013,13 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
         />
       </ObjectStateProvider>
+      <div data-puzzle3d-play-probe className="pointer-events-none absolute left-0 top-0 select-none opacity-0" aria-hidden>
+        <span data-e2e-selected>{snap.selectedLabel ?? "none"}</span>
+        <span data-e2e-scene-lod>{snap.lodTag}</span>
+        <span data-e2e-proximity-count>{snap.proximityCount}</span>
+        <span data-e2e-connect-count>{snap.connectCount}</span>
+        <span data-e2e-indirect-count>{snap.indirectCount}</span>
+      </div>
     </div>
   );
 }
@@ -1158,7 +1165,7 @@ class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
 //#endregion 🔖DetailsPanel
 
 //#region 🔖Surfaces
-function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
+function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): React.ReactElement {
   const { controller, snapshot } = usePuzzle5dPlaySnapshot();
   if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_2D_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_2D_WINDOW_ID || !controller || !snapshot?.fixture2d || !snapshot.camera2d) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
@@ -1211,7 +1218,7 @@ let topologyPlayChromeRegistered = false;
 export function registerPuzzle5dPlaySurfaceHosts(): void {
   if (topologyPlayChromeRegistered) return;
   topologyPlayChromeRegistered = true;
-  registerUiBoardSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
+  registerUiPuzzle2dSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
   registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_3D_SURFACE_ID, Puzzle5d3dSurfaceHost);
   registerWindowBody(PUZZLE_5D_PLAY_2D_BODY_KEY, buildPuzzle5d2dDeclarativeBody);
   registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
@@ -1299,41 +1306,41 @@ import {
   mergeKindCatalogBundleByRowId,
   DEFAULT_KIND_CATALOG_BUNDLE,
   BUILTIN_PORT_HANDLE_KIND,
-  BOARD_CAMERA_ZOOM_MIN,
-  BOARD_CAMERA_ZOOM_MAX,
-  BOARD_PRESELECT_EMPTY,
-  BOARD_SELECTION_TARGETS_DEFAULT,
+  PUZZLE_2D_CAMERA_ZOOM_MIN,
+  PUZZLE_2D_CAMERA_ZOOM_MAX,
+  PUZZLE_2D_PRESELECT_EMPTY,
+  PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
   fixtureMetaKindCatalogBundle,
-  boardFixtureNodeCaption,
-  classifyElementsBoardIconSelectorMode,
-  parseBoardFixtureV1,
-  BoardCanvas,
-  boardFixtureSceneMarkers,
-  type BoardStructureDeletePayload,
-  encodeBoardFixtureForDragV1,
-  BOARD_FIXTURE_DRAG_V1_MIME,
-  BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
-  BOARD_LOD_MODE_AUTOMATIC,
-  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-  layoutBoardFixtureRedrawNodes,
-  normalizeBoardSelectionProp,
-  type BoardFixtureV1,
-  type BoardFixtureNodeV1,
-  type BoardFixtureRectangleNodeV1,
-  type BoardFixtureCircleNodeV1,
-  type BoardFixtureHandleV1,
-  type BoardFixtureEdgeV1,
-  type BoardFixtureDropDetail,
-  type BoardDrawLodKind,
-  type BoardLodModeKind,
-  type BoardSelectionMethod,
-  type BoardSelectionMode,
-  type BoardSelectionTargets,
-  type BoardSelectionSnapshot,
-  type BoardPreselectSnapshot,
-  type BoardRedrawModeKind,
-  type BoardHierarchicalTreeDirectionKind,
-  type BoardRedrawLayoutOptions,
+  puzzle2dFixtureNodeCaption,
+  classifyPuzzle2dIconSelectorMode,
+  parsePuzzle2dFixtureV1,
+  Puzzle2dCanvas,
+  puzzle2dFixtureSceneMarkers,
+  type Puzzle2dStructureDeletePayload,
+  encodePuzzle2dFixtureForDragV1,
+  PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
+  PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE,
+  PUZZLE_2D_LOD_MODE_AUTOMATIC,
+  DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
+  layoutPuzzle2dFixtureRedrawNodes,
+  normalizePuzzle2dSelectionProp,
+  type Puzzle2dFixtureV1,
+  type Puzzle2dFixtureNodeV1,
+  type Puzzle2dFixtureRectangleNodeV1,
+  type Puzzle2dFixtureCircleNodeV1,
+  type Puzzle2dFixtureHandleV1,
+  type Puzzle2dFixtureEdgeV1,
+  type Puzzle2dFixtureDropDetail,
+  type Puzzle2dDrawLodKind,
+  type Puzzle2dLodModeKind,
+  type Puzzle2dSelectionMethod,
+  type Puzzle2dSelectionMode,
+  type Puzzle2dSelectionTargets,
+  type Puzzle2dSelectionSnapshot,
+  type Puzzle2dPreselectSnapshot,
+  type Puzzle2dRedrawModeKind,
+  type Puzzle2dHierarchicalTreeDirectionKind,
+  type Puzzle2dRedrawLayoutOptions,
   type CameraState,
 } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground/core";
@@ -1344,13 +1351,13 @@ const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeKindCatalogBundleByRowId({ ...
 // #region 🔖Kinds
 export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
 
-const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
-const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
+const puzzle2dPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
+const puzzle2dPlayDemoNodeContextMenu: ContextMenuItem[] = [
   { id: "demo-node", label: "Demo capsule action" },
   { children: [{ id: "demo-sub-1", label: "Nested item" }], id: "demo-sub", label: "Demo nested" },
 ];
-const boardPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
-const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Board background menu" }];
+const puzzle2dPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
+const puzzle2dPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Puzzle 2D background menu" }];
 
 // #endregion 🔖Kinds
 
@@ -1358,11 +1365,11 @@ const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label
 const REF_VIEWPORT_SHORT_PX = 640;
 
 function clampZoom(value: number): number {
-  return Math.min(BOARD_CAMERA_ZOOM_MAX, Math.max(BOARD_CAMERA_ZOOM_MIN, value));
+  return Math.min(PUZZLE_2D_CAMERA_ZOOM_MAX, Math.max(PUZZLE_2D_CAMERA_ZOOM_MIN, value));
 }
 
 /** @emoji 📐 Axis-aligned bounds of all fixture nodes (world units). */
-function fixtureWorldBounds(fixture: BoardFixtureV1): { cx: number; cy: number; halfSpan: number } {
+function fixtureWorldBounds(fixture: Puzzle2dFixtureV1): { cx: number; cy: number; halfSpan: number } {
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
   let maxX = Number.NEGATIVE_INFINITY;
@@ -1392,7 +1399,7 @@ function fixtureWorldBounds(fixture: BoardFixtureV1): { cx: number; cy: number; 
 }
 
 /** @emoji 📷 Default cameras for all play panes: center on fixture bounds; zoom fits the graph’s longest axis into the reference short viewport (margin padding). */
-function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<Puzzle2dPlayPaneId, CameraState> {
+function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1): Record<Puzzle2dPlayPaneId, CameraState> {
   const { cx, cy, halfSpan } = fixtureWorldBounds(fixture);
   const base = fixture.camera;
   const margin = 0.06;
@@ -1453,7 +1460,7 @@ function dampCameraStateLinear(a: CameraState, b: CameraState, w: number): Camer
 }
 
 /** @emoji ✅ Shared default selection for all play panes (overview node on the Nakagin graph). */
-function selectionSeedForFixture(fixture: BoardFixtureV1): Set<string> {
+function selectionSeedForFixture(fixture: Puzzle2dFixtureV1): Set<string> {
   const nodeA = fixture.nodes[0];
   return new Set(nodeA?.id ? [nodeA.id] : []);
 }
@@ -1461,17 +1468,17 @@ function selectionSeedForFixture(fixture: BoardFixtureV1): Set<string> {
 
 // #region 🔖ShellContext
 interface Puzzle2dPlayShellValue {
-  fixture: BoardFixtureV1;
-  setFixture: (next: BoardFixtureV1) => void;
+  fixture: Puzzle2dFixtureV1;
+  setFixture: (next: Puzzle2dFixtureV1) => void;
   /** @emoji 🎯 Palette drags merge one node at the pointer; full fixtures replace the graph. */
-  handleCanvasFixtureDrop: (pane: Puzzle2dPlayPaneId, detail: BoardFixtureDropDetail) => void;
-  patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+  handleCanvasFixtureDrop: (pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => void;
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
   activePaneId: Puzzle2dPlayPaneId;
   setActivePaneId: (id: Puzzle2dPlayPaneId) => void;
   selectionIds: Set<string>;
   setSelectionIds: (ids: readonly string[]) => void;
-  preselection: BoardPreselectSnapshot;
-  setPreselection: (snapshot: BoardPreselectSnapshot) => void;
+  preselection: Puzzle2dPreselectSnapshot;
+  setPreselection: (snapshot: Puzzle2dPreselectSnapshot) => void;
   hoveredId: string | null;
   /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link Puzzle2dPlayShellValue.hoveredId}. */
   hoverSourcePane: Puzzle2dPlayPaneId | null;
@@ -1483,24 +1490,24 @@ interface Puzzle2dPlayShellValue {
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
   /** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link puzzle2dPlayPaneCamerasBaseline}; other panes unchanged. */
   syncBaselineFromViewportCamera: (cam: CameraState) => void;
-  puzzle2dSelectionMethod: BoardSelectionMethod;
-  setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
-  puzzle2dSelectionMode: BoardSelectionMode;
-  setBoardSelectionMode: (value: BoardSelectionMode) => void;
-  puzzle2dSelectionTargets: BoardSelectionTargets;
-  setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
+  puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
+  setPuzzle2dSelectionMethod: (value: Puzzle2dSelectionMethod) => void;
+  puzzle2dSelectionMode: Puzzle2dSelectionMode;
+  setPuzzle2dSelectionMode: (value: Puzzle2dSelectionMode) => void;
+  puzzle2dSelectionTargets: Puzzle2dSelectionTargets;
+  setPuzzle2dSelectionTargets: (value: Puzzle2dSelectionTargets | ((prev: Puzzle2dSelectionTargets) => Puzzle2dSelectionTargets)) => void;
   puzzle2dGridSnapEnabled: boolean;
-  setBoardGridSnapEnabled: (value: boolean) => void;
+  setPuzzle2dGridSnapEnabled: (value: boolean) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
-  boardLodModeByPane: Record<Puzzle2dPlayPaneId, BoardLodModeKind>;
-  setBoardLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: BoardLodModeKind) => void;
+  puzzle2dLodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
+  setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
   puzzle2dRedrawPlaying: boolean;
-  setBoardRedrawPlaying: (value: boolean) => void;
-  boardRedrawMode: BoardRedrawModeKind;
-  setBoardRedrawMode: (value: BoardRedrawModeKind) => void;
+  setPuzzle2dRedrawPlaying: (value: boolean) => void;
+  puzzle2dRedrawMode: Puzzle2dRedrawModeKind;
+  setPuzzle2dRedrawMode: (value: Puzzle2dRedrawModeKind) => void;
   forceLayoutFullIterations: number;
   setForceLayoutFullIterations: (value: number) => void;
   forceLayoutIdealEdgeLength: number;
@@ -1509,24 +1516,24 @@ interface Puzzle2dPlayShellValue {
   setForceLayoutGravity: (value: number) => void;
   forceLayoutRepulsionStrength: number;
   setForceLayoutRepulsionStrength: (value: number) => void;
-  boardRedrawPlayMaxItersPerFrame: number;
-  setBoardRedrawPlayMaxItersPerFrame: (value: number) => void;
-  boardRedrawProgressiveEnabled: boolean;
-  setBoardRedrawProgressiveEnabled: (value: boolean) => void;
-  boardRedrawProgressiveAutoStopMs: number;
-  setBoardRedrawProgressiveAutoStopMs: (value: number) => void;
+  puzzle2dRedrawPlayMaxItersPerFrame: number;
+  setPuzzle2dRedrawPlayMaxItersPerFrame: (value: number) => void;
+  puzzle2dRedrawProgressiveEnabled: boolean;
+  setPuzzle2dRedrawProgressiveEnabled: (value: boolean) => void;
+  puzzle2dRedrawProgressiveAutoStopMs: number;
+  setPuzzle2dRedrawProgressiveAutoStopMs: (value: number) => void;
   /** @emoji 🔁 Restarts progressive iteration ramp and auto-stop clock (used when the user drags a node during play). */
-  resetBoardRedrawProgressiveEpoch: () => void;
+  resetPuzzle2dRedrawProgressiveEpoch: () => void;
   treeLayoutLayerSpacing: number;
   setTreeLayoutLayerSpacing: (value: number) => void;
   treeLayoutSiblingGap: number;
   setTreeLayoutSiblingGap: (value: number) => void;
-  treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
-  setTreeLayoutDirection: (value: BoardHierarchicalTreeDirectionKind) => void;
-  applyBoardRedrawOnce: () => void;
-  applyBoardRedrawHandlesOnce: () => void;
-  boardRedrawHandlesAfterNodes: boolean;
-  setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
+  treeLayoutDirection: Puzzle2dHierarchicalTreeDirectionKind;
+  setTreeLayoutDirection: (value: Puzzle2dHierarchicalTreeDirectionKind) => void;
+  applyPuzzle2dRedrawOnce: () => void;
+  applyPuzzle2dRedrawHandlesOnce: () => void;
+  puzzle2dRedrawHandlesAfterNodes: boolean;
+  setPuzzle2dRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
 class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
@@ -1556,7 +1563,7 @@ class Puzzle2dPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
             id: "puzzle-2d-play-library.section",
             label: "Library",
             defaultOpen: true,
-            content: <BoardFixtureLibraryPanel />,
+            content: <Puzzle2dFixtureLibraryPanel />,
             items: [],
           },
         ],
@@ -1603,7 +1610,7 @@ class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
 
 const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellValue | null>(null);
 
-const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
+const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => void) | null>(null);
 
 function usePuzzle2dPlayShell(): Puzzle2dPlayShellValue {
   const value = reactHostPort.useContext(Puzzle2dPlayShellContext);
@@ -1615,7 +1622,7 @@ function usePuzzle2dPlayShell(): Puzzle2dPlayShellValue {
 // #endregion 🔖ShellContext
 
 // #region 🔖PlayRedrawHelpers
-function newBoardAuthoringId(prefix: string): string {
+function newPuzzle2dAuthoringId(prefix: string): string {
   if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
   }
@@ -1625,30 +1632,30 @@ function newBoardAuthoringId(prefix: string): string {
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
 const PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX = 40;
 
-const BOARD_PLAYRedraw_FRAME_BUDGET_MS = 14;
+const PUZZLE_2D_PLAY_REDRAW_FRAME_BUDGET_MS = 14;
 
 /** @emoji 📈 Force-graph play: iteration budget per inner WASM call ramps from 2 up to `playMax` over `autoStopMs` (or ~3.8s when stop is off). */
-function boardPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number, playMax: number): number {
+function puzzle2dPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number, playMax: number): number {
   const cap = Math.max(4, Math.min(500, Math.round(playMax)));
   const rampWindow = autoStopMs > 0 ? autoStopMs * 0.88 : 3800;
   const t = Math.min(1, elapsedMs / Math.max(100, rampWindow));
   return Math.max(2, Math.round(2 + t * (cap - 2)));
 }
 
-/** @emoji 📐 Builds {@link BoardRedrawLayoutOptions} for the active pane camera center and redraw mode. */
-function boardPlayRedrawLayoutOpts(
+/** @emoji 📐 Builds {@link Puzzle2dRedrawLayoutOptions} for the active pane camera center and redraw mode. */
+function puzzle2dPlayRedrawLayoutOpts(
   pane: Puzzle2dPlayPaneId,
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>,
-  mode: BoardRedrawModeKind,
+  mode: Puzzle2dRedrawModeKind,
   forceIters: number,
   forceIdealEdge: number,
   forceGravity: number,
   forceRepulsion: number,
   treeLayerSpacing: number,
   treeSiblingGap: number,
-  treeDirection: BoardHierarchicalTreeDirectionKind,
+  treeDirection: Puzzle2dHierarchicalTreeDirectionKind,
   redrawHandlesAfter: boolean,
-): BoardRedrawLayoutOptions {
+): Puzzle2dRedrawLayoutOptions {
   const cam = camerasByPane[pane];
   const cx = cam.x;
   const cy = cam.y;
@@ -1665,7 +1672,7 @@ function boardPlayRedrawLayoutOpts(
       redrawHandlesAfter,
     };
   }
-  const fg: BoardForceGraphLayoutOptions = {
+  const fg: Puzzle2dForceGraphLayoutOptions = {
     centerX: cx,
     centerY: cy,
     gravity: Math.max(0, forceGravity),
@@ -1682,22 +1689,22 @@ function boardPlayRedrawLayoutOpts(
 function Puzzle2dPlaySettingsPanel(): ReactElement {
   const {
     activePaneId,
-    applyBoardRedrawHandlesOnce,
-    applyBoardRedrawOnce,
-    boardRedrawHandlesAfterNodes,
-    boardRedrawMode,
-    boardRedrawPlayMaxItersPerFrame,
-    boardRedrawProgressiveAutoStopMs,
-    boardRedrawProgressiveEnabled,
+    applyPuzzle2dRedrawHandlesOnce,
+    applyPuzzle2dRedrawOnce,
+    puzzle2dRedrawHandlesAfterNodes,
+    puzzle2dRedrawMode,
+    puzzle2dRedrawPlayMaxItersPerFrame,
+    puzzle2dRedrawProgressiveAutoStopMs,
+    puzzle2dRedrawProgressiveEnabled,
     forceLayoutFullIterations,
     forceLayoutGravity,
     forceLayoutIdealEdgeLength,
     forceLayoutRepulsionStrength,
-    setBoardRedrawMode,
-    setBoardRedrawHandlesAfterNodes,
-    setBoardRedrawPlayMaxItersPerFrame,
-    setBoardRedrawProgressiveAutoStopMs,
-    setBoardRedrawProgressiveEnabled,
+    setPuzzle2dRedrawMode,
+    setPuzzle2dRedrawHandlesAfterNodes,
+    setPuzzle2dRedrawPlayMaxItersPerFrame,
+    setPuzzle2dRedrawProgressiveAutoStopMs,
+    setPuzzle2dRedrawProgressiveEnabled,
     setForceLayoutFullIterations,
     setForceLayoutGravity,
     setForceLayoutIdealEdgeLength,
@@ -1723,7 +1730,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
         <div className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">Redraw nodes</div>
         <Label id="board.play.settings.redraw.mode" label="Layout kind">
-          <Select onValueChange={(v) => setBoardRedrawMode(v as BoardRedrawModeKind)} value={boardRedrawMode}>
+          <Select onValueChange={(v) => setPuzzle2dRedrawMode(v as Puzzle2dRedrawModeKind)} value={puzzle2dRedrawMode}>
             <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-redraw-mode" size="sm">
               <SelectValue />
             </SelectTrigger>
@@ -1734,28 +1741,28 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
           </Select>
         </Label>
         <div className="flex items-center gap-2">
-          <input checked={boardRedrawHandlesAfterNodes} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-handles-after-nodes" onChange={(e) => setBoardRedrawHandlesAfterNodes(e.target.checked)} type="checkbox" />
+          <input checked={puzzle2dRedrawHandlesAfterNodes} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-handles-after-nodes" onChange={(e) => setPuzzle2dRedrawHandlesAfterNodes(e.target.checked)} type="checkbox" />
           <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-handles-after-nodes">
             Also redraw handles after node redraw
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <input checked={boardRedrawProgressiveEnabled} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-progressive" onChange={(e) => setBoardRedrawProgressiveEnabled(e.target.checked)} type="checkbox" />
+          <input checked={puzzle2dRedrawProgressiveEnabled} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-progressive" onChange={(e) => setPuzzle2dRedrawProgressiveEnabled(e.target.checked)} type="checkbox" />
           <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-progressive">
             Progressive iterations while play is on (graph ramps up; tree still one pass per frame)
           </label>
         </div>
         <Label id="board.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
-          <Slider id="puzzle-2d-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[boardRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setBoardRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
+          <Slider id="puzzle-2d-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[puzzle2dRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setPuzzle2dRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
         </Label>
-        {boardRedrawMode === "force-graph" ? (
+        {puzzle2dRedrawMode === "force-graph" ? (
           <Label id="board.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
-            <Slider id="puzzle-2d-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[boardRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setBoardRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
+            <Slider id="puzzle-2d-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[puzzle2dRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setPuzzle2dRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
           </Label>
         ) : (
           <p className="text-muted-foreground text-[11px] leading-snug">Tree redraw runs once per animation frame while play is on; use auto-stop to end play after a duration.</p>
         )}
-        {boardRedrawMode === "force-graph" ? (
+        {puzzle2dRedrawMode === "force-graph" ? (
           <>
             <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Graph</div>
             <Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
@@ -1781,7 +1788,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
               <Slider id="puzzle-2d-play-slider-tree-sibling" max={120} min={0} step={2} value={[treeLayoutSiblingGap]} onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)} />
             </Label>
             <Label id="board.play.settings.tree.direction" label="Direction">
-              <Select onValueChange={(v) => setTreeLayoutDirection(v as BoardHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
+              <Select onValueChange={(v) => setTreeLayoutDirection(v as Puzzle2dHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
                 <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-tree-direction" size="sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -1795,12 +1802,12 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
             </Label>
           </>
         )}
-        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
+        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyPuzzle2dRedrawOnce}>
           Redraw nodes
         </Button>
         <div className="text-muted-foreground border-t border-element pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
         <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
-        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
+        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyPuzzle2dRedrawHandlesOnce}>
           Redraw handles
         </Button>
         <p className="text-muted-foreground text-[11px] leading-snug">
@@ -1818,7 +1825,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Panes
 /** @emoji 🪟 Captures pointer focus for the active pane (tabs + canvas). */
-function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Puzzle2dPlayPaneId }): ReactElement {
+function Puzzle2dPaneChrome({ children, paneId }: { children: ReactNode; paneId: Puzzle2dPlayPaneId }): ReactElement {
   const { clearHoverForPane, setActivePaneId, setHoverPane } = usePuzzle2dPlayShell();
   return (
     <div
@@ -1841,8 +1848,8 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Pu
   );
 }
 
-function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolean; lod?: BoardDrawLodKind } {
-  if (mode === BOARD_LOD_MODE_AUTOMATIC) {
+function puzzle2dPlayLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: boolean; lod?: Puzzle2dDrawLodKind } {
+  if (mode === PUZZLE_2D_LOD_MODE_AUTOMATIC) {
     return { automaticLod: true };
   }
   return { automaticLod: false, lod: mode };
@@ -1853,7 +1860,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     activePaneId,
     applyStructuralDelete,
     puzzle2dGridSnapEnabled,
-    boardLodModeByPane,
+    puzzle2dLodModeByPane,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
     puzzle2dSelectionMode,
@@ -1863,7 +1870,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     camerasByPane,
     hoveredId,
     preselection,
-    resetBoardRedrawProgressiveEpoch,
+    resetPuzzle2dRedrawProgressiveEpoch,
     selectionIds,
     setHoverForPane,
     setPreselection,
@@ -1871,12 +1878,12 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     syncBaselineFromViewportCamera,
   } = usePuzzle2dPlayShell();
   const camera = camerasByPane[paneId];
-  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
+  const lodProps = puzzle2dPlayLodCanvasProps(puzzle2dLodModeByPane[paneId]);
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
-  const onLodChange = reactHostPort.useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
-  const selection = reactHostPort.useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
-  const onSelect = reactHostPort.useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
-  const onPreselect = reactHostPort.useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
+  const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
+  const selection = reactHostPort.useMemo(() => normalizePuzzle2dSelectionProp([...selectionIds]), [selectionIds]);
+  const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
+  const onPreselect = reactHostPort.useCallback((snapshot: Puzzle2dPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
   const onHover = reactHostPort.useCallback(
     (payload: { id: string | null }) => {
       setHoverForPane(paneId, payload.id);
@@ -1887,15 +1894,25 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
   const demoEdgeId = fixture.edges[0]?.id;
   const sceneMarkers = reactHostPort.useMemo(
     () =>
-      boardFixtureSceneMarkers(fixture, {
-        nodeContextMenuForId: (id) => (id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined),
-        edgeContextMenuForId: (id) => (id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined),
+      puzzle2dFixtureSceneMarkers(fixture, {
+        nodeContextMenuForId: (id) => (id === demoNodeId ? puzzle2dPlayDemoNodeContextMenu : undefined),
+        edgeContextMenuForId: (id) => (id === demoEdgeId ? puzzle2dPlayDemoEdgeContextMenu : undefined),
       }),
     [demoEdgeId, demoNodeId, fixture],
   );
+  const acceptCanvasStructuralDeleteRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      acceptCanvasStructuralDeleteRef.current = true;
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      acceptCanvasStructuralDeleteRef.current = false;
+    };
+  }, []);
   const onCanvasDelete = reactHostPort.useCallback(
-    (payload: BoardStructureDeletePayload) => {
-      if (payload.kind === "wire") {
+    (payload: Puzzle2dStructureDeletePayload) => {
+      if (!acceptCanvasStructuralDeleteRef.current || payload.kind === "wire") {
         return;
       }
       applyStructuralDelete(payload.kind, payload.id);
@@ -1907,23 +1924,23 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
       if (!puzzle2dRedrawPlaying) {
         return;
       }
-      resetBoardRedrawProgressiveEpoch();
+      resetPuzzle2dRedrawProgressiveEpoch();
     },
-    [puzzle2dRedrawPlaying, resetBoardRedrawProgressiveEpoch],
+    [puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
   );
   return (
-    <BoardPaneChrome paneId={paneId}>
-      <BoardCanvas
+    <Puzzle2dPaneChrome paneId={paneId}>
+      <Puzzle2dCanvas
         {...lodProps}
         onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"
-        contextMenu={showBackgroundMenu ? boardPlayCanvasBackgroundMenu : undefined}
+        contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         hoveredId={hoveredId}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
-        lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
+        lodZoomThresholds={DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onDelete={onCanvasDelete}
         onDrag={onCanvasDrag}
@@ -1938,12 +1955,12 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         selectionTargets={puzzle2dSelectionTargets}
       >
         {sceneMarkers}
-      </BoardCanvas>
-    </BoardPaneChrome>
+      </Puzzle2dCanvas>
+    </Puzzle2dPaneChrome>
   );
 }
 
-function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): ReactElement {
+function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_SURFACE_ID) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid board surface binding</div>;
   }
@@ -1953,11 +1970,11 @@ function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiBoardHostSurfa
 
 let puzzle2dPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers board play surface host, window bodies, and tab icons (called from `@framework/playground/renderer/react`). */
+/** @emoji 🧊 Registers puzzle 2d play surface host, window bodies, and tab icons (called from `@framework/playground/renderer/react`). */
 export function registerPuzzle2dPlaySurfaceHosts(): void {
   if (puzzle2dPlayChromeRegistered) return;
   puzzle2dPlayChromeRegistered = true;
-  registerUiBoardSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID, Puzzle2dPlayPaneSurfaceHost);
+  registerUiPuzzle2dSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID, Puzzle2dPlayPaneSurfaceHost);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
@@ -1971,11 +1988,11 @@ export function registerPuzzle2dPlaySurfaceHosts(): void {
 // #region 🔖PaletteFixtureShelf
 /** @emoji 📐 Palette seeds match {@link PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX} (circle radius = span/2). */
 
-const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
-  parseBoardFixtureV1({
+const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
+  parsePuzzle2dFixtureV1({
     camera: { x: 0, y: 0, zoom: 1 },
     edges: [],
-    meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
+    meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
     nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2, x: 0, y: 0 }],
     schema: "puzzle.2d.fixture/v1",
   }) ??
@@ -1983,11 +2000,11 @@ const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
     throw new Error("Board play: palette circle drag fixture failed validation.");
   })();
 
-const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
-  parseBoardFixtureV1({
+const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
+  parsePuzzle2dFixtureV1({
     camera: { x: 0, y: 0, zoom: 1 },
     edges: [],
-    meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
+    meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
     nodes: [
       {
         handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
@@ -2005,16 +2022,16 @@ const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
     throw new Error("Board play: palette rectangle drag fixture failed validation.");
   })();
 
-/** @emoji 🧩 When {@link BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE} is on meta, returns one node placed at the drop world point; else null so the scene should be replaced. */
-function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureNodeV1 | null {
-  if (detail.fixture.meta?.boardFixtureDragKind !== BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE) {
+/** @emoji 🧩 When {@link PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE} is on meta, returns one node placed at the drop world point; else null so the scene should be replaced. */
+function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
+  if (detail.fixture.meta?.puzzle2dFixtureDragKind !== PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
     return null;
   }
   const template = detail.fixture.nodes[0];
   if (!template) {
     return null;
   }
-  const newId = newBoardAuthoringId("node");
+  const newId = newPuzzle2dAuthoringId("node");
   return {
     ...template,
     handles: template.handles.map((h, i) => ({ ...h, id: `${newId}.h${i}` })),
@@ -2025,13 +2042,13 @@ function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureN
 }
 
 /** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
-function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
+function Puzzle2dFixturePaletteDraggable(props: { fixture: Puzzle2dFixtureV1; label: string; preview: ReactNode }): ReactElement {
   const { fixture: dragFixture, label, preview } = props;
   const dragProps = useNativeDragAndDrop(
     reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
+          event.dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encodePuzzle2dFixtureForDragV1(dragFixture));
           event.dataTransfer.effectAllowed = "copy";
           const { clientHeight, clientWidth } = event.currentTarget;
           event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
@@ -2049,14 +2066,14 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 // #endregion 🔖PaletteFixtureShelf
 
 /** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
-function BoardFixtureLibraryPanel(): ReactElement {
+function Puzzle2dFixtureLibraryPanel(): ReactElement {
   const { fixture } = usePuzzle2dPlayShell();
 
   const shelfDragProps = useNativeDragAndDrop(
     reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
+          event.dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encodePuzzle2dFixtureForDragV1(fixture));
           event.dataTransfer.effectAllowed = "copy";
         },
       }),
@@ -2072,8 +2089,8 @@ function BoardFixtureLibraryPanel(): ReactElement {
       <div className="flex flex-col gap-2">
         <div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
         <div className="flex flex-wrap gap-2">
-          <BoardFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE} label="Drag circle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />} />
-          <BoardFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
+          <Puzzle2dFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE} label="Drag circle onto the puzzle 2d canvas" preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />} />
+          <Puzzle2dFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the puzzle 2d canvas" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
       <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
@@ -2091,15 +2108,15 @@ function BoardFixtureLibraryPanel(): ReactElement {
   );
 }
 
-function findNode(fixture: BoardFixtureV1, id: string): BoardFixtureNodeV1 | undefined {
+function findNode(fixture: Puzzle2dFixtureV1, id: string): Puzzle2dFixtureNodeV1 | undefined {
   return fixture.nodes.find((n) => n.id === id);
 }
 
-function findEdge(fixture: BoardFixtureV1, id: string): BoardFixtureEdgeV1 | undefined {
+function findEdge(fixture: Puzzle2dFixtureV1, id: string): Puzzle2dFixtureEdgeV1 | undefined {
   return fixture.edges.find((e) => e.id === id);
 }
 
-function findHandleOwner(fixture: BoardFixtureV1, handleId: string): { node: BoardFixtureNodeV1; handleId: string } | undefined {
+function findHandleOwner(fixture: Puzzle2dFixtureV1, handleId: string): { node: Puzzle2dFixtureNodeV1; handleId: string } | undefined {
   for (const node of fixture.nodes) {
     if (node.handles.some((h) => h.id === handleId)) {
       return { handleId, node };
@@ -2108,7 +2125,7 @@ function findHandleOwner(fixture: BoardFixtureV1, handleId: string): { node: Boa
   return undefined;
 }
 
-function findHandle(fixture: BoardFixtureV1, handleId: string): BoardFixtureHandleV1 | undefined {
+function findHandle(fixture: Puzzle2dFixtureV1, handleId: string): Puzzle2dFixtureHandleV1 | undefined {
   for (const node of fixture.nodes) {
     const h = node.handles.find((x) => x.id === handleId);
     if (h) {
@@ -2118,7 +2135,7 @@ function findHandle(fixture: BoardFixtureV1, handleId: string): BoardFixtureHand
   return undefined;
 }
 
-function nodeIsRectangle(n: BoardFixtureNodeV1): n is BoardFixtureRectangleNodeV1 {
+function nodeIsRectangle(n: Puzzle2dFixtureNodeV1): n is Puzzle2dFixtureRectangleNodeV1 {
   return n.shape === "rectangle";
 }
 
@@ -2130,7 +2147,7 @@ function allEqual<T>(values: T[]): boolean {
   return values.every((v) => v === first);
 }
 
-function listHandleIds(fixture: BoardFixtureV1): string[] {
+function listHandleIds(fixture: Puzzle2dFixtureV1): string[] {
   const out: string[] = [];
   for (const node of fixture.nodes) {
     for (const h of node.handles) {
@@ -2141,13 +2158,13 @@ function listHandleIds(fixture: BoardFixtureV1): string[] {
   return out;
 }
 
-function toCircleNode(n: BoardFixtureRectangleNodeV1): BoardFixtureCircleNodeV1 {
+function toCircleNode(n: Puzzle2dFixtureRectangleNodeV1): Puzzle2dFixtureCircleNodeV1 {
   const { width, height, shape: _s, ...rest } = n;
   const radius = Math.min(width, height) / 2;
   return { ...rest, radius, shape: "circle" };
 }
 
-function toRectangleNode(n: BoardFixtureCircleNodeV1): BoardFixtureRectangleNodeV1 {
+function toRectangleNode(n: Puzzle2dFixtureCircleNodeV1): Puzzle2dFixtureRectangleNodeV1 {
   const { radius, shape: _s, ...rest } = n;
   return { ...rest, shape: "rectangle", width: radius * 2, height: radius * 2 };
 }
@@ -2257,15 +2274,15 @@ function InspectorNodeBatch({
   patchFixture,
   remapIdInSelections,
 }: {
-  fixture: BoardFixtureV1;
+  fixture: Puzzle2dFixtureV1;
   nodeIds: readonly string[];
-  patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(nodeIds), [nodeIds]);
-  const targets = reactHostPort.useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is BoardFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
+  const targets = reactHostPort.useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
 
-  const textValues = targets.map((n) => boardFixtureNodeCaption(n) ?? "");
+  const textValues = targets.map((n) => puzzle2dFixtureNodeCaption(n) ?? "");
   const textUniform = allEqual(textValues);
   const textValue = textUniform ? (textValues[0] ?? "") : "";
 
@@ -2295,7 +2312,7 @@ function InspectorNodeBatch({
   const hValue = hUniform ? heights[0] : Number.NaN;
 
   const patchNodes = reactHostPort.useCallback(
-    (updater: (n: BoardFixtureNodeV1) => BoardFixtureNodeV1) => {
+    (updater: (n: Puzzle2dFixtureNodeV1) => Puzzle2dFixtureNodeV1) => {
       patchFixture((prev) => ({
         ...prev,
         nodes: prev.nodes.map((n) => (idSet.has(n.id) ? updater(n) : n)),
@@ -2362,7 +2379,7 @@ function InspectorNodeBatch({
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
       <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
-        <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
+        <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
       </Label>
       <Label id="puzzle-2d-play.inspector.node.shape" label="Shape">
         <Select
@@ -2429,13 +2446,13 @@ function InspectorHandleBatch({
   patchFixture,
   remapIdInSelections,
 }: {
-  fixture: BoardFixtureV1;
+  fixture: Puzzle2dFixtureV1;
   handleIds: readonly string[];
-  patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(handleIds), [handleIds]);
-  const handles = reactHostPort.useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is BoardFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
+  const handles = reactHostPort.useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is Puzzle2dFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
   const angles = handles.map((h) => h.angle);
   const angleUniform = allEqual(angles);
   const angleValue = angleUniform ? angles[0]! : 0;
@@ -2448,7 +2465,7 @@ function InspectorHandleBatch({
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
 
   const patchHandles = reactHostPort.useCallback(
-    (updater: (h: BoardFixtureHandleV1) => BoardFixtureHandleV1) => {
+    (updater: (h: Puzzle2dFixtureHandleV1) => Puzzle2dFixtureHandleV1) => {
       patchFixture((prev) => ({
         ...prev,
         nodes: prev.nodes.map((node) => ({
@@ -2498,7 +2515,7 @@ function InspectorHandleBatch({
             value={radiusValue}
           />
           <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
-            <IconSelector classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
+            <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
           </Label>
           {handleIds.length === 1 ? (
             <Label id="puzzle-2d-play.inspector.handle.id" label="Id">
@@ -2542,13 +2559,13 @@ function InspectorEdgeBatch({
   patchFixture,
   remapIdInSelections,
 }: {
-  fixture: BoardFixtureV1;
+  fixture: Puzzle2dFixtureV1;
   edgeIds: readonly string[];
-  patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
   const idSet = reactHostPort.useMemo(() => new Set(edgeIds), [edgeIds]);
-  const edges = reactHostPort.useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is BoardFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
+  const edges = reactHostPort.useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is Puzzle2dFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
   const sources = edges.map((e) => e.source);
   const targets = edges.map((e) => e.target);
   const sourceUniform = allEqual(sources);
@@ -2556,7 +2573,7 @@ function InspectorEdgeBatch({
   const handleOptions = reactHostPort.useMemo(() => listHandleIds(fixture), [fixture]);
 
   const patchEdges = reactHostPort.useCallback(
-    (updater: (e: BoardFixtureEdgeV1) => BoardFixtureEdgeV1) => {
+    (updater: (e: Puzzle2dFixtureEdgeV1) => Puzzle2dFixtureEdgeV1) => {
       patchFixture((prev) => ({
         ...prev,
         edges: prev.edges.map((e) => (idSet.has(e.id) ? updater(e) : e)),
@@ -2711,16 +2728,16 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): Tree
 
 interface Puzzle2dPlayRedrawLoopSnapshot {
   activePaneId: Puzzle2dPlayPaneId;
-  boardRedrawHandlesAfterNodes: boolean;
-  boardRedrawProgressiveAutoStopMs: number;
-  boardRedrawProgressiveEnabled: boolean;
-  boardRedrawPlayMaxItersPerFrame: number;
+  puzzle2dRedrawHandlesAfterNodes: boolean;
+  puzzle2dRedrawProgressiveAutoStopMs: number;
+  puzzle2dRedrawProgressiveEnabled: boolean;
+  puzzle2dRedrawPlayMaxItersPerFrame: number;
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
   forceLayoutGravity: number;
   forceLayoutIdealEdgeLength: number;
   forceLayoutRepulsionStrength: number;
-  mode: BoardRedrawModeKind;
-  treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
+  mode: Puzzle2dRedrawModeKind;
+  treeLayoutDirection: Puzzle2dHierarchicalTreeDirectionKind;
   treeLayoutLayerSpacing: number;
   treeLayoutSiblingGap: number;
 }
@@ -2728,9 +2745,9 @@ interface Puzzle2dPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
 
-function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }): ReactElement {
-  const [fixture, setFixtureState] = reactHostPort.useState<BoardFixtureV1>(initialFixture);
-  const fixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
+function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Platform }): ReactElement {
+  const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(initialFixture);
+  const fixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   fixtureRef.current = fixture;
   const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
   const puzzle2dPlayPaneCamerasBaselineRef = reactHostPort.useRef(puzzle2dPlayPaneCamerasBaseline);
@@ -2739,57 +2756,57 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
   const activePaneIdRef = reactHostPort.useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
   const [selectionIds, setSelectionIdsState] = reactHostPort.useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
-  const [preselection, setPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
+  const [preselection, setPreselection] = reactHostPort.useState<Puzzle2dPreselectSnapshot>(PUZZLE_2D_PRESELECT_EMPTY);
   const [hoveredId, setHoveredId] = reactHostPort.useState<string | null>(null);
   const [hoverSourcePane, setHoverSourcePane] = reactHostPort.useState<Puzzle2dPlayPaneId | null>(null);
   const hoverSourcePaneRef = reactHostPort.useRef<Puzzle2dPlayPaneId | null>(hoverSourcePane);
   hoverSourcePaneRef.current = hoverSourcePane;
-  const [puzzle2dSelectionMethod, setBoardSelectionMethod] = reactHostPort.useState<BoardSelectionMethod>("rectangle");
-  const [puzzle2dSelectionMode, setBoardSelectionMode] = reactHostPort.useState<BoardSelectionMode>("default");
-  const [puzzle2dSelectionTargets, setBoardSelectionTargets] = reactHostPort.useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
-  const [puzzle2dGridSnapEnabled, setBoardGridSnapEnabled] = reactHostPort.useState(false);
-  const puzzle2dShellController = boardRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
+  const [puzzle2dSelectionMethod, setPuzzle2dSelectionMethod] = reactHostPort.useState<Puzzle2dSelectionMethod>("rectangle");
+  const [puzzle2dSelectionMode, setPuzzle2dSelectionMode] = reactHostPort.useState<Puzzle2dSelectionMode>("default");
+  const [puzzle2dSelectionTargets, setPuzzle2dSelectionTargets] = reactHostPort.useState<Puzzle2dSelectionTargets>(() => ({ ...PUZZLE_2D_SELECTION_TARGETS_DEFAULT }));
+  const [puzzle2dGridSnapEnabled, setPuzzle2dGridSnapEnabled] = reactHostPort.useState(false);
+  const puzzle2dShellController = puzzle2dRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
   const shellGeneration = reactHostPort.useSyncExternalStore(
-    (onStoreChange) => boardRuntime.subscribe(onStoreChange),
-    () => boardRuntime.generation,
+    (onStoreChange) => puzzle2dRuntime.subscribe(onStoreChange),
+    () => puzzle2dRuntime.generation,
     () => 0,
   );
   void shellGeneration;
-  const boardLodModeByPane = puzzle2dShellController?.getLodModeByPane() ?? {
-    "2d-detail": BOARD_LOD_MODE_AUTOMATIC,
-    "2d-overview": BOARD_LOD_MODE_AUTOMATIC,
-    "2d-selection": BOARD_LOD_MODE_AUTOMATIC,
+  const puzzle2dLodModeByPane = puzzle2dShellController?.getLodModeByPane() ?? {
+    "2d-detail": PUZZLE_2D_LOD_MODE_AUTOMATIC,
+    "2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
+    "2d-selection": PUZZLE_2D_LOD_MODE_AUTOMATIC,
   };
-  const setBoardLodModeForPane = reactHostPort.useCallback(
-    (pane: Puzzle2dPlayPaneId, mode: BoardLodModeKind) => {
-      boardRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
+  const setPuzzle2dLodModeForPane = reactHostPort.useCallback(
+    (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => {
+      puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
     },
-    [boardRuntime.commandBus],
+    [puzzle2dRuntime.commandBus],
   );
-  const setBoardEffectiveLodForPane = reactHostPort.useCallback(
-    (pane: Puzzle2dPlayPaneId, lod: BoardDrawLodKind) => {
-      boardRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
+  const setPuzzle2dEffectiveLodForPane = reactHostPort.useCallback(
+    (pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => {
+      puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
-    [boardRuntime.commandBus],
+    [puzzle2dRuntime.commandBus],
   );
   const onPuzzle2dPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
     if (windowKindId === "2d-overview" || windowKindId === "2d-detail" || windowKindId === "2d-selection") {
       setActivePaneId(windowKindId);
     }
   }, []);
-  const [puzzle2dRedrawPlaying, setBoardRedrawPlaying] = reactHostPort.useState(false);
+  const [puzzle2dRedrawPlaying, setPuzzle2dRedrawPlaying] = reactHostPort.useState(false);
   const [forceLayoutFullIterations, setForceLayoutFullIterations] = reactHostPort.useState(200);
   const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = reactHostPort.useState(64);
   const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(0.012);
   const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = reactHostPort.useState(80);
-  const [boardRedrawPlayMaxItersPerFrame, setBoardRedrawPlayMaxItersPerFrame] = reactHostPort.useState(96);
-  const [boardRedrawProgressiveEnabled, setBoardRedrawProgressiveEnabled] = reactHostPort.useState(true);
-  const [boardRedrawProgressiveAutoStopMs, setBoardRedrawProgressiveAutoStopMs] = reactHostPort.useState(3000);
-  const [boardRedrawMode, setBoardRedrawMode] = reactHostPort.useState<BoardRedrawModeKind>("force-graph");
-  const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = reactHostPort.useState(false);
+  const [puzzle2dRedrawPlayMaxItersPerFrame, setPuzzle2dRedrawPlayMaxItersPerFrame] = reactHostPort.useState(96);
+  const [puzzle2dRedrawProgressiveEnabled, setPuzzle2dRedrawProgressiveEnabled] = reactHostPort.useState(true);
+  const [puzzle2dRedrawProgressiveAutoStopMs, setPuzzle2dRedrawProgressiveAutoStopMs] = reactHostPort.useState(3000);
+  const [puzzle2dRedrawMode, setPuzzle2dRedrawMode] = reactHostPort.useState<Puzzle2dRedrawModeKind>("force-graph");
+  const [puzzle2dRedrawHandlesAfterNodes, setPuzzle2dRedrawHandlesAfterNodes] = reactHostPort.useState(false);
   const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = reactHostPort.useState(120);
   const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = reactHostPort.useState(28);
-  const [treeLayoutDirection, setTreeLayoutDirection] = reactHostPort.useState<BoardHierarchicalTreeDirectionKind>("downwards");
+  const [treeLayoutDirection, setTreeLayoutDirection] = reactHostPort.useState<Puzzle2dHierarchicalTreeDirectionKind>("downwards");
 
   const puzzle2dRedrawPlayingRef = reactHostPort.useRef(puzzle2dRedrawPlaying);
   puzzle2dRedrawPlayingRef.current = puzzle2dRedrawPlaying;
@@ -2826,17 +2843,17 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     pruneSelections([id, ...handleIds]);
   }, []);
 
-  const setFixture = reactHostPort.useCallback((next: BoardFixtureV1) => {
+  const setFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
     setFixtureState(next);
     setSelectionIdsState(selectionSeedForFixture(next));
-    setPreselection(BOARD_PRESELECT_EMPTY);
+    setPreselection(PUZZLE_2D_PRESELECT_EMPTY);
     setHoveredId(null);
     hoverSourcePaneRef.current = null;
     setHoverSourcePane(null);
     setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
   }, []);
 
-  const patchFixture = reactHostPort.useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
+  const patchFixture = reactHostPort.useCallback((updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {
     setFixtureState((prev) => updater(prev));
   }, []);
 
@@ -2868,7 +2885,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
   }, []);
 
   const handleCanvasFixtureDrop = reactHostPort.useCallback(
-    (pane: Puzzle2dPlayPaneId, detail: BoardFixtureDropDetail) => {
+    (pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
       const merged = mergePaletteNodeFromDrop(detail);
       if (merged) {
@@ -2888,7 +2905,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     setSelectionIdsState((prev) => new Set([...prev].map((id) => (id === replacedId ? replacementId : id))));
   }, []);
 
-  const cameraBasisFixtureRef = reactHostPort.useRef<BoardFixtureV1>(fixture);
+  const cameraBasisFixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   /** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link puzzle2dPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
   const skipNextCameraBasisResyncRef = reactHostPort.useRef(false);
   const prevBoardRedrawPlayingRef = reactHostPort.useRef(false);
@@ -2898,7 +2915,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
   const suppressCameraBasisSyncRef = reactHostPort.useRef(false);
   const cameraPlayEndAnimRafRef = reactHostPort.useRef<number | null>(null);
   const boardPlayNodesRedrawCameraAnimRafRef = reactHostPort.useRef<number | null>(null);
-  const boardPlayRedrawCameraChaseRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
+  const puzzle2dPlayRedrawCameraChaseRef = reactHostPort.useRef<Record<Puzzle2dPlayPaneId, CameraState> | null>(null);
   const lastPlayingForCameraEaseRef = reactHostPort.useRef(false);
   const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = reactHostPort.useState(0);
   /** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
@@ -2961,7 +2978,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
       suppressCameraBasisSyncRef.current = false;
       cameraBasisFixtureRef.current = fixture;
       const prevCam = puzzle2dPlayPaneCamerasBaselineRef.current;
-      boardPlayRedrawCameraChaseRef.current = {
+      puzzle2dPlayRedrawCameraChaseRef.current = {
         "2d-detail": { ...prevCam["2d-detail"] },
         "2d-overview": { ...prevCam["2d-overview"] },
         "2d-selection": { ...prevCam["2d-selection"] },
@@ -2977,7 +2994,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
 
   reactHostPort.useEffect(() => {
     if (!puzzle2dRedrawPlaying) {
-      boardPlayRedrawCameraChaseRef.current = null;
+      puzzle2dPlayRedrawCameraChaseRef.current = null;
       return;
     }
     if (suppressCameraBasisSyncRef.current) {
@@ -2986,7 +3003,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     const pane = activePaneIdRef.current;
     const target = triptychCamerasFromFixture(fixture);
     setPuzzle2dPlayPaneCamerasBaseline((baselinePrev) => {
-      const prevChase = boardPlayRedrawCameraChaseRef.current ?? baselinePrev;
+      const prevChase = puzzle2dPlayRedrawCameraChaseRef.current ?? baselinePrev;
       const damped = dampCameraStateLinear(prevChase[pane], target[pane], PUZZLE_2D_PLAY_REDRAW_CAMERA_CHASE_BLEND);
       const nextChase: Record<Puzzle2dPlayPaneId, CameraState> = {
         "2d-detail": { ...prevChase["2d-detail"] },
@@ -2994,7 +3011,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
         "2d-selection": { ...prevChase["2d-selection"] },
       };
       nextChase[pane] = damped;
-      boardPlayRedrawCameraChaseRef.current = nextChase;
+      puzzle2dPlayRedrawCameraChaseRef.current = nextChase;
       return nextChase;
     });
   }, [puzzle2dRedrawPlaying, fixture]);
@@ -3151,10 +3168,10 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
   const redrawProgressiveEpochRef = reactHostPort.useRef(0);
   const redrawLoopSnapshotRef = reactHostPort.useRef<Puzzle2dPlayRedrawLoopSnapshot>({
     activePaneId: "2d-overview",
-    boardRedrawHandlesAfterNodes: false,
-    boardRedrawProgressiveAutoStopMs: 3000,
-    boardRedrawProgressiveEnabled: true,
-    boardRedrawPlayMaxItersPerFrame: 96,
+    puzzle2dRedrawHandlesAfterNodes: false,
+    puzzle2dRedrawProgressiveAutoStopMs: 3000,
+    puzzle2dRedrawProgressiveEnabled: true,
+    puzzle2dRedrawPlayMaxItersPerFrame: 96,
     camerasByPane: triptychCamerasFromFixture(initialFixture),
     forceLayoutGravity: 0.012,
     forceLayoutIdealEdgeLength: 64,
@@ -3165,31 +3182,31 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     treeLayoutSiblingGap: 28,
   });
 
-  const resetBoardRedrawProgressiveEpoch = reactHostPort.useCallback(() => {
+  const resetPuzzle2dRedrawProgressiveEpoch = reactHostPort.useCallback(() => {
     redrawProgressiveEpochRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
   }, []);
 
   redrawLoopSnapshotRef.current = {
     activePaneId,
-    boardRedrawHandlesAfterNodes,
-    boardRedrawProgressiveAutoStopMs,
-    boardRedrawProgressiveEnabled,
-    boardRedrawPlayMaxItersPerFrame,
+    puzzle2dRedrawHandlesAfterNodes,
+    puzzle2dRedrawProgressiveAutoStopMs,
+    puzzle2dRedrawProgressiveEnabled,
+    puzzle2dRedrawPlayMaxItersPerFrame,
     camerasByPane,
     forceLayoutGravity,
     forceLayoutIdealEdgeLength,
     forceLayoutRepulsionStrength,
-    mode: boardRedrawMode,
+    mode: puzzle2dRedrawMode,
     treeLayoutDirection,
     treeLayoutLayerSpacing,
     treeLayoutSiblingGap,
   };
 
-  const applyBoardRedrawHandlesOnce = reactHostPort.useCallback(() => {
-    patchFixture((prev) => layoutBoardFixtureRedrawHandles(prev));
+  const applyPuzzle2dRedrawHandlesOnce = reactHostPort.useCallback(() => {
+    patchFixture((prev) => layoutPuzzle2dFixtureRedrawHandles(prev));
   }, [patchFixture]);
 
-  const applyBoardRedrawOnce = reactHostPort.useCallback(() => {
+  const applyPuzzle2dRedrawOnce = reactHostPort.useCallback(() => {
     if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
       cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
       boardPlayNodesRedrawCameraAnimRafRef.current = null;
@@ -3202,12 +3219,12 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     };
     const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
     patchFixture((prev) => {
-      const laidOut = layoutBoardFixtureRedrawNodes(
+      const laidOut = layoutPuzzle2dFixtureRedrawNodes(
         prev,
-        boardPlayRedrawLayoutOpts(
+        puzzle2dPlayRedrawLayoutOpts(
           activePaneId,
           camerasByPane,
-          boardRedrawMode,
+          puzzle2dRedrawMode,
           full,
           forceLayoutIdealEdgeLength,
           forceLayoutGravity,
@@ -3215,7 +3232,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
           treeLayoutLayerSpacing,
           treeLayoutSiblingGap,
           treeLayoutDirection,
-          boardRedrawHandlesAfterNodes,
+          puzzle2dRedrawHandlesAfterNodes,
         ),
       );
       return { ...laidOut, camera: { ...prev.camera } };
@@ -3223,8 +3240,8 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     setNodesRedrawCameraEaseTick((n) => n + 1);
   }, [
     activePaneId,
-    boardRedrawHandlesAfterNodes,
-    boardRedrawMode,
+    puzzle2dRedrawHandlesAfterNodes,
+    puzzle2dRedrawMode,
     camerasByPane,
     forceLayoutFullIterations,
     forceLayoutGravity,
@@ -3251,17 +3268,17 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
       const snap = redrawLoopSnapshotRef.current;
       const now = typeof performance !== "undefined" ? performance.now() : Date.now();
       const elapsed = now - redrawProgressiveEpochRef.current;
-      if (snap.boardRedrawProgressiveAutoStopMs > 0 && elapsed >= snap.boardRedrawProgressiveAutoStopMs) {
+      if (snap.puzzle2dRedrawProgressiveAutoStopMs > 0 && elapsed >= snap.puzzle2dRedrawProgressiveAutoStopMs) {
         redrawPlayingRef.current = false;
-        setBoardRedrawPlaying(false);
+        setPuzzle2dRedrawPlaying(false);
         return;
       }
       let innerIters = 1;
       if (snap.mode === "force-graph") {
-        if (snap.boardRedrawProgressiveEnabled) {
-          innerIters = boardPlayProgressiveForceIters(elapsed, snap.boardRedrawProgressiveAutoStopMs, snap.boardRedrawPlayMaxItersPerFrame);
+        if (snap.puzzle2dRedrawProgressiveEnabled) {
+          innerIters = puzzle2dPlayProgressiveForceIters(elapsed, snap.puzzle2dRedrawProgressiveAutoStopMs, snap.puzzle2dRedrawPlayMaxItersPerFrame);
         } else {
-          innerIters = Math.max(1, Math.min(500, Math.round(snap.boardRedrawPlayMaxItersPerFrame)));
+          innerIters = Math.max(1, Math.min(500, Math.round(snap.puzzle2dRedrawPlayMaxItersPerFrame)));
         }
       }
       patchFixture((prev) => {
@@ -3269,9 +3286,9 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
           return prev;
         }
         if (snap.mode === "hierarchical-tree") {
-          return layoutBoardFixtureRedrawNodes(
+          return layoutPuzzle2dFixtureRedrawNodes(
             prev,
-            boardPlayRedrawLayoutOpts(
+            puzzle2dPlayRedrawLayoutOpts(
               snap.activePaneId,
               snap.camerasByPane,
               snap.mode,
@@ -3282,16 +3299,16 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
               snap.treeLayoutLayerSpacing,
               snap.treeLayoutSiblingGap,
               snap.treeLayoutDirection,
-              snap.boardRedrawHandlesAfterNodes,
+              snap.puzzle2dRedrawHandlesAfterNodes,
             ),
           );
         }
         const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
         let cur = prev;
-        while (redrawPlayingRef.current && (typeof performance !== "undefined" ? performance.now() : Date.now()) - t0 < BOARD_PLAYRedraw_FRAME_BUDGET_MS) {
-          cur = layoutBoardFixtureRedrawNodes(
+        while (redrawPlayingRef.current && (typeof performance !== "undefined" ? performance.now() : Date.now()) - t0 < PUZZLE_2D_PLAY_REDRAW_FRAME_BUDGET_MS) {
+          cur = layoutPuzzle2dFixtureRedrawNodes(
             cur,
-            boardPlayRedrawLayoutOpts(
+            puzzle2dPlayRedrawLayoutOpts(
               snap.activePaneId,
               snap.camerasByPane,
               snap.mode,
@@ -3302,7 +3319,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
               snap.treeLayoutLayerSpacing,
               snap.treeLayoutSiblingGap,
               snap.treeLayoutDirection,
-              snap.boardRedrawHandlesAfterNodes,
+              snap.puzzle2dRedrawHandlesAfterNodes,
             ),
           );
         }
@@ -3315,20 +3332,20 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
       redrawPlayingRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [puzzle2dRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
+  }, [puzzle2dRedrawPlaying, patchFixture, setPuzzle2dRedrawPlaying]);
 
   const shellValue = reactHostPort.useMemo<Puzzle2dPlayShellValue>(
     () => ({
       activePaneId,
-      applyBoardRedrawHandlesOnce,
-      applyBoardRedrawOnce,
+      applyPuzzle2dRedrawHandlesOnce,
+      applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
-      boardRedrawHandlesAfterNodes,
-      boardRedrawMode,
-      boardRedrawPlayMaxItersPerFrame,
+      puzzle2dRedrawHandlesAfterNodes,
+      puzzle2dRedrawMode,
+      puzzle2dRedrawPlayMaxItersPerFrame,
       puzzle2dRedrawPlaying,
-      boardRedrawProgressiveAutoStopMs,
-      boardRedrawProgressiveEnabled,
+      puzzle2dRedrawProgressiveAutoStopMs,
+      puzzle2dRedrawProgressiveEnabled,
       puzzle2dSelectionMethod,
       puzzle2dSelectionMode,
       puzzle2dSelectionTargets,
@@ -3343,20 +3360,20 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
       handleCanvasFixtureDrop,
       patchFixture,
       remapIdInSelections,
-      resetBoardRedrawProgressiveEpoch,
+      resetPuzzle2dRedrawProgressiveEpoch,
       setActivePaneId,
-      setBoardRedrawHandlesAfterNodes,
-      setBoardRedrawMode,
-      setBoardRedrawPlayMaxItersPerFrame,
-      setBoardRedrawPlaying,
-      setBoardRedrawProgressiveAutoStopMs,
-      setBoardRedrawProgressiveEnabled,
-      setBoardGridSnapEnabled,
-      boardLodModeByPane,
-      setBoardLodModeForPane,
-      setBoardSelectionMethod,
-      setBoardSelectionMode,
-      setBoardSelectionTargets,
+      setPuzzle2dRedrawHandlesAfterNodes,
+      setPuzzle2dRedrawMode,
+      setPuzzle2dRedrawPlayMaxItersPerFrame,
+      setPuzzle2dRedrawPlaying,
+      setPuzzle2dRedrawProgressiveAutoStopMs,
+      setPuzzle2dRedrawProgressiveEnabled,
+      setPuzzle2dGridSnapEnabled,
+      puzzle2dLodModeByPane,
+      setPuzzle2dLodModeForPane,
+      setPuzzle2dSelectionMethod,
+      setPuzzle2dSelectionMode,
+      setPuzzle2dSelectionTargets,
       setFixture,
       setForceLayoutFullIterations,
       setForceLayoutGravity,
@@ -3380,21 +3397,21 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     }),
     [
       activePaneId,
-      applyBoardRedrawHandlesOnce,
-      applyBoardRedrawOnce,
+      applyPuzzle2dRedrawHandlesOnce,
+      applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
-      boardRedrawHandlesAfterNodes,
-      boardRedrawMode,
-      boardRedrawPlayMaxItersPerFrame,
+      puzzle2dRedrawHandlesAfterNodes,
+      puzzle2dRedrawMode,
+      puzzle2dRedrawPlayMaxItersPerFrame,
       puzzle2dRedrawPlaying,
-      boardRedrawProgressiveAutoStopMs,
-      boardRedrawProgressiveEnabled,
+      puzzle2dRedrawProgressiveAutoStopMs,
+      puzzle2dRedrawProgressiveEnabled,
       puzzle2dSelectionMethod,
       puzzle2dSelectionMode,
       puzzle2dSelectionTargets,
       puzzle2dGridSnapEnabled,
-      boardLodModeByPane,
-      setBoardLodModeForPane,
+      puzzle2dLodModeByPane,
+      setPuzzle2dLodModeForPane,
       camerasByPane,
       syncBaselineFromViewportCamera,
       fixture,
@@ -3405,7 +3422,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
       handleCanvasFixtureDrop,
       patchFixture,
       remapIdInSelections,
-      resetBoardRedrawProgressiveEpoch,
+      resetPuzzle2dRedrawProgressiveEpoch,
       selectionIds,
       preselection,
       hoveredId,
@@ -3422,26 +3439,26 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
   // #region 🔖ToolbarHostBridge
   const puzzle2dPlayToolbarHostRef = reactHostPort.useRef({
     activePaneId: "2d-overview" as Puzzle2dPlayPaneId,
-    applyBoardRedrawHandlesOnce: () => {},
+    applyPuzzle2dRedrawHandlesOnce: () => {},
     camerasByPane: triptychCamerasFromFixture(initialFixture),
-    patchFixture: (_updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {},
-    setBoardGridSnapEnabled: (_value: boolean | ((prev: boolean) => boolean)) => {},
-    setBoardRedrawPlaying: (_value: boolean | ((prev: boolean) => boolean)) => {},
-    setBoardSelectionMethod: (_value: BoardSelectionMethod) => {},
-    setBoardSelectionMode: (_value: BoardSelectionMode) => {},
-    setBoardSelectionTargets: (_value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => {},
+    patchFixture: (_updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {},
+    setPuzzle2dGridSnapEnabled: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setPuzzle2dRedrawPlaying: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setPuzzle2dSelectionMethod: (_value: Puzzle2dSelectionMethod) => {},
+    setPuzzle2dSelectionMode: (_value: Puzzle2dSelectionMode) => {},
+    setPuzzle2dSelectionTargets: (_value: Puzzle2dSelectionTargets | ((prev: Puzzle2dSelectionTargets) => Puzzle2dSelectionTargets)) => {},
     setSelectionIds: (_ids: readonly string[]) => {},
   });
   puzzle2dPlayToolbarHostRef.current = {
     activePaneId,
-    applyBoardRedrawHandlesOnce,
+    applyPuzzle2dRedrawHandlesOnce,
     camerasByPane,
     patchFixture,
-    setBoardGridSnapEnabled,
-    setBoardRedrawPlaying,
-    setBoardSelectionMethod,
-    setBoardSelectionMode,
-    setBoardSelectionTargets,
+    setPuzzle2dGridSnapEnabled,
+    setPuzzle2dRedrawPlaying,
+    setPuzzle2dSelectionMethod,
+    setPuzzle2dSelectionMode,
+    setPuzzle2dSelectionTargets,
     setSelectionIds,
   };
 
@@ -3461,27 +3478,27 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
         const h = puzzle2dPlayToolbarHostRef.current;
         switch (command) {
           case "setSelectionMethod":
-            h.setBoardSelectionMethod((args as { method: BoardSelectionMethod }).method);
+            h.setPuzzle2dSelectionMethod((args as { method: Puzzle2dSelectionMethod }).method);
             break;
           case "setSelectionMode":
-            h.setBoardSelectionMode((args as { mode: BoardSelectionMode }).mode);
+            h.setPuzzle2dSelectionMode((args as { mode: Puzzle2dSelectionMode }).mode);
             break;
           case "toggleSelectionTarget": {
             const { kind } = args as { kind: "edges" | "handles" | "nodes" };
-            h.setBoardSelectionTargets((prev) => ({ ...prev, [kind]: !prev[kind] }));
+            h.setPuzzle2dSelectionTargets((prev) => ({ ...prev, [kind]: !prev[kind] }));
             break;
           }
           case "clearSelection":
             h.setSelectionIds([]);
             break;
           case "toggleGridSnap":
-            h.setBoardGridSnapEnabled((prev) => !prev);
+            h.setPuzzle2dGridSnapEnabled((prev) => !prev);
             break;
           case "appendCircle": {
             const camera = h.camerasByPane[h.activePaneId];
-            const id = newBoardAuthoringId("node");
+            const id = newPuzzle2dAuthoringId("node");
             const handleId = `${id}.h0`;
-            const node: BoardFixtureCircleNodeV1 = {
+            const node: Puzzle2dFixtureCircleNodeV1 = {
               handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               id,
               radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2,
@@ -3494,10 +3511,10 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
           }
           case "appendRectangle": {
             const camera = h.camerasByPane[h.activePaneId];
-            const id = newBoardAuthoringId("node");
+            const id = newPuzzle2dAuthoringId("node");
             const handleId = `${id}.h0`;
             const d = PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX;
-            const node: BoardFixtureRectangleNodeV1 = {
+            const node: Puzzle2dFixtureRectangleNodeV1 = {
               handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               height: d,
               id,
@@ -3511,10 +3528,10 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
             break;
           }
           case "toggleRedrawPlaying":
-            h.setBoardRedrawPlaying((prev) => !prev);
+            h.setPuzzle2dRedrawPlaying((prev) => !prev);
             break;
           case "redrawHandlesOnce":
-            h.applyBoardRedrawHandlesOnce();
+            h.applyPuzzle2dRedrawHandlesOnce();
             break;
           default:
             break;
@@ -3523,7 +3540,7 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
     };
     puzzle2dShellController.setHostBridge(bridge);
     return () => puzzle2dShellController.setHostBridge(null);
-  }, [applyBoardRedrawHandlesOnce, puzzle2dGridSnapEnabled, puzzle2dRedrawPlaying, puzzle2dSelectionMethod, puzzle2dSelectionMode, puzzle2dSelectionTargets, puzzle2dShellController]);
+  }, [applyPuzzle2dRedrawHandlesOnce, puzzle2dGridSnapEnabled, puzzle2dRedrawPlaying, puzzle2dSelectionMethod, puzzle2dSelectionMode, puzzle2dSelectionTargets, puzzle2dShellController]);
   // #endregion 🔖ToolbarHostBridge
 
   const shellValueRef = reactHostPort.useRef(shellValue);
@@ -3547,18 +3564,18 @@ function Puzzle2dPlayInner({ boardRuntime }: { readonly boardRuntime: Platform }
 
   return (
     <Puzzle2dPlayShellContext.Provider value={shellValue}>
-      <Puzzle2dPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <PlaygroundView runtime={boardRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+      <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
+        <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
       </Puzzle2dPlayLodRuntimeContext.Provider>
     </Puzzle2dPlayShellContext.Provider>
   );
 }
 
 function Puzzle2dPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <Puzzle2dPlayInner boardRuntime={runtime} />;
+  return <Puzzle2dPlayInner puzzle2dRuntime={runtime} />;
 }
 
-/** @emoji 🚀 Mounts board play chrome for a {@link Playground}. */
+/** @emoji 🚀 Mounts puzzle 2d play chrome for a {@link Playground}. */
 export function mountPuzzle2dPlayChrome(playground: Playground, rootId = "root"): void {
   mountPlaygroundApp(<Puzzle2dPlayChrome runtime={playground.runtime} />, rootId);
 }
@@ -3718,11 +3735,11 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("board play cameras", () => {
+  describe("puzzle 2d play cameras", () => {
     it("imports board camera zoom limits used by host clamping", async () => {
-      const { BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
-      expect(BOARD_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
-      expect(BOARD_CAMERA_ZOOM_MAX).toBeGreaterThan(BOARD_CAMERA_ZOOM_MIN);
+      const { PUZZLE_2D_CAMERA_ZOOM_MIN, PUZZLE_2D_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
+      expect(PUZZLE_2D_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
+      expect(PUZZLE_2D_CAMERA_ZOOM_MAX).toBeGreaterThan(PUZZLE_2D_CAMERA_ZOOM_MIN);
     });
   });
 

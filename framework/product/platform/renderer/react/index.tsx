@@ -129,7 +129,7 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { BoardCanvas, parseBoardFixtureV1, type BoardSelectionSnapshot } from "@puzzle/2d/react";
+import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
 import { useTranslation } from "react-i18next";
@@ -1583,7 +1583,7 @@ const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node })
 	}
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-			<BoardCanvas className="h-full w-full" />
+			<Puzzle2dCanvas className="h-full w-full" />
 		</div>
 	);
 };
@@ -1608,7 +1608,7 @@ function usePlatformTopologyStore(
 			setTopologyStore(null);
 			return;
 		}
-		const model = compose5d(parseBoardFixtureV1(payload.flat)!, parseFixtureV1(payload.volume)!);
+		const model = compose5d(parsePuzzle2dFixtureV1(payload.flat)!, parseFixtureV1(payload.volume)!);
 		setTopologyStore((previous) => {
 			if (previous) {
 				previous.replaceModel(model);
@@ -1629,7 +1629,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 		() =>
 			model.presentation === "flat"
 				? {
-						onSelect: (snapshot: BoardSelectionSnapshot) => {
+						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
 							commandBus.dispatch(component.controllerId, "applyBoardSelection", {
 								instanceId,
 								boardIds: snapshot.ids,
@@ -1737,7 +1737,7 @@ const PlatformComponentPlaceholder: React.FC<{ readonly kind: ComponentKind; rea
 
 const BuiltinPuzzle2dCanvas: React.FC<{ readonly node: UiPuzzle2dHostSurfaceNode }> = ({ node }) => (
 	<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-		<BoardCanvas className="h-full w-full" />
+		<Puzzle2dCanvas className="h-full w-full" />
 	</div>
 );
 

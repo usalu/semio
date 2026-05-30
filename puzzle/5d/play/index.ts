@@ -25,7 +25,7 @@ import {
 
 import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
-import { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, boardLodCanvasProps, isBoardDrawLodKind, parseBoardFixtureV1, type BoardDrawLodKind, type BoardFixtureV1, type BoardLodModeKind, type CameraState } from "../../2d/react/index.tsx";
+import { PUZZLE_2D_LOD_MODE_AUTOMATIC, puzzle2dLodAutomaticSelectLabel, puzzle2dLodCanvasProps, isPuzzle2dDrawLodKind, parsePuzzle2dFixtureV1, type Puzzle2dDrawLodKind, type Puzzle2dFixtureV1, type Puzzle2dLodModeKind, type CameraState } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
 import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
 import {
@@ -56,7 +56,7 @@ export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d/v1";
 export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 
-const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 //#endregion 🔖Ids
 
 //#region 🔖Puzzle5dPlayHierarchy
@@ -116,7 +116,7 @@ function sameCamera(a: CameraState | null, b: CameraState): boolean {
 //#region 🔖Controller
 export interface Puzzle5dPlaySnapshot {
   readonly manifestLabel: string | undefined;
-  readonly fixture2d: BoardFixtureV1 | null;
+  readonly fixture2d: Puzzle2dFixtureV1 | null;
   readonly fixture3d: Puzzle3dFixtureV1 | null;
   readonly selected2d: ReadonlySet<string>;
   readonly camera2d: CameraState | null;
@@ -124,8 +124,8 @@ export interface Puzzle5dPlaySnapshot {
   readonly selected3d: string | null;
   readonly relocateMode: Puzzle3dRelocateMode;
   readonly lod3dTag: number;
-  readonly lod2dTag: BoardDrawLodKind;
-  readonly lod2dProps: ReturnType<typeof boardLodCanvasProps>;
+  readonly lod2dTag: Puzzle2dDrawLodKind;
+  readonly lod2dProps: ReturnType<typeof puzzle2dLodCanvasProps>;
   readonly lod3dProps: ReturnType<typeof puzzle3dLodCanvasProps>;
   readonly automaticLod3d: boolean;
   readonly depthVariableLod3d: boolean;
@@ -179,8 +179,8 @@ export class Puzzle5dPlayShellController extends Controller {
   private depthVariableLod3d = false;
   private manualLod3d = DEFAULT_MANUAL_LOD;
   private lod3dSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
-  private lod2dTag: BoardDrawLodKind = "normal";
-  private lod2dMode: BoardLodModeKind = BOARD_LOD_MODE_AUTOMATIC;
+  private lod2dTag: Puzzle2dDrawLodKind = "normal";
+  private lod2dMode: Puzzle2dLodModeKind = PUZZLE_2D_LOD_MODE_AUTOMATIC;
   private connect2d = 0;
   private connect3d = 0;
   private proximity2d = 0;
@@ -215,7 +215,7 @@ export class Puzzle5dPlayShellController extends Controller {
       id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`,
       label: "LOD",
       value: this.lod2dMode,
-      items: [{ id: "automatic", label: boardLodAutomaticSelectLabel(this.lod2dTag), value: BOARD_LOD_MODE_AUTOMATIC }, ...PUZZLE_5D_PLAY_LOD_TIERS_2D.map((tier) => ({ id: tier, label: puzzle5dPlayLodTierMenuLabel(tier), value: tier }))],
+      items: [{ id: "automatic", label: puzzle2dLodAutomaticSelectLabel(this.lod2dTag), value: PUZZLE_2D_LOD_MODE_AUTOMATIC }, ...PUZZLE_5D_PLAY_LOD_TIERS_2D.map((tier) => ({ id: tier, label: puzzle5dPlayLodTierMenuLabel(tier), value: tier }))],
       onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set2dLodMode" },
     };
   }
@@ -262,7 +262,7 @@ export class Puzzle5dPlayShellController extends Controller {
     switch (command) {
       case "set2dLodMode": {
         const value = (args as { value?: string }).value;
-        if ((value === BOARD_LOD_MODE_AUTOMATIC || (typeof value === "string" && isBoardDrawLodKind(value))) && this.lod2dMode !== value) this.lod2dMode = value as BoardLodModeKind;
+        if ((value === PUZZLE_2D_LOD_MODE_AUTOMATIC || (typeof value === "string" && isPuzzle2dDrawLodKind(value))) && this.lod2dMode !== value) this.lod2dMode = value as Puzzle2dLodModeKind;
         else changed = false;
         break;
       }
@@ -287,7 +287,7 @@ export class Puzzle5dPlayShellController extends Controller {
         break;
       }
       case "set2dLodTag": {
-        const lod = (args as { lod: BoardDrawLodKind }).lod;
+        const lod = (args as { lod: Puzzle2dDrawLodKind }).lod;
         if (this.lod2dTag !== lod) this.lod2dTag = lod;
         else changed = false;
         break;
@@ -367,7 +367,7 @@ export class Puzzle5dPlayShellController extends Controller {
       relocateMode: this.relocateMode,
       lod3dTag: this.lod3dTag,
       lod2dTag: this.lod2dTag,
-      lod2dProps: boardLodCanvasProps(this.lod2dMode),
+      lod2dProps: puzzle2dLodCanvasProps(this.lod2dMode),
       lod3dProps: puzzle3dLodCanvasProps({
         automaticLod: this.automaticLod3d,
         depthVariableLod: this.depthVariableLod3d,
@@ -464,7 +464,7 @@ if (import.meta.vitest) {
 
   describe("puzzle 5d play fixtures", () => {
     it("parses nakagin 2d and 3d fixtures", () => {
-      const fixture2d = parseBoardFixtureV1(nakagin2dJson as unknown);
+      const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
       const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
       expect(fixture2d?.nodes.length).toBeGreaterThan(0);
       expect(fixture3d?.objects.length).toBeGreaterThan(0);
@@ -476,7 +476,7 @@ if (import.meta.vitest) {
     });
     it("regenerates nakagin 5d fixture when REGENERATE_NAKAGIN_5D=1", async () => {
       if (process.env.REGENERATE_NAKAGIN_5D !== "1") return;
-      const fixture2d = parseBoardFixtureV1(nakagin2dJson as unknown);
+      const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
       const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
       expect(fixture2d).toBeTruthy();
       expect(fixture3d).toBeTruthy();

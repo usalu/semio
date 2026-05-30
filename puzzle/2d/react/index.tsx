@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📋 `@puzzle/2d/react` — WASM board renderer + React canvas (depends only on `@ui/react`). */
+/** @emoji 📋 `@puzzle/2d/react` — WASM puzzle 2d renderer + React canvas (depends only on `@ui/react`). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -9,12 +9,12 @@ import Reconciler from "react-reconciler";
 import { ContinuousEventPriority, DefaultEventPriority, DiscreteEventPriority, LegacyRoot, NoEventPriority } from "react-reconciler/constants";
 // #endregion 🔌Adapters
 
-type BoardListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+type Puzzle2dListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-class BoardEventBindingController {
+class Puzzle2dEventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
-  listen(target: BoardListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+  listen(target: Puzzle2dListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
     if (!target) return;
     target.addEventListener(kind, listener, options);
     this.cleanups.push(() => target.removeEventListener(kind, listener, options));
@@ -41,7 +41,7 @@ if (typeof process !== "undefined" && process.env.VITEST === "true") {
 }
 
 /** @emoji 🌐 Idempotent: resolves after the wasm-bindgen `web` target has finished instantiating. */
-export async function ensureElementsBoardWasmLoaded(): Promise<void> {
+export async function ensurePuzzle2dWasmLoaded(): Promise<void> {
   await initBoardWasm();
 }
 
@@ -51,18 +51,18 @@ export { BoardSession };
 //#region 🔖Kinds
 export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
-export type BoardSelectionMethod = "lasso" | "rectangle";
-export type BoardSelectionMode = "additive" | "default" | "invertive" | "subtractive";
+export type Puzzle2dSelectionMethod = "lasso" | "rectangle";
+export type Puzzle2dSelectionMode = "additive" | "default" | "invertive" | "subtractive";
 
 /** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
-export interface BoardSelectionTargets {
+export interface Puzzle2dSelectionTargets {
   edges: boolean;
   handles: boolean;
   nodes: boolean;
 }
 
 /** @emoji 🎯 Default: nodes, edges, and handles all participate (matches prior `nodes&edges`). */
-export const BOARD_SELECTION_TARGETS_DEFAULT: BoardSelectionTargets = {
+export const PUZZLE_2D_SELECTION_TARGETS_DEFAULT: Puzzle2dSelectionTargets = {
   edges: true,
   handles: true,
   nodes: true,
@@ -150,7 +150,7 @@ export const DEFAULT_WIRE_KIND_CATALOG: readonly WireKind[] = [{ defaultEdgeKind
 /** @emoji 🎨 Default edge catalog entry paired with {@link DEFAULT_WIRE_KIND_CATALOG}. */
 export const DEFAULT_EDGE_KIND_CATALOG: readonly EdgeKind[] = [{ id: BUILTIN_LINK_EDGE_KIND, name: "Link edge" }];
 
-/** @emoji 📚 Default {@link KindCatalogBundle} for {@link BoardCanvas} when callers omit `kindCatalogs`. */
+/** @emoji 📚 Default {@link KindCatalogBundle} for {@link Puzzle2dCanvas} when callers omit `kindCatalogs`. */
 export const DEFAULT_KIND_CATALOG_BUNDLE: KindCatalogBundle = {
   edges: DEFAULT_EDGE_KIND_CATALOG,
   handles: DEFAULT_HANDLE_KIND_CATALOG,
@@ -183,7 +183,7 @@ export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: Ki
   };
 }
 
-/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw board fixture JSON when present (nodes/handles slices only). */
+/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present (nodes/handles slices only). */
 export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
   if (!raw || typeof raw !== "object") {
     return undefined;
@@ -213,8 +213,8 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   return out;
 }
 
-/** @emoji 🔗 Returns `meta.kindCompatibility` from raw board fixture JSON when present. */
-export function boardFixtureMetaKindCompatibility(raw: unknown): readonly KindCompatEntry[] | undefined {
+/** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON when present. */
+export function puzzle2dFixtureMetaKindCompatibility(raw: unknown): readonly KindCompatEntry[] | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const meta = (raw as Record<string, unknown>).meta;
   if (!meta || typeof meta !== "object") return undefined;
@@ -323,21 +323,21 @@ export interface CameraState {
   zoom: number;
 }
 
-export interface BoardSelectionSnapshot {
+export interface Puzzle2dSelectionSnapshot {
   ids: string[];
 }
 
 /** @emoji 👁️ Rectangle/lasso drag preview ids plus anchor ids leaving the committed selection during the gesture. */
-export interface BoardPreselectSnapshot {
+export interface Puzzle2dPreselectSnapshot {
   ids: string[];
   removedIds: string[];
 }
 
 /** @emoji 👁️ Empty area-select preview (no ids highlighted, none marked removed). */
-export const BOARD_PRESELECT_EMPTY: BoardPreselectSnapshot = { ids: [], removedIds: [] };
+export const PUZZLE_2D_PRESELECT_EMPTY: Puzzle2dPreselectSnapshot = { ids: [], removedIds: [] };
 
 /** @emoji 🎯 Committed selection vs area-select preview chrome (`preselect∖selection` selected, `removedIds` highlighted). */
-export function boardElementInteractionChrome(selectionIds: Iterable<string>, preselection: BoardPreselectSnapshot): { highlightedIds: Set<string>; selectedIds: Set<string> } {
+export function puzzle2dElementInteractionChrome(selectionIds: Iterable<string>, preselection: Puzzle2dPreselectSnapshot): { highlightedIds: Set<string>; selectedIds: Set<string> } {
   const selection = new Set(selectionIds);
   if (preselection.ids.length === 0) {
     return { selectedIds: selection, highlightedIds: new Set() };
@@ -348,7 +348,7 @@ export function boardElementInteractionChrome(selectionIds: Iterable<string>, pr
 }
 
 /** @emoji 🎨 Resolves headless / fallback style key from interaction chrome flags (selected beats highlighted). */
-export function boardObjectChromeStyleKey(base: "edge" | "handle" | "node", object: BoardObject): string {
+export function puzzle2dObjectChromeStyleKey(base: "edge" | "handle" | "node", object: BoardObject): string {
   if (object.selected) {
     return `${base}.selected`;
   }
@@ -369,20 +369,20 @@ export function boardInteractionChromeStyleKey(base: "edge" | "handle" | "node",
   return base;
 }
 
-export interface BoardSelectionOptions {
-  method?: BoardSelectionMethod;
-  mode?: BoardSelectionMode;
-  targets?: Partial<BoardSelectionTargets>;
+export interface Puzzle2dSelectionOptions {
+  method?: Puzzle2dSelectionMethod;
+  mode?: Puzzle2dSelectionMode;
+  targets?: Partial<Puzzle2dSelectionTargets>;
 }
 
 /** @emoji 🎯 Resolved selection options passed to WASM (`targets` fully specified). */
-export type ResolvedBoardSelectionOptions = {
-  method: BoardSelectionMethod;
-  mode: BoardSelectionMode;
-  targets: BoardSelectionTargets;
+export type ResolvedPuzzle2dSelectionOptions = {
+  method: Puzzle2dSelectionMethod;
+  mode: Puzzle2dSelectionMode;
+  targets: Puzzle2dSelectionTargets;
 };
 
-export interface BoardStyle {
+export interface Puzzle2dStyle {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
@@ -390,8 +390,8 @@ export interface BoardStyle {
 
 export interface FrameState {
   camera: CameraState;
-  renderer: BoardRenderer;
-  selection: BoardSelectionSnapshot;
+  renderer: Puzzle2dRenderer;
+  selection: Puzzle2dSelectionSnapshot;
 }
 
 export interface CubicBezierCurve {
@@ -401,10 +401,10 @@ export interface CubicBezierCurve {
   p3: Point;
 }
 
-/** @emoji 📄 Handle record inside {@link BoardFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
-export interface BoardFixtureHandleV1 {
+/** @emoji 📄 Handle record inside {@link Puzzle2dFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
+export interface Puzzle2dFixtureHandleV1 {
   angle: number;
-  /** @emoji 🔗 Required after {@link parseBoardFixtureV1}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
+  /** @emoji 🔗 Required after {@link parsePuzzle2dFixtureV1}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
   handleKind: string;
   id: string;
   /** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
@@ -414,10 +414,10 @@ export interface BoardFixtureHandleV1 {
   radius?: number;
 }
 
-/** @emoji 📄 Circle node: {@link BoardFixtureCircleNodeV1.x}/{@link BoardFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link BoardFixtureHandleV1.angle} aims at the connected neighbor (radians). */
-export interface BoardFixtureCircleNodeV1 {
+/** @emoji 📄 Circle node: {@link Puzzle2dFixtureCircleNodeV1.x}/{@link Puzzle2dFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link Puzzle2dFixtureHandleV1.angle} aims at the connected neighbor (radians). */
+export interface Puzzle2dFixtureCircleNodeV1 {
   cad?: { x: number; y: number; z: number } | null;
-  handles: BoardFixtureHandleV1[];
+  handles: Puzzle2dFixtureHandleV1[];
   id: string;
   /** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
   root?: boolean;
@@ -432,7 +432,7 @@ export interface BoardFixtureCircleNodeV1 {
   /** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 Optional CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Optional caption size in layout px when not using autofit. */
@@ -442,9 +442,9 @@ export interface BoardFixtureCircleNodeV1 {
 }
 
 /** @emoji 📄 Axis-aligned rectangle: center (x,y) in layout space, full width/height (not half-extents); handle `angle` is **0 at north** (top center), **CCW** in `[0,2π)` (`π/4` NW corner, `π/2` west, …); circles use **east-zero** polar `atan2(dy,dx)`. */
-export interface BoardFixtureRectangleNodeV1 {
+export interface Puzzle2dFixtureRectangleNodeV1 {
   cad?: { x: number; y: number; z: number } | null;
-  handles: BoardFixtureHandleV1[];
+  handles: Puzzle2dFixtureHandleV1[];
   height: number;
   id: string;
   /** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
@@ -459,7 +459,7 @@ export interface BoardFixtureRectangleNodeV1 {
   /** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 Optional CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Optional caption size in layout px when not using autofit. */
@@ -469,29 +469,29 @@ export interface BoardFixtureRectangleNodeV1 {
   y: number;
 }
 
-/** @emoji 📄 Node record inside {@link BoardFixtureV1} (circle or rectangle body). */
-export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangleNodeV1;
+/** @emoji 📄 Node record inside {@link Puzzle2dFixtureV1} (circle or rectangle body). */
+export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1 | Puzzle2dFixtureRectangleNodeV1;
 
-/** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
-export interface BoardFixtureEdgeV1 {
+/** @emoji 📄 Edge record inside {@link Puzzle2dFixtureV1}. */
+export interface Puzzle2dFixtureEdgeV1 {
   id: string;
   source: string;
   target: string;
 }
 
 /** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative board scenes. */
-export interface BoardFixtureV1 {
+export interface Puzzle2dFixtureV1 {
   camera: CameraState;
-  edges: BoardFixtureEdgeV1[];
+  edges: Puzzle2dFixtureEdgeV1[];
   meta?: Record<string, unknown>;
-  nodes: BoardFixtureNodeV1[];
+  nodes: Puzzle2dFixtureNodeV1[];
   schema: string;
 }
 
 // #region 🏷️IconSelectorMode
 
 /** @emoji 🎛️ Board `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
-export type ElementsBoardIconSelectorMode = "data" | "emoji" | "math" | "vector";
+export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
 
 function stripLegacyImageDataPrefixForBoardIcon(raw: string): string {
   const t = raw.trim();
@@ -514,8 +514,8 @@ function looksLikeAsciiCatalogishVectorStemForBoardIcon(s: string): boolean {
   return /[.-_]/.test(t) || t.length > 48;
 }
 
-/** @emoji 🧭 Picks a {@link ElementsBoardIconSelectorMode} tab for a stored board icon string (align with `board_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
-export function classifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
+/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored board icon string (align with `board_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
+export function classifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
   const t = raw.trim();
   if (t === "") {
     return "math";
@@ -541,8 +541,8 @@ export function classifyElementsBoardIconSelectorMode(raw: string): ElementsBoar
 
 // #endregion 🏷️IconSelectorMode
 
-/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
-export interface BoardForceGraphLayoutOptions {
+/** @emoji 🕸️ JSON options for {@link layoutPuzzle2dFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
+export interface Puzzle2dForceGraphLayoutOptions {
   centerX?: number;
   centerY?: number;
   gravity?: number;
@@ -557,28 +557,28 @@ export interface BoardForceGraphLayoutOptions {
 }
 
 /** @emoji 🌳 Rank growth axis for hierarchical redraw (`downwards` | `upwards` | `right` | `left`). */
-export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
+export type Puzzle2dHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
 
-/** @emoji 🕸️ WASM redraw dispatcher mode for {@link layoutBoardFixtureRedrawNodes}. */
-export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
+/** @emoji 🕸️ WASM redraw dispatcher mode for {@link layoutPuzzle2dFixtureRedrawNodes}. */
+export type Puzzle2dRedrawModeKind = "force-graph" | "hierarchical-tree";
 
-/** @emoji 🧩 Options for {@link layoutBoardFixtureRedrawNodes} (camelCase; mirrors Rust `RedrawFixtureOptions`). */
-export interface BoardRedrawLayoutOptions {
-  mode: BoardRedrawModeKind;
+/** @emoji 🧩 Options for {@link layoutPuzzle2dFixtureRedrawNodes} (camelCase; mirrors Rust `RedrawFixtureOptions`). */
+export interface Puzzle2dRedrawLayoutOptions {
+  mode: Puzzle2dRedrawModeKind;
   redrawHandlesAfter: boolean;
   centerX?: number;
   centerY?: number;
   randomSeed?: number;
-  forceGraph?: BoardForceGraphLayoutOptions;
+  forceGraph?: Puzzle2dForceGraphLayoutOptions;
   hierarchicalTree?: {
-    direction: BoardHierarchicalTreeDirectionKind;
+    direction: Puzzle2dHierarchicalTreeDirectionKind;
     layerSpacing: number;
     siblingGap: number;
   };
 }
 
 /** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
-export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
+export function layoutPuzzle2dFixtureForceGraph(fixture: Puzzle2dFixtureV1, options?: Puzzle2dForceGraphLayoutOptions): Puzzle2dFixtureV1 {
   const out = boardRedrawLayoutFixtureJson(
     JSON.stringify(fixture),
     JSON.stringify({
@@ -587,64 +587,64 @@ export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: 
       redrawHandlesAfter: false,
     }),
   );
-  return JSON.parse(out) as BoardFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixtureV1;
 }
 
 /** @emoji 🧩 Runs WASM fixture redraw (force graph or hierarchical tree) with optional chained handle snap. */
-export function layoutBoardFixtureRedrawNodes(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
+export function layoutPuzzle2dFixtureRedrawNodes(fixture: Puzzle2dFixtureV1, options: Puzzle2dRedrawLayoutOptions): Puzzle2dFixtureV1 {
   const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
-  return JSON.parse(out) as BoardFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixtureV1;
 }
 
 /** @emoji 🔗 Snaps fixture handle angles to straight chords between linked node centers (WASM). */
-export function layoutBoardFixtureRedrawHandles(fixture: BoardFixtureV1): BoardFixtureV1 {
+export function layoutPuzzle2dFixtureRedrawHandles(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
   const out = boardRedrawHandlesFixtureJson(JSON.stringify(fixture));
-  return JSON.parse(out) as BoardFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixtureV1;
 }
 
-/** @emoji 🖱️ Hit-under-pointer payload for {@link BoardEventMap.hover} (tooltips, status, …). */
-export interface BoardHoverPayload {
+/** @emoji 🖱️ Hit-under-pointer payload for {@link Puzzle2dEventMap.hover} (tooltips, status, …). */
+export interface Puzzle2dHoverPayload {
   clientX: number;
   clientY: number;
   id: string | null;
-  /** @emoji 📐 Canvas-local CSS pixels passed to {@link BoardRenderer.screenToWorld}. */
+  /** @emoji 📐 Canvas-local CSS pixels passed to {@link Puzzle2dRenderer.screenToWorld}. */
   screenX: number;
   screenY: number;
   worldX: number;
   worldY: number;
 }
 
-/** @emoji 🪪 Payload for {@link BoardEventMap.nodeChange} and other single-node graph notifications. */
-export interface BoardGraphNodeIdPayload {
+/** @emoji 🪪 Payload for {@link Puzzle2dEventMap.nodeChange} and other single-node graph notifications. */
+export interface Puzzle2dGraphNodeIdPayload {
   id: string;
 }
 
-/** @emoji 🪪 Payload for {@link BoardEventMap.childEdgeChange} and {@link BoardEventMap.parentEdgeChange}. */
-export interface BoardGraphEdgeIdPayload {
+/** @emoji 🪪 Payload for {@link Puzzle2dEventMap.childEdgeChange} and {@link Puzzle2dEventMap.parentEdgeChange}. */
+export interface Puzzle2dGraphEdgeIdPayload {
   id: string;
 }
 
 /** @emoji 🌳 Emitted when the multiset of subtree child node ids under all {@link Node.root} nodes changes. */
-export interface BoardChildNodesChangePayload {
+export interface Puzzle2dChildNodesChangePayload {
   rootIds: string[];
   nodeIds: string[];
 }
 
-/** @emoji 🌳 Emitted when the multiset of subtree edge ids under roots changes (see {@link BoardChildNodesChangePayload}). */
-export interface BoardChildEdgesChangePayload {
+/** @emoji 🌳 Emitted when the multiset of subtree edge ids under roots changes (see {@link Puzzle2dChildNodesChangePayload}). */
+export interface Puzzle2dChildEdgesChangePayload {
   rootIds: string[];
   edgeIds: string[];
 }
 
-/** @emoji 🪢 Payload for {@link BoardEventMap.edgeCreate} and gesture connect aliases. */
-export interface BoardEdgeLinkPayload {
+/** @emoji 🪢 Payload for {@link Puzzle2dEventMap.edgeCreate} and gesture connect aliases. */
+export interface Puzzle2dEdgeLinkPayload {
   id: string;
   source: string;
   target: string;
 }
 
-/** @emoji 🧵 Payload for {@link BoardEventMap.wireCreate} (declarative / scene wire). */
-export interface BoardWireSnapshotPayload {
+/** @emoji 🧵 Payload for {@link Puzzle2dEventMap.wireCreate} (declarative / scene wire). */
+export interface Puzzle2dWireSnapshotPayload {
   endX: number | null;
   endY: number | null;
   id: string;
@@ -653,30 +653,30 @@ export interface BoardWireSnapshotPayload {
   wireKind: string;
 }
 
-/** @emoji 🪪 Payload for {@link BoardEventMap.wireChange} / {@link BoardEventMap.wireDestroy}. */
-export interface BoardGraphWireIdPayload {
+/** @emoji 🪪 Payload for {@link Puzzle2dEventMap.wireChange} / {@link Puzzle2dEventMap.wireDestroy}. */
+export interface Puzzle2dGraphWireIdPayload {
   id: string;
 }
 
-/** @emoji 📦 Optional aggregate for {@link BoardCanvasProps.onCreate} (node, edge, or wire). */
-export type BoardStructureCreatePayload = { kind: "edge"; id: string; source: string; target: string } | { kind: "node"; id: string } | { kind: "wire"; payload: BoardWireSnapshotPayload };
+/** @emoji 📦 Optional aggregate for {@link Puzzle2dCanvasProps.onCreate} (node, edge, or wire). */
+export type Puzzle2dStructureCreatePayload = { kind: "edge"; id: string; source: string; target: string } | { kind: "node"; id: string } | { kind: "wire"; payload: Puzzle2dWireSnapshotPayload };
 
-/** @emoji 📦 Optional aggregate for {@link BoardCanvasProps.onDelete} (node, edge, or wire). */
-export type BoardStructureDeletePayload = { kind: "edge"; id: string } | { kind: "node"; id: string } | { kind: "wire"; id: string };
+/** @emoji 📦 Optional aggregate for {@link Puzzle2dCanvasProps.onDelete} (node, edge, or wire). */
+export type Puzzle2dStructureDeletePayload = { kind: "edge"; id: string } | { kind: "node"; id: string } | { kind: "wire"; id: string };
 
-export interface BoardLinkCompatibleNodesPayload {
+export interface Puzzle2dLinkCompatibleNodesPayload {
   readonly source: string;
   readonly nodeIds: readonly string[];
 }
 
-export interface BoardLinkTargetRingPayload {
+export interface Puzzle2dLinkTargetRingPayload {
   readonly source: string;
   readonly nodeId: string | null;
   readonly handleIds: readonly string[];
 }
 
-/** @emoji 🔗 Host-driven link gesture preview mirrored across flat surfaces (see {@link BoardCanvasProps.linkSession}). */
-export interface BoardLinkSessionSnapshot {
+/** @emoji 🔗 Host-driven link gesture preview mirrored across flat surfaces (see {@link Puzzle2dCanvasProps.linkSession}). */
+export interface Puzzle2dLinkSessionSnapshot {
   readonly source: string;
   readonly endX: number;
   readonly endY: number;
@@ -685,36 +685,36 @@ export interface BoardLinkSessionSnapshot {
   readonly ringAnchorIds: readonly string[];
 }
 
-export interface BoardEventMap {
+export interface Puzzle2dEventMap {
   camera: CameraState;
   change: undefined;
-  childEdgeChange: BoardGraphEdgeIdPayload;
-  childEdgesChange: BoardChildEdgesChangePayload;
-  childNodeChange: BoardGraphNodeIdPayload;
-  childNodesChange: BoardChildNodesChangePayload;
+  childEdgeChange: Puzzle2dGraphEdgeIdPayload;
+  childEdgesChange: Puzzle2dChildEdgesChangePayload;
+  childNodeChange: Puzzle2dGraphNodeIdPayload;
+  childNodesChange: Puzzle2dChildNodesChangePayload;
   contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
-  edgeChange: BoardGraphEdgeIdPayload;
-  edgeCreate: BoardEdgeLinkPayload;
+  edgeChange: Puzzle2dGraphEdgeIdPayload;
+  edgeCreate: Puzzle2dEdgeLinkPayload;
   edgeDelete: { id: string };
-  fixtureDrop: BoardFixtureDropDetail;
-  hover: BoardHoverPayload;
-  indirectConnect: BoardEdgeLinkPayload;
-  linkCompatibleNodes: BoardLinkCompatibleNodesPayload;
-  linkTargetRing: BoardLinkTargetRingPayload;
+  fixtureDrop: Puzzle2dFixtureDropDetail;
+  hover: Puzzle2dHoverPayload;
+  indirectConnect: Puzzle2dEdgeLinkPayload;
+  linkCompatibleNodes: Puzzle2dLinkCompatibleNodesPayload;
+  linkTargetRing: Puzzle2dLinkTargetRingPayload;
   invalidate: undefined;
-  nodeChange: BoardGraphNodeIdPayload;
-  nodeCreate: BoardGraphNodeIdPayload;
+  nodeChange: Puzzle2dGraphNodeIdPayload;
+  nodeCreate: Puzzle2dGraphNodeIdPayload;
   nodeDelete: { id: string };
   nodeMove: { id: string; x: number; y: number };
-  parentEdgeChange: BoardGraphEdgeIdPayload;
-  parentNodeChange: BoardGraphNodeIdPayload;
-  proximityConnect: BoardEdgeLinkPayload;
-  select: BoardSelectionSnapshot;
-  preselect: BoardPreselectSnapshot;
-  preselectCancel: BoardPreselectSnapshot;
-  wireChange: BoardGraphWireIdPayload;
-  wireCreate: BoardWireSnapshotPayload;
-  wireDestroy: BoardGraphWireIdPayload;
+  parentEdgeChange: Puzzle2dGraphEdgeIdPayload;
+  parentNodeChange: Puzzle2dGraphNodeIdPayload;
+  proximityConnect: Puzzle2dEdgeLinkPayload;
+  select: Puzzle2dSelectionSnapshot;
+  preselect: Puzzle2dPreselectSnapshot;
+  preselectCancel: Puzzle2dPreselectSnapshot;
+  wireChange: Puzzle2dGraphWireIdPayload;
+  wireCreate: Puzzle2dWireSnapshotPayload;
+  wireDestroy: Puzzle2dGraphWireIdPayload;
 }
 
 export interface BoardObjectOptions {
@@ -729,7 +729,7 @@ export interface BoardObjectOptions {
 
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
-  handles?: BoardSceneHandle[];
+  handles?: Puzzle2dSceneHandle[];
   /** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
   iconKind?: string;
   /** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
@@ -742,7 +742,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
   /** @emoji 📏 When true, overlay label scales to fit inside the circle (layout px); drawn at node center. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Caption size in layout px when not using autofit. */
@@ -753,7 +753,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 
 /** @emoji 🟩 World-space axis-aligned rectangle node (center + full width and height). */
 export type RectangleNodeOptions = BoardObjectOptions & {
-  handles?: BoardSceneHandle[];
+  handles?: Puzzle2dSceneHandle[];
   height: number;
   /** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
   iconKind?: string;
@@ -766,7 +766,7 @@ export type RectangleNodeOptions = BoardObjectOptions & {
   /** @emoji 📏 When true, overlay label scales to fit inside the rectangle (layout px); drawn at node center. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Caption size in layout px when not using autofit. */
@@ -787,12 +787,12 @@ export interface HandleOptions extends BoardObjectOptions {
   iconKind?: string;
   /** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
   handleKind: string;
-  node: BoardSceneNode;
+  node: Puzzle2dSceneNode;
   radius?: number;
 }
 
 /** @emoji 🟣 Declarative handle marker props (React + reconciler). */
-export interface BoardHandleProps {
+export interface Puzzle2dHandleProps {
   angle: number;
   color?: string | null;
   contextMenu?: ContextMenuItem[];
@@ -810,7 +810,7 @@ export interface BoardHandleProps {
 }
 
 /** @emoji 🪢 Declarative edge marker props. */
-export interface BoardEdgeProps {
+export interface Puzzle2dEdgeProps {
   contextMenu?: ContextMenuItem[];
   /** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
   edgeKind?: string;
@@ -824,8 +824,8 @@ export interface BoardEdgeProps {
   visible?: boolean;
 }
 
-/** @emoji 🧵 Declarative wire props: anchored at {@link BoardWireProps.source}; either {@link BoardWireProps.target} handle id **or** {@link BoardWireProps.endX}/{@link BoardWireProps.endY} world end. */
-export interface BoardWireProps {
+/** @emoji 🧵 Declarative wire props: anchored at {@link Puzzle2dWireProps.source}; either {@link Puzzle2dWireProps.target} handle id **or** {@link Puzzle2dWireProps.endX}/{@link Puzzle2dWireProps.endY} world end. */
+export interface Puzzle2dWireProps {
   contextMenu?: ContextMenuItem[];
   endX?: number;
   endY?: number;
@@ -843,21 +843,21 @@ export interface BoardWireProps {
 
 export interface EdgeOptions extends BoardObjectOptions {
   edgeKind?: string;
-  source: BoardSceneHandle;
-  target: BoardSceneHandle;
+  source: Puzzle2dSceneHandle;
+  target: Puzzle2dSceneHandle;
 }
 
 export interface WireOptions extends BoardObjectOptions {
   endX?: number | null;
   endY?: number | null;
-  source: BoardSceneHandle;
-  target: BoardSceneHandle | null;
+  source: Puzzle2dSceneHandle;
+  target: Puzzle2dSceneHandle | null;
   wireKind?: string;
 }
 
 type FrameListener = (state: FrameState, dt: number) => void;
-type BoardCanvasElement = HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
-type BoardCanvasContext = Pick<
+type Puzzle2dCanvasElement = HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer };
+type Puzzle2dCanvasContext = Pick<
   CanvasRenderingContext2D,
   "arc" | "beginPath" | "bezierCurveTo" | "clearRect" | "clip" | "closePath" | "fill" | "fillRect" | "fillText" | "lineTo" | "measureText" | "moveTo" | "rect" | "restore" | "save" | "setLineDash" | "setTransform" | "stroke" | "strokeRect"
 > & {
@@ -876,12 +876,12 @@ type BoardCanvasContext = Pick<
 //#region 🔖Utilities
 const DEFAULT_CAMERA: CameraState = { x: 0, y: 0, zoom: 1 };
 /** @emoji 🔍 Smallest allowed world scale (most zoomed-out). */
-export const BOARD_CAMERA_ZOOM_MIN = 0.05;
+export const PUZZLE_2D_CAMERA_ZOOM_MIN = 0.05;
 /** @emoji 🔎 Largest allowed world scale (most zoomed-in). */
-export const BOARD_CAMERA_ZOOM_MAX = 32;
+export const PUZZLE_2D_CAMERA_ZOOM_MAX = 32;
 
-const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
-const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
+const MIN_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MIN;
+const MAX_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MAX;
 
 /** @emoji ⌨️ True when Delete/Backspace should reach the board instead of staying in a focused text control. */
 function shouldBoardHandleDeleteShortcut(): boolean {
@@ -898,14 +898,14 @@ function shouldBoardHandleDeleteShortcut(): boolean {
   }
   return true;
 }
-/** 📐 Quantized large grid step in world units (LOD grids scale `10` / `2.5` / `0.5` / `0.1` by {@link DEFAULT_BOARD_GRID_FACTOR}). */
-export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
+/** 📐 Quantized large grid step in world units (LOD grids scale `10` / `2.5` / `0.5` / `0.1` by {@link DEFAULT_PUZZLE_2D_GRID_FACTOR}). */
+export const PUZZLE_2D_LOD_GRID_MAJOR_QUANTUM = 10;
 
 /** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `2.5×` / `0.5×` / `0.1×` world units per band); default `10` yields `100` / `25` / `5` / `1`. */
-export const DEFAULT_BOARD_GRID_FACTOR = 10;
+export const DEFAULT_PUZZLE_2D_GRID_FACTOR = 10;
 
 /** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < compact < `compactMaxZoom` < normal < `normalMaxZoom` < detail < `detailMaxZoom` ≤ micro. */
-export interface BoardLodZoomThresholds {
+export interface Puzzle2dLodZoomThresholds {
   minimapMaxZoom: number;
   overviewMaxZoom: number;
   compactMaxZoom: number;
@@ -913,7 +913,7 @@ export interface BoardLodZoomThresholds {
   detailMaxZoom: number;
 }
 
-export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
+export const DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS: Puzzle2dLodZoomThresholds = {
   minimapMaxZoom: 0.15,
   overviewMaxZoom: 0.35,
   compactMaxZoom: 0.55,
@@ -921,17 +921,17 @@ export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
   detailMaxZoom: 2.5,
 };
 
-/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
-export const BOARD_LOD_MINIMAP_MAX_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom;
+/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
+export const PUZZLE_2D_LOD_MINIMAP_MAX_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.minimapMaxZoom;
 
-/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom} (detail band starts here). */
-export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom;
+/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.normalMaxZoom} (detail band starts here). */
+export const PUZZLE_2D_LOD_DETAIL_MIN_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.normalMaxZoom;
 
-/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
-export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
+/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
+export const PUZZLE_2D_LOD_MICRO_MIN_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
 
-/** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
-export function resolveBoardLodLabelFromThresholds(zoom: number, t: BoardLodZoomThresholds): BoardDrawLodKind {
+/** @emoji 📶 LOD label for `data-puzzle2d-lod` using explicit thresholds. */
+export function resolvePuzzle2dLodLabelFromThresholds(zoom: number, t: Puzzle2dLodZoomThresholds): Puzzle2dDrawLodKind {
   const z = zoom;
   if (z < t.minimapMaxZoom) {
     return "minimap";
@@ -951,42 +951,42 @@ export function resolveBoardLodLabelFromThresholds(zoom: number, t: BoardLodZoom
   return "micro";
 }
 
-/** @emoji 📶 LOD tier for `data-board-lod` using {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}. */
-export function resolveBoardLodLabel(zoom: number): BoardDrawLodKind {
-  return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
+/** @emoji 📶 LOD tier for `data-puzzle2d-lod` using {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}. */
+export function resolvePuzzle2dLodLabel(zoom: number): Puzzle2dDrawLodKind {
+  return resolvePuzzle2dLodLabelFromThresholds(zoom, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS);
 }
 
-/** @emoji 📶 WASM draw LOD tier label (matches `data-board-lod` / `setForcedDrawLodLabel`). */
-export type BoardDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "normal" | "overview";
+/** @emoji 📶 WASM draw LOD tier label (matches `data-puzzle2d-lod` / `setForcedDrawLodLabel`). */
+export type Puzzle2dDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "normal" | "overview";
 
 /** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
-export const BOARD_LOD_MODE_AUTOMATIC = "automatic" as const;
+export const PUZZLE_2D_LOD_MODE_AUTOMATIC = "automatic" as const;
 
-/** @emoji 📶 Board play / window LOD select value (`automatic` or a pinned {@link BoardDrawLodKind}). */
-export type BoardLodModeKind = typeof BOARD_LOD_MODE_AUTOMATIC | BoardDrawLodKind;
+/** @emoji 📶 Board play / window LOD select value (`automatic` or a pinned {@link Puzzle2dDrawLodKind}). */
+export type Puzzle2dLodModeKind = typeof PUZZLE_2D_LOD_MODE_AUTOMATIC | Puzzle2dDrawLodKind;
 
-const BOARD_DRAW_LOD_KINDS: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const BOARD_DRAW_LOD_KINDS: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 /** @emoji ✅ True when `label` is a pinned WASM draw LOD tier. */
-export function isBoardDrawLodKind(label: string): label is BoardDrawLodKind {
+export function isPuzzle2dDrawLodKind(label: string): label is Puzzle2dDrawLodKind {
   return (BOARD_DRAW_LOD_KINDS as readonly string[]).includes(label);
 }
 
-/** @emoji 📶 Maps a window LOD select value to {@link BoardCanvasProps} LOD fields. */
-export function boardLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolean; lod?: BoardDrawLodKind } {
-  if (mode === BOARD_LOD_MODE_AUTOMATIC) {
+/** @emoji 📶 Maps a window LOD select value to {@link Puzzle2dCanvasProps} LOD fields. */
+export function puzzle2dLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: boolean; lod?: Puzzle2dDrawLodKind } {
+  if (mode === PUZZLE_2D_LOD_MODE_AUTOMATIC) {
     return { automaticLod: true };
   }
   return { automaticLod: false, lod: mode };
 }
 
 /** @emoji 📶 Automatic LOD select row label showing the live zoom-derived tier. */
-export function boardLodAutomaticSelectLabel(effectiveTier: BoardDrawLodKind): string {
+export function puzzle2dLodAutomaticSelectLabel(effectiveTier: Puzzle2dDrawLodKind): string {
   return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
 }
 
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
-const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
+const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
   edge: { stroke: "#7b827d", strokeWidth: 2 },
   "edge.highlighted": { stroke: "#34d1bf", strokeWidth: 2 },
   "edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
@@ -998,7 +998,7 @@ const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
   "node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
 };
 
-const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
+const DEFAULT_STYLES: Record<string, Puzzle2dStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
 //#region 🎨ElementsUiBoardPaint
 /** @emoji 🎨 Elements semantic tokens for committed selection chrome (primary, not secondary). */
@@ -1081,7 +1081,7 @@ function boardProbeCssComputed(property: "color" | "backgroundColor", value: str
   return out;
 }
 
-function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
+function boardDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle> {
   const f = BOARD_STYLES_HEADLESS_FALLBACK;
   const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
     const raw = boardProbeCssComputed(prop, expr);
@@ -1182,11 +1182,11 @@ function serializeElementsBoardVelloThemeJson(): string {
 //#endregion 🎨ElementsUiBoardPaint
 
 /** @emoji 🧭 Caption anchor inside the node box (compass, origin at node center). */
-export const BOARD_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
-export type BoardNodeTextAlignment = (typeof BOARD_NODE_TEXT_ALIGNMENTS)[number];
+export const PUZZLE_2D_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
+export type Puzzle2dNodeTextAlignment = (typeof PUZZLE_2D_NODE_TEXT_ALIGNMENTS)[number];
 
 /** @emoji ⬅️ Default: reading-order start at west edge, vertically centered (`w`). */
-export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "w";
+export const PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT: Puzzle2dNodeTextAlignment = "w";
 
 /** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
 export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
@@ -1194,9 +1194,9 @@ export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
 /** @emoji 🔤 Default sans stack for overlay captions. */
 export const BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT = "system-ui,Segoe UI,sans-serif";
 
-/** @emoji ✅ True when `value` is a known {@link BoardNodeTextAlignment} token. */
-export function isBoardNodeTextAlignment(value: string): value is BoardNodeTextAlignment {
-  return (BOARD_NODE_TEXT_ALIGNMENTS as readonly string[]).includes(value);
+/** @emoji ✅ True when `value` is a known {@link Puzzle2dNodeTextAlignment} token. */
+export function isPuzzle2dNodeTextAlignment(value: string): value is Puzzle2dNodeTextAlignment {
+  return (PUZZLE_2D_NODE_TEXT_ALIGNMENTS as readonly string[]).includes(value);
 }
 
 /** @emoji 🖋️ Builds a `CanvasRenderingContext2D.font` string from size and family. */
@@ -1265,17 +1265,17 @@ function arrayEqual(left: string[], right: string[]): boolean {
   return left.every((value, index) => value === right[index]);
 }
 
-function preselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
+function preselectSnapshotsEqual(left: Puzzle2dPreselectSnapshot, right: Puzzle2dPreselectSnapshot): boolean {
   return arrayEqual(left.ids, right.ids) && arrayEqual(left.removedIds, right.removedIds);
 }
 
 /** @emoji 🧩 Compares committed selection snapshots by sorted id list. */
-export function boardSelectionSnapshotsEqual(left: BoardSelectionSnapshot, right: BoardSelectionSnapshot): boolean {
+export function puzzle2dSelectionSnapshotsEqual(left: Puzzle2dSelectionSnapshot, right: Puzzle2dSelectionSnapshot): boolean {
   return arrayEqual(left.ids, right.ids);
 }
 
 /** @emoji 🧩 Compares preselect snapshots by ids and removedIds. */
-export function boardPreselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
+export function puzzle2dPreselectSnapshotsEqual(left: Puzzle2dPreselectSnapshot, right: Puzzle2dPreselectSnapshot): boolean {
   return preselectSnapshotsEqual(left, right);
 }
 
@@ -1295,16 +1295,16 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
   return Array.from(ids).sort((left, right) => left.localeCompare(right));
 }
 
-function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
+function createSelectionSnapshot(ids: Iterable<string>): Puzzle2dSelectionSnapshot {
   return { ids: sortedSelectionIds(ids) };
 }
 
-function createPreselectSnapshot(ids: Iterable<string>, removedIds: Iterable<string>): BoardPreselectSnapshot {
+function createPreselectSnapshot(ids: Iterable<string>, removedIds: Iterable<string>): Puzzle2dPreselectSnapshot {
   return { ids: sortedSelectionIds(ids), removedIds: sortedSelectionIds(removedIds) };
 }
 
-/** @emoji 🧩 Normalizes {@link BoardSelectionSnapshot} or a bare id list into a sorted snapshot. */
-export function normalizeBoardSelectionProp(value: BoardSelectionSnapshot | readonly string[] | undefined): BoardSelectionSnapshot {
+/** @emoji 🧩 Normalizes {@link Puzzle2dSelectionSnapshot} or a bare id list into a sorted snapshot. */
+export function normalizePuzzle2dSelectionProp(value: Puzzle2dSelectionSnapshot | readonly string[] | undefined): Puzzle2dSelectionSnapshot {
   if (value === undefined) {
     return { ids: [] };
   }
@@ -1314,27 +1314,27 @@ export function normalizeBoardSelectionProp(value: BoardSelectionSnapshot | read
   return createSelectionSnapshot(value.ids);
 }
 
-/** @emoji 🧩 Normalizes {@link BoardPreselectSnapshot} props for controlled board interaction state. */
-export function normalizeBoardPreselectProp(value: BoardPreselectSnapshot | undefined): BoardPreselectSnapshot {
+/** @emoji 🧩 Normalizes {@link Puzzle2dPreselectSnapshot} props for controlled board interaction state. */
+export function normalizePuzzle2dPreselectProp(value: Puzzle2dPreselectSnapshot | undefined): Puzzle2dPreselectSnapshot {
   if (value === undefined) {
-    return BOARD_PRESELECT_EMPTY;
+    return PUZZLE_2D_PRESELECT_EMPTY;
   }
   return createPreselectSnapshot(value.ids, value.removedIds);
 }
 
-function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
+function resolveSelectionOptions(options: Puzzle2dSelectionOptions | undefined): ResolvedPuzzle2dSelectionOptions {
   return {
     method: options?.method ?? "rectangle",
     mode: options?.mode ?? "default",
     targets: {
-      edges: options?.targets?.edges ?? BOARD_SELECTION_TARGETS_DEFAULT.edges,
-      handles: options?.targets?.handles ?? BOARD_SELECTION_TARGETS_DEFAULT.handles,
-      nodes: options?.targets?.nodes ?? BOARD_SELECTION_TARGETS_DEFAULT.nodes,
+      edges: options?.targets?.edges ?? PUZZLE_2D_SELECTION_TARGETS_DEFAULT.edges,
+      handles: options?.targets?.handles ?? PUZZLE_2D_SELECTION_TARGETS_DEFAULT.handles,
+      nodes: options?.targets?.nodes ?? PUZZLE_2D_SELECTION_TARGETS_DEFAULT.nodes,
     },
   };
 }
 
-function boardSelectionModeForHost(mode: BoardSelectionMode): string {
+function puzzle2dSelectionModeForHost(mode: Puzzle2dSelectionMode): string {
   return mode === "default" ? "replace" : mode;
 }
 
@@ -1348,7 +1348,7 @@ function fixtureNodeTextFromJson(node: Record<string, unknown>): string | undefi
 }
 
 /** @emoji 🏷️ On-canvas / inspector caption for a parsed fixture node. */
-export function boardFixtureNodeCaption(node: BoardFixtureNodeV1): string | undefined {
+export function puzzle2dFixtureNodeCaption(node: Puzzle2dFixtureNodeV1): string | undefined {
   const text = node.text?.trim();
   return text !== "" ? text : undefined;
 }
@@ -1367,13 +1367,13 @@ function fixtureOptionalTextFontSize(node: Record<string, unknown>): number | un
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
-function fixtureOptionalTextAlignment(node: Record<string, unknown>): BoardNodeTextAlignment | undefined {
+function fixtureOptionalTextAlignment(node: Record<string, unknown>): Puzzle2dNodeTextAlignment | undefined {
   const v = node.textAlignment;
-  return typeof v === "string" && isBoardNodeTextAlignment(v) ? v : undefined;
+  return typeof v === "string" && isPuzzle2dNodeTextAlignment(v) ? v : undefined;
 }
 
-/** @emoji 🧾 Validates unknown JSON into {@link BoardFixtureV1} or returns null. */
-export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
+/** @emoji 🧾 Validates unknown JSON into {@link Puzzle2dFixtureV1} or returns null. */
+export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
   if (!raw || typeof raw !== "object") {
     return null;
   }
@@ -1397,7 +1397,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
   if (!Array.isArray(root.nodes) || !Array.isArray(root.edges)) {
     return null;
   }
-  const nodes: BoardFixtureNodeV1[] = [];
+  const nodes: Puzzle2dFixtureNodeV1[] = [];
   for (const entry of root.nodes) {
     if (!entry || typeof entry !== "object") {
       return null;
@@ -1415,7 +1415,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
     if (!Array.isArray(node.handles)) {
       return null;
     }
-    const handles: BoardFixtureHandleV1[] = [];
+    const handles: Puzzle2dFixtureHandleV1[] = [];
     for (const h of node.handles) {
       if (!h || typeof h !== "object") {
         return null;
@@ -1434,7 +1434,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
       const withRadius = Number.isFinite(hradius) && hradius > 0;
       const iconRaw = hr.iconKind;
       const iconTrim = typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
-      const base: BoardFixtureHandleV1 = {
+      const base: Puzzle2dFixtureHandleV1 = {
         angle,
         handleKind,
         id: hid,
@@ -1516,7 +1516,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
       y,
     });
   }
-  const edges: BoardFixtureEdgeV1[] = [];
+  const edges: Puzzle2dFixtureEdgeV1[] = [];
   for (const entry of root.edges) {
     if (!entry || typeof entry !== "object") {
       return null;
@@ -1536,33 +1536,33 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
   return { camera, edges, meta, nodes, schema: "puzzle.2d.fixture/v1" };
 }
 
-/** @emoji 📌 MIME for in-app board fixture drags (not host filesystem file drops). */
-export const BOARD_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v1";
+/** @emoji 📌 MIME for in-app puzzle 2d fixture drags (not host filesystem file drops). */
+export const PUZZLE_2D_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v1";
 
-/** @emoji 🧩 `BoardFixtureV1.meta.boardFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
-export const BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
+/** @emoji 🧩 `Puzzle2dFixtureV1.meta.puzzle2dFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
+export const PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
 
 /** @emoji 📍 Payload for board canvas fixture drops: scene plus pointer in canvas CSS space and mapped world coordinates. */
-export interface BoardFixtureDropDetail {
-  fixture: BoardFixtureV1;
+export interface Puzzle2dFixtureDropDetail {
+  fixture: Puzzle2dFixtureV1;
   screen: { x: number; y: number };
   world: { x: number; y: number };
 }
 
-/** @emoji 📦 Serializes a validated fixture for {@link BOARD_FIXTURE_DRAG_V1_MIME}. */
-export function encodeBoardFixtureForDragV1(fixture: BoardFixtureV1): string {
+/** @emoji 📦 Serializes a validated fixture for {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
+export function encodePuzzle2dFixtureForDragV1(fixture: Puzzle2dFixtureV1): string {
   return JSON.stringify(fixture);
 }
 
-/** @emoji 📥 Parses drag payload from {@link BOARD_FIXTURE_DRAG_V1_MIME}. */
-export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | null {
+/** @emoji 📥 Parses drag payload from {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
+export function decodePuzzle2dFixtureFromDragV1(text: string): Puzzle2dFixtureV1 | null {
   let raw: unknown;
   try {
     raw = JSON.parse(text) as unknown;
   } catch {
     return null;
   }
-  return parseBoardFixtureV1(raw);
+  return parsePuzzle2dFixtureV1(raw);
 }
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
@@ -1634,7 +1634,7 @@ export function boardEllipsisTextToWidth(ctx: CanvasTextMeasuring, text: string,
 }
 
 /** @emoji 📍 Maps a node-centered box to `fillText` origin + canvas alignment (layout px). */
-export function boardNodeTextPlacementAnchor(centerX: number, centerY: number, maxW: number, maxH: number, alignment: BoardNodeTextAlignment): { fillX: number; fillY: number; textAlign: CanvasTextAlign; textBaseline: CanvasTextBaseline } {
+export function puzzle2dNodeTextPlacementAnchor(centerX: number, centerY: number, maxW: number, maxH: number, alignment: Puzzle2dNodeTextAlignment): { fillX: number; fillY: number; textAlign: CanvasTextAlign; textBaseline: CanvasTextBaseline } {
   const halfW = maxW / 2;
   const halfH = maxH / 2;
   const left = centerX - halfW;
@@ -1671,7 +1671,7 @@ export function boardNodeTextPlacementAnchor(centerX: number, centerY: number, m
 export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
-export function computeEdgeBezier(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): CubicBezierCurve {
+export function computeEdgeBezier(sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): CubicBezierCurve {
   const sourcePoint = sourceHandle.position;
   const targetPoint = targetHandle.position;
   const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
@@ -1686,7 +1686,7 @@ export function computeEdgeBezier(sourceHandle: BoardSceneHandle, targetHandle: 
 }
 
 /** 🧵 Same radial cubic as {@link computeEdgeBezier} but the far end is a free world point (transient link / {@link Wire}). */
-export function computeWireBezier(sourceHandle: BoardSceneHandle, endWorld: Point): CubicBezierCurve {
+export function computeWireBezier(sourceHandle: Puzzle2dSceneHandle, endWorld: Point): CubicBezierCurve {
   const sourcePoint = sourceHandle.position;
   const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
   const flat = boardComputeEdgeBezier(sourcePoint.x, sourcePoint.y, sourceCenter.x, sourceCenter.y, endWorld.x, endWorld.y, endWorld.x, endWorld.y);
@@ -1757,13 +1757,13 @@ class TypedEmitter<TEvents extends object> {
 export class BoardObject {
   draggable: boolean;
   highlighted: boolean;
-  parent: BoardScene | null = null;
+  parent: Puzzle2dScene | null = null;
   selected: boolean;
   style: string | null;
   userData: Record<string, unknown>;
   visible: boolean;
 
-  protected renderer: BoardRenderer | null = null;
+  protected renderer: Puzzle2dRenderer | null = null;
 
   constructor(
     public readonly id: string,
@@ -1781,7 +1781,7 @@ export class BoardObject {
     throw new Error("BoardObject.kind must be implemented by subclasses.");
   }
 
-  attachRenderer(renderer: BoardRenderer | null): void {
+  attachRenderer(renderer: Puzzle2dRenderer | null): void {
     this.renderer = renderer;
   }
 
@@ -1791,18 +1791,18 @@ export class BoardObject {
 }
 
 /** 🟠 Board node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
-export class BoardSceneNode extends BoardObject {
-  handles: BoardSceneHandle[] = [];
+export class Puzzle2dSceneNode extends BoardObject {
+  handles: Puzzle2dSceneHandle[] = [];
   height: number;
   radius: number;
   shape: "circle" | "rectangle";
   text: string | null;
   /** @emoji 🏷️ Runtime icon string forwarded to WASM detail LOD (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, baked catalog id, or inline SVG). */
   iconKind: string | null;
-  /** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
+  /** @emoji 📏 When true, {@link Puzzle2dRenderer} scales overlay text to the node interior (always drawn at node center). */
   textAutofit: boolean;
   /** @emoji 🧭 When not autofitting, anchors single-line caption inside the node-centered box. */
-  textAlignment: BoardNodeTextAlignment;
+  textAlignment: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 CSS font family string for overlay captions. */
   textFontFamily: string;
   /** @emoji 🔤 Font size in layout px when not autofitting. */
@@ -1810,12 +1810,12 @@ export class BoardSceneNode extends BoardObject {
   width: number;
   x: number;
   y: number;
-  /** @emoji 🌳 When true, {@link computeBoardGraphObservationSnapshot} treats each {@link Edge} as parent {@link Edge.source} → child {@link Edge.target} along node ids. */
+  /** @emoji 🌳 When true, {@link computePuzzle2dGraphObservationSnapshot} treats each {@link Edge} as parent {@link Edge.source} → child {@link Edge.target} along node ids. */
   root: boolean;
   /** @emoji 🧩 Semantic node-kind id forwarded to WASM for catalog defaults and compatibility. */
   nodeKind: string;
 
-  constructor(options: BoardSceneNodeOptions) {
+  constructor(options: Puzzle2dSceneNodeOptions) {
     super(options.id, {
       draggable: options.draggable ?? true,
       selected: options.selected,
@@ -1831,7 +1831,7 @@ export class BoardSceneNode extends BoardObject {
     this.text = options.text ?? null;
     this.iconKind = typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
     this.textAutofit = options.textAutofit ?? false;
-    this.textAlignment = options.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
+    this.textAlignment = options.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT;
     this.textFontFamily = typeof options.textFontFamily === "string" && options.textFontFamily.trim() !== "" ? options.textFontFamily.trim() : BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
     const rawSize = options.textFontSize;
     this.textFontSize = typeof rawSize === "number" && Number.isFinite(rawSize) && rawSize > 0 ? rawSize : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
@@ -1893,7 +1893,7 @@ export class BoardSceneNode extends BoardObject {
     return this;
   }
 
-  attachHandle(handle: BoardSceneHandle): void {
+  attachHandle(handle: Puzzle2dSceneHandle): void {
     if (this.handles.includes(handle)) {
       return;
     }
@@ -1901,22 +1901,22 @@ export class BoardSceneNode extends BoardObject {
     this.handles.push(handle);
   }
 
-  detachHandle(handle: BoardSceneHandle): void {
+  detachHandle(handle: Puzzle2dSceneHandle): void {
     this.handles = this.handles.filter((candidate) => candidate !== handle);
   }
 }
 
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
-export class BoardSceneHandle extends BoardObject {
+export class Puzzle2dSceneHandle extends BoardObject {
   angle: number;
   /** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
   color: string | null;
   /** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
   handleKind: string;
-  node: BoardSceneNode;
+  node: Puzzle2dSceneNode;
   radius: number;
 
-  constructor(options: BoardSceneHandleOptions) {
+  constructor(options: Puzzle2dSceneHandleOptions) {
     super(options.id, options);
     this.angle = options.angle;
     const ck = String(options.handleKind ?? "").trim();
@@ -1948,13 +1948,13 @@ export class BoardSceneHandle extends BoardObject {
 }
 
 /** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
-export class BoardSceneEdge extends BoardObject {
+export class Puzzle2dSceneEdge extends BoardObject {
   /** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
   edgeKind: string;
-  source: BoardSceneHandle;
-  target: BoardSceneHandle;
+  source: Puzzle2dSceneHandle;
+  target: Puzzle2dSceneHandle;
 
-  constructor(options: BoardSceneEdgeOptions) {
+  constructor(options: Puzzle2dSceneEdgeOptions) {
     super(options.id, options);
     this.source = options.source;
     this.target = options.target;
@@ -1970,7 +1970,7 @@ export class BoardSceneEdge extends BoardObject {
     return computeEdgeBezier(this.source, this.target);
   }
 
-  setEndpoints(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): this {
+  setEndpoints(sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): this {
     this.source = sourceHandle;
     this.target = targetHandle;
     return this;
@@ -1978,15 +1978,15 @@ export class BoardSceneEdge extends BoardObject {
 }
 
 /** 🧵 Transient cubic from one {@link Handle} to another handle or a free world point (in‑progress link drag). */
-export class BoardSceneWire extends BoardObject {
+export class Puzzle2dSceneWire extends BoardObject {
   endX: number | null;
   endY: number | null;
-  source: BoardSceneHandle;
-  target: BoardSceneHandle | null;
+  source: Puzzle2dSceneHandle;
+  target: Puzzle2dSceneHandle | null;
   /** @emoji 🧩 Semantic wire-kind id forwarded to WASM. */
   wireKind: string;
 
-  constructor(options: BoardSceneWireOptions) {
+  constructor(options: Puzzle2dSceneWireOptions) {
     super(options.id, options);
     this.source = options.source;
     this.target = options.target;
@@ -2011,7 +2011,7 @@ export class BoardSceneWire extends BoardObject {
     return computeWireBezier(this.source, { x, y });
   }
 
-  setAnchors(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle | null, endWorld?: Point | null): this {
+  setAnchors(sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle | null, endWorld?: Point | null): this {
     this.source = sourceHandle;
     this.target = targetHandle;
     if (endWorld && Number.isFinite(endWorld.x) && Number.isFinite(endWorld.y)) {
@@ -2029,22 +2029,22 @@ export class BoardSceneWire extends BoardObject {
 }
 //#endregion 🔖Objects
 
-type BoardNodeObject = BoardSceneNode;
-type BoardHandleObject = BoardSceneHandle;
-type BoardEdgeObject = BoardSceneEdge;
-type BoardWireObject = BoardSceneWire;
+type BoardNodeObject = Puzzle2dSceneNode;
+type BoardHandleObject = Puzzle2dSceneHandle;
+type BoardEdgeObject = Puzzle2dSceneEdge;
+type BoardWireObject = Puzzle2dSceneWire;
 
 //#region 🔖Scene
 /** 🧭 Retained scene catalog owning nodes, handles, edges, and wires by stable id. */
-export class BoardScene {
-  readonly edges = new Map<string, BoardSceneEdge>();
-  readonly handles = new Map<string, BoardSceneHandle>();
-  readonly nodes = new Map<string, BoardSceneNode>();
-  readonly wires = new Map<string, BoardSceneWire>();
+export class Puzzle2dScene {
+  readonly edges = new Map<string, Puzzle2dSceneEdge>();
+  readonly handles = new Map<string, Puzzle2dSceneHandle>();
+  readonly nodes = new Map<string, Puzzle2dSceneNode>();
+  readonly wires = new Map<string, Puzzle2dSceneWire>();
 
-  constructor(private renderer: BoardRenderer | null = null) {}
+  constructor(private renderer: Puzzle2dRenderer | null = null) {}
 
-  setRenderer(renderer: BoardRenderer | null): void {
+  setRenderer(renderer: Puzzle2dRenderer | null): void {
     this.renderer = renderer;
     for (const object of this.getAllObjects()) {
       object.attachRenderer(renderer);
@@ -2052,7 +2052,7 @@ export class BoardScene {
   }
 
   add(object: BoardObject): this {
-    if (object instanceof BoardSceneNode) {
+    if (object instanceof Puzzle2dSceneNode) {
       const prior = this.nodes.get(object.id);
       if (prior && prior !== object) {
         this.remove(prior);
@@ -2067,7 +2067,7 @@ export class BoardScene {
       return this;
     }
 
-    if (object instanceof BoardSceneHandle) {
+    if (object instanceof Puzzle2dSceneHandle) {
       if (!this.nodes.has(object.node.id)) {
         this.add(object.node);
       }
@@ -2079,7 +2079,7 @@ export class BoardScene {
       return this;
     }
 
-    if (object instanceof BoardSceneWire) {
+    if (object instanceof Puzzle2dSceneWire) {
       if (!this.nodes.has(object.source.node.id)) {
         this.add(object.source.node);
       }
@@ -2113,8 +2113,8 @@ export class BoardScene {
     return this;
   }
 
-  /** @emoji 🔗 Inserts a WASM‑drained edge without emitting {@link BoardEventMap.edgeCreate} (the renderer applies that once per drain row). */
-  ingestWasmEdge(edge: BoardSceneEdge): this {
+  /** @emoji 🔗 Inserts a WASM‑drained edge without emitting {@link Puzzle2dEventMap.edgeCreate} (the renderer applies that once per drain row). */
+  ingestWasmEdge(edge: Puzzle2dSceneEdge): this {
     this.edges.set(edge.id, edge);
     edge.parent = this;
     edge.attachRenderer(this.renderer);
@@ -2123,7 +2123,7 @@ export class BoardScene {
   }
 
   remove(object: BoardObject): this {
-    if (object instanceof BoardSceneNode) {
+    if (object instanceof Puzzle2dSceneNode) {
       for (const edge of Array.from(this.edges.values())) {
         if (edge.source.node === object || edge.target.node === object) {
           this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2147,7 +2147,7 @@ export class BoardScene {
       return this;
     }
 
-    if (object instanceof BoardSceneHandle) {
+    if (object instanceof Puzzle2dSceneHandle) {
       for (const edge of Array.from(this.edges.values())) {
         if (edge.source === object || edge.target === object) {
           this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2167,7 +2167,7 @@ export class BoardScene {
       return this;
     }
 
-    if (object instanceof BoardSceneWire) {
+    if (object instanceof Puzzle2dSceneWire) {
       this.renderer?.emitSceneDeleteEvent("wireDestroy", { id: object.id });
       this.wires.delete(object.id);
       object.parent = null;
@@ -2217,8 +2217,8 @@ export class BoardScene {
 //#endregion 🔖Scene
 
 //#region 🔖DirectedGraphObservation
-/** @emoji 🧮 Immutable snapshot for {@link BoardRenderer} hierarchy callbacks (roots + directed reachability along {@link Edge.source}→{@link Edge.target}). */
-export interface BoardGraphObservationSnapshot {
+/** @emoji 🧮 Immutable snapshot for {@link Puzzle2dRenderer} hierarchy callbacks (roots + directed reachability along {@link Edge.source}→{@link Edge.target}). */
+export interface Puzzle2dGraphObservationSnapshot {
   childEdgeIds: string[];
   childNodeIds: string[];
   edgeSigById: Map<string, string>;
@@ -2244,7 +2244,7 @@ function sortedStringArraysEqual(a: string[], b: string[]): boolean {
   return true;
 }
 
-function boardGraphNodeSig(node: BoardSceneNode): string {
+function boardGraphNodeSig(node: Puzzle2dSceneNode): string {
   return JSON.stringify({
     draggable: node.draggable,
     height: node.height,
@@ -2266,7 +2266,7 @@ function boardGraphNodeSig(node: BoardSceneNode): string {
   });
 }
 
-function boardGraphEdgeSig(edge: BoardSceneEdge): string {
+function boardGraphEdgeSig(edge: Puzzle2dSceneEdge): string {
   return JSON.stringify({
     source: edge.source.id,
     id: edge.id,
@@ -2277,7 +2277,7 @@ function boardGraphEdgeSig(edge: BoardSceneEdge): string {
   });
 }
 
-function boardGraphWireSig(wire: BoardSceneWire): string {
+function boardGraphWireSig(wire: Puzzle2dSceneWire): string {
   return JSON.stringify({
     endX: wire.endX,
     endY: wire.endY,
@@ -2292,7 +2292,7 @@ function boardGraphWireSig(wire: BoardSceneWire): string {
 }
 
 /** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} following directed edges from parent handle node to child handle node. */
-export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGraphObservationSnapshot {
+export function computePuzzle2dGraphObservationSnapshot(scene: Puzzle2dScene): Puzzle2dGraphObservationSnapshot {
   const rootIds = sortIds([...scene.nodes.values()].filter((n) => n.root).map((n) => n.id));
   const rootSet = new Set(rootIds);
   const reachable = new Set<string>(rootSet);
@@ -2329,7 +2329,7 @@ export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGr
 }
 //#endregion 🔖DirectedGraphObservation
 
-/** @emoji 🧯 Normalizes WebGPU errors for `data-board-surface-failure` (E2E + local debugging). */
+/** @emoji 🧯 Normalizes WebGPU errors for `data-puzzle2d-surface-failure` (E2E + local debugging). */
 function summarizeRasterSurfaceFailure(err: unknown): string {
   if (err instanceof Error) {
     return `${err.name}: ${err.message}`.slice(0, 512);
@@ -2349,7 +2349,7 @@ function boardAbbreviateCaption(raw: string, maxChars: number): string {
 }
 
 /** @emoji 🏷️ Abbreviated node caption for the text overlay canvas, or null when the LOD band hides node labels. */
-export function boardTextOverlayCaptionForLod(raw: string, lod: BoardDrawLodKind, iconKind: string | null): string | null {
+export function puzzle2dTextOverlayCaptionForLod(raw: string, lod: Puzzle2dDrawLodKind, iconKind: string | null): string | null {
   const t = raw.trim();
   if (t === "") {
     return null;
@@ -2370,7 +2370,7 @@ export function boardTextOverlayCaptionForLod(raw: string, lod: BoardDrawLodKind
 }
 
 /** @emoji 🏷️ Abbreviated handle caption for the text overlay canvas, or null when the LOD band hides handle labels. */
-export function boardHandleOverlayCaptionForLod(raw: string, lod: BoardDrawLodKind): string | null {
+export function puzzle2dHandleOverlayCaptionForLod(raw: string, lod: Puzzle2dDrawLodKind): string | null {
   const t = raw.trim();
   if (t === "") {
     return null;
@@ -2397,21 +2397,21 @@ export function boardHandleKindOverlayLabel(handleKind: string, catalogs: KindCa
 
 //#region 🔖Renderer
 /** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
-export class BoardRenderer {
-  static activeRenderer: BoardRenderer | null = null;
+export class Puzzle2dRenderer {
+  static activeRenderer: Puzzle2dRenderer | null = null;
 
   readonly camera: CameraState = { ...DEFAULT_CAMERA };
-  readonly scene: BoardScene;
+  readonly scene: Puzzle2dScene;
   readonly session: BoardSession;
-  /** @emoji 🔗 Edge ids created by the WASM host (link gesture) until the same id appears in React `children`; merged into the descriptor passed to {@link syncBoardScene}. */
+  /** @emoji 🔗 Edge ids created by the WASM host (link gesture) until the same id appears in React `children`; merged into the descriptor passed to {@link syncPuzzle2dScene}. */
   readonly wasmHostAuthoredEdgeIds = new Set<string>();
-  /** @emoji 🔗 Endpoint ids for each {@link BoardRenderer.wasmHostAuthoredEdgeIds} entry so merge can rebuild the descriptor if the scene edge was removed transiently (e.g. handle purge ordering). */
+  /** @emoji 🔗 Endpoint ids for each {@link Puzzle2dRenderer.wasmHostAuthoredEdgeIds} entry so merge can rebuild the descriptor if the scene edge was removed transiently (e.g. handle purge ordering). */
   readonly wasmHostAuthoredLinkByEdgeId = new Map<string, { source: string; target: string }>();
 
   private batchDepth = 0;
-  /** @emoji 🔇 While >0, {@link BoardScene.remove} does not emit delete events (dispose / JSX resync). */
+  /** @emoji 🔇 While >0, {@link Puzzle2dScene.remove} does not emit delete events (dispose / JSX resync). */
   private suppressSceneDeleteEvents = 0;
-  /** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
+  /** @emoji 🔁 Nesting depth for {@link Puzzle2dRenderer.render}; defers {@link Puzzle2dRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
   private renderPipelineDepth = 0;
   /** @emoji ⛓️ Tracks async WASM session borrows such as {@link BoardSession.attach_canvas} so sync probes like `gpuReady()` do not re-enter the same `RefCell`. */
   private wasmSessionBorrowDepth = 0;
@@ -2423,7 +2423,7 @@ export class BoardRenderer {
     return this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0;
   }
 
-  /** @emoji 🔇 Runs `fn` without {@link BoardEventMap.nodeDelete} / edge / wire delete emissions (internal teardown or descriptor resync). */
+  /** @emoji 🔇 Runs `fn` without {@link Puzzle2dEventMap.nodeDelete} / edge / wire delete emissions (internal teardown or descriptor resync). */
   runWithoutSceneDeleteEvents(fn: () => void): void {
     this.suppressSceneDeleteEvents += 1;
     try {
@@ -2434,19 +2434,19 @@ export class BoardRenderer {
   }
 
   /** @emoji 📣 Forwards structural delete events to play/fixture listeners unless suppressed or disposed. */
-  emitSceneDeleteEvent<TKey extends "nodeDelete" | "edgeDelete" | "wireDestroy">(name: TKey, payload: BoardEventMap[TKey]): void {
+  emitSceneDeleteEvent<TKey extends "nodeDelete" | "edgeDelete" | "wireDestroy">(name: TKey, payload: Puzzle2dEventMap[TKey]): void {
     if (this.suppressSceneDeleteEvents > 0 || this.isDisposed) {
       return;
     }
     this.emit(name, payload);
   }
-  /** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
+  /** @emoji 💾 Last `gpuReady` snapshot; used while {@link Puzzle2dRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
   private cachedWasmGpuReady = false;
   private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
-  private drawLodStore = new SnapshotStore<BoardDrawLodKind>(resolveBoardLodLabelFromThresholds(DEFAULT_CAMERA.zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS));
+  private drawLodStore = new SnapshotStore<Puzzle2dDrawLodKind>(resolvePuzzle2dLodLabelFromThresholds(DEFAULT_CAMERA.zoom, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS));
   private canvas: HTMLCanvasElement | null;
   private dpr = 1;
-  private emitter = new TypedEmitter<BoardEventMap>();
+  private emitter = new TypedEmitter<Puzzle2dEventMap>();
   private frameListeners = new Set<FrameListener>();
   private hoveredId: string | null = null;
   private lastPointerClientX = 0;
@@ -2458,12 +2458,12 @@ export class BoardRenderer {
   private lastRenderTimestamp: number | null = null;
   private rafId: number | null = null;
   private selectionIds = new Set<string>();
-  private selectionOptions: ResolvedBoardSelectionOptions;
-  private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
+  private selectionOptions: ResolvedPuzzle2dSelectionOptions;
+  private selectionStore = new SnapshotStore<Puzzle2dSelectionSnapshot>({ ids: [] });
   private preselectIds = new Set<string>();
   private preselectRemovedIds = new Set<string>();
-  private preselectStore = new SnapshotStore<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
-  private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
+  private preselectStore = new SnapshotStore<Puzzle2dPreselectSnapshot>(PUZZLE_2D_PRESELECT_EMPTY);
+  private styles = new Map<string, Puzzle2dStyle>(Object.entries(DEFAULT_STYLES));
   private gpuSurfaceErrorDetail = "";
   private gpuSurfaceInitPromise: Promise<void> | null = null;
   private gpuSurfacePresentedFrame = false;
@@ -2479,16 +2479,16 @@ export class BoardRenderer {
   private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
   private suppressSceneToWasmPush = false;
   private graphObservationFlushPending = false;
-  private lastGraphObservation: BoardGraphObservationSnapshot | null = null;
+  private lastGraphObservation: Puzzle2dGraphObservationSnapshot | null = null;
   private width = 1;
   private height = 1;
   private textOverlayCanvas: HTMLCanvasElement | null = null;
 
-  private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
+  private lodZoomThresholds: Puzzle2dLodZoomThresholds = { ...DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS };
   private automaticLod = true;
-  private forcedDrawLodLabel: BoardDrawLodKind | undefined = undefined;
+  private forcedDrawLodLabel: Puzzle2dDrawLodKind | undefined = undefined;
   private gridSnapEnabled = false;
-  private gridFactor = DEFAULT_BOARD_GRID_FACTOR;
+  private gridFactor = DEFAULT_PUZZLE_2D_GRID_FACTOR;
   private lastLodThresholdsJsonForWasm: string | null = null;
   private lastAutomaticLodForWasm: boolean | null = null;
   private lastForcedDrawLodLabelForWasm: string | null = null;
@@ -2501,13 +2501,13 @@ export class BoardRenderer {
     options: {
       canvas?: HTMLCanvasElement | null;
       renderMode?: RenderMode;
-      selection?: BoardSelectionOptions;
+      selection?: Puzzle2dSelectionOptions;
       worldRasterTiling?: WorldRasterTilingKind;
-      lodZoomThresholds?: BoardLodZoomThresholds;
+      lodZoomThresholds?: Puzzle2dLodZoomThresholds;
       /** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, {@link lod} pins the tier when set. */
       automaticLod?: boolean;
       /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
-      lod?: BoardDrawLodKind;
+      lod?: Puzzle2dDrawLodKind;
       gridSnapEnabled?: boolean;
       gridFactor?: number;
     } = {},
@@ -2524,48 +2524,48 @@ export class BoardRenderer {
           normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
           detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
         }
-      : { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
+      : { ...DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS };
     this.gridSnapEnabled = options.gridSnapEnabled ?? false;
     const gf = options.gridFactor;
-    this.gridFactor = typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
+    this.gridFactor = typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_PUZZLE_2D_GRID_FACTOR;
     this.automaticLod = options.automaticLod ?? true;
     const optLod = options.lod;
-    this.forcedDrawLodLabel = !this.automaticLod && optLod !== undefined && isBoardDrawLodKind(optLod) ? optLod : undefined;
+    this.forcedDrawLodLabel = !this.automaticLod && optLod !== undefined && isPuzzle2dDrawLodKind(optLod) ? optLod : undefined;
     if (this.automaticLod) {
       this.forcedDrawLodLabel = undefined;
     }
-    this.scene = new BoardScene(this);
+    this.scene = new Puzzle2dScene(this);
     this.session = new BoardSession();
     const initialSel = this.selectionOptions;
-    this.session.setSelectionOptions(initialSel.method, boardSelectionModeForHost(initialSel.mode), initialSel.targets.nodes, initialSel.targets.edges, initialSel.targets.handles);
+    this.session.setSelectionOptions(initialSel.method, puzzle2dSelectionModeForHost(initialSel.mode), initialSel.targets.nodes, initialSel.targets.edges, initialSel.targets.handles);
     this.session.setHandleLinkCompatJson(this.kindCompatJson);
     try {
       this.session.setKindCatalogsJson(this.kindCatalogsJson);
     } catch (err) {
-      console.error("[DEBUG] setKindCatalogsJson failed during BoardRenderer init", err);
+      console.error("[DEBUG] setKindCatalogsJson failed during Puzzle2dRenderer init", err);
     }
     this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.attachCanvasListeners();
     if (this.canvas) {
-      (this.canvas as BoardCanvasElement).__boardRenderer = this;
+      (this.canvas as Puzzle2dCanvasElement).__puzzle2dRenderer = this;
       const initialWidth = this.canvas.clientWidth || this.canvas.width || 1;
       const initialHeight = this.canvas.clientHeight || this.canvas.height || 1;
       this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
     }
-    this.lastGraphObservation = computeBoardGraphObservationSnapshot(this.scene);
+    this.lastGraphObservation = computePuzzle2dGraphObservationSnapshot(this.scene);
   }
 
   readonly renderMode: RenderMode;
 
-  /** @emoji 🔗 Subscribes to an epoch bumped when WASM event drains mutate edges/nodes so the React host can re-merge {@link BoardRenderer.wasmHostAuthoredEdgeIds} into JSX sync without waiting for `children` identity changes. */
+  /** @emoji 🔗 Subscribes to an epoch bumped when WASM event drains mutate edges/nodes so the React host can re-merge {@link Puzzle2dRenderer.wasmHostAuthoredEdgeIds} into JSX sync without waiting for `children` identity changes. */
   subscribeWasmHostSceneMergeResync = (listener: () => void): (() => void) => this.wasmHostSceneMergeResyncStore.subscribe(listener);
 
-  /** @emoji 🔗 Snapshot for {@link BoardRenderer.subscribeWasmHostSceneMergeResync} (use with `useSyncExternalStore`). */
+  /** @emoji 🔗 Snapshot for {@link Puzzle2dRenderer.subscribeWasmHostSceneMergeResync} (use with `useSyncExternalStore`). */
   getWasmHostSceneMergeResyncEpoch = (): number => this.wasmHostSceneMergeResyncStore.getSnapshot();
 
   get selection(): {
-    getSnapshot: () => BoardSelectionSnapshot;
+    getSnapshot: () => Puzzle2dSelectionSnapshot;
     has: (id: string) => boolean;
     ids: string[];
     subscribe: (listener: () => void) => () => void;
@@ -2586,10 +2586,10 @@ export class BoardRenderer {
 
   subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
 
-  getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
+  getSelectionSnapshot = (): Puzzle2dSelectionSnapshot => this.selectionStore.getSnapshot();
 
   get preselection(): {
-    getSnapshot: () => BoardPreselectSnapshot;
+    getSnapshot: () => Puzzle2dPreselectSnapshot;
     subscribe: (listener: () => void) => () => void;
   } {
     return {
@@ -2600,7 +2600,7 @@ export class BoardRenderer {
 
   subscribePreselect = (listener: () => void): (() => void) => this.preselectStore.subscribe(listener);
 
-  getPreselectSnapshot = (): BoardPreselectSnapshot => this.preselectStore.getSnapshot();
+  getPreselectSnapshot = (): Puzzle2dPreselectSnapshot => this.preselectStore.getSnapshot();
 
   /** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
   setSelectionIds(ids: Iterable<string>): void {
@@ -2631,8 +2631,8 @@ export class BoardRenderer {
   }
 
   /** @emoji 👁️ Controlled sync: mirrors area-select preview chrome on this canvas without emitting `preselect`. */
-  syncPreselectionSilent(snapshot: BoardPreselectSnapshot): void {
-    const normalized = normalizeBoardPreselectProp(snapshot);
+  syncPreselectionSilent(snapshot: Puzzle2dPreselectSnapshot): void {
+    const normalized = normalizePuzzle2dPreselectProp(snapshot);
     if (preselectSnapshotsEqual(normalized, this.preselectStore.getSnapshot())) {
       return;
     }
@@ -2662,12 +2662,12 @@ export class BoardRenderer {
     this.markDirty();
   }
 
-  getSelectionOptions(): ResolvedBoardSelectionOptions {
+  getSelectionOptions(): ResolvedPuzzle2dSelectionOptions {
     return { ...this.selectionOptions, targets: { ...this.selectionOptions.targets } };
   }
 
   /** @emoji 🎯 Updates area-selection behavior for left-button drag gestures. */
-  setSelectionOptions(options: BoardSelectionOptions): void {
+  setSelectionOptions(options: Puzzle2dSelectionOptions): void {
     const next = resolveSelectionOptions({ ...this.selectionOptions, ...options });
     const tn = next.targets;
     const tc = this.selectionOptions.targets;
@@ -2679,7 +2679,7 @@ export class BoardRenderer {
       this.invalidated = true;
       return;
     }
-    this.session.setSelectionOptions(next.method, boardSelectionModeForHost(next.mode), next.targets.nodes, next.targets.edges, next.targets.handles);
+    this.session.setSelectionOptions(next.method, puzzle2dSelectionModeForHost(next.mode), next.targets.nodes, next.targets.edges, next.targets.handles);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.markDirty();
   }
@@ -2700,8 +2700,8 @@ export class BoardRenderer {
   }
 
   /** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `compactMaxZoom` / `normalMaxZoom` / `detailMaxZoom`). */
-  setLodZoomThresholds(next: BoardLodZoomThresholds): void {
-    const c: BoardLodZoomThresholds = {
+  setLodZoomThresholds(next: Puzzle2dLodZoomThresholds): void {
+    const c: Puzzle2dLodZoomThresholds = {
       minimapMaxZoom: next.minimapMaxZoom,
       overviewMaxZoom: next.overviewMaxZoom,
       compactMaxZoom: next.compactMaxZoom,
@@ -2726,9 +2726,9 @@ export class BoardRenderer {
     this.markDirty();
   }
 
-  /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (see {@link DEFAULT_BOARD_GRID_FACTOR}). */
+  /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (see {@link DEFAULT_PUZZLE_2D_GRID_FACTOR}). */
   setGridFactor(next: number): void {
-    const n = typeof next === "number" && Number.isFinite(next) && next > 0 && next <= 1e6 ? next : DEFAULT_BOARD_GRID_FACTOR;
+    const n = typeof next === "number" && Number.isFinite(next) && next > 0 && next <= 1e6 ? next : DEFAULT_PUZZLE_2D_GRID_FACTOR;
     if (n === this.gridFactor) {
       return;
     }
@@ -2743,8 +2743,8 @@ export class BoardRenderer {
 
   private lastLinkSessionJsonForWasm: string | null = null;
 
-  /** @emoji 🔗 Mirrors a host {@link BoardLinkSessionSnapshot} into WASM for cross-surface link preview. */
-  setLinkSession(snapshot: BoardLinkSessionSnapshot | null): void {
+  /** @emoji 🔗 Mirrors a host {@link Puzzle2dLinkSessionSnapshot} into WASM for cross-surface link preview. */
+  setLinkSession(snapshot: Puzzle2dLinkSessionSnapshot | null): void {
     const json = snapshot
       ? JSON.stringify({
           source: snapshot.source,
@@ -2776,7 +2776,7 @@ export class BoardRenderer {
     this.markDirty();
   }
 
-  /** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link BoardRenderer.setForcedDrawLod} pins the tier. */
+  /** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link Puzzle2dRenderer.setForcedDrawLod} pins the tier. */
   setAutomaticLod(next: boolean): void {
     if (this.automaticLod === next) {
       return;
@@ -2793,9 +2793,9 @@ export class BoardRenderer {
     this.markDirty();
   }
 
-  /** @emoji 📶 Pins WASM draw LOD when {@link BoardRenderer.setAutomaticLod} is false; pass undefined to follow zoom bands. */
-  setForcedDrawLod(next: BoardDrawLodKind | undefined): void {
-    const norm = this.automaticLod || next === undefined ? undefined : isBoardDrawLodKind(next) ? next : undefined;
+  /** @emoji 📶 Pins WASM draw LOD when {@link Puzzle2dRenderer.setAutomaticLod} is false; pass undefined to follow zoom bands. */
+  setForcedDrawLod(next: Puzzle2dDrawLodKind | undefined): void {
+    const norm = this.automaticLod || next === undefined ? undefined : isPuzzle2dDrawLodKind(next) ? next : undefined;
     if (this.forcedDrawLodLabel === norm) {
       return;
     }
@@ -2808,11 +2808,11 @@ export class BoardRenderer {
     this.markDirty();
   }
 
-  private effectiveDrawLodLabel(): BoardDrawLodKind {
+  private effectiveDrawLodLabel(): Puzzle2dDrawLodKind {
     if (!this.automaticLod && this.forcedDrawLodLabel !== undefined) {
       return this.forcedDrawLodLabel;
     }
-    return resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+    return resolvePuzzle2dLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
   }
 
   /** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
@@ -2878,7 +2878,7 @@ export class BoardRenderer {
   }
 
   /** @emoji 📍 Applies declarative node x/y while keeping wasm-dragged coordinates when React props still show the pre-drag authoring values. */
-  applyNodePositionFromProps(nodeId: string, x: number, y: number, instance: BoardSceneNode): void {
+  applyNodePositionFromProps(nodeId: string, x: number, y: number, instance: Puzzle2dSceneNode): void {
     const last = this.lastNodeAuthoringPositionById.get(nodeId);
     const propsUnchangedSinceLastSync = last !== undefined && last.x === x && last.y === y;
     const sceneMatchesDescriptor = instance.x === x && instance.y === y;
@@ -2889,7 +2889,7 @@ export class BoardRenderer {
     this.lastNodeAuthoringPositionById.set(nodeId, { x, y });
   }
 
-  /** @emoji 🧹 Drops cached declarative coordinates for a removed node id (see {@link BoardRenderer.applyNodePositionFromProps}). */
+  /** @emoji 🧹 Drops cached declarative coordinates for a removed node id (see {@link Puzzle2dRenderer.applyNodePositionFromProps}). */
   evictNodeAuthoringPosition(nodeId: string): void {
     this.lastNodeAuthoringPositionById.delete(nodeId);
   }
@@ -2898,15 +2898,15 @@ export class BoardRenderer {
 
   subscribeCamera = (listener: () => void): (() => void) => this.cameraStore.subscribe(listener);
 
-  getDrawLodSnapshot = (): BoardDrawLodKind => this.drawLodStore.getSnapshot();
+  getDrawLodSnapshot = (): Puzzle2dDrawLodKind => this.drawLodStore.getSnapshot();
 
   subscribeDrawLod = (listener: () => void): (() => void) => this.drawLodStore.subscribe(listener);
 
-  on<TKey extends keyof BoardEventMap>(name: TKey, handler: (payload: BoardEventMap[TKey]) => void): () => void {
+  on<TKey extends keyof Puzzle2dEventMap>(name: TKey, handler: (payload: Puzzle2dEventMap[TKey]) => void): () => void {
     return this.emitter.on(name, handler);
   }
 
-  emit<TKey extends keyof BoardEventMap>(name: TKey, payload: BoardEventMap[TKey]): void {
+  emit<TKey extends keyof Puzzle2dEventMap>(name: TKey, payload: Puzzle2dEventMap[TKey]): void {
     this.emitter.emit(name, payload);
   }
 
@@ -2924,10 +2924,10 @@ export class BoardRenderer {
   private flushBoardGraphObservation(): void {
     const prev = this.lastGraphObservation;
     if (prev === null) {
-      this.lastGraphObservation = computeBoardGraphObservationSnapshot(this.scene);
+      this.lastGraphObservation = computePuzzle2dGraphObservationSnapshot(this.scene);
       return;
     }
-    const next = computeBoardGraphObservationSnapshot(this.scene);
+    const next = computePuzzle2dGraphObservationSnapshot(this.scene);
     let anyEmitted = false;
     const prevRoot = new Set(prev.rootIds);
     const nextRoot = new Set(next.rootIds);
@@ -3032,12 +3032,12 @@ export class BoardRenderer {
     }
   }
 
-  defineStyle(name: string, style: BoardStyle): void {
+  defineStyle(name: string, style: Puzzle2dStyle): void {
     this.styles.set(name, style);
     this.markDirty();
   }
 
-  getStyle(name: string | null, fallbackName: string): BoardStyle {
+  getStyle(name: string | null, fallbackName: string): Puzzle2dStyle {
     return this.styles.get(name ?? fallbackName) ?? this.styles.get(fallbackName) ?? {};
   }
 
@@ -3168,7 +3168,7 @@ export class BoardRenderer {
               this.markDirty();
             })
             .catch((err: unknown) => {
-              console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
+              console.error("[DEBUG] Puzzle2dRenderer GPU surface init failed", err);
               this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
               this.gpuSurfaceUnavailable = true;
               this.cachedWasmGpuReady = false;
@@ -3203,7 +3203,7 @@ export class BoardRenderer {
     if (!this.canvas || this.renderMode === "headless-test") {
       return;
     }
-    await ensureElementsBoardWasmLoaded();
+    await ensurePuzzle2dWasmLoaded();
     const lw = this.width;
     const lh = this.height;
     const dpr = this.dpr;
@@ -3224,7 +3224,7 @@ export class BoardRenderer {
       }
     }
     const o = this.selectionOptions;
-    this.session.setSelectionOptions(o.method, boardSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
+    this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
     this.session.setHandleLinkCompatJson(this.kindCompatJson);
@@ -3273,7 +3273,7 @@ export class BoardRenderer {
       if (node.textFontSize !== BOARD_NODE_TEXT_FONT_PX_DEFAULT) {
         base.textFontSize = node.textFontSize;
       }
-      if (node.textAlignment !== BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) {
+      if (node.textAlignment !== PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) {
         base.textAlignment = node.textAlignment;
       }
       if (node.shape === "rectangle") {
@@ -3411,7 +3411,7 @@ export class BoardRenderer {
     }
   }
 
-  /** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
+  /** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link Puzzle2dRenderer.invalidated} so the next frame retries. */
   private pushSceneToWasmDriver(): void {
     if (this.suppressSceneToWasmPush) {
       return;
@@ -3422,7 +3422,7 @@ export class BoardRenderer {
     }
     const o = this.selectionOptions;
     this.session.setSize(this.width, this.height, this.dpr);
-    this.session.setSelectionOptions(o.method, boardSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
+    this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
     this.session.setHandleLinkCompatJson(this.kindCompatJson);
@@ -3440,6 +3440,10 @@ export class BoardRenderer {
     }
     this.lastDescriptorPushDeferred = deferDescriptorSync;
     if (!deferDescriptorSync) {
+      if (this.scene.nodes.size === 0) {
+        this.invalidated = true;
+        return;
+      }
       const desc = this.descriptorJsonForWasmHost();
       if (desc !== this.lastPushedDescriptorJson) {
         try {
@@ -3496,7 +3500,7 @@ export class BoardRenderer {
           case "preselectCancel": {
             this.updatePreselection([], [], false);
             this.applySelectionChromeToSceneObjects();
-            this.emit("preselectCancel", BOARD_PRESELECT_EMPTY);
+            this.emit("preselectCancel", PUZZLE_2D_PRESELECT_EMPTY);
             break;
           }
           case "hover": {
@@ -3530,7 +3534,6 @@ export class BoardRenderer {
             } else {
               this.clearWasmHostAuthorshipForEdge(id);
               graphMutatedForHostMerge = true;
-              this.emitSceneDeleteEvent("edgeDelete", { id });
             }
             break;
           }
@@ -3540,8 +3543,6 @@ export class BoardRenderer {
             if (node) {
               this.scene.remove(node);
               graphMutatedForHostMerge = true;
-            } else {
-              this.emitSceneDeleteEvent("nodeDelete", { id });
             }
             break;
           }
@@ -3554,12 +3555,12 @@ export class BoardRenderer {
             }
             const sourceObj = this.scene.getObjectById(sourceId);
             const targetObj = this.scene.getObjectById(targetId);
-            if (!(sourceObj instanceof BoardSceneHandle) || !(targetObj instanceof BoardSceneHandle)) {
+            if (!(sourceObj instanceof Puzzle2dSceneHandle) || !(targetObj instanceof Puzzle2dSceneHandle)) {
               break;
             }
             this.wasmHostAuthoredEdgeIds.add(id);
             this.wasmHostAuthoredLinkByEdgeId.set(id, { source: sourceId, target: targetId });
-            this.scene.ingestWasmEdge(new BoardSceneEdge({ id, source: sourceObj, target: targetObj }));
+            this.scene.ingestWasmEdge(new Puzzle2dSceneEdge({ id, source: sourceObj, target: targetObj }));
             graphMutatedForHostMerge = true;
             this.emitter.emit("edgeCreate", { id, source: sourceId, target: targetId });
             break;
@@ -3615,7 +3616,7 @@ export class BoardRenderer {
     }
   }
 
-  /** @emoji 🏷️ Draws node captions on {@link BoardRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
+  /** @emoji 🏷️ Draws node captions on {@link Puzzle2dRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
   private paintTextOverlays(): void {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
@@ -3635,12 +3636,12 @@ export class BoardRenderer {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
     const lod = this.effectiveDrawLodLabel();
-    const chrome = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
+    const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const node of this.scene.nodes.values()) {
       if (!node.visible) {
         continue;
       }
-      const caption = boardTextOverlayCaptionForLod(node.text ?? "", lod, node.iconKind);
+      const caption = puzzle2dTextOverlayCaptionForLod(node.text ?? "", lod, node.iconKind);
       if (caption === null) {
         continue;
       }
@@ -3676,7 +3677,7 @@ export class BoardRenderer {
       const fontPx = node.textFontSize;
       ctx.font = boardBuildCanvasFontSpec(fontPx, family);
       const line = boardEllipsisTextToWidth(ctx, caption, maxW);
-      const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
+      const anchor = puzzle2dNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
       ctx.textAlign = anchor.textAlign;
       ctx.textBaseline = anchor.textBaseline;
       ctx.fillText(line, anchor.fillX, anchor.fillY);
@@ -3696,7 +3697,7 @@ export class BoardRenderer {
           continue;
         }
         const rawLabel = boardHandleKindOverlayLabel(handle.handleKind, this.kindCatalogsBundle);
-        const caption = boardHandleOverlayCaptionForLod(rawLabel, lod);
+        const caption = puzzle2dHandleOverlayCaptionForLod(rawLabel, lod);
         if (caption === null) {
           continue;
         }
@@ -3716,7 +3717,7 @@ export class BoardRenderer {
     }
   }
 
-  /** @emoji 🎨 Presents one GPU frame after {@link BoardRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
+  /** @emoji 🎨 Presents one GPU frame after {@link Puzzle2dRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
   private syncGpuFrame(): void {
     if (this.renderMode === "headless-test" || !this.readGpuReady()) {
       return;
@@ -3733,7 +3734,7 @@ export class BoardRenderer {
       this.gpuSurfacePresentedFrame = true;
       this.gpuSurfaceErrorDetail = "";
     } catch (err: unknown) {
-      console.error("[DEBUG] BoardRenderer GPU surface frame failed", err);
+      console.error("[DEBUG] Puzzle2dRenderer GPU surface frame failed", err);
       this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
       this.gpuSurfaceUnavailable = true;
       this.gpuSurfacePresentedFrame = false;
@@ -3755,7 +3756,7 @@ export class BoardRenderer {
     return this.cachedWasmGpuReady;
   }
 
-  /** @emoji 📡 Refreshes {@link BoardRenderer.cachedWasmGpuReady} from WASM when no in-flight GPU frame holds the session borrow. */
+  /** @emoji 📡 Refreshes {@link Puzzle2dRenderer.cachedWasmGpuReady} from WASM when no in-flight GPU frame holds the session borrow. */
   private syncGpuReadyCacheFromSession(): void {
     if (this.isDisposed) {
       this.cachedWasmGpuReady = false;
@@ -3793,13 +3794,13 @@ export class BoardRenderer {
     this.runWithoutSceneDeleteEvents(() => {
       this.scene.clear();
     });
-    if (BoardRenderer.activeRenderer === this) {
-      BoardRenderer.activeRenderer = null;
+    if (Puzzle2dRenderer.activeRenderer === this) {
+      Puzzle2dRenderer.activeRenderer = null;
     }
     if (this.canvas) {
-      const el = this.canvas as BoardCanvasElement;
-      if (el.__boardRenderer === this) {
-        delete el.__boardRenderer;
+      const el = this.canvas as Puzzle2dCanvasElement;
+      if (el.__puzzle2dRenderer === this) {
+        delete el.__puzzle2dRenderer;
       }
     }
   }
@@ -3810,7 +3811,7 @@ export class BoardRenderer {
     }
     this.canvas.tabIndex = 0;
     this.canvas.style.touchAction = "none";
-    const bindings = new BoardEventBindingController();
+    const bindings = new Puzzle2dEventBindingController();
     bindings.listen(this.canvas, "contextmenu", this.handleContextMenu as EventListener);
     bindings.listen(this.canvas, "pointerdown", this.handlePointerDown as EventListener);
     bindings.listen(this.canvas, "pointermove", this.handlePointerMove as EventListener);
@@ -3818,12 +3819,12 @@ export class BoardRenderer {
     bindings.listen(this.canvas, "pointerleave", this.handlePointerLeave as EventListener);
     bindings.listen(this.canvas, "wheel", this.handleWheel as EventListener, { passive: false });
     bindings.listen(globalThis, "keydown", this.handleWindowKeyDown as EventListener, true);
-    (this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings = bindings;
+    (this as Puzzle2dRenderer & { __eventBindings?: Puzzle2dEventBindingController }).__eventBindings = bindings;
   }
 
   private detachCanvasListeners(): void {
-    (this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings?.dispose();
-    (this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings = undefined;
+    (this as Puzzle2dRenderer & { __eventBindings?: Puzzle2dEventBindingController }).__eventBindings?.dispose();
+    (this as Puzzle2dRenderer & { __eventBindings?: Puzzle2dEventBindingController }).__eventBindings = undefined;
   }
 
   /** @emoji 🎨 Reapplies scene `selected` / `highlighted` from committed selection and preselection only. */
@@ -3832,7 +3833,7 @@ export class BoardRenderer {
   }
 
   private applySelectionChromeToSceneObjects(): void {
-    const { highlightedIds, selectedIds } = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
+    const { highlightedIds, selectedIds } = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const object of this.scene.getAllObjects()) {
       object.selected = selectedIds.has(object.id);
       object.highlighted = highlightedIds.has(object.id);
@@ -3879,7 +3880,7 @@ export class BoardRenderer {
     this.hoveredId = id;
   }
 
-  /** @emoji 📡 Emits {@link BoardEventMap.hover} using the last recorded pointer and current {@link BoardRenderer.hoveredId}. */
+  /** @emoji 📡 Emits {@link Puzzle2dEventMap.hover} using the last recorded pointer and current {@link Puzzle2dRenderer.hoveredId}. */
   private publishHover(): void {
     const world = this.screenToWorld({ x: this.lastPointerScreenX, y: this.lastPointerScreenY });
     this.emit("hover", {
@@ -3914,7 +3915,7 @@ export class BoardRenderer {
     if (event.repeat) {
       return;
     }
-    if (BoardRenderer.activeRenderer !== this) {
+    if (Puzzle2dRenderer.activeRenderer !== this) {
       return;
     }
     if (event.key === "Escape") {
@@ -3973,7 +3974,7 @@ export class BoardRenderer {
     this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
     this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
     this.canvas.dataset.boardHover = this.hoveredId ?? "";
-    this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
+    this.canvas.setAttribute("data-puzzle2d-camera", `${this.camera.x},${this.camera.y}`);
   }
 
   private readonly handleContextMenu = (event: MouseEvent): void => {
@@ -3981,7 +3982,7 @@ export class BoardRenderer {
       return;
     }
     event.preventDefault();
-    BoardRenderer.activeRenderer = this;
+    Puzzle2dRenderer.activeRenderer = this;
     if (this.wasmSessionCallBlockedForReentry()) {
       this.invalidated = true;
       return;
@@ -4005,7 +4006,7 @@ export class BoardRenderer {
     if (event.button !== 0 && event.button !== 1) {
       return;
     }
-    BoardRenderer.activeRenderer = this;
+    Puzzle2dRenderer.activeRenderer = this;
     this.canvas.focus({ preventScroll: true });
     if (typeof event.pointerId === "number") {
       this.canvas.setPointerCapture?.(event.pointerId);
@@ -4126,7 +4127,7 @@ if (boardVitest) {
   const { beforeAll, describe, expect, it, vi } = boardVitest;
 
   beforeAll(async () => {
-    await ensureElementsBoardWasmLoaded();
+    await ensurePuzzle2dWasmLoaded();
   });
 
   describe("boardFitTextFontPx", () => {
@@ -4171,14 +4172,14 @@ if (boardVitest) {
     });
   });
 
-  describe("boardNodeTextPlacementAnchor", () => {
+  describe("puzzle2dNodeTextPlacementAnchor", () => {
     it("anchors west at the left-middle of the node-centered box", () => {
-      const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, "w");
+      const a = puzzle2dNodeTextPlacementAnchor(100, 50, 80, 40, "w");
       expect(a).toEqual({ fillX: 60, fillY: 50, textAlign: "left", textBaseline: "middle" });
     });
   });
 
-  function createMockCanvas(width = 800, height = 600): { canvas: HTMLCanvasElement; context: BoardCanvasContext } {
+  function createMockCanvas(width = 800, height = 600): { canvas: HTMLCanvasElement; context: Puzzle2dCanvasContext } {
     const canvas = document.createElement("canvas");
     const context = {
       arc: vi.fn(),
@@ -4208,7 +4209,7 @@ if (boardVitest) {
       strokeStyle: "#000000",
       textAlign: "start" as CanvasTextAlign,
       textBaseline: "alphabetic" as CanvasTextBaseline,
-    } satisfies BoardCanvasContext;
+    } satisfies Puzzle2dCanvasContext;
     Object.defineProperty(canvas, "clientWidth", { configurable: true, value: width });
     Object.defineProperty(canvas, "clientHeight", { configurable: true, value: height });
     Object.defineProperty(canvas, "getContext", { configurable: true, value: () => context });
@@ -4222,10 +4223,10 @@ if (boardVitest) {
   describe("board hover publication", () => {
     it("emits hover with hit id and pointer/world coordinates after pointermove", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const hovers: BoardHoverPayload[] = [];
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const hovers: Puzzle2dHoverPayload[] = [];
       renderer.on("hover", (h) => hovers.push(h));
-      const node = new BoardSceneNode({ id: "hover-node", radius: 24, x: 0, y: 0 });
+      const node = new Puzzle2dSceneNode({ id: "hover-node", radius: 24, x: 0, y: 0 });
       renderer.scene.add(node);
       renderer.render();
       const p = renderer.worldToScreen({ x: 0, y: 0 });
@@ -4241,10 +4242,10 @@ if (boardVitest) {
 
   describe("board geometry helpers", () => {
     it("places cubic edge control arms along circle normals at the anchors", () => {
-      const sourceNode = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "b", radius: 40, x: 300, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
+      const sourceNode = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "b", radius: 40, x: 300, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
       const curve = computeEdgeBezier(sourceHandle, targetHandle);
 
       expect(curve.p0.x).toBeCloseTo(40);
@@ -4262,8 +4263,8 @@ if (boardVitest) {
     });
 
     it("builds a radial cubic for a wire whose far end is a free world point", () => {
-      const sourceNode = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+      const sourceNode = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
       const curve = computeWireBezier(sourceHandle, { x: 200, y: 100 });
       expect(curve.p0.x).toBeCloseTo(40);
       expect(curve.p0.y).toBeCloseTo(0);
@@ -4272,7 +4273,7 @@ if (boardVitest) {
     });
 
     it("places rectangle handles on the perimeter by north-zero CCW angle", () => {
-      const rectNode = new BoardSceneNode({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
+      const rectNode = new Puzzle2dSceneNode({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
       const p0 = computeHandlePosition(rectNode, 0);
       expect(p0.x).toBeCloseTo(100);
       expect(p0.y).toBeCloseTo(40);
@@ -4288,43 +4289,43 @@ if (boardVitest) {
     });
 
     it("labels minimap, overview, compact, normal, detail, and micro LOD bands from zoom thresholds", () => {
-      expect(resolveBoardLodLabel(0.1)).toBe("minimap");
-      expect(resolveBoardLodLabel(0.25)).toBe("overview");
-      expect(resolveBoardLodLabel(0.4)).toBe("compact");
-      expect(resolveBoardLodLabel(0.9)).toBe("normal");
-      expect(resolveBoardLodLabel(1.3)).toBe("detail");
-      expect(resolveBoardLodLabel(2.6)).toBe("micro");
-      const tight: BoardLodZoomThresholds = {
+      expect(resolvePuzzle2dLodLabel(0.1)).toBe("minimap");
+      expect(resolvePuzzle2dLodLabel(0.25)).toBe("overview");
+      expect(resolvePuzzle2dLodLabel(0.4)).toBe("compact");
+      expect(resolvePuzzle2dLodLabel(0.9)).toBe("normal");
+      expect(resolvePuzzle2dLodLabel(1.3)).toBe("detail");
+      expect(resolvePuzzle2dLodLabel(2.6)).toBe("micro");
+      const tight: Puzzle2dLodZoomThresholds = {
         minimapMaxZoom: 0.2,
         overviewMaxZoom: 0.35,
         compactMaxZoom: 0.45,
         normalMaxZoom: 0.6,
         detailMaxZoom: 1,
       };
-      expect(resolveBoardLodLabelFromThresholds(0.15, tight)).toBe("minimap");
-      expect(resolveBoardLodLabelFromThresholds(0.3, tight)).toBe("overview");
-      expect(resolveBoardLodLabelFromThresholds(0.4, tight)).toBe("compact");
-      expect(resolveBoardLodLabelFromThresholds(0.5, tight)).toBe("normal");
-      expect(resolveBoardLodLabelFromThresholds(0.7, tight)).toBe("detail");
-      expect(resolveBoardLodLabelFromThresholds(1.1, tight)).toBe("micro");
+      expect(resolvePuzzle2dLodLabelFromThresholds(0.15, tight)).toBe("minimap");
+      expect(resolvePuzzle2dLodLabelFromThresholds(0.3, tight)).toBe("overview");
+      expect(resolvePuzzle2dLodLabelFromThresholds(0.4, tight)).toBe("compact");
+      expect(resolvePuzzle2dLodLabelFromThresholds(0.5, tight)).toBe("normal");
+      expect(resolvePuzzle2dLodLabelFromThresholds(0.7, tight)).toBe("detail");
+      expect(resolvePuzzle2dLodLabelFromThresholds(1.1, tight)).toBe("micro");
     });
 
     it("switches caption policy across the six LOD bands", () => {
-      expect(boardTextOverlayCaptionForLod("Node Label", "minimap", null)).toBeNull();
-      expect(boardTextOverlayCaptionForLod("Node Label", "overview", null)).toBeNull();
-      expect(boardTextOverlayCaptionForLod("Node Label", "compact", null)).toBe("Node La…");
-      expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node La…");
-      expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
-      expect(boardTextOverlayCaptionForLod("0123456789012345", "micro", null)).toBe("01234567890…");
-      expect(boardHandleOverlayCaptionForLod("Handle Label", "compact")).toBeNull();
-      expect(boardHandleOverlayCaptionForLod("Handle Label", "detail")).toBe("Handl…");
-      expect(boardHandleOverlayCaptionForLod("Handle Label", "micro")).toBe("Handle …");
+      expect(puzzle2dTextOverlayCaptionForLod("Node Label", "minimap", null)).toBeNull();
+      expect(puzzle2dTextOverlayCaptionForLod("Node Label", "overview", null)).toBeNull();
+      expect(puzzle2dTextOverlayCaptionForLod("Node Label", "compact", null)).toBe("Node La…");
+      expect(puzzle2dTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node La…");
+      expect(puzzle2dTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
+      expect(puzzle2dTextOverlayCaptionForLod("0123456789012345", "micro", null)).toBe("01234567890…");
+      expect(puzzle2dHandleOverlayCaptionForLod("Handle Label", "compact")).toBeNull();
+      expect(puzzle2dHandleOverlayCaptionForLod("Handle Label", "detail")).toBe("Handl…");
+      expect(puzzle2dHandleOverlayCaptionForLod("Handle Label", "micro")).toBe("Handle …");
     });
   });
 
-  describe("board renderer render pipeline", () => {
+  describe("puzzle 2d renderer render pipeline", () => {
     it("coalesces nested render calls from frame listeners instead of re-entering the render pass", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       let frameCount = 0;
       renderer.subscribeFrame(() => {
         frameCount += 1;
@@ -4341,15 +4342,15 @@ if (boardVitest) {
   describe("board scene", () => {
     it("stores nodes, handles, and edges with stable ids and emits edge creation", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
       renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 80 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-      const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 36, x: 220, y: 80 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 
       renderer.scene.add(sourceNode).add(targetNode).add(edge);
 
@@ -4362,14 +4363,14 @@ if (boardVitest) {
     });
 
     it("stores wires and drops them when an endpoint handle is removed", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const created: string[] = [];
       const destroyed: string[] = [];
       renderer.on("wireCreate", (e) => created.push(e.id));
       renderer.on("wireDestroy", (e) => destroyed.push(e.id));
-      const n = new BoardSceneNode({ id: "n", radius: 22, x: 0, y: 0 });
-      const h = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
-      const w = new BoardSceneWire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
+      const n = new Puzzle2dSceneNode({ id: "n", radius: 22, x: 0, y: 0 });
+      const h = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
+      const w = new Puzzle2dSceneWire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
       renderer.scene.add(n).add(w);
       expect(renderer.scene.wires.get("w-1")).toBe(w);
       expect(w.kind).toBe("wire");
@@ -4382,15 +4383,15 @@ if (boardVitest) {
 
     it("creates an edge when linking two handles with a pointer drag through WASM", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      renderer.setCamera(0, 0, BOARD_LOD_DETAIL_MIN_ZOOM);
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCamera(0, 0, PUZZLE_2D_LOD_DETAIL_MIN_ZOOM);
       const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
       renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
-      const a = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 40, x: 280, y: 0 });
-      new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: a });
-      new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 40, x: 280, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: a });
+      new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
       renderer.scene.add(a).add(b);
       renderer.render();
 
@@ -4411,12 +4412,27 @@ if (boardVitest) {
       renderer.dispose();
     });
 
-    it("dispose does not emit structural delete events that would clear play fixtures", () => {
+    it("wasm drain nodeDelete for missing scene ids does not emit structural delete events", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       const nodeDeletes: string[] = [];
       renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
-      const root = new BoardSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
+      const root = new Puzzle2dSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(root);
+      renderer["applyWasmDrainToScene"](
+        JSON.stringify([{ type: "nodeDelete", payload: { id: "ghost" } }]),
+      );
+      expect(nodeDeletes).toEqual([]);
+      expect(renderer.scene.nodes.has("keep")).toBe(true);
+      renderer.dispose();
+    });
+
+    it("dispose does not emit structural delete events that would clear play fixtures", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const nodeDeletes: string[] = [];
+      renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      const root = new Puzzle2dSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
       renderer.scene.add(root);
       renderer.dispose();
       expect(nodeDeletes).toEqual([]);
@@ -4424,17 +4440,17 @@ if (boardVitest) {
 
     it("deletes selected edges and nodes when Delete reaches the window listener after pointerdown", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       const edgeDeletes: string[] = [];
       const nodeDeletes: string[] = [];
       renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
       renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
 
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-      const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
       renderer.scene.add(sourceNode).add(targetNode).add(edge);
       renderer.render();
 
@@ -4461,12 +4477,12 @@ if (boardVitest) {
     it("does not delete the board selection while a text field owns focus", () => {
       const { canvas } = createMockCanvas();
       document.body.appendChild(canvas);
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-      const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
       renderer.scene.add(sourceNode).add(targetNode).add(edge);
       renderer.render();
 
@@ -4490,8 +4506,8 @@ if (boardVitest) {
 
     it("moves a selected draggable node from pointer events without React involvement", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const movableNode = new BoardSceneNode({ draggable: true, id: "movable", radius: 30, x: 0, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const movableNode = new Puzzle2dSceneNode({ draggable: true, id: "movable", radius: 30, x: 0, y: 0 });
       renderer.scene.add(movableNode);
       renderer.render();
 
@@ -4511,9 +4527,9 @@ if (boardVitest) {
 
     it("moves every selected draggable node when dragging one of them", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const a = new BoardSceneNode({ draggable: true, id: "a", radius: 20, x: 0, y: 0 });
-      const b = new BoardSceneNode({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const a = new Puzzle2dSceneNode({ draggable: true, id: "a", radius: 20, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.render();
       renderer.setSelectionIds(["a", "b"]);
@@ -4531,8 +4547,8 @@ if (boardVitest) {
 
     it("keeps imperative node coordinates when declarative props still show pre-drag authoring values", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const node = new BoardSceneNode({ id: "n", radius: 10, x: 10, y: 20 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 10, x: 10, y: 20 });
       renderer.scene.add(node);
       renderer.applyNodePositionFromProps(node.id, 10, 20, node);
       node.setPosition(100, 200);
@@ -4545,12 +4561,12 @@ if (boardVitest) {
       renderer.dispose();
     });
 
-    it("boardElementInteractionChrome maps preselect preview and anchor removal", () => {
-      expect(boardElementInteractionChrome(["a"], { ids: ["a", "b"], removedIds: ["a"] })).toEqual({
+    it("puzzle2dElementInteractionChrome maps preselect preview and anchor removal", () => {
+      expect(puzzle2dElementInteractionChrome(["a"], { ids: ["a", "b"], removedIds: ["a"] })).toEqual({
         highlightedIds: new Set(["a"]),
         selectedIds: new Set(["b"]),
       });
-      expect(boardElementInteractionChrome(["a"], BOARD_PRESELECT_EMPTY)).toEqual({
+      expect(puzzle2dElementInteractionChrome(["a"], PUZZLE_2D_PRESELECT_EMPTY)).toEqual({
         highlightedIds: new Set(),
         selectedIds: new Set(["a"]),
       });
@@ -4558,9 +4574,9 @@ if (boardVitest) {
 
     it("applies imperative selection via setSelectionIds", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 20, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 20, x: 100, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 20, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 20, x: 100, y: 0 });
       renderer.scene.add(sourceNode).add(targetNode);
       renderer.setSelectionIds(["target"]);
       expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
@@ -4571,10 +4587,10 @@ if (boardVitest) {
 
     it("syncs selection silently for controlled hosts without emitting select", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const node = new BoardSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
       renderer.scene.add(node);
-      const selects: BoardSelectionSnapshot[] = [];
+      const selects: Puzzle2dSelectionSnapshot[] = [];
       renderer.on("select", (snap) => selects.push(snap));
       renderer.setSelectionIdsSilent(["solo"]);
       expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
@@ -4584,8 +4600,8 @@ if (boardVitest) {
 
     it("keeps committed selection empty during rectangle preselect from empty", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-      const node = new BoardSceneNode({ id: "solo", radius: 20, x: 200, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
+      const node = new Puzzle2dSceneNode({ id: "solo", radius: 20, x: 200, y: 0 });
       renderer.scene.add(node);
       renderer.render();
       const s0 = renderer.worldToScreen({ x: 120, y: -40 });
@@ -4603,12 +4619,12 @@ if (boardVitest) {
 
     it("emits preselect while rectangle-selecting and clears on commit", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-      const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 20, x: 120, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 20, x: 120, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.render();
-      const preselects: BoardPreselectSnapshot[] = [];
+      const preselects: Puzzle2dPreselectSnapshot[] = [];
       renderer.on("preselect", (snap) => preselects.push(snap));
       const s0 = renderer.worldToScreen({ x: -40, y: -40 });
       const s1 = renderer.worldToScreen({ x: 160, y: 40 });
@@ -4618,15 +4634,15 @@ if (boardVitest) {
       expect(preselects.at(-1)?.ids.includes("b")).toBe(true);
       canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
       expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
-      expect(renderer.preselection.getSnapshot()).toEqual(BOARD_PRESELECT_EMPTY);
+      expect(renderer.preselection.getSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
       renderer.dispose();
     });
 
     it("syncPreselectionSilent applies selected chrome on scene objects", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.setSelectionIds(["a"]);
       renderer.syncPreselectionSilent({ ids: ["b"], removedIds: [] });
@@ -4639,9 +4655,9 @@ if (boardVitest) {
 
     it("splits preselect preview into selected and highlighted scene chrome", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.setSelectionIds(["a"]);
       renderer.syncPreselectionSilent({ ids: ["b"], removedIds: ["a"] });
@@ -4655,13 +4671,13 @@ if (boardVitest) {
 
     it("cancels area-select on Escape without changing committed selection", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.setSelectionIds(["a"]);
       renderer.render();
-      const cancels: BoardPreselectSnapshot[] = [];
+      const cancels: Puzzle2dPreselectSnapshot[] = [];
       renderer.on("preselectCancel", (snap) => cancels.push(snap));
       const s0 = renderer.worldToScreen({ x: 120, y: -40 });
       const s1 = renderer.worldToScreen({ x: 280, y: 40 });
@@ -4671,7 +4687,7 @@ if (boardVitest) {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       expect(cancels.length).toBe(1);
       expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
-      expect(renderer.preselection.getSnapshot()).toEqual(BOARD_PRESELECT_EMPTY);
+      expect(renderer.preselection.getSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
       expect(a.selected).toBe(true);
       expect(b.selected).toBe(false);
       renderer.dispose();
@@ -4679,8 +4695,8 @@ if (boardVitest) {
 
     it("opens rectangle selection from a left-button drag and applies directional partial versus enclosing rules", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-      const node = new BoardSceneNode({ id: "node", radius: 20, x: 0, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
+      const node = new Puzzle2dSceneNode({ id: "node", radius: 20, x: 0, y: 0 });
       renderer.scene.add(node);
       renderer.render();
 
@@ -4703,8 +4719,8 @@ if (boardVitest) {
 
     it("clears selection when clicking the background without dragging", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const node = new BoardSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
       renderer.scene.add(node);
       renderer.render();
 
@@ -4724,19 +4740,19 @@ if (boardVitest) {
     });
 
     it("boardInteractionChromeStyleKey follows selection ids not stale scene flags", () => {
-      const node = new BoardSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
+      const node = new Puzzle2dSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
       node.selected = true;
       node.highlighted = false;
-      const chrome = boardElementInteractionChrome([], BOARD_PRESELECT_EMPTY);
+      const chrome = puzzle2dElementInteractionChrome([], PUZZLE_2D_PRESELECT_EMPTY);
       expect(boardInteractionChromeStyleKey("node", node.id, chrome)).toBe("node");
-      const chromeSel = boardElementInteractionChrome(["solo"], BOARD_PRESELECT_EMPTY);
+      const chromeSel = puzzle2dElementInteractionChrome(["solo"], PUZZLE_2D_PRESELECT_EMPTY);
       expect(boardInteractionChromeStyleKey("node", node.id, chromeSel)).toBe("node.selected");
     });
 
     it("stale silent selection sync undoes background deselect until controlled prop updates", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      const node = new BoardSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
       renderer.scene.add(node);
       renderer.render();
 
@@ -4757,16 +4773,16 @@ if (boardVitest) {
 
     it("includes handles in rectangle selection with nodes and edges target", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({
+      const renderer = new Puzzle2dRenderer({
         canvas,
         renderMode: "headless-test",
-        selection: { method: "rectangle", mode: "invertive", targets: { ...BOARD_SELECTION_TARGETS_DEFAULT } },
+        selection: { method: "rectangle", mode: "invertive", targets: { ...PUZZLE_2D_SELECTION_TARGETS_DEFAULT } },
       });
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 40, x: 0, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 40, x: 200, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-      const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 40, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 40, x: 200, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
       renderer.scene.add(sourceNode).add(targetNode).add(edge);
       renderer.render();
 
@@ -4784,12 +4800,12 @@ if (boardVitest) {
 
     it("supports lasso targets and additive subtractive invertive selection modes", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", targets: { nodes: false, edges: true, handles: false } } });
-      const sourceNode = new BoardSceneNode({ id: "source", radius: 12, x: -80, y: 0 });
-      const targetNode = new BoardSceneNode({ id: "target", radius: 12, x: 80, y: 0 });
-      const sourceHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-      const targetHandle = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-      const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge", target: targetHandle });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", targets: { nodes: false, edges: true, handles: false } } });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 12, x: -80, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 12, x: 80, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge", target: targetHandle });
       renderer.scene.add(sourceNode).add(targetNode).add(edge);
       renderer.render();
 
@@ -4834,9 +4850,9 @@ if (boardVitest) {
 
     it("maps default selection to replace and honors Ctrl and Shift modifiers", () => {
       const { canvas } = createMockCanvas();
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "default", targets: { nodes: true, edges: false, handles: false } } });
-      const a = new BoardSceneNode({ id: "a", radius: 12, x: 0, y: 0 });
-      const b = new BoardSceneNode({ id: "b", radius: 12, x: 80, y: 0 });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { mode: "default", targets: { nodes: true, edges: false, handles: false } } });
+      const a = new Puzzle2dSceneNode({ id: "a", radius: 12, x: 0, y: 0 });
+      const b = new Puzzle2dSceneNode({ id: "b", radius: 12, x: 80, y: 0 });
       renderer.scene.add(a).add(b);
       renderer.render();
 
@@ -4862,9 +4878,9 @@ if (boardVitest) {
     });
   });
 
-  describe("board fixture io", () => {
+  describe("puzzle 2d fixture io", () => {
     it("parses minimal v1 fixture payloads", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 1, y: 2, zoom: 0.5 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         meta: {},
@@ -4884,7 +4900,7 @@ if (boardVitest) {
     });
 
     it("parses rectangle fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -4905,7 +4921,7 @@ if (boardVitest) {
     });
 
     it("parses optional iconKind on fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -4927,7 +4943,7 @@ if (boardVitest) {
     });
 
     it("parses optional metabolism catalog iconKind on fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -4946,7 +4962,7 @@ if (boardVitest) {
     });
 
     it("parses optional iconKind on fixture handles", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -4965,26 +4981,26 @@ if (boardVitest) {
     });
 
     it("classifies board icon selector modes for UI tabs", () => {
-      expect(classifyElementsBoardIconSelectorMode("")).toBe("math");
-      expect(classifyElementsBoardIconSelectorMode("typst:$x$")).toBe("math");
-      expect(classifyElementsBoardIconSelectorMode("$x$")).toBe("math");
-      expect(classifyElementsBoardIconSelectorMode("emoji:😀")).toBe("emoji");
-      expect(classifyElementsBoardIconSelectorMode("data:image/png;base64,abc")).toBe("data");
-      expect(classifyElementsBoardIconSelectorMode("image:data:image/jpeg;base64,xyz")).toBe("data");
-      expect(classifyElementsBoardIconSelectorMode("<svg")).toBe("vector");
-      expect(classifyElementsBoardIconSelectorMode("capsule-with-balcony_p")).toBe("vector");
-      expect(classifyElementsBoardIconSelectorMode("😀")).toBe("emoji");
+      expect(classifyPuzzle2dIconSelectorMode("")).toBe("math");
+      expect(classifyPuzzle2dIconSelectorMode("typst:$x$")).toBe("math");
+      expect(classifyPuzzle2dIconSelectorMode("$x$")).toBe("math");
+      expect(classifyPuzzle2dIconSelectorMode("emoji:😀")).toBe("emoji");
+      expect(classifyPuzzle2dIconSelectorMode("data:image/png;base64,abc")).toBe("data");
+      expect(classifyPuzzle2dIconSelectorMode("image:data:image/jpeg;base64,xyz")).toBe("data");
+      expect(classifyPuzzle2dIconSelectorMode("<svg")).toBe("vector");
+      expect(classifyPuzzle2dIconSelectorMode("capsule-with-balcony_p")).toBe("vector");
+      expect(classifyPuzzle2dIconSelectorMode("😀")).toBe("emoji");
     });
 
     it("parses optional textAutofit on fixture nodes", () => {
-      const circle = parseBoardFixtureV1({
+      const circle = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [{ handles: [{ angle: 0, id: "c.h" }], id: "c", radius: 12, text: "cap", textAutofit: true, x: 0, y: 0 }],
         schema: "puzzle.2d.fixture/v1",
       });
       expect(circle?.nodes[0]).toMatchObject({ id: "c", textAutofit: true, text: "cap" });
-      const rect = parseBoardFixtureV1({
+      const rect = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5006,7 +5022,7 @@ if (boardVitest) {
     });
 
     it("parses optional caption font, size, and alignment", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5031,7 +5047,7 @@ if (boardVitest) {
         textAlignment: "ne",
       });
       expect(
-        parseBoardFixtureV1({
+        parsePuzzle2dFixtureV1({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [{ angle: 0, id: "bad.aln" }], id: "bad", radius: 3, textAlignment: "xx", x: 0, y: 0 }],
@@ -5041,7 +5057,7 @@ if (boardVitest) {
     });
 
     it("parses optional handle radius on fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5062,7 +5078,7 @@ if (boardVitest) {
 
     it("rejects fixture edges that use legacy `from`/`to` instead of source/target", () => {
       expect(
-        parseBoardFixtureV1({
+        parsePuzzle2dFixtureV1({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [{ from: "a:h0", id: "e1", to: "b:h0" }],
           nodes: [
@@ -5076,7 +5092,7 @@ if (boardVitest) {
 
     it("rejects fixture nodes that use legacy `label` instead of `text`", () => {
       expect(
-        parseBoardFixtureV1({
+        parsePuzzle2dFixtureV1({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
@@ -5097,7 +5113,7 @@ if (boardVitest) {
     });
 
     it("parses optional nodeKind on circle and rectangle fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5130,7 +5146,7 @@ if (boardVitest) {
     });
 
     it("maps kit piece name to node text", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5152,14 +5168,14 @@ if (boardVitest) {
         shape: "rectangle",
         text: "cs_sl0_d0_t_f0_b_c0",
       });
-      expect(boardFixtureNodeCaption(parsed!.nodes[0]!)).toBe("cs_sl0_d0_t_f0_b_c0");
+      expect(puzzle2dFixtureNodeCaption(parsed!.nodes[0]!)).toBe("cs_sl0_d0_t_f0_b_c0");
     });
 
     it("rejects wrong schema or malformed nodes", () => {
-      expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
-      expect(parseBoardFixtureV1({ schema: "puzzle.2d.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+      expect(parsePuzzle2dFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+      expect(parsePuzzle2dFixtureV1({ schema: "puzzle.2d.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
       expect(
-        parseBoardFixtureV1({
+        parsePuzzle2dFixtureV1({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [], id: "bad", shape: "triangle", x: 0, y: 0 }],
@@ -5169,7 +5185,7 @@ if (boardVitest) {
     });
 
     it("round-trips drag codec for v1 fixtures", () => {
-      const fixture: BoardFixtureV1 = {
+      const fixture: Puzzle2dFixtureV1 = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         meta: {},
@@ -5198,12 +5214,12 @@ if (boardVitest) {
         ],
         schema: "puzzle.2d.fixture/v1",
       };
-      const decoded = decodeBoardFixtureFromDragV1(encodeBoardFixtureForDragV1(fixture));
+      const decoded = decodePuzzle2dFixtureFromDragV1(encodePuzzle2dFixtureForDragV1(fixture));
       expect(decoded).toEqual(fixture);
     });
 
     it("parses optional root on fixture nodes", () => {
-      const parsed = parseBoardFixtureV1({
+      const parsed = parsePuzzle2dFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -5229,7 +5245,7 @@ if (boardVitest) {
 
   describe("puzzle 2d force graph layout", () => {
     it("spreads linked nodes using wasm+nalgebra layout", () => {
-      const fixture: BoardFixtureV1 = {
+      const fixture: Puzzle2dFixtureV1 = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         nodes: [
@@ -5238,7 +5254,7 @@ if (boardVitest) {
         ],
         schema: "puzzle.2d.fixture/v1",
       };
-      const laid = layoutBoardFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
+      const laid = layoutPuzzle2dFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
       const ax = (laid.nodes[0] as { x: number }).x;
       const bx = (laid.nodes[1] as { x: number }).x;
       expect(Math.abs(bx - ax)).toBeGreaterThan(90);
@@ -5246,25 +5262,25 @@ if (boardVitest) {
     });
 
     it("throws on invalid fixture schema from wasm", () => {
-      const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
-      expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
+      const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as Puzzle2dFixtureV1;
+      expect(() => layoutPuzzle2dFixtureForceGraph(bad)).toThrow();
     });
   });
 
   describe("board directed graph observation", () => {
     it("computes subtree from roots along directed edges", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-      const mid = new BoardSceneNode({ id: "mid", radius: 10, x: 50, y: 0 });
-      const leaf = new BoardSceneNode({ id: "leaf", radius: 10, x: 100, y: 0 });
-      const hRoot = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-      const hMidTarget = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
-      const hMidSource = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
-      const hLeafTarget = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
-      const e1 = new BoardSceneEdge({ source: hRoot, id: "e1", target: hMidTarget });
-      const e2 = new BoardSceneEdge({ source: hMidSource, id: "e2", target: hLeafTarget });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const root = new Puzzle2dSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+      const mid = new Puzzle2dSceneNode({ id: "mid", radius: 10, x: 50, y: 0 });
+      const leaf = new Puzzle2dSceneNode({ id: "leaf", radius: 10, x: 100, y: 0 });
+      const hRoot = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+      const hMidTarget = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
+      const hMidSource = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
+      const hLeafTarget = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
+      const e1 = new Puzzle2dSceneEdge({ source: hRoot, id: "e1", target: hMidTarget });
+      const e2 = new Puzzle2dSceneEdge({ source: hMidSource, id: "e2", target: hLeafTarget });
       renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
-      const snap = computeBoardGraphObservationSnapshot(renderer.scene);
+      const snap = computePuzzle2dGraphObservationSnapshot(renderer.scene);
       expect(snap.rootIds).toEqual(["root"]);
       expect(snap.childNodeIds).toEqual(["leaf", "mid"]);
       expect(snap.childEdgeIds).toEqual(["e1", "e2"]);
@@ -5273,7 +5289,7 @@ if (boardVitest) {
     });
 
     it("emits graph observation events after scene mutations flush", async () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const events: string[] = [];
       const unsubs = [
         renderer.on("change", () => events.push("change")),
@@ -5285,11 +5301,11 @@ if (boardVitest) {
         renderer.on("childNodeChange", (p) => events.push(`childNodeChange:${p.id}`)),
         renderer.on("childEdgeChange", (p) => events.push(`childEdgeChange:${p.id}`)),
       ];
-      const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-      const child = new BoardSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
-      const hRootSource = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-      const hChildTarget = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
-      const edge = new BoardSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
+      const root = new Puzzle2dSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+      const child = new Puzzle2dSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
+      const hRootSource = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+      const hChildTarget = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+      const edge = new Puzzle2dSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
       renderer.scene.add(root).add(child).add(edge);
       await Promise.resolve();
       expect(events.some((e) => e.startsWith("parentNodeChange:root"))).toBe(true);
@@ -5303,13 +5319,13 @@ if (boardVitest) {
     });
 
     it("emits nodeCreate when a node id first appears after the baseline observation", async () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const created: string[] = [];
       const off = renderer.on("nodeCreate", (p) => created.push(p.id));
-      const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+      const root = new Puzzle2dSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
       renderer.scene.add(root);
       await Promise.resolve();
-      const child = new BoardSceneNode({ id: "child", radius: 10, x: 50, y: 0 });
+      const child = new Puzzle2dSceneNode({ id: "child", radius: 10, x: 50, y: 0 });
       renderer.scene.add(child);
       await Promise.resolve();
       expect(created).toEqual(["root", "child"]);
@@ -5318,14 +5334,14 @@ if (boardVitest) {
     });
 
     it("emits edgeChange when an existing edge signature changes", async () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const changes: string[] = [];
       const off = renderer.on("edgeChange", (p) => changes.push(p.id));
-      const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-      const child = new BoardSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
-      const hRootSource = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-      const hChildTarget = new BoardSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
-      const edge = new BoardSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
+      const root = new Puzzle2dSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+      const child = new Puzzle2dSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
+      const hRootSource = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+      const hChildTarget = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+      const edge = new Puzzle2dSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
       renderer.scene.add(root).add(child).add(edge);
       await Promise.resolve();
       edge.visible = false;
@@ -5498,48 +5514,48 @@ function reportBoardHostRecoverableError(error: unknown): void {
 }
 
 //#region 🔖HostKinds
-export const BOARD_HOST_NODE = "puzzle.2d/node";
-export const BOARD_HOST_HANDLE = "puzzle.2d/handle";
-export const BOARD_HOST_EDGE = "puzzle.2d/edge";
-export const BOARD_HOST_WIRE = "puzzle.2d/wire";
+export const PUZZLE_2D_HOST_NODE = "puzzle.2d/node";
+export const PUZZLE_2D_HOST_HANDLE = "puzzle.2d/handle";
+export const PUZZLE_2D_HOST_EDGE = "puzzle.2d/edge";
+export const PUZZLE_2D_HOST_WIRE = "puzzle.2d/wire";
 
-export type BoardHostType = typeof BOARD_HOST_NODE | typeof BOARD_HOST_HANDLE | typeof BOARD_HOST_EDGE | typeof BOARD_HOST_WIRE;
+export type Puzzle2dHostType = typeof PUZZLE_2D_HOST_NODE | typeof PUZZLE_2D_HOST_HANDLE | typeof PUZZLE_2D_HOST_EDGE | typeof PUZZLE_2D_HOST_WIRE;
 
 interface BoardHostNode {
   kind: "node";
-  impl: BoardSceneNode;
-  renderer: BoardRenderer;
+  impl: Puzzle2dSceneNode;
+  renderer: Puzzle2dRenderer;
   readonly handleChildren: Set<BoardHostHandle>;
 }
 
 interface BoardHostHandle {
   kind: "handle";
-  impl: BoardSceneHandle | null;
-  props: BoardHandleProps;
-  renderer: BoardRenderer;
+  impl: Puzzle2dSceneHandle | null;
+  props: Puzzle2dHandleProps;
+  renderer: Puzzle2dRenderer;
 }
 
 interface BoardHostEdge {
   kind: "edge";
-  impl: BoardSceneEdge | null;
-  props: BoardEdgeProps;
-  renderer: BoardRenderer;
+  impl: Puzzle2dSceneEdge | null;
+  props: Puzzle2dEdgeProps;
+  renderer: Puzzle2dRenderer;
 }
 
 interface BoardHostWire {
   kind: "wire";
-  impl: BoardSceneWire | null;
-  props: BoardWireProps;
-  renderer: BoardRenderer;
+  impl: Puzzle2dSceneWire | null;
+  props: Puzzle2dWireProps;
+  renderer: Puzzle2dRenderer;
 }
 
 export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge | BoardHostWire;
 //#endregion 🔖HostKinds
 
 //#region 🔖PropApply
-function newBoardNodeFromProps(props: BoardSceneNodeOptions): BoardSceneNode {
+function newBoardNodeFromProps(props: Puzzle2dSceneNodeOptions): Puzzle2dSceneNode {
   if (props.shape === "rectangle") {
-    return new BoardSceneNode({
+    return new Puzzle2dSceneNode({
       draggable: props.draggable ?? true,
       height: props.height,
       iconKind: props.iconKind,
@@ -5559,7 +5575,7 @@ function newBoardNodeFromProps(props: BoardSceneNodeOptions): BoardSceneNode {
       y: props.y,
     });
   }
-  return new BoardSceneNode({
+  return new Puzzle2dSceneNode({
     draggable: props.draggable ?? true,
     iconKind: props.iconKind,
     id: props.id,
@@ -5578,14 +5594,14 @@ function newBoardNodeFromProps(props: BoardSceneNodeOptions): BoardSceneNode {
   });
 }
 
-function applyNodeProps(renderer: BoardRenderer, instance: BoardSceneNode, props: BoardSceneNodeOptions): void {
+function applyNodeProps(renderer: Puzzle2dRenderer, instance: Puzzle2dSceneNode, props: Puzzle2dSceneNodeOptions): void {
   instance.draggable = props.draggable ?? true;
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
   instance.visible = props.visible ?? true;
   instance.root = props.root === true;
   instance.textAutofit = props.textAutofit ?? false;
-  instance.textAlignment = props.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
+  instance.textAlignment = props.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT;
   instance.textFontFamily = typeof props.textFontFamily === "string" && props.textFontFamily.trim() !== "" ? props.textFontFamily.trim() : BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
   const psz = props.textFontSize;
   instance.textFontSize = typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
@@ -5601,7 +5617,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardSceneNode, props
   }
 }
 
-function applyHandleProps(instance: BoardSceneHandle, props: BoardHandleProps, node: BoardSceneNode): void {
+function applyHandleProps(instance: Puzzle2dSceneHandle, props: Puzzle2dHandleProps, node: Puzzle2dSceneNode): void {
   if (instance.node !== node) {
     instance.node.detachHandle(instance);
     node.attachHandle(instance);
@@ -5619,7 +5635,7 @@ function applyHandleProps(instance: BoardSceneHandle, props: BoardHandleProps, n
   instance.setAngle(props.angle);
 }
 
-function applyEdgeProps(instance: BoardSceneEdge, props: BoardEdgeProps, sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): void {
+function applyEdgeProps(instance: Puzzle2dSceneEdge, props: Puzzle2dEdgeProps, sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): void {
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
   instance.visible = props.visible ?? true;
@@ -5627,7 +5643,7 @@ function applyEdgeProps(instance: BoardSceneEdge, props: BoardEdgeProps, sourceH
   instance.setEndpoints(sourceHandle, targetHandle);
 }
 
-function applyWireProps(instance: BoardSceneWire, props: BoardWireProps, sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle | null): void {
+function applyWireProps(instance: Puzzle2dSceneWire, props: Puzzle2dWireProps, sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle | null): void {
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
   instance.visible = props.visible ?? true;
@@ -5646,15 +5662,15 @@ function applyWireProps(instance: BoardSceneWire, props: BoardWireProps, sourceH
   }
 }
 
-function nodeShapeSyncKey(props: BoardSceneNodeOptions): "circle" | "rectangle" {
+function nodeShapeSyncKey(props: Puzzle2dSceneNodeOptions): "circle" | "rectangle" {
   return props.shape === "rectangle" ? "rectangle" : "circle";
 }
 
-function instanceShapeSyncKey(node: BoardSceneNode): "circle" | "rectangle" {
+function instanceShapeSyncKey(node: Puzzle2dSceneNode): "circle" | "rectangle" {
   return node.shape;
 }
 
-function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
+function propsEqualHandle(a: Puzzle2dHandleProps, b: Puzzle2dHandleProps): boolean {
   const ac = a.color === undefined || a.color === null ? "" : String(a.color).trim();
   const bc = b.color === undefined || b.color === null ? "" : String(b.color).trim();
   return (
@@ -5672,7 +5688,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
   );
 }
 
-function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
+function propsEqualEdge(a: Puzzle2dEdgeProps, b: Puzzle2dEdgeProps): boolean {
   return (
     a.id === b.id &&
     a.source === b.source &&
@@ -5686,7 +5702,7 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
   );
 }
 
-function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
+function propsEqualWire(a: Puzzle2dWireProps, b: Puzzle2dWireProps): boolean {
   return (
     a.id === b.id &&
     a.source === b.source &&
@@ -5702,7 +5718,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
   );
 }
 
-function propsEqualNode(a: BoardSceneNodeOptions, b: BoardSceneNodeOptions): boolean {
+function propsEqualNode(a: Puzzle2dSceneNodeOptions, b: Puzzle2dSceneNodeOptions): boolean {
   if (
     a.id !== b.id ||
     a.x !== b.x ||
@@ -5714,7 +5730,7 @@ function propsEqualNode(a: BoardSceneNodeOptions, b: BoardSceneNodeOptions): boo
     a.visible !== b.visible ||
     a.text !== b.text ||
     (a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
-    (a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
+    (a.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT) ||
     (a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
     (a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
     (a.root === true) !== (b.root === true) ||
@@ -5737,12 +5753,12 @@ function propsEqualNode(a: BoardSceneNodeOptions, b: BoardSceneNodeOptions): boo
 //#endregion 🔖PropApply
 
 //#region 🔖MountHelpers
-function mountHandleUnderNode(renderer: BoardRenderer, nodeHost: BoardHostNode, handleHost: BoardHostHandle): void {
+function mountHandleUnderNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNode, handleHost: BoardHostHandle): void {
   if (handleHost.impl?.parent) {
     return;
   }
   nodeHost.handleChildren.add(handleHost);
-  const impl = new BoardSceneHandle({ ...handleHost.props, node: nodeHost.impl });
+  const impl = new Puzzle2dSceneHandle({ ...handleHost.props, node: nodeHost.impl });
   handleHost.impl = impl;
   renderer.batch(() => {
     renderer.scene.add(impl);
@@ -5750,7 +5766,7 @@ function mountHandleUnderNode(renderer: BoardRenderer, nodeHost: BoardHostNode, 
   renderer.invalidate();
 }
 
-function mountNode(renderer: BoardRenderer, nodeHost: BoardHostNode): void {
+function mountNode(renderer: Puzzle2dRenderer, nodeHost: BoardHostNode): void {
   if (nodeHost.impl.parent) {
     return;
   }
@@ -5760,18 +5776,18 @@ function mountNode(renderer: BoardRenderer, nodeHost: BoardHostNode): void {
   renderer.invalidate();
 }
 
-function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
+function mountEdge(renderer: Puzzle2dRenderer, edgeHost: BoardHostEdge): void {
   if (edgeHost.impl?.parent) {
     return;
   }
   const source = renderer.scene.getObjectById(edgeHost.props.source);
   const target = renderer.scene.getObjectById(edgeHost.props.target);
-  if (!(source instanceof BoardSceneHandle) || !(target instanceof BoardSceneHandle)) {
+  if (!(source instanceof Puzzle2dSceneHandle) || !(target instanceof Puzzle2dSceneHandle)) {
     return;
   }
   renderer.batch(() => {
     if (!edgeHost.impl) {
-      edgeHost.impl = new BoardSceneEdge({ ...edgeHost.props, source, target });
+      edgeHost.impl = new Puzzle2dSceneEdge({ ...edgeHost.props, source, target });
       renderer.scene.add(edgeHost.impl);
     } else {
       applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
@@ -5780,19 +5796,19 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
   renderer.invalidate();
 }
 
-function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
+function mountWire(renderer: Puzzle2dRenderer, wireHost: BoardHostWire): void {
   if (wireHost.impl?.parent) {
     return;
   }
   const source = renderer.scene.getObjectById(wireHost.props.source);
-  if (!(source instanceof BoardSceneHandle)) {
+  if (!(source instanceof Puzzle2dSceneHandle)) {
     return;
   }
   const tid = (wireHost.props.target ?? "").trim();
-  let target: BoardSceneHandle | null = null;
+  let target: Puzzle2dSceneHandle | null = null;
   if (tid !== "") {
     const t = renderer.scene.getObjectById(tid);
-    if (!(t instanceof BoardSceneHandle)) {
+    if (!(t instanceof Puzzle2dSceneHandle)) {
       return;
     }
     target = t;
@@ -5801,7 +5817,7 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
     if (!wireHost.impl) {
       const ex = wireHost.props.endX;
       const ey = wireHost.props.endY;
-      wireHost.impl = new BoardSceneWire({
+      wireHost.impl = new Puzzle2dSceneWire({
         id: wireHost.props.id,
         source,
         target,
@@ -5820,7 +5836,7 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
   renderer.invalidate();
 }
 
-function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: BoardSceneNodeOptions): void {
+function replaceNodeImpl(renderer: Puzzle2dRenderer, host: BoardHostNode, nextProps: Puzzle2dSceneNodeOptions): void {
   if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
     renderer.batch(() => {
       for (const handleHost of host.handleChildren) {
@@ -5845,13 +5861,13 @@ function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps
   renderer.invalidate();
 }
 
-function isBoardRenderer(value: unknown): value is BoardRenderer {
-  return value instanceof BoardRenderer;
+function isPuzzle2dRenderer(value: unknown): value is Puzzle2dRenderer {
+  return value instanceof Puzzle2dRenderer;
 }
 
-function appendToBoardParent(parent: BoardRenderer | BoardHostInstance, child: BoardHostInstance): void {
+function appendToBoardParent(parent: Puzzle2dRenderer | BoardHostInstance, child: BoardHostInstance): void {
   const renderer = child.renderer;
-  if (isBoardRenderer(parent)) {
+  if (isPuzzle2dRenderer(parent)) {
     if (child.kind === "node") {
       mountNode(renderer, child);
     } else if (child.kind === "edge") {
@@ -5895,33 +5911,33 @@ const boardSceneHost = Reconciler({
 
   createInstance(type, props, rootContainer) {
     const renderer = rootContainer;
-    if (type === BOARD_HOST_NODE) {
+    if (type === PUZZLE_2D_HOST_NODE) {
       return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as NodeOptions), renderer };
     }
-    if (type === BOARD_HOST_HANDLE) {
-      return { kind: "handle", impl: null, props: props as BoardHandleProps, renderer };
+    if (type === PUZZLE_2D_HOST_HANDLE) {
+      return { kind: "handle", impl: null, props: props as Puzzle2dHandleProps, renderer };
     }
-    if (type === BOARD_HOST_EDGE) {
-      return { kind: "edge", impl: null, props: props as BoardEdgeProps, renderer };
+    if (type === PUZZLE_2D_HOST_EDGE) {
+      return { kind: "edge", impl: null, props: props as Puzzle2dEdgeProps, renderer };
     }
-    if (type === BOARD_HOST_WIRE) {
-      return { kind: "wire", impl: null, props: props as BoardWireProps, renderer };
+    if (type === PUZZLE_2D_HOST_WIRE) {
+      return { kind: "wire", impl: null, props: props as Puzzle2dWireProps, renderer };
     }
-    throw new Error(`Unknown board host type: ${String(type)}`);
+    throw new Error(`Unknown puzzle2d host type: ${String(type)}`);
   },
 
   createTextInstance() {
-    throw new Error("Text children are not supported inside the board host tree.");
+    throw new Error("Text children are not supported inside the puzzle2d host tree.");
   },
 
   shouldSetTextContent: () => false,
 
   appendInitialChild(parent, child) {
-    appendToBoardParent(parent as BoardRenderer | BoardHostInstance, child);
+    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
   },
 
   appendChild(parent, child) {
-    appendToBoardParent(parent as BoardRenderer | BoardHostInstance, child);
+    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
   },
 
   appendChildToContainer(container, child) {
@@ -5935,7 +5951,7 @@ const boardSceneHost = Reconciler({
   },
 
   insertBefore(parent, child, _beforeChild) {
-    appendToBoardParent(parent as BoardRenderer | BoardHostInstance, child);
+    appendToBoardParent(parent as Puzzle2dRenderer | BoardHostInstance, child);
   },
 
   insertInContainerBefore(container, child, _beforeChild) {
@@ -5950,7 +5966,7 @@ const boardSceneHost = Reconciler({
 
   removeChild(parent, child) {
     const renderer = child.renderer;
-    if (!isBoardRenderer(parent) && parent.kind === "node" && child.kind === "handle") {
+    if (!isPuzzle2dRenderer(parent) && parent.kind === "node" && child.kind === "handle") {
       detachHandleFromNode(parent, child);
     }
     if (child.impl?.parent) {
@@ -5989,7 +6005,7 @@ const boardSceneHost = Reconciler({
   },
 
   /** @emoji 🧹 No-op: host stack calls this on root before mutation; scene graph is driven by append/remove only (see {@link unmountBoardHostMount}). */
-  clearContainer(_container: BoardRenderer) {},
+  clearContainer(_container: Puzzle2dRenderer) {},
 
   finalizeInitialChildren() {
     return false;
@@ -6006,24 +6022,24 @@ const boardSceneHost = Reconciler({
   preparePortalMount() {},
 
   prepareUpdate(instance, type, oldProps, newProps) {
-    if (type === BOARD_HOST_NODE) {
+    if (type === PUZZLE_2D_HOST_NODE) {
       return !propsEqualNode(oldProps as NodeOptions, newProps as NodeOptions);
     }
-    if (type === BOARD_HOST_HANDLE) {
-      return !propsEqualHandle(oldProps as BoardHandleProps, newProps as BoardHandleProps);
+    if (type === PUZZLE_2D_HOST_HANDLE) {
+      return !propsEqualHandle(oldProps as Puzzle2dHandleProps, newProps as Puzzle2dHandleProps);
     }
-    if (type === BOARD_HOST_EDGE) {
-      return !propsEqualEdge(oldProps as BoardEdgeProps, newProps as BoardEdgeProps);
+    if (type === PUZZLE_2D_HOST_EDGE) {
+      return !propsEqualEdge(oldProps as Puzzle2dEdgeProps, newProps as Puzzle2dEdgeProps);
     }
-    if (type === BOARD_HOST_WIRE) {
-      return !propsEqualWire(oldProps as BoardWireProps, newProps as BoardWireProps);
+    if (type === PUZZLE_2D_HOST_WIRE) {
+      return !propsEqualWire(oldProps as Puzzle2dWireProps, newProps as Puzzle2dWireProps);
     }
     return false;
   },
 
   commitUpdate(instance, _payload, type, oldProps, nextProps) {
     const renderer = instance.renderer;
-    if (type === BOARD_HOST_NODE) {
+    if (type === PUZZLE_2D_HOST_NODE) {
       const next = nextProps as NodeOptions;
       const prev = oldProps as NodeOptions;
       const host = instance as BoardHostNode;
@@ -6040,9 +6056,9 @@ const boardSceneHost = Reconciler({
       renderer.invalidate();
       return;
     }
-    if (type === BOARD_HOST_HANDLE) {
+    if (type === PUZZLE_2D_HOST_HANDLE) {
       const h = instance as BoardHostHandle;
-      h.props = nextProps as BoardHandleProps;
+      h.props = nextProps as Puzzle2dHandleProps;
       if (!h.impl) {
         return;
       }
@@ -6053,17 +6069,17 @@ const boardSceneHost = Reconciler({
       renderer.invalidate();
       return;
     }
-    if (type === BOARD_HOST_EDGE) {
+    if (type === PUZZLE_2D_HOST_EDGE) {
       const e = instance as BoardHostEdge;
-      e.props = nextProps as BoardEdgeProps;
+      e.props = nextProps as Puzzle2dEdgeProps;
       const from = renderer.scene.getObjectById(e.props.source);
       const to = renderer.scene.getObjectById(e.props.target);
-      if (!(from instanceof BoardSceneHandle) || !(to instanceof BoardSceneHandle)) {
+      if (!(from instanceof Puzzle2dSceneHandle) || !(to instanceof Puzzle2dSceneHandle)) {
         return;
       }
       renderer.batch(() => {
         if (!e.impl) {
-          e.impl = new BoardSceneEdge({ ...e.props, source: from, target: to });
+          e.impl = new Puzzle2dSceneEdge({ ...e.props, source: from, target: to });
           renderer.scene.add(e.impl);
         } else {
           applyEdgeProps(e.impl, e.props, from, to);
@@ -6072,18 +6088,18 @@ const boardSceneHost = Reconciler({
       renderer.invalidate();
       return;
     }
-    if (type === BOARD_HOST_WIRE) {
+    if (type === PUZZLE_2D_HOST_WIRE) {
       const w = instance as BoardHostWire;
-      w.props = nextProps as BoardWireProps;
+      w.props = nextProps as Puzzle2dWireProps;
       const from = renderer.scene.getObjectById(w.props.source);
-      if (!(from instanceof BoardSceneHandle)) {
+      if (!(from instanceof Puzzle2dSceneHandle)) {
         return;
       }
       const tid = (w.props.target ?? "").trim();
-      let to: BoardSceneHandle | null = null;
+      let to: Puzzle2dSceneHandle | null = null;
       if (tid !== "") {
         const t = renderer.scene.getObjectById(tid);
-        if (!(t instanceof BoardSceneHandle)) {
+        if (!(t instanceof Puzzle2dSceneHandle)) {
           return;
         }
         to = t;
@@ -6092,7 +6108,7 @@ const boardSceneHost = Reconciler({
         if (!w.impl) {
           const ex = w.props.endX;
           const ey = w.props.endY;
-          w.impl = new BoardSceneWire({
+          w.impl = new Puzzle2dSceneWire({
             id: w.props.id,
             source: from,
             target: to,
@@ -6128,8 +6144,8 @@ const boardSceneHost = Reconciler({
 
 export type BoardHostMount = ReturnType<typeof boardSceneHost.createContainer>;
 
-/** @emoji 🌱 Creates a legacy-mode host mount bound to {@link BoardRenderer} for synchronous subtree commits with DOM `act()`. */
-export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
+/** @emoji 🌱 Creates a legacy-mode host mount bound to {@link Puzzle2dRenderer} for synchronous subtree commits with DOM `act()`. */
+export function createBoardHostMount(renderer: Puzzle2dRenderer): BoardHostMount {
   return boardSceneHost.createContainer(
     renderer,
     LegacyRoot,
@@ -6144,7 +6160,7 @@ export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
   );
 }
 
-/** @emoji 🔄 Schedules host work and ties post-commit to {@link BoardRenderer.invalidate}. */
+/** @emoji 🔄 Schedules host work and ties post-commit to {@link Puzzle2dRenderer.invalidate}. */
 export function updateBoardHostMount(root: BoardHostMount, element: ReactElement | null, parent: null): void {
   boardSceneHost.updateContainer(element, root, parent, () => {
     const renderer = root.containerInfo;
@@ -6152,10 +6168,10 @@ export function updateBoardHostMount(root: BoardHostMount, element: ReactElement
   });
 }
 
-/** @emoji 🧹 Unmounts the host subtree without disposing {@link BoardRenderer}. */
+/** @emoji 🧹 Unmounts the host subtree without disposing {@link Puzzle2dRenderer}. */
 export function unmountBoardHostMount(root: BoardHostMount): void {
   updateBoardHostMount(root, null, null);
-  const renderer = root.containerInfo as BoardRenderer;
+  const renderer = root.containerInfo as Puzzle2dRenderer;
   renderer.runWithoutSceneDeleteEvents(() => {
     renderer.scene.clear();
   });
@@ -6171,102 +6187,102 @@ import { Children, Fragment, act, createElement, isValidElement, type CSSPropert
 import { createRoot } from "react-dom/client";
 
 //#region 🔖Kinds
-export interface BoardCanvasProps {
+export interface Puzzle2dCanvasProps {
   camera?: Partial<CameraState>;
   children?: ReactNode;
-  /** @emoji 🎧 DOM-tree descendants with {@link BoardContext} (e.g. {@link useBoardEvent}); not mounted in the board host reconciler. */
+  /** @emoji 🎧 DOM-tree descendants with {@link Puzzle2dContext} (e.g. {@link usePuzzle2dEvent}); not mounted in the puzzle2d host reconciler. */
   companions?: ReactNode;
   className?: string;
   contextMenu?: ContextMenuItem[];
-  /** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+  /** @emoji 📥 When true, accepts in-app fixture drags using {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
   fixtureDragDrop?: boolean;
   height?: number;
   /** @emoji 🔗 Allowed kind pairs for link gestures (`specificity` tiers + `important`); empty omits filtering. */
   kindCompatibility?: readonly KindCompatEntry[];
   /** @emoji 🧩 Central semantic kind catalogs (handles, wires, nodes, edges) for WASM defaults + compatibility. */
   kindCatalogs?: KindCatalogBundle;
-  onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
+  onFixtureDrop?: (detail: Puzzle2dFixtureDropDetail) => void;
   /** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
-  onHover?: (payload: BoardHoverPayload) => void;
-  onReady?: (renderer: BoardRenderer) => void;
+  onHover?: (payload: Puzzle2dHoverPayload) => void;
+  onReady?: (renderer: Puzzle2dRenderer) => void;
   /** @emoji 🔔 Fires after any graph observation emission in this flush (see other `on*` graph props). */
   onChange?: () => void;
-  /** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-board-lod`). */
-  lodZoomThresholds?: BoardLodZoomThresholds;
+  /** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-puzzle2d-lod`). */
+  lodZoomThresholds?: Puzzle2dLodZoomThresholds;
   /** @emoji 📶 When true (default), camera zoom selects draw LOD; when false, {@link lod} pins the tier. */
   automaticLod?: boolean;
   /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
-  lod?: BoardDrawLodKind;
+  lod?: Puzzle2dDrawLodKind;
   /** @emoji 📶 Emits whenever the resolved WASM draw LOD band changes. */
-  onLodChange?: (lod: BoardDrawLodKind) => void;
-  /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_BOARD_GRID_FACTOR}). */
+  onLodChange?: (lod: Puzzle2dDrawLodKind) => void;
+  /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_PUZZLE_2D_GRID_FACTOR}). */
   gridFactor?: number;
   /** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
   gridSnapEnabled?: boolean;
-  onChildEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
-  onChildEdgesChange?: (payload: BoardChildEdgesChangePayload) => void;
-  onChildNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
-  onChildNodesChange?: (payload: BoardChildNodesChangePayload) => void;
-  onNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
-  onParentEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
-  onParentNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
-  /** @emoji 🎥 Camera pan/zoom center in world space plus zoom factor (same payload as {@link BoardCanvasProps.onViewportChange}). */
+  onChildEdgeChange?: (payload: Puzzle2dGraphEdgeIdPayload) => void;
+  onChildEdgesChange?: (payload: Puzzle2dChildEdgesChangePayload) => void;
+  onChildNodeChange?: (payload: Puzzle2dGraphNodeIdPayload) => void;
+  onChildNodesChange?: (payload: Puzzle2dChildNodesChangePayload) => void;
+  onNodeChange?: (payload: Puzzle2dGraphNodeIdPayload) => void;
+  onParentEdgeChange?: (payload: Puzzle2dGraphEdgeIdPayload) => void;
+  onParentNodeChange?: (payload: Puzzle2dGraphNodeIdPayload) => void;
+  /** @emoji 🎥 Camera pan/zoom center in world space plus zoom factor (same payload as {@link Puzzle2dCanvasProps.onViewportChange}). */
   onCamera?: (state: CameraState) => void;
   /** @emoji 🖱️ Right-click surface hit before built-in context UI resolves menu items. */
-  onContextMenu?: (payload: BoardEventMap["contextmenu"]) => void;
-  /** @emoji 🪢 Direct handle-to-handle link commit ({@link BoardEventMap.edgeCreate}). */
-  onConnect?: (payload: BoardEdgeLinkPayload) => void;
-  /** @emoji 📦 Fires once for {@link BoardEventMap.nodeCreate}, {@link BoardEventMap.edgeCreate}, or {@link BoardEventMap.wireCreate}. */
-  onCreate?: (payload: BoardStructureCreatePayload) => void;
-  /** @emoji 📦 Fires once for {@link BoardEventMap.nodeDelete}, {@link BoardEventMap.edgeDelete}, or {@link BoardEventMap.wireDestroy}. */
-  onDelete?: (payload: BoardStructureDeletePayload) => void;
+  onContextMenu?: (payload: Puzzle2dEventMap["contextmenu"]) => void;
+  /** @emoji 🪢 Direct handle-to-handle link commit ({@link Puzzle2dEventMap.edgeCreate}). */
+  onConnect?: (payload: Puzzle2dEdgeLinkPayload) => void;
+  /** @emoji 📦 Fires once for {@link Puzzle2dEventMap.nodeCreate}, {@link Puzzle2dEventMap.edgeCreate}, or {@link Puzzle2dEventMap.wireCreate}. */
+  onCreate?: (payload: Puzzle2dStructureCreatePayload) => void;
+  /** @emoji 📦 Fires once for {@link Puzzle2dEventMap.nodeDelete}, {@link Puzzle2dEventMap.edgeDelete}, or {@link Puzzle2dEventMap.wireDestroy}. */
+  onDelete?: (payload: Puzzle2dStructureDeletePayload) => void;
   /** @emoji 🖱️ Node drag motion from WASM (`nodeMove`). */
-  onDrag?: (payload: BoardEventMap["nodeMove"]) => void;
-  onEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
-  onEdgeCreate?: (payload: BoardEdgeLinkPayload) => void;
+  onDrag?: (payload: Puzzle2dEventMap["nodeMove"]) => void;
+  onEdgeChange?: (payload: Puzzle2dGraphEdgeIdPayload) => void;
+  onEdgeCreate?: (payload: Puzzle2dEdgeLinkPayload) => void;
   onEdgeDelete?: (payload: { id: string }) => void;
-  /** @emoji 🧭 Second click on an indirect handle ring target after {@link BoardEventMap.edgeCreate}. */
-  onIndirectConnect?: (payload: BoardEdgeLinkPayload) => void;
+  /** @emoji 🧭 Second click on an indirect handle ring target after {@link Puzzle2dEventMap.edgeCreate}. */
+  onIndirectConnect?: (payload: Puzzle2dEdgeLinkPayload) => void;
   /** @emoji ♻️ GPU/text invalidation tick (coalesced `invalidate`). */
   onInvalidate?: () => void;
-  onNodeCreate?: (payload: BoardGraphNodeIdPayload) => void;
+  onNodeCreate?: (payload: Puzzle2dGraphNodeIdPayload) => void;
   onNodeDelete?: (payload: { id: string }) => void;
   /** @emoji 🧲 Snap commit on pointer-up after a link drag (`proximityConnect` after `edgeCreate`). */
-  onProximityConnect?: (payload: BoardEdgeLinkPayload) => void;
-  /** @emoji 🎯 Emits while a link drag highlights compatible target parts ({@link BoardEventMap.linkCompatibleNodes}). */
-  onLinkCompatibleNodes?: (payload: BoardLinkCompatibleNodesPayload) => void;
-  /** @emoji ⭕ Emits while a link drag shows an indirect anchor ring ({@link BoardEventMap.linkTargetRing}). */
-  onLinkTargetRing?: (payload: BoardLinkTargetRingPayload) => void;
+  onProximityConnect?: (payload: Puzzle2dEdgeLinkPayload) => void;
+  /** @emoji 🎯 Emits while a link drag highlights compatible target parts ({@link Puzzle2dEventMap.linkCompatibleNodes}). */
+  onLinkCompatibleNodes?: (payload: Puzzle2dLinkCompatibleNodesPayload) => void;
+  /** @emoji ⭕ Emits while a link drag shows an indirect anchor ring ({@link Puzzle2dEventMap.linkTargetRing}). */
+  onLinkTargetRing?: (payload: Puzzle2dLinkTargetRingPayload) => void;
   /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
-  linkSession?: BoardLinkSessionSnapshot | null;
-  onSelect?: (snapshot: BoardSelectionSnapshot) => void;
+  linkSession?: Puzzle2dLinkSessionSnapshot | null;
+  onSelect?: (snapshot: Puzzle2dSelectionSnapshot) => void;
   /** @emoji ✅ Controlled committed selection (`onSelect` should update this). */
-  selection?: BoardSelectionSnapshot | readonly string[];
+  selection?: Puzzle2dSelectionSnapshot | readonly string[];
   /** @emoji ✅ Uncontrolled initial committed selection. */
-  defaultSelection?: BoardSelectionSnapshot | readonly string[];
+  defaultSelection?: Puzzle2dSelectionSnapshot | readonly string[];
   /** @emoji 👁️ Controlled area-select preview (`onPreselect` should update this). */
-  preselection?: BoardPreselectSnapshot;
+  preselection?: Puzzle2dPreselectSnapshot;
   /** @emoji 👁️ Uncontrolled initial area-select preview. */
-  defaultPreselection?: BoardPreselectSnapshot;
-  onPreselect?: (snapshot: BoardPreselectSnapshot) => void;
+  defaultPreselection?: Puzzle2dPreselectSnapshot;
+  onPreselect?: (snapshot: Puzzle2dPreselectSnapshot) => void;
   /** @emoji 🖱️ Controlled hover target id (`onHover` should update this). */
   hoveredId?: string | null;
   /** @emoji 🖱️ Uncontrolled initial hover target id. */
   defaultHoveredId?: string | null;
-  onWireChange?: (payload: BoardGraphWireIdPayload) => void;
-  onWireCreate?: (payload: BoardWireSnapshotPayload) => void;
-  onWireDestroy?: (payload: BoardGraphWireIdPayload) => void;
+  onWireChange?: (payload: Puzzle2dGraphWireIdPayload) => void;
+  onWireCreate?: (payload: Puzzle2dWireSnapshotPayload) => void;
+  onWireDestroy?: (payload: Puzzle2dGraphWireIdPayload) => void;
   /** @emoji ↔️ Camera center changed without zoom delta beyond float noise. */
   onPan?: (state: CameraState) => void;
   /** @emoji 🔎 Zoom factor changed on the camera snapshot. */
   onZoom?: (state: CameraState) => void;
-  /** @emoji 🪟 Preferred alias for {@link BoardCanvasProps.onCamera} (viewport = camera snapshot). */
+  /** @emoji 🪟 Preferred alias for {@link Puzzle2dCanvasProps.onCamera} (viewport = camera snapshot). */
   onViewportChange?: (state: CameraState) => void;
   renderMode?: RenderMode;
-  selectionMethod?: BoardSelectionMethod;
-  selectionMode?: BoardSelectionMode;
+  selectionMethod?: Puzzle2dSelectionMethod;
+  selectionMode?: Puzzle2dSelectionMode;
   /** @emoji 🎯 Independent toggles for which kinds participate in marquee/lasso and hit picking. */
-  selectionTargets?: BoardSelectionTargets;
+  selectionTargets?: Puzzle2dSelectionTargets;
   style?: CSSProperties;
   width?: number;
   /** 🧩 World-space clip tiling for Vello (`world-clip`, default) vs monolithic scene (`none`). */
@@ -6293,7 +6309,7 @@ export type BoardNodeCircleProps = {
   /** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Caption size in layout px when not autofitting. */
@@ -6324,7 +6340,7 @@ export type BoardNodeRectangleProps = {
   /** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
   textAutofit?: boolean;
   /** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
-  textAlignment?: BoardNodeTextAlignment;
+  textAlignment?: Puzzle2dNodeTextAlignment;
   /** @emoji 🔤 CSS font family for overlay caption. */
   textFontFamily?: string;
   /** @emoji 🔤 Caption size in layout px when not autofitting. */
@@ -6343,15 +6359,15 @@ export interface NodeDescriptor extends BoardNodeProps {
   handles: HandleDescriptor[];
 }
 
-export interface HandleDescriptor extends BoardHandleProps {
+export interface HandleDescriptor extends Puzzle2dHandleProps {
   nodeId: string;
 }
 
-export interface EdgeDescriptor extends BoardEdgeProps {}
+export interface EdgeDescriptor extends Puzzle2dEdgeProps {}
 
-export interface WireDescriptor extends BoardWireProps {}
+export interface WireDescriptor extends Puzzle2dWireProps {}
 
-interface BoardSceneDescriptor {
+interface Puzzle2dSceneDescriptor {
   edges: EdgeDescriptor[];
   handles: HandleDescriptor[];
   nodes: NodeDescriptor[];
@@ -6360,32 +6376,32 @@ interface BoardSceneDescriptor {
 //#endregion 🔖Kinds
 
 //#region 🔖Context
-const BoardContext = reactHostPort.createContext<BoardRenderer | null>(null);
-let activeBoardRenderer: BoardRenderer | null = null;
+const Puzzle2dContext = reactHostPort.createContext<Puzzle2dRenderer | null>(null);
+let activePuzzle2dRenderer: Puzzle2dRenderer | null = null;
 
 //#endregion 🔖Context
 
 //#region 🔖Markers
-/** 🟠 Host intrinsic for the secondary board host; assign to JSX {@link BOARD_HOST_NODE}. */
-export const Node = BOARD_HOST_NODE;
+/** 🟠 Host intrinsic for the secondary puzzle2d host; assign to JSX {@link PUZZLE_2D_HOST_NODE}. */
+export const Node = PUZZLE_2D_HOST_NODE;
 
 /** 🟣 Host intrinsic for board handles nested under {@link Node}. */
-export const Handle = BOARD_HOST_HANDLE;
+export const Handle = PUZZLE_2D_HOST_HANDLE;
 
 /** 🪢 Host intrinsic for directed edges between handle ids. */
-export const Edge = BOARD_HOST_EDGE;
+export const Edge = PUZZLE_2D_HOST_EDGE;
 
 /** 🧵 Host intrinsic for transient wires from a handle to another handle or a free world end. */
-export const Wire = BOARD_HOST_WIRE;
+export const Wire = PUZZLE_2D_HOST_WIRE;
 
-/** @emoji 🗼 Optional per-id context menus when building {@link boardFixtureSceneMarkers}. */
+/** @emoji 🗼 Optional per-id context menus when building {@link puzzle2dFixtureSceneMarkers}. */
 export interface BoardFixtureSceneMarkersOptions {
   edgeContextMenuForId?: (edgeId: string) => ContextMenuItem[] | undefined;
   nodeContextMenuForId?: (nodeId: string) => ContextMenuItem[] | undefined;
 }
 
-/** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link BoardCanvas} `children` from {@link BoardFixtureV1} (Fragment of host markers only). */
-export function boardFixtureSceneMarkers(fixture: BoardFixtureV1, options?: BoardFixtureSceneMarkersOptions): ReactElement {
+/** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link Puzzle2dCanvas} `children` from {@link Puzzle2dFixtureV1} (Fragment of host markers only). */
+export function puzzle2dFixtureSceneMarkers(fixture: Puzzle2dFixtureV1, options?: BoardFixtureSceneMarkersOptions): ReactElement {
   const nodeMenu = options?.nodeContextMenuForId;
   const edgeMenu = options?.edgeContextMenuForId;
   return (
@@ -6400,7 +6416,7 @@ export function boardFixtureSceneMarkers(fixture: BoardFixtureV1, options?: Boar
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             shape="rectangle"
-            text={boardFixtureNodeCaption(node)}
+            text={puzzle2dFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
             textFontFamily={node.textFontFamily}
@@ -6422,7 +6438,7 @@ export function boardFixtureSceneMarkers(fixture: BoardFixtureV1, options?: Boar
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             radius={node.radius}
-            text={boardFixtureNodeCaption(node)}
+            text={puzzle2dFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
             textFontFamily={node.textFontFamily}
@@ -6447,7 +6463,7 @@ export function boardFixtureSceneMarkers(fixture: BoardFixtureV1, options?: Boar
 
 //#region 🔖Descriptor Build
 function isMarkerElement(element: ReactElement): boolean {
-  return element.type === BOARD_HOST_NODE || element.type === BOARD_HOST_HANDLE || element.type === BOARD_HOST_EDGE || element.type === BOARD_HOST_WIRE;
+  return element.type === PUZZLE_2D_HOST_NODE || element.type === PUZZLE_2D_HOST_HANDLE || element.type === PUZZLE_2D_HOST_EDGE || element.type === PUZZLE_2D_HOST_WIRE;
 }
 
 function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: HandleDescriptor[]): void {
@@ -6459,15 +6475,15 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
       appendHandleDescriptors((child as ReactElement<{ children?: ReactNode }>).props.children, nodeId, handles);
       return;
     }
-    if (child.type === BOARD_HOST_HANDLE) {
-      const props = child.props as BoardHandleProps;
+    if (child.type === PUZZLE_2D_HOST_HANDLE) {
+      const props = child.props as Puzzle2dHandleProps;
       handles.push({ ...props, nodeId });
     }
   });
 }
 
-export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescriptor {
-  const descriptor: BoardSceneDescriptor = { edges: [], handles: [], nodes: [], wires: [] };
+export function buildPuzzle2dSceneDescriptor(children: ReactNode): Puzzle2dSceneDescriptor {
+  const descriptor: Puzzle2dSceneDescriptor = { edges: [], handles: [], nodes: [], wires: [] };
 
   const visit = (node: ReactNode): void => {
     Children.forEach(node, (child) => {
@@ -6478,7 +6494,7 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
         visit((child as ReactElement<{ children?: ReactNode }>).props.children);
         return;
       }
-      if (child.type === BOARD_HOST_NODE) {
+      if (child.type === PUZZLE_2D_HOST_NODE) {
         const props = child.props as BoardNodeProps;
         const handles: HandleDescriptor[] = [];
         appendHandleDescriptors(props.children, props.id, handles);
@@ -6486,12 +6502,12 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
         descriptor.handles.push(...handles);
         return;
       }
-      if (child.type === BOARD_HOST_EDGE) {
-        descriptor.edges.push(child.props as BoardEdgeProps);
+      if (child.type === PUZZLE_2D_HOST_EDGE) {
+        descriptor.edges.push(child.props as Puzzle2dEdgeProps);
         return;
       }
-      if (child.type === BOARD_HOST_WIRE) {
-        descriptor.wires.push(child.props as BoardWireProps);
+      if (child.type === PUZZLE_2D_HOST_WIRE) {
+        descriptor.wires.push(child.props as Puzzle2dWireProps);
         return;
       }
     });
@@ -6502,16 +6518,16 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 }
 //#endregion 🔖Descriptor Build
 
-function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
+function requireRenderer(renderer: Puzzle2dRenderer | null): Puzzle2dRenderer {
   if (!renderer) {
-    throw new Error("BoardCanvas did not publish its renderer.");
+    throw new Error("Puzzle2dCanvas did not publish its renderer.");
   }
   return renderer;
 }
 
 //#region 🔖Scene Sync
-/** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link BoardRenderer.clearWasmHostAuthorshipForEdge}). */
-export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: BoardRenderer, descriptor: BoardSceneDescriptor): BoardSceneDescriptor {
+/** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link Puzzle2dRenderer.clearWasmHostAuthorshipForEdge}). */
+export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
   const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
   for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
     if (jsxEdgeIds.has(id)) {
@@ -6541,7 +6557,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: BoardRenderer
     }
     const sourceH = renderer.scene.getObjectById(link.source);
     const targetH = renderer.scene.getObjectById(link.target);
-    if (!(sourceH instanceof BoardSceneHandle) || !(targetH instanceof BoardSceneHandle)) {
+    if (!(sourceH instanceof Puzzle2dSceneHandle) || !(targetH instanceof Puzzle2dSceneHandle)) {
       continue;
     }
     extra.push({
@@ -6561,7 +6577,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: BoardRenderer
 }
 
 /** 🔁 Declarative-to-imperative scene sync that preserves stable instances by id. */
-export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDescriptor): void {
+export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
   const desiredNodeIds = new Set(descriptor.nodes.map((node) => node.id));
   const desiredHandleIds = new Set(descriptor.handles.map((handle) => handle.id));
   const desiredEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
@@ -6570,14 +6586,14 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
   renderer.batch(() => {
     for (const nodeDescriptor of descriptor.nodes) {
       let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
-      if (existingNode instanceof BoardSceneNode && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
+      if (existingNode instanceof Puzzle2dSceneNode && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
         renderer.scene.remove(existingNode);
         existingNode = undefined;
       }
       const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
       const { handles: _handles, ...nodeProps } = nodeDescriptor;
-      const node = resolvedExisting instanceof BoardSceneNode ? resolvedExisting : newBoardNodeFromProps(nodeProps);
-      if (!(resolvedExisting instanceof BoardSceneNode)) {
+      const node = resolvedExisting instanceof Puzzle2dSceneNode ? resolvedExisting : newBoardNodeFromProps(nodeProps);
+      if (!(resolvedExisting instanceof Puzzle2dSceneNode)) {
         renderer.scene.add(node);
       }
       applyNodeProps(renderer, node, nodeProps);
@@ -6585,13 +6601,13 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 
     for (const handleDescriptor of descriptor.handles) {
       const parentNode = renderer.scene.getObjectById(handleDescriptor.nodeId);
-      if (!(parentNode instanceof BoardSceneNode)) {
+      if (!(parentNode instanceof Puzzle2dSceneNode)) {
         continue;
       }
       const existingHandle = renderer.scene.getObjectById(handleDescriptor.id);
       const { nodeId: _nodeId, ...handleProps } = handleDescriptor;
-      const handle = existingHandle instanceof BoardSceneHandle ? existingHandle : new BoardSceneHandle({ ...handleProps, node: parentNode });
-      if (!(existingHandle instanceof BoardSceneHandle)) {
+      const handle = existingHandle instanceof Puzzle2dSceneHandle ? existingHandle : new Puzzle2dSceneHandle({ ...handleProps, node: parentNode });
+      if (!(existingHandle instanceof Puzzle2dSceneHandle)) {
         renderer.scene.add(handle);
       }
       applyHandleProps(handle, handleProps, parentNode);
@@ -6600,12 +6616,12 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
     for (const edgeDescriptor of descriptor.edges) {
       const sourceHandle = renderer.scene.getObjectById(edgeDescriptor.source);
       const targetHandle = renderer.scene.getObjectById(edgeDescriptor.target);
-      if (!(sourceHandle instanceof BoardSceneHandle) || !(targetHandle instanceof BoardSceneHandle)) {
+      if (!(sourceHandle instanceof Puzzle2dSceneHandle) || !(targetHandle instanceof Puzzle2dSceneHandle)) {
         continue;
       }
       const existingEdge = renderer.scene.getObjectById(edgeDescriptor.id);
-      const edge = existingEdge instanceof BoardSceneEdge ? existingEdge : new BoardSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
-      if (!(existingEdge instanceof BoardSceneEdge)) {
+      const edge = existingEdge instanceof Puzzle2dSceneEdge ? existingEdge : new Puzzle2dSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
+      if (!(existingEdge instanceof Puzzle2dSceneEdge)) {
         renderer.scene.add(edge);
       }
       applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
@@ -6613,14 +6629,14 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 
     for (const wireDescriptor of descriptor.wires) {
       const sourceHandle = renderer.scene.getObjectById(wireDescriptor.source);
-      if (!(sourceHandle instanceof BoardSceneHandle)) {
+      if (!(sourceHandle instanceof Puzzle2dSceneHandle)) {
         continue;
       }
       const tid = (wireDescriptor.target ?? "").trim();
-      let targetHandle: BoardSceneHandle | null = null;
+      let targetHandle: Puzzle2dSceneHandle | null = null;
       if (tid !== "") {
         const t = renderer.scene.getObjectById(tid);
-        if (!(t instanceof BoardSceneHandle)) {
+        if (!(t instanceof Puzzle2dSceneHandle)) {
           continue;
         }
         targetHandle = t;
@@ -6629,9 +6645,9 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
       const ex = wireDescriptor.endX;
       const ey = wireDescriptor.endY;
       const wire =
-        existingWire instanceof BoardSceneWire
+        existingWire instanceof Puzzle2dSceneWire
           ? existingWire
-          : new BoardSceneWire({
+          : new Puzzle2dSceneWire({
               id: wireDescriptor.id,
               source: sourceHandle,
               target: targetHandle,
@@ -6642,7 +6658,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
               endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
               endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
             });
-      if (!(existingWire instanceof BoardSceneWire)) {
+      if (!(existingWire instanceof Puzzle2dSceneWire)) {
         renderer.scene.add(wire);
       }
       applyWireProps(wire, wireDescriptor, sourceHandle, targetHandle);
@@ -6679,10 +6695,10 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; scene sync runs on `children` changes and on {@link BoardRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
-function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: BoardRenderer }): null {
+/** @emoji 🌉 Secondary host root per {@link Puzzle2dRenderer}; scene sync runs on `children` changes and on {@link Puzzle2dRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
+function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: Puzzle2dRenderer }): null {
   const hostMountRef = reactHostPort.useRef<BoardHostMount | null>(null);
-  const mountedRendererRef = reactHostPort.useRef<BoardRenderer | null>(null);
+  const mountedRendererRef = reactHostPort.useRef<Puzzle2dRenderer | null>(null);
   const Bridge = useHostMountBridge();
   const wasmHostSceneMergeResyncEpoch = reactHostPort.useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
 
@@ -6696,8 +6712,8 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
       mountedRendererRef.current = renderer;
     }
     updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
-    const jsxDescriptor = buildBoardSceneDescriptor(children);
-    syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
+    const jsxDescriptor = buildPuzzle2dSceneDescriptor(children);
+    syncPuzzle2dScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
   }, [children, renderer, wasmHostSceneMergeResyncEpoch]);
 
   reactHostPort.useLayoutEffect(() => {
@@ -6724,7 +6740,7 @@ function BoardHostSubtree({ camera, children, renderer }: { camera?: Partial<Cam
 
 //#region 🔖Canvas
 /** 🖼️ React board root that keeps the hot path inside the imperative renderer. */
-export function BoardCanvas({
+export function Puzzle2dCanvas({
   camera,
   children,
   companions,
@@ -6789,20 +6805,20 @@ export function BoardCanvas({
   style,
   width,
   worldRasterTiling,
-}: BoardCanvasProps): ReactElement {
+}: Puzzle2dCanvasProps): ReactElement {
   const canvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
   const textOverlayCanvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
   const containerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const [contextRenderer, setContextRenderer] = reactHostPort.useState<BoardRenderer | null>(null);
-  const rendererRef = reactHostPort.useRef<BoardRenderer | null>(null);
-  const [uncontrolledSelection, setUncontrolledSelection] = reactHostPort.useState<BoardSelectionSnapshot>(() => normalizeBoardSelectionProp(defaultSelection));
-  const [uncontrolledPreselection, setUncontrolledPreselection] = reactHostPort.useState<BoardPreselectSnapshot>(() => normalizeBoardPreselectProp(defaultPreselection));
+  const [contextRenderer, setContextRenderer] = reactHostPort.useState<Puzzle2dRenderer | null>(null);
+  const rendererRef = reactHostPort.useRef<Puzzle2dRenderer | null>(null);
+  const [uncontrolledSelection, setUncontrolledSelection] = reactHostPort.useState<Puzzle2dSelectionSnapshot>(() => normalizePuzzle2dSelectionProp(defaultSelection));
+  const [uncontrolledPreselection, setUncontrolledPreselection] = reactHostPort.useState<Puzzle2dPreselectSnapshot>(() => normalizePuzzle2dPreselectProp(defaultPreselection));
   const [uncontrolledHoveredId, setUncontrolledHoveredId] = reactHostPort.useState<string | null>(defaultHoveredId ?? null);
   const selectionControlled = selection !== undefined;
   const preselectionControlled = preselection !== undefined;
   const hoveredControlled = hoveredIdProp !== undefined;
-  const resolvedSelection = selectionControlled ? normalizeBoardSelectionProp(selection) : uncontrolledSelection;
-  const resolvedPreselection = preselectionControlled ? normalizeBoardPreselectProp(preselection) : uncontrolledPreselection;
+  const resolvedSelection = selectionControlled ? normalizePuzzle2dSelectionProp(selection) : uncontrolledSelection;
+  const resolvedPreselection = preselectionControlled ? normalizePuzzle2dPreselectProp(preselection) : uncontrolledPreselection;
   const resolvedHoveredId = hoveredControlled ? (hoveredIdProp ?? null) : uncontrolledHoveredId;
   const boardTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
   const [surfaceContextMenu, setSurfaceContextMenu] = reactHostPort.useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
@@ -6814,7 +6830,7 @@ export function BoardCanvas({
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      if (![...event.dataTransfer.types].includes(BOARD_FIXTURE_DRAG_V1_MIME)) {
+      if (![...event.dataTransfer.types].includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME)) {
         return;
       }
       fileDragDepthRef.current += 1;
@@ -6844,7 +6860,7 @@ export function BoardCanvas({
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      if ([...event.dataTransfer.types].includes(BOARD_FIXTURE_DRAG_V1_MIME)) {
+      if ([...event.dataTransfer.types].includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME)) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "copy";
       }
@@ -6860,8 +6876,8 @@ export function BoardCanvas({
       event.preventDefault();
       fileDragDepthRef.current = 0;
       setFixtureDragActive(false);
-      const text = event.dataTransfer.getData(BOARD_FIXTURE_DRAG_V1_MIME);
-      const fixture = decodeBoardFixtureFromDragV1(text);
+      const text = event.dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME);
+      const fixture = decodePuzzle2dFixtureFromDragV1(text);
       if (!fixture) {
         return;
       }
@@ -6873,7 +6889,7 @@ export function BoardCanvas({
       const bounds = canvas.getBoundingClientRect();
       const screen = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
       const world = renderer.screenToWorld(screen);
-      const detail: BoardFixtureDropDetail = { fixture, screen, world };
+      const detail: Puzzle2dFixtureDropDetail = { fixture, screen, world };
       onFixtureDrop?.(detail);
       renderer.emit("fixtureDrop", detail);
     },
@@ -6885,7 +6901,7 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
-    const descriptor = buildBoardSceneDescriptor(children);
+    const descriptor = buildPuzzle2dSceneDescriptor(children);
     const next = new Map<string, ContextMenuItem[]>();
     for (const n of descriptor.nodes) {
       if (n.contextMenu?.length) {
@@ -7068,7 +7084,7 @@ export function BoardCanvas({
       );
     }
     if (onPreselect || !preselectionControlled) {
-      const onPreselectEvent = (snapshot: BoardPreselectSnapshot): void => {
+      const onPreselectEvent = (snapshot: Puzzle2dPreselectSnapshot): void => {
         if (!preselectionControlled) {
           setUncontrolledPreselection(snapshot);
         }
@@ -7155,26 +7171,26 @@ export function BoardCanvas({
       return;
     }
     const canvas = canvasRef.current;
-    const renderer = new BoardRenderer({
+    const renderer = new Puzzle2dRenderer({
       canvas,
       automaticLod: automaticLod ?? true,
-      gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
+      gridFactor: gridFactor ?? DEFAULT_PUZZLE_2D_GRID_FACTOR,
       gridSnapEnabled: gridSnapEnabled ?? false,
-      lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+      lodZoomThresholds: lodZoomThresholds ?? DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
       ...(lod !== undefined ? { lod } : {}),
       renderMode,
       selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
       worldRasterTiling,
     });
     rendererRef.current = renderer;
-    activeBoardRenderer = renderer;
+    activePuzzle2dRenderer = renderer;
     setContextRenderer(renderer);
     return () => {
       const r = renderer;
       queueMicrotask(() => {
         r.dispose();
-        if (activeBoardRenderer === r) {
-          activeBoardRenderer = null;
+        if (activePuzzle2dRenderer === r) {
+          activePuzzle2dRenderer = null;
         }
         if (rendererRef.current === r) {
           rendererRef.current = null;
@@ -7196,7 +7212,7 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
-    renderer.setGridFactor(gridFactor ?? DEFAULT_BOARD_GRID_FACTOR);
+    renderer.setGridFactor(gridFactor ?? DEFAULT_PUZZLE_2D_GRID_FACTOR);
   }, [gridFactor]);
 
   reactHostPort.useLayoutEffect(() => {
@@ -7204,7 +7220,7 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
-    renderer.setLodZoomThresholds(lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
+    renderer.setLodZoomThresholds(lodZoomThresholds ?? DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS);
   }, [lodZoomThresholds]);
 
   reactHostPort.useLayoutEffect(() => {
@@ -7276,8 +7292,8 @@ export function BoardCanvas({
     renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, targets: selectionTargets });
   }, [selectionMethod, selectionMode, selectionTargets]);
 
-  const lastSyncedControlledSelectionRef = reactHostPort.useRef<BoardSelectionSnapshot | null>(null);
-  const lastSyncedControlledPreselectionRef = reactHostPort.useRef<BoardPreselectSnapshot | null>(null);
+  const lastSyncedControlledSelectionRef = reactHostPort.useRef<Puzzle2dSelectionSnapshot | null>(null);
+  const lastSyncedControlledPreselectionRef = reactHostPort.useRef<Puzzle2dPreselectSnapshot | null>(null);
 
   reactHostPort.useLayoutEffect(() => {
     lastSyncedControlledSelectionRef.current = null;
@@ -7289,7 +7305,7 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
-    if (lastSyncedControlledSelectionRef.current !== null && boardSelectionSnapshotsEqual(resolvedSelection, lastSyncedControlledSelectionRef.current)) {
+    if (lastSyncedControlledSelectionRef.current !== null && puzzle2dSelectionSnapshotsEqual(resolvedSelection, lastSyncedControlledSelectionRef.current)) {
       return;
     }
     lastSyncedControlledSelectionRef.current = resolvedSelection;
@@ -7301,7 +7317,7 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
-    if (lastSyncedControlledPreselectionRef.current !== null && boardPreselectSnapshotsEqual(resolvedPreselection, lastSyncedControlledPreselectionRef.current)) {
+    if (lastSyncedControlledPreselectionRef.current !== null && puzzle2dPreselectSnapshotsEqual(resolvedPreselection, lastSyncedControlledPreselectionRef.current)) {
       return;
     }
     lastSyncedControlledPreselectionRef.current = resolvedPreselection;
@@ -7369,7 +7385,7 @@ export function BoardCanvas({
   }, [height, width]);
 
   return (
-    <BoardContext.Provider value={contextRenderer}>
+    <Puzzle2dContext.Provider value={contextRenderer}>
       <div
         className={["flex min-h-0 min-w-0 flex-1 flex-col", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
         onDragEnter={handleDragEnter}
@@ -7379,8 +7395,8 @@ export function BoardCanvas({
         ref={containerRef}
         style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
       >
-        <canvas className="min-h-0 min-w-0 flex-1 touch-none" data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
-        {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 min-h-0 min-w-0" data-testid="board-text-overlay" ref={textOverlayCanvasRef} />}
+        <canvas className="min-h-0 min-w-0 flex-1 touch-none" data-testid="puzzle2d-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+        {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 min-h-0 min-w-0" data-testid="puzzle2d-text-overlay" ref={textOverlayCanvasRef} />}
         {contextRenderer ? (
           <>
             <HostMountProvider>
@@ -7401,14 +7417,14 @@ export function BoardCanvas({
           position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
         />
       </div>
-    </BoardContext.Provider>
+    </Puzzle2dContext.Provider>
   );
 }
 //#endregion 🔖Canvas
 
 //#region 🔖Hooks
-/** @emoji 📶 Subscribes to {@link BoardRenderer} draw LOD band changes for window measure labels. */
-export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: BoardDrawLodKind) => void }): null {
+/** @emoji 📶 Subscribes to {@link Puzzle2dRenderer} draw LOD band changes for window measure labels. */
+export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Puzzle2dDrawLodKind) => void }): null {
   const renderer = useBoard();
   const lod = reactHostPort.useSyncExternalStore(renderer.subscribeDrawLod, renderer.getDrawLodSnapshot, renderer.getDrawLodSnapshot);
   reactHostPort.useEffect(() => {
@@ -7417,16 +7433,16 @@ export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: Boar
   return null;
 }
 
-/** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or secondary host tree). */
-export function useBoard(): BoardRenderer {
-  const renderer = reactHostPort.useContext(BoardContext);
+/** 🎯 Access the imperative puzzle 2d renderer from within Puzzle2dCanvas descendants (DOM or secondary host tree). */
+export function useBoard(): Puzzle2dRenderer {
+  const renderer = reactHostPort.useContext(Puzzle2dContext);
   if (renderer) {
     return renderer;
   }
-  if (activeBoardRenderer) {
-    return activeBoardRenderer;
+  if (activePuzzle2dRenderer) {
+    return activePuzzle2dRenderer;
   }
-  throw new Error("useBoard must be used inside BoardCanvas.");
+  throw new Error("useBoard must be used inside Puzzle2dCanvas.");
 }
 
 /** 📷 Read and update camera state through an external store subscription. */
@@ -7437,19 +7453,19 @@ export function useCamera(): [CameraState, (camera: CameraState) => void] {
 }
 
 /** ✅ Subscribe to semantic selection ids without pushing React through the drag hot path. */
-export function useSelection(): BoardSelectionSnapshot {
+export function useSelection(): Puzzle2dSelectionSnapshot {
   const renderer = useBoard();
   return reactHostPort.useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
-/** @emoji 👁️ Subscribe to area-select preview ids (and anchor-removed ids) on the active board renderer. */
-export function usePreselection(): BoardPreselectSnapshot {
+/** @emoji 👁️ Subscribe to area-select preview ids (and anchor-removed ids) on the active puzzle 2d renderer. */
+export function usePreselection(): Puzzle2dPreselectSnapshot {
   const renderer = useBoard();
   return reactHostPort.useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
 /** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
-export function useBoardEvent<TKey extends keyof BoardEventMap>(name: TKey, handler: (payload: BoardEventMap[TKey]) => void): void {
+export function usePuzzle2dEvent<TKey extends keyof Puzzle2dEventMap>(name: TKey, handler: (payload: Puzzle2dEventMap[TKey]) => void): void {
   const renderer = useBoard();
   reactHostPort.useEffect(() => renderer.on(name, handler), [handler, name, renderer]);
 }
@@ -7461,8 +7477,8 @@ export function useFrame(callback: (state: FrameState, dt: number) => void): voi
 }
 
 /** 🔄 Imperatively request another render for the active board root. */
-export function invalidate(renderer?: BoardRenderer): void {
-  (renderer ?? activeBoardRenderer)?.invalidate();
+export function invalidate(renderer?: Puzzle2dRenderer): void {
+  (renderer ?? activePuzzle2dRenderer)?.invalidate();
 }
 //#endregion 🔖Hooks
 
@@ -7484,7 +7500,7 @@ if (boardReactVitest) {
   (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
   beforeAll(async () => {
-    await ensureElementsBoardWasmLoaded();
+    await ensurePuzzle2dWasmLoaded();
   });
 
   function installCanvasStub(): () => void {
@@ -7529,16 +7545,16 @@ if (boardReactVitest) {
   });
 
   function BoardSelectListenerStub(): null {
-    useBoardEvent("select", () => undefined);
+    usePuzzle2dEvent("select", () => undefined);
     return null;
   }
 
   describe("board react helpers", () => {
-    it("boardFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
+    it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
-      const fixture = parseBoardFixtureV1(nakaginFixtureJson);
+      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
       expect(fixture?.nodes.length).toBeGreaterThan(100);
-      const descriptor = buildBoardSceneDescriptor(boardFixtureSceneMarkers(fixture!));
+      const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
       expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
       expect(descriptor.edges.length).toBe(fixture!.edges.length);
       expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);
@@ -7546,7 +7562,7 @@ if (boardReactVitest) {
 
     it("createBoardHostMount registers React 19 error reporters on the host root", () => {
       const canvas = document.createElement("canvas");
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       const mount = createBoardHostMount(renderer);
       expect(typeof mount.onUncaughtError).toBe("function");
       expect(typeof mount.onCaughtError).toBe("function");
@@ -7555,7 +7571,7 @@ if (boardReactVitest) {
     });
 
     it("builds a flat scene descriptor from declarative markers", () => {
-      const descriptor = buildBoardSceneDescriptor(
+      const descriptor = buildPuzzle2dSceneDescriptor(
         <>
           <Node id="a" radius={24} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="a:h0" />
@@ -7587,7 +7603,7 @@ if (boardReactVitest) {
       const nodeMenu: ContextMenuItem[] = [{ id: "n1", label: "Node" }];
       const handleMenu: ContextMenuItem[] = [{ id: "h1", label: "Handle" }];
       const edgeMenu: ContextMenuItem[] = [{ id: "e1", label: "Edge" }];
-      const descriptor = buildBoardSceneDescriptor(
+      const descriptor = buildPuzzle2dSceneDescriptor(
         <>
           <Node contextMenu={nodeMenu} id="a" radius={24} x={0} y={0}>
             <Handle handleKind="port" angle={0} contextMenu={handleMenu} id="a:h0" />
@@ -7601,8 +7617,8 @@ if (boardReactVitest) {
     });
 
     it("mergeWasmHostAuthoredEdgesIntoDescriptor keeps WASM gesture edges across JSX-only syncs until adopted", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const jsx = buildBoardSceneDescriptor(
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
         <>
           <Node id="a" radius={40} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="a:h0" />
@@ -7612,22 +7628,22 @@ if (boardReactVitest) {
           </Node>
         </>,
       );
-      syncBoardScene(renderer, jsx);
+      syncPuzzle2dScene(renderer, jsx);
       const sourceHandle = renderer.scene.handles.get("a:h0");
       const targetHandle = renderer.scene.handles.get("b:h0");
       expect(sourceHandle).toBeDefined();
       expect(targetHandle).toBeDefined();
-      renderer.scene.ingestWasmEdge(new BoardSceneEdge({ id: "edge-link-99", source: sourceHandle as BoardSceneHandle, target: targetHandle as BoardSceneHandle }));
+      renderer.scene.ingestWasmEdge(new Puzzle2dSceneEdge({ id: "edge-link-99", source: sourceHandle as Puzzle2dSceneHandle, target: targetHandle as Puzzle2dSceneHandle }));
       renderer.wasmHostAuthoredEdgeIds.add("edge-link-99");
       renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-99", { source: "a:h0", target: "b:h0" });
       const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
       expect(merged.edges.some((e) => e.id === "edge-link-99")).toBe(true);
-      syncBoardScene(renderer, merged);
+      syncPuzzle2dScene(renderer, merged);
       expect(renderer.scene.edges.has("edge-link-99")).toBe(true);
       const merged2 = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
-      syncBoardScene(renderer, merged2);
+      syncPuzzle2dScene(renderer, merged2);
       expect(renderer.scene.edges.has("edge-link-99")).toBe(true);
-      const adopted = buildBoardSceneDescriptor(
+      const adopted = buildPuzzle2dSceneDescriptor(
         <>
           <Node id="a" radius={40} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="a:h0" />
@@ -7645,8 +7661,8 @@ if (boardReactVitest) {
     });
 
     it("mergeWasmHostAuthoredEdgesIntoDescriptor rebuilds from link map after scene edge removal", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const jsx = buildBoardSceneDescriptor(
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
         <>
           <Node id="a" radius={40} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="a:h0" />
@@ -7656,15 +7672,15 @@ if (boardReactVitest) {
           </Node>
         </>,
       );
-      syncBoardScene(renderer, jsx);
+      syncPuzzle2dScene(renderer, jsx);
       const sourceHandle = renderer.scene.handles.get("a:h0");
       const targetHandle = renderer.scene.handles.get("b:h0");
       expect(sourceHandle).toBeDefined();
       expect(targetHandle).toBeDefined();
-      const edge = new BoardSceneEdge({
+      const edge = new Puzzle2dSceneEdge({
         id: "edge-link-map",
-        source: sourceHandle as BoardSceneHandle,
-        target: targetHandle as BoardSceneHandle,
+        source: sourceHandle as Puzzle2dSceneHandle,
+        target: targetHandle as Puzzle2dSceneHandle,
       });
       renderer.scene.ingestWasmEdge(edge);
       renderer.wasmHostAuthoredEdgeIds.add("edge-link-map");
@@ -7673,7 +7689,7 @@ if (boardReactVitest) {
       expect(renderer.scene.edges.has("edge-link-map")).toBe(false);
       const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
       expect(merged.edges.some((e) => e.id === "edge-link-map")).toBe(true);
-      syncBoardScene(renderer, merged);
+      syncPuzzle2dScene(renderer, merged);
       expect(renderer.scene.edges.has("edge-link-map")).toBe(true);
       renderer.dispose();
     });
@@ -7683,11 +7699,11 @@ if (boardReactVitest) {
       const container = document.createElement("div");
       document.body.appendChild(container);
       const root = createRoot(container);
-      let readyRenderer: BoardRenderer | null = null;
+      let readyRenderer: Puzzle2dRenderer | null = null;
       await act(async () => {
         root.render(
-          <BoardCanvas
-            camera={{ x: 0, y: 0, zoom: BOARD_LOD_DETAIL_MIN_ZOOM }}
+          <Puzzle2dCanvas
+            camera={{ x: 0, y: 0, zoom: PUZZLE_2D_LOD_DETAIL_MIN_ZOOM }}
             height={600}
             onReady={(r) => {
               readyRenderer = r;
@@ -7701,13 +7717,13 @@ if (boardReactVitest) {
             <Node id="b" radius={40} x={280} y={0}>
               <Handle handleKind="port" angle={Math.PI} id="b:h0" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
         await Promise.resolve();
       });
-      const canvas = container.querySelector("canvas") as HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
-      const renderer = requireRenderer(canvas.__boardRenderer ?? readyRenderer);
+      const canvas = container.querySelector("canvas") as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer };
+      const renderer = requireRenderer(canvas.__puzzle2dRenderer ?? readyRenderer);
       Object.defineProperty(canvas, "clientWidth", { configurable: true, value: 800 });
       Object.defineProperty(canvas, "clientHeight", { configurable: true, value: 600 });
       Object.defineProperty(canvas, "getBoundingClientRect", {
@@ -7717,8 +7733,8 @@ if (boardReactVitest) {
       expect(renderer.scene.getObjectById("a:h0")).toBeDefined();
       expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBe(0);
       renderer.render();
-      const nodeA = renderer.scene.getObjectById("a") as BoardSceneNode;
-      const nodeB = renderer.scene.getObjectById("b") as BoardSceneNode;
+      const nodeA = renderer.scene.getObjectById("a") as Puzzle2dSceneNode;
+      const nodeB = renderer.scene.getObjectById("b") as Puzzle2dSceneNode;
       const p0 = renderer.worldToScreen(computeHandlePosition(nodeA, 0));
       const pMid = renderer.worldToScreen({ x: 140, y: 0 });
       const p1 = renderer.worldToScreen(computeHandlePosition(nodeB, Math.PI));
@@ -7736,8 +7752,8 @@ if (boardReactVitest) {
       expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBeGreaterThan(0);
       await act(async () => {
         root.render(
-          <BoardCanvas
-            camera={{ x: 0, y: 0, zoom: BOARD_LOD_DETAIL_MIN_ZOOM }}
+          <Puzzle2dCanvas
+            camera={{ x: 0, y: 0, zoom: PUZZLE_2D_LOD_DETAIL_MIN_ZOOM }}
             height={600}
             onReady={(r) => {
               readyRenderer = r;
@@ -7751,7 +7767,7 @@ if (boardReactVitest) {
             <Node id="b" radius={40} x={280} y={0}>
               <Handle handleKind="port" angle={Math.PI} id="b:h0" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
       });
       const linkIdsAfterRelayout = [...renderer.scene.edges.keys()].filter((k) => k.startsWith("edge-link-"));
@@ -7772,10 +7788,10 @@ if (boardReactVitest) {
         configurable: true,
         value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
       });
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      syncBoardScene(
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      syncPuzzle2dScene(
         renderer,
-        buildBoardSceneDescriptor(
+        buildPuzzle2dSceneDescriptor(
           <Node id="hit" radius={50} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="hit:h0" />
           </Node>,
@@ -7801,10 +7817,10 @@ if (boardReactVitest) {
         configurable: true,
         value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
       });
-      const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-      syncBoardScene(
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      syncPuzzle2dScene(
         renderer,
-        buildBoardSceneDescriptor(
+        buildPuzzle2dSceneDescriptor(
           <Node id="lonely" radius={10} x={0} y={0}>
             <Handle handleKind="port" angle={0} id="lonely:h0" />
           </Node>,
@@ -7820,22 +7836,22 @@ if (boardReactVitest) {
       restoreCanvas();
     });
 
-    it("syncBoardScene ignores descriptor selected flags and reapplies interaction chrome", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const descriptor = buildBoardSceneDescriptor(<Node id="solo" radius={36} selected x={0} y={0} text="caption" />);
-      syncBoardScene(renderer, descriptor);
+    it("syncPuzzle2dScene ignores descriptor selected flags and reapplies interaction chrome", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(<Node id="solo" radius={36} selected x={0} y={0} text="caption" />);
+      syncPuzzle2dScene(renderer, descriptor);
       const node = renderer.scene.nodes.get("solo");
       expect(node?.selected).toBe(false);
       renderer.setSelectionIds(["solo"]);
-      syncBoardScene(renderer, descriptor);
+      syncPuzzle2dScene(renderer, descriptor);
       expect(node?.selected).toBe(true);
       renderer.setSelectionIds([]);
-      syncBoardScene(renderer, descriptor);
+      syncPuzzle2dScene(renderer, descriptor);
       expect(node?.selected).toBe(false);
       renderer.dispose();
     });
 
-    it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {
+    it("buildPuzzle2dSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {
       function OpaqueScene(): ReactElement {
         return (
           <Node id="inner" radius={8} x={1} y={2}>
@@ -7843,7 +7859,7 @@ if (boardReactVitest) {
           </Node>
         );
       }
-      const descriptor = buildBoardSceneDescriptor(
+      const descriptor = buildPuzzle2dSceneDescriptor(
         <>
           <OpaqueScene />
         </>,
@@ -7852,18 +7868,18 @@ if (boardReactVitest) {
       expect(descriptor.handles).toHaveLength(0);
     });
 
-    it("secondary host mounts handle under node without BoardCanvas", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+    it("secondary host mounts handle under node without Puzzle2dCanvas", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const hostMount = createBoardHostMount(renderer);
       act(() => {
         updateBoardHostMount(
           hostMount,
-          createElement(BOARD_HOST_NODE, { draggable: true, id: "host-a-node", radius: 10, selected: false, visible: true, x: 0, y: 0 }, createElement(BOARD_HOST_HANDLE, { angle: 0, id: "host-a-handle", selected: false, visible: true })),
+          createElement(PUZZLE_2D_HOST_NODE, { draggable: true, id: "host-a-node", radius: 10, selected: false, visible: true, x: 0, y: 0 }, createElement(PUZZLE_2D_HOST_HANDLE, { angle: 0, id: "host-a-handle", selected: false, visible: true })),
           null,
         );
       });
-      expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(BoardSceneNode);
-      expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(BoardSceneHandle);
+      expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(Puzzle2dSceneNode);
+      expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(Puzzle2dSceneHandle);
       unmountBoardHostMount(hostMount);
       renderer.dispose();
     });
@@ -7876,19 +7892,19 @@ if (boardReactVitest) {
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+          <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
             <Node id="direct" radius={10} x={0} y={0}>
               <Handle handleKind="port" angle={0} id="direct.h" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
 
       const canvas = container.querySelector("canvas");
-      const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
-      expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(BoardSceneNode);
-      expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(BoardSceneHandle);
+      const renderer = (canvas as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer }).__puzzle2dRenderer;
+      expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(Puzzle2dSceneNode);
+      expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(Puzzle2dSceneHandle);
 
       await act(async () => {
         root.unmount();
@@ -7912,17 +7928,17 @@ if (boardReactVitest) {
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+          <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
             <WrappedScene />
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
 
       const canvas = container.querySelector("canvas");
-      const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
-      expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(BoardSceneNode);
-      expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(BoardSceneHandle);
+      const renderer = (canvas as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer }).__puzzle2dRenderer;
+      expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(Puzzle2dSceneNode);
+      expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(Puzzle2dSceneHandle);
 
       await act(async () => {
         root.unmount();
@@ -7931,77 +7947,77 @@ if (boardReactVitest) {
     });
 
     it("syncs declarative updates into stable imperative instances", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const firstDescriptor = buildBoardSceneDescriptor(
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const firstDescriptor = buildPuzzle2dSceneDescriptor(
         <Node draggable id="a" radius={24} x={10} y={20}>
           <Handle handleKind="port" angle={0} id="a:h0" />
         </Node>,
       );
-      syncBoardScene(renderer, firstDescriptor);
+      syncPuzzle2dScene(renderer, firstDescriptor);
 
       const firstNode = renderer.scene.getObjectById("a");
-      const secondDescriptor = buildBoardSceneDescriptor(
+      const secondDescriptor = buildPuzzle2dSceneDescriptor(
         <Node draggable id="a" radius={30} x={40} y={50}>
           <Handle handleKind="port" angle={Math.PI / 2} id="a:h0" />
         </Node>,
       );
-      syncBoardScene(renderer, secondDescriptor);
+      syncPuzzle2dScene(renderer, secondDescriptor);
 
       const secondNode = renderer.scene.getObjectById("a");
       expect(secondNode).toBe(firstNode);
-      expect(secondNode).toBeInstanceOf(BoardSceneNode);
-      expect((secondNode as BoardSceneNode).x).toBe(40);
-      expect((secondNode as BoardSceneNode).radius).toBe(30);
+      expect(secondNode).toBeInstanceOf(Puzzle2dSceneNode);
+      expect((secondNode as Puzzle2dSceneNode).x).toBe(40);
+      expect((secondNode as Puzzle2dSceneNode).radius).toBe(30);
 
       renderer.dispose();
     });
 
     it("syncs handleKind from declarative handles into scene instances", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const descriptor = buildBoardSceneDescriptor(
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
         <Node id="n" radius={20} x={0} y={0}>
           <Handle angle={0} handleKind="slot-a" id="h1" />
         </Node>,
       );
-      syncBoardScene(renderer, descriptor);
-      const h = renderer.scene.getObjectById("h1") as BoardSceneHandle;
+      syncPuzzle2dScene(renderer, descriptor);
+      const h = renderer.scene.getObjectById("h1") as Puzzle2dSceneHandle;
       expect(h.handleKind).toBe("slot-a");
       renderer.dispose();
     });
 
     it("replaces the imperative node when declarative shape changes from circle to rectangle", () => {
-      const renderer = new BoardRenderer({ renderMode: "headless-test" });
-      const circleDescriptor = buildBoardSceneDescriptor(
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const circleDescriptor = buildPuzzle2dSceneDescriptor(
         <Node id="a" radius={20} x={0} y={0}>
           <Handle handleKind="port" angle={0} id="a:h0" />
         </Node>,
       );
-      syncBoardScene(renderer, circleDescriptor);
+      syncPuzzle2dScene(renderer, circleDescriptor);
       const firstNode = renderer.scene.getObjectById("a");
-      const rectDescriptor = buildBoardSceneDescriptor(
+      const rectDescriptor = buildPuzzle2dSceneDescriptor(
         <Node height={30} id="a" shape="rectangle" width={40} x={0} y={0}>
           <Handle handleKind="port" angle={0} id="a:h0" />
         </Node>,
       );
-      syncBoardScene(renderer, rectDescriptor);
+      syncPuzzle2dScene(renderer, rectDescriptor);
       const secondNode = renderer.scene.getObjectById("a");
       expect(secondNode).not.toBe(firstNode);
-      expect((secondNode as BoardSceneNode).shape).toBe("rectangle");
-      expect((secondNode as BoardSceneNode).width).toBe(40);
+      expect((secondNode as Puzzle2dSceneNode).shape).toBe("rectangle");
+      expect((secondNode as Puzzle2dSceneNode).width).toBe(40);
       renderer.dispose();
     });
 
-    it("mounts BoardCanvas and updates scene objects when JSX props change", async () => {
+    it("mounts Puzzle2dCanvas and updates scene objects when JSX props change", async () => {
       const restoreCanvas = installCanvasStub();
       const container = document.createElement("div");
       document.body.appendChild(container);
       const root = createRoot(container);
-      let readyRenderer: BoardRenderer | null = null;
+      let readyRenderer: Puzzle2dRenderer | null = null;
       const onReadyNoop = (): void => undefined;
 
       await act(async () => {
         root.render(
-          <BoardCanvas
+          <Puzzle2dCanvas
             camera={{ x: 0, y: 0, zoom: 1 }}
             height={480}
             onReady={(renderer) => {
@@ -8017,17 +8033,17 @@ if (boardReactVitest) {
               <Handle handleKind="port" angle={Math.PI} id="b:h0" />
             </Node>
             <Edge id="edge-1" source="a:h0" target="b:h0" />
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
       expect(readyRenderer).not.toBeNull();
       const createdRenderer = requireRenderer(readyRenderer);
-      expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(BoardSceneEdge);
+      expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(Puzzle2dSceneEdge);
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={onReadyNoop} renderMode="headless-test" width={640}>
+          <Puzzle2dCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={onReadyNoop} renderMode="headless-test" width={640}>
             <Node draggable id="a" radius={28} x={120} y={40}>
               <Handle handleKind="port" angle={0} id="a:h0" />
             </Node>
@@ -8035,12 +8051,12 @@ if (boardReactVitest) {
               <Handle handleKind="port" angle={Math.PI} id="b:h0" />
             </Node>
             <Edge id="edge-1" source="a:h0" target="b:h0" />
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
       /** Secondary host commit can trail the outer `act` tick; mirror JSX into the imperative scene before reading coordinates. */
-      const movedDescriptor = buildBoardSceneDescriptor(
+      const movedDescriptor = buildPuzzle2dSceneDescriptor(
         <>
           <Node draggable id="a" radius={28} x={120} y={40}>
             <Handle handleKind="port" angle={0} id="a:h0" />
@@ -8051,10 +8067,10 @@ if (boardReactVitest) {
           <Edge id="edge-1" source="a:h0" target="b:h0" />
         </>,
       );
-      syncBoardScene(createdRenderer, movedDescriptor);
+      syncPuzzle2dScene(createdRenderer, movedDescriptor);
       const canvasAfterMove = container.querySelector("canvas");
-      const rendererAfterMove = requireRenderer((canvasAfterMove as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer);
-      const movedNode = rendererAfterMove.scene.getObjectById("a") as BoardSceneNode;
+      const rendererAfterMove = requireRenderer((canvasAfterMove as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer | undefined }).__puzzle2dRenderer);
+      const movedNode = rendererAfterMove.scene.getObjectById("a") as Puzzle2dSceneNode;
       expect(movedNode.x).toBe(120);
       expect(movedNode.y).toBe(40);
       expect(rendererAfterMove.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
@@ -8065,20 +8081,20 @@ if (boardReactVitest) {
       restoreCanvas();
     });
 
-    it("does not dispose BoardRenderer when only selection props change", async () => {
+    it("does not dispose Puzzle2dRenderer when only selection props change", async () => {
       const restoreCanvas = installCanvasStub();
-      const disposeSpy = vi.spyOn(BoardRenderer.prototype, "dispose");
+      const disposeSpy = vi.spyOn(Puzzle2dRenderer.prototype, "dispose");
       const container = document.createElement("div");
       document.body.appendChild(container);
       const root = createRoot(container);
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" selectionMethod="rectangle" selectionMode="additive" selectionTargets={{ nodes: true, edges: false, handles: false }} width={160}>
+          <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" selectionMethod="rectangle" selectionMode="additive" selectionTargets={{ nodes: true, edges: false, handles: false }} width={160}>
             <Node id="a" radius={12} x={0} y={0}>
               <Handle handleKind="port" angle={0} id="a:h0" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
@@ -8087,18 +8103,18 @@ if (boardReactVitest) {
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" selectionMethod="lasso" selectionMode="invertive" selectionTargets={{ nodes: false, edges: true, handles: false }} width={160}>
+          <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" selectionMethod="lasso" selectionMode="invertive" selectionTargets={{ nodes: false, edges: true, handles: false }} width={160}>
             <Node id="a" radius={12} x={0} y={0}>
               <Handle handleKind="port" angle={0} id="a:h0" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });
 
       expect(disposeSpy).not.toHaveBeenCalled();
       const canvas = container.querySelector("canvas");
-      const renderer = requireRenderer((canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer ?? null);
+      const renderer = requireRenderer((canvas as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer | undefined }).__puzzle2dRenderer ?? null);
       expect(renderer.getSelectionOptions().method).toBe("lasso");
       expect(renderer.getSelectionOptions().mode).toBe("invertive");
       expect(renderer.getSelectionOptions().targets).toEqual({ nodes: false, edges: true, handles: false });
@@ -8111,7 +8127,7 @@ if (boardReactVitest) {
       restoreCanvas();
     });
 
-    it("defers BoardCanvas children until the renderer exists so useBoard hooks do not throw", async () => {
+    it("defers Puzzle2dCanvas children until the renderer exists so useBoard hooks do not throw", async () => {
       const restoreCanvas = installCanvasStub();
       const container = document.createElement("div");
       document.body.appendChild(container);
@@ -8119,12 +8135,12 @@ if (boardReactVitest) {
 
       await act(async () => {
         root.render(
-          <BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+          <Puzzle2dCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
             <BoardSelectListenerStub />
             <Node draggable id="a" radius={12} x={0} y={0}>
               <Handle handleKind="port" angle={0} id="a:h0" />
             </Node>
-          </BoardCanvas>,
+          </Puzzle2dCanvas>,
         );
         await Promise.resolve();
       });

@@ -1,7 +1,7 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "FiveD platform renderer: map flat/volume presentation to 2d/3d mode; wire puzzle2d.onSelect and puzzle3d.onSelect to applyBoardSelection (volume passes objectIds, vortexIds, attractionIds). Kit diagram: port union-find (compatiblePorts + shared code) and type↔type compat edges. Tests: 26/26 sketchpad vitest.",
   "goal": "🎯r2602/🎯runningsketchpad",
@@ -19,6 +19,7 @@
     "⚪f62cebc19b1d4192b204bc377fb71ee1",
     "⚪45cb01f69a6944bdab704d1c83055c10",
     "⚪502b471a512846c9a0569cc2508a9335",
-    "⚪d63d75d879354bdc834a07661fd0c3a3"
+    "⚪d63d75d879354bdc834a07661fd0c3a3",
+    "⚪fd954b0e516d448ca6cbaec69e827743"
   ]
 }

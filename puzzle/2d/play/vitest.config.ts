@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for board play playground wiring (`play/index.ts`). */
+/** @emoji 🧪 Vitest for puzzle 2d play playground wiring (`play/index.ts`). */
 export default defineConfig({
 	root,
 	resolve: {

@@ -64,7 +64,7 @@ export type {
 } from "@framework/platform/core";
 
 /** @emoji 📋 Playground alias for {@link UiPuzzle2dHostSurfaceNode}. */
-export type UiBoardHostSurfaceNode = import("@framework/platform/core").UiPuzzle2dHostSurfaceNode;
+export type UiPuzzle2dHostSurfaceNode = import("@framework/platform/core").UiPuzzle2dHostSurfaceNode;
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
@@ -166,7 +166,7 @@ export type UiNode =
   | UiButtonNode
   | UiSeparatorNode
   | UiPuzzle3dHostSurfaceNode
-  | UiBoardHostSurfaceNode
+  | UiPuzzle2dHostSurfaceNode
   | import("@framework/platform/core").UiPuzzle5dHostSurfaceNode
   | import("@framework/platform/core").UiCadHostSurfaceNode
   | UiTableHostSurfaceNode

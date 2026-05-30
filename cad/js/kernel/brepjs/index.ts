@@ -2057,8 +2057,10 @@ class BrepjsWasmEngine {
 		if (solidRecordHasShellTopology(model, rec)) {
 			const fromTopology = solidFromModelTopology(model, rec);
 			if (fromTopology) return fromTopology;
-			const syncedBox = boxSolidPrimitiveFromShellVertices(model, rec);
-			if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
+			if (isBoxShellAxisAligned(model, rec)) {
+				const syncedBox = boxSolidPrimitiveFromShellVertices(model, rec);
+				if (syncedBox) return this.solidFromSolidPrimitive(syncedBox);
+			}
 		}
 		if (rec.solid) return this.solidFromSolidPrimitive(rec.solid);
 		const points = derivedSolidPoints(model, rec);

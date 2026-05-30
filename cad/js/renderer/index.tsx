@@ -223,6 +223,8 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
 export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, tolerance: number): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
   const [meshes, setMeshes] = reactHostPort.useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
   const revision = model.revision;
+  const revisionRef = reactHostPort.useRef(revision);
+  revisionRef.current = revision;
   reactHostPort.useEffect(() => {
     if (!kernel) {
       setMeshes([]);
@@ -248,7 +250,7 @@ export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, to
           }
         }),
       );
-      if (cancelled || revisionAtStart !== modelAtStart.revision) return;
+      if (cancelled || revisionAtStart !== revisionRef.current) return;
       setMeshes(rows.filter((row): row is { readonly solid: SolidRef; readonly mesh: MeshTransfer } => row !== null));
     })();
     return () => {
@@ -360,8 +362,20 @@ export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): Archive
   return { cornerA: o, cornerB: c, height: hz };
 }
 
-function mergeDisplayWithArchivedBoxes(base: DisplayModel, archived: readonly ArchivedBoxLayout[]): DisplayModel {
-  if (archived.length === 0) return base;
+/** @emoji 🧊 True when committed kernel solids own the scene (footprint box previews would duplicate meshes). */
+export function modelHasCommittedSolidsForDisplay(model: Model | null | undefined): boolean {
+  return listModelSolidRefs(model).length > 0;
+}
+
+/** @emoji 📦 Drops axis-aligned footprint `box-preview` display items when kernel solids are present. */
+export function filterFootprintBoxPreviewDisplayItems(display: DisplayModel, model: Model | null | undefined): DisplayModel {
+  if (!modelHasCommittedSolidsForDisplay(model)) return display;
+  const items = display.items.filter((item) => item.kind !== "box-preview");
+  return items.length === display.items.length ? display : { ...display, items };
+}
+
+function mergeDisplayWithArchivedBoxes(base: DisplayModel, archived: readonly ArchivedBoxLayout[], model: Model | null | undefined): DisplayModel {
+  if (archived.length === 0 || modelHasCommittedSolidsForDisplay(model)) return base;
   const extra: DisplayItem[] = archived.map((b, i) => ({
     kind: "box-preview",
     id: `archived-box-${i}`,
@@ -2820,7 +2834,7 @@ export function InteractionSpatialView({
       {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} /> : null}
       <CommittedMeshLayer
         meshes={layerMeshes}
-        modelRevision={geometry?.revision}
+        modelRevision={geometry?.revision ?? 0}
         pickable={committedMeshPickable}
         showFaces={sceneVisibility.showCommittedFaces}
         showEdges={sceneVisibility.showCommittedEdges}
@@ -3560,8 +3574,14 @@ export function InteractionRepl({
   const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.model, tessTolerance);
   const documentArchivedBoxLayouts = reactHostPort.useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
   const allArchivedBoxLayouts = reactHostPort.useMemo(() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts], [documentArchivedBoxLayouts, archivedBoxLayouts]);
-  const baseDisplay = reactHostPort.useMemo(() => replBaseDisplayForHistory(snapshot), [snapshot]);
-  const mergedDisplay = reactHostPort.useMemo(() => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts), [baseDisplay, allArchivedBoxLayouts]);
+  const baseDisplay = reactHostPort.useMemo(
+    () => filterFootprintBoxPreviewDisplayItems(replBaseDisplayForHistory(snapshot), documentModel.model),
+    [snapshot, documentModel.model],
+  );
+  const mergedDisplay = reactHostPort.useMemo(
+    () => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts, documentModel.model),
+    [baseDisplay, allArchivedBoxLayouts, documentModel.model],
+  );
   const chromeDefaults = reactHostPort.useMemo(() => defaultInteractionReplChromeState(), []);
   const [cmdLine, setCmdLine] = useHostState(cmdLineProp, onCmdLineChange, () => chromeDefaults.cmdLine);
   const [activeIndex, setActiveIndex] = useHostState(activeSuggestionIndexProp, onActiveSuggestionIndexChange, () => chromeDefaults.activeSuggestionIndex);
@@ -5503,6 +5523,27 @@ if (import.meta.vitest) {
       expect(chrome.filterTypologyToggles["spatial.shape.primitive.box"]).toBe(true);
       expect(chrome.filterPrimitiveToggles.vertex).toBe(true);
       expect(chrome.filterPrimitiveToggles.solid).toBe(true);
+    });
+
+    it("filterFootprintBoxPreviewDisplayItems removes box-preview when model has solids", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const display: DisplayModel = {
+        items: [
+          { kind: "box-preview", id: "preview-committed", params: { cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 } },
+          { kind: "point", id: "p0", params: { position: [0, 0, 0] } },
+        ],
+      };
+      const filtered = filterFootprintBoxPreviewDisplayItems(display, model);
+      expect(filtered.items.some((item) => item.kind === "box-preview")).toBe(false);
+      expect(filtered.items.some((item) => item.kind === "point")).toBe(true);
+    });
+
+    it("historyEntryArchivesBoxFootprint skips transform and measure interactions", () => {
+      expect(historyEntryArchivesBoxFootprint("transform.move")).toBe(false);
+      expect(historyEntryArchivesBoxFootprint("transform.copy")).toBe(false);
+      expect(historyEntryArchivesBoxFootprint("measure.vertexDistance")).toBe(false);
+      expect(historyEntryArchivesBoxFootprint("primitive.box")).toBe(true);
     });
 
     it("filterSpatialPickTargetsForPrimitiveToggles hides primitive picks by kind", () => {

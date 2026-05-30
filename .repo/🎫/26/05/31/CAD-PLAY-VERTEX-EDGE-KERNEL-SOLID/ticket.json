@@ -1,11 +1,13 @@
 {
   "title": "Cad Play Vertex Edge Kernel Solid",
   "emoji": "🐛",
-  "status": "closed",
+  "status": "open",
   "description": "CAD play: moving vertices or edges produces wrong boxy blocky solids and overlapping shapes. Fix kernel solid computation on topology edit.",
-  "summary": "Fixed CAD play solid corruption when moving vertices/edges: brepjs kernel now rebuilds solids from live shell topology (sew/heal) instead of stale SolidPrimitive or AABB fallback, syncs box primitives from shell vertices when needed, calls syncSolidsFromModel before tessellate, invalidates mesh cache on model geometry changes, and keys tessellation cache by model revision.",
+  "summary": "Fixed leftover overlapping axis-aligned box meshes when editing box vertices. Renderer suppresses footprint box-preview display items and history archived-box overlays whenever the model already has committed solids (kernel tessellation is authoritative). useDocumentMeshes now compares async completion against a live revision ref so stale tessellations cannot repaint after gumball commits. Kernel brepForShapeSourceSolid only uses boxSolidPrimitiveFromShellVertices when the shell is still axis-aligned (matches solidForSolidRecord). All brepjs (26) and renderer (57) tests pass.",
   "goal": "🎯cad",
   "sessions": [
-    "⚪5e2ae006c0c249298b4bba1ac9a6965c"
+    "⚪5e2ae006c0c249298b4bba1ac9a6965c",
+    "⚪1df4d915ca9047cda5bb8d3360f20ed0",
+    "⚪fe65c1ce10c2444b9d4d5b36167ed6d9"
   ]
 }

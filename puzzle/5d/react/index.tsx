@@ -9,20 +9,20 @@ import type { ReactElement } from "react";
 /** @emoji 🔗 Unified puzzle 5d model with 2d WASM + 3d R3F projections and a shared {@link Store}. */
 
 import {
-  BoardCanvas,
-  DEFAULT_BOARD_GRID_FACTOR,
-  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  Puzzle2dCanvas,
+  DEFAULT_PUZZLE_2D_GRID_FACTOR,
+  DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
   Edge, Handle, Node, Wire,
   BUILTIN_PORT_HANDLE_KIND,
   fixtureMetaKindCatalogBundle,
-  parseBoardFixtureV1,
+  parsePuzzle2dFixtureV1,
   type CameraState as BoardCameraState,
-  type BoardCanvasProps,
-  type BoardFixtureV1,
-  type BoardForceGraphLayoutOptions,
+  type Puzzle2dCanvasProps,
+  type Puzzle2dFixtureV1,
+  type Puzzle2dForceGraphLayoutOptions,
   type KindCatalogBundle as Puzzle2dKindCatalogBundle,
   type KindCompatEntry as Puzzle2dKindCompatEntry,
-  type BoardLinkSessionSnapshot,
+  type Puzzle2dLinkSessionSnapshot,
   type EdgeKind as Puzzle2dEdgeKind,
   type HandleKind as Puzzle2dHandleKind,
   type NodeKind as Puzzle2dNodeKind,
@@ -143,7 +143,7 @@ export interface TieV1 {
   readonly tieKind?: string;
 }
 
-/** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across 2d {@link BoardLinkSessionSnapshot} and 3d {@link AttractionSessionSnapshot}. */
+/** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across 2d {@link Puzzle2dLinkSessionSnapshot} and 3d {@link AttractionSessionSnapshot}. */
 export interface ConnectSession {
   readonly origin: PresentationMode;
   readonly sourceAnchor: string;
@@ -212,7 +212,7 @@ export function parseV1(raw: unknown): V1 | null {
 }
 
 /** @emoji 🔀 Builds {@link V1} by merging 2d and 3d fixtures (same part ids unite). */
-export function compose5d(fixture2d: BoardFixtureV1, fixture3d: Puzzle3dFixtureV1): V1 {
+export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtureV1): V1 {
   const partsMap = new Map<string, PartV1>();
   for (const node of fixture2d.nodes) {
     const anchors: AnchorV1[] = node.handles.map((h) => {
@@ -347,7 +347,7 @@ export function compose5d(fixture2d: BoardFixtureV1, fixture3d: Puzzle3dFixtureV
 }
 
 /** @emoji 📐 Projects {@link V1} to a 2d fixture for WASM rendering. */
-export function project2d(model: V1): BoardFixtureV1 {
+export function project2d(model: V1): Puzzle2dFixtureV1 {
   const nodes = model.parts
     .filter((p) => p.puzzle2d)
     .map((p) => {
@@ -594,8 +594,8 @@ export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
 /** @emoji 📶 Flat-only LOD/grid defaults ({@link PUZZLE_5D_2D_LOD_TIER_COUNT} discrete tiers); do not pass to 3d {@link Puzzle3dCanvas}. */
 export const FIVE_D_FLAT_LOD_DEFAULTS = {
-  lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-  gridFactor: DEFAULT_BOARD_GRID_FACTOR,
+  lodZoomThresholds: DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
+  gridFactor: DEFAULT_PUZZLE_2D_GRID_FACTOR,
   gridSnapEnabled: true,
 } as const;
 
@@ -615,12 +615,12 @@ export interface FiveDProps {
   readonly lockedPartIds?: ReadonlySet<string>;
   readonly relocateMode?: Puzzle3dRelocateMode;
   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
-  readonly puzzle2d?: Omit<BoardCanvasProps, "children">;
+  readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
   /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
   readonly puzzle3d?: Omit<Puzzle3dCanvasProps, "children">;
 }
 
-function fiveDLinkSessionFromStore(session: ConnectSession | null): BoardLinkSessionSnapshot | null {
+function fiveDLinkSessionFromStore(session: ConnectSession | null): Puzzle2dLinkSessionSnapshot | null {
   if (!session) return null;
   return {
     source: session.sourceAnchor,
@@ -643,7 +643,7 @@ function fiveDAttractionSessionFromStore(session: ConnectSession | null): Attrac
   };
 }
 
-function markers2dFromFixture(props: { readonly fixture: BoardFixtureV1; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
+function markers2dFromFixture(props: { readonly fixture: Puzzle2dFixtureV1; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
   const { fixture, lockedIds, selectedIds } = props;
   return (
     <>
@@ -714,7 +714,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="2d" data-five-d-instance={props.instanceId}>
-      <BoardCanvas
+      <Puzzle2dCanvas
         camera={rest2d.camera ?? camera}
         className={["min-h-0 flex-1", props.className, rest2d.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_FLAT_LOD_DEFAULTS}
@@ -779,7 +779,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         {...rest2d}
       >
         {markers}
-      </BoardCanvas>
+      </Puzzle2dCanvas>
     </div>
   );
 });
@@ -1271,8 +1271,8 @@ export interface DiagramForceWeights {
   readonly chargeStrength: number;
 }
 
-/** @emoji ┬¡ãÆ├▓┬®┬┤┬®├à Maps diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
-export function puzzle2dForceGraphOptions(weights: DiagramForceWeights): BoardForceGraphLayoutOptions {
+/** @emoji ┬¡ãÆ├▓┬®┬┤┬®├à Maps diagram force sliders to {@link layoutPuzzle2dFixtureForceGraph} options. */
+export function puzzle2dForceGraphOptions(weights: DiagramForceWeights): Puzzle2dForceGraphLayoutOptions {
   return {
     centerX: 0,
     centerY: 0,
@@ -1295,7 +1295,7 @@ export function camera2dFromPartCenters(centers: readonly { x: number; y: number
 /** @emoji ┬¡ãÆ├┤├¼ Writes WASM layout node centers back into top-left layout positions. */
 export function flatApplyFixtureCentersToTopLeft<T extends { readonly id: string; readonly position: { x: number; y: number } }>(
   items: readonly T[],
-  fixture: BoardFixtureV1,
+  fixture: Puzzle2dFixtureV1,
   frameForItem: (item: T) => { width: number; height: number },
 ): T[] {
   const centerById = new Map(fixture.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
@@ -1327,9 +1327,9 @@ export interface FlatWireRecord {
   readonly hidden?: boolean;
 }
 
-/** @emoji 🧩 Builds board host markers from a board fixture (same static shape walk as board play). */
+/** @emoji 🧩 Builds puzzle2d host markers from a puzzle 2d fixture (same static shape walk as puzzle 2d play). */
 export function flatMarkersFromFixture(props: {
-  readonly fixture: BoardFixtureV1;
+  readonly fixture: Puzzle2dFixtureV1;
   readonly lockedIds: ReadonlySet<string>;
   readonly selectedIds: ReadonlySet<string>;
   readonly contextMenuById: (id: string | null) => ContextMenuItem[];
@@ -1433,7 +1433,7 @@ export function flatMarkersFromFixture(props: {
 }
 //#endregion 🔖BoardMarkers
 
-export { DEFAULT_BOARD_GRID_FACTOR, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, blockedVortexFullIdsFromAttractions, parseBoardFixtureV1, parseFixtureV1 };
+export { DEFAULT_PUZZLE_2D_GRID_FACTOR, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixtureV1, parseFixtureV1 };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1462,7 +1462,7 @@ if (import.meta.vitest) {
   });
   describe("compose5d", () => {
     it("merges 2d nodes and 3d objects by id", () => {
-      const fixture2d: BoardFixtureV1 = {
+      const fixture2d: Puzzle2dFixtureV1 = {
         schema: "puzzle.2d.fixture/v1",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "p1", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] }],
@@ -1564,7 +1564,7 @@ if (import.meta.vitest) {
   });
   describe("flatApplyFixtureCentersToTopLeft", () => {
     it("converts centers to top-left using frame size", () => {
-      const fixture: BoardFixtureV1 = {
+      const fixture: Puzzle2dFixtureV1 = {
         schema: "puzzle.2d.fixture/v1",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "n1", shape: "rectangle", width: 40, height: 20, x: 50, y: 30, handles: [] }],

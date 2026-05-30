@@ -27,18 +27,18 @@ import {
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
 import {
-	BOARD_LOD_MODE_AUTOMATIC,
-	boardFixtureNodeCaption,
-	boardLodAutomaticSelectLabel,
-	isBoardDrawLodKind,
-	parseBoardFixtureV1,
-	type BoardDrawLodKind,
-	type BoardFixtureNodeV1,
-	type BoardFixtureV1,
-	type BoardLodModeKind,
-	type BoardSelectionMethod,
-	type BoardSelectionMode,
-	type BoardSelectionTargets,
+	PUZZLE_2D_LOD_MODE_AUTOMATIC,
+	puzzle2dFixtureNodeCaption,
+	puzzle2dLodAutomaticSelectLabel,
+	isPuzzle2dDrawLodKind,
+	parsePuzzle2dFixtureV1,
+	type Puzzle2dDrawLodKind,
+	type Puzzle2dFixtureNodeV1,
+	type Puzzle2dFixtureV1,
+	type Puzzle2dLodModeKind,
+	type Puzzle2dSelectionMethod,
+	type Puzzle2dSelectionMode,
+	type Puzzle2dSelectionTargets,
 } from "../react/index.tsx";
 
 //#region 🔖Ids
@@ -52,9 +52,9 @@ export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
 export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
 export const PUZZLE_2D_PLAY_BODY_KEY_SELECTION = "puzzle.2d.play.selection";
 
-export const PUZZLE_2D_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+export const PUZZLE_2D_PLAY_LOD_TIERS: Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
-export function puzzle2dPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
+export function puzzle2dPlayLodTierMenuLabel(tier: Puzzle2dDrawLodKind): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
@@ -62,8 +62,8 @@ export const PUZZLE_2D_PLAY_HIERARCHY_TAB_ID = "puzzle-2d-play-hierarchy";
 
 export const PUZZLE_2D_PLAY_PACKAGE_ROOT = import.meta.url;
 
-export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: BoardFixtureV1 =
-	parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
+export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 =
+	parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as Puzzle2dFixtureV1);
 
 export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 	root: {
@@ -88,7 +88,7 @@ export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 //#endregion 🔖Ids
 
 //#region 🔖Puzzle2dPlayHierarchy
-function puzzle2dFixtureHandleToNodeId(fixture: BoardFixtureV1): ReadonlyMap<string, string> {
+function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, string> {
 	const out = new Map<string, string>();
 	for (const node of fixture.nodes) {
 		for (const handle of node.handles) {
@@ -98,7 +98,7 @@ function puzzle2dFixtureHandleToNodeId(fixture: BoardFixtureV1): ReadonlyMap<str
 	return out;
 }
 
-function puzzle2dFixtureChildrenByNodeId(fixture: BoardFixtureV1): ReadonlyMap<string, readonly string[]> {
+function puzzle2dFixtureChildrenByNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, readonly string[]> {
 	const handleToNode = puzzle2dFixtureHandleToNodeId(fixture);
 	const out = new Map<string, string[]>();
 	for (const edge of fixture.edges) {
@@ -120,7 +120,7 @@ function puzzle2dFixtureChildrenByNodeId(fixture: BoardFixtureV1): ReadonlyMap<s
 	return out;
 }
 
-function puzzle2dFixtureRootNodeIds(fixture: BoardFixtureV1, childrenByParent: ReadonlyMap<string, readonly string[]>): readonly string[] {
+function puzzle2dFixtureRootNodeIds(fixture: Puzzle2dFixtureV1, childrenByParent: ReadonlyMap<string, readonly string[]>): readonly string[] {
 	const explicitRoots = fixture.nodes.filter((node) => node.root).map((node) => node.id);
 	if (explicitRoots.length > 0) {
 		return [...new Set(explicitRoots)].sort((a, b) => a.localeCompare(b));
@@ -135,13 +135,13 @@ function puzzle2dFixtureRootNodeIds(fixture: BoardFixtureV1, childrenByParent: R
 	return inferred.length > 0 ? inferred.sort((a, b) => a.localeCompare(b)) : fixture.nodes.map((node) => node.id).sort((a, b) => a.localeCompare(b));
 }
 
-function puzzle2dFixtureNodeLabel(node: BoardFixtureNodeV1): string {
-	const caption = boardFixtureNodeCaption(node);
+function puzzle2dFixtureNodeLabel(node: Puzzle2dFixtureNodeV1): string {
+	const caption = puzzle2dFixtureNodeCaption(node);
 	return caption?.trim() ? `${node.id} · ${caption}` : node.id;
 }
 
 function buildPuzzle2dFixtureNodeHierarchyItem(
-	fixture: BoardFixtureV1,
+	fixture: Puzzle2dFixtureV1,
 	nodeId: string,
 	childrenByParent: ReadonlyMap<string, readonly string[]>,
 	selectedIds: ReadonlySet<string>,
@@ -189,7 +189,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 
 /** @emoji 🌳 Nested workbench tree: Puzzle 2D → nodes (graph) → handles; flat edges group. */
 export function buildPuzzle2dPlayHierarchySections(
-	fixture: BoardFixtureV1,
+	fixture: Puzzle2dFixtureV1,
 	selectionIds: readonly string[],
 	onSelect: (id: string) => void,
 ): UiTreeNode {
@@ -245,9 +245,9 @@ function puzzle2dPlayTargetLabel(kind: Puzzle2dPlayTargetKind): string {
 
 /** @emoji 🧰 Snapshot read by {@link buildPuzzle2dPlayToolbarTools} (host-owned play state). */
 export interface Puzzle2dPlayToolbarState {
-	readonly puzzle2dSelectionMethod: BoardSelectionMethod;
-	readonly puzzle2dSelectionMode: BoardSelectionMode;
-	readonly puzzle2dSelectionTargets: BoardSelectionTargets;
+	readonly puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
+	readonly puzzle2dSelectionMode: Puzzle2dSelectionMode;
+	readonly puzzle2dSelectionTargets: Puzzle2dSelectionTargets;
 	readonly puzzle2dGridSnapEnabled: boolean;
 	readonly puzzle2dRedrawPlaying: boolean;
 }
@@ -371,16 +371,16 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 /** @emoji 🎛 Puzzle 2d play shell controller: per-pane LOD modes + playground toolbar tools. */
 export class Puzzle2dPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Puzzle 2D", undefined);
-	private lodModeByPane: Record<Puzzle2dPlayPaneId, BoardLodModeKind>;
-	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, BoardDrawLodKind>;
+	private lodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
+	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>;
 	private hostBridge: Puzzle2dPlayHostBridge | null = null;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.lodModeByPane = {
-			"2d-detail": BOARD_LOD_MODE_AUTOMATIC,
-			"2d-overview": BOARD_LOD_MODE_AUTOMATIC,
-			"2d-selection": BOARD_LOD_MODE_AUTOMATIC,
+			"2d-detail": PUZZLE_2D_LOD_MODE_AUTOMATIC,
+			"2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
+			"2d-selection": PUZZLE_2D_LOD_MODE_AUTOMATIC,
 		};
 		this.effectiveLodByPane = {
 			"2d-detail": "normal",
@@ -412,7 +412,7 @@ export class Puzzle2dPlayShellController extends Controller {
 			label: "LOD",
 			value: this.lodModeByPane[paneId],
 			items: [
-				{ id: "automatic", value: BOARD_LOD_MODE_AUTOMATIC, label: boardLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },
+				{ id: "automatic", value: PUZZLE_2D_LOD_MODE_AUTOMATIC, label: puzzle2dLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },
 				...PUZZLE_2D_PLAY_LOD_TIERS.map((tier) => ({ id: tier, value: tier, label: puzzle2dPlayLodTierMenuLabel(tier) })),
 			],
 			onChange: { controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "setLodModeForPane", args: { pane: paneId } },
@@ -432,14 +432,14 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "setLodModeForPane": {
 				const { pane, value } = args as { pane: Puzzle2dPlayPaneId; value?: string };
 				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") break;
-				if (value === BOARD_LOD_MODE_AUTOMATIC || (typeof value === "string" && isBoardDrawLodKind(value))) {
-					this.lodModeByPane = { ...this.lodModeByPane, [pane]: value as BoardLodModeKind };
+				if (value === PUZZLE_2D_LOD_MODE_AUTOMATIC || (typeof value === "string" && isPuzzle2dDrawLodKind(value))) {
+					this.lodModeByPane = { ...this.lodModeByPane, [pane]: value as Puzzle2dLodModeKind };
 				}
 				break;
 			}
 			case "setEffectiveLodForPane": {
-				const { pane, lod } = args as { pane: Puzzle2dPlayPaneId; lod: BoardDrawLodKind };
-				if (!isBoardDrawLodKind(lod)) break;
+				const { pane, lod } = args as { pane: Puzzle2dPlayPaneId; lod: Puzzle2dDrawLodKind };
+				if (!isPuzzle2dDrawLodKind(lod)) break;
 				if (this.effectiveLodByPane[pane] === lod) break;
 				this.effectiveLodByPane = { ...this.effectiveLodByPane, [pane]: lod };
 				break;
@@ -464,11 +464,11 @@ export class Puzzle2dPlayShellController extends Controller {
 		this.emit();
 	}
 
-	getLodModeByPane(): Readonly<Record<Puzzle2dPlayPaneId, BoardLodModeKind>> {
+	getLodModeByPane(): Readonly<Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>> {
 		return this.lodModeByPane;
 	}
 
-	getEffectiveLodByPane(): Readonly<Record<Puzzle2dPlayPaneId, BoardDrawLodKind>> {
+	getEffectiveLodByPane(): Readonly<Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>> {
 		return this.effectiveLodByPane;
 	}
 }
@@ -607,7 +607,7 @@ if (import.meta.vitest) {
 		it("default nakagin fixture parses with puzzle 2d graph nodes", () => {
 			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length).toBeGreaterThan(0);
 			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.edges.length).toBeGreaterThan(0);
-			expect(parseBoardFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(
+			expect(parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(
 				PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length,
 			);
 		});
@@ -625,7 +625,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildPuzzle2dPlayHierarchySections nests root nodes, handles, and child nodes", () => {
-			const fixture = parseBoardFixtureV1({
+			const fixture = parsePuzzle2dFixtureV1({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
