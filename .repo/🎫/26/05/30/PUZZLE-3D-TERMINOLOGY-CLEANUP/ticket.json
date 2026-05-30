@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 3d Terminology Cleanup",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Clean puzzle 3d terminology: object/object kind, vortex/vortex kind, attraction/attraction kind, cable/cable kind only. Remove node, magnet, edge, wire aliases. Get tests and play working.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪0fc3a28db9b44741aedbcba55fb0bff7"
+  ]
+}

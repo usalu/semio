@@ -121,7 +121,7 @@ export interface CameraState {
 /** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */
 export type Lod = number;
 
-/** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.handleMeshByLod}. */
+/** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.vortexMeshByLod}. */
 export interface LodMeshEntry {
   readonly lod: number;
   readonly url: string;
@@ -154,24 +154,16 @@ export const DEFAULT_LOD_GRID_FACTOR = 10;
 export interface VortexProps {
   id: string;
   vortexKind?: string;
-  /** @emoji 🏷️ Human-readable handle label for play UI and hierarchy. */
+  /** @emoji 🏷️ Human-readable vortex label for play UI and hierarchy. */
   label?: string;
   position: Vec3;
   direction?: Vec3;
   radius?: number;
   visible?: boolean;
-  handleMeshUrl?: string;
-  /** @emoji 🎨 Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
-  handleMeshByLod?: readonly LodMeshEntry[];
+  vortexMeshUrl?: string;
+  /** @emoji 🎨 Optional per-LOD GLB URLs for the vortex mesh; falls back to {@link vortexMeshUrl}. */
+  vortexMeshByLod?: readonly LodMeshEntry[];
   children?: ReactNode;
-}
-
-export interface MagnetProps {
-  id: string;
-  magnetKind?: string;
-  position: Vec3;
-  orientation?: Quat;
-  size: Vec3;
 }
 
 export interface ObjectProps {
@@ -211,13 +203,13 @@ export interface AttractionProps {
 
 export const PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
-export interface EdgeKindCatalogEntry {
+export interface AttractionKindCatalogEntry {
   id: string;
   label?: string;
   name?: string;
 }
 
-export interface HandleKindCatalogEntry {
+export interface VortexKindCatalogEntry {
   id: string;
   label?: string;
   name?: string;
@@ -226,7 +218,7 @@ export interface HandleKindCatalogEntry {
   scale?: number;
 }
 
-export interface NodeKindCatalogEntry {
+export interface ObjectKindCatalogEntry {
   id: string;
   label?: string;
   name?: string;
@@ -238,14 +230,14 @@ export interface CableKindCatalogEntry {
   id: string;
   label?: string;
   name?: string;
-  defaultEdgeKind?: string;
+  defaultAttractionKind?: string;
 }
 
 export interface KindCatalogBundle {
-  edges?: readonly EdgeKindCatalogEntry[];
-  handles?: readonly HandleKindCatalogEntry[];
-  nodes?: readonly NodeKindCatalogEntry[];
+  attractions?: readonly AttractionKindCatalogEntry[];
   cables?: readonly CableKindCatalogEntry[];
+  objects?: readonly ObjectKindCatalogEntry[];
+  vortices?: readonly VortexKindCatalogEntry[];
 }
 
 export interface KindCompatEntry {
@@ -253,7 +245,7 @@ export interface KindCompatEntry {
   target: string;
   bidirectional?: boolean;
   important?: boolean;
-  specificity?: "general" | "object" | "attraction" | "handle" | "cable" | "node" | "edge";
+  specificity?: "general" | "object" | "vortex" | "cable" | "attraction";
 }
 
 export interface SelectionSnapshot {
@@ -505,7 +497,6 @@ export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture+json;v=1";
 
 export interface FixtureObjectV1 extends ObjectProps {
   vortices: VortexProps[];
-  magnets?: MagnetProps[];
 }
 
 /** @emoji 🧭 Puzzle 3D fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
@@ -592,13 +583,13 @@ export function lodGridStepWorld(lod: number, gridFactor: number): number | null
   return raw > 50 * gridFactor ? null : raw;
 }
 
-/** @emoji 🌐 True when primary handle visuals are drawn at the given scene LOD. */
-export function lodHandlePrimaryVisible(lod: number): boolean {
+/** @emoji 🌐 True when primary vortex visuals are drawn at the given scene LOD. */
+export function lodVortexPrimaryVisible(lod: number): boolean {
   return lod <= 200;
 }
 
-/** @emoji 🌐 True when invisible handle pick proxies are used instead of GLB handles. */
-export function lodHandlePickProxy(lod: number): boolean {
+/** @emoji 🌐 True when invisible vortex pick proxies are used instead of GLB vortex meshes. */
+export function lodVortexPickProxy(lod: number): boolean {
   return lod > 200 && lod <= 1000;
 }
 
@@ -657,20 +648,20 @@ function useResolvedMeshUrl(opts: { readonly origin: Vec3; readonly meshByLod?: 
 }
 
 interface VortexLodVisual {
-  readonly drawHandleBody: boolean;
+  readonly drawVortexBody: boolean;
   readonly pickProxy: boolean;
   readonly meshUrl: string | undefined;
 }
 
-function vortexLodVisual(lod: number, linger: boolean, handleMeshByLod: readonly LodMeshEntry[] | undefined, handleMeshUrl: string | undefined): VortexLodVisual {
-  const drawHandleBody = lodHandlePrimaryVisible(lod) || linger;
-  const pickProxy = lodHandlePickProxy(lod) && !drawHandleBody;
-  const meshUrl = drawHandleBody ? pickClosestMeshUrl(handleMeshByLod, lod, handleMeshUrl) : undefined;
-  return { drawHandleBody, pickProxy, meshUrl };
+function vortexLodVisual(lod: number, linger: boolean, vortexMeshByLod: readonly LodMeshEntry[] | undefined, vortexMeshUrl: string | undefined): VortexLodVisual {
+  const drawVortexBody = lodVortexPrimaryVisible(lod) || linger;
+  const pickProxy = lodVortexPickProxy(lod) && !drawVortexBody;
+  const meshUrl = drawVortexBody ? pickClosestMeshUrl(vortexMeshByLod, lod, vortexMeshUrl) : undefined;
+  return { drawVortexBody, pickProxy, meshUrl };
 }
 
 function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
-  return a.drawHandleBody === b.drawHandleBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
+  return a.drawVortexBody === b.drawVortexBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
 }
 
 function LodGridHelper() {
@@ -842,7 +833,7 @@ function parseDomainKind(value: unknown): DomainKind {
   }
 }
 
-function parseHandleMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
+function parseVortexMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
   return parseLodMeshEntries(v);
 }
 
@@ -886,7 +877,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
         if (!v || typeof v !== "object") continue;
         const vx = v as Record<string, unknown>;
         if (typeof vx.id !== "string" || !isVec3(vx.position)) continue;
-        const handleMeshByLod = parseHandleMeshByLod(vx.handleMeshByLod);
+        const vortexMeshByLod = parseVortexMeshByLod(vx.vortexMeshByLod);
         vortices.push({
           id: vx.id,
           ...(typeof vx.vortexKind === "string" ? { vortexKind: vx.vortexKind } : {}),
@@ -894,8 +885,8 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
           position: vx.position,
           ...(isVec3(vx.direction) ? { direction: vx.direction } : {}),
           ...(typeof vx.radius === "number" ? { radius: vx.radius } : {}),
-          ...(typeof vx.handleMeshUrl === "string" ? { handleMeshUrl: vx.handleMeshUrl } : {}),
-          ...(handleMeshByLod ? { handleMeshByLod } : {}),
+          ...(typeof vx.vortexMeshUrl === "string" ? { vortexMeshUrl: vx.vortexMeshUrl } : {}),
+          ...(vortexMeshByLod ? { vortexMeshByLod } : {}),
         });
       }
     }
@@ -955,16 +946,16 @@ export function isWormholeObject(objectId: string, props: { readonly wormhole?: 
   return inferredWormholeIds.has(objectId);
 }
 
-/** @emoji ­ƒº▓ One object-level attraction edge derived from an attraction (`attracting` attracts `attracted`). */
-export interface AttractionEdge {
+/** @emoji 🧲 One object-level attraction derived from a vortex-to-vortex attraction (`attracting` attracts `attracted`). */
+export interface ObjectAttraction {
   readonly attractingObjectId: string;
   readonly attractedObjectId: string;
   readonly attractionId: string;
 }
 
-/** @emoji ­ƒº▓ Maps scene attractions to object-level attraction edges. */
-export function attractionEdgesFromAttractions(attractions: readonly AttractionProps[]): AttractionEdge[] {
-  const out: AttractionEdge[] = [];
+/** @emoji 🧲 Maps scene attractions to object-level attractions. */
+export function objectAttractionsFromAttractions(attractions: readonly AttractionProps[]): ObjectAttraction[] {
+  const out: ObjectAttraction[] = [];
   for (const attraction of attractions) {
     const attractingObjectId = parseVortexFullId(attraction.attracting).objectId;
     const attractedObjectId = parseVortexFullId(attraction.attracted).objectId;
@@ -991,18 +982,18 @@ function vec3Sub(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]] as Vec3;
 }
 
-function undirectedComponents(objectIds: readonly string[], edges: readonly AttractionEdge[]): string[][] {
+function undirectedComponents(objectIds: readonly string[], objectAttractions: readonly ObjectAttraction[]): string[][] {
   const idSet = new Set(objectIds);
   const adj = new Map<string, Set<string>>();
   for (const id of objectIds) {
     adj.set(id, new Set());
   }
-  for (const e of edges) {
-    if (!idSet.has(e.attractingObjectId) || !idSet.has(e.attractedObjectId)) {
+  for (const link of objectAttractions) {
+    if (!idSet.has(link.attractingObjectId) || !idSet.has(link.attractedObjectId)) {
       continue;
     }
-    adj.get(e.attractingObjectId)!.add(e.attractedObjectId);
-    adj.get(e.attractedObjectId)!.add(e.attractingObjectId);
+    adj.get(link.attractingObjectId)!.add(link.attractedObjectId);
+    adj.get(link.attractedObjectId)!.add(link.attractingObjectId);
   }
   const seen = new Set<string>();
   const components: string[][] = [];
@@ -1029,16 +1020,16 @@ function undirectedComponents(objectIds: readonly string[], edges: readonly Attr
   return components;
 }
 
-/** @emoji ­ƒöä True when `attractingObjectId ÔåÆ attractedObjectId` closes a directed cycle in attraction edges. */
-export function wouldAttractionEdgeIntroduceCycle(edges: readonly AttractionEdge[], attractingObjectId: string, attractedObjectId: string): boolean {
+/** @emoji 🔄 True when `attractingObjectId → attractedObjectId` closes a directed cycle in object attractions. */
+export function wouldObjectAttractionIntroduceCycle(objectAttractions: readonly ObjectAttraction[], attractingObjectId: string, attractedObjectId: string): boolean {
   if (!attractingObjectId || !attractedObjectId || attractingObjectId === attractedObjectId) {
     return true;
   }
   const outgoing = new Map<string, string[]>();
-  for (const edge of edges) {
-    const next = outgoing.get(edge.attractingObjectId) ?? [];
-    next.push(edge.attractedObjectId);
-    outgoing.set(edge.attractingObjectId, next);
+  for (const link of objectAttractions) {
+    const next = outgoing.get(link.attractingObjectId) ?? [];
+    next.push(link.attractedObjectId);
+    outgoing.set(link.attractingObjectId, next);
   }
   const stack = [attractedObjectId];
   const seen = new Set<string>();
@@ -1092,34 +1083,34 @@ function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>
   }
 }
 
-/** @emoji ­ƒò©´©Å Resolves a forest from attraction edges: wormhole roots, closest-to-wormhole parent when multiply attracted. */
-export function resolveAttractionTree(args: { readonly objectIds: readonly string[]; readonly edges: readonly AttractionEdge[]; readonly explicitWormholeIds?: ReadonlySet<string> }): AttractionTree {
+/** @emoji 🕸️ Resolves a forest from object attractions: wormhole roots, closest-to-wormhole parent when multiply attracted. */
+export function resolveAttractionTree(args: { readonly objectIds: readonly string[]; readonly objectAttractions: readonly ObjectAttraction[]; readonly explicitWormholeIds?: ReadonlySet<string> }): AttractionTree {
   const explicit = args.explicitWormholeIds ?? new Set<string>();
-  const incoming = new Map<string, AttractionEdge[]>();
+  const incoming = new Map<string, ObjectAttraction[]>();
   const outgoing = new Map<string, string[]>();
   for (const id of args.objectIds) {
     incoming.set(id, []);
     outgoing.set(id, []);
   }
-  for (const edge of args.edges) {
-    if (!incoming.has(edge.attractedObjectId) || !outgoing.has(edge.attractingObjectId)) {
+  for (const link of args.objectAttractions) {
+    if (!incoming.has(link.attractedObjectId) || !outgoing.has(link.attractingObjectId)) {
       continue;
     }
-    incoming.get(edge.attractedObjectId)!.push(edge);
-    outgoing.get(edge.attractingObjectId)!.push(edge.attractedObjectId);
+    incoming.get(link.attractedObjectId)!.push(link);
+    outgoing.get(link.attractingObjectId)!.push(link.attractedObjectId);
   }
 
   const wormholeIds: string[] = [];
   const wormholeDistanceByObjectId = new Map<string, number>();
   const parentByObjectId = new Map<string, string | null>();
 
-  for (const comp of undirectedComponents(args.objectIds, args.edges)) {
+  for (const comp of undirectedComponents(args.objectIds, args.objectAttractions)) {
     const compSet = new Set(comp);
-    const compIncoming = new Map<string, AttractionEdge[]>();
+    const compIncoming = new Map<string, ObjectAttraction[]>();
     for (const id of comp) {
       compIncoming.set(
         id,
-        (incoming.get(id) ?? []).filter((e) => compSet.has(e.attractingObjectId) && compSet.has(e.attractedObjectId)),
+        (incoming.get(id) ?? []).filter((link) => compSet.has(link.attractingObjectId) && compSet.has(link.attractedObjectId)),
       );
     }
     let roots = comp.filter((id) => explicit.has(id));
@@ -1161,13 +1152,13 @@ export function resolveAttractionTree(args: { readonly objectIds: readonly strin
         parentByObjectId.set(id, null);
         continue;
       }
-      let best: AttractionEdge | null = null;
+      let best: ObjectAttraction | null = null;
       let bestDist = Number.POSITIVE_INFINITY;
-      for (const edge of inc) {
-        const d = dist.get(edge.attractingObjectId) ?? Number.POSITIVE_INFINITY;
-        if (d < bestDist || (d === bestDist && (!best || edge.attractingObjectId.localeCompare(best.attractingObjectId) < 0))) {
+      for (const link of inc) {
+        const d = dist.get(link.attractingObjectId) ?? Number.POSITIVE_INFINITY;
+        if (d < bestDist || (d === bestDist && (!best || link.attractingObjectId.localeCompare(best.attractingObjectId) < 0))) {
           bestDist = d;
-          best = edge;
+          best = link;
         }
       }
       parentByObjectId.set(id, best?.attractingObjectId ?? null);
@@ -1282,16 +1273,16 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
       return r ? isWormholeObject(id, r, new Set()) : false;
     }),
   );
-  const edges = attractionEdgesFromAttractions(attractions);
+  const objectAttractions = objectAttractionsFromAttractions(attractions);
   const inferred = new Set<string>();
-  for (const comp of undirectedComponents(objectIds, edges)) {
-    const compEdges = edges.filter((e) => comp.includes(e.attractingObjectId) && comp.includes(e.attractedObjectId));
+  for (const comp of undirectedComponents(objectIds, objectAttractions)) {
+    const compLinks = objectAttractions.filter((link) => comp.includes(link.attractingObjectId) && comp.includes(link.attractedObjectId));
     const inc = new Map<string, number>();
     for (const id of comp) {
       inc.set(id, 0);
     }
-    for (const e of compEdges) {
-      inc.set(e.attractedObjectId, (inc.get(e.attractedObjectId) ?? 0) + 1);
+    for (const link of compLinks) {
+      inc.set(link.attractedObjectId, (inc.get(link.attractedObjectId) ?? 0) + 1);
     }
     for (const id of comp) {
       if ((inc.get(id) ?? 0) === 0 && !explicitWormholes.has(id)) {
@@ -1301,7 +1292,7 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
   }
   const tree = resolveAttractionTree({
     objectIds,
-    edges,
+    objectAttractions,
     explicitWormholeIds: new Set([...explicitWormholes, ...inferred]),
   });
   return { records, attractions, tree, version };
@@ -1349,10 +1340,10 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
       return { records, attractions: state.attractions, tree: state.tree, version: state.version + 1 };
     }
     case "addAttraction": {
-      const edges = attractionEdgesFromAttractions(state.attractions);
+      const objectAttractions = objectAttractionsFromAttractions(state.attractions);
       const attractingObjectId = parseVortexFullId(action.attraction.attracting).objectId;
       const attractedObjectId = parseVortexFullId(action.attraction.attracted).objectId;
-      if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
+      if (wouldObjectAttractionIntroduceCycle(objectAttractions, attractingObjectId, attractedObjectId)) {
         return state;
       }
       const attractions = [...state.attractions, action.attraction];
@@ -2019,7 +2010,7 @@ export function kindsCompatible(aKind: string | undefined, bKind: string | undef
   return table.some((e) => (e.source === aKind && e.target === bKind) || (e.bidirectional === true && e.source === bKind && e.target === aKind));
 }
 
-const DEFAULT_WIRE_KIND_ID = "board.cable.link";
+const DEFAULT_CABLE_KIND_ID = "board.cable.link";
 
 /** @emoji ­ƒº▓ Attraction endpoint vortex full ids that are already attracting/attracted and cannot start or receive another attraction. */
 export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<AttractionProps, "attracting" | "attracted">[]): ReadonlySet<string> {
@@ -2031,16 +2022,16 @@ export function blockedVortexFullIdsFromAttractions(attractions: readonly Pick<A
   return s;
 }
 
-/** @emoji ­ƒº¡ Semantic kinds at one end of an attraction drag (object + vortex handle). */
-export interface AttractionHandleContext {
+/** @emoji 🧭 Semantic kinds at one end of an attraction drag (object + vortex). */
+export interface AttractionVortexContext {
   readonly objectId: string;
   readonly objectKind: string | undefined;
   readonly vortexKind: string | undefined;
 }
 
-function catalogHandleById(catalogs: KindCatalogBundle | undefined, handleKind: string | undefined): HandleKindCatalogEntry | undefined {
-  if (!handleKind || !catalogs?.handles?.length) return undefined;
-  return catalogs.handles.find((h) => h.id === handleKind);
+function catalogVortexById(catalogs: KindCatalogBundle | undefined, vortexKind: string | undefined): VortexKindCatalogEntry | undefined {
+  if (!vortexKind || !catalogs?.vortices?.length) return undefined;
+  return catalogs.vortices.find((v) => v.id === vortexKind);
 }
 
 function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: string | undefined): CableKindCatalogEntry | undefined {
@@ -2048,18 +2039,18 @@ function catalogCableById(catalogs: KindCatalogBundle | undefined, cableKind: st
   return catalogs.cables.find((w) => w.id === cableKind);
 }
 
-/** @emoji ­ƒöî Resolves default cable kind for a vortex kind via handle catalog, else `board.cable.link`. */
+/** @emoji 🔌 Resolves default cable kind for a vortex kind via vortex catalog, else `board.cable.link`. */
 export function resolveCableKindForVortex(vortexKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
-  const h = catalogHandleById(catalogs, vortexKind);
-  const w = h?.defaultCableKind?.trim();
-  return w && w.length > 0 ? w : DEFAULT_WIRE_KIND_ID;
+  const v = catalogVortexById(catalogs, vortexKind);
+  const cableKind = v?.defaultCableKind?.trim();
+  return cableKind && cableKind.length > 0 ? cableKind : DEFAULT_CABLE_KIND_ID;
 }
 
-/** @emoji ­ƒ¬ó Resolves default edge kind for a cable kind via cable catalog, else empty string. */
-export function resolveEdgeKindForCable(cableKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
-  const w = catalogCableById(catalogs, cableKind);
-  const e = w?.defaultEdgeKind?.trim();
-  return e && e.length > 0 ? e : "";
+/** @emoji 🧲 Resolves default attraction kind for a cable kind via cable catalog, else empty string. */
+export function resolveAttractionKindForCable(cableKind: string | undefined, catalogs: KindCatalogBundle | undefined): string {
+  const cable = catalogCableById(catalogs, cableKind);
+  const attractionKind = cable?.defaultAttractionKind?.trim();
+  return attractionKind && attractionKind.length > 0 ? attractionKind : "";
 }
 
 function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean {
@@ -2068,36 +2059,34 @@ function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean
   return false;
 }
 
-function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: AttractionHandleContext, attracted: AttractionHandleContext, catalogs: KindCatalogBundle | undefined): boolean {
-  const wSrc = resolveCableKindForVortex(attracting.vortexKind, catalogs);
-  const wTgt = resolveCableKindForVortex(attracted.vortexKind, catalogs);
-  const eSrc = resolveEdgeKindForCable(wSrc, catalogs);
-  const eTgt = resolveEdgeKindForCable(wTgt, catalogs);
+function attractionGestureRuleApplies(rule: KindCompatEntry, attracting: AttractionVortexContext, attracted: AttractionVortexContext, catalogs: KindCatalogBundle | undefined): boolean {
+  const cableSrc = resolveCableKindForVortex(attracting.vortexKind, catalogs);
+  const cableTgt = resolveCableKindForVortex(attracted.vortexKind, catalogs);
+  const attractionSrc = resolveAttractionKindForCable(cableSrc, catalogs);
+  const attractionTgt = resolveAttractionKindForCable(cableTgt, catalogs);
   const sn = attracting.objectKind ?? "";
   const tn = attracted.objectKind ?? "";
-  const sh = attracting.vortexKind ?? "";
-  const th = attracted.vortexKind ?? "";
-  const spec = rule.specificity ?? "handle";
+  const sv = attracting.vortexKind ?? "";
+  const tv = attracted.vortexKind ?? "";
+  const spec = rule.specificity ?? "vortex";
   switch (spec) {
     case "general":
-      return compatPairMatches(rule, sh, th);
+      return compatPairMatches(rule, sv, tv);
     case "object":
-    case "node":
       return compatPairMatches(rule, sn, tn);
-    case "edge":
     case "attraction":
-      return compatPairMatches(rule, eSrc, eTgt);
-    case "handle":
-      return compatPairMatches(rule, sh, th);
+      return compatPairMatches(rule, attractionSrc, attractionTgt);
+    case "vortex":
+      return compatPairMatches(rule, sv, tv);
     case "cable":
-      return compatPairMatches(rule, wSrc, th);
+      return compatPairMatches(rule, cableSrc, cableTgt);
     default:
-      return compatPairMatches(rule, sh, th);
+      return compatPairMatches(rule, sv, tv);
   }
 }
 
-/** @emoji ­ƒñØ WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
-export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleContext, attracted: AttractionHandleContext, rules: readonly KindCompatEntry[] | undefined, catalogs: KindCatalogBundle | undefined): boolean {
+/** @emoji 🤝 WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
+export function vorticesAttractionCompatibleForDrag(attracting: AttractionVortexContext, attracted: AttractionVortexContext, rules: readonly KindCompatEntry[] | undefined, catalogs: KindCatalogBundle | undefined): boolean {
   if (!rules?.length) return true;
   let matched = rules.filter((r) => attractionGestureRuleApplies(r, attracting, attracted, catalogs));
   if (matched.length === 0) return false;
@@ -2108,14 +2097,12 @@ export function handlesAttractionCompatibleForDrag(attracting: AttractionHandleC
         case "general":
           return 0;
         case "object":
-        case "node":
           return 1;
-        case "edge":
         case "attraction":
           return 2;
         case "cable":
           return 3;
-        case "handle":
+        case "vortex":
           return 4;
         default:
           return 4;
@@ -3267,7 +3254,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 //#region ­ƒîÇVortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
-function VortexHandleGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
+function VortexMeshGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
   const scale = (props.radius / 0.35) * 0.9;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
   return <MeshBody meshUrl={meshProps.meshUrl} style={meshProps.style} scale={scale} userData={{ puzzle3dVortexFullId: meshProps.fullId }} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
@@ -3390,12 +3377,12 @@ export const Vortex = reactHostPort.memo(function Vortex(
 
   const lodCtx = useLod();
   const worldPosRef = reactHostPort.useRef(new Vector3());
-  const handleMeshByLodRef = reactHostPort.useRef(props.handleMeshByLod);
-  handleMeshByLodRef.current = props.handleMeshByLod;
-  const handleMeshUrlRef = reactHostPort.useRef(props.handleMeshUrl);
-  handleMeshUrlRef.current = props.handleMeshUrl;
-  const trackVortexLod = lodCtx.depthVariable || (props.handleMeshByLod?.length ?? 0) > 0;
-  const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.handleMeshByLod, props.handleMeshUrl));
+  const vortexMeshByLodRef = reactHostPort.useRef(props.vortexMeshByLod);
+  vortexMeshByLodRef.current = props.vortexMeshByLod;
+  const vortexMeshUrlRef = reactHostPort.useRef(props.vortexMeshUrl);
+  vortexMeshUrlRef.current = props.vortexMeshUrl;
+  const trackVortexLod = lodCtx.depthVariable || (props.vortexMeshByLod?.length ?? 0) > 0;
+  const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.vortexMeshByLod, props.vortexMeshUrl));
   const vortexSelected = props.selected === true || liveSelection.vortexIds.includes(fullId);
   const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = vortexSelected
     ? "attracting"
@@ -3491,17 +3478,17 @@ export const Vortex = reactHostPort.memo(function Vortex(
           return lodCtx.lodForWorldPosition(worldPosRef.current.toArray() as Vec3);
         })()
       : lodCtx.lod;
-    const next = vortexLodVisual(lod, lingerRef.current, handleMeshByLodRef.current, handleMeshUrlRef.current);
+    const next = vortexLodVisual(lod, lingerRef.current, vortexMeshByLodRef.current, vortexMeshUrlRef.current);
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
-  const drawHandleBody = trackVortexLod ? lodVisual.drawHandleBody || linger : lodHandlePrimaryVisible(lodCtx.lod) || linger;
-  const pickProxy = (drawHandleBody ? false : trackVortexLod ? lodVisual.pickProxy : lodHandlePickProxy(lodCtx.lod)) && !linger;
-  const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.handleMeshByLod, lodCtx.lod, props.handleMeshUrl);
+  const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
+  const pickProxy = (drawVortexBody ? false : trackVortexLod ? lodVisual.pickProxy : lodVortexPickProxy(lodCtx.lod)) && !linger;
+  const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
 
   const vortexPointerHovered = reg.isHovered({ kind: "vortex", fullId });
-  const handleMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
+  const vortexMeshStyle = highlight === "none" && vortexPointerHovered ? "hovered" : vortexHighlightMeshStyle(highlight);
 
   const vortexPointerHoverHandlers = reactHostPort.useMemo(
     () => ({
@@ -3526,13 +3513,13 @@ export const Vortex = reactHostPort.memo(function Vortex(
       {showDirection ? (
         <VortexDirectionArrow directionCad={props.direction!} objectOrigin={props.objectOrigin} objectOrientation={props.objectOrientation} radius={r} selected={vortexSelected || highlight !== "none"} />
       ) : null}
-      {drawHandleBody && meshUrl ? (
-        <VortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} {...vortexPointerHoverHandlers} />
-      ) : drawHandleBody && props.children ? (
+      {drawVortexBody && meshUrl ? (
+        <VortexMeshGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={vortexMeshStyle} {...vortexPointerHoverHandlers} />
+      ) : drawVortexBody && props.children ? (
         <group userData={{ puzzle3dVortexFullId: fullId }} {...vortexPointerHoverHandlers}>
           {props.children}
         </group>
-      ) : drawHandleBody ? (
+      ) : drawVortexBody ? (
         <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} {...vortexPointerHoverHandlers} />
       ) : null}
       {pickProxy ? (
@@ -3545,18 +3532,6 @@ export const Vortex = reactHostPort.memo(function Vortex(
   );
 });
 //#endregion ­ƒîÇVortex
-
-//#region ­ƒº▓Magnet
-export const Magnet = reactHostPort.memo(function Magnet(props: MagnetProps & { objectOrigin: Vec3; objectOrientation?: Quat }) {
-  const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
-  return (
-    <mesh position={positionThree} userData={{ puzzle3dMagnetId: props.id }}>
-      <boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
-      <meshStandardMaterial color="#a78bfa" cableframe />
-    </mesh>
-  );
-});
-//#endregion ­ƒº▓Magnet
 
 //#region ­ƒº▓Attraction
 function puzzle3dAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): number {
@@ -4045,7 +4020,7 @@ function RegistryProvider({
   const attractionSessionRef = reactHostPort.useRef<{
     attractingFullId: string;
     attractingObjectId: string;
-    attractingCtx: AttractionHandleContext;
+    attractingCtx: AttractionVortexContext;
     compat: Set<string>;
     snapAttractedFullId: string | null;
   } | null>(null);
@@ -4157,19 +4132,19 @@ function RegistryProvider({
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
       if (indirectPickRef.current) return;
       if (blockedVortexFullIds.has(fullId)) return;
-      const attractingCtx: AttractionHandleContext = { objectId, objectKind, vortexKind };
+      const attractingCtx: AttractionVortexContext = { objectId, objectKind, vortexKind };
       const compat = new Set<string>();
       const objectIds = new Set<string>();
       for (const [tid, meta] of vortexMetaRef.current) {
         if (tid === fullId) continue;
         if (meta.objectId === objectId) continue;
         if (blockedVortexFullIds.has(tid)) continue;
-        const attractedCtx: AttractionHandleContext = {
+        const attractedCtx: AttractionVortexContext = {
           objectId: meta.objectId,
           objectKind: meta.objectKind,
           vortexKind: meta.vortexKind,
         };
-        if (!handlesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
+        if (!vorticesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
         compat.add(tid);
         objectIds.add(meta.objectId);
       }
@@ -4844,17 +4819,17 @@ if (import.meta.vitest) {
       expect(lodGridStepWorld(100, 10)).toBe(50);
     });
   });
-  describe("lodHandlePrimaryVisible", () => {
-    it("draws handles at detail bands", () => {
-      expect(lodHandlePrimaryVisible(100)).toBe(true);
-      expect(lodHandlePrimaryVisible(201)).toBe(false);
+  describe("lodVortexPrimaryVisible", () => {
+    it("draws vortices at detail bands", () => {
+      expect(lodVortexPrimaryVisible(100)).toBe(true);
+      expect(lodVortexPrimaryVisible(201)).toBe(false);
     });
   });
-  describe("lodHandlePickProxy", () => {
+  describe("lodVortexPickProxy", () => {
     it("uses pick proxies in mid bands only", () => {
-      expect(lodHandlePickProxy(500)).toBe(true);
-      expect(lodHandlePickProxy(100)).toBe(false);
-      expect(lodHandlePickProxy(2000)).toBe(false);
+      expect(lodVortexPickProxy(500)).toBe(true);
+      expect(lodVortexPickProxy(100)).toBe(false);
+      expect(lodVortexPickProxy(2000)).toBe(false);
     });
   });
   describe("puzzle3dLodCanvasProps", () => {
@@ -5051,8 +5026,8 @@ if (import.meta.vitest) {
               {
                 id: "a:v1",
                 position: [0, 0, 0],
-                handleMeshUrl: "/fallback.glb",
-                handleMeshByLod: [
+                vortexMeshUrl: "/fallback.glb",
+                vortexMeshByLod: [
                   { lod: 100, url: "/d.glb" },
                   { lod: 50, url: "/u.glb" },
                 ],
@@ -5064,8 +5039,8 @@ if (import.meta.vitest) {
       const o = f?.objects[0];
       expect(o?.meshByLod?.[0]?.url).toBe("/fine.glb");
       const v = o?.vortices[0];
-      expect(v?.handleMeshByLod?.[0]?.url).toBe("/d.glb");
-      expect(v?.handleMeshUrl).toBe("/fallback.glb");
+      expect(v?.vortexMeshByLod?.[0]?.url).toBe("/d.glb");
+      expect(v?.vortexMeshUrl).toBe("/fallback.glb");
     });
   });
   describe("chunkKey", () => {
@@ -5178,13 +5153,13 @@ if (import.meta.vitest) {
       expect(s.has("b:h2")).toBe(true);
     });
   });
-  describe("handlesAttractionCompatibleForDrag", () => {
+  describe("vorticesAttractionCompatibleForDrag", () => {
     it("allows all when rules empty", () => {
-      const ok = handlesAttractionCompatibleForDrag({ objectId: "a", objectKind: "n1", vortexKind: "h1" }, { objectId: "b", objectKind: "n2", vortexKind: "h2" }, [], undefined);
+      const ok = vorticesAttractionCompatibleForDrag({ objectId: "a", objectKind: "n1", vortexKind: "h1" }, { objectId: "b", objectKind: "n2", vortexKind: "h2" }, [], undefined);
       expect(ok).toBe(true);
     });
-    it("matches handle specificity", () => {
-      const ok = handlesAttractionCompatibleForDrag({ objectId: "a", objectKind: "x", vortexKind: "h1" }, { objectId: "b", objectKind: "y", vortexKind: "h2" }, [{ source: "h1", target: "h2", specificity: "handle" }], undefined);
+    it("matches vortex specificity", () => {
+      const ok = vorticesAttractionCompatibleForDrag({ objectId: "a", objectKind: "x", vortexKind: "h1" }, { objectId: "b", objectKind: "y", vortexKind: "h2" }, [{ source: "h1", target: "h2", specificity: "vortex" }], undefined);
       expect(ok).toBe(true);
     });
   });
