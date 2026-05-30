@@ -1384,6 +1384,7 @@ import {
   BOARD_PRESELECT_EMPTY,
   BOARD_SELECTION_TARGETS_DEFAULT,
   boardFixtureMetaKindCatalogBundle,
+  boardFixtureNodeCaption,
   parseBoardFixtureV1,
   BoardCanvas,
   Node,

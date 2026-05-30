@@ -1,17 +1,17 @@
-# Puzzle3d
+# Puzzle5d
 
-# ObjectKind
+# PartKind
 
-# Object
+# Part
 
-# VortexKind
+# GripKind
 
-# Vortex
+# Grip
 
-# AttractionKind
+# FastenerKind
 
-# Attraction
+# Fastener
 
-# CableKind
+# RopeKind
 
-# CableKind
+# RopeKind

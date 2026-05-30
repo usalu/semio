@@ -2888,9 +2888,23 @@ function cloneModelGeometryShell(source: Model): Model {
   return target;
 }
 
+/** @emoji 🔄 Copies geometry and keeps only object rows whose typology is listed on the transformation spec. */
+function applyTransformationFallback(spec: TransformationSpec, source: Model): Model {
+  const target = cloneModelGeometryShell(source);
+  const allowedTypologies = new Set(spec.typologies);
+  const objects: Model["objects"] = {};
+  for (const row of Object.values(source.objects)) {
+    if (!allowedTypologies.has(row.typology)) continue;
+    objects[row.id] = row;
+  }
+  target.objects = objects;
+  target.bump();
+  return target;
+}
+
 function runDeriveTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
   const derive = spec.derive;
-  if (!derive) return applyTransformationFallback(spec, source);
+  if (!derive) throw new Error(`transformation ${qualifiedTransformationId(spec.modelDefinitionId, spec.id)} is missing derive`);
   const target = cloneModelGeometryShell(source);
   const solidRefs = collectTransformationPrimitiveRefs(source, derive.collect.sourceModelDefinition, derive.collect.primitiveKind);
   if (!solidRefs.length) {
