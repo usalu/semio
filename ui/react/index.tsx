@@ -18012,16 +18012,14 @@ export const Tree = (({
   const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
 
   reactHostPort.useEffect(() => {
-    setSectionItemsById((previousItems) => {
-      let hasChanges = false;
-      const nextItems = { ...previousItems };
-      resolvedSections.forEach((section) => {
-        if (section.items && previousItems[section.id] !== section.items) {
+    setSectionItemsById(() => {
+      const nextItems: Record<string, TreeDataItem[]> = {};
+      for (const section of resolvedSections) {
+        if (section.items) {
           nextItems[section.id] = section.items;
-          hasChanges = true;
         }
-      });
-      return hasChanges ? nextItems : previousItems;
+      }
+      return nextItems;
     });
   }, [resolvedSections]);
 

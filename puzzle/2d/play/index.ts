@@ -624,6 +624,11 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 		}
 		out.push(item);
 	}
+	const nodeDeletes = out.filter((item) => item.kind === "node");
+	const nodeCount = fixture.nodes.length;
+	if (nodeCount > 0 && nodeDeletes.length >= 2 && nodeDeletes.length > nodeCount / 2) {
+		return out.filter((item) => item.kind === "edge");
+	}
 	return out;
 }
 
@@ -737,6 +742,32 @@ if (import.meta.vitest) {
 				),
 			).toEqual([{ kind: "edge", id: "e0" }]);
 		});
+
+		it("drops resync bursts that would delete most of the fixture graph", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{ id: "a", x: 0, y: 0, radius: 10, handles: [] },
+					{ id: "b", x: 10, y: 0, radius: 10, handles: [] },
+					{ id: "c", x: 20, y: 0, radius: 10, handles: [] },
+				],
+				edges: [],
+			};
+			const batch = [
+				{ kind: "node" as const, id: "a" },
+				{ kind: "node" as const, id: "b" },
+				{ kind: "node" as const, id: "c" },
+			];
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+		});
+	});
+
+	it("nakagin default fixture yields a populated hierarchy nodes group", () => {
+		const tree = buildPuzzle2dPlayHierarchySections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
+		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
+		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
+		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
 	});
 }
 //#endregion 🧪Tests

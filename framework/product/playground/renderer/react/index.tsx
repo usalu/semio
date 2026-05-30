@@ -1322,6 +1322,7 @@ import {
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
   encodePuzzle2dFixtureForDragV1,
+  setPuzzle2dFixtureDragDataTransfer,
   PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
   PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE,
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -1508,8 +1509,10 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
-  /** @emoji 🗑️ Batches canvas structural deletes; drops resync bursts while the fixture graph is mutating. */
+  /** @emoji 🗑️ Batches canvas structural deletes; ignores ids already absent from the shared fixture. */
   queueStructuralDelete: (kind: "edge" | "node", id: string) => void;
+  /** @emoji 🔁 Monotonic epoch bumped on shared fixture graph edits for multi-pane declarative resync. */
+  sceneAuthoringEpoch: number;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
   puzzle2dRedrawPlaying: boolean;
   setPuzzle2dRedrawPlaying: (value: boolean) => void;
@@ -1543,17 +1546,32 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
-class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly buildTree: () => UiTreeNode) {
-    super();
-  }
+/** @emoji 🌳 Workbench hierarchy bound to {@link Puzzle2dPlayShellContext} fixture (not static tree snapshots). */
+function Puzzle2dPlayHierarchyPanel(): ReactElement {
+  const { fixture, selectionIds, setSelectionIds } = usePuzzle2dPlayShell();
+  const sections = reactHostPort.useMemo(
+    () => buildPuzzle2dPlayHierarchySections(fixture, [...selectionIds], (id) => setSelectionIds([id])).sections as TreeDataSection[],
+    [fixture, selectionIds, setSelectionIds],
+  );
+  return <Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={sections} />;
+}
 
+class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig {
     return {
       id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.buildTree().sections as TreeDataSection[]),
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-2d-play-hierarchy.shell",
+            defaultOpen: true,
+            content: <Puzzle2dPlayHierarchyPanel />,
+            items: [],
+          },
+        ],
+      }),
     };
   }
 }
@@ -1867,7 +1885,8 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     activePaneId,
     patchFixture,
     queueStructuralDelete,
-    puzzle2dGridSnapEnabled,
+      puzzle2dGridSnapEnabled,
+      sceneAuthoringEpoch,
     puzzle2dLodModeByPane,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
@@ -1960,6 +1979,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         onPreselect={onPreselect}
         onSelect={onSelect}
         preselection={preselection}
+        sceneAuthoringEpoch={sceneAuthoringEpoch}
         selection={selection}
         selectionMethod={puzzle2dSelectionMethod}
         selectionMode={puzzle2dSelectionMode}
@@ -2070,7 +2090,7 @@ function Puzzle2dFixturePaletteDraggable(props: { fixture: Puzzle2dFixtureV1; la
     reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          event.dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encodePuzzle2dFixtureForDragV1(dragFixture));
+          setPuzzle2dFixtureDragDataTransfer(event.dataTransfer, dragFixture);
           event.dataTransfer.effectAllowed = "copy";
           const { clientHeight, clientWidth } = event.currentTarget;
           event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
@@ -2095,7 +2115,7 @@ function Puzzle2dFixtureLibraryPanel(): ReactElement {
     reactHostPort.useMemo(
       () => ({
         onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          event.dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encodePuzzle2dFixtureForDragV1(fixture));
+          setPuzzle2dFixtureDragDataTransfer(event.dataTransfer, fixture);
           event.dataTransfer.effectAllowed = "copy";
         },
       }),
@@ -2759,6 +2779,11 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const puzzle2dRedrawPlayingRef = reactHostPort.useRef(puzzle2dRedrawPlaying);
   puzzle2dRedrawPlayingRef.current = puzzle2dRedrawPlaying;
 
+  const [sceneAuthoringEpoch, setSceneAuthoringEpoch] = reactHostPort.useState(0);
+  const bumpSceneAuthoringEpoch = reactHostPort.useCallback(() => {
+    setSceneAuthoringEpoch((epoch) => epoch + 1);
+  }, []);
+
   const applyStructuralDelete = reactHostPort.useCallback((kind: "edge" | "node", id: string) => {
     const pruneSelections = (removeIds: readonly string[]): void => {
       const remove = new Set(removeIds);
@@ -2772,6 +2797,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         return { ...prev, edges: prev.edges.filter((e) => e.id !== id) };
       });
       pruneSelections([id]);
+      bumpSceneAuthoringEpoch();
       return;
     }
     const node = fixtureRef.current.nodes.find((n) => n.id === id);
@@ -2789,13 +2815,27 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       };
     });
     pruneSelections([id, ...handleIds]);
+    bumpSceneAuthoringEpoch();
+  }, [bumpSceneAuthoringEpoch]);
+
+  const fixtureAuthoringQuietUntilRef = reactHostPort.useRef(0);
+  const paletteDropNodeGuardRef = reactHostPort.useRef<Set<string>>(new Set());
+  const guardFixtureAuthoringFromStructuralDeletes = reactHostPort.useCallback((quietMs = 100) => {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    fixtureAuthoringQuietUntilRef.current = Math.max(fixtureAuthoringQuietUntilRef.current, now + quietMs);
   }, []);
 
-  const fixtureGraphMutationSuppressRef = reactHostPort.useRef(0);
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
   const queueStructuralDelete = reactHostPort.useCallback(
     (kind: "edge" | "node", id: string) => {
+      if (kind === "node" && paletteDropNodeGuardRef.current.has(id)) {
+        return;
+      }
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (now < fixtureAuthoringQuietUntilRef.current) {
+        return;
+      }
       structuralDeleteQueueRef.current.push({ kind, id });
       if (structuralDeleteFlushScheduledRef.current) {
         return;
@@ -2803,10 +2843,6 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       structuralDeleteFlushScheduledRef.current = true;
       queueMicrotask(() => {
         structuralDeleteFlushScheduledRef.current = false;
-        if (fixtureGraphMutationSuppressRef.current > 0) {
-          structuralDeleteQueueRef.current = [];
-          return;
-        }
         const batch = structuralDeleteQueueRef.current;
         structuralDeleteQueueRef.current = [];
         const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current);
@@ -2822,33 +2858,26 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [applyStructuralDelete],
   );
 
-  reactHostPort.useEffect(() => {
-    if (fixtureGraphMutationSuppressRef.current === 0) {
-      return;
-    }
-    const frame = requestAnimationFrame(() => {
-      fixtureGraphMutationSuppressRef.current = 0;
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, [fixture]);
-
   const setFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
-    fixtureGraphMutationSuppressRef.current += 1;
+    guardFixtureAuthoringFromStructuralDeletes(120);
     setFixtureState(next);
+    bumpSceneAuthoringEpoch();
     setSelectionIdsState(selectionSeedForFixture(next));
     setPreselection(PUZZLE_2D_PRESELECT_EMPTY);
     setHoveredId(null);
     hoverSourcePaneRef.current = null;
     setHoverSourcePane(null);
     setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
-  }, []);
+  }, [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes]);
 
-  const patchFixture = reactHostPort.useCallback((updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {
-    fixtureGraphMutationSuppressRef.current += 1;
-    setFixtureState((prev) => updater(prev));
-  }, []);
+  const patchFixture = reactHostPort.useCallback(
+    (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {
+      guardFixtureAuthoringFromStructuralDeletes(80);
+      setFixtureState((prev) => updater(prev));
+      bumpSceneAuthoringEpoch();
+    },
+    [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes],
+  );
 
   const setSelectionIds = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
@@ -2878,17 +2907,24 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   }, []);
 
   const handleCanvasFixtureDrop = reactHostPort.useCallback(
-    (pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => {
+    (_pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
+      guardFixtureAuthoringFromStructuralDeletes(200);
       const merged = mergePaletteNodeFromDrop(detail);
       if (merged) {
+        paletteDropNodeGuardRef.current.add(merged.id);
+        if (typeof globalThis.setTimeout === "function") {
+          globalThis.setTimeout(() => {
+            paletteDropNodeGuardRef.current.delete(merged.id);
+          }, 600);
+        }
         patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
         setSelectionIds([merged.id]);
         return;
       }
       setFixture(detail.fixture);
     },
-    [patchFixture, setFixture, setSelectionIds],
+    [guardFixtureAuthoringFromStructuralDeletes, patchFixture, setFixture, setSelectionIds],
   );
 
   const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {
@@ -3380,6 +3416,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setSelectionIds,
       preselection,
       setPreselection,
+      sceneAuthoringEpoch,
       hoveredId,
       hoverSourcePane,
       setHoverPane,
@@ -3420,6 +3457,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       resetPuzzle2dRedrawProgressiveEpoch,
       selectionIds,
       preselection,
+      sceneAuthoringEpoch,
       hoveredId,
       hoverSourcePane,
       setHoverPane,
@@ -3540,13 +3578,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
-  const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(
-    () =>
-      new Puzzle2dPlayHierarchyPanelDefinition(() =>
-        buildPuzzle2dPlayHierarchySections(shellValueRef.current.fixture, [...shellValueRef.current.selectionIds], (id) => shellValueRef.current.setSelectionIds([id])),
-      ),
-    [],
-  );
+  const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
   const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
   const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
   const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(

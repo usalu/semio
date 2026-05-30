@@ -2,6 +2,13 @@
   "name": "@semio/fixtures",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "regenerate-metabolism-light": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/fixtures",
+        "command": "bun ./script.ts regenerate-metabolism-light"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

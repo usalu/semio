@@ -118,6 +118,7 @@ const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons"
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
   const assetsPath = path.resolve(__dirname, "../../../../assets");
+  const fixturesPath = path.resolve(__dirname, "../../../../fixtures");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
       const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -125,6 +126,19 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
         res.setHeader("Content-Type", "application/wasm");
         fsMod.createReadStream(wasmFile).pipe(res);
         return;
+      }
+    }
+    if (req.url?.startsWith("/fixtures/")) {
+      const requestedFixturePath = req.url.replace("/fixtures/", "").split(/[?#]/, 1)[0];
+      if (requestedFixturePath && !requestedFixturePath.includes("..")) {
+        const filePath = path.join(fixturesPath, requestedFixturePath);
+        if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
+          if (requestedFixturePath.endsWith(".json")) {
+            res.setHeader("Content-Type", "application/json");
+          }
+          fsMod.createReadStream(filePath).pipe(res);
+          return;
+        }
       }
     }
     if (req.url?.startsWith("/assets/")) {

@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Design scene 3D selection: sketchpadApplyPuzzle2dSelection classifies volume attraction ids as connectionIds when they match design.connections (not only semio.connection prefixes). Tests for volume connection selection, metabolism-shaped bundle decode + family port compat extract. Prior: family ports in rs hydration + projection round-trip, sketchpad family port collect/merge, copatibleWith GraphQL. Vitest 39/39.",
+  "summary": "Repaired truncated semio/fixtures/metabolism.kit.light.semio.json by regenerating from metabolism.kit.snapshot.semio.json (bundle hash/items, nodeKind, handleKind). Ticket script regenerate-metabolism-light-fixture.mjs. Rs metabolism_light_fixture_kinds_for_types_and_ports passes. Sketchpad vitest reads real light fixture (40/40). Prior: family port hydration, 3d selection mapping, copatibleWith GraphQL.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -27,6 +27,7 @@
     "⚪6c766e1ab24b4f47a4a14e26f21235e1",
     "⚪f15f6be93a5348a1b4dbcddafe163dc3",
     "⚪47e927f5ce1a40428c21e9d31b3efae8",
-    "⚪a895cc44a27742d78b485a4b07c40e37"
+    "⚪a895cc44a27742d78b485a4b07c40e37",
+    "⚪0b135944870543c38c918f82b181ce8a"
   ]
 }

@@ -95,12 +95,14 @@ export function sketchpadKitFromDecodedBundle(value: unknown): Kit | null {
 
 /** @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
 export async function importKit(
-	data: ArrayBuffer | Blob | File | string,
+	data: ArrayBuffer | Uint8Array | Blob | File | string,
 ): Promise<{ readonly kit: Kit; readonly session: Session; readonly portCompatSource: Kit }> {
 	let bytes: Uint8Array;
 	if (typeof data === "string") {
 		const res = await fetch(data);
 		bytes = new Uint8Array(await res.arrayBuffer());
+	} else if (data instanceof Uint8Array) {
+		bytes = data;
 	} else if (data instanceof ArrayBuffer) {
 		bytes = new Uint8Array(data);
 	} else {
@@ -3404,6 +3406,18 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadKitFromDecodedBundle", () => {
+		it("reads metabolism.kit.light.semio.json fixture file", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/metabolism.kit.light.semio.json");
+			const kit = sketchpadKitFromDecodedBundle(JSON.parse(readFileSync(fixturePath, "utf8")));
+			expect(kit?.name).toBe("Metabolism");
+			expect(sketchpadExtractPortCompatById(kit!).size).toBeGreaterThan(0);
+			expect(sketchpadCollectKitPorts(kit!).length).toBeGreaterThan(0);
+			expect(sketchpadReadKitFamilyRows(kit!).some((f) => f["name"] === "Nakagin Capsule Tower")).toBe(true);
+		});
+
 		it("reads metabolism-shaped wip.initialKit bundle", () => {
 			const raw = {
 				schema: "test",
@@ -3465,6 +3479,39 @@ if (import.meta.vitest) {
 			expect(ctrl.getKitStore(id)).toBeInstanceOf(SemioJsKitStore);
 			ctrl.dispose();
 		});
+	});
+
+	describe("importKit", () => {
+		it("hydrates family ports into live kit and diagram compat edges", async () => {
+			const payload = JSON.stringify({
+				id: "kit-import-test",
+				name: "Import Test",
+				families: [
+					{
+						id: "fam1",
+						name: "Tower",
+						ports: [
+							{ id: "p1", name: "bottom", compatiblePorts: [{ id: "p2" }] },
+							{ id: "p2", name: "top", compatiblePorts: [{ id: "p1" }] },
+						],
+					},
+				],
+				types: [
+					{ id: "t1", name: "A", connectors: [{ id: "c1", name: "c1", port: { id: "p1" } }] },
+					{ id: "t2", name: "B", connectors: [{ id: "c2", name: "c2", port: { id: "p2" } }] },
+				],
+				designs: [],
+			});
+			const { kit, session } = await importKit(new TextEncoder().encode(payload));
+			try {
+				expect(kit.name).toBe("Import Test");
+				expect(sketchpadExtractPortCompatById(kit).size).toBe(2);
+				const fixture = sketchpadKitPuzzle2dFixtureFromKit(kit);
+				expect(fixture.edges.some((edge) => edge.id === "compat-type:t1-type:t2")).toBe(true);
+			} finally {
+				await session.dispose();
+			}
+		}, 120_000);
 	});
 
 	describe("executeSketchpadJsKitMutation", () => {

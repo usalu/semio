@@ -1554,6 +1554,32 @@ export function encodePuzzle2dFixtureForDragV1(fixture: Puzzle2dFixtureV1): stri
   return JSON.stringify(fixture);
 }
 
+/** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop (same JSON as {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}). */
+export const PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME = "text/plain";
+
+/** @emoji 📤 Writes puzzle 2d fixture drag payload (custom MIME + `text/plain` fallback). */
+export function setPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: Puzzle2dFixtureV1): void {
+  const encoded = encodePuzzle2dFixtureForDragV1(fixture);
+  dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encoded);
+  dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME, encoded);
+}
+
+/** @emoji 📥 Reads puzzle 2d fixture drag payload from a drop `DataTransfer`. */
+export function readPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer): Puzzle2dFixtureV1 | null {
+  const custom = dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME);
+  if (custom.trim() !== "") {
+    const parsed = decodePuzzle2dFixtureFromDragV1(custom);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  const plain = dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME);
+  if (plain.trim() === "") {
+    return null;
+  }
+  return decodePuzzle2dFixtureFromDragV1(plain);
+}
+
 /** @emoji 📥 Parses drag payload from {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
 export function decodePuzzle2dFixtureFromDragV1(text: string): Puzzle2dFixtureV1 | null {
   let raw: unknown;
@@ -2653,6 +2679,11 @@ export class Puzzle2dRenderer {
   clearNodeAuthoringPositionCache(): void {
     this.lastNodeAuthoringPositionById.clear();
   }
+
+  /** @emoji 🔗 Whether this renderer still participates in multi-pane authoring peer sync. */
+  authoringPeerActive(): boolean {
+    return !this.isDisposed;
+  }
   /** @emoji 💾 Last `gpuReady` snapshot; used while {@link Puzzle2dRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
   private cachedWasmGpuReady = false;
   private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
@@ -3670,10 +3701,10 @@ export class Puzzle2dRenderer {
     }
     this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
     this.syncPuzzle2dAppearanceFromDocument();
-    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
   }
 
-  private applyWasmDrainToScene(raw: string): void {
+  private applyWasmDrainToScene(raw: string, options?: { readonly silentStructuralRemoves?: boolean }): void {
     let rows: Array<{ name: string; payload: Record<string, unknown> }>;
     try {
       rows = JSON.parse(raw) as Array<{ name: string; payload: Record<string, unknown> }>;
@@ -3745,7 +3776,14 @@ export class Puzzle2dRenderer {
             const edge = this.scene.edges.get(id);
             if (edge) {
               this.clearWasmHostAuthorshipForEdge(id);
-              this.scene.remove(edge);
+              const remove = () => {
+                this.scene.remove(edge);
+              };
+              if (options?.silentStructuralRemoves) {
+                this.runWithoutSceneDeleteEvents(remove);
+              } else {
+                remove();
+              }
               graphMutatedForHostMerge = true;
             } else {
               this.clearWasmHostAuthorshipForEdge(id);
@@ -3757,7 +3795,14 @@ export class Puzzle2dRenderer {
             const id = String((row.payload as { id: string }).id);
             const node = this.scene.nodes.get(id);
             if (node) {
-              this.scene.remove(node);
+              const remove = () => {
+                this.scene.remove(node);
+              };
+              if (options?.silentStructuralRemoves) {
+                this.runWithoutSceneDeleteEvents(remove);
+              } else {
+                remove();
+              }
               graphMutatedForHostMerge = true;
             }
             break;
@@ -4629,6 +4674,30 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("broadcasts nodeMove and structural deletes to peer renderers", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ id: "shared", radius: 28, x: 10, y: 20 });
+      const nodeB = new Puzzle2dSceneNode({ id: "shared", radius: 28, x: 10, y: 20 });
+      rendererA.scene.add(nodeA);
+      rendererB.scene.add(nodeB);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeMove", payload: { id: "shared", x: 90, y: 110 } }]));
+      expect(nodeA.x).toBe(90);
+      expect(nodeB.x).toBe(90);
+      expect(nodeB.y).toBe(110);
+      const nodeDeletes: string[] = [];
+      rendererA.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      rendererA.setSelectionIdsSilent(["shared"]);
+      rendererA["deleteSelectedObjects"]();
+      expect(nodeDeletes).toContain("shared");
+      expect(rendererA.scene.nodes.has("shared")).toBe(false);
+      expect(rendererB.scene.nodes.has("shared")).toBe(false);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
     it("wasm drain nodeDelete for missing scene ids does not emit structural delete events", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -4637,10 +4706,23 @@ if (puzzle2dVitest) {
       const root = new Puzzle2dSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
       renderer.scene.add(root);
       renderer["applyWasmDrainToScene"](
-        JSON.stringify([{ type: "nodeDelete", payload: { id: "ghost" } }]),
+        JSON.stringify([{ name: "nodeDelete", payload: { id: "ghost" } }]),
       );
       expect(nodeDeletes).toEqual([]);
       expect(renderer.scene.nodes.has("keep")).toBe(true);
+      renderer.dispose();
+    });
+
+    it("wasm drain nodeDelete for an existing scene id does not emit structural delete events", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const nodeDeletes: string[] = [];
+      renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      const root = new Puzzle2dSceneNode({ id: "keep", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(root);
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeDelete", payload: { id: "keep" } }]), { silentStructuralRemoves: true });
+      expect(nodeDeletes).toEqual([]);
+      expect(renderer.scene.nodes.has("keep")).toBe(false);
       renderer.dispose();
     });
 
@@ -5436,6 +5518,25 @@ if (puzzle2dVitest) {
           schema: "puzzle.2d.fixture/v1",
         }),
       ).toBeNull();
+    });
+
+    it("reads fixture drag payload from custom MIME or text/plain fallback", () => {
+      const fixture: Puzzle2dFixtureV1 = {
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [],
+        meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
+        nodes: [{ handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "seed.h0" }], id: "palette-seed-circle", radius: 12, x: 0, y: 0 }],
+        schema: "puzzle.2d.fixture/v1",
+      };
+      const encoded = encodePuzzle2dFixtureForDragV1(fixture);
+      const fromCustom = {
+        getData: (mime: string) => (mime === PUZZLE_2D_FIXTURE_DRAG_V1_MIME ? encoded : ""),
+      } as DataTransfer;
+      expect(readPuzzle2dFixtureDragDataTransfer(fromCustom)?.nodes[0]?.id).toBe("palette-seed-circle");
+      const fromPlain = {
+        getData: (mime: string) => (mime === PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME ? encoded : ""),
+      } as DataTransfer;
+      expect(readPuzzle2dFixtureDragDataTransfer(fromPlain)?.nodes[0]?.id).toBe("palette-seed-circle");
     });
 
     it("round-trips drag codec for v1 fixtures", () => {
@@ -6533,6 +6634,8 @@ export interface Puzzle2dCanvasProps {
   /** @emoji 👁️ Uncontrolled initial area-select preview. */
   defaultPreselection?: Puzzle2dPreselectSnapshot;
   onPreselect?: (snapshot: Puzzle2dPreselectSnapshot) => void;
+  /** @emoji 🔁 Bumps when shared fixture graph authoring changes so every pane reapplies declarative node positions. */
+  sceneAuthoringEpoch?: number;
   /** @emoji 🖱️ Controlled hover target id (`onHover` should update this). */
   hoveredId?: string | null;
   /** @emoji 🖱️ Uncontrolled initial hover target id. */
@@ -6844,6 +6947,36 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
   return { ...descriptor, edges: [...descriptor.edges, ...extra] };
 }
 
+//#region 🔖MultiViewAuthoring
+const puzzle2dAuthoringPeerRenderers = new Set<Puzzle2dRenderer>();
+
+function puzzle2dRegisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
+  puzzle2dAuthoringPeerRenderers.add(renderer);
+}
+
+function puzzle2dUnregisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
+  puzzle2dAuthoringPeerRenderers.delete(renderer);
+}
+
+function puzzle2dBroadcastNodeMove(source: Puzzle2dRenderer, payload: { id: string; x: number; y: number }): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (peer === source || !peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.applyNodePositionSilent(payload.id, payload.x, payload.y);
+  }
+}
+
+function puzzle2dBroadcastStructuralRemove(source: Puzzle2dRenderer, payload: Puzzle2dStructureDeletePayload): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (peer === source || !peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.applyStructuralRemoveSilent(payload);
+  }
+}
+//#endregion 🔖MultiViewAuthoring
+
 /** 🔁 Declarative-to-imperative scene sync that preserves stable instances by id. */
 export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
   const desiredNodeIds = new Set(descriptor.nodes.map((node) => node.id));
@@ -6966,11 +7099,27 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 
 //#region 🔖HostMountBridge
 /** @emoji 🌉 Secondary host root per {@link Puzzle2dRenderer}; scene sync runs on `children` changes and on {@link Puzzle2dRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
-function Puzzle2dHostSubtree({ camera, children, renderer }: { camera?: Partial<CameraState>; children: ReactNode; renderer: Puzzle2dRenderer }): null {
+function Puzzle2dHostSubtree({
+  camera,
+  children,
+  renderer,
+  sceneAuthoringEpoch,
+}: {
+  camera?: Partial<CameraState>;
+  children: ReactNode;
+  renderer: Puzzle2dRenderer;
+  sceneAuthoringEpoch?: number;
+}): null {
   const hostMountRef = reactHostPort.useRef<Puzzle2dHostMount | null>(null);
   const mountedRendererRef = reactHostPort.useRef<Puzzle2dRenderer | null>(null);
   const Bridge = useHostMountBridge();
   const wasmHostSceneMergeResyncEpoch = reactHostPort.useSyncExternalStore(renderer.subscribeWasmHostSceneMergeResync, renderer.getWasmHostSceneMergeResyncEpoch, renderer.getWasmHostSceneMergeResyncEpoch);
+
+  reactHostPort.useLayoutEffect(() => {
+    if (sceneAuthoringEpoch !== undefined) {
+      renderer.clearNodeAuthoringPositionCache();
+    }
+  }, [renderer, sceneAuthoringEpoch]);
 
   reactHostPort.useLayoutEffect(() => {
     if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
@@ -7061,6 +7210,7 @@ export function Puzzle2dCanvas({
   preselection,
   defaultPreselection,
   onPreselect,
+  sceneAuthoringEpoch,
   hoveredId: hoveredIdProp,
   defaultHoveredId,
   onViewportChange,
@@ -7146,8 +7296,7 @@ export function Puzzle2dCanvas({
       event.preventDefault();
       fileDragDepthRef.current = 0;
       setFixtureDragActive(false);
-      const text = event.dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME);
-      const fixture = decodePuzzle2dFixtureFromDragV1(text);
+      const fixture = readPuzzle2dFixtureDragDataTransfer(event.dataTransfer);
       if (!fixture) {
         return;
       }
@@ -7670,7 +7819,7 @@ export function Puzzle2dCanvas({
         {contextRenderer ? (
           <>
             <HostMountProvider>
-              <Puzzle2dHostSubtree camera={camera} children={children} renderer={contextRenderer} />
+              <Puzzle2dHostSubtree camera={camera} children={children} renderer={contextRenderer} sceneAuthoringEpoch={sceneAuthoringEpoch} />
               {onLodChange ? <Puzzle2dDrawLodReporter onLodChange={onLodChange} /> : null}
             </HostMountProvider>
             {companions}

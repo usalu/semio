@@ -2782,6 +2782,7 @@ function VortexScreenPick(): null {
       if (!hit) return;
       e.stopImmediatePropagation();
       e.preventDefault();
+      (window as unknown as { __p3dLastVortexPick?: string }).__p3dLastVortexPick = hit.fullId;
       st.commitSelection({ kind: "vortex", fullId: hit.fullId });
       st.setActiveRelocateObjectId(hit.objectId);
       st.invalidate();

@@ -73,7 +73,7 @@ function main() {
 			initialKit,
 		},
 	};
-	fs.writeFileSync(outPath, `${JSON.stringify(bundle, null, 4)}\n`);
+	fs.writeFileSync(outPath, `${JSON.stringify(bundle)}\n`);
 	const parsed = JSON.parse(fs.readFileSync(outPath, "utf8"));
 	const kit = parsed.wip.initialKit;
 	const families = kit.families?.items ?? [];
