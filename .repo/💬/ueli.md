@@ -2639,7 +2639,12 @@ The passthrough components MUST show all available information. A lot of params 
 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
 
-## 🗿spatial
+## 📐cad
+
+---
+
+the transformation from shape to energy is not correct.
+All solids must be fused, then exploded into the surfaces and then every surface is classified e.g. the upper horizontal surfaces turn roof, the lowest turns to base plate, the other ones to slabs, the vertical surfaces turn to external walls, etc
 
 ---
 

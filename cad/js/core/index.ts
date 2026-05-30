@@ -5425,11 +5425,18 @@ export class InteractionRegistry {
   }
 }
 
-/** @emoji 📚 Loads a model-definition interaction by stable `id`. */
+const COMPILED_INTERACTION_BY_ID = new Map<string, InteractionSpec>();
+
+/** @emoji 📚 Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
+  const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
+  if (cached) return cached;
   const raw = shippedInteractionJsons.find((spec) => spec.id === interactionId);
   const spec = raw ? parseInteractionSpec(raw) : null;
-  return spec ? compileInteraction(spec) : null;
+  if (!spec) return null;
+  const compiled = compileInteraction(spec);
+  COMPILED_INTERACTION_BY_ID.set(interactionId, compiled);
+  return compiled;
 }
 
 function requireSpatialInteraction(interactionId: string): InteractionSpec {
@@ -6479,6 +6486,9 @@ if (import.meta.vitest) {
       expect(spec?.invocation).toBe("callable");
       expect(isCallableOnlyInteraction(spec!)).toBe(true);
       expect(loadSpatialInteraction("curve.construct")?.invocation).toBe("callable");
+    });
+    it("loadSpatialInteraction returns the same compiled instance per interaction id", () => {
+      expect(loadSpatialInteraction("primitive.box")).toBe(loadSpatialInteraction("primitive.box"));
     });
     it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
       class StubKernel extends BrepjsKernel {

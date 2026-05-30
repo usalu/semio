@@ -1861,7 +1861,10 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
   const interactionId = interactionIdForPane(pane);
-  const spec = specForPane(pane);
+  const spec = reactHostPort.useMemo(
+    () => (interactionId ? (loadSpatialInteraction(interactionId) ?? PLAY_REPL_SPEC) : PLAY_REPL_SPEC),
+    [interactionId],
+  );
   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
   const pickGeometry = reactHostPort.useMemo(
@@ -2050,6 +2053,14 @@ if (import.meta.vitest) {
       expect(controller.getComputeModeForPane("shape")).toBe("fast");
       const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
       expect(energyWindow?.measures[0]).toMatchObject({ kind: "select", value: "precise" });
+    });
+  });
+
+  describe("interaction spec identity", () => {
+    it("loadSpatialInteraction returns one compiled instance per interaction id", () => {
+      const first = loadSpatialInteraction("primitive.box");
+      const second = loadSpatialInteraction("primitive.box");
+      expect(first).toBe(second);
     });
   });
 

@@ -15455,8 +15455,20 @@ export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 
 // #region 🪬Resizable
 
-function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
-  return <ResizablePrimitive.Group data-slot="resizable-panel-group" className={cn("flex h-full w-full", className)} {...props} />;
+function ResizablePanelGroup({
+  className,
+  orientation = "horizontal",
+  ...props
+}: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+  return (
+    <ResizablePrimitive.Group
+      data-slot="resizable-panel-group"
+      data-panel-group-direction={orientation}
+      className={cn("flex h-full w-full", orientation === "vertical" ? "flex-col" : "flex-row", className)}
+      orientation={orientation}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -22179,6 +22191,17 @@ export interface ModeProps {
   className?: string;
 }
 
+//#region 🧭ModeCanvasSpacing
+
+/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same spacing step. */
+const MODE_CANVAS_INSET_CLASS = "p-double";
+
+function modeCanvasSplitterClass(orientation: "horizontal" | "vertical"): string {
+  return orientation === "horizontal" ? "h-full min-h-0 w-double shrink-0" : "w-full min-h-0 h-double shrink-0";
+}
+
+//#endregion 🧭ModeCanvasSpacing
+
 //#region 🧭ModeLayoutUtils
 
 type ModeLayoutPath = string;
@@ -22882,7 +22905,10 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
       panels.push(
         <ResizableHandle
           key={`sep-${childPath}`}
-          className="relative shrink-0 border-0 bg-transparent after:hidden hover:bg-accent/25 data-[panel-group-direction=vertical]:h-double data-[panel-group-direction=vertical]:min-h-0 data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=horizontal]:h-full data-[panel-group-direction=horizontal]:min-w-0 data-[panel-group-direction=horizontal]:w-double"
+          className={cn(
+            "relative border-0 bg-transparent after:hidden hover:bg-accent/25",
+            modeCanvasSplitterClass(orientation),
+          )}
         />,
       );
     panels.push(
@@ -23146,7 +23172,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
     >
       <LevelProvider level="canvas">
-        <div ref={modeBodyRef} data-slot="mode-body" className="relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas p-double">
+        <div ref={modeBodyRef} data-slot="mode-body" className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}>
           {body}
         {dragState ? (
           <>
@@ -23571,7 +23597,9 @@ if (import.meta.vitest) {
         </div>,
       );
       const modeBody = container.querySelector('[data-slot="mode-body"]');
-      expect(modeBody?.className).toContain("p-double");
+      expect(modeBody?.className).toContain(MODE_CANVAS_INSET_CLASS);
+      const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+      expect(panelGroup?.getAttribute("data-panel-group-direction")).toBe("horizontal");
       const panels = [...container.querySelectorAll('[data-slot="resizable-panel"]')];
       expect(panels.length).toBeGreaterThanOrEqual(2);
       for (const panel of panels) {
@@ -23581,6 +23609,7 @@ if (import.meta.vitest) {
       const horizontalHandle = container.querySelector('[data-slot="resizable-handle"]');
       expect(horizontalHandle).toBeTruthy();
       expect(horizontalHandle!.className).toContain("w-double");
+      expect(horizontalHandle!.className).not.toContain("data-[panel-group-direction=horizontal]:w-double");
     });
 
     it("Mode tab stack shows only the active window body", () => {

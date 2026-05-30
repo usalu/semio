@@ -2280,7 +2280,8 @@ export function CommittedMeshLayer({
 // #region 🪝Hooks
 /** @emoji 🪝 Memoized `createInteractionRuntime` for React hosts. */
 export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
-  return reactHostPort.useMemo(() => createInteractionRuntime(spec, opts), [spec, opts]);
+  const specId = spec.id;
+  return reactHostPort.useMemo(() => createInteractionRuntime(spec, opts), [spec, specId, opts]);
 }
 
 /** @emoji 🪝 Subscribes to `InteractionRuntime` revision updates for React hosts. */
@@ -3437,6 +3438,8 @@ export function InteractionRepl({
   spatialView: spatialViewOverrides,
 }: InteractionReplProps): ReactNode {
   const snapshot = useInteractionSnapshot(rt);
+  const rtRef = reactHostPort.useRef(rt);
+  rtRef.current = rt;
   const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
   const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.model, tessTolerance);
   const documentArchivedBoxLayouts = reactHostPort.useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
@@ -3796,12 +3799,13 @@ export function InteractionRepl({
   const onSpatialInteractionEvent = reactHostPort.useCallback(
     (ev: InteractionEvent) => {
       onInteractionEventProp?.(ev);
+      const activeRt = rtRef.current;
       if (ev.kind === "pointer.down") {
-        const st = rt.getSnapshot().state;
-        const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
+        const st = activeRt.getSnapshot().state;
+        const hi = activeRt.getSnapshot().spatialInteraction.heightConfirmState;
         const snapEv = (ev as { snap?: { kind: string; id: string } }).snap;
         if (hi && st === hi && !snapEv) {
-          void rt.send({ kind: "confirm", modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
+          void activeRt.send({ kind: "confirm", modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
           return;
         }
         if (snapEv && activeSelectionAccept.length > 0 && activeSelectionAccept.includes(snapEv.kind as ModelEntityKind) && effectiveSelectionKindToggles[snapEv.kind as SpatialPickTargetKind] !== false) {
@@ -3813,14 +3817,14 @@ export function InteractionRepl({
           const selection = spatialSelectionTarget(snapTarget);
           const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
           commitSelection(replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState, [selection], modifiers));
-          if (boundInteractionSession) void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
+          if (boundInteractionSession) void activeRt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
           return;
         }
       }
       if (ev.kind === "pointer.move" && !pointerMoveActive) return;
-      if (ev.kind === "pointer.down" || ev.kind === "pointer.move" || ev.kind === "contextmenu") void rt.send(ev);
+      if (ev.kind === "pointer.down" || ev.kind === "pointer.move" || ev.kind === "contextmenu") void activeRt.send(ev);
     },
-    [rt, activeSelectionAccept, commitSelection, boundInteractionSession, interactionSelectionByState, rendererSelectionByModel, snapshot.state, pointerMoveActive, activeModelDefinitionId, effectiveSelectionKindToggles, onInteractionEventProp],
+    [activeSelectionAccept, commitSelection, boundInteractionSession, interactionSelectionByState, rendererSelectionByModel, snapshot.state, pointerMoveActive, activeModelDefinitionId, effectiveSelectionKindToggles, onInteractionEventProp],
   );
 
   reactHostPort.useEffect(() => {
@@ -3936,9 +3940,9 @@ export function InteractionRepl({
     (row: InteractionKeybindRow) => {
       onTransitionRun?.(row);
       const ev = replBuildDispatchEvent(row, { interactionId: spec.id, model: documentModel.model });
-      if (ev) void rt.send(ev);
+      if (ev) void rtRef.current.send(ev);
     },
-    [rt, spec.id, documentModel.model, onTransitionRun],
+    [spec.id, documentModel.model, onTransitionRun],
   );
 
   const transitionRows = reactHostPort.useMemo(() => listKeyedInteractionTransitions(spec, snapshot.state), [spec, snapshot.state]);
@@ -4283,10 +4287,10 @@ export function InteractionRepl({
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
       const event = createSpatialPickEvent("pointer.move", p, null);
-      void rt.send(event);
+      void rtRef.current.send(event);
       onScenePointerMoveProp?.(p, event);
     },
-    [rt, onScenePointerMoveProp],
+    [onScenePointerMoveProp],
   );
 
   const pickPlaneOn = snapshot.spatialInteraction.spatialGroundPick ? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state) : false;

@@ -1,9 +1,9 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Continued pure-TS sketchpad: SemioJsKitStore with sketchpadKitDtoFromJsStore materialization, refreshFromJs, executeSketchpadJsKitMutation; createTemporaryKit and desktop folder/file open use @semio/js sessions; default remote factory via Session.openHttp + prompt; openKit accepts serverUrl; kit app commands renameActiveKit and createDesignInActiveKit; factory type returns SemioKitStore; Controller.revokeStore from prior turn. Vitest 8 passed, tsc clean.",
+  "summary": "Wired FiveD puzzle surfaces to controller-owned topology stores: sketchpadKitBoardFixtureFromKit, design piece boards, parseSketchpadPuzzleInstanceId, SketchpadTopologyStoreBridge, syncTopologyForSurface on shell controller. Kit diagram window now puzzle5d flat; custom puzzle5d renderer in sketchpad-renderers.tsx (TopologyStoreProvider + FiveD). boot/desktop/vscode/docs register renderers before mount. Playwright smoke test on home table. Vitest 11 passed.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",

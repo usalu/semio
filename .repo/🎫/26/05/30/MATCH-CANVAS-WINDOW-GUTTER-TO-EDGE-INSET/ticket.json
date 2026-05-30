@@ -1,0 +1,11 @@
+{
+  "title": "Match Canvas Window Gutter To Edge Inset",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Spacing between windows inside the Mode canvas is too small. It should match the distance to the edge of the canvas.",
+  "summary": "Mode canvas inter-window spacing now matches the outer inset: splitters use orientation-based w-double/h-double classes instead of dead data-[panel-group-direction] variants (react-resizable-panels never set that attribute, so gutters stayed w-px). Introduced MODE_CANVAS_INSET_CLASS shared with mode-body padding; ResizablePanelGroup now exposes data-panel-group-direction for cursor styling. Extended regression test.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪bd62dcd6897143c88ed96aed5734c5bc"
+  ]
+}

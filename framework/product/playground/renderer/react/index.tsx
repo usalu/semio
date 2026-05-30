@@ -31,6 +31,9 @@ import {
   type TreePanelDefinition,
   type TreePanelSource,
   reactHostPort,
+  Button,
+  useNativeDragAndDrop,
+  type ContextMenuItem,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 import type { LucideIcon } from "lucide-react";
@@ -1369,11 +1372,17 @@ import {
   buildBoardPlayDetailDeclarativeBody,
   buildBoardPlaySelectionDeclarativeBody,
   buildBoardPlayRuntime,
+  type BoardPlayHostBridge,
   type Puzzle2dPlayPaneId,
 } from "@puzzle/2d/play";
 import {
   mergeBoardKindCatalogBundleByRowId,
   BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+  BOARD_BUILTIN_PORT_HANDLE_KIND,
+  BOARD_CAMERA_ZOOM_MIN,
+  BOARD_CAMERA_ZOOM_MAX,
+  BOARD_PRESELECT_EMPTY,
+  BOARD_SELECTION_TARGETS_DEFAULT,
   boardFixtureMetaKindCatalogBundle,
   parseBoardFixtureV1,
   BoardCanvas,
@@ -1385,9 +1394,13 @@ import {
   BOARD_FIXTURE_DRAG_V1_MIME,
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
   BOARD_LOD_MODE_AUTOMATIC,
+  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  layoutBoardFixtureRedrawNodes,
+  normalizeBoardSelectionProp,
   type BoardFixtureV1,
   type BoardFixtureNodeV1,
   type BoardFixtureRectangleNodeV1,
+  type BoardFixtureCircleNodeV1,
   type BoardFixtureHandleV1,
   type BoardFixtureEdgeV1,
   type BoardFixtureDropDetail,
@@ -1396,6 +1409,11 @@ import {
   type BoardSelectionMethod,
   type BoardSelectionMode,
   type BoardSelectionTargets,
+  type BoardSelectionSnapshot,
+  type BoardPreselectSnapshot,
+  type BoardRedrawModeKind,
+  type BoardHierarchicalTreeDirectionKind,
+  type BoardRedrawLayoutOptions,
   type CameraState,
 } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground/core";
@@ -3838,6 +3856,14 @@ if (import.meta.vitest) {
       const section = playgroundPanelSection("panel.test", "Test", <span data-testid="body">x</span>);
       expect(section.content).toBeTruthy();
       expect(section.items).toBeUndefined();
+    });
+  });
+
+  describe("board play cameras", () => {
+    it("imports board camera zoom limits used by host clamping", async () => {
+      const { BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
+      expect(BOARD_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
+      expect(BOARD_CAMERA_ZOOM_MAX).toBeGreaterThan(BOARD_CAMERA_ZOOM_MIN);
     });
   });
 
