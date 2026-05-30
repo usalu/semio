@@ -931,6 +931,18 @@
   max-height: var(--size-large);
 }
 
+@utility min-h-tiny {
+  min-height: var(--size-tiny);
+}
+@utility min-h-small {
+  min-height: var(--size-small);
+}
+@utility min-h-medium {
+  min-height: var(--size-medium);
+}
+@utility min-h-large {
+  min-height: var(--size-large);
+}
 @utility min-h-huge {
   min-height: var(--size-huge);
 }

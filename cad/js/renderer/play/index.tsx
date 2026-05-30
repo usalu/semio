@@ -1284,9 +1284,9 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     pointerFocusRef.current = new AppPointerFocusStore<string>();
   }
   const pointerFocus = reactHostPort.useSyncExternalStore(
-    (onStoreChange) => pointerFocusRef.current!.cell.subscribe(onStoreChange),
-    () => pointerFocusRef.current!.cell.get(),
-    () => pointerFocusRef.current!.cell.get(),
+    (onStoreChange) => pointerFocusRef.current!.subscribe(onStoreChange),
+    () => pointerFocusRef.current!.getSnapshot(),
+    () => pointerFocusRef.current!.getSnapshot(),
   );
   const [activeModelDefinitionId, setActiveModelDefinitionId] = reactHostPort.useState(SHAPE_MODEL_DEFINITION_ID);
   const [interactionIdByPane, setInteractionIdByPane] = reactHostPort.useState(emptyInteractionIdByPane);

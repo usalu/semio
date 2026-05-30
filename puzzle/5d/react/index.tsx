@@ -476,7 +476,8 @@ class TopologyStore {
     this.emit();
   }
 
-  getModel(): TopologyV1 {
+  /** @emoji 🧬 Topology document from the current store snapshot. */
+  readTopology(): TopologyV1 {
     return this.snapshot.model;
   }
 

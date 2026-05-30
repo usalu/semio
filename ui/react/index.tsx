@@ -11330,9 +11330,9 @@ export function modeDockChromeGridPlacement(
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — three-sided pill above the active U-frame baseline (no bottom stroke). */
+/** @emoji 📏 Inactive sibling tab — gray pill resting on the U-frame baseline; its bottom stroke color is applied per-stack (active vs secondary) so the chrome reads as one continuous outline. */
 export const modeDockInactiveTabClass =
-  "relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-element bg-window";
+  "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
 
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body (no bottom stroke). */
 export const modeDockActiveTabClass =
@@ -22600,6 +22600,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
   const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
+  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
   const tabInsertIndex =
     dock?.dropZone?.kind === "tab" && dock.dropZone.stackPath === stackPath ? dock.dropZone.index : null;
 
@@ -22622,7 +22623,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       className={cn(
         "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-window hover:text-foreground",
         !perTabActiveChrome && "bg-window",
-        perTabActiveChrome && activeId !== tab.id && modeDockInactiveTabClass,
+        perTabActiveChrome && activeId !== tab.id && cn(modeDockInactiveTabClass, baselineBottomClass),
         perTabActiveChrome && activeId === tab.id && modeDockActiveTabClass,
         !perTabActiveChrome &&
           activeWindowId === tab.id &&
@@ -22727,7 +22728,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
               {renderInsertSlot("insert-end")}
             </div>
           ) : null}
-          <div className="relative z-0 min-h-medium min-w-0" style={{ gridColumn: chromeGrid.gapCol }}>
+          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: chromeGrid.gapCol }}>
             {tabGap}
           </div>
           <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: chromeGrid.controlsCol }}>
@@ -23609,6 +23610,15 @@ if (import.meta.vitest) {
       expect(bodyRow?.className).toContain("flex");
       expect(bodyRow?.className).toContain("flex-col");
       expect(bodyRow?.className).toContain("min-h-0");
+      const gapCell = chromeColumn?.querySelector('[data-slot="mode-dock-tab-gap"]')?.parentElement;
+      expect(gapCell?.className).toContain("flex");
+      expect(gapCell?.className).toContain("items-stretch");
+      const inactiveTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
+      expect(inactiveTab?.className).toContain("border-b-active-base");
+      expect(inactiveTab?.className).not.toContain("border-b-0");
+      const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
+      expect(activeTab?.className).toContain("border-active-base");
+      expect(activeTab?.className).toContain("border-b-0");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {

@@ -1,13 +1,14 @@
 {
   "title": "Unified Renderer-Neutral Store Abstraction",
   "emoji": "🗄️",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce abstract Store\u003cTSnapshot\u003e in @framework/core, controller-owned store registry, Component extends Store, renderer useStore hooks, sketchpad SemioKitStore + local store, puzzle play controllers provide domain stores. Full unification, no backwards compat.",
+  "summary": "Introduced renderer-neutral abstract Store\u003cTSnapshot\u003e in @framework/core with ObservableCell and AppPointerFocusStore as subclasses. Controller now owns stores via provideStore/getStore/stores and disposes them on teardown. Component extends Store (getSnapshot/buildSnapshot); PlatformComponentEntry replaced by SurfaceComponent. Platform renderer exports useStore and useControllerStore. Sketchpad: SemioKitStore + InMemorySemioKitStore on SketchpadShellController (shell ObservableCell + per-kit stores); removed KitHostStore registry bridge; VS Code webview registers kits on controller. Puzzle 5d: TopologyStoreBridge on TopologyPlayShellController; TopologyStore.getModel renamed readTopology. Tests: @framework/core 16/16, @framework/platform/core 10/10, platform renderer 11/11, playground renderer 13/13, puzzle 5d play vitest 6/6, puzzle 3d play vitest 13/13.",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
     "id": "0cd71f44",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/unified_store_abstraction_0cd71f44.plan.md"
+    "local": "unified_store_abstraction_0cd71f44.plan.md"
   },
   "sessions": [
     "⚪1578323ce62a47fea81152d88dd88c28"

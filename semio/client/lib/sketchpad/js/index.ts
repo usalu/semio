@@ -1,6 +1,6 @@
 ﻿// #region 🧲Header
 // 2024-2026 Ueli Saluz <ueli@semio-tech.com>
-// Render-agnostic sketchpad product: {@link Platform} apps, {@link Component} models, kit registry bridge.
+// Render-agnostic sketchpad product: {@link Platform} apps, {@link Component} snapshots, controller-owned {@link Store}s.
 // #endregion 🧲Header
 
 //#region 🔌Adapters
@@ -9,9 +9,11 @@ import {
 	CommandBus,
 	Component,
 	Controller,
+	ObservableCell,
 	Panel,
 	Platform,
 	PluginHost,
+	Store,
 	Table,
 	buildCadWindowBody,
 	buildPanelWindowBody,
@@ -37,40 +39,77 @@ import {
 } from "@framework/platform/core";
 //#endregion 🔌Adapters
 
-//#region 🔖KitRegistryBridge
-/** @emoji 🗄️ Host store snapshot used by open-kit rows (wired by the host, not sketchpad). */
-export type KitHostStore = {
-	getSnapshot: () => { kit: Kit };
-	subscribe?: (listener: () => void) => () => void;
-	replace?: (next: Kit) => void;
-} & Record<string, unknown>;
+//#region 🔖KitStore
+export const SKETCHPAD_SHELL_STORE_SHELL = "shell";
+export const SKETCHPAD_KIT_STORE_PREFIX = "kit:";
 
-/** @emoji 🌉 Registry row exposed to sketchpad {@link Component} models. */
-export type SketchpadKitRegistryEntry = {
-	readonly store?: KitHostStore;
-	readonly kind?: string;
-	readonly persistence?: { readonly kind?: string };
-};
+/** @emoji 📸 Kit row snapshot for {@link SemioKitStore}. */
+export type SketchpadKitSnapshot = { readonly kit: Kit };
 
-/** @emoji 🌉 Ordered open-kit registry (host installs via {@link setSketchpadKitRegistryBridge}). */
-export type SketchpadKitRegistryBridge = {
-	list(): readonly string[];
-	get(id: string): SketchpadKitRegistryEntry | undefined;
-	subscribe?(listener: () => void) => () => void;
-};
-
-let sketchpadKitRegistryBridge: SketchpadKitRegistryBridge | null = null;
-
-/** @emoji 🔌 Host hook: connect kit registry before models read open kits. */
-export function setSketchpadKitRegistryBridge(bridge: SketchpadKitRegistryBridge | null): void {
-	sketchpadKitRegistryBridge = bridge;
+/** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
+export interface SketchpadShellSnapshot {
+	readonly navigationPath: string;
+	readonly panelVisibility: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
+	readonly openKitIds: readonly string[];
 }
 
-/** @emoji 🔍 Active kit registry for sketchpad platform components. */
-export function getKitRegistryBridge(): SketchpadKitRegistryBridge | null {
-	return sketchpadKitRegistryBridge;
+/** @emoji 🔌 Backend contract for {@link SemioKitStore} (memory, WASM worker, HTTP, …). */
+export type SemioKitStoreBackend = {
+	getSnapshot(): SketchpadKitSnapshot;
+	subscribe?(listener: () => void): () => void;
+	replace?(next: Kit): void;
+};
+
+/** @emoji 🗄️ Kit authority store; adapts any {@link SemioKitStoreBackend} to {@link Store}. */
+export class SemioKitStore extends Store<SketchpadKitSnapshot> {
+	private detach?: () => void;
+
+	constructor(private readonly backend: SemioKitStoreBackend) {
+		super();
+		if (backend.subscribe) {
+			this.detach = backend.subscribe(() => this.notify());
+		}
+	}
+
+	override getSnapshot(): SketchpadKitSnapshot {
+		return this.backend.getSnapshot();
+	}
+
+	replaceKit(next: Kit): void {
+		this.backend.replace?.(next);
+		this.notify();
+	}
+
+	override dispose(): void {
+		this.detach?.();
+		super.dispose();
+	}
 }
-//#endregion 🔖KitRegistryBridge
+
+/** @emoji 💾 In-memory kit store for hosts without a live {@link @semio/js} session yet. */
+export class InMemorySemioKitStore extends SemioKitStore {
+	constructor(kit: Kit) {
+		let current = kit;
+		super({
+			getSnapshot: () => ({ kit: current }),
+			replace: (next) => {
+				current = next;
+			},
+		});
+	}
+}
+
+export function sketchpadKitStoreId(kitId: string): string {
+	return `${SKETCHPAD_KIT_STORE_PREFIX}${kitId}`;
+}
+
+let sketchpadShellControllerSingleton: SketchpadShellController | null = null;
+
+/** @emoji 🎛 Active sketchpad shell controller after {@link buildSketchpadPlatform}. */
+export function getSketchpadShellController(): SketchpadShellController | null {
+	return sketchpadShellControllerSingleton;
+}
+//#endregion 🔖KitStore
 
 //#region 🔖SketchpadRouteScope
 /** @emoji 🧭 Kit/design/type ids parsed from a sketchpad URL path (render-agnostic). */
@@ -138,14 +177,14 @@ const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
 const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
 
 //#region 🔖SketchpadPlatformComponents
-abstract class SketchpadRoutedComponent<TModel> extends Component<TModel> {
+abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> {
 	protected route = parseSketchpadRouteScopeFromPath("/");
 	private readonly detachRoute: () => void;
-	private readonly detachKitRegistry?: () => void;
+	private readonly detachShellStore?: () => void;
 	private detachKitStore?: () => void;
 
-	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialModel: TModel, platform: Platform) {
-		super(componentKind, surfaceId, controllerId, initialModel);
+	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialSnapshot: TSnapshot, platform: Platform) {
+		super(componentKind, surfaceId, controllerId, initialSnapshot);
 		this.route = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
 		this.detachRoute = platform.subscribe(() => {
 			const nextRoute = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
@@ -160,9 +199,9 @@ abstract class SketchpadRoutedComponent<TModel> extends Component<TModel> {
 				this.refresh();
 			}
 		});
-		const registry = getKitRegistryBridge();
-		if (registry?.subscribe) {
-			this.detachKitRegistry = registry.subscribe(() => this.refresh());
+		const shellStore = getSketchpadShellController()?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
+		if (shellStore) {
+			this.detachShellStore = shellStore.subscribe(() => this.refresh());
 		}
 		this.attachActiveKitStore();
 	}
@@ -172,16 +211,17 @@ abstract class SketchpadRoutedComponent<TModel> extends Component<TModel> {
 		this.detachKitStore = undefined;
 		const { kitId } = this.route;
 		if (!kitId) return;
-		const store = getKitRegistryBridge()?.get(kitId)?.store;
-		if (store?.subscribe) {
+		const store = getSketchpadShellController()?.getKitStore(kitId);
+		if (store) {
 			this.detachKitStore = store.subscribe(() => this.refresh());
 		}
 	}
 
 	dispose(): void {
 		this.detachRoute();
-		this.detachKitRegistry?.();
+		this.detachShellStore?.();
 		this.detachKitStore?.();
+		super.dispose();
 	}
 }
 
@@ -190,15 +230,15 @@ export class SketchpadHomeTable extends Table {
 	constructor(platform: Platform) {
 		super(SKETCHPAD_SURFACE_HOME_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID);
 		platform.subscribe(() => this.refresh());
-		const registry = getKitRegistryBridge();
-		if (registry?.subscribe) {
-			registry.subscribe(() => this.refresh());
+		const shellStore = getSketchpadShellController()?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
+		if (shellStore) {
+			shellStore.subscribe(() => this.refresh());
 		}
 	}
 
-	override buildModel(): TableModel {
-		const registry = getKitRegistryBridge();
-		const ids = registry?.list() ?? [];
+	override buildSnapshot(): TableModel {
+		const ctrl = getSketchpadShellController();
+		const ids = ctrl?.listOpenKitIds() ?? [];
 		return {
 			columns: [
 				{ id: "name", label: "Name" },
@@ -206,14 +246,12 @@ export class SketchpadHomeTable extends Table {
 			],
 			rows: ids.map((id) => {
 				let name = id;
-				let kind = "";
+				const kind = "";
 				try {
-					const snapshot = registry?.get(id)?.store?.getSnapshot?.();
-					const kit = snapshot?.kit;
+					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
 					if (kit?.name) name = kit.name;
-					kind = registry?.get(id)?.kind ?? "";
 				} catch {
-					/* registry row may still be opening */
+					/* kit store may still be opening */
 				}
 				return { id, cells: { name, kind }, navigateUri: `/kits/${id}` };
 			}),
@@ -228,13 +266,12 @@ export class SketchpadKitTable extends SketchpadRoutedComponent<TableModel> {
 		super("table", SKETCHPAD_SURFACE_KIT_TABLE, SKETCHPAD_SHELL_CONTROLLER_ID, { columns: [], rows: [] }, platform);
 	}
 
-	override buildModel(): TableModel {
+	override buildSnapshot(): TableModel {
 		const { kitId } = this.route;
 		if (!kitId) {
 			return { columns: [], rows: [], emptyMessage: "Open a kit to view the table" };
 		}
-		const registry = getKitRegistryBridge();
-		const store = registry?.get(kitId)?.store;
+		const store = getSketchpadShellController()?.getKitStore(kitId);
 		if (!store) {
 			return { columns: [], rows: [], emptyMessage: "Kit loading…" };
 		}
@@ -273,13 +310,12 @@ export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle2dModel>
 		super("puzzle2d", SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, { nodes: [], edges: [] }, platform);
 	}
 
-	override buildModel(): Puzzle2dModel {
+	override buildSnapshot(): Puzzle2dModel {
 		const { kitId } = this.route;
 		if (!kitId) {
 			return { nodes: [], edges: [], emptyMessage: "Open a kit to view the diagram" };
 		}
-		const registry = getKitRegistryBridge();
-		const store = registry?.get(kitId)?.store;
+		const store = getSketchpadShellController()?.getKitStore(kitId);
 		if (!store) {
 			return { nodes: [], edges: [], emptyMessage: "Kit loading…" };
 		}
@@ -306,7 +342,7 @@ export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel
 		);
 	}
 
-	override buildModel(): Puzzle5dModel {
+	override buildSnapshot(): Puzzle5dModel {
 		const { kitId, designId } = this.route;
 		if (!kitId || !designId) {
 			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE, emptyMessage: "Open a design to view the scene" };
@@ -327,7 +363,7 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
 		);
 	}
 
-	override buildModel(): Puzzle5dModel {
+	override buildSnapshot(): Puzzle5dModel {
 		const { kitId, designId } = this.route;
 		if (!kitId || !designId) {
 			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM, emptyMessage: "Open a design to view the diagram" };
@@ -342,7 +378,7 @@ export class SketchpadTypeCad extends SketchpadRoutedComponent<CadModel> {
 		super("cad", SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, {}, platform);
 	}
 
-	override buildModel(): CadModel {
+	override buildSnapshot(): CadModel {
 		const { kitId, typeId } = this.route;
 		if (!kitId || !typeId) {
 			return { emptyMessage: "Open a type to view the CAD scene" };
@@ -357,7 +393,7 @@ export class SketchpadDocsPanel extends SketchpadRoutedComponent<PanelModel> {
 		super("panel", SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "Docs" } }, platform);
 	}
 
-	override buildModel(): PanelModel {
+	override buildSnapshot(): PanelModel {
 		return {
 			body: {
 				type: "stack",
@@ -428,22 +464,61 @@ class SketchpadPlatformComponents {
 
 /** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link CommandBus}. */
 export class SketchpadShellController extends Controller {
-	navigationPath = "/";
-	panelVisibility = { leftSidePanel: false, rightSidePanel: false };
+	private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
+	private readonly kitKinds = new Map<string, string>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
+		this.shellStore = new ObservableCell<SketchpadShellSnapshot>({
+			navigationPath: "/",
+			panelVisibility: { leftSidePanel: false, rightSidePanel: false },
+			openKitIds: [],
+		});
+		this.provideStore(SKETCHPAD_SHELL_STORE_SHELL, this.shellStore);
+	}
+
+	get navigationPath(): string {
+		return this.shellStore.get().navigationPath;
+	}
+
+	get panelVisibility(): SketchpadShellSnapshot["panelVisibility"] {
+		return this.shellStore.get().panelVisibility;
+	}
+
+	/** @emoji 📋 Open kit ids from the shell store snapshot. */
+	listOpenKitIds(): readonly string[] {
+		return this.shellStore.get().openKitIds;
+	}
+
+	/** @emoji 🗄️ Registers a kit store on this controller (`kit:<id>`). */
+	registerKitStore(kitId: string, store: SemioKitStore, options?: { readonly kind?: string }): void {
+		this.provideStore(sketchpadKitStoreId(kitId), store);
+		if (options?.kind) this.kitKinds.set(kitId, options.kind);
+		const openKitIds = this.shellStore.get().openKitIds;
+		if (!openKitIds.includes(kitId)) {
+			this.shellStore.set({ ...this.shellStore.get(), openKitIds: [...openKitIds, kitId] });
+		}
+		this.emit();
+	}
+
+	/** @emoji 🔍 Resolves a controller-owned kit store. */
+	getKitStore(kitId: string): SemioKitStore | undefined {
+		return this.getStore<SketchpadKitSnapshot>(sketchpadKitStoreId(kitId)) as SemioKitStore | undefined;
 	}
 
 	override run(command: string, args?: unknown): void {
+		const shell = this.shellStore.get();
 		switch (command) {
 			case "setNavigation": {
-				this.navigationPath = (args as { path: string }).path;
+				this.shellStore.set({ ...shell, navigationPath: (args as { path: string }).path });
 				break;
 			}
 			case "togglePanel": {
 				const panel = (args as { panel: "leftSidePanel" | "rightSidePanel" }).panel;
-				this.panelVisibility = { ...this.panelVisibility, [panel]: !this.panelVisibility[panel] };
+				this.shellStore.set({
+					...shell,
+					panelVisibility: { ...shell.panelVisibility, [panel]: !shell.panelVisibility[panel] },
+				});
 				break;
 			}
 			default:
@@ -588,6 +663,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	registerSketchpadWindowBodies();
 	const platform = new Platform(SKETCHPAD_PLATFORM_SPEC);
 	const controller = new SketchpadShellController(platform.commandBus, () => platform.notify());
+	sketchpadShellControllerSingleton = controller;
 	const host = new PluginHost(platform);
 	host.register(buildSketchpadExtensionManifest(), {
 		id: SKETCHPAD_EXTENSION_ID,

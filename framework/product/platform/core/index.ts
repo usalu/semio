@@ -1166,7 +1166,7 @@ if (import.meta.vitest) {
 	describe("Component registry", () => {
 		it("registers components by surface id and refreshes models", () => {
 			class DemoTable extends Table {
-				override buildModel(): TableModel {
+				override buildSnapshot(): TableModel {
 					return {
 						columns: [{ id: "name", label: "Name" }],
 						rows: [{ id: "1", cells: { name: "alpha" } }],
@@ -1178,7 +1178,7 @@ if (import.meta.vitest) {
 			registerPlatformComponent(platform, table);
 			table.refresh();
 			const resolved = getPlatformComponent<DemoTable>(platform, "surface/table/v1");
-			expect(resolved?.getModel().rows[0]?.cells.name).toBe("alpha");
+			expect(resolved?.getSnapshot().rows[0]?.cells.name).toBe("alpha");
 		});
 	});
 

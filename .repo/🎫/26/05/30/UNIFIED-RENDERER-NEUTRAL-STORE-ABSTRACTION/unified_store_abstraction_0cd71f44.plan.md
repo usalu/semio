@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: core-store
     content: Add abstract Store<TSnapshot> in @framework/core; refactor ObservableCell and AppPointerFocusStore to derive from it
-    status: in_progress
+    status: completed
   - id: controller-registry
     content: Extend Controller with owned-store registry (provideStore/getStore/stores) and dispose owned stores
-    status: pending
+    status: completed
   - id: component-store
     content: Make Component extend Store; rename getModel/buildModel/TModel to getSnapshot/buildSnapshot/TSnapshot; remove PlatformComponentEntry
-    status: pending
+    status: completed
   - id: renderer-hooks
     content: Add useStore + useControllerStore hooks; replace useComponentModel and getModel call sites in renderers
-    status: pending
+    status: completed
   - id: sketchpad-store
     content: Add SemioKitStore (semio/js WASM worker) + local-state store, both provided by SketchpadShellController; remove KitHostStore bridge
-    status: pending
+    status: completed
   - id: puzzle-stores
     content: Provide puzzle domain stores via play Controllers; rename getModel->getSnapshot in @puzzle/*/react stores
-    status: pending
+    status: completed
   - id: validate
     content: Run affected vitest suites and confirm runtime dual-store behavior; close ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

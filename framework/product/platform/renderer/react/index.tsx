@@ -41,6 +41,7 @@ import {
 	countAppTools,
 	CommandBus,
 	Controller,
+	Store,
 	Platform,
 	resolveInitialPanelVisibility,
 	AppRuntime,
@@ -1408,12 +1409,23 @@ export function registerComponentKindRenderer(kind: ComponentKind, Renderer: Com
 	componentKindRenderers.set(kind, Renderer);
 }
 
-function useComponentModel<T>(component: Component<T>): T {
-	return React.useSyncExternalStore(component.subscribe.bind(component), () => component.getModel(), () => component.getModel());
+/** @emoji 🗄️ Binds a renderer-neutral {@link Store} into React via `useSyncExternalStore`. */
+export function useStore<TSnapshot>(store: Store<TSnapshot>): TSnapshot {
+	return React.useSyncExternalStore(
+		(listener) => store.subscribe(listener),
+		() => store.getSnapshot(),
+		() => store.getSnapshot(),
+	);
+}
+
+/** @emoji 🎛 Resolves a controller-owned store by id and binds it with {@link useStore}. */
+export function useControllerStore<TSnapshot>(controller: Controller | undefined, storeId: string): TSnapshot | undefined {
+	const store = controller?.getStore<TSnapshot>(storeId);
+	return store ? useStore(store) : undefined;
 }
 
 const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }) => {
-	const model = useComponentModel(component as Table);
+	const model = useStore(component as Table);
 	return (
 		<div className="flex h-full min-h-0 w-full flex-col overflow-auto p-2" data-component-kind="table">
 			{model.columns.length === 0 && model.rows.length === 0 ? (
@@ -1458,7 +1470,7 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 };
 
 const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useComponentModel(component as Puzzle2d);
+	const model = useStore(component as Puzzle2d);
 	if (model.nodes.length === 0 && model.edges.length === 0) {
 		return (
 			<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
@@ -1474,7 +1486,7 @@ const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node })
 };
 
 const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useComponentModel(component as Puzzle3d);
+	const model = useStore(component as Puzzle3d);
 	return (
 		<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
 			{model.emptyMessage ?? `3D scene${model.instanceId ? ` · ${model.instanceId}` : ""}`}
@@ -1483,7 +1495,7 @@ const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node })
 };
 
 const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useComponentModel(component as Puzzle5d);
+	const model = useStore(component as Puzzle5d);
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
 			<FiveD mode={model.presentation === "volume" ? "volume" : "flat"} instanceId={model.instanceId || node.surfaceId} />
@@ -1492,7 +1504,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node })
 };
 
 const BuiltinCadKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useComponentModel(component as Cad);
+	const model = useStore(component as Cad);
 	return (
 		<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
 			{model.emptyMessage ?? `CAD${model.instanceId ? ` · ${model.instanceId}` : ""}`}
@@ -1501,7 +1513,7 @@ const BuiltinCadKindRenderer: ComponentKindRenderer = ({ component, node }) => {
 };
 
 const BuiltinPanelKindRenderer: ComponentKindRenderer = ({ component, commandBus }) => {
-	const model = useComponentModel(component as Panel);
+	const model = useStore(component as Panel);
 	return <UiRenderer node={model.body} commandBus={commandBus} />;
 };
 
@@ -1788,7 +1800,7 @@ if (import.meta.vitest) {
 	describe("component kind renderers", () => {
 		it("renders registered table components from platform registry", () => {
 			class DemoTable extends Table {
-				override buildModel(): TableModel {
+				override buildSnapshot(): TableModel {
 					return {
 						columns: [{ id: "name", label: "Name" }],
 						rows: [{ id: "1", cells: { name: "kit-a" } }],

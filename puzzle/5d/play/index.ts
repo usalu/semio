@@ -5,6 +5,7 @@
 import {
   CommandBus,
   Controller,
+  Store,
   Platform,
   AppRuntime,
   ModeRuntime,
@@ -39,7 +40,7 @@ import {
   type FixtureV1 as VolumeFixtureV1,
   type RelocateMode as VolumeRelocateMode,
 } from "../../3d/react/index.tsx";
-import { createTopologyStore, parseTopologyV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type TopologyStore, type TopologyV1 } from "../react/index.tsx";
+import { createTopologyStore, parseTopologyV1, projectFlat, projectVolume, topologyCompose, topologySharedKindsFromMetas, type TopologyStore, type TopologyStoreSnapshot, type TopologyV1 } from "../react/index.tsx";
 import { NakaginCapsuleTowerTopologyJson as nakaginTopologyJson } from "@puzzle/assets";
 
 //#region 🔖Ids
@@ -142,15 +143,37 @@ function loadNakaginTopologyModel(): TopologyV1 {
   return model;
 }
 
+export const TOPOLOGY_PLAY_STORE_ID = "topology";
+
+/** @emoji 🔗 Adapts {@link TopologyStore} to {@link Store} for controller-owned registration. */
+class TopologyStoreBridge extends Store<TopologyStoreSnapshot> {
+  private detach?: () => void;
+
+  constructor(readonly inner: TopologyStore) {
+    super();
+    this.detach = inner.subscribe(() => this.notify());
+  }
+
+  override getSnapshot(): TopologyStoreSnapshot {
+    return this.inner.getSnapshot();
+  }
+
+  override dispose(): void {
+    this.detach?.();
+    super.dispose();
+  }
+}
+
 /** @emoji 🎛 Topology play shell controller shared by declarative board and volume windows. */
 export class TopologyPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Topology", undefined);
   readonly topologyStore: TopologyStore = createTopologyStore(loadNakaginTopologyModel());
+  readonly topologyStoreBridge: TopologyStoreBridge;
   private relocateMode: VolumeRelocateMode = "translate";
   private boardSelected: ReadonlySet<string> = new Set();
   private volumeSelected: string | null = null;
-  private boardCamera: CameraState | null = { ...this.topologyStore.getModel().flatCamera };
-  private volumeCamera: CameraState | null = { ...this.topologyStore.getModel().volumeCamera };
+  private boardCamera: CameraState | null = { ...this.topologyStore.readTopology().flatCamera };
+  private volumeCamera: CameraState | null = { ...this.topologyStore.readTopology().volumeCamera };
   private volumeLodTag = DEFAULT_MANUAL_LOD;
   private volumeAutomaticLod = true;
   private volumeDepthVariableLod = false;
@@ -165,6 +188,8 @@ export class TopologyPlayShellController extends Controller {
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    this.topologyStoreBridge = new TopologyStoreBridge(this.topologyStore);
+    this.provideStore(TOPOLOGY_PLAY_STORE_ID, this.topologyStoreBridge);
     this.topologyStore.subscribe(() => this.emit());
     this.rebuildShellMode();
   }
@@ -328,7 +353,7 @@ export class TopologyPlayShellController extends Controller {
   }
 
   getSnapshot(): TopologyPlaySnapshot {
-    const model = this.topologyStore.getModel();
+    const model = this.topologyStore.readTopology();
     const boardFixture = projectFlat(model);
     const volumeFixture = projectVolume(model);
     return {

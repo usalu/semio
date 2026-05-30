@@ -868,6 +868,33 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("Controller stores", () => {
+		it("provideStore registers and disposes owned stores", () => {
+			class TCtrl extends Controller {
+				override run(): void {}
+			}
+			class CountStore extends Store<number> {
+				value = 0;
+				override getSnapshot(): number {
+					return this.value;
+				}
+				disposed = false;
+				override dispose(): void {
+					this.disposed = true;
+					super.dispose();
+				}
+			}
+			const bus = new CommandBus();
+			const ctrl = new TCtrl("c", bus, () => {});
+			const store = new CountStore();
+			ctrl.provideStore("count", store);
+			expect(ctrl.getStore<number>("count")).toBe(store);
+			expect(ctrl.stores.size).toBe(1);
+			ctrl.dispose();
+			expect(store.disposed).toBe(true);
+		});
+	});
+
 	describe("CommandBus", () => {
 		it("dispatches to registered controller", () => {
 			class TCtrl extends Controller {
