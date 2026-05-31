@@ -612,6 +612,91 @@ export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture-v1";
 /** @emoji 🖱️ True while a workbench object-kind palette drag is in flight (some hosts hide custom MIME in `types`). */
 export const puzzle3dFixturePaletteDragRef = { active: false };
 
+/** @emoji 🖱️ Pointer-driven palette drag when native HTML5 tree drag does not start (Electron / scroll panels). */
+export const puzzle3dFixturePalettePointerDragRef = { active: false, encoded: null as string | null };
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded fixture payload. */
+export function beginPuzzle3dFixturePalettePointerDrag(encoded: string): void {
+  puzzle3dFixturePalettePointerDragRef.active = true;
+  puzzle3dFixturePalettePointerDragRef.encoded = encoded;
+  puzzle3dFixturePaletteDragRef.active = true;
+  window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded } }));
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelPuzzle3dFixturePalettePointerDrag(): void {
+  if (!puzzle3dFixturePalettePointerDragRef.active && !puzzle3dFixturePaletteDragRef.active) {
+    return;
+  }
+  puzzle3dFixturePalettePointerDragRef.active = false;
+  puzzle3dFixturePalettePointerDragRef.encoded = null;
+  puzzle3dFixturePaletteDragRef.active = false;
+  window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+}
+
+/** @emoji 🎯 True when client coordinates are over the puzzle 3D fixture drop host. */
+export function isClientPointOverPuzzle3dFixtureDropHost(clientX: number, clientY: number, host: HTMLElement | null | undefined): boolean {
+  if (!host) {
+    return false;
+  }
+  const rect = host.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+/** @emoji 📥 Commits a palette fixture drop at client coordinates (pointer or HTML5 drop). */
+export function commitPuzzle3dFixtureDropAtClient(
+  clientX: number,
+  clientY: number,
+  fixture: FixtureV1,
+  host: HTMLElement | null | undefined,
+  onFixtureDrop: ((detail: Puzzle3dFixtureDropDetail) => void) | undefined,
+): boolean {
+  const toCad = puzzle3dFixtureDropPointerToCadRef.current;
+  if (!toCad || !onFixtureDrop) {
+    return false;
+  }
+  const dropHost = host ?? null;
+  const rect = dropHost?.getBoundingClientRect();
+  if (!rect) {
+    return false;
+  }
+  const worldCad = toCad(clientX, clientY);
+  if (!worldCad) {
+    return false;
+  }
+  onFixtureDrop({
+    fixture,
+    screen: { x: clientX - rect.left, y: clientY - rect.top },
+    worldCad,
+  });
+  return true;
+}
+
+/** @emoji 🖱️ Ends pointer palette drag and drops on the viewport when the pointer is over the host. */
+export function endPuzzle3dFixturePalettePointerDrag(
+  clientX: number,
+  clientY: number,
+  host: HTMLElement | null | undefined,
+  onFixtureDrop: ((detail: Puzzle3dFixtureDropDetail) => void) | undefined,
+): void {
+  if (!puzzle3dFixturePalettePointerDragRef.active) {
+    return;
+  }
+  const encoded = puzzle3dFixturePalettePointerDragRef.encoded;
+  cancelPuzzle3dFixturePalettePointerDrag();
+  if (!encoded) {
+    return;
+  }
+  const fixture = decodePuzzle3dFixtureFromDragV1(encoded);
+  if (!fixture) {
+    return;
+  }
+  if (!isClientPointOverPuzzle3dFixtureDropHost(clientX, clientY, host)) {
+    return;
+  }
+  commitPuzzle3dFixtureDropAtClient(clientX, clientY, fixture, host, onFixtureDrop);
+}
+
 /** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 3D fixture palette drag. */
 export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolean {
   return types.includes(FIXTURE_DRAG_V1_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
@@ -619,7 +704,7 @@ export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolea
 
 /** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
 export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): boolean {
-  if (puzzle3dFixturePaletteDragRef.active) {
+  if (puzzle3dFixturePalettePointerDragRef.active || puzzle3dFixturePaletteDragRef.active) {
     return true;
   }
   return puzzle3dFixtureDragMimeInTypes(types);
@@ -627,16 +712,31 @@ export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): bo
 
 /** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 3D fixture palette `dragData`. */
 export function puzzle3dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[FIXTURE_DRAG_V1_MIME];
+    return payload?.trim() ? payload : undefined;
+  };
   return {
     getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: beginPuzzle3dFixturePalettePointerDrag,
+      cancel: cancelPuzzle3dFixturePalettePointerDrag,
+    },
     onDragStart: ({ sourceItem }) => {
+      if (puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
       puzzle3dFixturePaletteDragRef.active = true;
-      const payload = dragDataByItemId.get(sourceItem.id)?.[FIXTURE_DRAG_V1_MIME];
+      const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
       if (payload) {
         window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
       }
     },
     onDragEnd: () => {
+      if (puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
       puzzle3dFixturePaletteDragRef.active = false;
       window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
     },
@@ -6453,21 +6553,33 @@ function FixtureDropPointerBridge(props: {
       if (!fixture) {
         return;
       }
-      const toCad = puzzle3dFixtureDropPointerToCadRef.current;
-      if (!toCad) {
-        return;
-      }
       const host = root ?? canvas.parentElement;
-      const rect = host?.getBoundingClientRect() ?? canvas.getBoundingClientRect();
-      const worldCad = toCad(event.clientX, event.clientY);
-      if (!worldCad) {
+      commitPuzzle3dFixtureDropAtClient(event.clientX, event.clientY, fixture, host, onFixtureDropRef.current);
+    };
+
+    const dropHost = (): HTMLElement | null => root ?? canvas.parentElement ?? canvas;
+
+    const onWindowPointerMove = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
         return;
       }
-      onFixtureDropRef.current?.({
-        fixture,
-        screen: { x: event.clientX - rect.left, y: event.clientY - rect.top },
-        worldCad,
-      });
+      props.setFixtureDragActive(isClientPointOverPuzzle3dFixtureDropHost(event.clientX, event.clientY, dropHost()));
+    };
+
+    const onWindowPointerUp = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      resetDragDepth();
+      endPuzzle3dFixturePalettePointerDrag(event.clientX, event.clientY, dropHost(), onFixtureDropRef.current);
+    };
+
+    const onWindowPointerCancel = (event: PointerEvent): void => {
+      if (!puzzle3dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      resetDragDepth();
+      cancelPuzzle3dFixturePalettePointerDrag();
     };
 
     const attach = (element: HTMLElement | null | undefined): void => {
@@ -6484,6 +6596,9 @@ function FixtureDropPointerBridge(props: {
     attach(root);
     bindings.listen(window, "dragover", onDragOver);
     bindings.listen(window, "drop", onDrop);
+    bindings.listen(window, "pointermove", onWindowPointerMove);
+    bindings.listen(window, "pointerup", onWindowPointerUp);
+    bindings.listen(window, "pointercancel", onWindowPointerCancel);
     return () => bindings.dispose();
   }, [gl, props.enabled, props.fixtureDragDepthRef, props.rootRef, props.setFixtureDragActive]);
 
@@ -7391,6 +7506,21 @@ if (import.meta.vitest) {
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
+    });
+    it("beginPuzzle3dFixturePalettePointerDrag commits drop on pointer up over host", () => {
+      const host = document.createElement("div");
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      puzzle3dFixtureDropPointerToCadRef.current = () => [5, 6, 7];
+      const dragFixture = buildPaletteObjectDragFixture("J");
+      const encoded = encodeFixtureForDragV1(dragFixture);
+      let dropped: Puzzle3dFixtureDropDetail | null = null;
+      beginPuzzle3dFixturePalettePointerDrag(encoded);
+      expect(puzzle3dFixturePalettePointerDragRef.active).toBe(true);
+      endPuzzle3dFixturePalettePointerDrag(10, 10, host, (detail) => {
+        dropped = detail;
+      });
+      expect(puzzle3dFixturePalettePointerDragRef.active).toBe(false);
+      expect(dropped?.worldCad).toEqual([5, 6, 7]);
     });
     it("puzzle3dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
       const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture("J"));

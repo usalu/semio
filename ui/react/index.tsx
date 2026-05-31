@@ -7332,8 +7332,16 @@ export interface TreeDataSection {
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
+/** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
+export interface TreePointerPaletteDragController {
+  readEncodedDragPayload: (dragData: Record<string, string>) => string | undefined;
+  begin: (encoded: string) => void;
+  cancel: () => void;
+}
+
 export interface TreeDragAndDropController {
   getDragData?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => Record<string, string> | undefined;
+  pointerPaletteDrag?: TreePointerPaletteDragController;
   onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   onDragEnd?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   handleDrop?: (context: { target: TreeDataItem | TreeDataSection; targetKind: "item" | "section"; data: Record<string, string>; sourceItems: TreeDataItem[]; section: TreeDataSection }) => void | Promise<void>;
@@ -7484,6 +7492,10 @@ interface TreeItemProps {
   onBranchChange?: (index: number) => void;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
+  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerMove?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerCancel?: React.PointerEventHandler<HTMLDivElement>;
   layoutKind?: "default" | "property";
 }
 
@@ -8077,6 +8089,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onBranchChange,
   onPointerEnter,
   onPointerLeave,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   layoutKind = "default",
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
@@ -8155,6 +8171,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         }}
         onMouseEnter={handlePointerEnter}
         onMouseLeave={handlePointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
       >
         <TreeAlignedRow
           level={level}
@@ -8267,6 +8287,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           }}
           onMouseEnter={handlePointerEnter}
           onMouseLeave={handlePointerLeave}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
         >
           <TreeAlignedRow
             level={level}
@@ -8371,6 +8395,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onClick={onClick}
       onMouseEnter={handlePointerEnter}
       onMouseLeave={handlePointerLeave}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
@@ -8696,6 +8724,14 @@ export const Tree = (({
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
   const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
   const resolvedSections = sections ?? [];
+  const suppressPaletteClickRef = reactHostPort.useRef(false);
+  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number }>({
+    pending: false,
+    dragging: false,
+    encoded: null,
+    startX: 0,
+    startY: 0,
+  });
   const anchorIdRef = reactHostPort.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
   const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
 
@@ -8772,6 +8808,10 @@ export const Tree = (({
 
   const handleSelectItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+      if (suppressPaletteClickRef.current) {
+        suppressPaletteClickRef.current = false;
+        return;
+      }
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
       const nextSelection = getTreeNextSelectionState({
         selectionMode,
@@ -8850,6 +8890,71 @@ export const Tree = (({
     [dragAndDropController, draggedIds, itemMap],
   );
 
+  const resolveItemDragData = reactHostPort.useCallback(
+    (treeItem: TreeDataItem, treeSection: TreeDataSection) =>
+      dragAndDropController?.getDragData?.({ items: [treeItem], sourceItem: treeItem, section: treeSection }) ?? treeItem.dragData,
+    [dragAndDropController],
+  );
+
+  const buildPalettePointerProps = reactHostPort.useCallback(
+    (item: TreeDataItem, section: TreeDataSection): Pick<TreeItemProps, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel"> => {
+      const palettePointer = dragAndDropController?.pointerPaletteDrag;
+      if (!palettePointer) {
+        return {};
+      }
+      return {
+        onPointerDown: (event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          const dragData = resolveItemDragData(item, section);
+          if (!dragData) {
+            return;
+          }
+          const encoded = palettePointer.readEncodedDragPayload(dragData);
+          if (!encoded) {
+            return;
+          }
+          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        },
+        onPointerMove: (event) => {
+          const gesture = palettePointerGestureRef.current;
+          if (!gesture.pending && !gesture.dragging) {
+            return;
+          }
+          const deltaX = event.clientX - gesture.startX;
+          const deltaY = event.clientY - gesture.startY;
+          if (gesture.pending && deltaX * deltaX + deltaY * deltaY < 36) {
+            return;
+          }
+          if (gesture.pending && gesture.encoded) {
+            gesture.pending = false;
+            gesture.dragging = true;
+            suppressPaletteClickRef.current = true;
+            palettePointer.begin(gesture.encoded);
+            dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
+          }
+        },
+        onPointerUp: () => {
+          const gesture = palettePointerGestureRef.current;
+          if (gesture.dragging) {
+            suppressPaletteClickRef.current = true;
+          }
+          palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+        },
+        onPointerCancel: () => {
+          if (palettePointerGestureRef.current.dragging) {
+            palettePointer.cancel();
+            dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
+          }
+          palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+        },
+      };
+    },
+    [dragAndDropController, resolveItemDragData],
+  );
+
   const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
     const baseChildItems = getTreeItemItems(item, itemItemsById);
     const alternatives = item.alternatives ?? [];
@@ -8868,6 +8973,8 @@ export const Tree = (({
         void loadItemItems(item);
       }
     }, [hasDynamicChildren, item, treeOpenState.open]);
+
+    const palettePointerProps = buildPalettePointerProps(item, section);
 
     return (
       <TreeItem
@@ -8894,6 +9001,7 @@ export const Tree = (({
         onDrop={(event) => handleDrop(event, item, "item", section)}
         onPointerEnter={item.onPointerEnter}
         onPointerLeave={item.onPointerLeave}
+        {...palettePointerProps}
         branchCount={branchCount}
         activeBranchIndex={clampedBranchIndex}
         onBranchChange={setActiveBranchIndex}

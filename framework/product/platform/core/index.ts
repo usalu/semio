@@ -650,6 +650,7 @@ export function buildVirtualFileSystemModelRows(
 export abstract class VirtualFileSystemController extends Controller {
 	protected readonly expandedByScope = new Map<string, VirtualFileSystemExpandedStore>();
 	protected readonly childrenByScope = new Map<string, VirtualFileSystemChildrenStore>();
+	protected readonly pendingChildrenLoadsByScope = new Map<string, Set<string>>();
 	protected readonly selectedRowIdsByScope = new Map<string, string[]>();
 	protected readonly selectionAnchorRowIdByScope = new Map<string, string>();
 
@@ -662,6 +663,12 @@ export abstract class VirtualFileSystemController extends Controller {
 	protected abstract getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord;
 
 	protected abstract loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[];
+
+	/** @emoji 📁 Optional async child loader; when set, {@link ensureChildrenLoaded} fetches over the network and emits when done. */
+	protected loadChildrenAsync?(
+		parentId: string,
+		scope: VirtualFileSystemScope,
+	): Promise<readonly VirtualFileSystemNodeRecord[]>;
 
 	protected resolveScope(args?: unknown, surfaceIdFallback?: string): VirtualFileSystemScope | null {
 		const payload = (args ?? {}) as { appId?: string; surfaceId?: string };
@@ -708,6 +715,22 @@ export abstract class VirtualFileSystemController extends Controller {
 		const snapshot = childrenStore.getSnapshot();
 		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
 		if (snapshot[key]) return;
+		const scopeKey = virtualFileSystemScopeKey(scope);
+		let pending = this.pendingChildrenLoadsByScope.get(scopeKey);
+		if (!pending) {
+			pending = new Set();
+			this.pendingChildrenLoadsByScope.set(scopeKey, pending);
+		}
+		if (pending.has(key)) return;
+		if (this.loadChildrenAsync) {
+			pending.add(key);
+			void this.loadChildrenAsync(parentId, scope).then((loaded) => {
+				pending!.delete(key);
+				childrenStore.setChildren(key, loaded);
+				this.emit();
+			});
+			return;
+		}
 		const loaded = this.loadChildren(parentId, scope);
 		childrenStore.setChildren(key, loaded);
 	}

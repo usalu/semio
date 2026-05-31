@@ -1387,7 +1387,7 @@ function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystem
   return { id, kind: String(node["fileSystemKind"] ?? "") };
 }
 
-function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string): Entity {
+function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string, typeId?: string): Entity {
   switch (ref.kind) {
     case "KIT":
       return new Kit(session, ref.id, storeId);
@@ -1405,9 +1405,56 @@ function resolveFileSystemNode(session: Session, storeId: string | undefined, re
       return new Piece(session, designId ?? "", ref.id, storeId);
     case "CONNECTION":
       return new Connection(session, designId ?? "", ref.id, storeId);
+    case "REPRESENTATION":
+      return new Representation(session, typeId ?? "", ref.id, storeId);
+    case "PORT":
+      return new Port(session, typeId ?? "", ref.id, storeId);
+    case "CONNECTOR":
+      return new Connector(session, typeId ?? "", ref.id, storeId);
     default:
       return new Entity(session, ref.id, storeId);
   }
+}
+
+const VFS_CHILD_NODE_SELECTION =
+  "id fileSystemKind fileSystemName fileSystemPath fileSystemHasChildren owner { __typename ... on Type { id } ... on Design { id } }";
+
+function resolveFileSystemNodeFromGraphql(
+  session: Session,
+  storeId: string | undefined,
+  node: JsonObject | null | undefined,
+  designId?: string,
+): Entity {
+  const ref = parseFileSystemNodeRef(node);
+  if (!ref) return new Entity(session, "", storeId);
+  const owner = node?.["owner"] as JsonObject | undefined;
+  const ownerTypename = String(owner?.["__typename"] ?? "");
+  const ownerId = String(owner?.["id"] ?? "");
+  const typeId = ownerTypename === "Type" ? ownerId : undefined;
+  const pieceDesignId = ownerTypename === "Design" ? ownerId : designId;
+  return resolveFileSystemNode(session, storeId, ref, pieceDesignId, typeId);
+}
+
+function parseFileSystemChildrenRefs(frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  const edges = (frag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
+  if (!Array.isArray(edges)) return Object.freeze([]);
+  return Object.freeze(
+    edges.map((edge) => {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      const owner = node?.["owner"] as JsonObject | undefined;
+      const ownerTypename = String(owner?.["__typename"] ?? "");
+      const ownerId = String(owner?.["id"] ?? "");
+      return {
+        id: String(node?.["id"] ?? ""),
+        kind: String(node?.["fileSystemKind"] ?? ""),
+        name: String(node?.["fileSystemName"] ?? ""),
+        path: String(node?.["fileSystemPath"] ?? ""),
+        hasChildren: Boolean(node?.["fileSystemHasChildren"]),
+        ...(ownerTypename === "Type" && ownerId ? { typeId: ownerId } : {}),
+        ...(ownerTypename === "Design" && ownerId ? { designId: ownerId } : {}),
+      } satisfies SemioFileSystemChildRef;
+    }),
+  );
 }
 
 function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObject | null {
@@ -1419,11 +1466,18 @@ function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObje
 function vfsKitFields(branch: string | null, designId?: string) {
   const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
   const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
   return [
     { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
     { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
     { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
     { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
     {
       method: "fileSystemParent",
       selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
@@ -1435,21 +1489,141 @@ function vfsKitFields(branch: string | null, designId?: string) {
     },
     {
       method: "fileSystemChildren",
-      selection: "... on FileSystemNode { fileSystemChildren { edges { node { id fileSystemKind } } } }",
+      selection: vfsChildrenSelection,
       parse: () => [],
       coarseEvent: true,
       parseEntity: (entity, frag) => {
-        const edges = (b(frag as JsonObject | null)?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
-        if (!Array.isArray(edges)) return Object.freeze([]);
+        const nodeFrag = b(frag as JsonObject | null);
         return Object.freeze(
-          edges.map((e) => {
-            const ref = parseFileSystemNodeRef((e as JsonObject)?.["node"] as JsonObject | undefined);
-            return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : new Entity(entity.session, "", entity.storeId);
-          }),
+          ((nodeFrag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined ?? []).map((e) =>
+            resolveFileSystemNodeFromGraphql(entity.session, entity.storeId, (e as JsonObject)?.["node"] as JsonObject | undefined, designId),
+          ),
         );
       },
     },
   ] as const;
+}
+
+function vfsEntityPathFields(path: readonly string[], designId?: string) {
+  const nodeAt = (frag: JsonObject | null) => readKitPathNode(frag, path);
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
+  return [
+    {
+      method: "fileSystemPath",
+      selection: "... on FileSystemNode { fileSystemPath }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+    },
+    {
+      method: "fileSystemName",
+      selection: "... on FileSystemNode { fileSystemName }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+    },
+    {
+      method: "isFileSystemRoot",
+      selection: "... on FileSystemNode { isFileSystemRoot }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+    },
+    {
+      method: "fileSystemKind",
+      selection: "... on FileSystemNode { fileSystemKind }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+    },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
+    {
+      method: "fileSystemChildren",
+      selection: vfsChildrenSelection,
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) =>
+        Object.freeze(
+          (parseFileSystemChildrenRefs(nodeAt(frag as JsonObject | null)) as readonly SemioFileSystemChildRef[]).map((child) =>
+            resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId, child.typeId),
+          ),
+        ),
+    },
+  ] as const;
+}
+
+/** @emoji 📁 One lazy VFS child row from {@link fetchSemioFileSystemChildren}. */
+export interface SemioFileSystemChildRef {
+  readonly id: string;
+  readonly kind: string;
+  readonly name: string;
+  readonly path: string;
+  readonly hasChildren: boolean;
+  readonly typeId?: string;
+  readonly designId?: string;
+}
+
+/** @emoji 📁 Parent node scope for {@link fetchSemioFileSystemChildren}. */
+export type SemioFileSystemParentRef =
+  | { readonly kind: "KIT"; readonly id: string }
+  | { readonly kind: "FOLDER"; readonly id: string }
+  | { readonly kind: "FILE"; readonly id: string }
+  | { readonly kind: "DESIGN"; readonly id: string }
+  | { readonly kind: "TYPE"; readonly id: string }
+  | { readonly kind: "FAMILY"; readonly id: string }
+  | { readonly kind: "PIECE"; readonly id: string; readonly designId: string }
+  | { readonly kind: "CONNECTION"; readonly id: string; readonly designId: string };
+
+function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string {
+  const vfs = `fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } }`;
+  switch (parent.kind) {
+    case "KIT":
+      return vfs;
+    case "FOLDER":
+      return `folder(id: ${gqlString(parent.id)}) { ${vfs} }`;
+    case "FILE":
+      return `file(id: ${gqlString(parent.id)}) { ${vfs} }`;
+    case "DESIGN":
+      return `design(id: ${gqlString(parent.id)}) { ${vfs} }`;
+    case "TYPE":
+      return `type(id: ${gqlString(parent.id)}) { ${vfs} }`;
+    case "FAMILY":
+      return `family(id: ${gqlString(parent.id)}) { ${vfs} }`;
+    case "PIECE":
+      return `design(id: ${gqlString(parent.designId)}) { piece(id: ${gqlString(parent.id)}) { ${vfs} } }`;
+    case "CONNECTION":
+      return `design(id: ${gqlString(parent.designId)}) { connection(id: ${gqlString(parent.id)}) { ${vfs} } }`;
+    default:
+      return vfs;
+  }
+}
+
+/** @emoji 📁 Loads VFS children for a kit-graph parent node via GraphQL {@link FileSystemNode}. */
+export async function fetchSemioFileSystemChildren(store: JsKitStore, parent: SemioFileSystemParentRef): Promise<readonly SemioFileSystemChildRef[]> {
+  const inner = semioFileSystemChildrenInner(parent);
+  const frag = await store.readKitInner(inner);
+  if (parent.kind === "KIT") return parseFileSystemChildrenRefs(frag);
+  const path =
+    parent.kind === "FOLDER"
+      ? (["folder"] as const)
+      : parent.kind === "FILE"
+        ? (["file"] as const)
+        : parent.kind === "DESIGN"
+          ? (["design"] as const)
+          : parent.kind === "TYPE"
+            ? (["type"] as const)
+            : parent.kind === "FAMILY"
+              ? (["family"] as const)
+              : parent.kind === "PIECE"
+                ? (["design", "piece"] as const)
+                : (["design", "connection"] as const);
+  return parseFileSystemChildrenRefs(readKitPathNode(frag, path));
+}
+
+/** @emoji 📁 Loads kit-root VFS children (alias for {@link fetchSemioFileSystemChildren} on the kit node). */
+export async function fetchSemioFileSystemRootChildren(store: JsKitStore, kitId: string): Promise<readonly SemioFileSystemChildRef[]> {
+  return fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId });
 }
 //#endregion 📁FileSystem
 
@@ -1919,6 +2093,7 @@ export class Kit extends Entity {
   declare fileSystemName: () => Promise<string>;
   declare isFileSystemRoot: () => Promise<boolean>;
   declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
   declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null) => Promise<SetResult>;
   declare moveToFolder: (nodeId: string, folderId?: string | null) => Promise<SetResult>;
 }
@@ -3187,6 +3362,11 @@ export class Port extends Entity {
   declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
   declare removeAttribute: (id: string) => Promise<SetResult>;
   declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -3204,6 +3384,7 @@ installEntityKitMethods(
       coarseEvent: true,
       parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_PORT)),
     },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_PORT),
   ] as const) as readonly BoundKitFieldSpec<unknown, Port>[],
   defineBoundKitOperations([
     { method: "rename", buildInner: (_e, newCode, newLabel) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))}, newLabel: ${newLabel == null ? "null" : gqlString(String(newLabel))})` },
@@ -3242,6 +3423,11 @@ export class Connector extends Entity {
   declare rename: (newCode: string) => Promise<SetResult>;
   declare changeDescription: (newDescription: string) => Promise<SetResult>;
   declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -3265,6 +3451,7 @@ installEntityKitMethods(
       coarseEvent: true,
       parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)),
     },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_CONNECTOR),
   ] as const) as readonly BoundKitFieldSpec<unknown, Connector>[],
   defineBoundKitOperations([
     { method: "rename", buildInner: (_e, newCode) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))})` },
@@ -4082,6 +4269,11 @@ export class Representation extends Entity {
   declare files: () => Promise<readonly File[]>;
   declare referencedByDesigns: () => Promise<readonly Design[]>;
   declare allReferencedByDesigns: () => Promise<readonly Design[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 function parseRepresentationBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
@@ -4177,6 +4369,7 @@ installEntityKitMethods(Representation, defineBoundKitFields([
         ),
       ),
   },
+  ...vfsEntityPathFields(KIT_PATH_TYPE_REPRESENTATION),
 ]) as readonly BoundKitFieldSpec<unknown, Representation>[]);
 //#endregion 🎨Representation
 
@@ -4200,6 +4393,7 @@ export class Family extends Entity {
   declare fileSystemName: () => Promise<string>;
   declare isFileSystemRoot: () => Promise<boolean>;
   declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 const FAMILY_FIELDS = defineBoundKitFields([
@@ -4338,6 +4532,7 @@ export class Folder extends Entity {
   declare fileSystemName: () => Promise<string>;
   declare isFileSystemRoot: () => Promise<boolean>;
   declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 function parseFolderBranchConnection(frag: JsonObject | null, key: string): readonly string[] {

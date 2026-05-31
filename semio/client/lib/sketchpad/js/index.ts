@@ -6,6 +6,11 @@
 //#region 🔌Adapters
 import type { Design, Kit, Session, SetResult, Type } from "@semio/js";
 import { Kit as JsKitEntity, Session as SemioSession } from "@semio/js";
+import {
+	fetchSemioFileSystemChildren,
+	type SemioFileSystemChildRef,
+	type SemioFileSystemParentRef,
+} from "@semio/react";
 import { gunzipSync } from "fflate";
 import type { Store as JsKitStore } from "@semio/js";
 import {
@@ -12208,6 +12213,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		folder: {
 			id: "folder",
 			name: "Folder",
+			icon: "folder",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12216,6 +12222,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		file: {
 			id: "file",
 			name: "File",
+			icon: "file",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12224,6 +12231,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		design: {
 			id: "design",
 			name: "Design",
+			icon: "layout",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12232,6 +12240,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		type: {
 			id: "type",
 			name: "Type",
+			icon: "component",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12240,6 +12249,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		family: {
 			id: "family",
 			name: "Family",
+			icon: "users",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12248,6 +12258,7 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		piece: {
 			id: "piece",
 			name: "Piece",
+			icon: "puzzle",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12256,6 +12267,34 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 		connection: {
 			id: "connection",
 			name: "Connection",
+			icon: "link",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		representation: {
+			id: "representation",
+			name: "Representation",
+			icon: "box",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		port: {
+			id: "port",
+			name: "Port",
+			icon: "circle-dot",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		connector: {
+			id: "connector",
+			name: "Connector",
+			icon: "plug",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -12302,6 +12341,24 @@ function sketchpadVfsScope(appId: string): VirtualFileSystemScope {
 	return { appId, surfaceId: virtualFileSystemSurfaceId(appId) };
 }
 
+const SKETCHPAD_RS_FILE_NODE_KIND_TO_VFS: Readonly<Record<string, string>> = {
+	KIT: "kit",
+	FOLDER: "folder",
+	FILE: "file",
+	DESIGN: "design",
+	TYPE: "type",
+	FAMILY: "family",
+	PIECE: "piece",
+	CONNECTION: "connection",
+	REPRESENTATION: "representation",
+	PORT: "port",
+	CONNECTOR: "connector",
+};
+
+function sketchpadVfsFileNodeKindId(rsKind: string): string {
+	return SKETCHPAD_RS_FILE_NODE_KIND_TO_VFS[rsKind] ?? "file";
+}
+
 function sketchpadVfsEntityId(kind: string, id: string): string {
 	return `${kind}:${id}`;
 }
@@ -12310,6 +12367,92 @@ function sketchpadParseVfsEntityId(nodeId: string): { readonly kind: string; rea
 	const slash = nodeId.indexOf(":");
 	if (slash < 0) return null;
 	return { kind: nodeId.slice(0, slash), id: nodeId.slice(slash + 1) };
+}
+
+function sketchpadRsVfsParentRef(
+	parentId: string,
+	root: VirtualFileSystemNodeRecord,
+	route: ReturnType<typeof parseSketchpadRouteScopeFromPath>,
+	vfsNodeMeta: ReadonlyMap<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }>,
+): SemioFileSystemParentRef {
+	if (parentId === root.id) {
+		return { kind: "KIT", id: String(route.kitId ?? parentId) };
+	}
+	const meta = vfsNodeMeta.get(parentId);
+	const vfsKind = meta?.fileNodeKindId ?? root.fileNodeKindId;
+	switch (vfsKind) {
+		case "folder":
+			return { kind: "FOLDER", id: parentId };
+		case "file":
+			return { kind: "FILE", id: parentId };
+		case "design":
+			return { kind: "DESIGN", id: parentId };
+		case "type":
+			return { kind: "TYPE", id: parentId };
+		case "family":
+			return { kind: "FAMILY", id: parentId };
+		case "piece":
+			return { kind: "PIECE", id: parentId, designId: meta?.designId ?? route.designId ?? "" };
+		case "connection":
+			return { kind: "CONNECTION", id: parentId, designId: meta?.designId ?? route.designId ?? "" };
+		default:
+			return { kind: "KIT", id: String(route.kitId ?? parentId) };
+	}
+}
+
+function sketchpadVfsNavigateUri(
+	kitId: string,
+	route: ReturnType<typeof parseSketchpadRouteScopeFromPath>,
+	fileNodeKindId: string,
+	nodeId: string,
+	child: SemioFileSystemChildRef,
+): string | undefined {
+	switch (fileNodeKindId) {
+		case "type":
+			return `/kits/${kitId}/types/${nodeId}`;
+		case "design":
+			return `/kits/${kitId}/designs/${nodeId}`;
+		case "folder":
+			return `/kits/${kitId}?folder=${encodeURIComponent(nodeId)}`;
+		case "file":
+			return `/kits/${kitId}?file=${encodeURIComponent(nodeId)}`;
+		case "representation": {
+			const typeId = child.typeId ?? route.typeId;
+			if (!typeId) return undefined;
+			return `/kits/${kitId}/types/${typeId}?rep=${encodeURIComponent(nodeId)}`;
+		}
+		case "piece":
+		case "connection": {
+			const designId = child.designId ?? route.designId;
+			if (!designId) return undefined;
+			const param = fileNodeKindId === "piece" ? "piece" : "conn";
+			return `/kits/${kitId}/designs/${designId}?${param}=${encodeURIComponent(nodeId)}`;
+		}
+		default:
+			return undefined;
+	}
+}
+
+function sketchpadVfsRecordsFromRsChildren(
+	kitId: string,
+	route: ReturnType<typeof parseSketchpadRouteScopeFromPath>,
+	parentId: string,
+	children: readonly SemioFileSystemChildRef[],
+): readonly VirtualFileSystemNodeRecord[] {
+	return children.map((child) => {
+		const fileNodeKindId = sketchpadVfsFileNodeKindId(child.kind);
+		const path = child.path || `/${child.name || child.id}`;
+		return {
+			id: child.id,
+			fileNodeKindId,
+			name: child.name || child.id,
+			path,
+			parentId,
+			hasChildren: child.hasChildren,
+			navigateUri: sketchpadVfsNavigateUri(kitId, route, fileNodeKindId, child.id, child),
+			descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues(fileNodeKindId, { path }),
+		} satisfies VirtualFileSystemNodeRecord;
+	});
 }
 
 function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFileSystemNodeRecord[] {
@@ -12715,7 +12858,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [this.route.kitId]);
 		}
 		if (this.vfsAppId === SKETCHPAD_DESIGN_APP_ID && this.route.designId) {
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_DESIGN_APP_ID), [sketchpadVfsEntityId("design", this.route.designId)]);
+			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_DESIGN_APP_ID), [this.route.designId]);
 		}
 		return ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(this.vfsAppId));
 	}
@@ -13115,6 +13258,10 @@ class SketchpadPlatformComponents {
 export class SketchpadShellController extends VirtualFileSystemController {
 	private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
 	private readonly kitKinds = new Map<string, string>();
+	private readonly vfsNodeMetaByScope = new Map<
+		string,
+		Map<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }>
+	>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
@@ -13400,7 +13547,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			const design = kit ? findDesignInKit(kit, route.designId) : undefined;
 			const path = `/${design?.name ?? route.designId}`;
 			return {
-				id: sketchpadVfsEntityId("design", route.designId),
+				id: route.designId,
 				fileNodeKindId: "design",
 				name: design?.name ?? route.designId,
 				path,

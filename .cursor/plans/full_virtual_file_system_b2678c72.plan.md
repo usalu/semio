@@ -13,13 +13,13 @@ todos:
     status: completed
   - id: js
     content: Extend semio/js vfsKitFields (hasChildren + richer child selection), resolveFileSystemNode kinds, attach vfs fields to Representation/Port/Connector entities
-    status: in_progress
+    status: completed
   - id: react
     content: Add semio/react fetchSemioFileSystemChildren / root helper over the js store
-    status: pending
+    status: completed
   - id: framework
     content: Add async loadChildrenAsync support (in-flight dedupe + emit) to VirtualFileSystemController in framework platform core
-    status: pending
+    status: in_progress
   - id: sketchpad
     content: Rewire sketchpad kit/design VFS to rs-driven loadChildrenAsync; extend schema fileNodeKinds+icons; kind/navigateUri/descriptor mapping; keep home client-side
     status: pending
