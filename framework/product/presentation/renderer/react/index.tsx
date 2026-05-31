@@ -11,7 +11,7 @@ import {
 	Expertise,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, useEffect, useRef, type FC, type ReactNode } from "react";
+import { act, Fragment, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationEntry,
@@ -258,11 +258,11 @@ function AuthorsMorphView({
 		embodiment.id?.startsWith("marked-affiliations-step");
 	const rows = authorRows(embodiment);
 	return (
-		<div className="w-full max-w-full text-center">
+		<div className="presentation-intro-rows presentation-intro-authors flex w-full max-w-full flex-col items-center text-center">
 			{rows.map((line, lineIndex) => (
 				<div
 					key={`${anchorId}-line-${lineIndex}`}
-					className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2"
+					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center"
 				>
 					{line.map((person) => {
 						const displayName = authorDisplayName(person, embodiment);
@@ -276,10 +276,10 @@ function AuthorsMorphView({
 								{person.markEntries && person.markEntries.length > 0 ? (
 									<sup className="ms-[0.35em]">
 										{person.markEntries.map((entry, markIndex) => (
-											<span key={entry.mark} className={emphasisClass(entry.emphasis)}>
-												{markIndex > 0 ? "," : null}
-												{entry.mark}
-											</span>
+											<Fragment key={entry.mark}>
+												{markIndex > 0 ? <span className="opacity-20">,</span> : null}
+												<span className={emphasisClass(entry.emphasis)}>{entry.mark}</span>
+											</Fragment>
 										))}
 									</sup>
 								) : person.marks && person.marks.length > 0 ? (
@@ -316,11 +316,11 @@ function AffiliationsMorphView({
 	readonly embodiment: AffiliationsEmbodiment;
 }): ReactNode {
 	return (
-		<div className="w-full max-w-full text-center">
+		<div className="presentation-intro-rows presentation-intro-affiliations flex w-full max-w-full flex-col items-center text-center">
 			{embodiment.entries.map((entry) => (
 				<div
 					key={entry.mark}
-					className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2"
+					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center"
 				>
 					<h4
 						data-id={`${anchorId}--${entry.mark}`}
@@ -660,12 +660,12 @@ if (import.meta.vitest) {
 			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
 			expect(marked2?.textContent).toBe("a,1");
 			expect(marked2?.querySelector('h4[data-id="authors--Alice Example"] sup span:not(.opacity-20)')?.textContent).toBe(
-				",1",
+				"1",
 			);
 			const marked3 = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice Example"] sup');
 			expect(marked3?.textContent).toBe("a,1,x");
 			expect(marked3?.querySelector('h4[data-id="authors--Alice Example"] sup span:not(.opacity-20)')?.textContent).toBe(
-				",x",
+				"x",
 			);
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("A. Example");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeTruthy();
