@@ -154,8 +154,35 @@ export const PUZZLE_3D_ATTRACTION_SNAP_MAX_LOD = 1000;
 /** @emoji 📐 Large LOD grid quantum in world units (puzzle 2d `PUZZLE_2D_LOD_GRID_MAJOR_QUANTUM`). */
 export const LOD_GRID_MAJOR_QUANTUM = 10;
 
+/** @emoji 📐 Medium LOD grid quantum (puzzle 2d `GRID_WORLD_MEDIUM`). */
+export const LOD_GRID_MEDIUM_QUANTUM = 2.5;
+
+/** @emoji 📐 Small LOD grid quantum (puzzle 2d `GRID_WORLD_SMALL`). */
+export const LOD_GRID_SMALL_QUANTUM = 0.5;
+
+/** @emoji 📐 Micro LOD grid quantum (puzzle 2d `GRID_WORLD_MICRO`). */
+export const LOD_GRID_MICRO_QUANTUM = 0.1;
+
+/** @emoji 📐 Coarsest scene LOD that still draws any grid band (puzzle 2d minimap). */
+export const PUZZLE_3D_LOD_GRID_MAX_LOD = 1000;
+
+/** @emoji 📐 Scene LOD at or below which the medium grid band appears (puzzle 2d normal). */
+export const PUZZLE_3D_LOD_GRID_MEDIUM_MAX_LOD = 50;
+
+/** @emoji 📐 Scene LOD at or below which the small grid band appears (puzzle 2d detail). */
+export const PUZZLE_3D_LOD_GRID_SMALL_MAX_LOD = 10;
+
+/** @emoji 📐 Scene LOD at or below which the micro grid band appears (puzzle 2d micro). */
+export const PUZZLE_3D_LOD_GRID_MICRO_MAX_LOD = 2;
+
 /** @emoji 📐 Default grid factor (puzzle 2d `DEFAULT_PUZZLE_2D_GRID_FACTOR`). */
 export const DEFAULT_LOD_GRID_FACTOR = 10;
+
+/** @emoji 📐 One progressive LOD grid layer (world step + stroke opacity). */
+export interface LodGridLayer {
+  readonly stepWorld: number;
+  readonly opacity: number;
+}
 
 export interface VortexProps {
   id: string;
@@ -224,12 +251,28 @@ export interface VortexKind {
   scale?: number;
 }
 
+/** @emoji 🌀 Explicit local vortex template on an {@link ObjectKind} for brush placement. */
+export interface ObjectKindVortexTemplate {
+  readonly vortexKind: string;
+  readonly position: Vec3;
+  readonly direction?: Vec3;
+  readonly radius?: number;
+}
+
 export interface ObjectKind {
   id: string;
   label?: string;
   name?: string;
   color?: string;
   shape?: string;
+  /** @emoji 🖌️ Explicit GLB URL when this kind is instantiated by the brush tool. */
+  meshUrl?: string;
+  /** @emoji 🎨 Optional per-LOD GLB URLs for brush instantiation. */
+  meshByLod?: readonly LodMeshEntry[];
+  /** @emoji 📐 Default scale for brush instantiation. */
+  scale?: number | Vec3;
+  /** @emoji 🌀 Local vortex templates (positions/directions in object-local CAD). */
+  vortices?: readonly ObjectKindVortexTemplate[];
 }
 
 export interface CableKind {
@@ -452,6 +495,29 @@ export interface AttractionPayload {
   readonly attractionId?: string;
 }
 
+/** @emoji 🖌️ Brush commit payload: new object pose plus attraction endpoints. */
+export interface BrushPlacePayload {
+  readonly targetVortexFullId: string;
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+  readonly origin: Vec3;
+  readonly orientation: Quat;
+  readonly scale?: number | Vec3;
+  readonly attractionId?: string;
+}
+
+/** @emoji 🖌️ Live brush preview pose and catalog candidate index. */
+export interface BrushPreviewState {
+  readonly targetVortexFullId: string;
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+  readonly meshUrl: string;
+  readonly meshByLod?: readonly LodMeshEntry[];
+  readonly scale?: number | Vec3;
+  readonly origin: Vec3;
+  readonly orientation: Quat;
+}
+
 export interface AttractionCompatibleObjectsPayload {
   readonly attracting: string;
   readonly objectIds: readonly string[];
@@ -519,6 +585,10 @@ export interface CanvasProps {
   onProximityConnect?: (p: AttractionPayload) => void;
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+  /** @emoji 🖌️ When true, hover free vortices to preview and flush compatible objects on leave. */
+  brushActive?: boolean;
+  /** @emoji 🖌️ Commits a brush placement (new object + attraction). */
+  onBrushPlace?: (payload: BrushPlacePayload) => void;
   /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
   attractionSession?: AttractionSessionSnapshot | null;
   /** @emoji 🖱️ Marquee tool shape (rectangle default, lasso optional). */
@@ -629,11 +699,30 @@ export function puzzle3dLodCanvasProps(state: { readonly automaticLod: boolean; 
   };
 }
 
-/** @emoji 📐 Visible LOD grid / relocate snap step in world units. */
+/** @emoji 📐 Fixed LOD grid band steps in world units (`10` / `2.5` / `0.5` / `0.1` × {@link gridFactor}). */
+export function lodGridBandStepsWorld(gridFactor: number): readonly [number, number, number, number] {
+  const f = gridFactor;
+  return [LOD_GRID_MAJOR_QUANTUM * f, LOD_GRID_MEDIUM_QUANTUM * f, LOD_GRID_SMALL_QUANTUM * f, LOD_GRID_MICRO_QUANTUM * f];
+}
+
+const LOD_GRID_LAYER_OPACITY = [1, 0.72, 0.48, 0.32] as const;
+
+/** @emoji 📐 Progressive LOD grid layers to draw (puzzle 2d `stroke_world_step_grid` bands). */
+export function lodProgressiveGridLayers(lod: number, gridFactor: number): readonly LodGridLayer[] {
+  if (!Number.isFinite(lod) || lod <= 0 || lod > PUZZLE_3D_LOD_GRID_MAX_LOD) return [];
+  const [large, medium, small, micro] = lodGridBandStepsWorld(gridFactor);
+  const layers: LodGridLayer[] = [{ stepWorld: large, opacity: LOD_GRID_LAYER_OPACITY[0] }];
+  if (lod <= PUZZLE_3D_LOD_GRID_MEDIUM_MAX_LOD) layers.push({ stepWorld: medium, opacity: LOD_GRID_LAYER_OPACITY[1] });
+  if (lod <= PUZZLE_3D_LOD_GRID_SMALL_MAX_LOD) layers.push({ stepWorld: small, opacity: LOD_GRID_LAYER_OPACITY[2] });
+  if (lod <= PUZZLE_3D_LOD_GRID_MICRO_MAX_LOD) layers.push({ stepWorld: micro, opacity: LOD_GRID_LAYER_OPACITY[3] });
+  return layers;
+}
+
+/** @emoji 📐 Finest visible LOD grid / relocate snap step in world units. */
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
-  if (!Number.isFinite(lod) || lod <= 0) return null;
-  const raw = lod * 0.05 * gridFactor;
-  return raw > 50 * gridFactor ? null : raw;
+  const layers = lodProgressiveGridLayers(lod, gridFactor);
+  if (!layers.length) return null;
+  return layers[layers.length - 1]!.stepWorld;
 }
 
 /** @emoji 🌐 True when primary vortex visuals are drawn at the given scene LOD. */
@@ -719,21 +808,33 @@ function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
 
 function LodGridHelper() {
   const lod = useLod();
-  const grid = reactHostPort.useMemo(() => {
-    const step = lod.gridStepWorld;
-    if (step == null || !Number.isFinite(step) || step <= 0) return null;
+  const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
+  const grids = reactHostPort.useMemo(() => {
     const size = 12_000;
-    const divs = Math.min(512, Math.max(2, Math.round(size / step)));
-    return new GridHelper(size, divs, 0x8899aa, 0x445566);
-  }, [lod.gridStepWorld]);
+    return layers.map(({ stepWorld, opacity }) => {
+      const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
+      const grid = new GridHelper(size, divs, 0x8899aa, 0x445566);
+      const mat = grid.material as LineBasicMaterial;
+      mat.transparent = true;
+      mat.opacity = opacity;
+      mat.depthWrite = false;
+      return grid;
+    });
+  }, [layers]);
   reactHostPort.useEffect(
     () => () => {
-      grid?.dispose();
+      for (const grid of grids) grid.dispose();
     },
-    [grid],
+    [grids],
   );
-  if (!grid) return null;
-  return <primitive object={grid} position={[0, 0, 0]} />;
+  if (!grids.length) return null;
+  return (
+    <>
+      {grids.map((grid, i) => (
+        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[0, 0, 0]} />
+      ))}
+    </>
+  );
 }
 
 function LodFrameRunner(props: {
@@ -5614,10 +5715,29 @@ if (import.meta.vitest) {
       expect(pickClosestLod(available, 5000)).toBe(1000);
     });
   });
+  describe("lodGridBandStepsWorld", () => {
+    it("scales puzzle 2d quanta by grid factor", () => {
+      expect(lodGridBandStepsWorld(10)).toEqual([100, 25, 5, 1]);
+      expect(lodGridBandStepsWorld(5)).toEqual([50, 12.5, 2.5, 0.5]);
+    });
+  });
+  describe("lodProgressiveGridLayers", () => {
+    it("adds finer bands as lod decreases", () => {
+      expect(lodProgressiveGridLayers(5000, 10)).toEqual([]);
+      expect(lodProgressiveGridLayers(500, 10).map((l) => l.stepWorld)).toEqual([100]);
+      expect(lodProgressiveGridLayers(100, 10).map((l) => l.stepWorld)).toEqual([100]);
+      expect(lodProgressiveGridLayers(50, 10).map((l) => l.stepWorld)).toEqual([100, 25]);
+      expect(lodProgressiveGridLayers(10, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5]);
+      expect(lodProgressiveGridLayers(2, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5, 1]);
+    });
+  });
   describe("lodGridStepWorld", () => {
-    it("returns null for very coarse lod and ~5 at lod 100", () => {
+    it("returns null when no grid and finest visible band otherwise", () => {
       expect(lodGridStepWorld(5000, 10)).toBe(null);
-      expect(lodGridStepWorld(100, 10)).toBe(50);
+      expect(lodGridStepWorld(100, 10)).toBe(100);
+      expect(lodGridStepWorld(50, 10)).toBe(25);
+      expect(lodGridStepWorld(10, 10)).toBe(5);
+      expect(lodGridStepWorld(2, 10)).toBe(1);
     });
   });
   describe("lodVortexPrimaryVisible", () => {

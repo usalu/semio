@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 3d Progressive Lod Grid",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Display progressive LOD grid bands in puzzle 3d according to LOD (mirror puzzle 2d large/medium/small/micro layers).",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪a4450a1270714568b46bd3e951d17801"
+  ]
+}
