@@ -5815,6 +5815,9 @@ export class InteractionRuntime {
       if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
       diff = ar.diff ?? EMPTY_MODEL_DIFF;
       data = ar.data ?? null;
+      if (isEmptyModelDiff(diff) && op.action === "command.finish") {
+        return fail("interaction.emptyCommit", "Command produced no geometry; add more points and finish again.");
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       return fail("interaction.commitFailed", msg);
@@ -6834,6 +6837,21 @@ if (import.meta.vitest) {
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
+    it("curve.interpolateCurve confirm with one point stays in next_point", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("next_point");
+      expect(Object.keys(model.edges).length).toBe(0);
+    });
+
     it("curve.interpolateCurve commit binds typology object rows for hierarchy", async () => {
       const typology = "spatial.shape.curve.interpolate-curve";
       expect(typologyIdForInteractionCommit("curve.interpolateCurve")).toBe(typology);
@@ -6850,6 +6868,7 @@ if (import.meta.vitest) {
       await rt.send({ kind: "confirm", modifiers: {} });
       const res = rt.getSnapshot().lastResponse!;
       expect(res.ok).toBe(true);
+      expect(Object.keys(model.edges).length).toBeGreaterThan(0);
       expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
       expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
       expect(model.objects[typology as ObjectRef]?.primitives.wire).toBeTruthy();

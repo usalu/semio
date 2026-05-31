@@ -1,0 +1,11 @@
+{
+  "title": "Interpolate Curve Disappears On Finish",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Interpolate Curve Disappears On Finish",
+  "summary": "Finishing interpolate curve with only one placed point committed an empty diff: preview was stripped in `committed` while factory wireframe had no new edges. Added `hasTwoCurvePoints` guard on finish transitions and commit, `runCommit` rejects empty `command.finish` diffs, `replBaseDisplayForHistory` keeps preview until geometry commits, and through-nurbs wireframe sampling matches the in-command Catmull-Rom preview density.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪bb5141f99f65447fa5893ba825159316"
+  ]
+}

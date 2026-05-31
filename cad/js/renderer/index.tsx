@@ -407,6 +407,9 @@ function archivedBoxesFromHistory(history: DocumentHistory): readonly ArchivedBo
 
 function replBaseDisplayForHistory(snapshot: InteractionSnapshot): DisplayModel {
   if (snapshot.state !== "committed") return snapshot.display;
+  const diff = snapshot.lastResponse?.diff;
+  const committedGeometry = snapshot.lastResponse?.ok === true && diff !== undefined && !isEmptyModelDiff(diff);
+  if (!committedGeometry) return snapshot.display;
   return { ...snapshot.display, items: snapshot.display.items.filter((item) => item.role !== "preview") };
 }
 // #endregion 🪩ArchivedFootprints

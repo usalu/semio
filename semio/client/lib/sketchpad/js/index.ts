@@ -483,6 +483,12 @@ export interface SketchpadImportStatus {
 	readonly error?: string;
 }
 
+/** @emoji 💬 In-progress feedback form draft stored on the shell snapshot. */
+export interface SketchpadFeedbackDraft {
+	readonly message: string;
+	readonly contact: string;
+}
+
 /** @emoji 🏠 Home table UI state (expand, selection, URL-synced filters). */
 export interface SketchpadHomeUiState {
 	readonly expandedRowIds: readonly string[];
@@ -503,6 +509,7 @@ export interface SketchpadShellSnapshot {
 	readonly routeSelection: SketchpadRouteSelection;
 	readonly home: SketchpadHomeUiState;
 	readonly importStatus: SketchpadImportStatus;
+	readonly feedback: SketchpadFeedbackDraft;
 }
 
 function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
@@ -524,6 +531,20 @@ function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {
 
 function sketchpadEmptyImportStatus(): SketchpadImportStatus {
 	return { phase: "idle" };
+}
+
+function sketchpadEmptyFeedbackDraft(): SketchpadFeedbackDraft {
+	return { message: "", contact: "" };
+}
+
+/** @emoji ✉️ Builds a `mailto:` URI for the sketchpad feedback draft. */
+export function sketchpadFeedbackMailtoUri(draft: SketchpadFeedbackDraft): string | null {
+	const message = draft.message.trim();
+	if (!message) return null;
+	const contact = draft.contact.trim();
+	const subject = encodeURIComponent("Semio Sketchpad feedback");
+	const body = encodeURIComponent(contact.length > 0 ? `${message}\n\n— ${contact}` : message);
+	return `mailto:feedback@semio-tech.de?subject=${subject}&body=${body}`;
 }
 
 function sketchpadPathSupportsRouteSelectionQuery(pathOnly: string): boolean {
@@ -1072,26 +1093,32 @@ export function getSketchpadShellController(): SketchpadShellController | null {
 //#endregion 🔖KitStore
 
 //#region 🔖SketchpadRouteScope
-/** @emoji 🧭 Kit/design/type ids parsed from a sketchpad URL path (render-agnostic). */
-export function parseSketchpadRouteScopeFromPath(path: string): {
+/** @emoji 🧭 Kit/design/type/docs scope parsed from a sketchpad URL (path + kit query params). */
+export function parseSketchpadRouteScopeFromPath(pathOrUri: string): {
 	readonly kitId: string | null;
 	readonly designId: string | null;
 	readonly typeId: string | null;
 	readonly docsPath: string;
+	readonly qualityId: string | null;
 } {
-	const pathParts = path.split("/").filter((part) => part.length > 0);
+	const queryIndex = pathOrUri.indexOf("?");
+	const pathOnly = queryIndex >= 0 ? pathOrUri.slice(0, queryIndex) : pathOrUri;
+	const query = queryIndex >= 0 ? pathOrUri.slice(queryIndex + 1) : "";
+	const pathParts = pathOnly.split("/").filter((part) => part.length > 0);
 	const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 	if (pathParts[0] === "docs") {
 		const docsPath = pathParts.slice(1).join("/") || "index";
-		return { kitId: null, designId: null, typeId: null, docsPath };
+		return { kitId: null, designId: null, typeId: null, docsPath, qualityId: null };
 	}
 	if (pathParts[0] !== "kits") {
-		return { kitId: null, designId: null, typeId: null, docsPath: "index" };
+		return { kitId: null, designId: null, typeId: null, docsPath: "index", qualityId: null };
 	}
 	const kitId = pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
 	const designId = pathParts[2] === "designs" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
 	const typeId = pathParts[2] === "types" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
-	return { kitId, designId, typeId, docsPath: "index" };
+	const qualityParam = kitId && query.length > 0 ? new URLSearchParams(query).get("quality") : null;
+	const qualityId = qualityParam && qualityParam.length > 0 ? qualityParam : null;
+	return { kitId, designId, typeId, docsPath: "index", qualityId };
 }
 
 /** @emoji 🧭 Maps a location path to the sketchpad {@link Platform} active app id. */
@@ -1113,6 +1140,15 @@ export function sketchpadAppIdFromPath(path: string): string {
 export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
 	if (!typeId) return undefined;
 	return kit.types?.find((t) => t.id === typeId);
+}
+
+/** @emoji 🔍 Finds a quality row on a kit snapshot. */
+export function findQualityInKit(kit: Kit, qualityId: string | null | undefined): { readonly id: string; readonly key?: string; readonly value?: string } | undefined {
+	if (!qualityId) return undefined;
+	return (kit.qualities ?? []).find((entry) => {
+		if (typeof entry !== "object" || entry === null || !("id" in entry)) return false;
+		return (entry as { id: string }).id === qualityId;
+	}) as { readonly id: string; readonly key?: string; readonly value?: string } | undefined;
 }
 
 /** @emoji 🔍 Finds a design row on a kit snapshot. */
@@ -2101,7 +2137,7 @@ const SKETCHPAD_SURFACE_WORKBENCH = "semio.sketchpad.surface.workbench/v1";
 const SKETCHPAD_SURFACE_DETAILS = "semio.sketchpad.surface.details/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "semio.sketchpad.surface.type.scene/v1";
 export const SKETCHPAD_SURFACE_DOCS_PAGE = "semio.sketchpad.surface.docs.page/v1";
-const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v1";
+export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback.form/v1";
 const SKETCHPAD_PANEL_WINDOWS_BODY = "semio.sketchpad.panel.windows";
 const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
 const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
@@ -2115,14 +2151,15 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 
 	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialSnapshot: TSnapshot, platform: Platform) {
 		super(componentKind, surfaceId, controllerId, initialSnapshot);
-		this.route = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
+		this.route = parseSketchpadRouteScopeFromPath(platform.uri);
 		this.detachRoute = platform.subscribe(() => {
-			const nextRoute = parseSketchpadRouteScopeFromPath(platform.uri.split("?")[0] ?? "/");
+			const nextRoute = parseSketchpadRouteScopeFromPath(platform.uri);
 			if (
 				nextRoute.kitId !== this.route.kitId ||
 				nextRoute.designId !== this.route.designId ||
 				nextRoute.typeId !== this.route.typeId ||
-				nextRoute.docsPath !== this.route.docsPath
+				nextRoute.docsPath !== this.route.docsPath ||
+				nextRoute.qualityId !== this.route.qualityId
 			) {
 				this.route = nextRoute;
 				this.attachActiveKitStore();
@@ -2409,46 +2446,6 @@ export class SketchpadTypeScene extends SketchpadRoutedComponent<Puzzle5dModel> 
 	}
 }
 
-/** @emoji 📄 Docs panel surface. */
-export class SketchpadDocsPanel extends SketchpadRoutedComponent<PanelModel> {
-	constructor(platform: Platform) {
-		super("panel", SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "Docs" } }, platform);
-	}
-
-	override buildSnapshot(): PanelModel {
-		const docsPath = this.route.docsPath;
-		return {
-			body: {
-				type: "stack",
-				direction: "vertical",
-				padding: "standard",
-				children: [
-					{ type: "text", value: sketchpadTitleFromDocPath(docsPath), emphasize: true },
-					{ type: "text", value: `/docs/${docsPath}` },
-					{ type: "text", value: "MDX content renders in the docs window." },
-				],
-			},
-		};
-	}
-}
-
-/** @emoji 💬 Feedback panel surface. */
-export class SketchpadFeedbackPanel extends Panel {
-	constructor(_platform: Platform) {
-		super(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID, {
-			body: {
-				type: "stack",
-				direction: "vertical",
-				padding: "standard",
-				children: [
-					{ type: "text", value: "Feedback", emphasize: true },
-					{ type: "text", value: "Send feedback from the footer or command palette." },
-				],
-			},
-		});
-	}
-}
-
 /** @emoji 🧩 Workbench side panel for the active route. */
 class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 	constructor(platform: Platform) {
@@ -2568,6 +2565,17 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
 			]);
 		}
+		const { qualityId } = this.route;
+		if (qualityId && kit) {
+			const quality = findQualityInKit(kit, qualityId);
+			const key = quality?.key ?? qualityId;
+			const value = quality?.value;
+			return sketchpadPanelTextStack([
+				{ text: "Quality", emphasize: true },
+				{ text: value != null && value !== "" ? `${key} · ${value}` : key },
+				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
+			]);
+		}
 		const diagramSelected = ctrl?.routeSelection.kitDiagramNodeIds ?? [];
 		if (diagramSelected.length > 0 && kit) {
 			const lines: { text: string; emphasize?: boolean }[] = [
@@ -2653,6 +2661,17 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 			lines.push({ text: `Representations · ${reps} · Connectors · ${connectors}` });
 			return sketchpadPanelTextStack(lines);
 		}
+		const { qualityId } = this.route;
+		if (qualityId) {
+			const quality = findQualityInKit(kit, qualityId);
+			const lines: { text: string; emphasize?: boolean }[] = [
+				{ text: "Quality details", emphasize: true },
+				{ text: `Id · ${qualityId}` },
+			];
+			if (quality?.key) lines.push({ text: `Key · ${quality.key}` });
+			if (quality?.value) lines.push({ text: `Value · ${quality.value}` });
+			return sketchpadPanelTextStack(lines);
+		}
 		return sketchpadPanelTextStack([
 			{ text: "Kit details", emphasize: true },
 			{ text: `Id · ${kitId}` },
@@ -2673,8 +2692,6 @@ class SketchpadPlatformComponents {
 			new SketchpadDesignScene(platform),
 			new SketchpadDesignDiagram(platform),
 			new SketchpadTypeScene(platform),
-			new SketchpadDocsPanel(platform),
-			new SketchpadFeedbackPanel(platform),
 			new SketchpadWorkbenchPanel(platform),
 			new SketchpadDetailsPanel(platform),
 		];
@@ -2705,6 +2722,7 @@ export class SketchpadShellController extends Controller {
 			routeSelection: sketchpadEmptyRouteSelection(),
 			home: sketchpadEmptyHomeUiState(),
 			importStatus: sketchpadEmptyImportStatus(),
+			feedback: sketchpadEmptyFeedbackDraft(),
 		});
 		this.provideStore(SKETCHPAD_SHELL_STORE_SHELL, this.shellStore);
 	}
@@ -3054,6 +3072,24 @@ export class SketchpadShellController extends Controller {
 				this.navigateTo((args as { path: string }).path);
 				break;
 			}
+			case "setFeedbackDraft": {
+				const payload = args as { message?: string; contact?: string };
+				this.shellStore.set({
+					...shell,
+					feedback: {
+						message: payload.message ?? shell.feedback.message,
+						contact: payload.contact ?? shell.feedback.contact,
+					},
+				});
+				break;
+			}
+			case "submitFeedback": {
+				if (typeof window !== "undefined") {
+					const mailto = sketchpadFeedbackMailtoUri(shell.feedback);
+					if (mailto) window.location.assign(mailto);
+				}
+				break;
+			}
 			case "setRouteSelection": {
 				this.setRouteSelection(args as SketchpadRouteSelection);
 				break;
@@ -3145,6 +3181,8 @@ function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 			descending: true,
 		}),
 		sketchpadShellCommand("semio.sketchpad.home.sortName", "Sort home by name", "setHomeSort", { columnId: "name", descending: false }),
+		sketchpadShellCommand("semio.sketchpad.home.openDocs", "Open documentation", "navigate", { path: "/docs/getting-started/index" }),
+		sketchpadShellCommand("semio.sketchpad.home.openFeedback", "Open feedback", "navigate", { path: "/feedback" }),
 	];
 }
 
@@ -3481,6 +3519,25 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
 			expect(sketchpadAppIdFromPath(`/kits/${kitId}/designs/${designId}`)).toBe(SKETCHPAD_DESIGN_APP_ID);
+		});
+	});
+
+	describe("parseSketchpadRouteScopeFromPath", () => {
+		it("parses quality query on kit routes", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			expect(parseSketchpadRouteScopeFromPath(`/kits/${kitId}?quality=q1`)).toMatchObject({
+				kitId,
+				qualityId: "q1",
+				designId: null,
+				typeId: null,
+			});
+		});
+	});
+
+	describe("sketchpadFeedbackMailtoUri", () => {
+		it("requires a non-empty message", () => {
+			expect(sketchpadFeedbackMailtoUri({ message: "", contact: "" })).toBeNull();
+			expect(sketchpadFeedbackMailtoUri({ message: "Hello", contact: "dev@semio.tech" })).toContain("mailto:feedback@semio-tech.de");
 		});
 	});
 
@@ -4059,7 +4116,7 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 
 		test("workbench panel is present when platform loads", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
-			const workbenchToggle = page.locator("#ui\\.panelToggle\\.workbench");
+			const workbenchToggle = page.locator('[id="ui.panelToggle.workbench"]');
 			await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
 		});
 
@@ -4071,6 +4128,37 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await dialog.getByPlaceholder("Search...").fill("fixture");
 			await expect(dialog.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
 			await expect(dialog.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
+		});
+
+		test("open nakagin fixture navigates to kit table", async ({ page }) => {
+			await page.goto("/", { waitUntil: "networkidle" });
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
+			await openSketchpadCommandPalette(page);
+			const dialog = page.getByRole("dialog");
+			await dialog.getByText("Open Nakagin filtered fixture").click();
+			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			await expect(page.getByRole("columnheader", { name: "Kind" })).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
+		});
+
+		test("docs route renders MDX getting started page", async ({ page }) => {
+			await page.goto("/docs/getting-started/index", { waitUntil: "networkidle" });
+			await expect(page.getByRole("heading", { name: "Getting Started" })).toBeVisible({ timeout: 120_000 });
+		});
+
+		test("feedback route shows feedback form", async ({ page }) => {
+			await page.goto("/feedback", { waitUntil: "networkidle" });
+			await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByPlaceholder("What should we know?")).toBeVisible({ timeout: 30_000 });
+		});
+
+		test("kit table navigates to design app", async ({ page }) => {
+			await page.goto("/", { waitUntil: "networkidle" });
+			await openSketchpadCommandPalette(page);
+			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
+			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
+			await page.getByText("Nakagin Capsule Tower").click();
+			await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 		});
 	});
 }

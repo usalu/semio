@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Fixed flaky Playwright command-palette e2e: UISearch now always mounts (empty items ok) so Ctrl+P toggle always opens a dialog with Search input; e2e uses attribute selectors, waits for home table, scopes assertions to the dialog via getByPlaceholder. All 3 Playwright tests pass (~5s); sketchpad vitest 43/43; platform renderer vitest 18/18.",
+  "summary": "Continued sketchpad platform refactor validation: added Playwright e2e `open nakagin fixture navigates to kit table` (command palette → kit URL → Kind column + design row); fixed workbench toggle locator to attribute form. All 4 e2e pass (~8s), vitest 43/43, vite build OK. Home/kit import-nav flow covered end-to-end; follow-up doc tracks design/type/docs/feedback deep rewrite.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -35,6 +35,7 @@
     "⚪2686a158df4541ad91ac27ec101b8a06",
     "⚪5dc2274c969f4ef2a011a3eb3df66517",
     "⚪79b9a9fd73fa4ee089de77f719eb0ebb",
-    "⚪c07aebdb51f6402fb5ed8c1850effb4a"
+    "⚪c07aebdb51f6402fb5ed8c1850effb4a",
+    "⚪0b93b211d01b41fbaae3d7e6f990f5fc"
   ]
 }

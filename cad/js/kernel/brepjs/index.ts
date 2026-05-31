@@ -419,7 +419,10 @@ export function edgeSamplePoints(
 			Math.max(segments, 64),
 		);
 	}
-	if (curve.kind === "nurbs") return nurbsDisplaySamplePoints(curve.poles, Math.max(4, Math.ceil(segments / 4)));
+	if (curve.kind === "nurbs") {
+		const span = curve.through ? Math.max(12, curve.poles.length * 8) : Math.max(4, Math.ceil(segments / 4));
+		return nurbsDisplaySamplePoints(curve.poles, span);
+	}
 	return ends.length >= 2 ? ends : ends;
 }
 
