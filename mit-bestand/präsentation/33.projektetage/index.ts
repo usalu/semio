@@ -26,38 +26,37 @@ const deck = intro({
 	authors: {
 		lines: [
 			[
-				{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
-				{ name: "Phillipp Geyer", marks: ["1", "a", "x"] },
+				{ name: "Ueli Saluz", marks: ["a", "1", "x"] },
+				{ name: "Phillipp Geyer", marks: ["a", "1", "x"] },
 			],
 			[
-				{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
-				{ name: "Christoph Gengnagel", marks: ["2", "a", "y"] },
+				{ name: "Kinan Sarakbi", marks: ["a", "2", "y"] },
+				{ name: "Christoph Gengnagel", marks: ["a", "2", "y"] },
 			],
 		],
 	},
 	affiliations: {
 		steps: [
+			[{ mark: "a", name: "Fakultät für Architektur" }],
 			[
-				{ mark: "1", name: "Leibniz Universität Hannover" },
-				{ mark: "2", name: "Universität der Künste" },
-			],
-			[
-				{ mark: "1", name: "Leibniz Universität Hannover" },
-				{ mark: "2", name: "Universität der Künste" },
 				{ mark: "a", name: "Fakultät für Architektur" },
+				{ mark: "1", name: "Leibniz Universität Hannover" },
+				{ mark: "2", name: "Universität der Künste" },
 			],
 			[
+				{ mark: "a", name: "Fakultät für Architektur" },
 				{
 					mark: "1",
 					name: "Leibniz Universität Hannover",
+					shortName: "LUH",
 					suffix: { mark: "x", name: "Nachhaltige Gebäudesysteme" },
 				},
 				{
 					mark: "2",
 					name: "Universität der Künste",
+					shortName: "UdK",
 					suffix: { mark: "y", name: "Konstruktives Entwerfen" },
 				},
-				{ mark: "a", name: "Fakultät für Architektur" },
 			],
 		],
 	},

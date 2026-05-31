@@ -107,9 +107,15 @@ export function abbreviateAuthorFirstName(fullName: string): string {
 export interface AffiliationEntry {
 	readonly mark: string;
 	readonly name: string;
+	readonly shortName?: string;
 	readonly suffix?: { readonly mark: string; readonly name: string };
 	readonly lineEmphasis?: ParticipantEmphasis;
 	readonly suffixEmphasis?: ParticipantEmphasis;
+}
+
+/** @emoji 🏛 Affiliation line label (`shortName` when set, else full `name`). */
+export function affiliationLineName(entry: AffiliationEntry): string {
+	return entry.shortName ?? entry.name;
 }
 
 /** @emoji 🏛 Collects `mark` and `suffix.mark` values present in one affiliation step. */
@@ -124,6 +130,20 @@ export function affiliationMarksInStep(step: readonly AffiliationEntry[]): Reado
 	return marks;
 }
 
+/** @emoji 🏛 Footnote mark order as listed in one affiliation step (line marks, then suffix marks). */
+export function affiliationMarkOrderInStep(step: readonly AffiliationEntry[]): readonly string[] {
+	const order: string[] = [];
+	for (const entry of step) {
+		if (!order.includes(entry.mark)) {
+			order.push(entry.mark);
+		}
+		if (entry.suffix && !order.includes(entry.suffix.mark)) {
+			order.push(entry.suffix.mark);
+		}
+	}
+	return order;
+}
+
 /** @emoji 👤 Author rows with only marks defined in `currentStep`; newer marks vs `previousStep` stay active. */
 export function authorLinesForAffiliationStep(
 	lines: readonly (readonly AuthorPerson[])[],
@@ -132,16 +152,19 @@ export function authorLinesForAffiliationStep(
 ): readonly (readonly AuthorPerson[])[] {
 	const allowed = affiliationMarksInStep(currentStep);
 	const previous = affiliationMarksInStep(previousStep);
+	const markOrder = affiliationMarkOrderInStep(currentStep);
+	const markRank = new Map(markOrder.map((mark, index) => [mark, index]));
 	return lines.map((line) =>
-		line.map((author) => ({
-			name: author.name,
-			markEntries: (author.marks ?? [])
+		line.map((author) => {
+			const markEntries = (author.marks ?? [])
 				.filter((mark) => allowed.has(mark))
 				.map((mark) => ({
 					mark,
 					emphasis: previous.has(mark) ? ("muted" as const) : ("active" as const),
-				})),
-		})),
+				}))
+				.sort((left, right) => (markRank.get(left.mark) ?? 0) - (markRank.get(right.mark) ?? 0));
+			return { name: author.name, markEntries };
+		}),
 	);
 }
 
@@ -552,19 +575,26 @@ if (import.meta.vitest) {
 		},
 		affiliations: {
 			steps: [
+				[{ mark: "a", name: "Faculty" }],
 				[
+					{ mark: "a", name: "Faculty" },
 					{ mark: "1", name: "University" },
 					{ mark: "2", name: "Other University" },
 				],
 				[
-					{ mark: "1", name: "University" },
-					{ mark: "2", name: "Other University" },
 					{ mark: "a", name: "Faculty" },
-				],
-				[
-					{ mark: "1", name: "University", suffix: { mark: "x", name: "Chair X" } },
-					{ mark: "2", name: "Other University", suffix: { mark: "y", name: "Chair Y" } },
-					{ mark: "a", name: "Faculty" },
+					{
+						mark: "1",
+						name: "University",
+						shortName: "LUH",
+						suffix: { mark: "x", name: "Chair X" },
+					},
+					{
+						mark: "2",
+						name: "Other University",
+						shortName: "UdK",
+						suffix: { mark: "y", name: "Chair Y" },
+					},
 				],
 			],
 		},
@@ -594,6 +624,16 @@ if (import.meta.vitest) {
 			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
 
+		it("uses affiliation short names when chairs are introduced", () => {
+			expect(
+				affiliationLineName({
+					mark: "1",
+					name: "Leibniz Universität Hannover",
+					shortName: "LUH",
+				}),
+			).toBe("LUH");
+		});
+
 		it("abbreviates author first names on affiliation slides", () => {
 			expect(abbreviateAuthorFirstName("Ueli Saluz")).toBe("U. Saluz");
 			expect(abbreviateAuthorFirstName("Christoph Gengnagel")).toBe("C. Gengnagel");
@@ -607,23 +647,26 @@ if (import.meta.vitest) {
 		});
 
 		it("introduces author marks with each affiliation step", () => {
-			const lines = [
-				[{ name: "Alice", marks: ["1", "a", "x"] }],
+			const lines = [[{ name: "Alice", marks: ["a", "1", "x"] }]] as const;
+			const rawSteps = [
+				[{ mark: "a", name: "Faculty" }],
+				[
+					{ mark: "a", name: "Faculty" },
+					{ mark: "1", name: "University" },
+				],
+				[
+					{ mark: "a", name: "Faculty" },
+					{ mark: "1", name: "University", suffix: { mark: "x", name: "Chair X" } },
+				],
 			] as const;
-			const steps = sampleIntro.sequences[0]!.thoughts[0]!.participants.find(
-				(p) => p.id === INTRO_PARTICIPANT_INSTITUTIONS,
-			)!;
-			const step1 = (steps.embodiments[0] as AffiliationsEmbodiment).entries;
-			const step2 = (steps.embodiments[1] as AffiliationsEmbodiment).entries;
-			const step3 = (steps.embodiments[2] as AffiliationsEmbodiment).entries;
-			const aff1 = authorLinesForAffiliationStep(lines, step1, [])[0]![0]!;
-			expect(aff1.markEntries?.map((m) => m.mark)).toEqual(["1"]);
-			const aff2 = authorLinesForAffiliationStep(lines, step2, step1)[0]![0]!;
-			expect(aff2.markEntries?.map((m) => m.mark)).toEqual(["1", "a"]);
-			expect(aff2.markEntries?.find((m) => m.mark === "a")?.emphasis).toBe("active");
-			expect(aff2.markEntries?.find((m) => m.mark === "1")?.emphasis).toBe("muted");
-			const aff3 = authorLinesForAffiliationStep(lines, step3, step2)[0]![0]!;
-			expect(aff3.markEntries?.map((m) => m.mark)).toEqual(["1", "a", "x"]);
+			const aff1 = authorLinesForAffiliationStep(lines, rawSteps[0], [])[0]![0]!;
+			expect(aff1.markEntries?.map((m) => m.mark)).toEqual(["a"]);
+			const aff2 = authorLinesForAffiliationStep(lines, rawSteps[1], rawSteps[0])[0]![0]!;
+			expect(aff2.markEntries?.map((m) => m.mark)).toEqual(["a", "1"]);
+			expect(aff2.markEntries?.find((m) => m.mark === "a")?.emphasis).toBe("muted");
+			expect(aff2.markEntries?.find((m) => m.mark === "1")?.emphasis).toBe("active");
+			const aff3 = authorLinesForAffiliationStep(lines, rawSteps[2], rawSteps[1])[0]![0]!;
+			expect(aff3.markEntries?.map((m) => m.mark)).toEqual(["a", "1", "x"]);
 			expect(aff3.markEntries?.find((m) => m.mark === "x")?.emphasis).toBe("active");
 		});
 
@@ -633,8 +676,8 @@ if (import.meta.vitest) {
 				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step2.embodiment.kind === "affiliations") {
-				expect(step2.embodiment.entries.find((e) => e.mark === "1")?.lineEmphasis).toBe("muted");
-				expect(step2.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("active");
+				expect(step2.embodiment.entries.find((e) => e.mark === "1")?.lineEmphasis).toBe("active");
+				expect(step2.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("muted");
 			}
 			const step3 = resolveArrangement(thought, "affiliations-3").find(
 				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,

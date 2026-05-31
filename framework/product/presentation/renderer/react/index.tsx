@@ -11,7 +11,7 @@ import {
 	Expertise,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, Fragment, useEffect, useRef, type FC, type ReactNode } from "react";
+import { act, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationEntry,
@@ -31,6 +31,7 @@ import type {
 } from "@framework/presentation/core";
 import {
 	abbreviateAuthorFirstName,
+	affiliationLineName,
 	intro,
 	resolveArrangement,
 	resolveTextMorphRoot,
@@ -273,16 +274,16 @@ function AuthorsMorphView({
 							>
 								{namesMuted ? <span className="opacity-20">{displayName}</span> : displayName}
 								{person.markEntries && person.markEntries.length > 0 ? (
-									<sup>
+									<sup className="ms-[0.35em]">
 										{person.markEntries.map((entry, markIndex) => (
-											<Fragment key={entry.mark}>
+											<span key={entry.mark} className={emphasisClass(entry.emphasis)}>
 												{markIndex > 0 ? "," : null}
-												<span className={emphasisClass(entry.emphasis)}>{entry.mark}</span>
-											</Fragment>
+												{entry.mark}
+											</span>
 										))}
 									</sup>
 								) : person.marks && person.marks.length > 0 ? (
-									<sup>{person.marks.join(",")}</sup>
+									<sup className="ms-[0.35em]">{person.marks.join(",")}</sup>
 								) : null}
 							</h4>
 						);
@@ -310,14 +311,20 @@ function AffiliationsMorphView({
 		<div className="w-full text-center">
 			<h5 data-id={anchorId} className={morphTextClass(anchorId, "text-center")}>
 				{embodiment.entries.map((entry) => (
-					<span key={entry.mark} data-id={`${anchorId}--${entry.mark}`}>
-						<sup>{entry.mark}</sup>
-						<span className={affiliationPartClass(entry.lineEmphasis, placementEmphasis)}>{entry.name}</span>
+					<span
+						key={entry.mark}
+						data-id={`${anchorId}--${entry.mark}`}
+						className={entry.suffix ? "inline-block max-w-full whitespace-nowrap" : undefined}
+					>
+						<span className={affiliationPartClass(entry.lineEmphasis, placementEmphasis)}>
+							<sup>{entry.mark}</sup>
+							{affiliationLineName(entry)}
+						</span>
 						{entry.suffix ? (
 							<>
 								{" "}
-								<sup>{entry.suffix.mark}</sup>
 								<span className={affiliationPartClass(entry.suffixEmphasis, placementEmphasis)}>
+									<sup>{entry.suffix.mark}</sup>
 									{entry.suffix.name}
 								</span>
 							</>
@@ -526,14 +533,14 @@ if (import.meta.vitest) {
 
 		const testAffiliationSteps = {
 			steps: [
-				[{ mark: "1", name: "Uni" }],
+				[{ mark: "a", name: "Faculty" }],
 				[
-					{ mark: "1", name: "Uni" },
 					{ mark: "a", name: "Faculty" },
+					{ mark: "1", name: "Uni" },
 				],
 				[
-					{ mark: "1", name: "Uni", suffix: { mark: "x", name: "Chair X" } },
 					{ mark: "a", name: "Faculty" },
+					{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair X" } },
 				],
 			],
 		} as const;
@@ -593,7 +600,7 @@ if (import.meta.vitest) {
 				goal: ["G1"],
 				authors: {
 					lines: [
-						[{ name: "Alice Example", marks: ["1", "a", "x"] }, { name: "Bob Beta", marks: ["1", "a", "x"] }],
+						[{ name: "Alice Example", marks: ["a", "1", "x"] }, { name: "Bob Beta", marks: ["a", "1", "x"] }],
 						[{ name: "Carol Creator" }],
 					],
 				},
@@ -617,22 +624,23 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(3);
 			expect(slide("affiliations-3")?.querySelector('h5[data-id="institutions"]')).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
-			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("1");
+			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
 			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
-			expect(marked2?.textContent).toBe("1,a");
-			expect(marked2?.querySelector("span:not(.opacity-20)")?.textContent).toBe("a");
+			expect(marked2?.textContent).toBe("a,1");
+			expect(marked2?.querySelector("span:not(.opacity-20)")?.textContent).toBe("1");
 			const marked3 = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice Example"] sup');
-			expect(marked3?.textContent).toBe("1,a,x");
+			expect(marked3?.textContent).toBe("a,1,x");
 			expect(marked3?.querySelector("span:not(.opacity-20)")?.textContent).toBe("x");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("A. Example");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeTruthy();
 			expect(slide("authors")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeNull();
 			expect(slide("authors")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("Alice Example");
 			const aff2 = slide("affiliations-2");
-			expect(aff2?.querySelector('[data-id="institutions--1"] .opacity-20')).toBeTruthy();
-			expect(aff2?.querySelector('[data-id="institutions--a"] .opacity-20')).toBeNull();
+			expect(aff2?.querySelector('[data-id="institutions--a"] .opacity-20')).toBeTruthy();
+			expect(aff2?.querySelector('[data-id="institutions--1"] .opacity-20')).toBeNull();
 			const aff3 = slide("affiliations-3");
-			expect(aff3?.querySelector('[data-id="institutions--1"] .opacity-20')?.textContent).toContain("Uni");
+			expect(aff3?.querySelector('[data-id="institutions--a"] .opacity-20')).toBeTruthy();
+			expect(aff3?.querySelector('[data-id="institutions--1"] .opacity-20')?.textContent).toContain("LUH");
 			expect(aff3?.querySelector('[data-id="institutions--1"] span:not(.opacity-20)')?.textContent).toContain("Chair X");
 		});
 
