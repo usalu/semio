@@ -1,7 +1,15 @@
 :root {
 	--r-background-color: var(--base);
 	--r-main-font: var(--font-sans);
-	--r-main-font-size: 36px;
+	--r-main-font-size: 42px;
+	--r-block-margin: 20px;
+	--r-heading-margin: 0 0 20px 0;
+	--r-heading-line-height: 1.2;
+	--r-heading-font-weight: 400;
+	--r-heading1-size: 2.5em;
+	--r-heading2-size: 1.6em;
+	--r-heading3-size: 1.3em;
+	--r-heading4-size: 1em;
 	--r-main-color: var(--foreground);
 	--r-heading-font: var(--font-sans);
 	--r-heading-color: var(--foreground);
@@ -33,12 +41,17 @@
 	color: var(--color-primary);
 }
 
-.reveal .slides section {
+.reveal .slides section,
+.reveal .slides section > section {
 	text-align: left;
 }
 
 .reveal .slides {
 	text-align: left;
+}
+
+.reveal .slides section.present {
+	display: block;
 }
 
 .reveal .progress span {

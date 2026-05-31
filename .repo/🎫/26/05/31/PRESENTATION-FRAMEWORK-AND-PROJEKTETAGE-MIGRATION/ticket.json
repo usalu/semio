@@ -3,9 +3,10 @@
   "emoji": "📽",
   "status": "closed",
   "description": "Build @framework/presentation/core (declarative render-independent presentation model) + @framework/presentation/renderer/react (React+reveal.js). Migrate mit-bestand/präsentation/33.projektetage to eg-ice-25 intro (5 slides) with no direct react/reveal deps.",
-  "summary": "Implemented @framework/presentation/core with full declarative domain (Presentation, Sequence, Thought, Participant, Embodiment, Arrangement, Transition, intro template) and @framework/presentation/renderer/react (React + reveal.js, mountPresentation, globals.css). Migrated mit-bestand/präsentation/33.projektetage to pure declarative index.ts with eg-ice-25 intro (5 slides); removed direct react/reveal/@ui/react deps from the app. All core/renderer tests pass; projektetage production build succeeds.",
+  "summary": "Restored reveal.js auto-animate after @ui/react styling: fullscreen 100vw×100vh deck, center:true for FLIP transforms, useLayoutEffect+layout() on init/slide change, hash/slideNumber off for intro, heading scale tokens aligned to reveal black theme (42px base). Verified morph CSS includes translate transforms in browser; renderer tests extended.",
   "goal": "🎯framework",
   "sessions": [
-    "⚪d22c8b9bb3fd48a0b6050838b526c8d9"
+    "⚪d22c8b9bb3fd48a0b6050838b526c8d9",
+    "⚪906f8d5bfcb5480aad26d0d8d5af142c"
   ]
 }

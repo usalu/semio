@@ -1,3 +1,5 @@
-@import "../../../framework/product/presentation/renderer/react/deck.css";
+@import "../../../ui/react/globals.css";
+@import "../../../framework/product/presentation/renderer/react/globals.css";
+@source "../../../ui/react";
 @source "../../../framework/product/presentation/renderer/react";
 @source ".";

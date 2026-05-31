@@ -148,7 +148,6 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
-import { useTranslation } from "react-i18next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -196,6 +195,7 @@ import {
 	type WindowLayoutNode as ShellWindowLayoutNode,
 	cn,
 	resolveTranslationLabel,
+	useUiTranslation,
 	useCommandHotkey,
 	useMediaQuery,
 	type ContextMenuItem,
@@ -216,8 +216,13 @@ import {
 	windowMeasureSectionClass,
 	windowMeasureTileClass,
 	windowMeasureToggleClass,
+	type AssertUiToolbarParentKeysCovered,
 } from "@ui/react";
 // #endregion 🔌Adapters
+
+import type { AppToolCategory } from "@framework/core";
+
+const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
 
 //#region 📦shell-chrome-types.tsx
 
@@ -1196,7 +1201,7 @@ const UIToolbar: React.FC<{
   tools: ToolbarViewTools;
   className?: string;
 }> = ({ tools, className }) => {
-  const { t } = useTranslation();
+  const { t } = useUiTranslation();
   const populatedCategories = reactHostPort.useMemo(() => listPopulatedToolbarViewCategories(tools), [tools]);
   const [activeCategory, setActiveCategory] = reactHostPort.useState<AppToolCategory | null>(null);
 
@@ -1237,7 +1242,7 @@ const UIToolbar: React.FC<{
                   pressed={activeCategory === category}
                   onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
                   icon={resolveAppToolCategoryIcon(category)}
-                  text={resolveTranslationLabel(t(`ui.toolbar.parent.${category}`))}
+                  text={resolveTranslationLabel(t(`ui.toolbar.parent.${category}` as const))}
                 />
               ))}
             </ToolbarZone>

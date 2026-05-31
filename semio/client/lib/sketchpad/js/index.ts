@@ -58,7 +58,74 @@ import type { PlatformBreadcrumbItem, SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
 
 //#region 🪁SemioUiI18n
-import { registerUiTranslationBundles, setControlLabelIdResolver } from "@ui/react";
+import {
+	registerUiTranslationBundles,
+	setControlLabelIdResolver,
+	type UiLabelValue,
+	type UiLocale,
+	type UiToolbarParentCategory,
+} from "@ui/react";
+
+/** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiToolbarParentCategory}. */
+type SemioSketchpadToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
+
+const semioSketchpadToolbarParentDe: SemioSketchpadToolbarParentEntries = {
+	history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
+	hand: { label: { normal: "Hand", beginner: "Hand" } },
+	selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
+	lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+	filter: { label: { normal: "Filter", beginner: "Filter" } },
+	open: { label: { normal: "Öffnen", beginner: "Öffnen" } },
+	save: { label: { normal: "Speichern", beginner: "Speichern" } },
+	transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+	transform: { label: { normal: "Transformieren", beginner: "Transformieren" } },
+	create: { label: { normal: "Erstellen", beginner: "Erstellen" } },
+	view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
+	actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+	settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
+};
+
+const semioSketchpadToolbarParentEn: SemioSketchpadToolbarParentEntries = {
+	history: { label: { normal: "History", beginner: "History" } },
+	hand: { label: { normal: "Hand", beginner: "Hand" } },
+	selection: { label: { normal: "Selection", beginner: "Selection" } },
+	lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+	filter: { label: { normal: "Filter", beginner: "Filter" } },
+	open: { label: { normal: "Open", beginner: "Open" } },
+	save: { label: { normal: "Save", beginner: "Save" } },
+	transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+	transform: { label: { normal: "Transform", beginner: "Transform" } },
+	create: { label: { normal: "Create", beginner: "Create" } },
+	view: { label: { normal: "View", beginner: "View" } },
+	actions: { label: { normal: "Actions", beginner: "Actions" } },
+	settings: { label: { normal: "Settings", beginner: "Settings" } },
+};
+
+/** @emoji 🪁 Semio sketchpad i18n keys resolved from shell control ids. */
+export type SemioSketchpadControlTranslationKey =
+	| "semio.sketchpad.navbar.back"
+	| "semio.sketchpad.navbar.forward"
+	| "semio.sketchpad.navbar.up"
+	| "semio.sketchpad.navbar.search.open"
+	| `semio.sketchpad.navbar.panelToggle.${string}`
+	| `semio.sketchpad.toolbar.parent.${UiToolbarParentCategory}`;
+
+type SemioSketchpadTranslationTree = {
+	readonly semio: {
+		readonly sketchpad: {
+			readonly toolbar: {
+				readonly parent: SemioSketchpadToolbarParentEntries;
+			};
+		};
+	};
+};
+
+function applySemioSketchpadToolbarParentEntries(
+	bundles: Record<UiLocale, { translation: SemioSketchpadTranslationTree }>,
+): void {
+	bundles.de.translation.semio.sketchpad.toolbar.parent = semioSketchpadToolbarParentDe;
+	bundles.en.translation.semio.sketchpad.toolbar.parent = semioSketchpadToolbarParentEn;
+}
 
 const semioSketchpadTranslationBundles = {
   de: {
@@ -9993,17 +10060,7 @@ const semioSketchpadTranslationBundles = {
             }
           }
         },
-        "parent": {
-          "hand": "Hand",
-          "selection": "Selection",
-          "lasso": "Lasso",
-          "filter": "Filter",
-          "open": "Open",
-          "create": "Create",
-          "view": "View",
-          "actions": "Actions",
-          "settings": "Settings"
-        }
+        "parent": {}
       },
       "tutorial": {
         "controls": {
@@ -10055,9 +10112,12 @@ const semioSketchpadTranslationBundles = {
   },
 } as const;
 
+applySemioSketchpadToolbarParentEntries(
+	semioSketchpadTranslationBundles as Record<UiLocale, { translation: SemioSketchpadTranslationTree }>,
+);
 
 /** @emoji 🏷️ Maps generic `ui.*` shell control ids to semio sketchpad i18n keys. */
-export function sketchpadResolveControlLabelId(id: string): string {
+export function sketchpadResolveControlLabelId(id: string): SemioSketchpadControlTranslationKey | string {
 	if (id.startsWith("ui.nav.")) {
 		const segment = id.slice("ui.nav.".length);
 		if (segment === "back" || segment === "forward" || segment === "up") {

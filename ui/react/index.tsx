@@ -761,9 +761,189 @@ export function useControlInlineText(id: string | undefined, text?: string): str
 // Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
 // Product-specific bundles (e.g. semio sketchpad) register via {@link registerUiTranslationBundles}.
 
+/** @emoji 🪁 Supported UI locale codes. */
+export type UiLocale = "en" | "de";
+
+/** @emoji 🪁 Expertise-specific label pair. */
+export type UiLabelPair = { readonly normal: string; readonly beginner: string };
+
+/** @emoji 🪁 Translation leaf with optional manual, tutorial, and hotkey metadata. */
+export type UiLabelValue = {
+  readonly label: UiLabelPair;
+  readonly manual?: string;
+  readonly tutorial?: string;
+  readonly hotkey?: string;
+};
+
+/** @emoji 🪁 Toolbar parent category ids mirrored from {@link @framework/core AppToolCategory}. */
+export type UiToolbarParentCategory =
+  | "history"
+  | "hand"
+  | "selection"
+  | "lasso"
+  | "filter"
+  | "open"
+  | "save"
+  | "transfer"
+  | "transform"
+  | "create"
+  | "view"
+  | "actions"
+  | "settings";
+
+/** @emoji 🪁 i18n key for a toolbar parent category toggle. */
+export type UiToolbarParentKey = `ui.toolbar.parent.${UiToolbarParentCategory}`;
+
+type UiToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
+
+type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
+  ? Prefix extends ""
+    ? never
+    : Prefix
+  : T extends string
+    ? Prefix extends ""
+      ? never
+      : Prefix
+    : T extends number | boolean | null | undefined
+      ? never
+      : T extends readonly unknown[]
+        ? never
+        : {
+            [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
+          }[keyof T & string];
+
+/** @emoji 🪁 Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
+export type UiTranslationSchema = {
+  readonly ui: {
+    readonly nav: {
+      readonly back: UiLabelValue;
+      readonly forward: UiLabelValue;
+      readonly up: UiLabelValue;
+    };
+    readonly search: {
+      readonly toggle: UiLabelValue;
+      readonly close: UiLabelValue;
+    };
+    readonly panelToggle: {
+      readonly workbench: UiLabelValue;
+    };
+    readonly toolbar: {
+      readonly group: {
+        readonly parent: UiLabelValue;
+      };
+      readonly parent: UiToolbarParentEntries;
+    };
+    readonly common: {
+      readonly mixedValues: UiLabelValue;
+    };
+    readonly docs: {
+      readonly navigation: {
+        readonly previous: UiLabelValue;
+        readonly next: UiLabelValue;
+      };
+    };
+    readonly ring: {
+      readonly demo: UiLabelValue;
+    };
+    readonly stepper: {
+      readonly demo: UiLabelValue;
+    };
+  };
+  readonly settings: {
+    readonly layout: {
+      readonly normal: UiLabelValue;
+      readonly desktop: UiLabelValue;
+      readonly tablet: UiLabelValue;
+      readonly mobile: UiLabelValue;
+    };
+    readonly compact: UiLabelValue;
+    readonly mode: {
+      readonly dev: UiLabelValue;
+      readonly user: UiLabelValue;
+      readonly beginner: UiLabelValue;
+      readonly normal: UiLabelValue;
+    };
+    readonly expertise: {
+      readonly beginner: UiLabelValue;
+      readonly normal: UiLabelValue;
+      readonly expert: UiLabelValue;
+    };
+  };
+  readonly tooltip: {
+    readonly manual: UiLabelValue;
+    readonly tutorial: UiLabelValue;
+  };
+};
+
+/** @emoji 🪁 Dot-path union of keys in {@link UiTranslationSchema}. */
+export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
+
+/** @emoji 🪁 Compile-time check that every toolbar category has a chrome translation key. */
+export type AssertUiToolbarParentKeysCovered<Categories extends string> = {
+  readonly [K in Categories]: `ui.toolbar.parent.${K & UiToolbarParentCategory}` extends UiTranslationKey ? true : false;
+}[Categories] extends true
+  ? true
+  : false;
+
+/** @emoji 🪁 Typed translate function for domain-neutral chrome keys. */
+export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
+
+/** @emoji 🪁 Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
+export interface UiI18nPort {
+  readonly t: UiTranslateFn;
+  changeLanguage(locale: UiLocale): Promise<unknown>;
+  readonly language: string | undefined;
+  readonly resolvedLanguage: string | undefined;
+  readonly isInitialized: boolean;
+}
+
+declare module "i18next" {
+  interface CustomTypeOptions {
+    defaultNS: "translation";
+    resources: {
+      readonly en: { readonly translation: UiTranslationSchema };
+      readonly de: { readonly translation: UiTranslationSchema };
+    };
+  }
+}
+
+const uiToolbarParentDe: UiToolbarParentEntries = {
+  history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
+  hand: { label: { normal: "Hand", beginner: "Hand" } },
+  selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
+  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+  filter: { label: { normal: "Filter", beginner: "Filter" } },
+  open: { label: { normal: "Oeffnen", beginner: "Oeffnen" } },
+  save: { label: { normal: "Speichern", beginner: "Speichern" } },
+  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+  transform: { label: { normal: "Transformieren", beginner: "Transformieren" } },
+  create: { label: { normal: "Erstellen", beginner: "Erstellen" } },
+  view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
+  actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+  settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
+};
+
+const uiToolbarParentEn: UiToolbarParentEntries = {
+  history: { label: { normal: "History", beginner: "History" } },
+  hand: { label: { normal: "Hand", beginner: "Hand" } },
+  selection: { label: { normal: "Selection", beginner: "Selection" } },
+  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+  filter: { label: { normal: "Filter", beginner: "Filter" } },
+  open: { label: { normal: "Open", beginner: "Open" } },
+  save: { label: { normal: "Save", beginner: "Save" } },
+  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
+  transform: { label: { normal: "Transform", beginner: "Transform" } },
+  create: { label: { normal: "Create", beginner: "Create" } },
+  view: { label: { normal: "View", beginner: "View" } },
+  actions: { label: { normal: "Actions", beginner: "Actions" } },
+  settings: { label: { normal: "Settings", beginner: "Settings" } },
+};
+
+const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
+
 const uiChromeTranslationBundles = {
   de: {
-    translation: JSON.parse(String.raw`{
+    translation: {
   "ui": {
     "nav": {
       "back": {
@@ -807,58 +987,59 @@ const uiChromeTranslationBundles = {
         }
       }
     },
-    "toolbar": {
-      "group": {
-        "parent": {
-          "label": {
-            "normal": "Werkzeug",
-            "beginner": "Werkzeug"
-          }
-        }
-      }
-    },
-    "common": {
-      "mixedValues": {
-        "label": {
-          "normal": "Gemischt",
-          "beginner": "Gemischt"
-        }
-      }
-    },
-    "docs": {
-      "navigation": {
-        "previous": {
-          "label": {
-            "normal": "Zurueck",
-            "beginner": "Zurueck"
-          }
+    toolbar: {
+      group: {
+        parent: {
+          label: {
+            normal: "Werkzeug",
+            beginner: "Werkzeug",
+          },
         },
-        "next": {
-          "label": {
-            "normal": "Weiter",
-            "beginner": "Weiter"
-          }
-        }
-      }
+      },
+      parent: uiToolbarParentDe,
     },
-    "ring": {
-      "demo": {
-        "label": {
-          "normal": "Ring",
-          "beginner": "Ring"
-        }
-      }
+    common: {
+      mixedValues: {
+        label: {
+          normal: "Gemischt",
+          beginner: "Gemischt",
+        },
+      },
     },
-    "stepper": {
-      "demo": {
-        "label": {
-          "normal": "Wert",
-          "beginner": "Wert"
-        }
-      }
-    }
+    docs: {
+      navigation: {
+        previous: {
+          label: {
+            normal: "Zurueck",
+            beginner: "Zurueck",
+          },
+        },
+        next: {
+          label: {
+            normal: "Weiter",
+            beginner: "Weiter",
+          },
+        },
+      },
+    },
+    ring: {
+      demo: {
+        label: {
+          normal: "Ring",
+          beginner: "Ring",
+        },
+      },
+    },
+    stepper: {
+      demo: {
+        label: {
+          normal: "Wert",
+          beginner: "Wert",
+        },
+      },
+    },
   },
-  "settings": {
+  settings: {
     "layout": {
       "normal": {
         "label": {
@@ -945,17 +1126,17 @@ const uiChromeTranslationBundles = {
         "beginner": "Handbuch"
       }
     },
-    "tutorial": {
-      "label": {
-        "normal": "Tutorial",
-        "beginner": "Tutorial"
-      }
-    }
-  }
-}`),
+    tutorial: {
+      label: {
+        normal: "Tutorial",
+        beginner: "Tutorial",
+      },
+    },
+  },
+} satisfies UiTranslationSchema,
   },
   en: {
-    translation: JSON.parse(String.raw`{
+    translation: {
   "ui": {
     "nav": {
       "back": {
@@ -999,64 +1180,65 @@ const uiChromeTranslationBundles = {
         }
       }
     },
-    "toolbar": {
-      "group": {
-        "parent": {
-          "label": {
-            "normal": "Tool",
-            "beginner": "Tool"
-          }
-        }
-      }
-    },
-    "common": {
-      "mixedValues": {
-        "label": {
-          "normal": "Mixed",
-          "beginner": "Mixed"
-        }
-      }
-    },
-    "docs": {
-      "navigation": {
-        "previous": {
-          "label": {
-            "normal": "Previous",
-            "beginner": "Previous"
-          }
+    toolbar: {
+      group: {
+        parent: {
+          label: {
+            normal: "Tool",
+            beginner: "Tool",
+          },
         },
-        "next": {
-          "label": {
-            "normal": "Next",
-            "beginner": "Next"
-          }
-        }
-      }
+      },
+      parent: uiToolbarParentEn,
     },
-    "ring": {
-      "demo": {
-        "label": {
-          "normal": "Ring",
-          "beginner": "Ring"
-        }
-      }
+    common: {
+      mixedValues: {
+        label: {
+          normal: "Mixed",
+          beginner: "Mixed",
+        },
+      },
     },
-    "stepper": {
-      "demo": {
-        "label": {
-          "normal": "Value",
-          "beginner": "Value"
-        }
-      }
-    }
+    docs: {
+      navigation: {
+        previous: {
+          label: {
+            normal: "Previous",
+            beginner: "Previous",
+          },
+        },
+        next: {
+          label: {
+            normal: "Next",
+            beginner: "Next",
+          },
+        },
+      },
+    },
+    ring: {
+      demo: {
+        label: {
+          normal: "Ring",
+          beginner: "Ring",
+        },
+      },
+    },
+    stepper: {
+      demo: {
+        label: {
+          normal: "Value",
+          beginner: "Value",
+        },
+      },
+    },
   },
-  "settings": {
-    "layout": {
-      "normal": {
-        "label": {
-          "normal": "Normal layout",
-          "beginner": "Use the standard layout optimized for mouse and keyboard."
-        }
+  settings: {
+    layout: {
+      normal: {
+        label: {
+          normal: "Normal layout",
+          beginner: "Use the standard layout optimized for mouse and keyboard.",
+        },
       },
       "desktop": {
         "label": {
@@ -1137,22 +1319,21 @@ const uiChromeTranslationBundles = {
         "beginner": "Manual"
       }
     },
-    "tutorial": {
-      "label": {
-        "normal": "Tutorial",
-        "beginner": "Tutorial"
-      }
-    }
-  }
-}`),
+    tutorial: {
+      label: {
+        normal: "Tutorial",
+        beginner: "Tutorial",
+      },
+    },
   },
-} as const;
+} satisfies UiTranslationSchema,
+  },
+} satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
 
-
-export type UiTranslationLocaleCode = keyof typeof uiChromeTranslationBundles;
+export type UiTranslationLocaleCode = UiLocale;
 
 export type UiTranslationBundlesInput = {
-  readonly [L in UiTranslationLocaleCode]: { readonly translation: Record<string, unknown> };
+  readonly [L in UiLocale]: { readonly translation: Record<string, unknown> };
 };
 
 /** @emoji 🪁 Merges additional locale bundles into the shared UI i18n instance. */
@@ -1178,7 +1359,23 @@ function registerUiChromeTranslationBundles() {
   registerUiTranslationBundles(uiChromeTranslationBundles);
 }
 
-function initializeUiI18n() {
+function createUiI18nPort(instance: typeof i18next): UiI18nPort {
+  return {
+    t: ((key, options) => instance.t(key, options)) as UiTranslateFn,
+    changeLanguage: (locale) => instance.changeLanguage(locale),
+    get language() {
+      return instance.language;
+    },
+    get resolvedLanguage() {
+      return instance.resolvedLanguage;
+    },
+    get isInitialized() {
+      return instance.isInitialized;
+    },
+  };
+}
+
+function initializeUiI18n(): UiI18nPort {
   const requestedLocale = resolveRequestedUiLocale();
 
   if (i18next.isInitialized) {
@@ -1186,7 +1383,7 @@ function initializeUiI18n() {
     if (i18next.language !== requestedLocale) {
       void i18next.changeLanguage(requestedLocale);
     }
-    return i18next;
+    return createUiI18nPort(i18next);
   }
 
   i18next.use(LanguageDetector).use(initReactI18next);
@@ -1209,21 +1406,32 @@ function initializeUiI18n() {
     },
   });
 
-  return i18next;
+  return createUiI18nPort(i18next);
 }
 
-/** @emoji 🪁 Shared UI i18n instance (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
+/** @emoji 🪁 Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
 export const uiI18n = initializeUiI18n();
+
+/** @emoji 🪁 Sets the active UI locale on the shared i18n port. */
+export function setUiLocale(locale: UiLocale): Promise<unknown> {
+  return uiI18n.changeLanguage(locale);
+}
+
+/** @emoji 🪁 Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
+export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
+  const { t, i18n } = useTranslation();
+  return { t: t as UiTranslateFn, i18n };
+}
 
 // #endregion 🪁I18n Resources
 
 /**
  * React hook that resolves a localized label by i18n key and expertise level.
  **/
-export function useLabel(id: string): string | undefined {
-  const { t } = useTranslation();
+export function useLabel(id: UiTranslationKey | (string & {})): string | undefined {
+  const { t } = useUiTranslation();
   const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
-  const value = t(id as any) as any;
+  const value = t(id as UiTranslationKey);
 
   if (typeof value === "string") {
     return value;
@@ -1323,15 +1531,15 @@ export function resolveHotkeyValue(value: unknown): string | undefined {
 /**
  * React hook that resolves a localized hotkey by i18n key.
  **/
-export function useTranslatedHotkey(id: string): string | undefined {
-  const { t } = useTranslation();
-  const directHotkey = resolveHotkeyValue(t(id as any));
+export function useTranslatedHotkey(id: UiTranslationKey | (string & {})): string | undefined {
+  const { t } = useUiTranslation();
+  const directHotkey = resolveHotkeyValue(t(id as UiTranslationKey));
 
   if (directHotkey) {
     return directHotkey;
   }
 
-  return resolveHotkeyValue(t(`${id}.hotkey` as any));
+  return resolveHotkeyValue(t(`${id}.hotkey` as UiTranslationKey));
 }
 
 /**
@@ -15187,7 +15395,19 @@ export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, 
 // #endregion 🌈Routing
 
 // #region 🗿I18n
-export { i18next, initReactI18next, LanguageDetector, useTranslation };
+export { useTranslation };
+export type {
+  UiI18nPort,
+  UiLabelPair,
+  UiLabelValue,
+  UiLocale,
+  UiToolbarParentCategory,
+  UiToolbarParentKey,
+  UiTranslateFn,
+  UiTranslationKey,
+  UiTranslationSchema,
+  AssertUiToolbarParentKeysCovered,
+};
 // #endregion 🗿I18n
 
 // #region 🌙Hotkeys

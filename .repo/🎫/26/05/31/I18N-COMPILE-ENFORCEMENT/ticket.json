@@ -1,0 +1,9 @@
+{
+  "title": "I18n Compile Enforcement",
+  "emoji": "🪁",
+  "status": "open",
+  "description": "Wrap i18next behind a typed port; enforce translation keys, locale parity, and toolbar category coverage at compile time; add nx typecheck gates.",
+  "summary": "",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": []
+}
