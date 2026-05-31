@@ -1,0 +1,90 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "../../../../../temp/eg-ice-25/theme.css";
+
+:root {
+	cursor: auto;
+	--r-background-color: var(--color-dark);
+	--r-main-font: var(--font-sans);
+	--r-main-color: var(--color-light);
+	--r-heading-font: var(--font-sans);
+	--r-code-font: var(--font-mono);
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-primary);
+	--r-selection-background-color: var(--accent);
+	--r-selection-color: var(--color-light);
+}
+
+.reveal {
+	color: var(--color-light);
+	--r-background-color: var(--color-dark);
+	--r-main-font: var(--font-sans) !important;
+	--r-main-color: var(--color-light);
+	--r-heading-font: var(--font-sans) !important;
+	--r-code-font: var(--font-mono) !important;
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-primary);
+	--r-selection-background-color: var(--color-accent);
+	--r-selection-color: var(--color-primary);
+}
+
+.reveal-viewport {
+	background: var(--color-dark) !important;
+	background-color: var(--color-dark) !important;
+}
+
+.reveal ::selection {
+	color: var(--color-primary);
+	background: var(--color-accent);
+}
+
+.reveal ::-moz-selection {
+	color: var(--color-primary);
+	background: var(--color-accent);
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	color: var(--color-light);
+	font-family: var(--font-sans);
+}
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+
+.reveal a {
+	color: var(--color-primary);
+}
+
+.reveal a:hover {
+	color: var(--color-primary);
+}
+
+.reveal .controls {
+	color: var(--color-primary);
+}
+
+.reveal .progress {
+	background: rgba(0, 0, 0, 0.2);
+	color: var(--color-primary);
+}
+
+.reveal .progress span {
+	background: var(--color-primary);
+}
+
+.reveal .slides section {
+	text-align: left;
+}
+
+.reveal .slides {
+	text-align: left;
+}

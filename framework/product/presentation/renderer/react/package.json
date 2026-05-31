@@ -7,7 +7,8 @@
 	"private": true,
 	"exports": {
 		".": "./index.tsx",
-		"./globals.css": "./globals.css"
+		"./globals.css": "./globals.css",
+		"./eg-ice.css": "./eg-ice.css"
 	},
 	"dependencies": {
 		"@framework/core": "workspace:*",

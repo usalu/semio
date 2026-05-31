@@ -1,5 +1,3 @@
-@import "../../../ui/react/globals.css";
-@import "../../../framework/product/presentation/renderer/react/globals.css";
-@source "../../../ui/react";
+@import "../../../framework/product/presentation/renderer/react/eg-ice.css";
 @source "../../../framework/product/presentation/renderer/react";
 @source ".";

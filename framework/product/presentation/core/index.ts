@@ -300,8 +300,6 @@ export function intro(spec: IntroSpec): Presentation {
 		id: spec.id ?? "presentation",
 		name: spec.name ?? spec.brand,
 		sequences: [{ id: "main", thoughts: [thought] }],
-		width: 1280,
-		height: 720,
 	};
 }
 //#endregion 🔖Intro

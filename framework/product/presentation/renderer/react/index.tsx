@@ -5,7 +5,7 @@
 // #region 🔌Adapters
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
-import "./globals.css";
+import "reveal.js/dist/theme/black.css";
 import {
 	Expertise,
 	useElementsSurfaceChrome,
@@ -56,12 +56,18 @@ export {
 } from "@framework/presentation/core";
 
 //#region 🔖MountOptions
+/** @emoji 🎨 Visual preset: eg-ice-25 dark deck or @ui/react system chrome. */
+export type PresentationAppearance = "eg-ice" | "elements";
+
 /** @emoji ⚙️ Reveal.js and surface chrome options for {@link mountPresentation}. */
 export interface PresentationMountOptions {
+	readonly appearance?: PresentationAppearance;
 	readonly surfaceChrome?: ElementsSurfaceChromeInput;
 	readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
 	readonly hash?: boolean;
 	readonly slideNumber?: boolean;
+	readonly width?: number;
+	readonly height?: number;
 }
 //#endregion 🔖MountOptions
 
@@ -97,13 +103,13 @@ function TextEmbodimentView({
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
-	const muted = emphasisClass(emphasis);
+	const mutedClass = emphasisClass(emphasis);
 	const fit = embodiment.fit ? "r-fit-text" : undefined;
-	const headingClass = [fit, muted].filter(Boolean).join(" ") || undefined;
+	const lineClass = [fit, mutedClass].filter(Boolean).join(" ") || undefined;
 
 	if (embodiment.level === "title") {
 		return (
-			<h1 data-id={participantId} className={muted}>
+			<h1 data-id={participantId} className={mutedClass}>
 				{embodiment.lines[0]}
 			</h1>
 		);
@@ -111,9 +117,11 @@ function TextEmbodimentView({
 
 	if (embodiment.level === "body") {
 		return (
-			<div data-id={participantId} className={muted}>
+			<div data-id={participantId}>
 				{embodiment.lines.map((line) => (
-					<p key={line}>{line}</p>
+					<p key={line} className={mutedClass}>
+						{line}
+					</p>
 				))}
 			</div>
 		);
@@ -121,7 +129,7 @@ function TextEmbodimentView({
 
 	if (embodiment.lines.length === 1) {
 		return (
-			<h2 data-id={participantId} className={headingClass}>
+			<h2 data-id={participantId} className={lineClass}>
 				{embodiment.lines[0]}
 			</h2>
 		);
@@ -130,7 +138,7 @@ function TextEmbodimentView({
 	return (
 		<div data-id={participantId}>
 			{embodiment.lines.map((line) => (
-				<h2 key={line} className={headingClass}>
+				<h2 key={line} className={lineClass}>
 					{line}
 				</h2>
 			))}
@@ -252,8 +260,9 @@ const ArrangementSection: FC<{
 	readonly transition?: Transition;
 }> = ({ thought, arrangement, transition }) => {
 	const resolved = resolveArrangement(thought, arrangement.id);
+	const morph = arrangementUsesMorph(transition);
 	return (
-		<section data-auto-animate={arrangementUsesMorph(transition) ? true : undefined} title={arrangement.id}>
+		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
 			{resolved.map((placement) => (
 				<EmbodimentView key={`${arrangement.id}-${placement.participant.id}`} placement={placement} />
 			))}
@@ -271,22 +280,37 @@ export const PresentationDeck: FC<{
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
 
+	const appearance = options?.appearance ?? "elements";
+
 	useEffect(() => {
 		if (!deckDivRef.current || deckRef.current) {
 			return;
 		}
-		const deck = new Reveal(deckDivRef.current, {
+		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
-			hash: options?.hash ?? true,
-			slideNumber: options?.slideNumber ?? true,
-			width: presentation.width ?? 1280,
-			height: presentation.height ?? 720,
-			backgroundColor: "var(--base)",
-		});
+			autoAnimate: true,
+		};
+		if (appearance === "eg-ice") {
+			revealOptions.hash = options?.hash ?? false;
+			revealOptions.slideNumber = options?.slideNumber ?? false;
+		} else {
+			revealOptions.hash = options?.hash ?? true;
+			revealOptions.slideNumber = options?.slideNumber ?? true;
+			revealOptions.backgroundColor = "var(--base)";
+			if (options?.width ?? presentation.width) {
+				revealOptions.width = options?.width ?? presentation.width;
+			}
+			if (options?.height ?? presentation.height) {
+				revealOptions.height = options?.height ?? presentation.height;
+			}
+		}
+		const deck = new Reveal(deckDivRef.current, revealOptions);
 		deckRef.current = deck;
 		void deck.initialize().then(() => {
-			syncRevealBackgroundKind(deckDivRef.current);
-			deck.on("slidechanged", () => syncRevealBackgroundKind(deckDivRef.current));
+			if (appearance !== "eg-ice") {
+				syncRevealBackgroundKind(deckDivRef.current);
+				deck.on("slidechanged", () => syncRevealBackgroundKind(deckDivRef.current));
+			}
 		});
 		return () => {
 			try {
@@ -296,10 +320,22 @@ export const PresentationDeck: FC<{
 			}
 			deckRef.current = null;
 		};
-	}, [presentation.height, presentation.width, options?.hash, options?.slideNumber, options?.transition]);
+	}, [
+		appearance,
+		presentation.height,
+		presentation.width,
+		options?.hash,
+		options?.height,
+		options?.slideNumber,
+		options?.transition,
+		options?.width,
+	]);
+
+	const revealStyle =
+		appearance === "eg-ice" ? ({ width: "100vw", height: "100vh" } as const) : undefined;
 
 	return (
-		<div className="reveal h-full w-full" ref={deckDivRef}>
+		<div className={appearance === "eg-ice" ? "reveal" : "reveal h-full w-full"} ref={deckDivRef} style={revealStyle}>
 			<div className="slides">
 				{presentation.sequences.map((sequence) => (
 					<section key={sequence.id}>
@@ -322,7 +358,11 @@ export const PresentationDeck: FC<{
 //#endregion 🔖PresentationDeck
 
 //#region 🔖Shell
-const PresentationShell: FC<{
+const PresentationShellEgIce: FC<{ readonly children: ReactNode }> = ({ children }) => (
+	<div className="h-full w-full">{children}</div>
+);
+
+const PresentationShellElements: FC<{
 	readonly children: ReactNode;
 	readonly options?: PresentationMountOptions;
 }> = ({ children, options }) => {
@@ -342,6 +382,18 @@ const PresentationShell: FC<{
 	}, []);
 
 	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
+};
+
+const PresentationShell: FC<{
+	readonly children: ReactNode;
+	readonly options?: PresentationMountOptions;
+}> = ({ children, options }) => {
+	if ((options?.appearance ?? "elements") === "eg-ice") {
+		return <PresentationShellEgIce>{children}</PresentationShellEgIce>;
+	}
+	return (
+		<PresentationShellElements options={options}>{children}</PresentationShellElements>
+	);
 };
 //#endregion 🔖Shell
 
@@ -398,9 +450,10 @@ if (import.meta.vitest) {
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
-				mountPresentation(container, deck, { hash: false, slideNumber: false });
+				mountPresentation(container, deck, { appearance: "eg-ice", hash: false, slideNumber: false });
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
+			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
 			expect(sections.length).toBe(5);
 			expect(container.querySelector('[data-id="name"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="title"]')).toBeTruthy();
@@ -418,7 +471,7 @@ if (import.meta.vitest) {
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
-				mountPresentation(container, deck, { hash: false, slideNumber: false });
+				mountPresentation(container, deck, { appearance: "eg-ice", hash: false, slideNumber: false });
 			});
 			const titleSlide = container.querySelector('.slides > section > section[title="subtitle"]');
 			expect(titleSlide?.querySelector(".opacity-20")).toBeTruthy();

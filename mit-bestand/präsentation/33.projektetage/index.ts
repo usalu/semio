@@ -43,7 +43,7 @@ function mount(): void {
 	if (!el) {
 		return;
 	}
-	mountPresentation(el, deck, { hash: true, slideNumber: true, transition: "fade" });
+	mountPresentation(el, deck, { appearance: "eg-ice", transition: "fade" });
 }
 
 if (typeof document !== "undefined" && !import.meta.vitest) {
