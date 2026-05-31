@@ -4,22 +4,22 @@ overview: Add a "Brush" tool to puzzle 3d that previews and flushes a new, compa
 todos:
   - id: catalog
     content: Extend ObjectKind with explicit template fields (meshUrl/meshByLod/scale/vortices) and populate placeable kinds in the nakagin fixture JSON meta.kindCatalogs.objects
-    status: in_progress
+    status: completed
   - id: logic
     content: "Add pure brush logic to react index: brushCompatibleCandidates, computeBrushPlacementPose, boxesIntersect, applyBrushPlacementToFixture (in a 🖌️Brush region)"
-    status: pending
+    status: completed
   - id: canvas
     content: Add brushActive/onBrushPlace CanvasProps, BrushWindowBridge gesture (proximity/enter-leave, Tab cycle, right-click menu), BrushPreview ghost, and BrushContextMenu overlay; gate orbit/marquee
-    status: pending
+    status: completed
   - id: play
     content: Add activeTool state, setActiveTool + addBrushObject commands, snapshot field, and Select/Brush toolbar toggles in the play controller
-    status: pending
+    status: completed
   - id: host
     content: Wire brushActive and onBrushPlace from the playground renderer host into PlayCanvas
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing react + play vitest blocks to cover pose/compat/collision/fixture and the new play commands; verify runtime in the play app
-    status: pending
+    status: completed
 isProject: false
 ---
 

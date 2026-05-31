@@ -2300,6 +2300,11 @@ function negateVec3Cad(v: Vec3): Vec3 {
   return [-v[0], -v[1], -v[2]] as Vec3;
 }
 
+function rotateVecByCadQuat(q: Quat, v: Vec3): Vec3 {
+  const out = new Vector3(v[0], v[1], v[2]).applyQuaternion(quatToThree(q));
+  return [out.x, out.y, out.z] as Vec3;
+}
+
 /** @emoji 🧭 World CAD position and direction of an object-local vortex. */
 export function vortexWorldCadFromObject(record: Pick<ObjectRecord, "origin" | "orientation" | "vortices">, vortexIndex: number): { readonly position: Vec3; readonly direction: Vec3 } | null {
   const vortex = record.vortices[vortexIndex];
@@ -2307,8 +2312,8 @@ export function vortexWorldCadFromObject(record: Pick<ObjectRecord, "origin" | "
     return null;
   }
   const orientation = record.orientation ?? ([0, 0, 0, 1] as Quat);
-  const position = vec3Add(record.origin, quatRotateVec(orientation, vortex.position));
-  const direction = vortex.direction ? normalizeVec3Cad(quatRotateVec(orientation, vortex.direction)) : ([0, 0, -1] as Vec3);
+  const position = vec3Add(record.origin, rotateVecByCadQuat(orientation, vortex.position));
+  const direction = vortex.direction ? normalizeVec3Cad(rotateVecByCadQuat(orientation, vortex.direction)) : ([0, 0, -1] as Vec3);
   return { position, direction };
 }
 
@@ -2357,7 +2362,7 @@ export function computeBrushPlacementPose(args: {
   const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
   const orientation = threeQuatToCad(qThree);
   const scaledLocal = vec3ScaleCad(args.sourceLocalPosition, args.scale);
-  const rotated = quatRotateVec(orientation, scaledLocal);
+  const rotated = rotateVecByCadQuat(orientation, scaledLocal);
   const origin = vec3Sub(args.targetWorldPositionCad, rotated);
   return { origin, orientation };
 }
@@ -4715,7 +4720,6 @@ function BrushSession(props: {
     if (!preview || !props.onBrushPlace) {
       return;
     }
-    console.log("[DEBUG] brush commit", preview.targetVortexFullId, preview.objectKindId);
     props.onBrushPlace(brushPlacePayloadFromPreview(preview));
   }, [props.onBrushPlace]);
 
@@ -4773,7 +4777,6 @@ function BrushSession(props: {
       };
       candidatesRef.current = brushCompatibleCandidates(targetCtx, props.kindCatalogs, props.kindCompatibility);
       indexRef.current = 0;
-      console.log("[DEBUG] brush enter vortex", fullId, candidatesRef.current.length);
       applyCandidateIndex(fullId, 0);
     },
     [applyCandidateIndex, props.kindCatalogs, props.kindCompatibility, store],
@@ -4783,7 +4786,6 @@ function BrushSession(props: {
     if (!targetRef.current) {
       return;
     }
-    console.log("[DEBUG] brush leave vortex", targetRef.current);
     commitCurrentPreview();
     clearBrush();
   }, [clearBrush, commitCurrentPreview]);

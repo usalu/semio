@@ -3864,6 +3864,7 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection.clear();
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
             self.push_event("select", json!({ "ids": [], "exitHighlightIds": [] }));
         }
 
@@ -3950,6 +3951,7 @@ mod board_host {
                 self.selection_exit_highlight.clear();
                 self.selection = next;
                 self.sync_selection_flags_to_objects();
+                self.bump_content_scene_generation();
             }
             let mut payload = json!({ "ids": sorted, "exitHighlightIds": [] });
             if let Some(ref g) = gesture_owned {
@@ -3973,6 +3975,7 @@ mod board_host {
             self.preselect_removed = anchor_ids.difference(&self.preselect).cloned().collect();
             self.set_hovered_id_silent(None);
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
             let mut payload = json!({ "ids": sorted, "removedIds": removed });
             if let Some(ref g) = gesture_owned {
                 payload["gestureMergeMode"] = json!(g);
@@ -3999,6 +4002,7 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
             let mut payload = json!({ "ids": sorted, "anchorIds": anchor, "exitHighlightIds": [] });
             if let Some(ref g) = gesture_owned {
                 payload["gestureMergeMode"] = json!(g);
@@ -6179,6 +6183,7 @@ mod board_host {
                     self.last_preselect_emit_sig = None;
                     self.selection = initial_ids.clone();
                     self.sync_selection_flags_to_objects();
+                    self.bump_content_scene_generation();
                     self.last_select_emit_sig = None;
                     let sorted = Self::sorted_selection_ids(&self.selection);
                     self.push_event("preselectCancel", json!({ "ids": sorted }));
@@ -7516,6 +7521,18 @@ mod host_tests {
         h.set_world_raster_tiling("world-clip");
         let tiled = h.encoded_scene_hint();
         assert!(tiled >= monolithic);
+    }
+
+    #[test]
+    fn board_host_gestured_selection_invalidates_cached_world_content() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let gen_before = h.test_content_scene_generation();
+        let s = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_down_screen(s.x, s.y, 0, false, false);
+        assert!(h.test_content_scene_generation() > gen_before, "gestured click selection must rebuild cached nodes/handles");
+        assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected));
     }
 
     #[test]

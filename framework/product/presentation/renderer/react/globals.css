@@ -82,11 +82,14 @@
 
 /* #region 🔖IntroMorph */
 /**
- * Intro auto-animate: fixed heading scale and a bottom-anchored morph stack (flex spacer on top)
- * so reveal.js measures matching `data-id` nodes in place instead of flying from the deck origin.
+ * Intro auto-animate: fixed heading scale and a vertically centered morph stack; zero-height ghosts
+ * keep every `data-id` on every slide so reveal.js measures in place (not from the deck origin).
  */
 .reveal .slides section[data-auto-animate] {
-	display: block;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 	height: 100%;
 	box-sizing: border-box;
 }
@@ -95,15 +98,9 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	width: 100%;
-	min-height: 100%;
 	box-sizing: border-box;
-}
-
-.presentation-morph-stack__spacer {
-	flex: 1 1 auto;
-	width: 100%;
-	min-height: 0;
 }
 
 .presentation-morph-ghost {
@@ -121,6 +118,10 @@
 .reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
 	font-size: var(--r-intro-heading-size, var(--r-heading2-size));
 	line-height: var(--r-heading-line-height);
+}
+
+.reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
+	white-space: nowrap;
 }
 
 .reveal .slides section[data-auto-animate] [data-id="authors"] {

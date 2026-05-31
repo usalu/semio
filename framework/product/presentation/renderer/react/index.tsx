@@ -341,7 +341,6 @@ const IntroArrangementSection: FC<{
 	return (
 		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
 			<div className="presentation-morph-stack">
-				<div className="presentation-morph-stack__spacer" aria-hidden="true" />
 				{INTRO_MORPH_PARTICIPANT_IDS.map((morphId) => {
 					const placement = byMorphId.get(morphId);
 					if (placement) {
@@ -573,7 +572,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const titleSlide = container.querySelector('.slides > section > section[title="title"]');
-			expect(titleSlide?.querySelector(".presentation-morph-stack__spacer")).toBeTruthy();
+			expect(titleSlide?.querySelector(".presentation-morph-stack")).toBeTruthy();
 			expect(titleSlide?.querySelector('[data-id="description"].presentation-morph-ghost')).toBeTruthy();
 			expect(titleSlide?.querySelector('[data-id="goal"].presentation-morph-ghost')).toBeTruthy();
 		});

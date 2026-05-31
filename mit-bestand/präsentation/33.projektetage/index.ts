@@ -22,7 +22,7 @@ const deck = intro({
 		],
 		short: "Plattform zum Entwerfen mit wiederverwendete Bauteilen",
 	},
-	goal: ["Mehr Zeit zum manuellen Entwerfen dank Automatisierung!"],
+	goal: ["Mehr Zeit zum manuellen Entwerfen", "dank Automatisierung!"],
 	authors: [
 		{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
 		{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
