@@ -94,6 +94,41 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
+//#region 🔖MorphMatcher
+interface MorphPair {
+	readonly from: HTMLElement;
+	readonly to: HTMLElement;
+}
+
+interface MorphMatcherHost {
+	findAutoAnimateMatches(
+		pairs: MorphPair[],
+		fromScope: HTMLElement,
+		toScope: HTMLElement,
+		selector: string,
+		serializer: (node: HTMLElement) => string,
+	): void;
+}
+
+/**
+ * @emoji 🔗 reveal.js `autoAnimateMatcher`: morph strictly by participant `data-id` + shape (`nodeName`).
+ *
+ * Skips reveal's default text-content/media passes so embodiment-internal lines never match
+ * independently and fly; they ride inside their matched `[data-id]` container instead.
+ */
+function morphMatcher(this: MorphMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): MorphPair[] {
+	const pairs: MorphPair[] = [];
+	this.findAutoAnimateMatches(
+		pairs,
+		fromSlide,
+		toSlide,
+		"[data-id]",
+		(node) => `${node.nodeName}${node.getAttribute("data-id") ?? ""}`,
+	);
+	return pairs;
+}
+//#endregion 🔖MorphMatcher
+
 //#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
@@ -301,6 +336,7 @@ export const PresentationDeck: FC<{
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
+			autoAnimateMatcher: morphMatcher,
 		};
 		if (options?.hash === true) {
 			revealOptions.hash = true;
@@ -463,6 +499,27 @@ if (import.meta.vitest) {
 			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
 			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');
 			expect(marked?.textContent).toBe("1,a");
+		});
+
+		it("morphs only by participant data-id and never matches embodiment-internal lines", () => {
+			const calls: { selector: string; serialized: string[] }[] = [];
+			const host: MorphMatcherHost = {
+				findAutoAnimateMatches: (_pairs, fromScope, _toScope, selector, serializer) => {
+					calls.push({
+						selector,
+						serialized: [...fromScope.querySelectorAll<HTMLElement>(selector)].map(serializer),
+					});
+				},
+			};
+			const from = document.createElement("section");
+			from.innerHTML = '<h1 data-id="name">semio</h1>';
+			const to = document.createElement("section");
+			to.innerHTML =
+				'<h1 data-id="name">semio</h1><div data-id="subtitle"><h2>line a</h2><h2>line b</h2></div>';
+			morphMatcher.call(host, from, to);
+			expect(calls.length).toBe(1);
+			expect(calls[0]?.selector).toBe("[data-id]");
+			expect(calls[0]?.serialized).toEqual(["H1name"]);
 		});
 	});
 }

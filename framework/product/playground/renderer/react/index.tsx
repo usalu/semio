@@ -806,7 +806,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
       content: (
         <div className="flex items-stretch overflow-hidden border border-element h-medium">
           <Toggle
-            kind="icon"
             id="playground.panel.workbench"
             pressed={panelVisibility.leftSidePanel}
             onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed }))}
@@ -814,7 +813,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
             className="rounded-none border-0"
           />
           <Toggle
-            kind="icon"
             id="playground.panel.details"
             pressed={panelVisibility.rightSidePanel}
             onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed }))}

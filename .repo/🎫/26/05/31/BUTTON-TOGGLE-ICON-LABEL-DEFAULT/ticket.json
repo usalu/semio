@@ -1,11 +1,12 @@
 {
   "title": "Button Toggle Icon Label Default",
   "emoji": "🎛️",
-  "status": "closed",
+  "status": "open",
   "description": "ui: all buttons and toggles should by default show icon and label. The width is hence flexible. Unless global compact setting is enabled.",
   "summary": "Buttons and toggles now show icon plus inline label by default with flexible width (labels from explicit text or i18n id via useControlInlineText). Global compact mode (localStorage semio.ui.compact, footer settings.compact toggle, data-ui-compact on document) restores icon-only chrome. Platform navbar/panel toggles and UIToolbar items updated; shell ui.* ids map to semio.sketchpad navbar/toolbar keys.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪e5b4c5e04dba4f14882c81f0fe8a27a1"
+    "⚪e5b4c5e04dba4f14882c81f0fe8a27a1",
+    "⚪2c907991413b43bd81035ca090db84e4"
   ]
 }

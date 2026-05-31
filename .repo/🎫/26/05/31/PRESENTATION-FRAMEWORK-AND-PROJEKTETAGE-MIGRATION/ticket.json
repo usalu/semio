@@ -3,13 +3,15 @@
   "emoji": "📽",
   "status": "closed",
   "description": "Build @framework/presentation/core (declarative render-independent presentation model) + @framework/presentation/renderer/react (React+reveal.js). Migrate mit-bestand/präsentation/33.projektetage to eg-ice-25 intro (5 slides) with no direct react/reveal deps.",
-  "summary": "Fixed auto-animate: removed StrictMode/shell wrapper; eg-ice reveal init (transition fade, sync+layout once); data-auto-animate=\"\"; custom autoAnimateMatcher pairs [data-id] by morphId only so div↔h2 title morphs; imperative applyElementsSurfaceChrome. Removed section.present CSS override.",
+  "summary": "Root-caused 'everything flying around / reintroduced every slide' via live CDP probing of every auto-animate target + its FLIP from-transform on the running projektetage deck. Finding: reveal.js's DEFAULT autoAnimateMatcher runs a text-content pass (h1..li by nodeName:::textContent) in addition to the data-id pass. For embodiments rendered as a [data-id] container with multiple inner lines (e.g. div[data-id=subtitle] with three \u003ch2\u003e lines), the inner lines have no data-id and were matched INDEPENDENTLY by text across slides (targets 5/6/7) while their parent div[data-id] was also matched (target 4). reveal then transformed both parent and children, compounding transforms and flinging the inner lines sideways (from-transforms translate(-423px..)/translate(-698px..)) — i.e. every embodiment animated as if reintroduced. Fix: replaced reveal's default matcher with a focused morphMatcher (renderer/react) that does a SINGLE findAutoAnimateMatches pass over '[data-id]' keyed by nodeName+data-id, and nothing else. Now only participant data-id anchors morph; embodiment-internal lines ride inside their matched container; shape changes (div[title]-\u003eh2[title]) fade like eg-ice-25. Verified live across all intro transitions: brand-\u003etitle morphs name only; subtitle-\u003eauthors and authors-\u003einstitutions match exactly name/title/subtitle(/authors) with a uniform X=-168 + stepped vertical recenter and the new block fades in — no inner element flies. Added inline vitest asserting morphMatcher makes one '[data-id]' pass with nodeName+data-id serialization and never serializes inner lines. Tests green: renderer 4, core 6, @ui/react 81.",
   "goal": "🎯framework",
   "sessions": [
     "⚪d22c8b9bb3fd48a0b6050838b526c8d9",
     "⚪906f8d5bfcb5480aad26d0d8d5af142c",
     "⚪51d20f022e6c4db79dae33add70105c6",
     "⚪727816725a5b4900bd240b1c04e0cae5",
-    "⚪97c8ed2cc02e400fbeaa9e9cf6a40bd5"
+    "⚪97c8ed2cc02e400fbeaa9e9cf6a40bd5",
+    "⚪b79dfb27d84b40c5bdfe0d123f31f31a",
+    "⚪975094ab4f1945f182c704a3a4a6331b"
   ]
 }

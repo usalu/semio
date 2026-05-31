@@ -744,13 +744,32 @@ export function resolveControlLabelId(id: string): string {
   return _controlLabelIdResolver(id);
 }
 
+/** @emoji 🔤 Turns a control id segment into a short title (e.g. `panelToggle` → `Panel Toggle`). */
+export function humanizeControlSegment(segment: string): string {
+  const normalized = segment
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[._-]+/g, " ")
+    .trim();
+  if (!normalized) return segment;
+  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** @emoji 🔤 Human-readable caption from the last segment of a dotted control id. */
+export function humanizeControlId(id: string): string {
+  const segment = id.split(".").filter(Boolean).pop() ?? id;
+  return humanizeControlSegment(segment);
+}
+
 /** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
 export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
   const compact = useUiChromeCompact();
   if (compact) return undefined;
   if (text !== undefined) return text || undefined;
   if (!id) return undefined;
-  return useLabel(resolveControlLabelId(id));
+  const labelId = resolveControlLabelId(id);
+  const localized = useLabel(labelId);
+  if (localized && localized !== labelId) return localized;
+  return humanizeControlId(id);
 }
 // #endregion 🎛️UiChromeCompact
 
@@ -826,7 +845,12 @@ export type UiTranslationSchema = {
       readonly close: UiLabelValue;
     };
     readonly panelToggle: {
+      readonly windows: UiLabelValue;
+      readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
+      readonly details: UiLabelValue;
+      readonly settings: UiLabelValue;
+      readonly chat: UiLabelValue;
     };
     readonly toolbar: {
       readonly group: {
@@ -971,10 +995,40 @@ export const uiChromeTranslationBundles = {
       }
     },
     "panelToggle": {
+      "windows": {
+        "label": {
+          "normal": "Fenster",
+          "beginner": "Fenster"
+        }
+      },
+      "overview": {
+        "label": {
+          "normal": "Uebersicht",
+          "beginner": "Uebersicht"
+        }
+      },
       "workbench": {
         "label": {
           "normal": "Arbeitsbereich",
           "beginner": "Arbeitsbereich"
+        }
+      },
+      "details": {
+        "label": {
+          "normal": "Details",
+          "beginner": "Details"
+        }
+      },
+      "settings": {
+        "label": {
+          "normal": "Einstellungen",
+          "beginner": "Einstellungen"
+        }
+      },
+      "chat": {
+        "label": {
+          "normal": "Chat",
+          "beginner": "Chat"
         }
       }
     },
@@ -1164,10 +1218,40 @@ export const uiChromeTranslationBundles = {
       }
     },
     "panelToggle": {
+      "windows": {
+        "label": {
+          "normal": "Windows",
+          "beginner": "Windows"
+        }
+      },
+      "overview": {
+        "label": {
+          "normal": "Overview",
+          "beginner": "Overview"
+        }
+      },
       "workbench": {
         "label": {
           "normal": "Workbench",
           "beginner": "Workbench"
+        }
+      },
+      "details": {
+        "label": {
+          "normal": "Details",
+          "beginner": "Details"
+        }
+      },
+      "settings": {
+        "label": {
+          "normal": "Settings",
+          "beginner": "Settings"
+        }
+      },
+      "chat": {
+        "label": {
+          "normal": "Chat",
+          "beginner": "Chat"
         }
       }
     },
@@ -7103,6 +7187,7 @@ export interface TreeSectionAction {
   icon: React.ReactNode;
   onClick: () => void;
   title?: string;
+  text?: string;
   id?: string;
 }
 
@@ -7159,6 +7244,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
           }}
           id={action.id}
           icon={action.icon}
+          text={action.text ?? action.title}
         />
       ),
     )}
@@ -9190,8 +9276,18 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
       return <Stepper id={controlId} value={def.value} onChange={def.onChange} min={def.meta?.min} max={def.meta?.max} step={def.meta?.step ?? 1} />;
     case "slider":
       return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} />;
-    case "boolean":
-      return <Toggle id={controlId} pressed={def.value} onPressedChange={def.onChange} icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />} />;
+    case "boolean": {
+      const labelText = typeof def.meta?.label === "string" ? def.meta.label : def.key;
+      return (
+        <Toggle
+          id={controlId}
+          pressed={def.value}
+          onPressedChange={def.onChange}
+          icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />}
+          text={labelText}
+        />
+      );
+    }
     case "string":
       return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} />;
     case "color":
@@ -16299,6 +16395,37 @@ if (treeVitest) {
         </UiChromeCompactProvider>,
       );
       expect(markup).toContain("Search");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("humanizes unknown control ids when no i18n entry exists", () => {
+      expect(humanizeControlId("ui.panelToggle.details")).toBe("Details");
+      expect(humanizeControlSegment("puzzle2dGridSnap")).toBe("Puzzle2d Grid Snap");
+    });
+
+    it("renders panel toggle details with inline label when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Details");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("renders control-tree boolean toggles with inline labels when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          {defaultControlRenderer({
+            path: "folder/enabled",
+            key: "Enabled",
+            controlKind: "boolean",
+            value: true,
+            onChange: () => undefined,
+          })}
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Enabled");
       expect(markup).toContain("aspect-auto");
     });
   });

@@ -281,6 +281,8 @@ function createDOMEventBinding() {
 export interface UIWindowControl {
   kind: "toggle" | "dropdown";
   id: string;
+  label?: string;
+  text?: string;
   icon?: React.ReactNode;
   value?: string;
   options?: {
@@ -540,16 +542,16 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
     {controls.map((control) => {
       if (control.kind === "toggle") {
         return (
-          <ActionGroupItem key={control.id} id={control.id} onClick={() => control.onChange?.(control.value === "on" ? "off" : "on")}>
-            {control.icon}
-          </ActionGroupItem>
+          <ActionGroupItem
+            key={control.id}
+            id={control.id}
+            icon={control.icon}
+            text={control.text ?? control.label}
+            onClick={() => control.onChange?.(control.value === "on" ? "off" : "on")}
+          />
         );
       }
-      return (
-        <ActionGroupItem key={control.id} id={control.id}>
-          {control.icon}
-        </ActionGroupItem>
-      );
+      return <ActionGroupItem key={control.id} id={control.id} icon={control.icon} text={control.text ?? control.label} />;
     })}
   </ActionGroup>
 );
@@ -3629,6 +3631,9 @@ if (import.meta.vitest) {
 			expect(markup).toContain("Go back");
 			expect(markup).toContain("Search");
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
+			expect(markup).toContain("Workbench");
+			expect(markup).toContain('id="ui.panelToggle.details"');
+			expect(markup).toContain("Details");
 			expect(markup).toContain("Compact");
 		});
 
