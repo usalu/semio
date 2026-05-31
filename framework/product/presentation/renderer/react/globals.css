@@ -23,16 +23,54 @@
 
 .reveal {
 	font-family: var(--font-sans);
+	font-size: var(--r-main-font-size);
 }
 
+/* #region 🔖RevealTypography */
+/** Applies reveal heading scale (normally provided by a reveal theme) so layout matches eg-ice-25
+ *  and the @ui/react Tailwind preflight reset (which collapses headings to `inherit`) is overridden. */
 .reveal h1,
 .reveal h2,
 .reveal h3,
 .reveal h4,
-.reveal h5 {
-	font-family: var(--font-sans);
-	font-weight: 400;
+.reveal h5,
+.reveal h6 {
+	margin: var(--r-heading-margin);
+	color: var(--r-heading-color);
+	font-family: var(--r-heading-font);
+	font-weight: var(--r-heading-font-weight);
+	line-height: var(--r-heading-line-height);
+	letter-spacing: var(--r-heading-letter-spacing);
+	text-transform: var(--r-heading-text-transform);
+	word-wrap: break-word;
 }
+
+.reveal h1 {
+	font-size: var(--r-heading1-size);
+}
+
+.reveal h2 {
+	font-size: var(--r-heading2-size);
+}
+
+.reveal h3 {
+	font-size: var(--r-heading3-size);
+}
+
+.reveal h4 {
+	font-size: var(--r-heading4-size);
+}
+
+.reveal h5,
+.reveal h6 {
+	font-size: 1em;
+}
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+/* #endregion 🔖RevealTypography */
 
 .reveal a {
 	color: var(--color-primary);
