@@ -1,9 +1,9 @@
 {
   "title": "Toolbar Styling Consistency",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Unify toolbar styling (categories, items, actions) so height and spacing are consistent across all toolbar elements.",
-  "summary": "Unified toolbar height and control styling: ToolbarZone uses stretch layout and padding tokens; toolbar CSS normalizes group/item heights; UIToolbar uses one ToggleGroup for categories and batches tools into ButtonGroup/ToggleGroup; stories updated to match.",
+  "summary": "Added border-element border on ToolbarZone; introduced --toolbar-footer-offset (2× --spacing-double, matching Mode canvas inset) and toolbar-anchor slot for Layout/Ui; toolbar now sits twice the window offset above the footer.",
   "goal": "🎯ui",
   "sessions": [
     "⚪73f8d2a77adc4930b428e45d87da951b",

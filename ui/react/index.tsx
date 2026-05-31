@@ -2202,7 +2202,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
     )}
     {(footer || toolbar) && (
       <div className="flex-shrink-0 relative">
-        {toolbar && <div className="pointer-events-none absolute bottom-[calc(100%+var(--spacing-double))] left-0 right-0 z-panel flex justify-center">{toolbar}</div>}
+        {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
         {footer}
       </div>
     )}
@@ -10286,7 +10286,7 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
     <div
       data-slot="toolbar-zone"
       className={cn(
-        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden",
+        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border border-element",
         className,
       )}
       {...props}
@@ -14587,9 +14587,13 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
       {navbarItems.length > 0 ? <Navbar items={navbarItems} /> : null}
       <div data-slot="ui-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
-        {toolbar ? <div className="pointer-events-none absolute inset-x-0 bottom-large z-toolbar flex justify-center">{toolbar}</div> : null}
       </div>
-      {footer ? <div data-slot="ui-footer">{footer}</div> : null}
+      {(footer || toolbar) && (
+        <div data-slot="ui-footer" className="relative shrink-0">
+          {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
+          {footer}
+        </div>
+      )}
     </div>
   );
 };
