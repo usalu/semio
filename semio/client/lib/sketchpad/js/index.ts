@@ -44,6 +44,7 @@ import {
 	type WindowBodyViewContext,
 	getPlatformControllerById,
 	WindowKindRuntime,
+	AppRuntime,
 } from "@framework/platform/core";
 import type { PlatformBreadcrumbItem, SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
@@ -2256,7 +2257,7 @@ function sketchpadSyncTypeRepresentationComponents(platform: Platform, kitId: st
 		registerPlatformComponent(platform, component);
 		sketchpadRegisteredTypeRepSurfaces.add(surfaceId);
 		component.refresh();
-		getSketchpadShellController()?.syncTopologyForSurface(surfaceId, { kitId, designId: null, typeId, docsPath: "index", qualityId: null });
+		getSketchpadShellController()?.syncTopologyForSurface(surfaceId, { kitId, designId: null, typeId });
 	}
 }
 
@@ -2269,7 +2270,6 @@ export function sketchpadSyncTypeAppChrome(platform: Platform): void {
 		sketchpadUnregisterTypeRepresentationComponents(platform);
 		typeApp.windowKinds = [new WindowKindRuntime("type-empty", "Type", SKETCHPAD_BODY_TYPE_REP)];
 		typeApp.defaultLayout = createTabStackLayout(["type-empty"], ["Type"]);
-		platform.notify();
 		return;
 	}
 	const kit = getSketchpadShellController()?.getKitStore(route.kitId)?.getSnapshot().kit;
@@ -2287,7 +2287,6 @@ export function sketchpadSyncTypeAppChrome(platform: Platform): void {
 		);
 		typeApp.defaultLayout = createTabStackLayout(windowKindIds, labels);
 	}
-	platform.notify();
 }
 
 //#region 🔖SketchpadPlatformComponents
@@ -2930,6 +2929,8 @@ export class SketchpadShellController extends Controller {
 		if (!openKitIds.includes(kitId)) {
 			this.shellStore.set({ ...this.shellStore.get(), openKitIds: [...openKitIds, kitId] });
 		}
+		const platform = getSketchpadPlatform();
+		if (platform) sketchpadSyncTypeAppChrome(platform);
 		this.emit();
 	}
 
@@ -3423,8 +3424,8 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_TYPE_APP_ID,
 					label: "Type",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [{ id: "type-main", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE }],
-					defaultLayout: createTabStackLayout(["type-main"], ["Type"]),
+					windowKinds: [{ id: "type-empty", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE_REP }],
+					defaultLayout: createTabStackLayout(["type-empty"], ["Type"]),
 					panelTabs: sketchpadKitPanelTabs(),
 				},
 				{
@@ -3851,13 +3852,67 @@ if (import.meta.vitest) {
 		it("places one mesh object at the origin", () => {
 			const kit = {
 				id: "k",
-				types: [{ id: "t1", name: "Chair", representations: [{ file: { id: "f1" } }] }],
+				types: [{ id: "t1", name: "Chair", representations: [{ id: "r1", name: "chair", file: { id: "f1" } }] }],
 				files: [{ id: "f1", path: "files/chair.glb" }],
 			} as Kit;
 			const volume = sketchpadTypeVolumeFixtureFromType(kit.types![0]!, kit);
 			expect(volume.objects).toHaveLength(1);
-			expect(volume.objects[0]?.id).toBe("t1");
+			expect(volume.objects[0]?.id).toBe("r1");
 			expect(volume.objects[0]?.meshUrl).toContain("chair.glb");
+		});
+	});
+
+	describe("sketchpadKitFileUrlById", () => {
+		it("maps embedded file blobs to data URLs", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f1", name: "mesh.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
+		});
+	});
+
+	describe("sketchpadSyncTypeAppChrome", () => {
+		it("creates one window kind per representation", () => {
+			const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_TYPE_APP_ID });
+			const ctrl = new SketchpadShellController(new CommandBus(), () => platform.notify());
+			sketchpadShellControllerSingleton = ctrl;
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const kit = {
+				id: kitId,
+				types: [
+					{
+						id: typeId,
+						name: "Blob",
+						representations: [
+							{ id: "r1", name: "alpha", file: { id: "f1" } },
+							{ id: "r2", name: "beta", file: { id: "f2" } },
+						],
+					},
+				],
+				files: [
+					{ id: "f1", blob: "data:model/gltf-binary;base64,AAAA" },
+					{ id: "f2", blob: "data:model/gltf-binary;base64,BBBB" },
+				],
+			} as Kit;
+			platform.addApp(
+				new AppRuntime(
+					SKETCHPAD_TYPE_APP_ID,
+					"Type",
+					undefined,
+					ctrl,
+					createTabStackLayout(["type-empty"], ["Type"]),
+					[new WindowKindRuntime("type-empty", "Type", SKETCHPAD_BODY_TYPE_REP)],
+				),
+			);
+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			platform.uri = `/kits/${kitId}/types/${typeId}`;
+			sketchpadSyncTypeAppChrome(platform);
+			const typeApp = platform.apps.find((app) => app.id === SKETCHPAD_TYPE_APP_ID);
+			expect(typeApp?.windowKinds.map((wk) => wk.id)).toEqual(["rep-r1", "rep-r2"]);
+			expect(typeApp?.defaultLayout.root.kind).toBe("stack");
+			ctrl.dispose();
 		});
 	});
 
@@ -4335,6 +4390,17 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
 			await page.getByText("Nakagin Capsule Tower").click();
 			await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+		});
+
+		test("type route opens representation tab stack", async ({ page }) => {
+			await page.goto("/", { waitUntil: "networkidle" });
+			await openSketchpadCommandPalette(page);
+			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
+			await expect(page.getByText("Base")).toBeVisible({ timeout: 120_000 });
+			await page.getByText("Base").click();
+			await expect(page).toHaveURL(/\/types\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			await expect(page.getByText("base")).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByText("Mesh unavailable")).not.toBeVisible({ timeout: 5_000 });
 		});
 	});
 }

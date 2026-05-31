@@ -19883,6 +19883,7 @@ export interface EngagementProps extends EngagementSpec {
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
+  const [autocompleteSuppressed, setAutocompleteSuppressed] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
   const filteredPossibles = reactHostPort.useMemo(
@@ -19900,13 +19901,20 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
 
   reactHostPort.useEffect(() => {
     setPossiblesExpanded(false);
+    setAutocompleteSuppressed(false);
   }, [possibleEngagements]);
+
+  reactHostPort.useEffect(() => {
+    setAutocompleteSuppressed(false);
+  }, [draft]);
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
-  const showAutocomplete = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
+  const autocompleteFromTyping = draft.trim().length > 0;
+  const showAutocomplete =
+    hasPossibles && filteredPossibles.length > 0 && !autocompleteSuppressed && (possiblesExpanded || autocompleteFromTyping);
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -19921,6 +19929,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
       item.onSelect?.();
       applyDraft("");
       setPossiblesExpanded(false);
+      setAutocompleteSuppressed(false);
       setActivePossibleIndex(0);
     },
     [applyDraft],
@@ -19947,7 +19956,10 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         <Popover
           open={showAutocomplete}
           onOpenChange={(open) => {
-            if (!open) setPossiblesExpanded(false);
+            if (!open) {
+              setPossiblesExpanded(false);
+              setAutocompleteSuppressed(true);
+            }
           }}
         >
           <PopoverAnchor asChild>
@@ -19960,30 +19972,32 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                 onChange={(event) => applyDraft(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
-                    if (possiblesExpanded) {
+                    if (showAutocomplete) {
+                      event.preventDefault();
                       setPossiblesExpanded(false);
+                      setAutocompleteSuppressed(true);
                       return;
                     }
                     return;
                   }
-                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && possiblesExpanded && hasPossibles) {
+                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && showAutocomplete && hasPossibles) {
                     event.preventDefault();
                     activatePossible();
                     return;
                   }
-                  if (event.key === "ArrowDown" && possiblesExpanded && filteredPossibles.length) {
+                  if (event.key === "ArrowDown" && showAutocomplete && filteredPossibles.length) {
                     event.preventDefault();
                     setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
                     return;
                   }
-                  if (event.key === "ArrowUp" && possiblesExpanded && filteredPossibles.length) {
+                  if (event.key === "ArrowUp" && showAutocomplete && filteredPossibles.length) {
                     event.preventDefault();
                     setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
                     return;
                   }
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    if (possiblesExpanded && activatePossible()) return;
+                    if (showAutocomplete && activatePossible()) return;
                     input!.onSubmit?.(draft);
                   }
                 }}
@@ -24019,7 +24033,7 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("Engagement hides possibles until chevron opens and activates on Space or Enter", async () => {
+    it("Engagement shows possibles while typing and activates on Space or Enter", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
@@ -24035,7 +24049,6 @@ if (import.meta.vitest) {
       );
       const field = screen.getByPlaceholderText("Type an interaction");
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       fireEvent.change(field, { target: { value: "sph" } });
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
       expect(screen.getByText("Sphere")).toBeTruthy();

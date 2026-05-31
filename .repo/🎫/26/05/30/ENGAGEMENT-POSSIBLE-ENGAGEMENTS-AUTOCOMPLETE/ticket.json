@@ -3,9 +3,10 @@
   "emoji": "💬",
   "status": "closed",
   "description": "Extend EngagementSpec with possibleEngagements list and render autocomplete in Engagement UI when Space or Enter are pressed. Wire CAD play idle interaction repl to expose all interactions as possibleEngagements.",
-  "summary": "Extended EngagementSpec with possibleEngagements and autocomplete UI (Space opens filtered list, Enter selects when open). InteractionRepl idle/active sessions populate possible engagements from interactions/transitions. Playground WindowEngagement and cad play mirror route engagementPossibleSelect commands.",
+  "summary": "Engagement autocomplete popover now opens while typing when filtered possibles exist, not only after expanding the chevron. Escape and popover dismiss suppress the list until the draft changes; keyboard navigation and Space/Enter selection use showAutocomplete.",
   "goal": "🎯ui",
   "sessions": [
-    "⚪eac2b0e1e50043ef9a08d74717cd32a7"
+    "⚪eac2b0e1e50043ef9a08d74717cd32a7",
+    "⚪eada16544c8f4f2280ff9ae7f6e79a5d"
   ]
 }

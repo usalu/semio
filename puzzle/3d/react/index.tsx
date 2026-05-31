@@ -2961,6 +2961,37 @@ function pickNearestScreenVortex(args: {
   return null;
 }
 
+/** @emoji 🌀 Projects vortices near the cursor and picks the nearest unoccluded one via {@link SceneDepthSampler}. */
+function screenPickVortexAt(args: {
+  readonly dom: HTMLElement;
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly projected: Vector3;
+  readonly collectVortexTargets: () => readonly VortexScreenTarget[];
+  readonly blockedVortexFullIds: ReadonlySet<string>;
+  readonly camera: Camera;
+  readonly sceneDepth: SceneDepthSampler;
+}): ScreenVortexCandidate | null {
+  const rect = args.dom.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return null;
+  const cursorX = args.clientX - rect.left;
+  const cursorY = args.clientY - rect.top;
+  const camPos = (args.camera as unknown as { position: Vector3 }).position;
+  const candidates: ScreenVortexCandidate[] = [];
+  for (const target of args.collectVortexTargets()) {
+    if (args.blockedVortexFullIds.has(target.fullId)) continue;
+    args.projected.copy(target.world).project(args.camera as never);
+    if (args.projected.z > 1) continue;
+    const sx = ((args.projected.x + 1) / 2) * rect.width;
+    const sy = ((1 - args.projected.y) / 2) * rect.height;
+    if (Math.hypot(sx - cursorX, sy - cursorY) > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
+    candidates.push({ fullId: target.fullId, objectId: target.objectId, sx, sy, dist: camPos.distanceTo(target.world) });
+  }
+  if (candidates.length === 0) return null;
+  const surfaceDist = args.sceneDepth.sampleDepthDistance(args.clientX, args.clientY) ?? Infinity;
+  return pickNearestScreenVortex({ cursorX, cursorY, surfaceDist, candidates });
+}
+
 /**
  * 🌀 Centralized screen-space hover/selection for vortices.
  *
@@ -3005,28 +3036,6 @@ function VortexScreenPick(): null {
     const dom = gl.domElement;
     const projected = new Vector3();
 
-    const pickAt = (clientX: number, clientY: number): ScreenVortexCandidate | null => {
-      const st = stateRef.current;
-      const rect = dom.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return null;
-      const cursorX = clientX - rect.left;
-      const cursorY = clientY - rect.top;
-      const camPos = (st.camera as unknown as { position: Vector3 }).position;
-      const candidates: ScreenVortexCandidate[] = [];
-      for (const target of st.collectVortexTargets()) {
-        if (st.blockedVortexFullIds.has(target.fullId)) continue;
-        projected.copy(target.world).project(st.camera as never);
-        if (projected.z > 1) continue;
-        const sx = ((projected.x + 1) / 2) * rect.width;
-        const sy = ((1 - projected.y) / 2) * rect.height;
-        if (Math.hypot(sx - cursorX, sy - cursorY) > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
-        candidates.push({ fullId: target.fullId, objectId: target.objectId, sx, sy, dist: camPos.distanceTo(target.world) });
-      }
-      if (candidates.length === 0) return null;
-      const surfaceDist = st.sceneDepth.sampleDepthDistance(clientX, clientY) ?? Infinity;
-      return pickNearestScreenVortex({ cursorX, cursorY, surfaceDist, candidates });
-    };
-
     const onPointerMove = (e: PointerEvent) => {
       pendingPickRef.current = { x: e.clientX, y: e.clientY };
       stateRef.current.invalidate();
@@ -3048,7 +3057,16 @@ function VortexScreenPick(): null {
     const onClickCapture = (e: MouseEvent) => {
       if (e.button !== 0) return;
       const st = stateRef.current;
-      const hit = pickAt(e.clientX, e.clientY);
+      const hit = screenPickVortexAt({
+        dom,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        projected,
+        collectVortexTargets: st.collectVortexTargets,
+        blockedVortexFullIds: st.blockedVortexFullIds,
+        camera: st.camera,
+        sceneDepth: st.sceneDepth,
+      });
       if (!hit) return;
       e.stopImmediatePropagation();
       e.preventDefault();
@@ -3071,32 +3089,24 @@ function VortexScreenPick(): null {
     };
   }, [gl, sceneDepth]);
 
+  const projectedRef = reactHostPort.useRef(new Vector3());
+
   useFrame(() => {
     if (buttonsDownRef.current) return;
     const pending = pendingPickRef.current;
     if (!pending) return;
     pendingPickRef.current = null;
-    const dom = gl.domElement;
-    const rect = dom.getBoundingClientRect();
-    if (pending.x < rect.left || pending.x > rect.right || pending.y < rect.top || pending.y > rect.bottom) return;
     const st = stateRef.current;
-    const projected = new Vector3();
-    const cursorX = pending.x - rect.left;
-    const cursorY = pending.y - rect.top;
-    const camPos = (st.camera as unknown as { position: Vector3 }).position;
-    const candidates: ScreenVortexCandidate[] = [];
-    for (const target of st.collectVortexTargets()) {
-      if (st.blockedVortexFullIds.has(target.fullId)) continue;
-      projected.copy(target.world).project(st.camera as never);
-      if (projected.z > 1) continue;
-      const sx = ((projected.x + 1) / 2) * rect.width;
-      const sy = ((1 - projected.y) / 2) * rect.height;
-      if (Math.hypot(sx - cursorX, sy - cursorY) > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
-      candidates.push({ fullId: target.fullId, objectId: target.objectId, sx, sy, dist: camPos.distanceTo(target.world) });
-    }
-    if (candidates.length === 0) return;
-    const surfaceDist = st.sceneDepth.sampleDepthDistance(pending.x, pending.y) ?? Infinity;
-    const hit = pickNearestScreenVortex({ cursorX, cursorY, surfaceDist, candidates });
+    const hit = screenPickVortexAt({
+      dom: gl.domElement,
+      clientX: pending.x,
+      clientY: pending.y,
+      projected: projectedRef.current,
+      collectVortexTargets: st.collectVortexTargets,
+      blockedVortexFullIds: st.blockedVortexFullIds,
+      camera: st.camera,
+      sceneDepth: st.sceneDepth,
+    });
     if (hit) {
       st.setHover({ kind: "vortex", fullId: hit.fullId });
       st.invalidate();
@@ -5288,6 +5298,20 @@ if (import.meta.vitest) {
     it("draws vortices at detail bands", () => {
       expect(lodVortexPrimaryVisible(100)).toBe(true);
       expect(lodVortexPrimaryVisible(201)).toBe(false);
+    });
+  });
+  describe("unpackRGBAToDepth01", () => {
+    it("returns 0 for cleared depth (all zero bytes)", () => {
+      expect(unpackRGBAToDepth01(new Uint8Array([0, 0, 0, 0]))).toBe(0);
+    });
+    it("returns ~1 for saturated depth bytes", () => {
+      expect(unpackRGBAToDepth01(new Uint8Array([255, 255, 255, 255]))).toBeCloseTo(1, 2);
+    });
+  });
+  describe("depth01ToEyeDistance", () => {
+    it("maps near-plane depth to ~near and far-plane depth to ~far", () => {
+      expect(depth01ToEyeDistance(0, 0.1, 1000)).toBeCloseTo(0.1, 3);
+      expect(depth01ToEyeDistance(1, 0.1, 1000)).toBeGreaterThan(500);
     });
   });
   describe("pickNearestScreenVortex", () => {
