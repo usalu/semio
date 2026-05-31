@@ -7308,6 +7308,8 @@ export interface TreeDataItem {
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
   draggable?: boolean;
+  /** @emoji 📤 Extra `dataTransfer` MIME entries merged on drag start (in-app palette drags). */
+  dragData?: Record<string, string>;
   onClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onPointerEnter?: () => void;
@@ -8795,10 +8797,13 @@ export const Tree = (({
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
-      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });
+      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section }) ?? item.dragData;
       Object.entries(customData ?? {}).forEach(([kind, value]) => {
         event.dataTransfer.setData(kind, value);
       });
+      if (customData && Object.keys(customData).length > 0) {
+        event.dataTransfer.effectAllowed = "copy";
+      }
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
     [dragAndDropController, itemMap, resolvedSelectedIds],

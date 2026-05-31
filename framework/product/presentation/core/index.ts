@@ -406,7 +406,6 @@ export function intro(spec: IntroSpec): Presentation {
 				placements: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
-					muted(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
 				],
 			},
@@ -415,7 +414,6 @@ export function intro(spec: IntroSpec): Presentation {
 				placements: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
-					muted(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
 				],
 			},
@@ -488,21 +486,20 @@ if (import.meta.vitest) {
 			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
 
-		it("layers affiliation steps on the final affiliations slide", () => {
+		it("shows one institutions block per affiliations slide (chairs extend marks 1 and 2)", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			const resolved = resolveArrangement(thought, "affiliations-3");
-			expect(resolved.map((r) => r.participant.id)).toEqual([
-				INTRO_PARTICIPANT_TITLE,
-				INTRO_PARTICIPANT_DESCRIPTION,
-				INTRO_PARTICIPANT_GOAL,
-				INTRO_PARTICIPANT_AUTHORS,
-				INTRO_PARTICIPANT_INSTITUTIONS,
-				INTRO_PARTICIPANT_INSTITUTIONS,
-			]);
-			expect(resolved[4]!.emphasis).toBe("muted");
-			expect(resolved[5]!.emphasis).toBe("active");
-			if (resolved[5]!.embodiment.kind === "affiliations") {
-				expect(resolved[5]!.embodiment.id).toBe(INTRO_EMBODIMENT_INSTITUTIONS_STEP3);
+			for (const arrangementId of ["affiliations-1", "affiliations-2", "affiliations-3"] as const) {
+				const resolved = resolveArrangement(thought, arrangementId);
+				const institutions = resolved.filter((r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS);
+				expect(institutions).toHaveLength(1);
+				expect(institutions[0]!.emphasis).toBe("active");
+			}
+			const step3 = resolveArrangement(thought, "affiliations-3").find(
+				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			)!;
+			if (step3.embodiment.kind === "affiliations") {
+				expect(step3.embodiment.id).toBe(INTRO_EMBODIMENT_INSTITUTIONS_STEP3);
+				expect(step3.embodiment.entries[0]?.suffix?.mark).toBe("x");
 			}
 		});
 	});

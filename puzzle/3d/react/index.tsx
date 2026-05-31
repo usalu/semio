@@ -591,6 +591,10 @@ export interface CanvasProps {
   brushActive?: boolean;
   /** @emoji 🖌️ Commits a brush placement (new object + attraction). */
   onBrushPlace?: (payload: BrushPlacePayload) => void;
+  /** @emoji 📥 When true, accepts in-app fixture drags using {@link FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+  fixtureDragDrop?: boolean;
+  /** @emoji 📥 Palette / shelf fixture dropped on the canvas at the grid-plane intersection. */
+  onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
   /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
   attractionSession?: AttractionSessionSnapshot | null;
   /** @emoji 🖱️ Marquee tool shape (rectangle default, lasso optional). */
@@ -601,6 +605,19 @@ export interface CanvasProps {
 }
 
 export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture+json;v=1";
+
+/** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
+export const FIXTURE_DRAG_PLAIN_MIME = "text/plain";
+
+/** @emoji 🧩 `FixtureV1.meta.puzzle3dFixtureDragKind` — workbench palette drops place one object at the pointer. */
+export const FIXTURE_DRAG_KIND_PALETTE_OBJECT = "palette-object";
+
+/** @emoji 📍 Puzzle 3D canvas fixture drop: scene plus pointer in CSS space and CAD world on the grid plane. */
+export interface Puzzle3dFixtureDropDetail {
+  readonly fixture: FixtureV1;
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly worldCad: Vec3;
+}
 
 export interface FixtureObjectV1 extends ObjectProps {
   vortices: VortexProps[];
@@ -1073,7 +1090,151 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 export function encodeFixtureForDragV1(fixture: FixtureV1): string {
   return JSON.stringify(fixture);
 }
-//#endregion ­ƒº¥Fixture
+
+/** @emoji 📤 Writes puzzle 3D fixture drag payload (custom MIME + `text/plain` fallback). */
+export function setPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: FixtureV1): void {
+  const encoded = encodeFixtureForDragV1(fixture);
+  dataTransfer.setData(FIXTURE_DRAG_V1_MIME, encoded);
+  dataTransfer.setData(FIXTURE_DRAG_PLAIN_MIME, encoded);
+}
+
+/** @emoji 📥 Reads puzzle 3D fixture drag payload from a drop `DataTransfer`. */
+export function readPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer): FixtureV1 | null {
+  const custom = dataTransfer.getData(FIXTURE_DRAG_V1_MIME);
+  if (custom.trim() !== "") {
+    const parsed = decodePuzzle3dFixtureFromDragV1(custom);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  const plain = dataTransfer.getData(FIXTURE_DRAG_PLAIN_MIME);
+  if (plain.trim() === "") {
+    return null;
+  }
+  return decodePuzzle3dFixtureFromDragV1(plain);
+}
+
+/** @emoji 📥 Parses drag payload from {@link FIXTURE_DRAG_V1_MIME}. */
+export function decodePuzzle3dFixtureFromDragV1(text: string): FixtureV1 | null {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+  return parseFixtureV1(raw);
+}
+
+/** @emoji 🧩 Minimal fixture encoding one object kind for workbench palette drags. */
+export function buildPaletteObjectDragFixture(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): FixtureV1 {
+  return {
+    schema: "puzzle.3d.fixture/v1",
+    camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
+    domain,
+    meta: { puzzle3dFixtureDragKind: FIXTURE_DRAG_KIND_PALETTE_OBJECT },
+    attractions: [],
+    objects: [{ id: "palette-seed-object", objectKind: objectKindId, meshUrl: "puzzle3d://palette-seed", origin: [0, 0, 0], vortices: [] }],
+  };
+}
+
+/** @emoji 📤 `dataTransfer` map for dragging one object kind from the workbench kinds tree. */
+export function puzzle3dPlayObjectKindDragData(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): Record<string, string> {
+  const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture(objectKindId, domain));
+  return { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded };
+}
+
+/** @emoji 🧩 True when the drag payload is a palette object kind seed. */
+export function isPaletteObjectDragFixture(fixture: FixtureV1): boolean {
+  if (fixture.meta?.puzzle3dFixtureDragKind === FIXTURE_DRAG_KIND_PALETTE_OBJECT) {
+    return true;
+  }
+  return fixture.objects.length === 1 && fixture.attractions.length === 0 && fixture.objects[0]!.id.startsWith("palette-seed-");
+}
+
+/** @emoji 🧲 Snaps a CAD point to the finest visible LOD grid step when `step` is positive. */
+export function snapCadVec3ToGridStep(position: Vec3, step: number | null | undefined): Vec3 {
+  if (step == null || !Number.isFinite(step) || step <= 0) {
+    return position;
+  }
+  const snapAxis = (value: number) => Math.round(value / step) * step;
+  return [snapAxis(position[0]), snapAxis(position[1]), snapAxis(position[2])];
+}
+
+/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal grid (Three Y-up plane). */
+export function puzzle3dClientToGridPlaneCad(args: {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly camera: Camera;
+  readonly canvas: HTMLElement;
+  readonly gridSnapEnabled?: boolean;
+  readonly gridStepWorld?: number | null;
+}): Vec3 {
+  const rect = args.canvas.getBoundingClientRect();
+  const ndc = new Vector2(((args.clientX - rect.left) / rect.width) * 2 - 1, -((args.clientY - rect.top) / rect.height) * 2 + 1);
+  const raycaster = new Raycaster();
+  raycaster.setFromCamera(ndc, args.camera);
+  const plane = new Plane(new Vector3(0, 1, 0), 0);
+  const hit = new Vector3();
+  if (!raycaster.ray.intersectPlane(plane, hit)) {
+    raycaster.ray.at(80, hit);
+  }
+  const cad = threeVec3ToCad(hit);
+  return snapCadVec3ToGridStep(cad, args.gridSnapEnabled ? args.gridStepWorld : null);
+}
+
+/** @emoji 🧲 Live bridge from {@link Canvas3D} DOM drops to the active R3F camera and LOD grid snap. */
+export const puzzle3dFixtureDropPointerToCadRef: {
+  current: ((clientX: number, clientY: number) => Vec3 | null) | null;
+} = { current: null };
+
+function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: string): ObjectKind | undefined {
+  return catalogs?.objects?.find((entry) => entry.id === kindId);
+}
+
+function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3): FixtureObjectV1 {
+  const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
+    id: `${objectId}:v${index}`,
+    vortexKind: entry.vortexKind,
+    label: entry.vortexKind,
+    position: entry.position,
+    ...(entry.direction ? { direction: entry.direction } : {}),
+    ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
+  }));
+  return {
+    id: objectId,
+    objectKind: kind.id,
+    meshUrl: kind.meshUrl!,
+    ...(kind.meshByLod ? { meshByLod: kind.meshByLod } : {}),
+    label: kind.label ?? kind.name ?? kind.id,
+    origin,
+    orientation: [0, 0, 0, 1],
+    ...(kind.scale !== undefined ? { scale: kind.scale } : {}),
+    vortices,
+  };
+}
+
+/** @emoji 🧩 When the drag payload is a palette object kind, returns one object at the drop CAD point. */
+export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined): FixtureObjectV1 | null {
+  if (!isPaletteObjectDragFixture(detail.fixture)) {
+    return null;
+  }
+  const kindId = detail.fixture.objects[0]?.objectKind?.trim();
+  if (!kindId) {
+    return null;
+  }
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  if (!kind?.meshUrl) {
+    return null;
+  }
+  const objectId = `puzzle3d.drop.${crypto.randomUUID()}`;
+  return buildFixtureObjectFromObjectKind(kind, objectId, detail.worldCad);
+}
+
+/** @emoji 📥 Appends a palette-dropped object kind at a CAD origin. */
+export function applyPaletteObjectDropToFixture(fixture: FixtureV1, object: FixtureObjectV1): FixtureV1 {
+  return { ...fixture, objects: [...fixture.objects, object] };
+}
+//#endregion ­ƒº¾Fixture
 
 //#region ­ƒò©´©ÅAttractionGraph
 /** @emoji ­ƒöù Parsed `objectId:vortexId` attraction endpoint. */
@@ -2370,10 +2531,6 @@ export function computeBrushPlacementPose(args: {
 /** @emoji 📦 True when two axis-aligned boxes overlap (with epsilon). */
 export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
   return a.min.x <= b.max.x + epsilon && a.max.x + epsilon >= b.min.x && a.min.y <= b.max.y + epsilon && a.max.y + epsilon >= b.min.y && a.min.z <= b.max.z + epsilon && a.max.z + epsilon >= b.min.z;
-}
-
-function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: string): ObjectKind | undefined {
-  return catalogs?.objects?.find((entry) => entry.id === kindId);
 }
 
 function brushPreviewFromCandidate(args: {
@@ -6057,8 +6214,29 @@ function DemandFrameloopKick(): null {
   return null;
 }
 
+/** @emoji 📍 Registers {@link puzzle3dFixtureDropPointerToCadRef} for DOM fixture drops on {@link Canvas3D}. */
+function FixtureDropPointerBridge(): null {
+  const { camera, gl } = useThree();
+  const lod = useLod();
+  reactHostPort.useEffect(() => {
+    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) =>
+      puzzle3dClientToGridPlaneCad({
+        clientX,
+        clientY,
+        camera,
+        canvas: gl.domElement,
+        gridSnapEnabled: lod.gridSnapEnabled,
+        gridStepWorld: lod.gridStepWorld,
+      });
+    return () => {
+      puzzle3dFixtureDropPointerToCadRef.current = null;
+    };
+  }, [camera, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+  return null;
+}
+
 function Inner(props: CanvasProps) {
-  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility } = props;
+  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility, fixtureDragDrop, onFixtureDrop } = props;
   reactHostPort.useEffect(() => {
     puzzle3dBrushToolActiveRef.current = brushActive;
     if (!brushActive) {
@@ -6128,6 +6306,7 @@ function Inner(props: CanvasProps) {
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
+        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? <FixtureDropPointerBridge /> : null}
         {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
@@ -6172,6 +6351,8 @@ export interface PlayCanvasProps {
   readonly onAttractionTargetRing?: () => void;
   readonly brushActive?: boolean;
   readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
+  readonly fixtureDragDrop?: boolean;
+  readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
 }
 
 /** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
@@ -6234,6 +6415,8 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onAttractionTargetRing={onAttractionTargetRing}
       brushActive={props.brushActive}
       onBrushPlace={props.onBrushPlace}
+      fixtureDragDrop={props.fixtureDragDrop}
+      onFixtureDrop={props.onFixtureDrop}
       {...props.lodProps}
     >
       <Objects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
@@ -6245,9 +6428,12 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
 }
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
-  const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
+  const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, fixtureDragDrop, onFixtureDrop, ...rest } = props;
   const rootRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const [shellLod, setShellLod] = reactHostPort.useState(() => formatLod(DEFAULT_MANUAL_LOD));
+  const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
+  const fixtureDragDepthRef = reactHostPort.useRef(0);
+  const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
   const handleLod = reactHostPort.useCallback(
     (l: number) => {
       const label = formatLod(l);
@@ -6256,11 +6442,83 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
     },
     [onLodChange],
   );
+  const handleFixtureDragEnter = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!resolvedFixtureDragDrop) {
+        return;
+      }
+      if (![...event.dataTransfer.types].includes(FIXTURE_DRAG_V1_MIME)) {
+        return;
+      }
+      fixtureDragDepthRef.current += 1;
+      setFixtureDragActive(true);
+    },
+    [resolvedFixtureDragDrop],
+  );
+  const handleFixtureDragLeave = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!resolvedFixtureDragDrop) {
+        return;
+      }
+      if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
+        return;
+      }
+      fixtureDragDepthRef.current = Math.max(0, fixtureDragDepthRef.current - 1);
+      if (fixtureDragDepthRef.current === 0) {
+        setFixtureDragActive(false);
+      }
+    },
+    [resolvedFixtureDragDrop],
+  );
+  const handleFixtureDragOver = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!resolvedFixtureDragDrop) {
+        return;
+      }
+      if ([...event.dataTransfer.types].includes(FIXTURE_DRAG_V1_MIME)) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }
+    },
+    [resolvedFixtureDragDrop],
+  );
+  const handleFixtureDrop = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!resolvedFixtureDragDrop) {
+        return;
+      }
+      event.preventDefault();
+      fixtureDragDepthRef.current = 0;
+      setFixtureDragActive(false);
+      const fixture = readPuzzle3dFixtureDragDataTransfer(event.dataTransfer);
+      if (!fixture) {
+        return;
+      }
+      const root = rootRef.current;
+      const toCad = puzzle3dFixtureDropPointerToCadRef.current;
+      if (!root || !toCad) {
+        return;
+      }
+      const rect = root.getBoundingClientRect();
+      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const worldCad = toCad(event.clientX, event.clientY);
+      if (!worldCad) {
+        return;
+      }
+      onFixtureDrop?.({ fixture, screen, worldCad });
+    },
+    [onFixtureDrop, resolvedFixtureDragDrop],
+  );
   return (
     <div
       ref={rootRef}
       className={className}
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
+      data-puzzle3d-fixture-drag-active={fixtureDragActive ? "true" : undefined}
+      onDragEnter={handleFixtureDragEnter}
+      onDragLeave={handleFixtureDragLeave}
+      onDragOver={handleFixtureDragOver}
+      onDrop={handleFixtureDrop}
       onContextMenu={(event) => {
         if (puzzle3dRightDragActiveRef.current || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current)) {
           event.preventDefault();
@@ -6272,7 +6530,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
     >
       <Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
         <DemandFrameloopKick />
-        <Inner {...rest} domain={domain} onLodChange={handleLod}>
+        <Inner {...rest} domain={domain} onLodChange={handleLod} fixtureDragDrop={resolvedFixtureDragDrop} onFixtureDrop={onFixtureDrop}>
           {children}
         </Inner>
       </Canvas>
@@ -6890,6 +7148,28 @@ if (import.meta.vitest) {
       const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [] };
       expect(mergeSelectionSnapshot("default", current, incoming).objectIds).toEqual(["b"]);
       expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
+    });
+  });
+  describe("palette object fixture drag", () => {
+    it("mergePaletteObjectFromDrop places object kind at CAD world point", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "J",
+            label: "J",
+            meshUrl: "test.glb",
+            vortices: [{ vortexKind: "h1", position: [0, 0, 0] }],
+          },
+        ],
+      };
+      const dragFixture = buildPaletteObjectDragFixture("J");
+      const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 10, y: 20 }, worldCad: [12, 34, 56] }, catalogs);
+      expect(placed?.objectKind).toBe("J");
+      expect(placed?.origin).toEqual([12, 34, 56]);
+      expect(placed?.meshUrl).toBe("test.glb");
+    });
+    it("snapCadVec3ToGridStep rounds to grid step", () => {
+      expect(snapCadVec3ToGridStep([12.3, 0.1, 56.8], 5)).toEqual([10, 0, 55]);
     });
   });
   describe("brush", () => {

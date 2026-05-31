@@ -44,6 +44,7 @@ import {
   parseVortexFullId,
   puzzle3dLodCanvasProps,
   puzzle3dVortexFullId,
+  puzzle3dPlayObjectKindDragData,
   sliderValueFromLod,
   updatePuzzle3dCameraInFixture,
   type AttractionProps,
@@ -458,11 +459,20 @@ function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entrie
   }
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)))
-    .map((entry, index) => ({
-      id: `${sectionId}.${index}.${entry.id}`,
-      label: puzzle3dCatalogKindLabel(entry),
-      description: entry.id,
-    }));
+    .map((entry, index) => {
+      const isObjectPalette = sectionId === "puzzle-3d-play-kinds.objects";
+      return {
+        id: `${sectionId}.${index}.${entry.id}`,
+        label: puzzle3dCatalogKindLabel(entry),
+        description: entry.id,
+        ...(isObjectPalette
+          ? {
+              draggable: true,
+              dragData: puzzle3dPlayObjectKindDragData(entry.id),
+            }
+          : {}),
+      };
+    });
   return { id: sectionId, label, defaultOpen: true, items };
 }
 
@@ -1854,6 +1864,22 @@ if (import.meta.vitest) {
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
       expect(tree.sections.map((section) => section.label)).toEqual(["Objects", "Vortices", "Cables", "Attractions"]);
       expect(tree.sections[0]?.items?.[0]?.label).toBe("Capsule");
+    });
+
+    it("buildPuzzle3dPlayKindsTree marks object catalog rows draggable with fixture drag payload", async () => {
+      const { FIXTURE_DRAG_V1_MIME, decodePuzzle3dFixtureFromDragV1 } = await import("../react/index.tsx");
+      const catalogs = parseKindCatalogs({
+        kindCatalogs: {
+          objects: [{ id: "J", label: "J", name: "J", meshUrl: "m.glb", vortices: [] }],
+        },
+      });
+      const tree = buildPuzzle3dPlayKindsTree(catalogs);
+      const row = tree.sections[0]?.items?.[0];
+      expect(row?.draggable).toBe(true);
+      const encoded = row?.dragData?.[FIXTURE_DRAG_V1_MIME];
+      expect(encoded).toBeTruthy();
+      const dragFixture = decodePuzzle3dFixtureFromDragV1(encoded!);
+      expect(dragFixture?.objects[0]?.objectKind).toBe("J");
     });
 
     it("buildPuzzle3dPlayKindsTree assigns unique item ids when catalog ids repeat", () => {

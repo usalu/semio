@@ -144,22 +144,26 @@ export function relaxHiddenPreflight(): void {
 //#region 🔖MorphView
 const presentationMorphTextClass = "presentation-morph-text";
 
+function morphTextSizeClass(morphId: string): string {
+	return morphId === "title" ? "presentation-morph-text--title" : "presentation-morph-text--secondary";
+}
+
+function morphTextClass(morphId: string, extra?: string): string {
+	return [presentationMorphTextClass, morphTextSizeClass(morphId), extra].filter(Boolean).join(" ");
+}
+
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
 }
 
-function lineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
-	return [presentationMorphTextClass, embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)]
+function lineClass(morphId: string, embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
+	return [morphTextClass(morphId), embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)]
 		.filter(Boolean)
 		.join(" ") || undefined;
 }
 
-function centeredLineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string {
-	return [lineClass(embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
-}
-
-function morphTextClass(extra?: string): string {
-	return [presentationMorphTextClass, extra].filter(Boolean).join(" ");
+function centeredLineClass(morphId: string, embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string {
+	return [lineClass(morphId, embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
 }
 
 /** @emoji 🎯 Renders {@link TextEmbodiment}; `data-id` sits on leaf headings/paragraphs so reveal.js does not double-match wrappers and text nodes. */
@@ -177,13 +181,13 @@ function TextMorphView({
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	const root = resolveTextMorphRoot(embodiment);
-	const centeredHeadingClass = centeredLineClass(embodiment, emphasis);
+	const centeredHeadingClass = centeredLineClass(anchorId, embodiment, emphasis);
 	const lineCount = embodiment.lines.length;
 
 	switch (root) {
 		case "title":
 			return (
-				<h1 data-id={anchorId} className={centeredLineClass(embodiment, emphasis)}>
+				<h1 data-id={anchorId} className={centeredLineClass(anchorId, embodiment, emphasis)}>
 					{embodiment.lines[0]}
 				</h1>
 			);
@@ -194,7 +198,7 @@ function TextMorphView({
 						<p
 							key={line}
 							data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)}
-							className={[lineClass(embodiment, emphasis), "text-center"].filter(Boolean).join(" ") || "text-center"}
+							className={[lineClass(anchorId, embodiment, emphasis), "text-center"].filter(Boolean).join(" ") || "text-center"}
 						>
 							{line}
 						</p>
@@ -252,7 +256,7 @@ function AuthorsMorphView({
 					className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2"
 				>
 					{line.map((person) => (
-						<h4 key={person.name} data-id={`${anchorId}--${person.name}`} className={morphTextClass("m-0 shrink-0 text-center")}>
+						<h4 key={person.name} data-id={`${anchorId}--${person.name}`} className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}>
 							{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
 							{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
 						</h4>
@@ -272,7 +276,7 @@ function AffiliationsMorphView({
 }): ReactNode {
 	return (
 		<div className="w-full text-center">
-			<h5 data-id={anchorId} className={morphTextClass("text-center")}>
+			<h5 data-id={anchorId} className={morphTextClass(anchorId, "text-center")}>
 				{embodiment.entries.map((entry) => (
 					<span key={`${entry.mark}-${entry.suffix?.mark ?? ""}`}>
 						<sup>{entry.mark}</sup>
@@ -303,7 +307,7 @@ function BulletMorphView({
 }): ReactNode {
 	return (
 		<div data-id={anchorId} className={emphasisClass(emphasis)}>
-			<ul className={presentationMorphTextClass}>
+			<ul className={morphTextClass(anchorId)}>
 				{embodiment.items.map((item) => (
 					<li key={item}>{item}</li>
 				))}
@@ -574,15 +578,16 @@ if (import.meta.vitest) {
 			const authorLines = slide("authors")?.querySelectorAll('h4[data-id^="authors--"]');
 			expect(authorLines?.length).toBe(3);
 			expect(slide("affiliations-1")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(1);
-			expect(slide("affiliations-2")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(3);
-			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(5);
+			expect(slide("affiliations-2")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(2);
+			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"]').length).toBe(1);
+			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(3);
 			expect(slide("affiliations-3")?.querySelector('h5[data-id="institutions"]')).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			const marked = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice"] sup');
 			expect(marked?.textContent).toBe("1,a");
 		});
 
-		it("tags every intro morph leaf with presentation-morph-text for uniform sizing", () => {
+		it("applies title and secondary morph text sizes on intro slides", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
@@ -598,13 +603,16 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const morphLeaves = container.querySelectorAll(
-				'[data-id^="title"], [data-id^="description"], [data-id="goal"], [data-id^="authors--"], [data-id="institutions"]',
-			);
-			expect(morphLeaves.length).toBeGreaterThan(0);
-			for (const node of morphLeaves) {
-				expect(node.classList.contains("presentation-morph-text")).toBe(true);
-			}
+			const expectMorphClass = (selector: string, sizeClass: string) => {
+				for (const node of container.querySelectorAll(selector)) {
+					expect(node.classList.contains("presentation-morph-text")).toBe(true);
+					expect(node.classList.contains(sizeClass)).toBe(true);
+				}
+			};
+			expectMorphClass('[data-id^="title"]', "presentation-morph-text--title");
+			expectMorphClass('[data-id^="description"], [data-id="goal"]', "presentation-morph-text--secondary");
+			expect(container.querySelector('[data-id^="title"].presentation-morph-text--secondary')).toBeNull();
+			expect(container.querySelector('[data-id="goal"].presentation-morph-text--title')).toBeNull();
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {

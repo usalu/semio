@@ -143,6 +143,10 @@ export interface UiTreeItemNode {
   readonly selected?: boolean;
   readonly defaultOpen?: boolean;
   readonly command?: CommandDescriptor;
+  /** @emoji 🖱️ When true, row is draggable when the panel tree supplies a drag controller. */
+  readonly draggable?: boolean;
+  /** @emoji 📤 Extra `dataTransfer` MIME entries for in-app drags (e.g. puzzle fixture palette). */
+  readonly dragData?: Readonly<Record<string, string>>;
   readonly items?: readonly UiTreeItemNode[];
 }
 

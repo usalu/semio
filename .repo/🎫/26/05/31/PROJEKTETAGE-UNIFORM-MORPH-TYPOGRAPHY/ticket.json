@@ -3,9 +3,10 @@
   "emoji": "📽",
   "status": "closed",
   "description": "Make projektetage intro title a bit smaller. Ensure all presentation morph element kinds (title, description, goal, authors, affiliations) use the same default text size across all slides.",
-  "summary": "Projektetage intro title and all morph elements now share one default size across slides.\n\n- Added `--r-presentation-morph-size: 1.35em` (down from 1.6em h2 title scale) in presentation renderer globals.\n- Introduced `presentation-morph-text` on all morph leaves (h1–h6, p, bullet lists, authors h4, affiliations h5) so title, description, goal, authors, and affiliations no longer diverge via reveal heading tiers (h2 vs h4 vs h5).\n- Renderer test asserts every intro morph `data-id` leaf carries `presentation-morph-text`.\n- All @framework/presentation/core (7) and renderer/react (7) tests pass.",
+  "summary": "Split intro morph typography into title and secondary tiers.\n\n- Title (`data-id` participant `title`): `--r-presentation-morph-title-size` 1.35em via `presentation-morph-text--title`.\n- Description and goal (and authors/affiliations): `--r-presentation-morph-secondary-size` 1.15em via `presentation-morph-text--secondary`.\n- Size class derives from reveal `morphId` (participant id) in the renderer.\n- Test asserts title leaves use `--title`, description/goal use `--secondary`.\n- All presentation renderer tests pass.",
   "goal": "🎯framework",
   "sessions": [
-    "⚪4210d888256046edb3fb4303b744b298"
+    "⚪4210d888256046edb3fb4303b744b298",
+    "⚪c1a2d108f1df4bb59176275791278b53"
   ]
 }

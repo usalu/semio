@@ -28,6 +28,7 @@ import {
   type SidePanelTabDefinition,
   type TreeDataItem,
   type TreeDataSection,
+  type TreeDragAndDropController,
   type TreePanelConfig,
   type TreePanelDefinition,
   type TreePanelSource,
@@ -335,6 +336,8 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
     description: item.description,
     defaultOpen: item.defaultOpen,
     isSelected: item.selected,
+    draggable: item.draggable,
+    dragData: item.dragData,
     items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
     onClick: item.command
       ? () => {
@@ -342,6 +345,32 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
         }
       : undefined,
   }));
+}
+
+function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
+  const treeSections = uiTreeSectionsToTreeData(sections, commandBus);
+  const dragByItemId = new Map<string, Record<string, string>>();
+  const visit = (items: readonly TreeDataItem[]) => {
+    for (const item of items) {
+      if (item.dragData) {
+        dragByItemId.set(item.id, item.dragData);
+      }
+      if (item.items?.length) {
+        visit(item.items);
+      }
+    }
+  };
+  for (const section of treeSections) {
+    if (section.items?.length) {
+      visit(section.items);
+    }
+  }
+  if (dragByItemId.size === 0) {
+    return undefined;
+  }
+  return {
+    getDragData: ({ sourceItem }) => dragByItemId.get(sourceItem.id),
+  };
 }
 
 function uiTreeSectionsToTreeData(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDataSection[] {
@@ -520,12 +549,15 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
         </dl>
       );
     }
-    case "tree":
+    case "tree": {
+      const treeNode = node as UiTreeNode;
+      const dragAndDropController = buildUiTreeDragAndDropController(treeNode.sections, commandBus);
       return (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData((node as UiTreeNode).sections, commandBus)} selectionMode="single" showLines />
+          <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData(treeNode.sections, commandBus)} selectionMode="single" showLines dragAndDropController={dragAndDropController} />
         </div>
       );
+    }
     default:
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
@@ -964,7 +996,18 @@ export const mountReactApp = mountPlaygroundApp;
 // #region 🔌Adapters
 import { sceneHostPort } from "@ui/react";
 import nakaginPuzzle3dFixtureJson from "../../../../../puzzle/3d/fixture/nakagin-capsule-tower.3d.json";
-import { PlayCanvas, ObjectStateProvider, parseFixtureV1, applyConnectToFixture, blockedVortexFullIdsFromAttractions, type FixtureV1, type RelocatePayload } from "@puzzle/3d/react";
+import {
+  PlayCanvas,
+  ObjectStateProvider,
+  parseFixtureV1,
+  applyConnectToFixture,
+  applyPaletteObjectDropToFixture,
+  blockedVortexFullIdsFromAttractions,
+  mergePaletteObjectFromDrop,
+  type FixtureV1,
+  type Puzzle3dFixtureDropDetail,
+  type RelocatePayload,
+} from "@puzzle/3d/react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,
   PUZZLE_3D_PLAY_CONTROLLER_ID,
@@ -1021,6 +1064,23 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
     [ctrl],
   );
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
+  const handleFixtureDrop = reactHostPort.useCallback(
+    (detail: Puzzle3dFixtureDropDetail) => {
+      const placed = mergePaletteObjectFromDrop(detail, kindCatalogs);
+      if (placed) {
+        patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, placed));
+        bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelection", {
+          selection: { objectIds: [placed.id], vortexIds: [], attractionIds: [] },
+        });
+        return;
+      }
+      const parsed = parseFixtureV1(detail.fixture);
+      if (parsed) {
+        ctrl?.patchFixture(() => parsed);
+      }
+    },
+    [bus, ctrl, kindCatalogs, patchFixture],
+  );
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
       <ObjectStateProvider
@@ -1063,6 +1123,8 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
           brushActive={snap.activeTool === "brush"}
           onBrushPlace={(payload) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "addBrushObject", payload)}
+          fixtureDragDrop
+          onFixtureDrop={handleFixtureDrop}
         />
       </ObjectStateProvider>
       <div data-puzzle3d-play-probe className="pointer-events-none absolute left-0 top-0 select-none opacity-0" aria-hidden>
