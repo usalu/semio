@@ -1170,18 +1170,29 @@ func TestValidateKitDiffAsset(t *testing.T) {
 		})
 	}
 	bad := KitDiff{}
-	bad.Designs = &DesignsDiff{
+	bad.Typologies = &TypologiesDiff{
 		Updated: []struct {
-			Design DesignId   `json:"design"`
-			Diff   DesignDiff `json:"diff"`
-		}{{Design: DesignId{Id: "99999999-9999-9999-9999-999999999999"}, Diff: DesignDiff{Name: ptrStringGoTest("X")}}},
+			Typology TypologyId   `json:"typology"`
+			Diff     TypologyDiff `json:"diff"`
+		}{{Typology: TypologyId{Id: asset.TinyKit.Typologies[0].Id}, Diff: TypologyDiff{
+			Designs: &DesignsDiff{
+				Updated: []struct {
+					Design DesignId   `json:"design"`
+					Diff   DesignDiff `json:"diff"`
+				}{{Design: DesignId{Id: "99999999-9999-9999-9999-999999999999"}, Diff: DesignDiff{Name: ptrStringGoTest("X")}}},
+			},
+		}}},
 	}
 	r := ValidateKitDiff(asset.TinyKit, bad, true)
 	if r.Diff == nil {
 		t.Fatal("expected healed diff")
 	}
-	if r.Diff.Designs != nil && len(r.Diff.Designs.Updated) != 0 {
-		t.Fatalf("heal should drop invalid design update: %#v", r.Diff.Designs)
+	if r.Diff.Typologies != nil {
+		for _, u := range r.Diff.Typologies.Updated {
+			if u.Diff.Designs != nil && len(u.Diff.Designs.Updated) != 0 {
+				t.Fatalf("heal should drop invalid design update: %#v", u.Diff.Designs)
+			}
+		}
 	}
 }
 
@@ -2373,11 +2384,17 @@ func TestMetaShallow(t *testing.T) {
 		if shallow.Id != kit.Id {
 			t.Errorf("KitShallow.Id = %q, want %q", shallow.Id, kit.Id)
 		}
-		if len(shallow.Types) != len(kit.Types) {
-			t.Errorf("KitShallow.Types len = %d, want %d", len(shallow.Types), len(kit.Types))
+		shallowTypeCount := 0
+		shallowDesignCount := 0
+		for _, topo := range shallow.Typologies {
+			shallowTypeCount += len(topo.Types)
+			shallowDesignCount += len(topo.Designs)
 		}
-		if len(shallow.Designs) != len(kit.Designs) {
-			t.Errorf("KitShallow.Designs len = %d, want %d", len(shallow.Designs), len(kit.Designs))
+		if shallowTypeCount != len(kit.Types) {
+			t.Errorf("KitShallow typology types len = %d, want %d", shallowTypeCount, len(kit.Types))
+		}
+		if shallowDesignCount != len(kit.Designs) {
+			t.Errorf("KitShallow typology designs len = %d, want %d", shallowDesignCount, len(kit.Designs))
 		}
 		if len(shallow.Authors) != len(kit.Authors) {
 			t.Errorf("KitShallow.Authors len = %d, want %d", len(shallow.Authors), len(kit.Authors))
@@ -2385,9 +2402,10 @@ func TestMetaShallow(t *testing.T) {
 		if len(shallow.Files) != len(kit.Files) {
 			t.Errorf("KitShallow.Files len = %d, want %d", len(shallow.Files), len(kit.Files))
 		}
-		for i, tm := range shallow.Types {
-			if tm.Id != kit.Types[i].Id {
-				t.Errorf("KitShallow.Types[%d].Id = %q, want %q", i, tm.Id, kit.Types[i].Id)
+		if len(shallow.Typologies) > 0 && len(shallow.Typologies[0].Types) > 0 {
+			tm := shallow.Typologies[0].Types[0]
+			if tm.Id != kit.Types[0].Id {
+				t.Errorf("KitShallow typology type Id = %q, want %q", tm.Id, kit.Types[0].Id)
 			}
 		}
 	})
@@ -2477,11 +2495,21 @@ func TestMetaShallow(t *testing.T) {
 		if shallow.Name != "Metabolism" {
 			t.Errorf("KitShallow.Name = %q, want %q", shallow.Name, "Metabolism")
 		}
-		if len(shallow.Types) == 0 {
-			t.Error("KitShallow.Types is empty")
+		hasTypes := false
+		hasDesigns := false
+		for _, topo := range shallow.Typologies {
+			if len(topo.Types) > 0 {
+				hasTypes = true
+			}
+			if len(topo.Designs) > 0 {
+				hasDesigns = true
+			}
 		}
-		if len(shallow.Designs) == 0 {
-			t.Error("KitShallow.Designs is empty")
+		if !hasTypes {
+			t.Error("KitShallow typology types is empty")
+		}
+		if !hasDesigns {
+			t.Error("KitShallow typology designs is empty")
 		}
 		if len(shallow.Authors) == 0 {
 			t.Error("KitShallow.Authors is empty")
@@ -3333,30 +3361,37 @@ func TestMaxChildrenConnectorSerialization(t *testing.T) {
 func TestMaxChildrenKitRoundtrip(t *testing.T) {
 	mc3 := 3
 	mc5 := 5
+	topoID := "topo-1"
 	kit := Kit{
-		Id: "kit-1",
+		Id:   "kit-1",
 		Name: "TestKit",
 		Families: []Family{{
-			Id: "f1",
+			Id:   "f1",
 			Name: "Family1",
 			Ports: []Port{{
-				Id:        "p1",
+				Id:          "p1",
 				Name:        "Port1",
 				MaxChildren: &mc3,
 			}},
 		}},
-		Types: []Type{{
-			Id: "t1",
-			Name: "Type1",
-			Connectors: []Connector{{
-				Id:        "c1",
-				T:           0,
-				Point:       Point{X: 0, Y: 0, Z: 0},
-				Direction:   Vector{X: 0, Y: 0, Z: 1},
-				MaxChildren: &mc5,
+		Typologies: []Typology{{
+			Id:   topoID,
+			Name: "Default",
+			Types: []Type{{
+				Id:       "t1",
+				Name:     "Type1",
+				Typology: TypologyId{Id: topoID},
+				Connectors: []Connector{{
+					Id:          "c1",
+					T:           0,
+					Point:       Point{X: 0, Y: 0, Z: 0},
+					Direction:   Vector{X: 0, Y: 0, Z: 1},
+					MaxChildren: &mc5,
+				}},
 			}},
 		}},
 	}
+	KitFlattenTypesDesigns(&kit)
 	data, err := json.Marshal(kit)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)

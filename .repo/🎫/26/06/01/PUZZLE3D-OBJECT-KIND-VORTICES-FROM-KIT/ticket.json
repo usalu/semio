@@ -1,0 +1,12 @@
+{
+  "title": "Puzzle3d Object Kind Vortices From Kit",
+  "emoji": "🌀",
+  "status": "closed",
+  "description": "Puzzle2d Node Kind Vortices From Kit",
+  "summary": "Corrected terminology: puzzle 2d node kinds use `handles` templates (`NodeKindHandleTemplate`, `handleKind`); puzzle 3d object kinds use `vortices` (`ObjectKindVortexTemplate`, `vortexKind`). Baked nakagin 2d `meta.kindCatalogs.nodes[].handles` and 3d `meta.kindCatalogs.objects[].vortices` from metabolism kit connectors (one-off migrations, scripts removed). Remapped 3d `vortexKind` to vortex-catalog short ids via 2d handle names. Vitest: 2d/react 108, 3d/react 134.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪499bc0efb77b4a9590ad8e574073e94c",
+    "⚪1cfd0e77d0c8474da8529a6ec9252d4c"
+  ]
+}

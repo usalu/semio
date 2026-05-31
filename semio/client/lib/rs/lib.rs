@@ -19408,6 +19408,44 @@ mod tests {
     }
 
     #[test]
+    fn type_virtual_file_system_exposes_representation_port_connector_children() {
+        block_on(async {
+            use std::sync::Arc;
+
+            use crate::gql::interfaces::file_system_vfs;
+            use crate::gql::interfaces::FileSystemNodeInterface;
+            use crate::gql::interfaces::FileSystemNodeKind;
+            use crate::kit::r#type::{Connector, Port, Representation, Type};
+
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.mutable_kit.read().await.clone();
+            let owner = Arc::downgrade(&kit);
+            let ty = Type::new_with_external_id(owner.clone(), "type-vfs".into(), "Vfs Type".to_string()).await;
+            let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-vfs".into(), "rep://mesh".to_string()).await;
+            let port = Port::new_with_external_id(Arc::downgrade(&ty), "port-vfs".into()).await;
+            let connector = Connector::new_with_external_id(Arc::downgrade(&ty), "conn-vfs".into(), "frame".to_string()).await;
+            ty.representations.write().await.push(rep.clone());
+            ty.ports.write().await.push(port.clone());
+            ty.connectors.write().await.push(connector.clone());
+            kit.types.write().await.push(ty.clone());
+
+            let type_node = FileSystemNodeInterface::Type(ty);
+            assert!(file_system_vfs::has_children(&type_node).await);
+            let children = file_system_vfs::children(&type_node).await;
+            let kinds: Vec<FileSystemNodeKind> = children.edges.iter().map(|e| file_system_vfs::kind(&e.node)).collect();
+            assert!(kinds.contains(&FileSystemNodeKind::Representation));
+            assert!(kinds.contains(&FileSystemNodeKind::Port));
+            assert!(kinds.contains(&FileSystemNodeKind::Connector));
+
+            let rep_node = FileSystemNodeInterface::Representation(rep);
+            let parent = file_system_vfs::parent(&rep_node).await;
+            assert!(matches!(parent, Some(FileSystemNodeInterface::Type(t)) if t.id.as_str() == "type-vfs"));
+            assert!(!file_system_vfs::has_children(&rep_node).await);
+            assert!(file_system_vfs::path(&rep_node).await.contains("mesh"));
+        });
+    }
+
+    #[test]
     fn graph_operation_registry_len_matches_fixture() {
         assert_eq!(crate::operation::GRAPH_OPERATION_REGISTRY_LEN, 98);
     }

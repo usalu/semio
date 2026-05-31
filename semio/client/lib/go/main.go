@@ -2356,6 +2356,8 @@ type kitJSON struct {
 	Name        string      `json:"name"`
 	Version     string      `json:"version"`
 	Typologies  []Typology  `json:"typologies,omitempty"`
+	Types       []Type      `json:"types,omitempty"`
+	Designs     []Design    `json:"designs,omitempty"`
 	Tags        []Tag       `json:"tags,omitempty"`
 	Concepts    []Concept   `json:"concepts,omitempty"`
 	Families    []Family    `json:"families,omitempty"`
@@ -2416,7 +2418,13 @@ func (k *Kit) UnmarshalJSON(data []byte) error {
 	k.Attributes = raw.Attributes
 	k.CreatedAt = raw.CreatedAt
 	k.UpdatedAt = raw.UpdatedAt
-	KitFlattenTypesDesigns(k)
+	if len(k.Typologies) == 0 && (len(raw.Types) > 0 || len(raw.Designs) > 0) {
+		k.Types = raw.Types
+		k.Designs = raw.Designs
+		KitPackTypologiesFromFlat(k)
+	} else {
+		KitFlattenTypesDesigns(k)
+	}
 	return nil
 }
 
@@ -11927,13 +11935,51 @@ func jaccardTagIdsGo(representationTags []TagId, selectedTagIds []string) float6
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
+func kitTypologyDiffForTypes(topoID string, typesDiff TypesDiff) *TypologiesDiff {
+	return &TypologiesDiff{
+		Updated: []struct {
+			Typology TypologyId   `json:"typology"`
+			Diff     TypologyDiff `json:"diff"`
+		}{{Typology: TypologyId{Id: topoID}, Diff: TypologyDiff{Types: &typesDiff}}},
+	}
+}
+
+func kitTypologyDiffForDesigns(topoID string, designsDiff DesignsDiff) *TypologiesDiff {
+	return &TypologiesDiff{
+		Updated: []struct {
+			Typology TypologyId   `json:"typology"`
+			Diff     TypologyDiff `json:"diff"`
+		}{{Typology: TypologyId{Id: topoID}, Diff: TypologyDiff{Designs: &designsDiff}}},
+	}
+}
+
+func resolveTypologyIdForType(kit *Kit, typ Type) string {
+	KitEnsureTypologies(kit)
+	if typ.Typology.Id != "" {
+		return typ.Typology.Id
+	}
+	if len(kit.Typologies) > 0 {
+		return kit.Typologies[0].Id
+	}
+	return Id()
+}
+
+func resolveTypologyIdForDesign(kit *Kit, design Design) string {
+	KitEnsureTypologies(kit)
+	if design.Typology.Id != "" {
+		return design.Typology.Id
+	}
+	if len(kit.Typologies) > 0 {
+		return kit.Typologies[0].Id
+	}
+	return Id()
+}
+
 // 🆕AddTypeToKit creates a change that adds a single type to a kit.
 func AddTypeToKit(kit Kit, typ Type) KitChange {
-	forward := KitDiff{
-		Types: &TypesDiff{
-			Added: []Type{typ},
-		},
-	}
+	topoID := resolveTypologyIdForType(&kit, typ)
+	typ.Typology = TypologyId{Id: topoID}
+	forward := KitDiff{Typologies: kitTypologyDiffForTypes(topoID, TypesDiff{Added: []Type{typ}})}
 	after := deepCloneKit(kit)
 	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
@@ -11942,11 +11988,15 @@ func AddTypeToKit(kit Kit, typ Type) KitChange {
 
 // 🚚RemoveTypeFromKit creates a change that removes a type by ID.
 func RemoveTypeFromKit(kit Kit, typeId string) KitChange {
-	forward := KitDiff{
-		Types: &TypesDiff{
-			Removed: []TypeId{{Id: typeId}},
-		},
+	KitEnsureTypologies(&kit)
+	topoID := kit.Typologies[0].Id
+	for _, t := range kit.Types {
+		if t.Id == typeId {
+			topoID = t.Typology.Id
+			break
+		}
 	}
+	forward := KitDiff{Typologies: kitTypologyDiffForTypes(topoID, TypesDiff{Removed: []TypeId{{Id: typeId}}})}
 	after := deepCloneKit(kit)
 	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
@@ -11955,11 +12005,9 @@ func RemoveTypeFromKit(kit Kit, typeId string) KitChange {
 
 // ➕AddDesignToKit creates a change that adds a single design to a kit.
 func AddDesignToKit(kit Kit, design Design) KitChange {
-	forward := KitDiff{
-		Designs: &DesignsDiff{
-			Added: []Design{design},
-		},
-	}
+	topoID := resolveTypologyIdForDesign(&kit, design)
+	design.Typology = TypologyId{Id: topoID}
+	forward := KitDiff{Typologies: kitTypologyDiffForDesigns(topoID, DesignsDiff{Added: []Design{design}})}
 	after := deepCloneKit(kit)
 	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
@@ -11968,11 +12016,15 @@ func AddDesignToKit(kit Kit, design Design) KitChange {
 
 // ➖RemoveDesignFromKit creates a change that removes a design by ID.
 func RemoveDesignFromKit(kit Kit, designId string) KitChange {
-	forward := KitDiff{
-		Designs: &DesignsDiff{
-			Removed: []DesignId{{Id: designId}},
-		},
+	KitEnsureTypologies(&kit)
+	topoID := kit.Typologies[0].Id
+	for _, d := range kit.Designs {
+		if d.Id == designId {
+			topoID = d.Typology.Id
+			break
+		}
 	}
+	forward := KitDiff{Typologies: kitTypologyDiffForDesigns(topoID, DesignsDiff{Removed: []DesignId{{Id: designId}}})}
 	after := deepCloneKit(kit)
 	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
@@ -17132,122 +17184,125 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 			if t.Typology.Id == "" {
 				t.Typology = TypologyId{Id: topo.Id}
 			}
-		virtualVal := sql.NullInt64{}
-		if t.Virtual != nil {
-			v := int64(0)
-			if *t.Virtual {
-				v = 1
+			virtualVal := sql.NullInt64{}
+			if t.Virtual != nil {
+				v := int64(0)
+				if *t.Virtual {
+					v = 1
+				}
+				virtualVal = sql.NullInt64{Int64: v, Valid: true}
 			}
-			virtualVal = sql.NullInt64{Int64: v, Valid: true}
-		}
-		var stock sql.NullInt64
-		if t.Stock != nil {
-			stock = sql.NullInt64{Int64: int64(*t.Stock), Valid: true}
-		}
-		var locID *string
-		if t.Location != nil {
-			locID = &t.Location.Id
-		}
-		var createdT, updatedT any
-		createdT = t.CreatedAt
-		if t.CreatedAt == "" {
-			createdT = nil
-		}
-		updatedT = t.UpdatedAt
-		if t.UpdatedAt == "" {
-			updatedT = nil
-		}
-		if _, err := db.Exec(`INSERT INTO type (
-				id, ordinal, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at, kit_id
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			t.Id, ti, t.Name, t.Description, t.Icon, t.Image, stock, virtualVal, t.Unit, locID, createdT, updatedT, kit.Id,
-		); err != nil {
-			return fmt.Errorf("failed to insert type %s: %w", t.Id, err)
-		}
-		for fi := range t.Families {
-			ref := t.Families[fi]
-			if _, err := db.Exec(`INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?, ?, ?)`, t.Id, ref.Id, fi); err != nil {
-				return fmt.Errorf("failed to insert type_family for type %s: %w", t.Id, err)
+			var stock sql.NullInt64
+			if t.Stock != nil {
+				stock = sql.NullInt64{Int64: int64(*t.Stock), Valid: true}
 			}
-		}
-		for ci := range t.Connectors {
-			c := t.Connectors[ci]
-			if c.Port == nil {
-				return fmt.Errorf("connector %s on type %s needs port_id for SQLite", c.Id, t.Id)
+			var locID *string
+			if t.Location != nil {
+				locID = &t.Location.Id
 			}
-			cname := ""
-			if c.Name != nil {
-				cname = *c.Name
+			var createdT, updatedT any
+			createdT = t.CreatedAt
+			if t.CreatedAt == "" {
+				createdT = nil
 			}
-			if _, err := db.Exec(`INSERT INTO connector (id, ordinal, name, description, port_id, type_id) VALUES (?, ?, ?, ?, ?, ?)`,
-				c.Id, ci, cname, c.Description, c.Port.Id, t.Id); err != nil {
-				return fmt.Errorf("failed to insert connector %s: %w", c.Id, err)
+			updatedT = t.UpdatedAt
+			if t.UpdatedAt == "" {
+				updatedT = nil
 			}
-		}
-	}
-
-	for di := range kit.Designs {
-		d := kit.Designs[di]
-		var locID *string
-		if d.Location != nil {
-			locID = &d.Location.Id
-		}
-		var createdD, updatedD any
-		createdD = d.CreatedAt
-		if d.CreatedAt == "" {
-			createdD = nil
-		}
-		updatedD = d.UpdatedAt
-		if d.UpdatedAt == "" {
-			updatedD = nil
-		}
-		if _, err := db.Exec(`INSERT INTO design (
-				id, ordinal, name, description, icon, image, location_id, unit, created_at, updated_at, kit_id
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			d.Id, di, d.Name, d.Description, d.Icon, d.Image, locID, d.Unit, createdD, updatedD, kit.Id,
-		); err != nil {
-			return fmt.Errorf("failed to insert design %s: %w", d.Id, err)
-		}
-		for fi := range d.Families {
-			ref := d.Families[fi]
-			if _, err := db.Exec(`INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?, ?, ?)`, d.Id, ref.Id, fi); err != nil {
-				return fmt.Errorf("failed to insert design_family: %w", err)
-			}
-		}
-		for pi := range d.Pieces {
-			if err := insertPieceRow(db, d.Id, d.Pieces[pi], pi); err != nil {
-				return err
-			}
-		}
-		for ci := range d.Connections {
-			c := d.Connections[ci]
-			cpid, err := connectionSidePortID(kit.Types, c.Parent)
-			if err != nil {
-				return fmt.Errorf("connection %s parent side: %w", c.Id, err)
-			}
-			gpid, err := connectionSidePortID(kit.Types, c.Child)
-			if err != nil {
-				return fmt.Errorf("connection %s child side: %w", c.Id, err)
-			}
-			var cdes, gdes *string
-			if c.Parent.DesignPiece != nil {
-				cdes = &c.Parent.DesignPiece.Id
-			}
-			if c.Child.DesignPiece != nil {
-				gdes = &c.Child.DesignPiece.Id
-			}
-			if _, err := db.Exec(`INSERT INTO connection (
-					id, ordinal,
-					parent_side_id, parent_piece_id, parent_port_id, parent_design_piece_id,
-					child_side_id, child_piece_id, child_port_id, child_design_piece_id,
-					gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				c.Id, ci,
-				fmt.Sprintf("%s:parent", c.Id), c.Parent.Piece.Id, cpid, cdes,
-				fmt.Sprintf("%s:child", c.Id), c.Child.Piece.Id, gpid, gdes,
-				c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id,
+			if _, err := db.Exec(`INSERT INTO type (
+					id, ordinal, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at, typology_id
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				t.Id, ti, t.Name, t.Description, t.Icon, t.Image, stock, virtualVal, t.Unit, locID, createdT, updatedT, topo.Id,
 			); err != nil {
-				return fmt.Errorf("failed to insert connection %s: %w", c.Id, err)
+				return fmt.Errorf("failed to insert type %s: %w", t.Id, err)
+			}
+			for fi := range t.Families {
+				ref := t.Families[fi]
+				if _, err := db.Exec(`INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?, ?, ?)`, t.Id, ref.Id, fi); err != nil {
+					return fmt.Errorf("failed to insert type_family for type %s: %w", t.Id, err)
+				}
+			}
+			for ci := range t.Connectors {
+				c := t.Connectors[ci]
+				if c.Port == nil {
+					return fmt.Errorf("connector %s on type %s needs port_id for SQLite", c.Id, t.Id)
+				}
+				cname := ""
+				if c.Name != nil {
+					cname = *c.Name
+				}
+				if _, err := db.Exec(`INSERT INTO connector (id, ordinal, name, description, port_id, type_id) VALUES (?, ?, ?, ?, ?, ?)`,
+					c.Id, ci, cname, c.Description, c.Port.Id, t.Id); err != nil {
+					return fmt.Errorf("failed to insert connector %s: %w", c.Id, err)
+				}
+			}
+		}
+		for di := range topo.Designs {
+			d := topo.Designs[di]
+			if d.Typology.Id == "" {
+				d.Typology = TypologyId{Id: topo.Id}
+			}
+			var locID *string
+			if d.Location != nil {
+				locID = &d.Location.Id
+			}
+			var createdD, updatedD any
+			createdD = d.CreatedAt
+			if d.CreatedAt == "" {
+				createdD = nil
+			}
+			updatedD = d.UpdatedAt
+			if d.UpdatedAt == "" {
+				updatedD = nil
+			}
+			if _, err := db.Exec(`INSERT INTO design (
+					id, ordinal, name, description, icon, image, location_id, unit, created_at, updated_at, typology_id
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				d.Id, di, d.Name, d.Description, d.Icon, d.Image, locID, d.Unit, createdD, updatedD, topo.Id,
+			); err != nil {
+				return fmt.Errorf("failed to insert design %s: %w", d.Id, err)
+			}
+			for fi := range d.Families {
+				ref := d.Families[fi]
+				if _, err := db.Exec(`INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?, ?, ?)`, d.Id, ref.Id, fi); err != nil {
+					return fmt.Errorf("failed to insert design_family: %w", err)
+				}
+			}
+			for pi := range d.Pieces {
+				if err := insertPieceRow(db, d.Id, d.Pieces[pi], pi); err != nil {
+					return err
+				}
+			}
+			for ci := range d.Connections {
+				c := d.Connections[ci]
+				cpid, err := connectionSidePortID(kit.Types, c.Parent)
+				if err != nil {
+					return fmt.Errorf("connection %s parent side: %w", c.Id, err)
+				}
+				gpid, err := connectionSidePortID(kit.Types, c.Child)
+				if err != nil {
+					return fmt.Errorf("connection %s child side: %w", c.Id, err)
+				}
+				var cdes, gdes *string
+				if c.Parent.DesignPiece != nil {
+					cdes = &c.Parent.DesignPiece.Id
+				}
+				if c.Child.DesignPiece != nil {
+					gdes = &c.Child.DesignPiece.Id
+				}
+				if _, err := db.Exec(`INSERT INTO connection (
+						id, ordinal,
+						parent_side_id, parent_piece_id, parent_port_id, parent_design_piece_id,
+						child_side_id, child_piece_id, child_port_id, child_design_piece_id,
+						gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					c.Id, ci,
+					fmt.Sprintf("%s:parent", c.Id), c.Parent.Piece.Id, cpid, cdes,
+					fmt.Sprintf("%s:child", c.Id), c.Child.Piece.Id, gpid, gdes,
+					c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id,
+				); err != nil {
+					return fmt.Errorf("failed to insert connection %s: %w", c.Id, err)
+				}
 			}
 		}
 	}

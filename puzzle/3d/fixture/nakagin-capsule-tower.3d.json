@@ -153,7 +153,66 @@
         {
           "id": "Last Storey",
           "label": "Last Storey",
-          "name": "Last Storey"
+          "name": "Last Storey",
+          "vortices": [
+            {
+              "vortexKind": "tambour circular bottom",
+              "position": [
+                0,
+                0,
+                0.9166667
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "roof circular bottom",
+              "position": [
+                0,
+                0,
+                4.5833335
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/tambour_last-storey.glb"
         },
         {
           "id": "Balcony",
@@ -168,8 +227,30 @@
           "vortices": [
             {
               "vortexKind": "platform east",
-              "position": [5.6, -1.3, 0],
-              "direction": [1, 0, 0],
+              "position": [
+                5.6,
+                -1.3,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "platform west",
+              "position": [
+                0,
+                -1.3,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -177,7 +258,65 @@
         {
           "id": "Single Storey",
           "label": "Single Storey",
-          "name": "Single Storey"
+          "name": "Single Storey",
+          "vortices": [
+            {
+              "vortexKind": "core circular top",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "roof circular bottom",
+              "position": [
+                0,
+                0,
+                4.5833335
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "s",
@@ -187,8 +326,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -196,12 +343,87 @@
         {
           "id": "Base",
           "label": "Base",
-          "name": "Base"
+          "name": "Base",
+          "vortices": [
+            {
+              "vortexKind": "core rectangular bottom",
+              "position": [
+                -7.5,
+                -7.7,
+                7.5
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/base.glb"
         },
         {
           "id": "Single Storey",
           "label": "Single Storey",
-          "name": "Single Storey"
+          "name": "Single Storey",
+          "vortices": [
+            {
+              "vortexKind": "core circular top",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "roof circular bottom",
+              "position": [
+                0,
+                0,
+                4.5833335
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "First Storey",
@@ -211,20 +433,58 @@
           "vortices": [
             {
               "vortexKind": "core circular top",
-              "position": [0, 0, 0],
-              "direction": [0, 0, -1],
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "tambour circular top",
+              "position": [
+                0,
+                0,
+                3.6666667
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
               "radius": 0.36
             },
             {
               "vortexKind": "door tambour west",
-              "position": [2.75, 0.9, 0.2],
-              "direction": [1, 0, 0],
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
               "radius": 0.36
             },
             {
               "vortexKind": "door tambour east",
-              "position": [0.9, 2.75, 0.2],
-              "direction": [0, 1, 0],
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -237,20 +497,58 @@
           "vortices": [
             {
               "vortexKind": "tambour rectangular bottom",
-              "position": [0, 0, 0.9166667],
-              "direction": [0, 0, -1],
+              "position": [
+                0,
+                0,
+                0.9166667
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "tambour rectangular top",
+              "position": [
+                0,
+                0,
+                3.6666667
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
               "radius": 0.36
             },
             {
               "vortexKind": "door tambour west",
-              "position": [2.75, 0.9, 0.2],
-              "direction": [1, 0, 0],
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
               "radius": 0.36
             },
             {
               "vortexKind": "door tambour east",
-              "position": [0.9, 2.75, 0.2],
-              "direction": [0, 1, 0],
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -263,8 +561,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -272,7 +578,23 @@
         {
           "id": "q",
           "label": "q",
-          "name": "q"
+          "name": "q",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "p",
@@ -282,8 +604,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -291,27 +621,153 @@
         {
           "id": "/",
           "label": "/",
-          "name": "/"
+          "name": "/",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_slash.glb"
         },
         {
           "id": "Blob",
           "label": "Blob",
-          "name": "Blob"
+          "name": "Blob",
+          "vortices": [
+            {
+              "vortexKind": "core circular bottom",
+              "position": [
+                -6.75,
+                -7.75,
+                7.5
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "Last Storey",
           "label": "Last Storey",
-          "name": "Last Storey"
+          "name": "Last Storey",
+          "vortices": [
+            {
+              "vortexKind": "tambour circular bottom",
+              "position": [
+                0,
+                0,
+                0.9166667
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "roof circular bottom",
+              "position": [
+                0,
+                0,
+                4.5833335
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/tambour_last-storey.glb"
         },
         {
           "id": "Capital",
           "label": "Capital",
-          "name": "Capital"
+          "name": "Capital",
+          "vortices": [
+            {
+              "vortexKind": "roof rectangular top",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capital.glb"
         },
         {
           "id": "p",
           "label": "p",
-          "name": "p"
+          "name": "p",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_p.glb"
         },
         {
           "id": "Ellipsoid",
@@ -321,12 +777,46 @@
         {
           "id": "L",
           "label": "L",
-          "name": "L"
+          "name": "L",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_L.glb"
         },
         {
           "id": "s",
           "label": "s",
-          "name": "s"
+          "name": "s",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_s.glb"
         },
         {
           "id": "J",
@@ -336,8 +826,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -345,22 +843,132 @@
         {
           "id": "First Storey",
           "label": "First Storey",
-          "name": "First Storey"
+          "name": "First Storey",
+          "vortices": [
+            {
+              "vortexKind": "core circular top",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "tambour circular top",
+              "position": [
+                0,
+                0,
+                3.6666667
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                2.75,
+                0.9,
+                0.2
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.9,
+                2.75,
+                0.2
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/tambour_first-storey.glb"
         },
         {
           "id": "/",
           "label": "/",
-          "name": "/"
+          "name": "/",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_slash.glb"
         },
         {
           "id": "s",
           "label": "s",
-          "name": "s"
+          "name": "s",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_s.glb"
         },
         {
           "id": "p",
           "label": "p",
-          "name": "p"
+          "name": "p",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_p.glb"
         },
         {
           "id": "L",
@@ -370,8 +978,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -384,22 +1000,89 @@
         {
           "id": "q",
           "label": "q",
-          "name": "q"
+          "name": "q",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "J",
           "label": "J",
-          "name": "J"
+          "name": "J",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_J.glb"
         },
         {
           "id": "J",
           "label": "J",
-          "name": "J"
+          "name": "J",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_J.glb"
         },
         {
           "id": "L",
           "label": "L",
-          "name": "L"
+          "name": "L",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_L.glb"
         },
         {
           "id": "\\",
@@ -409,8 +1092,16 @@
           "vortices": [
             {
               "vortexKind": "door capsule east",
-              "position": [-1.3, -1.25, 0],
-              "direction": [-1, 0, 0],
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
               "radius": 0.36
             }
           ]
@@ -418,22 +1109,89 @@
         {
           "id": "z",
           "label": "z",
-          "name": "z"
+          "name": "z",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "L",
           "label": "L",
-          "name": "L"
+          "name": "L",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_L.glb"
         },
         {
           "id": "s",
           "label": "s",
-          "name": "s"
+          "name": "s",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_s.glb"
         },
         {
           "id": "J",
           "label": "J",
-          "name": "J"
+          "name": "J",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_J.glb"
         },
         {
           "id": "Trapezoid",
@@ -443,62 +1201,301 @@
         {
           "id": "z",
           "label": "z",
-          "name": "z"
+          "name": "z",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "\\",
           "label": "\\",
-          "name": "\\"
+          "name": "\\",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_backslash.glb"
         },
         {
           "id": "\\",
           "label": "\\",
-          "name": "\\"
+          "name": "\\",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_backslash.glb"
         },
         {
           "id": "Cylindric Tambour",
           "label": "Cylindric Tambour",
-          "name": "Cylindric Tambour"
+          "name": "Cylindric Tambour",
+          "vortices": [
+            {
+              "vortexKind": "tambour circular bottom",
+              "position": [
+                0,
+                0,
+                0.9166667
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "tambour circular top",
+              "position": [
+                0,
+                0,
+                3.6666667
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour west",
+              "position": [
+                3.1557984,
+                0.7768119,
+                0.2
+              ],
+              "direction": [
+                0.97101486,
+                0.23901905,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "door tambour east",
+              "position": [
+                0.7768119,
+                3.1557984,
+                0.2
+              ],
+              "direction": [
+                0.23901905,
+                0.97101486,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "z",
           "label": "z",
-          "name": "z"
+          "name": "z",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "q",
           "label": "q",
-          "name": "q"
+          "name": "q",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "Cylindric Capital",
           "label": "Cylindric Capital",
-          "name": "Cylindric Capital"
+          "name": "Cylindric Capital",
+          "vortices": [
+            {
+              "vortexKind": "roof circular top",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "q",
           "label": "q",
-          "name": "q"
+          "name": "q",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         },
         {
           "id": "p",
           "label": "p",
-          "name": "p"
+          "name": "p",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_p.glb"
         },
         {
           "id": "/",
           "label": "/",
-          "name": "/"
+          "name": "/",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                -0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_slash.glb"
         },
         {
           "id": "\\",
           "label": "\\",
-          "name": "\\"
+          "name": "\\",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                0.45,
+                -2.1,
+                2.7755576e-17
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          ],
+          "meshUrl": "/meshes/capsule_backslash.glb"
         },
         {
           "id": "z",
           "label": "z",
-          "name": "z"
+          "name": "z",
+          "vortices": [
+            {
+              "vortexKind": "door capsule east",
+              "position": [
+                1.3,
+                -1.25,
+                0
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
         }
       ],
       "cables": [
