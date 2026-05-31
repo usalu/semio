@@ -453,12 +453,12 @@ const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/fixtures/nakagin-capsule-tower.filtered.
 /** @emoji 🧪 Nakagin-filtered kit URL used for dev auto-seed. */
 export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = SKETCHPAD_DEV_FIXTURE_KIT_URL;
 
-/** @emoji 🧪 Loads the metabolism fixture when no kits are open (dev browser only). */
+/** @emoji 🧪 Preloads the dev fixture kit when none are open without leaving home (dev browser only). */
 export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
 	const ctrl = getSketchpadShellController();
 	if (!ctrl || ctrl.listOpenKitIds().length > 0) return null;
 	try {
-		return await openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_KIT_URL, { kind: "fixture", navigate: true });
+		return await openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_KIT_URL, { kind: "fixture", navigate: false });
 	} catch (error) {
 		console.warn("[semio.sketchpad] dev fixture kit failed to load:", error);
 		return null;
@@ -3709,6 +3709,40 @@ if (import.meta.vitest) {
 	describe("sketchpad dev fixtures", () => {
 		it("auto-seeds from nakagin filtered fixture URL", () => {
 			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+		});
+
+		it("preloads dev fixture on home without navigating to kit app", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+			const fixtureJson = readFileSync(fixturePath, "utf8");
+			const previousFetch = globalThis.fetch;
+			globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+				const url =
+					typeof input === "string" ? input : input instanceof URL ? input.href : input instanceof Request ? input.url : String(input);
+				if (url.includes("nakagin-capsule-tower.filtered")) {
+					return new Response(fixtureJson, { status: 200, headers: { "Content-Type": "application/json" } });
+				}
+				return previousFetch(input, init);
+			};
+			try {
+				const platform = await buildSketchpadPlatform();
+				applySketchpadUri(platform, "/");
+				const ctrl = getSketchpadShellController()!;
+				for (const openKitId of ctrl.listOpenKitIds()) {
+					ctrl.closeKit(openKitId);
+				}
+				applySketchpadUri(platform, "/");
+				const kitId = await seedSketchpadDevFixtureKitIfEmpty();
+				expect(kitId).toBeTruthy();
+				expect(platform.uri.split("?")[0]).toBe("/");
+				expect(platform.activeAppId).toBe(SKETCHPAD_HOME_APP_ID);
+				expect(ctrl.listOpenKitIds()).toContain(kitId);
+			} finally {
+				globalThis.fetch = previousFetch;
+				getSketchpadShellController()?.dispose();
+			}
 		});
 	});
 

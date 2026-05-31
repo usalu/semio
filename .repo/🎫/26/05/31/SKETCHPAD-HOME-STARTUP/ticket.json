@@ -1,0 +1,11 @@
+{
+  "title": "Sketchpad Home Startup",
+  "emoji": "🏠",
+  "status": "closed",
+  "description": "Sketchpad jumps directly to kit on startup instead of showing the home screen. Dev auto-seed should register fixture kits without navigating away from home.",
+  "summary": "Dev auto-seed (`seedSketchpadDevFixtureKitIfEmpty`) imported the Nakagin fixture with `navigate: true`, which sent sketchpad straight to the kit app on startup. Changed to `navigate: false` so the fixture preloads in the background while the home screen stays active. Added a regression test that asserts home URI and app after seeding.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪d150781dd9634a649435e264f5b3e550"
+  ]
+}

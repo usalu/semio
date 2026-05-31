@@ -170,6 +170,10 @@
     --destructive-bg: var(--color-light-8-9);
     --destructive-foreground: var(--color-danger);
     --destructive-border: var(--color-danger);
+    --scrollbar-size: var(--spacing-double);
+    --scrollbar-track: color-mix(in srgb, var(--muted) 55%, transparent);
+    --scrollbar-thumb: var(--border-color);
+    --scrollbar-thumb-hover: var(--muted-foreground);
     --color-new: var(--success-border);
     --color-modified: var(--warning-border);
     --color-removed: var(--destructive-border);
@@ -202,6 +206,59 @@
 
     ::-moz-selection {
       background-color: var(--accent);
+    }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar {
+      width: var(--scrollbar-size);
+      height: var(--scrollbar-size);
+    }
+
+    *::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 0;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: var(--scrollbar-track);
+    }
+
+    [data-slot="scroll-area-scrollbar"] {
+      background: var(--scrollbar-track);
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
+      width: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="horizontal"] {
+      height: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-thumb"] {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 0;
+    }
+
+    [data-slot="scroll-area-thumb"]:hover {
+      background-color: var(--scrollbar-thumb-hover);
     }
 
     body.cursor-selectable {

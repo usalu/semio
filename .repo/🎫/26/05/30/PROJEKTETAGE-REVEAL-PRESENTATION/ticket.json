@@ -2,9 +2,10 @@
   "title": "Projektetage Reveal Presentation",
   "status": "closed",
   "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
-  "summary": "Overrode reveal.js hardcoded chrome in globals.css (controls, slide-number, progress, viewport) to use --foreground, --font-sans, and panel tokens; sync has-dark-background with html.dark on init, slidechange, and prefers-color-scheme.",
+  "summary": "Removed PlatformView navbar app switcher (Home/Kit/Design tabs). Breadcrumb now follows back/forward/up navigation directly. App switching remains via URI/breadcrumb (sketchpad applySketchpadUri). Added regression test.",
   "goal": "🎯mitbestand",
   "sessions": [
-    "⚪cbb72fbe25dd449982ea468572735bf6"
+    "⚪cbb72fbe25dd449982ea468572735bf6",
+    "⚪54b2f60d961b4bb6b4871c42b7d4cca7"
   ]
 }

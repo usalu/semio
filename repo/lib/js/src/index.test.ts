@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   NEO4J_GRAPH_DATABASE_NAMES,
@@ -129,6 +129,18 @@ describe("dependency-boundary", () => {
       file,
     );
     expect(breachs).toEqual([]);
+  });
+});
+
+describe("ui scrollbar styling", () => {
+  test("ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
+    const repoRoot = findRepoRoot(import.meta.dir);
+    const css = readFileSync(join(repoRoot, "ui/styling/js/ui.css"), "utf8");
+    expect(css).toContain("--scrollbar-size:");
+    expect(css).toContain("--scrollbar-thumb:");
+    expect(css).toContain("scrollbar-color:");
+    expect(css).toContain("*::-webkit-scrollbar-thumb");
+    expect(css).toContain('[data-slot="scroll-area-thumb"]');
   });
 });
 

@@ -3019,7 +3019,7 @@ const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavig
  * Every UI has: toolbar, search (Ctrl+P), panel toggles, back/forward/up navigation.
  * Every app has: find (Ctrl+F).
  * Every panel has: tree.
- * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
+ * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [breadcrumb (flex-1)] [search] [find] [panel toggles].
  **/
 export const PlatformView: React.FC<PlatformViewProps> = ({
 	platform,
@@ -3257,21 +3257,6 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			</ButtonGroup>
 		),
 	});
-
-	if (resolvedApps.length > 1) {
-		navbarItems.push({
-			key: "appNav",
-			content: (
-				<ButtonGroup id="ui.appNav">
-					{resolvedApps.map((app) => (
-						<ButtonGroupItem key={app.id} id={`ui.appNav.${app.id}`} className={cn(activeAppId === app.id && "bg-active-base")} onClick={() => setActiveAppId(app.id)}>
-							{app.iconId ? resolveElementIcon(app.iconId) ?? <span className="text-xs">{app.label}</span> : <span className="text-xs">{app.label}</span>}
-						</ButtonGroupItem>
-					))}
-				</ButtonGroup>
-			),
-		});
-	}
 
 	const breadcrumbNavigate = reactHostPort.useCallback(
 		(href: string) => {
@@ -3548,6 +3533,28 @@ if (import.meta.vitest) {
 			expect(markup).toContain("kits");
 		});
 
+		it("does not render app switcher tabs when multiple apps are registered", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const mkApp = (id: string) => {
+				const app = new AppRuntime(id, id, undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+					new WindowKindRuntime("main", "Main", `test.workbench-view.${id}`),
+				]);
+				registerWindowBody(`test.workbench-view.${id}`, () => <div>{id}</div>);
+				return app;
+			};
+			wb.addApp(mkApp("home"));
+			wb.addApp(mkApp("kit"));
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/kits/demo" />);
+			expect(markup).toContain('aria-label="breadcrumb"');
+			expect(markup).not.toContain('id="ui.appNav"');
+		});
+
 		it("shows panel toggles only for registered panel kinds", () => {
 			const wb = new Platform();
 			class TCtrl extends Controller {
@@ -3571,6 +3578,21 @@ if (import.meta.vitest) {
 			expect(markup).not.toContain("data-missing-icon");
 			expect(markup).toContain('lucide lucide-folder');
 			expect(markup).toContain('lucide lucide-info');
+		});
+
+		it("renders navbar buttons and toggles with inline labels when compact is off", () => {
+			if (typeof localStorage !== "undefined") {
+				localStorage.setItem("semio.ui.compact", "false");
+			}
+			const wb = new Platform();
+			const app = new AppRuntime("kit", "Kit", undefined);
+			attachTestPanelTabs(app);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
+
+			expect(markup).toContain("Go back");
+			expect(markup).toContain("Search");
+			expect(markup).toContain("Toggle Workbench");
 		});
 
 		it("renders panel kind icons for unregistered tab iconIds", () => {

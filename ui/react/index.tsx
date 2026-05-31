@@ -11381,20 +11381,11 @@ export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${secondaryLi
 /** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
 export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
 
-/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap corners). */
+/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides). */
 export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${secondaryLineClass} bg-canvas`;
 
 /** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
 export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
-
-/** @emoji 📏 L-shaped joint at the bottom-outer corner of a window cap (connects side into gap baseline). */
-export const windowCapCornerClass = (lineClass: string, side: "left" | "right", behindTabs = false) =>
-  cn(
-    "pointer-events-none absolute bottom-0 box-border size-px border-b",
-    behindTabs ? "z-0" : "z-[3]",
-    side === "left" ? "left-0 border-l" : "right-0 border-r",
-    lineClass,
-  );
 
 /** @emoji 📐 Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
@@ -11431,6 +11422,10 @@ export function modeDockChromeGridPlacement(
 /** @emoji 📏 Inactive sibling tab — gray pill resting on the U-frame baseline; its bottom stroke color is applied per-stack (active vs secondary) so the chrome reads as one continuous outline. */
 export const modeDockInactiveTabClass =
   "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
+
+/** @emoji 📏 Inactive sibling tab resting on baseline with no bottom stroke — gap owns the horizontal segment before controls. */
+export const modeDockInactiveTabBeforeGapClass =
+  "relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 border-element bg-window";
 
 /** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
 export const modeDockActiveTabFillClass =
@@ -12005,12 +12000,13 @@ interface DescriptionTooltipContentProps {
 function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const { t } = useTranslation();
   const mode = useTooltipMode();
+  const labelId = resolveControlLabelId(id);
 
   if (mode === Expertise.EXPERT) return null;
 
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
-  const value = t(id as any) as any;
+  const value = t(labelId as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
   const label =
@@ -12034,7 +12030,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   if (typeof value === "object" && value?.hotkey) {
     hotkey = typeof value.hotkey === "string" ? value.hotkey : undefined;
   } else {
-    const hotkeyKey = `${id}.hotkey`;
+    const hotkeyKey = `${labelId}.hotkey`;
     const hotkeyValue = t(hotkeyKey as any) as any;
     if (typeof hotkeyValue === "string" && hotkeyValue !== hotkeyKey) {
       hotkey = hotkeyValue;
@@ -14933,7 +14929,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
     >
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
-          <ToggleGroupItem key={item.value} {...item} />
+          <ToggleGroupItem key={item.value} {...item} id={item.id ?? id} />
         ))}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -15192,6 +15188,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       items={[
         {
           value: "on",
+          id,
           icon: addIconSize(icon),
           text: text,
         },
@@ -15735,13 +15732,13 @@ function ScrollBar({ className, orientation = "vertical", ...props }: React.Comp
       orientation={orientation}
       className={cn(
         "flex touch-none select-none transition-colors",
-        orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent p-[1px]",
-        orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+        orientation === "vertical" && "h-full w-[var(--scrollbar-size)] border-l border-l-transparent p-[1px]",
+        orientation === "horizontal" && "h-[var(--scrollbar-size)] flex-col border-t border-t-transparent p-[1px]",
         className,
       )}
       {...props}
     >
-      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="bg-border relative flex-1 rounded-full" />
+      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="relative flex-1" />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   );
 }
@@ -23255,6 +23252,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     </div>
   );
 
+  const inactiveTabChromeClass = (stackIndex: number) => {
+    const isLastBeforeGap = perTabActiveChrome && stackIndex === tabs.length - 1;
+    return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : cn(modeDockInactiveTabClass, baselineBottomClass);
+  };
+
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => (
     <div
       key={tab.id}
@@ -23265,8 +23267,8 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       className={cn(
         "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-window hover:text-foreground",
         !perTabActiveChrome && "bg-window",
-        perTabActiveChrome && activeId !== tab.id && cn(modeDockInactiveTabClass, baselineBottomClass),
-        perTabActiveChrome && activeId === tab.id && !stackGloballyActive && cn(modeDockInactiveTabClass, baselineBottomClass),
+        perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
+        perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
         perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
         !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
         activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
@@ -23319,7 +23321,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
       </button>
-      <div data-slot="mode-dock-controls-cap-corner" className={windowCapCornerClass(frameLineClass, "left")} aria-hidden />
     </div>
   );
 
@@ -23364,9 +23365,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
                 style={{ gridColumn: displayChromeGrid.tabCol(index) }}
               >
                 {renderTab(tab, tabs.findIndex((row) => row.id === tab.id))}
-                {activeId === tab.id && stackGloballyActive ? (
-                  <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right", true)} aria-hidden />
-                ) : null}
               </div>
             ),
           )}
@@ -23403,7 +23401,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
               : renderTab(tab, tabs.findIndex((row) => row.id === tab.id)),
           )}
         </div>
-        <div data-slot="mode-dock-tab-cap-corner" className={windowCapCornerClass(frameLineClass, "right")} aria-hidden />
       </div>
       {tabGap}
       {controlsCap}
@@ -24112,8 +24109,8 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-t-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeTruthy();
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeTruthy();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-element");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-element");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-element");
@@ -24266,6 +24263,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-element");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
       const multiTabBar = container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-tabbar"]');
@@ -25559,6 +25557,30 @@ if (treeVitest) {
     it("maps ui shell ids to sketchpad navbar labels", () => {
       expect(resolveControlLabelId("ui.nav.back")).toBe("semio.sketchpad.navbar.back");
       expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("semio.sketchpad.navbar.panelToggle.workbench");
+    });
+
+    it("renders navbar navigation buttons with inline labels when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <ButtonGroup id="ui.nav.back">
+            <ButtonGroupItem id="ui.nav.back">
+              <NavigateBackIcon className="size-small" />
+            </ButtonGroupItem>
+          </ButtonGroup>
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Go back");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("renders toggles with inline labels from the toggle group id when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain("aspect-auto");
     });
   });
 
