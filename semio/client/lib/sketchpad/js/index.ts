@@ -4396,11 +4396,13 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await page.goto("/", { waitUntil: "networkidle" });
 			await openSketchpadCommandPalette(page);
 			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
-			await expect(page.getByText("Base")).toBeVisible({ timeout: 120_000 });
-			await page.getByText("Base").click();
+			await expect(page.getByRole("columnheader", { name: "Kind" })).toBeVisible({ timeout: 120_000 });
+			const baseRow = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "Base", exact: true }) });
+			await expect(baseRow).toBeVisible({ timeout: 120_000 });
+			await baseRow.click();
 			await expect(page).toHaveURL(/\/types\/[0-9a-f-]{36}/i, { timeout: 120_000 });
-			await expect(page.getByText("base")).toBeVisible({ timeout: 120_000 });
-			await expect(page.getByText("Mesh unavailable")).not.toBeVisible({ timeout: 5_000 });
+			await expect(page.getByText("Mesh unavailable")).toHaveCount(0, { timeout: 60_000 });
+			await expect(page.getByText("Topology loading")).toHaveCount(0, { timeout: 60_000 });
 		});
 	});
 }

@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, Input, Label, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, focusActiveEngagementInput, Input, Label, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -4644,6 +4644,18 @@ export function InteractionRepl({
     if (applyEv) void rt.send(applyEv);
   }, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
+  const focusReplCommandInput = reactHostPort.useCallback(() => {
+    if (!showAside && showEngagement && focusActiveEngagementInput()) return;
+    cmdRef.current?.focus({ preventScroll: true });
+  }, [showAside, showEngagement]);
+
+  const replCommandInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
+    if (!showAside && showEngagement) {
+      return document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+    }
+    return cmdRef.current;
+  }, [showAside, showEngagement]);
+
   reactHostPort.useEffect(() => {
     if (!captureGlobalKeys) return;
     const onWinCapture = (e: globalThis.KeyboardEvent) => {
@@ -4699,24 +4711,25 @@ export function InteractionRepl({
         else if (replShouldRepeatInteractionOnSpace(e, { interactionActive, cmdTarget: cmdRef.current })) repeatCurrentInteraction();
         return;
       }
-      if (t !== cmdRef.current && e.key === "Backspace") {
+      const commandInput = replCommandInputElement();
+      if (commandInput && t !== commandInput && e.key === "Backspace") {
         e.preventDefault();
         e.stopPropagation();
-        cmdRef.current?.focus();
+        focusReplCommandInput();
         setCmdLineRef.current((prev) => prev.slice(0, -1));
         return;
       }
-      if (t !== cmdRef.current && e.key === "Escape") {
+      if (commandInput && t !== commandInput && e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
-        cmdRef.current?.focus();
+        focusReplCommandInput();
         handleEscapeKey();
         return;
       }
-      if (t !== cmdRef.current && e.key === "Enter") {
+      if (commandInput && t !== commandInput && e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        cmdRef.current?.focus();
+        focusReplCommandInput();
         const snap = rt.getSnapshot();
         if (!cmdLine.trim()) {
           void (async () => {
@@ -4734,15 +4747,15 @@ export function InteractionRepl({
         return;
       }
       if (!one || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (t === cmdRef.current) return;
+      if (t === commandInput) return;
       e.preventDefault();
       e.stopPropagation();
-      cmdRef.current?.focus();
+      focusReplCommandInput();
       setCmdLineRef.current((prev) => replCommandTextWithoutSpaces(`${prev}${one}`));
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {

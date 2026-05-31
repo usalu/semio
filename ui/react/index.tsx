@@ -19829,6 +19829,81 @@ export function filterEngagementPossibles(query: string, items: readonly Engagem
   });
 }
 
+/** @emoji ⌨️ Inline completion suffix for one {@link EngagementPossible} (longest prefix match on label, detail, or id). */
+export function engagementCompletionSuffix(query: string, item: EngagementPossible | undefined): string {
+  if (!query.trim() || !item) return "";
+  const q = query;
+  const ql = q.toLowerCase();
+  let best = "";
+  for (const text of [item.label, item.detail ?? "", item.id]) {
+    if (!text.toLowerCase().startsWith(ql)) continue;
+    const suffix = text.slice(q.length);
+    if (suffix.length > best.length) best = suffix;
+  }
+  return best;
+}
+
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link EngagementPossible} matches. */
+export function engagementActiveCompletionSuffix(query: string, matches: readonly EngagementPossible[], index: number): string {
+  if (!query.trim() || !matches.length) return "";
+  const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
+  const seen = new Set<EngagementPossible>();
+  for (const item of order) {
+    if (seen.has(item)) continue;
+    seen.add(item);
+    const suffix = engagementCompletionSuffix(query, item);
+    if (suffix) return suffix;
+  }
+  return "";
+}
+
+/** @emoji ⌨️ True when the event target is already the active window engagement command field. */
+export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"] textarea'));
+}
+
+/** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
+export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolean {
+  if (isEngagementCommandTypingTarget(t)) return false;
+  if (!(t instanceof HTMLElement)) return true;
+  if (t instanceof HTMLTextAreaElement) return false;
+  if (t instanceof HTMLInputElement) {
+    const kind = (t.type || "text").toLowerCase();
+    return kind === "button" || kind === "checkbox" || kind === "radio" || kind === "file" || kind === "range" || kind === "color";
+  }
+  if (t.isContentEditable) return false;
+  return true;
+}
+
+/** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
+export function focusActiveEngagementInput(): boolean {
+  const field = document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+  if (!field || field.disabled) return false;
+  field.focus({ preventScroll: true });
+  return true;
+}
+
+/** @emoji 👁 True when the window engagement chrome should render (non-empty command or pointer over the engagement zone). */
+export function windowEngagementChromeVisible(engagement: EngagementSpec | undefined, zone: { readonly hovered: boolean; readonly focused: boolean }): boolean {
+  if (!engagement) return false;
+  if (engagement.input?.value?.trim()) return true;
+  return zone.hovered || zone.focused;
+}
+
+/** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
+export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
+  const input = engagement?.input;
+  if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+  if (!printable) return false;
+  const field = document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+  input.onChange?.(`${input.value ?? field?.value ?? ""}${event.key}`);
+  focusActiveEngagementInput();
+  return true;
+}
+
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
   options?: EngagementOption[];
@@ -19883,7 +19958,6 @@ export interface EngagementProps extends EngagementSpec {
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
   const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
-  const [autocompleteSuppressed, setAutocompleteSuppressed] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
   const filteredPossibles = reactHostPort.useMemo(
@@ -19901,20 +19975,17 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
 
   reactHostPort.useEffect(() => {
     setPossiblesExpanded(false);
-    setAutocompleteSuppressed(false);
   }, [possibleEngagements]);
-
-  reactHostPort.useEffect(() => {
-    setAutocompleteSuppressed(false);
-  }, [draft]);
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
-  const autocompleteFromTyping = draft.trim().length > 0;
-  const showAutocomplete =
-    hasPossibles && filteredPossibles.length > 0 && !autocompleteSuppressed && (possiblesExpanded || autocompleteFromTyping);
+  const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
+  const inlineCompletionSuffix = reactHostPort.useMemo(
+    () => (showPossiblesList ? "" : engagementActiveCompletionSuffix(draft, filteredPossibles, activePossibleIndex)),
+    [activePossibleIndex, draft, filteredPossibles, showPossiblesList],
+  );
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -19929,7 +20000,6 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
       item.onSelect?.();
       applyDraft("");
       setPossiblesExpanded(false);
-      setAutocompleteSuppressed(false);
       setActivePossibleIndex(0);
     },
     [applyDraft],
@@ -19954,56 +20024,74 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
       <div ref={engagementRef} data-slot="engagement" data-active={active ? "true" : undefined} className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}>
       {hasInput ? (
         <Popover
-          open={showAutocomplete}
+          open={showPossiblesList}
           onOpenChange={(open) => {
-            if (!open) {
-              setPossiblesExpanded(false);
-              setAutocompleteSuppressed(true);
-            }
+            if (!open) setPossiblesExpanded(false);
           }}
         >
           <PopoverAnchor asChild>
             <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
-              <Input
-                id={input!.id ?? "engagement-input"}
-                className="min-w-0 flex-1"
-                value={draft}
-                tabIndex={active ? 0 : -1}
-                onChange={(event) => applyDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    if (showAutocomplete) {
-                      event.preventDefault();
-                      setPossiblesExpanded(false);
-                      setAutocompleteSuppressed(true);
+              <div
+                data-slot="engagement-command-input"
+                className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0"
+              >
+                <Input
+                  id={input!.id ?? "engagement-input"}
+                  className="relative z-[1] min-w-0 flex-1 bg-transparent"
+                  value={draft}
+                  tabIndex={active ? 0 : -1}
+                  onChange={(event) => applyDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      if (showPossiblesList) {
+                        event.preventDefault();
+                        setPossiblesExpanded(false);
+                        return;
+                      }
                       return;
                     }
-                    return;
-                  }
-                  if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && showAutocomplete && hasPossibles) {
-                    event.preventDefault();
-                    activatePossible();
-                    return;
-                  }
-                  if (event.key === "ArrowDown" && showAutocomplete && filteredPossibles.length) {
-                    event.preventDefault();
-                    setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
-                    return;
-                  }
-                  if (event.key === "ArrowUp" && showAutocomplete && filteredPossibles.length) {
-                    event.preventDefault();
-                    setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
-                    return;
-                  }
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    if (showAutocomplete && activatePossible()) return;
-                    input!.onSubmit?.(draft);
-                  }
-                }}
-                placeholder={input!.placeholder}
-                disabled={input!.disabled}
-              />
+                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && showPossiblesList && hasPossibles) {
+                      event.preventDefault();
+                      activatePossible();
+                      return;
+                    }
+                    if (event.key === "Tab" && !showPossiblesList && inlineCompletionSuffix) {
+                      event.preventDefault();
+                      applyDraft(draft + inlineCompletionSuffix);
+                      return;
+                    }
+                    if (event.key === "ArrowDown" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === "ArrowUp" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (showPossiblesList && activatePossible()) return;
+                      input!.onSubmit?.(draft);
+                    }
+                  }}
+                  placeholder={input!.placeholder}
+                  disabled={input!.disabled}
+                />
+                {inlineCompletionSuffix ? (
+                  <div
+                    aria-hidden
+                    data-slot="engagement-inline-completion"
+                    className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm"
+                  >
+                    <span className="truncate text-transparent">{draft}</span>
+                    <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
+                      {inlineCompletionSuffix}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
               {hasPossibles ? (
                 <Action
                   id="engagement-possibles-toggle"
@@ -20136,6 +20224,31 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
  **/
 const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate }) => {
   const bgClass = "bg-window";
+  const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
+  const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
+  const showEngagementChrome = active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, focused: engagementZoneFocused });
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.input) return;
+    const root = windowRef.current;
+    if (!root) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!routeWindowEngagementKeydown(engagement, event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    root.addEventListener("keydown", onKeyDown, true);
+    return () => root.removeEventListener("keydown", onKeyDown, true);
+  }, [active, engagement]);
+
+  reactHostPort.useEffect(() => {
+    if (!active) {
+      setEngagementZoneHovered(false);
+      setEngagementZoneFocused(false);
+    }
+  }, [active]);
 
   if (!isVisible) return null;
 
@@ -20169,10 +20282,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   return (
     <LevelProvider level="window">
       <div
+        ref={windowRef}
         data-slot="window"
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDownCapture={() => onActivate?.()}
+        onPointerDownCapture={() => {
+          onActivate?.();
+          if (showEngagementChrome && engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+        }}
         className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
@@ -20188,9 +20305,27 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {engagement && active ? (
             <div
               data-slot="window-engagement-overlay"
-              className="pointer-events-none absolute inset-x-0 top-0 z-window flex items-start justify-center px-single pt-single"
+              data-expanded={showEngagementChrome ? "true" : undefined}
+              className="pointer-events-none absolute inset-x-0 top-0 z-window flex items-start justify-center"
             >
-              <Engagement {...engagement} active />
+              <div
+                ref={engagementZoneRef}
+                data-slot="window-engagement-hover-zone"
+                className={cn(
+                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-full flex-col items-stretch px-single pt-single",
+                  showEngagementChrome ? "min-h-0" : "h-medium",
+                )}
+                onPointerEnter={() => setEngagementZoneHovered(true)}
+                onPointerLeave={() => setEngagementZoneHovered(false)}
+                onFocusCapture={() => setEngagementZoneFocused(true)}
+                onBlurCapture={(event) => {
+                  const next = event.relatedTarget;
+                  if (next instanceof Node && engagementZoneRef.current?.contains(next)) return;
+                  setEngagementZoneFocused(false);
+                }}
+              >
+                {showEngagementChrome ? <Engagement {...engagement} active /> : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -24033,7 +24168,14 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("Engagement shows possibles while typing and activates on Space or Enter", async () => {
+    it("engagementCompletionSuffix ranks prefix matches on label, detail, and id", () => {
+      const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
+      expect(engagementCompletionSuffix("Sp", sphere)).toBe("here");
+      expect(engagementCompletionSuffix("sph", sphere)).toBe("ere");
+      expect(engagementActiveCompletionSuffix("Sp", [sphere], 0)).toBe("here");
+    });
+
+    it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
@@ -24049,9 +24191,13 @@ if (import.meta.vitest) {
       );
       const field = screen.getByPlaceholderText("Type an interaction");
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
-      fireEvent.change(field, { target: { value: "sph" } });
+      fireEvent.change(field, { target: { value: "Sp" } });
+      await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("here"));
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
       expect(screen.getByText("Sphere")).toBeTruthy();
+      fireEvent.change(field, { target: { value: "sph" } });
       fireEvent.keyDown(field, { key: "Enter" });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
       fireEvent.change(field, { target: { value: "" } });
@@ -24059,6 +24205,28 @@ if (import.meta.vitest) {
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
       Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("Window focuses engagement input on body pointer down and routes printable keys", async () => {
+      const changes: string[] = [];
+      const { container } = render(
+        <Window
+          id="engagement-window"
+          active
+          engagement={{ input: { id: "engagement-input", value: "", placeholder: "Command", onChange: (value) => changes.push(value) } }}
+        >
+          <div data-testid="window-body">Body</div>
+        </Window>,
+      );
+      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      const body = screen.getByTestId("window-body");
+      field.blur();
+      expect(document.activeElement).not.toBe(field);
+      fireEvent.pointerDown(body, { bubbles: true });
+      await waitFor(() => expect(document.activeElement).toBe(field));
+      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
+      await waitFor(() => expect(changes).toEqual(["b"]));
+      expect(document.activeElement).toBe(field);
     });
 
     it("Window anchors engagement in a top overlay when active", () => {

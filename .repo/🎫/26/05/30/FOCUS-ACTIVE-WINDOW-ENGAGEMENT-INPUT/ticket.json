@@ -1,11 +1,13 @@
 {
   "title": "Focus Active Window Engagement Input",
   "emoji": "⌨️",
-  "status": "closed",
+  "status": "open",
   "description": "When a window is active and has engagement, auto-focus the engagement input. Fix CAD play typing hitting all panes (global key capture + replIsQueryTypingTarget). Wire window activation to focus model definition.",
-  "summary": "Active windows now auto-focus the engagement command input (`Engagement` receives `active` from `Window`). CAD play only registers REPL global key capture on the focused model-definition pane (`captureGlobalKeys`), `replIsQueryTypingTarget` treats text inputs/engagement fields as typing targets, and `app.onActiveWindowChange` syncs window tabs to `focusModelDefinition`. All @ui/react (55) and @cad/js/renderer (47) tests pass.",
+  "summary": "Window body pointer-down and printable keydown now focus and feed the engagement command input without a separate click. Added focusActiveEngagementInput, routeWindowEngagementKeydown, and shouldRouteKeysToWindowEngagement in ui. InteractionRepl with showAside=false routes global keys to the overlay engagement field instead of a hidden aside input.",
   "goal": "🎯ui",
   "sessions": [
-    "⚪c05610cb1b334f46b076bcd7406d0ff4"
+    "⚪c05610cb1b334f46b076bcd7406d0ff4",
+    "⚪2975526520ba4aac8cd59ef6fefbf7fe",
+    "⚪08dd13f9e773413dae31837c4db9b34a"
   ]
 }
