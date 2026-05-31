@@ -4289,9 +4289,6 @@ export class Puzzle2dRenderer {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
-    if (this.session.defersDescriptorSyncFromJs() || this.wheelZoomGestureActive || this.session.isDraggingAreaSelect()) {
-      return;
-    }
     if (!this.textOverlayDirty()) {
       return;
     }
@@ -5291,6 +5288,56 @@ if (puzzle2dVitest) {
       renderer["rememberTextOverlayPainted"]();
       renderer["lastVelloThemeJson"] = '{"changed":true}';
       expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays repaints during wheel zoom and deferred descriptor sync", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: "#000000",
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer.setCamera(0, 0, 1);
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
+      fillText.mockClear();
+      renderer["wheelZoomGestureActive"] = true;
+      vi.spyOn(renderer.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
+      renderer.camera.x = 120;
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
       renderer.dispose();
     });
 

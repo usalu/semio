@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 2d Drag Stale Nodes",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "While dragging nodes in puzzle 2d, only edges update visually; nodes/handles stay at cached positions until drag ends. Bump world content cache generation when node geometry changes during drag and setNodePositions.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪e9e90bd511b647a88af4c75dc95526d3"
+  ]
+}

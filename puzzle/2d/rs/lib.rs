@@ -4950,14 +4950,21 @@ mod board_host {
 
         /// @emoji 📍 Applies peer-pane node drags without a full descriptor re-sync.
         pub fn set_node_positions(&mut self, moves: &[(String, f64, f64)]) {
+            let mut geometry_changed = false;
             for (id, x, y) in moves {
                 if !x.is_finite() || !y.is_finite() {
                     continue;
                 }
                 if let Some(node) = self.nodes.get_mut(id.as_str()) {
-                    node.x = *x;
-                    node.y = *y;
+                    if (node.x - *x).abs() > 1e-9 || (node.y - *y).abs() > 1e-9 {
+                        node.x = *x;
+                        node.y = *y;
+                        geometry_changed = true;
+                    }
                 }
+            }
+            if geometry_changed {
+                self.bump_content_scene_generation();
             }
         }
 
@@ -5956,14 +5963,21 @@ mod board_host {
                         dx = snx - px0;
                         dy = sny - py0;
                     }
+                    let mut geometry_changed = false;
                     for (id, (ox0, oy0)) in &start_positions {
                         if let Some(n) = self.nodes.get_mut(id) {
                             let mx = ox0 + dx;
                             let my = oy0 + dy;
+                            if (n.x - mx).abs() > 1e-9 || (n.y - my).abs() > 1e-9 {
+                                geometry_changed = true;
+                            }
                             n.x = mx;
                             n.y = my;
                             self.push_event("nodeMove", json!({ "id": id, "x": mx, "y": my }));
                         }
+                    }
+                    if geometry_changed {
+                        self.bump_content_scene_generation();
                     }
                     let proximity_pair = if start_positions.len() == 1 { self.node_drag_proximity_handle_pair(primary_id.as_str()) } else { None };
                     self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair };
@@ -7313,14 +7327,30 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
+        let gen_before = h.content_scene_generation;
         h.set_node_positions(&[("a".into(), 12.0, 34.0), ("missing".into(), 1.0, 2.0), ("a".into(), f64::NAN, 0.0)]);
         let node = h.nodes.get("a").expect("node a should remain");
         assert!((node.x - 12.0).abs() < 0.001);
         assert!((node.y - 34.0).abs() < 0.001);
+        assert!(h.content_scene_generation > gen_before, "moving nodes must invalidate cached world content");
         h.set_node_positions_json(r#"[{"id":"a","x":90.0,"y":110.0}]"#).unwrap();
         let node = h.nodes.get("a").expect("node a should remain");
         assert!((node.x - 90.0).abs() < 0.001);
         assert!((node.y - 110.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn board_host_node_drag_invalidates_cached_world_content() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let gen_before = h.content_scene_generation;
+        let hint_before = h.encoded_scene_hint();
+        let s = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_down_screen(s.x, s.y, 0, false, false);
+        h.pointer_move_screen(s.x + 80.0, s.y + 40.0, false, false);
+        assert!(h.content_scene_generation > gen_before, "node drag must rebuild cached nodes/handles, not only edges");
+        assert_ne!(h.encoded_scene_hint(), hint_before, "dragged node geometry should change encoded vector scene");
     }
 
     #[test]
@@ -7433,6 +7463,22 @@ mod host_tests {
         let hit = h.resolve_hit_world(hp);
         assert_eq!(hit.as_deref(), Some("a:h0"));
         assert!(h.encoded_scene_hint() > 10);
+    }
+
+    #[test]
+    fn board_host_cached_content_includes_edge_vector_paths_at_overview_zoom() {
+        let mut h = BoardHost::new();
+        h.set_size(1200, 800, 1.0);
+        h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
+        h.set_camera_silent(0.0, 0.0, 0.21);
+        let with_edges = h.encoded_scene_hint();
+        let mut without = link_test_scene_no_edge();
+        h.sync_descriptor(&without).unwrap();
+        let without_edges = h.encoded_scene_hint();
+        assert!(
+            with_edges > without_edges,
+            "overview cached draw must encode edges (with={with_edges}, without={without_edges})"
+        );
     }
 
     #[test]
