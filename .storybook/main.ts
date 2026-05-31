@@ -10,8 +10,10 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
+import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import { uiAssetsVitePlugin } from "../ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -37,6 +39,7 @@ const semioAssetsDir = resolve(repoRootPath, "semio/assets");
 const semioFixturesDir = resolve(repoRootPath, "semio/fixtures");
 const puzzleAssetsDir = resolve(repoRootPath, "puzzle/assets");
 const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
+const uiAssetsRootPath = resolve(repoRootPath, "ui/assets");
 
 function toVitePath(value: string): string {
 	return value.replaceAll("\\", "/");
@@ -157,6 +160,18 @@ const config: StorybookConfig = {
 		};
 
 		config.plugins = config.plugins || [];
+		const hasTailwindPlugin = config.plugins.some(
+			(plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite",
+		);
+		if (!hasTailwindPlugin) {
+			config.plugins.push(...tailwindcss());
+		}
+		const hasUiAssetsPlugin = config.plugins.some(
+			(plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve",
+		);
+		if (!hasUiAssetsPlugin) {
+			config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
+		}
 		const indicesToRemove: number[] = [];
 		for (let i = 0; i < config.plugins.length; i++) {
 			const plugin: any = config.plugins[i];

@@ -2790,6 +2790,10 @@ mod board_host {
         last_select_emit_sig: Option<(Vec<String>, Option<String>)>,
         /// @emoji 📡 Dedupes `preselect` emissions during area-select drag.
         last_preselect_emit_sig: Option<(Vec<String>, Vec<String>, Option<String>)>,
+        /// @emoji 🧿 Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
+        content_scene_generation: u64,
+        /// @emoji 🎨 World-space Vello content reused across pan/zoom when generation and LOD match.
+        world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
     }
 
     impl Default for Camera {
@@ -2841,7 +2845,28 @@ mod board_host {
                 link_target_ring_emit_key: None,
                 last_select_emit_sig: None,
                 last_preselect_emit_sig: None,
+                content_scene_generation: 0,
+                world_content_cache: RefCell::new(None),
             }
+        }
+    }
+
+    impl BoardHost {
+        fn bump_content_scene_generation(&mut self) {
+            self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
+            *self.world_content_cache.borrow_mut() = None;
+        }
+
+        fn camera_content_affine(&self) -> Affine {
+            let z = self.camera.zoom;
+            Affine::new([
+                z,
+                0.0,
+                0.0,
+                z,
+                self.width as f64 * 0.5 - self.camera.x * z,
+                self.height as f64 * 0.5 - self.camera.y * z,
+            ])
         }
     }
 
@@ -3097,6 +3122,15 @@ mod board_host {
         }
 
         pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+            self.set_camera_internal(x, y, zoom, true);
+        }
+
+        /// @emoji 🔇 Updates viewport camera without enqueueing a `camera` drain row (wheel / imperative sync).
+        pub fn set_camera_silent(&mut self, x: f64, y: f64, zoom: f64) {
+            self.set_camera_internal(x, y, zoom, false);
+        }
+
+        fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
             let zoom = zoom.clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX);
             if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
                 return;
@@ -3104,7 +3138,9 @@ mod board_host {
             self.camera.x = x;
             self.camera.y = y;
             self.camera.zoom = zoom;
-            self.push_event("camera", json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+            if emit_event {
+                self.push_event("camera", json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+            }
         }
 
         pub fn set_selection_options(&mut self, method: &str, mode: &str, select_nodes: bool, select_edges: bool, select_handles: bool) {
@@ -3857,6 +3893,7 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
             self.push_select_event();
         }
 
@@ -3872,6 +3909,7 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
         }
 
         /// @emoji 🔇 Mirrors area-select preview chrome without emitting `preselect` (shared multi-view sync).
@@ -3883,6 +3921,7 @@ mod board_host {
             }
             self.preselect = next;
             self.preselect_removed = removed;
+            self.bump_content_scene_generation();
             self.sync_selection_flags_to_objects();
         }
 
@@ -4902,6 +4941,7 @@ mod board_host {
                 }
             }
             self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
             Ok(())
         }
 
@@ -5171,9 +5211,25 @@ mod board_host {
             scene.stroke(&stroke, Affine::IDENTITY, color, None, &p);
         }
 
-        fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool, style_kind: BoardElementStyleKind, paint_override: Option<(Color, Color, f64)>) {
-            let c = self.world_to_screen(center);
-            let r = (radius_world * self.camera.zoom).max(1.0);
+        fn draw_space_point(&self, world: Point, world_space: bool) -> Point {
+            if world_space {
+                world
+            } else {
+                self.world_to_screen(world)
+            }
+        }
+
+        fn draw_space_len(&self, len_world: f64, world_space: bool) -> f64 {
+            if world_space {
+                len_world.max(1e-9)
+            } else {
+                (len_world * self.camera.zoom).max(1.0)
+            }
+        }
+
+        fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool, style_kind: BoardElementStyleKind, paint_override: Option<(Color, Color, f64)>, world_space: bool) {
+            let c = self.draw_space_point(center, world_space);
+            let r = self.draw_space_len(radius_world, world_space);
             let circle = Circle::new(c, r);
             let (fill, stroke_c, stroke_px) =
                 if let Some((f, s, sw)) = paint_override { (f, s, sw) } else { (self.resolve_handle_fill_color(h, &self.vello_theme, style_kind), self.resolve_handle_stroke_color(h, &self.vello_theme, style_kind), 2.0_f64) };
@@ -5184,13 +5240,13 @@ mod board_host {
                     let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
                     if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
                         let fit_inset = 0.62;
-                        let s = radius_world * self.camera.zoom * fit_inset;
+                        let s = self.draw_space_len(radius_world, world_space) * fit_inset;
                         let cx = bx + bw * 0.5;
                         let cy = by + bh * 0.5;
                         let avail = 2.0 * s;
                         let scale = (avail / bw).min(avail / bh);
                         let aff = Affine::translate((c.x - scale * cx, c.y - scale * cy)) * Affine::scale(scale);
-                        let r_clip = (radius_world * self.camera.zoom * 0.82).max(1.0);
+                        let r_clip = self.draw_space_len(radius_world, world_space) * 0.82;
                         let disc = Circle::new(c, r_clip);
                         scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
                         match &body {
@@ -5225,11 +5281,11 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h);
                 let stroke_px = 2.0_f64;
                 let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
-                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override);
+                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, false);
             }
         }
 
-        fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod) {
+        fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
             let pad = self.drawable_cull_pad_world();
             let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
@@ -5255,8 +5311,8 @@ mod board_host {
                 let sw = 2.0_f64;
                 match n.shape {
                     NodeShape::Circle => {
-                        let c = self.world_to_screen(Point::new(n.x, n.y));
-                        let r = (self.scaled_node_radius(n) * self.camera.zoom).max(1.0);
+                        let c = self.draw_space_point(Point::new(n.x, n.y), world_space);
+                        let r = self.draw_space_len(self.scaled_node_radius(n), world_space);
                         let circle = Circle::new(c, r);
                         scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
                         if draw_node_stroke {
@@ -5266,8 +5322,8 @@ mod board_host {
                     NodeShape::Rectangle => {
                         let hw = self.scaled_node_width(n) / 2.0;
                         let hh = self.scaled_node_height(n) / 2.0;
-                        let p0 = self.world_to_screen(Point::new(n.x - hw, n.y - hh));
-                        let p1 = self.world_to_screen(Point::new(n.x + hw, n.y + hh));
+                        let p0 = self.draw_space_point(Point::new(n.x - hw, n.y - hh), world_space);
+                        let p1 = self.draw_space_point(Point::new(n.x + hw, n.y + hh), world_space);
                         let r = Rect::from_points(p0, p1);
                         scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
                         if draw_node_stroke {
@@ -5283,12 +5339,15 @@ mod board_host {
                             let fit_inset = 0.76;
                             let (sx_half, sy_half) = match n.shape {
                                 NodeShape::Circle => {
-                                    let s = self.scaled_node_radius(n) * self.camera.zoom * fit_inset;
+                                    let s = self.draw_space_len(self.scaled_node_radius(n), world_space) * fit_inset;
                                     (s, s)
                                 }
-                                NodeShape::Rectangle => (self.scaled_node_width(n) * self.camera.zoom * fit_inset * 0.5, self.scaled_node_height(n) * self.camera.zoom * fit_inset * 0.5),
+                                NodeShape::Rectangle => (
+                                    self.draw_space_len(self.scaled_node_width(n), world_space) * fit_inset * 0.5,
+                                    self.draw_space_len(self.scaled_node_height(n), world_space) * fit_inset * 0.5,
+                                ),
                             };
-                            let center = self.world_to_screen(Point::new(n.x, n.y));
+                            let center = self.draw_space_point(Point::new(n.x, n.y), world_space);
                             let cx = bx + bw * 0.5;
                             let cy = by + bh * 0.5;
                             let avail_w = 2.0 * sx_half;
@@ -5297,7 +5356,7 @@ mod board_host {
                             let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
                             match n.shape {
                                 NodeShape::Circle => {
-                                    let r_clip = (self.scaled_node_radius(n) * self.camera.zoom * clip_inset).max(1.0);
+                                    let r_clip = self.draw_space_len(self.scaled_node_radius(n), world_space) * clip_inset;
                                     let disc = Circle::new(center, r_clip);
                                     scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
                                     match &body {
@@ -5311,8 +5370,8 @@ mod board_host {
                                     scene.pop_layer();
                                 }
                                 NodeShape::Rectangle => {
-                                    let hw = self.scaled_node_width(n) * self.camera.zoom * clip_inset * 0.5;
-                                    let hh = self.scaled_node_height(n) * self.camera.zoom * clip_inset * 0.5;
+                                    let hw = self.draw_space_len(self.scaled_node_width(n), world_space) * clip_inset * 0.5;
+                                    let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
                                     let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
                                     scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
                                     match &body {
@@ -5342,9 +5401,15 @@ mod board_host {
                 }
                 let Some(wp) = self.handle_world_pos(h) else { continue };
                 let style_kind = self.resolve_handle_style_kind(h);
-                self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None);
+                self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
             }
-            let edge_sw = if lod == BoardDrawLod::Minimap { 1.12_f64 } else { 2.0 * self.camera.zoom.max(0.75) };
+            let edge_sw = if lod == BoardDrawLod::Minimap {
+                1.12_f64
+            } else if world_space {
+                2.0_f64
+            } else {
+                2.0 * self.camera.zoom.max(0.75)
+            };
             let edge_stroke = Stroke::new(edge_sw);
             for e in self.edges.values() {
                 if !self.edge_effectively_visible(e) {
@@ -5357,10 +5422,10 @@ mod board_host {
                     }
                 }
                 if let Some(c) = self.edge_curve(e) {
-                    let p0 = self.world_to_screen(c.p0);
-                    let p1 = self.world_to_screen(c.p1);
-                    let p2 = self.world_to_screen(c.p2);
-                    let p3 = self.world_to_screen(c.p3);
+                    let p0 = self.draw_space_point(c.p0, world_space);
+                    let p1 = self.draw_space_point(c.p1, world_space);
+                    let p2 = self.draw_space_point(c.p2, world_space);
+                    let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
                     let stroke_color = Self::edge_stroke_for_style(&self.vello_theme, self.resolve_edge_style_kind(e));
                     scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
@@ -5373,10 +5438,10 @@ mod board_host {
                     continue;
                 }
                 if let Some(c) = self.wire_curve(w) {
-                    let p0 = self.world_to_screen(c.p0);
-                    let p1 = self.world_to_screen(c.p1);
-                    let p2 = self.world_to_screen(c.p2);
-                    let p3 = self.world_to_screen(c.p3);
+                    let p0 = self.draw_space_point(c.p0, world_space);
+                    let p1 = self.draw_space_point(c.p1, world_space);
+                    let p2 = self.draw_space_point(c.p2, world_space);
+                    let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
                     let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w));
                     scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
@@ -5389,12 +5454,27 @@ mod board_host {
             let link_wire_stroke = Stroke::new(link_wire_sw);
             let link_wire_color = self.vello_theme.node_stroke;
             if let Some(c) = self.active_link_wire_curve() {
-                let p0 = self.world_to_screen(c.p0);
-                let p1 = self.world_to_screen(c.p1);
-                let p2 = self.world_to_screen(c.p2);
-                let p3 = self.world_to_screen(c.p3);
+                let p0 = self.draw_space_point(c.p0, world_space);
+                let p1 = self.draw_space_point(c.p1, world_space);
+                let p2 = self.draw_space_point(c.p2, world_space);
+                let p3 = self.draw_space_point(c.p3, world_space);
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
+            }
+        }
+
+        fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
+            let gen = self.content_scene_generation;
+            let cam_aff = self.camera_content_affine();
+            let mut cache = self.world_content_cache.borrow_mut();
+            let needs_rebuild = cache.as_ref().map(|c| c.0 != gen || c.1 != lod).unwrap_or(true);
+            if needs_rebuild {
+                let mut content = Scene::new();
+                self.append_nodes_handles_edges(&mut content, None, lod, true);
+                *cache = Some((gen, lod, content));
+            }
+            if let Some(cached) = cache.as_ref() {
+                scene.append(&cached.2, Some(cam_aff));
             }
         }
 
@@ -5442,20 +5522,20 @@ mod board_host {
                 let ny = (iy1 - iy0 + 1).max(0) as u32;
                 let n_tiles = nx.saturating_mul(ny);
                 if n_tiles == 0 || n_tiles > MAX_WORLD_CLIP_TILES {
-                    self.append_nodes_handles_edges(&mut inner, None, lod);
+                    self.append_cached_world_content(&mut inner, lod);
                 } else {
                     for iy in iy0..=iy1 {
                         for ix in ix0..=ix1 {
                             let tile_box = WorldBox { min_x: ix as f64 * t, min_y: iy as f64 * t, max_x: (ix as f64 + 1.0) * t, max_y: (iy as f64 + 1.0) * t };
                             let clip = self.world_tile_screen_clip_rect(ix, iy, t);
                             inner.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip);
-                            self.append_nodes_handles_edges(&mut inner, Some(&tile_box), lod);
+                            self.append_nodes_handles_edges(&mut inner, Some(&tile_box), lod, false);
                             inner.pop_layer();
                         }
                     }
                 }
             } else {
-                self.append_nodes_handles_edges(&mut inner, None, lod);
+                self.append_cached_world_content(&mut inner, lod);
             }
             let scale = self.dpr.max(1.0);
             if (scale - 1.0).abs() < f64::EPSILON {
@@ -5481,6 +5561,7 @@ mod board_host {
             if self.hovered_id == id {
                 return;
             }
+            self.bump_content_scene_generation();
             self.hovered_id = id.clone();
             self.push_event("hover", json!({ "id": id }));
         }
@@ -5500,11 +5581,7 @@ mod board_host {
             let world_before = self.screen_to_world(screen);
             let nx = world_before.x - (sx - self.width as f64 / 2.0) / next_zoom;
             let ny = world_before.y - (sy - self.height as f64 / 2.0) / next_zoom;
-            self.set_camera(nx, ny, next_zoom);
-            if matches!(self.interaction, Interaction::None) {
-                let world = self.screen_to_world(screen);
-                self.update_hover_from_world(world);
-            }
+            self.set_camera_silent(nx, ny, next_zoom);
         }
 
         pub fn delete_selection(&mut self) {

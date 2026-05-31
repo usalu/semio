@@ -12,10 +12,12 @@ import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
 declare const __STORYBOOK_LOAD_UI__: boolean;
+declare const __STORYBOOK_LOAD_SEMIO__: boolean;
+declare const __STORYBOOK_LOAD_PUZZLE__: boolean;
 
 //#region 🔖ScopeStyles
-if (__STORYBOOK_LOAD_UI__) {
-	await import("../ui/react/globals.css");
+if (__STORYBOOK_LOAD_UI__ || __STORYBOOK_LOAD_SEMIO__ || __STORYBOOK_LOAD_PUZZLE__) {
+	await import("./globals.css");
 }
 //#endregion 🔖ScopeStyles
 

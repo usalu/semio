@@ -33,6 +33,7 @@ export default createPlaygroundPlayViteConfig({
 			"three",
 			"@react-three/fiber",
 			"@react-three/drei",
+			"lucide-react",
 		],
 		esbuildOptions: { target: "esnext" },
 	},

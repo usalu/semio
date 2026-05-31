@@ -8,7 +8,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./index.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot, isDevPortInUse } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForBundleDir,
@@ -45,6 +45,17 @@ describe("Neo4j graph database registry", () => {
     const names = getAllNeo4jGraphExportSpecs(env).map((s) => joinNeo4jGraphDatabaseName(s));
     expect(names).toContain("foo");
     expect(names).toContain("bar-baz");
+  });
+});
+
+describe("isDevPortInUse", () => {
+  test("returns false for a high ephemeral port", () => {
+    expect(isDevPortInUse("127.0.0.1", 59_999)).toBe(false);
+  });
+
+  test("returns true when puzzle 3d play port is listening", () => {
+    if (!isDevPortInUse("127.0.0.1", 6013) && !isDevPortInUse("127.0.0.1", 6014)) return;
+    expect(isDevPortInUse("127.0.0.1", 6013) || isDevPortInUse("127.0.0.1", 6014)).toBe(true);
   });
 });
 

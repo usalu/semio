@@ -1906,7 +1906,13 @@ function puzzle2dPlayLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: 
   return { automaticLod: false, lod: mode };
 }
 
-function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle2dPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
+const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
+  paneId,
+  showBackgroundMenu,
+}: {
+  paneId: Puzzle2dPlayPaneId;
+  showBackgroundMenu?: boolean;
+}): ReactElement {
   const {
     activePaneId,
     patchFixture,
@@ -2010,7 +2016,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
       </Puzzle2dCanvas>
     </Puzzle2dPaneChrome>
   );
-}
+});
 
 function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_SURFACE_ID) {

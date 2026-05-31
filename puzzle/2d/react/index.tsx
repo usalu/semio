@@ -2792,7 +2792,12 @@ export class Puzzle2dRenderer {
   private pendingIncrementalNodeMoves = new Map<string, { x: number; y: number }>();
   private wasmPushSceneDrainAlreadyApplied = false;
   private viewportWheelEmitRafId: number | null = null;
+  private wheelCameraReactSyncTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private wheelZoomGestureActive = false;
   private inputInvalidateRafId: number | null = null;
+  private lastPushedCameraX = Number.NaN;
+  private lastPushedCameraY = Number.NaN;
+  private lastPushedCameraZoom = Number.NaN;
   private lastEmittedHoverId: string | null | undefined;
   private lastPushedWidth = -1;
   private lastPushedHeight = -1;
@@ -3275,24 +3280,44 @@ export class Puzzle2dRenderer {
     this.emitter.emit("select", snapshot);
   }
 
-  /** @emoji ⏱️ Coalesces wheel zoom camera commits to one React update per animation frame. */
+  /** @emoji 📷 Mirrors WASM host camera into the JS store without `camera` events (wheel hot path). */
+  private syncCameraFromWasmHostSilent(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    let raw: { x: number; y: number; zoom: number };
+    try {
+      raw = JSON.parse(this.session.cameraJson()) as { x: number; y: number; zoom: number };
+    } catch {
+      return;
+    }
+    const nextZoom = clamp(raw.zoom, MIN_ZOOM, MAX_ZOOM);
+    const next: CameraState = { x: raw.x, y: raw.y, zoom: nextZoom };
+    if (pointsEqual(this.camera, next) && nearlyEqual(this.camera.zoom, next.zoom)) {
+      return;
+    }
+    this.camera.x = next.x;
+    this.camera.y = next.y;
+    this.camera.zoom = next.zoom;
+    this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+  }
+
+  /** @emoji ⏱️ Defers React `camera` commits until wheel zoom idles (GPU still renders every coalesced frame). */
   private scheduleDeferredPublicCameraEmit(): void {
     if (this.renderMode === "headless-test") {
+      this.wheelZoomGestureActive = false;
       this.emitPublicCameraChange();
       return;
     }
-    if (this.viewportWheelEmitRafId !== null && globalThis.cancelAnimationFrame) {
-      globalThis.cancelAnimationFrame(this.viewportWheelEmitRafId);
+    this.wheelZoomGestureActive = true;
+    if (this.wheelCameraReactSyncTimeoutId !== null) {
+      clearTimeout(this.wheelCameraReactSyncTimeoutId);
     }
-    const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
-    if (!requestFrame) {
+    this.wheelCameraReactSyncTimeoutId = setTimeout(() => {
+      this.wheelCameraReactSyncTimeoutId = null;
+      this.wheelZoomGestureActive = false;
       this.emitPublicCameraChange();
-      return;
-    }
-    this.viewportWheelEmitRafId = requestFrame(() => {
-      this.viewportWheelEmitRafId = null;
-      this.emitPublicCameraChange();
-    });
+    }, 120);
   }
 
   private enqueuePuzzle2dGraphObservationFlush(): void {
@@ -3452,12 +3477,32 @@ export class Puzzle2dRenderer {
     this.camera.zoom = next.zoom;
     this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
     this.emitter.emit("camera", { ...this.camera });
+    this.pushCameraToWasmSession(z);
+  }
+
+  /** @emoji 🔇 Controlled-host camera sync without `camera` events or WASM drain parsing. */
+  setCameraSilent(x: number, y: number, zoom: number): void {
+    const z = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+    const next: CameraState = { x, y, zoom: z };
+    if (pointsEqual(this.camera, next) && nearlyEqual(this.camera.zoom, next.zoom)) {
+      return;
+    }
+    this.camera.x = next.x;
+    this.camera.y = next.y;
+    this.camera.zoom = next.zoom;
+    this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+    this.pushCameraToWasmSession(z);
+  }
+
+  private pushCameraToWasmSession(zoom: number): void {
     if (this.wasmSessionCallBlockedForReentry()) {
       this.invalidated = true;
       return;
     }
-    this.session.setCamera(x, y, z);
-    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.session.setCamera(this.camera.x, this.camera.y, zoom);
+    this.lastPushedCameraX = this.camera.x;
+    this.lastPushedCameraY = this.camera.y;
+    this.lastPushedCameraZoom = zoom;
   }
 
   subscribeFrame(listener: FrameListener): () => void {
@@ -3867,7 +3912,17 @@ export class Puzzle2dRenderer {
       this.lastPushedHeight = this.height;
       this.lastPushedDpr = this.dpr;
     }
+    if (
+      this.camera.x === this.lastPushedCameraX &&
+      this.camera.y === this.lastPushedCameraY &&
+      nearlyEqual(this.camera.zoom, this.lastPushedCameraZoom)
+    ) {
+      return;
+    }
     this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
+    this.lastPushedCameraX = this.camera.x;
+    this.lastPushedCameraY = this.camera.y;
+    this.lastPushedCameraZoom = this.camera.zoom;
   }
 
   /** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link Puzzle2dRenderer.invalidated} so the next frame retries. */
@@ -4184,7 +4239,7 @@ export class Puzzle2dRenderer {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
-    if (this.session.defersDescriptorSyncFromJs() || this.viewportWheelEmitRafId !== null || this.session.isDraggingAreaSelect()) {
+    if (this.session.defersDescriptorSyncFromJs() || this.wheelZoomGestureActive || this.session.isDraggingAreaSelect()) {
       return;
     }
     if (!this.textOverlayDirty()) {
@@ -4296,7 +4351,12 @@ export class Puzzle2dRenderer {
       return;
     }
     if (!this.suppressSceneToWasmPush) {
-      this.pushSceneToWasmDriver();
+      if (this.wasmPushSceneDrainAlreadyApplied) {
+        this.wasmPushSceneDrainAlreadyApplied = false;
+        this.pushWasmViewportAndSizeToSession();
+      } else {
+        this.pushSceneToWasmDriver();
+      }
     }
     this.wasmGpuFrameDepth += 1;
     try {
@@ -4353,6 +4413,10 @@ export class Puzzle2dRenderer {
     if (this.viewportWheelEmitRafId !== null && globalThis.cancelAnimationFrame) {
       globalThis.cancelAnimationFrame(this.viewportWheelEmitRafId);
       this.viewportWheelEmitRafId = null;
+    }
+    if (this.wheelCameraReactSyncTimeoutId !== null) {
+      clearTimeout(this.wheelCameraReactSyncTimeoutId);
+      this.wheelCameraReactSyncTimeoutId = null;
     }
     if (this.inputInvalidateRafId !== null && globalThis.cancelAnimationFrame) {
       globalThis.cancelAnimationFrame(this.inputInvalidateRafId);
@@ -4745,7 +4809,7 @@ export class Puzzle2dRenderer {
     const sy = event.clientY - rect.top;
     this.recordPointerClient(event.clientX, event.clientY, sx, sy);
     this.session.wheelScreen(sx, sy, event.deltaY);
-    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentCamera: true });
+    this.syncCameraFromWasmHostSilent();
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleDeferredPublicCameraEmit();
     this.scheduleInputInvalidate();
@@ -7717,7 +7781,7 @@ function Puzzle2dHostSubtree({
     const cx = camera?.x ?? 0;
     const cy = camera?.y ?? 0;
     const cz = camera?.zoom ?? 1;
-    renderer.setCamera(cx, cy, cz);
+    renderer.setCameraSilent(cx, cy, cz);
   }, [camera?.x, camera?.y, camera?.zoom, renderer]);
 
   reactHostPort.useLayoutEffect(
