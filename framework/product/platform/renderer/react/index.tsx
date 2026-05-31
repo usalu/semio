@@ -789,7 +789,7 @@ export const ShellModeCanvas: React.FC<{
   defaultLayout: WindowLayout;
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
-}> = ({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) => {
+}> = reactHostPort.memo(function ShellModeCanvas({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) {
   const windowBodyCacheRef = reactHostPort.useRef(new Map<string, ShellModeWindowBodyCacheEntry>());
   reactHostPort.useLayoutEffect(() => {
     const liveIds = new Set(windowKinds.map((windowKind) => windowKind.id));
@@ -821,7 +821,7 @@ export const ShellModeCanvas: React.FC<{
       className="h-full w-full"
     />
   );
-};
+});
 
 // #region 🎼UISearch
 

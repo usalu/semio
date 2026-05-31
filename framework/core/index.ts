@@ -1123,6 +1123,27 @@ if (import.meta.vitest) {
 			expect(platform.chromeGeneration).toBe(chromeGen);
 		});
 
+		it("assignPanelVisibility updates state without notifying subscribers", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			const dataGen = platform.generation;
+			const chromeGen = platform.chromeGeneration;
+			let dataCalls = 0;
+			let chromeCalls = 0;
+			platform.subscribe(() => {
+				dataCalls++;
+			});
+			platform.subscribeChrome(() => {
+				chromeCalls++;
+			});
+			expect(platform.assignPanelVisibility({ leftSidePanel: true, rightSidePanel: false })).toBe(true);
+			expect(platform.panelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
+			expect(platform.generation).toBe(dataGen);
+			expect(platform.chromeGeneration).toBe(chromeGen);
+			expect(dataCalls).toBe(0);
+			expect(chromeCalls).toBe(0);
+			expect(platform.assignPanelVisibility({ leftSidePanel: true, rightSidePanel: false })).toBe(false);
+		});
+
 		it("registers render-agnostic surface components by surface id", () => {
 			const platform = new Platform({ id: "demo", name: "Demo" });
 			let snapshot = "a";

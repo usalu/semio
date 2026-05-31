@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle2d Play Panel Toggle Latency",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Panel toggle in puzzle 2d play still takes ~2s. Finish perf fixes: SidePanel memo, resolveTab cache, ProductShell panel prop memo.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪40dec526592d4a93b5ad3b95359f0abf"
+  ]
+}

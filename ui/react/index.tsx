@@ -10181,6 +10181,25 @@ export interface SidePanelProps {
   className?: string;
 }
 
+/** @emoji 🌲 Side-panel tree body; skipped when only panel visibility toggles. */
+const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config }: { readonly config: TreePanelConfig }) {
+  return (
+    <TreeStateProvider>
+      <Tree
+        className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
+        defaultSelectedIds={config.defaultSelectedIds}
+        dragAndDropController={config.dragAndDropController}
+        emptyState={config.emptyState}
+        indentMultiplier={config.indentMultiplier}
+        onSelectionChange={config.onSelectionChange}
+        sections={config.sections}
+        selectedIds={config.selectedIds}
+        selectionMode={config.selectionMode}
+      />
+    </TreeStateProvider>
+  );
+});
+
 const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
@@ -10287,21 +10306,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? (
-              <TreeStateProvider>
-                <Tree
-                  className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
-                  defaultSelectedIds={activeTabTree.defaultSelectedIds}
-                  dragAndDropController={activeTabTree.dragAndDropController}
-                  emptyState={activeTabTree.emptyState}
-                  indentMultiplier={activeTabTree.indentMultiplier}
-                  onSelectionChange={activeTabTree.onSelectionChange}
-                  sections={activeTabTree.sections}
-                  selectedIds={activeTabTree.selectedIds}
-                  selectionMode={activeTabTree.selectionMode}
-                />
-              </TreeStateProvider>
-            ) : null}
+            {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
           </div>
         </Scrollable>
         {visible && onSizeChange ? (
