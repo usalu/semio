@@ -27,9 +27,13 @@ import {
 	buildPuzzle5dWindowBody,
 	buildVirtualFileSystemWindowBody,
 	virtualFileSystemSurfaceId,
+	KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL,
+	KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL,
+	kitVirtualFileSystemDescriptorValues,
 	type VirtualFileSystemModel,
 	type VirtualFileSystemNodeRecord,
 	type VirtualFileSystemScope,
+	type VirtualFileSystemSchemaModel,
 	createDefaultLayout,
 	createTabStackLayout,
 	registerPlatformComponent,
@@ -810,6 +814,13 @@ function sketchpadFormatKitTimestamp(value: unknown): string {
 	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
 	if (!date || Number.isNaN(date.getTime())) return "";
 	return date.toLocaleString();
+}
+
+function sketchpadKitTimestampIso(value: unknown): string | undefined {
+	if (value == null || value === "") return undefined;
+	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
+	if (!date || Number.isNaN(date.getTime())) return undefined;
+	return date.toISOString();
 }
 
 /** @emoji 🔌 Maps GraphQL {@code copatibleWith} relay edges onto {@code compatiblePorts} DTO refs. */
@@ -2112,52 +2123,59 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			const name = slash >= 0 ? path.slice(slash + 1) : path;
 			rows.push({
 				id: sketchpadVfsEntityId("folder", id),
-				kind: "folder",
+				fileNodeKindId: "folder",
 				name,
 				path,
 				parentId: kitId,
 				hasChildren: true,
 				navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path }),
 			});
 		}
 		for (const type of kit.types ?? []) {
 			if (typeof type !== "object" || type === null || !("id" in type)) continue;
 			const t = type as Type;
+			const typePath = `/${t.name ?? t.id}`;
 			rows.push({
 				id: sketchpadVfsEntityId("type", t.id),
-				kind: "type",
+				fileNodeKindId: "type",
 				name: t.name ?? t.id,
-				path: `/${t.name ?? t.id}`,
+				path: typePath,
 				parentId: kitId,
 				hasChildren: false,
 				navigateUri: `/kits/${kitId}/types/${t.id}`,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("type", { path: typePath }),
 			});
 		}
 		for (const design of kit.designs ?? []) {
 			if (typeof design !== "object" || design === null || !("id" in design)) continue;
 			const d = design as Design;
+			const designPath = `/${d.name ?? d.id}`;
 			rows.push({
 				id: sketchpadVfsEntityId("design", d.id),
-				kind: "design",
+				fileNodeKindId: "design",
 				name: d.name ?? d.id,
-				path: `/${d.name ?? d.id}`,
+				path: designPath,
 				parentId: kitId,
 				hasChildren: true,
 				navigateUri: `/kits/${kitId}/designs/${d.id}`,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path: designPath }),
 			});
 		}
 		for (const file of kit.files ?? []) {
 			const row = file as Record<string, unknown>;
 			const id = String(row["id"] ?? "");
 			if (!id) continue;
+			const filePath = `/${sketchpadKitDiagramFileLabel(row)}`;
 			rows.push({
 				id: sketchpadVfsEntityId("file", id),
-				kind: "file",
+				fileNodeKindId: "file",
 				name: sketchpadKitDiagramFileLabel(row),
-				path: `/${sketchpadKitDiagramFileLabel(row)}`,
+				path: filePath,
 				parentId: kitId,
 				hasChildren: false,
 				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("file", { path: filePath }),
 			});
 		}
 		return rows;
@@ -2170,25 +2188,29 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 		for (const piece of design.pieces ?? []) {
 			if (typeof piece !== "object" || piece === null || !("id" in piece)) continue;
 			const p = piece as { id: string; name?: string };
+			const piecePath = `/${design.name ?? design.id}/${p.name ?? p.id}`;
 			out.push({
 				id: sketchpadVfsEntityId("piece", p.id),
-				kind: "piece",
+				fileNodeKindId: "piece",
 				name: p.name ?? p.id,
-				path: `/${design.name ?? design.id}/${p.name ?? p.id}`,
+				path: piecePath,
 				parentId,
 				hasChildren: false,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("piece", { path: piecePath }),
 			});
 		}
 		for (const connection of (design as { connections?: readonly unknown[] }).connections ?? []) {
 			const c = connection as { id: string; description?: string };
 			if (!c.id) continue;
+			const connectionPath = `/${design.name ?? design.id}/${c.description ?? c.id}`;
 			out.push({
 				id: sketchpadVfsEntityId("connection", c.id),
-				kind: "connection",
+				fileNodeKindId: "connection",
 				name: c.description ?? c.id,
-				path: `/${design.name ?? design.id}/${c.description ?? c.id}`,
+				path: connectionPath,
 				parentId,
 				hasChildren: false,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("connection", { path: connectionPath }),
 			});
 		}
 		return out;
@@ -2244,49 +2266,68 @@ function sketchpadHomeVfsChildren(
 		return [
 			{
 				id: "docs-root",
-				kind: "folder",
+				fileNodeKindId: "folder",
 				name: "Documentation",
 				path: "/Documentation",
 				parentId,
 				hasChildren: true,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path: "/Documentation" }),
 			},
-			...kitEntries.map(({ kitId, kit }) => {
+			...kitEntries.map(({ kitId, kit, kind }) => {
 				const name = kit.name ?? kitId;
+				const path = `/kits/${name}`;
+				const author = kit.authors?.[0];
+				const authorName = author && typeof author === "object" && "name" in author ? String(author.name ?? "") : "";
 				return {
 					id: `kit:${kitId}`,
-					kind: "kit",
+					fileNodeKindId: "kit",
 					name,
-					path: `/kits/${name}`,
+					path,
 					parentId,
 					hasChildren: false,
 					navigateUri: `/kits/${kitId}`,
+					descriptorValues: kitVirtualFileSystemDescriptorValues("kit", {
+						path,
+						version: kit.version ?? "",
+						kitKind: kind,
+						updatedIso: sketchpadKitTimestampIso(kit.updatedAt ?? kit.createdAt),
+						...(authorName ? { createdBy: { name: authorName } } : {}),
+					}),
 				} satisfies VirtualFileSystemNodeRecord;
 			}),
 		];
 	}
 	if (parentId === "docs-root") {
-		return sketchpadBuildDocsRegistry().map((section) => ({
-			id: `docs-section-${section.id}`,
-			kind: "folder",
-			name: section.label,
-			path: `/Documentation/${section.label}`,
-			parentId,
-			hasChildren: section.pages.length > 0,
-		}));
+		return sketchpadBuildDocsRegistry().map((section) => {
+			const path = `/Documentation/${section.label}`;
+			return {
+				id: `docs-section-${section.id}`,
+				fileNodeKindId: "folder",
+				name: section.label,
+				path,
+				parentId,
+				hasChildren: section.pages.length > 0,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path }),
+			};
+		});
 	}
 	const sectionMatch = /^docs-section-(.+)$/.exec(parentId);
 	if (sectionMatch) {
 		const section = sketchpadBuildDocsRegistry().find((entry) => entry.id === sectionMatch[1]);
 		if (!section) return [];
-		return section.pages.map((page) => ({
-			id: `docs-page-${page.path}`,
-			kind: "file",
-			name: page.title,
-			path: `/Documentation/${page.title}`,
-			parentId,
-			hasChildren: false,
-			navigateUri: `/docs/${page.path}`,
-		}));
+		return section.pages.map((page) => {
+			const path = `/Documentation/${page.title}`;
+			return {
+				id: `docs-page-${page.path}`,
+				fileNodeKindId: "file",
+				name: page.title,
+				path,
+				parentId,
+				hasChildren: false,
+				navigateUri: `/docs/${page.path}`,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("file", { path }),
+			};
+		});
 	}
 	return [];
 }
@@ -3096,41 +3137,81 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		sketchpadCommitUri(platform, path);
 	}
 
+	protected override getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+		if (scope.appId === SKETCHPAD_HOME_APP_ID) return KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL;
+		return KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL;
+	}
+
 	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
 		const route = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath);
 		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			return { id: "sketchpad-home", kind: "kit", name: "Home", path: "/", parentId: null, hasChildren: true };
+			return {
+				id: "sketchpad-home",
+				fileNodeKindId: "kit",
+				name: "Home",
+				path: "/",
+				parentId: null,
+				hasChildren: true,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+			};
 		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
 			if (!route.kitId) {
-				return { id: "kit-empty", kind: "kit", name: "Kit", path: "/", parentId: null, hasChildren: false };
+				return {
+					id: "kit-empty",
+					fileNodeKindId: "kit",
+					name: "Kit",
+					path: "/",
+					parentId: null,
+					hasChildren: false,
+					descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+				};
 			}
 			const kit = this.getKitStore(route.kitId)?.getSnapshot().kit;
 			return {
 				id: route.kitId,
-				kind: "kit",
+				fileNodeKindId: "kit",
 				name: kit?.name ?? route.kitId,
 				path: "/",
 				parentId: null,
 				hasChildren: true,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
 			};
 		}
 		if (scope.appId === SKETCHPAD_DESIGN_APP_ID) {
 			if (!route.kitId || !route.designId) {
-				return { id: "design-empty", kind: "design", name: "Design", path: "/", parentId: null, hasChildren: false };
+				return {
+					id: "design-empty",
+					fileNodeKindId: "design",
+					name: "Design",
+					path: "/",
+					parentId: null,
+					hasChildren: false,
+					descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path: "/" }),
+				};
 			}
 			const kit = this.getKitStore(route.kitId)?.getSnapshot().kit;
 			const design = kit ? findDesignInKit(kit, route.designId) : undefined;
+			const path = `/${design?.name ?? route.designId}`;
 			return {
 				id: sketchpadVfsEntityId("design", route.designId),
-				kind: "design",
+				fileNodeKindId: "design",
 				name: design?.name ?? route.designId,
-				path: `/${design?.name ?? route.designId}`,
+				path,
 				parentId: route.kitId,
 				hasChildren: true,
+				descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path }),
 			};
 		}
-		return { id: scope.appId, kind: "kit", name: scope.appId, path: "/", parentId: null, hasChildren: false };
+		return {
+			id: scope.appId,
+			fileNodeKindId: "kit",
+			name: scope.appId,
+			path: "/",
+			parentId: null,
+			hasChildren: false,
+			descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+		};
 	}
 
 	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
@@ -4266,7 +4347,7 @@ if (import.meta.vitest) {
 			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [kitId]);
 			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
 			const snap = vfs.buildSnapshot();
-			expect(snap.rows.some((row) => row.id === kitId && row.kind === "kit")).toBe(true);
+			expect(snap.rows.some((row) => row.id === kitId && row.fileNodeKindId === "kit")).toBe(true);
 			expect(snap.rows.some((row) => row.id === `type:${typeId}`)).toBe(true);
 			expect(snap.rows.some((row) => row.id === `design:${designId}` && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
 			expect(snap.rows.some((row) => row.id === `folder:${folderId}`)).toBe(true);

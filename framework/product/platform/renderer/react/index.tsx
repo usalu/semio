@@ -88,6 +88,7 @@ import {
 	type Component,
 	type ComponentKind,
 	type VirtualFileSystemModel,
+	type VirtualFileSystemSchemaModel,
 	type PanelModel,
 	type Puzzle2dModel,
 	type Puzzle3dModel,
@@ -206,7 +207,9 @@ import {
 	writeStoredUiChromeCompact,
 	reactHostPort,
 	VirtualFileSystem as VirtualFileSystemView,
+	KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
 	type VirtualFileSystemRow,
+	type VirtualFileSystemSchema,
 	windowMeasureControlClass,
 	windowMeasureLabelClass,
 	windowMeasureSectionClass,
@@ -1522,12 +1525,19 @@ export function useControllerStore<TSnapshot>(controller: Controller | undefined
 	return store ? useStore(store) : undefined;
 }
 
+function virtualFileSystemSchemaFromModel(schema: VirtualFileSystemSchemaModel): VirtualFileSystemSchema {
+	return schema as VirtualFileSystemSchema;
+}
+
 const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component, platform, commandBus }) => {
 	const model = useStore(component as VirtualFileSystemSurface);
 	const controllerId = component.controllerId;
+	const schema = model.schema.fileNodeKinds && Object.keys(model.schema.fileNodeKinds).length
+		? virtualFileSystemSchemaFromModel(model.schema)
+		: KIT_VIRTUAL_FILE_SYSTEM_SCHEMA;
 	const rows: VirtualFileSystemRow[] = model.rows.map((row) => ({
 		id: row.id,
-		kind: row.kind as VirtualFileSystemRow["kind"],
+		fileNodeKindId: row.fileNodeKindId,
 		name: row.name,
 		path: row.path,
 		level: row.depth,
@@ -1535,10 +1545,12 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 		isExpanded: row.expanded,
 		parentId: undefined,
 		navigateUri: row.navigateUri,
+		descriptorValues: row.descriptorValues,
 	}));
 	return (
 		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden p-2" data-component-kind="virtualFileSystem">
 			<VirtualFileSystemView
+				schema={schema}
 				rows={rows}
 				selectedRowIds={model.selectedRowIds ? new Set(model.selectedRowIds) : undefined}
 				emptyMessage={model.emptyMessage ?? "No file system nodes"}

@@ -422,6 +422,15 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+Generalize virtual file system.
+Add FileNodeKind (which has id, name, icon, description, descriptors, etc)
+Add DescriptorKind
+Descriptors are what can be turned into columns (e.g. CreatedByDescriptor of avatar descriptor kind, etc)
+There are TimeDescriptorKind, AvatarDescriptorKind, etc
+Every FileNode has file node kind id, etc.
+
+---
+
 The canvas doesnt feel like a canvas because it is not really visually different.
 The canvas is a different level.
 All windows should be slightly offsetted inwards, so they feel like windows.

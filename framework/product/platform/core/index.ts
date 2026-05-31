@@ -270,21 +270,64 @@ export interface TableModel {
 	readonly emptyMessage?: string;
 }
 
+/** @emoji 🏷️ Render-agnostic descriptor presentation kinds for virtual file system columns. */
+export type VirtualFileSystemDescriptorKindModel =
+	| { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "text" }
+	| {
+			readonly id: string;
+			readonly name: string;
+			readonly description?: string;
+			readonly presentation: "time";
+			readonly format?: "date" | "datetime" | "relative";
+	  }
+	| { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "avatar" };
+
+/** @emoji 🏷️ Column binding on a {@link VirtualFileSystemFileNodeKindModel}. */
+export interface VirtualFileSystemFileNodeDescriptorModel {
+	readonly id: string;
+	readonly descriptorKindId: string;
+	readonly label?: string;
+	readonly description?: string;
+}
+
+/** @emoji 📁 File node kind registry entry for {@link VirtualFileSystemSchemaModel}. */
+export interface VirtualFileSystemFileNodeKindModel {
+	readonly id: string;
+	readonly name: string;
+	readonly icon?: string;
+	readonly description?: string;
+	readonly descriptors: readonly VirtualFileSystemFileNodeDescriptorModel[];
+}
+
+/** @emoji 📁 Cell value for one descriptor column on a virtual file system node. */
+export type VirtualFileSystemDescriptorValueModel =
+	| { readonly presentation: "text"; readonly text: string }
+	| { readonly presentation: "time"; readonly iso: string }
+	| { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
+
+/** @emoji 📁 Schema driving virtual file system columns (render-agnostic). */
+export interface VirtualFileSystemSchemaModel {
+	readonly fileNodeKinds: Readonly<Record<string, VirtualFileSystemFileNodeKindModel>>;
+	readonly descriptorKinds: Readonly<Record<string, VirtualFileSystemDescriptorKindModel>>;
+	readonly descriptorColumnIds: readonly string[];
+}
+
 /** @emoji 📁 One lazy-loaded node record for {@link VirtualFileSystemController}. */
 export interface VirtualFileSystemNodeRecord {
 	readonly id: string;
-	readonly kind: string;
+	readonly fileNodeKindId: string;
 	readonly name: string;
 	readonly path: string;
 	readonly parentId: string | null;
 	readonly hasChildren: boolean;
 	readonly navigateUri?: string;
+	readonly descriptorValues?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
 }
 
 /** @emoji 📁 Flat row for {@link VirtualFileSystemModel}. */
 export interface VirtualFileSystemRowModel {
 	readonly id: string;
-	readonly kind: string;
+	readonly fileNodeKindId: string;
 	readonly name: string;
 	readonly path: string;
 	readonly depth: number;
@@ -293,10 +336,12 @@ export interface VirtualFileSystemRowModel {
 	readonly expandToggle?: { readonly command: string; readonly args?: unknown };
 	readonly canDrag?: boolean;
 	readonly navigateUri?: string;
+	readonly descriptorValues?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
 }
 
 /** @emoji 📁 Render-agnostic kit VFS view-model for {@link VirtualFileSystem}. */
 export interface VirtualFileSystemModel {
+	readonly schema: VirtualFileSystemSchemaModel;
 	readonly rows: readonly VirtualFileSystemRowModel[];
 	readonly selectedRowIds?: readonly string[];
 	readonly emptyMessage?: string;
@@ -439,7 +484,12 @@ export class Table extends Component<TableModel> {
 export class VirtualFileSystem extends Component<VirtualFileSystemModel> {
 	readonly appId: string;
 
-	constructor(appId: string, surfaceId: string, controllerId: string, initialSnapshot: VirtualFileSystemModel = { rows: [] }) {
+	constructor(
+		appId: string,
+		surfaceId: string,
+		controllerId: string,
+		initialSnapshot: VirtualFileSystemModel = { schema: { fileNodeKinds: {}, descriptorKinds: {}, descriptorColumnIds: [] }, rows: [] },
+	) {
 		super("virtualFileSystem", surfaceId, controllerId, initialSnapshot);
 		this.appId = appId;
 	}
@@ -568,7 +618,7 @@ export function buildVirtualFileSystemModelRows(
 		const expanded = hasChildren && expandedIds.has(node.id);
 		rows.push({
 			id: node.id,
-			kind: node.kind,
+			fileNodeKindId: node.fileNodeKindId,
 			name: node.name,
 			path: node.path,
 			depth,
@@ -582,8 +632,9 @@ export function buildVirtualFileSystemModelRows(
 						},
 					}
 				: {}),
-			canDrag: node.kind !== "kit",
+			canDrag: node.fileNodeKindId !== "kit",
 			...(node.navigateUri ? { navigateUri: node.navigateUri } : {}),
+			...(node.descriptorValues ? { descriptorValues: node.descriptorValues } : {}),
 		});
 		if (!expanded) return;
 		const children = childrenByParentId[node.id] ?? (depth === 0 ? rootBucket : undefined);
@@ -603,6 +654,8 @@ export abstract class VirtualFileSystemController extends Controller {
 	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
 		super(id, commandBus, hostNotify);
 	}
+
+	protected abstract getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel;
 
 	protected abstract getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord;
 
@@ -677,6 +730,7 @@ export abstract class VirtualFileSystemController extends Controller {
 			scope,
 		});
 		return {
+			schema: this.getSchema(scope),
 			rows,
 			selectedRowIds: this.selectedRows(scope),
 			emptyMessage: rows.length ? undefined : "No file system nodes",
@@ -727,6 +781,181 @@ export abstract class VirtualFileSystemController extends Controller {
 	}
 }
 
+/** @emoji 📁 Built-in kit virtual file system schema (render-agnostic). */
+export const KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	descriptorKinds: {
+		text: { id: "text", name: "Text", presentation: "text" },
+		time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
+		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
+	},
+	fileNodeKinds: {
+		kit: {
+			id: "kit",
+			name: "Kit",
+			icon: "layout-grid",
+			description: "Open kit workspace",
+			descriptors: [
+				{ id: "version", descriptorKindId: "text", label: "Version" },
+				{ id: "kitKind", descriptorKindId: "text", label: "Kind" },
+				{ id: "updated", descriptorKindId: "time", label: "Updated" },
+				{ id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		folder: {
+			id: "folder",
+			name: "Folder",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		file: {
+			id: "file",
+			name: "File",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		design: {
+			id: "design",
+			name: "Design",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		type: {
+			id: "type",
+			name: "Type",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		family: {
+			id: "family",
+			name: "Family",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		piece: {
+			id: "piece",
+			name: "Piece",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		connection: {
+			id: "connection",
+			name: "Connection",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+	},
+	descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
+};
+
+/** @emoji 📁 Home kit tree columns (no per-row author column). */
+export const KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
+	descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
+};
+
+/** @emoji 📁 In-kit tree columns (path + node kind only). */
+export const KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
+	descriptorColumnIds: ["path", "fileNodeKind"],
+};
+
+/** @emoji 📁 Builds kit descriptor values for {@link VirtualFileSystemNodeRecord}. */
+export function kitVirtualFileSystemDescriptorValues(
+	fileNodeKindId: string,
+	options: {
+		readonly path?: string;
+		readonly version?: string;
+		readonly kitKind?: string;
+		readonly updatedIso?: string;
+		readonly createdBy?: { readonly name: string; readonly icon?: string };
+		readonly extra?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
+	} = {},
+): Readonly<Record<string, VirtualFileSystemDescriptorValueModel>> {
+	const fileNodeKind = KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds[fileNodeKindId];
+	const values: Record<string, VirtualFileSystemDescriptorValueModel> = { ...options.extra };
+	if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
+	if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
+	if (options.version !== undefined) values.version = { presentation: "text", text: options.version };
+	if (options.kitKind !== undefined) values.kitKind = { presentation: "text", text: options.kitKind };
+	if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
+	if (options.createdBy) {
+		values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
+	}
+	return values;
+}
+
+/** @emoji 📁 Demo kit virtual file system schema (render-agnostic). */
+export const PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchemaModel = {
+	descriptorKinds: {
+		text: { id: "text", name: "Text", presentation: "text" },
+		time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
+		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
+	},
+	fileNodeKinds: {
+		kit: {
+			id: "kit",
+			name: "Kit",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		folder: {
+			id: "folder",
+			name: "Folder",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		design: {
+			id: "design",
+			name: "Design",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		type: {
+			id: "type",
+			name: "Type",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+	},
+	descriptorColumnIds: ["path", "fileNodeKind"],
+};
+
+/** @emoji 📁 Builds standard path and node-kind descriptor values for demo nodes. */
+export function platformVirtualFileSystemDemoDescriptorValues(
+	fileNodeKindId: string,
+	path: string,
+): Readonly<Record<string, VirtualFileSystemDescriptorValueModel>> {
+	const fileNodeKind = PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA.fileNodeKinds[fileNodeKindId];
+	return {
+		path: { presentation: "text", text: path },
+		fileNodeKind: { presentation: "text", text: fileNodeKind?.name ?? fileNodeKindId },
+	};
+}
+
 /** @emoji 📁 Demo VFS controller: each app id gets its own in-memory tree. */
 export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemController {
 	static readonly APP_A = "demo-app-a";
@@ -736,28 +965,86 @@ export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemCo
 		super("platform-vfs-demo-ctrl", commandBus, hostNotify);
 	}
 
+	protected override getSchema(_scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+		return PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA;
+	}
+
 	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
 		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
-			return { id: "kit-b", kind: "kit", name: "Beta Kit", path: "/", parentId: null, hasChildren: true };
+			return {
+				id: "kit-b",
+				fileNodeKindId: "kit",
+				name: "Beta Kit",
+				path: "/",
+				parentId: null,
+				hasChildren: true,
+				descriptorValues: platformVirtualFileSystemDemoDescriptorValues("kit", "/"),
+			};
 		}
-		return { id: "kit-a", kind: "kit", name: "Alpha Kit", path: "/", parentId: null, hasChildren: true };
+		return {
+			id: "kit-a",
+			fileNodeKindId: "kit",
+			name: "Alpha Kit",
+			path: "/",
+			parentId: null,
+			hasChildren: true,
+			descriptorValues: platformVirtualFileSystemDemoDescriptorValues("kit", "/"),
+		};
 	}
 
 	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
 		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
 			if (parentId === "kit-b") {
-				return [{ id: "design-b1", kind: "design", name: "Beta Design", path: "/Beta Design", parentId, hasChildren: false }];
+				const path = "/Beta Design";
+				return [
+					{
+						id: "design-b1",
+						fileNodeKindId: "design",
+						name: "Beta Design",
+						path,
+						parentId,
+						hasChildren: false,
+						descriptorValues: platformVirtualFileSystemDemoDescriptorValues("design", path),
+					},
+				];
 			}
 			return [];
 		}
 		if (parentId === "kit-a") {
 			return [
-				{ id: "folder-models", kind: "folder", name: "Models", path: "/Models", parentId, hasChildren: true },
-				{ id: "design-alpha", kind: "design", name: "Alpha", path: "/Alpha", parentId, hasChildren: false },
+				{
+					id: "folder-models",
+					fileNodeKindId: "folder",
+					name: "Models",
+					path: "/Models",
+					parentId,
+					hasChildren: true,
+					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("folder", "/Models"),
+				},
+				{
+					id: "design-alpha",
+					fileNodeKindId: "design",
+					name: "Alpha",
+					path: "/Alpha",
+					parentId,
+					hasChildren: false,
+					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("design", "/Alpha"),
+				},
 			];
 		}
 		if (parentId === "folder-models") {
-			return [{ id: "type-capsule", kind: "type", name: "Capsule", path: "/Models/Capsule", parentId, hasChildren: false }];
+			const path = "/Models/Capsule";
+			return [
+				{
+					id: "type-capsule",
+					fileNodeKindId: "type",
+					name: "Capsule",
+					path,
+					parentId,
+					hasChildren: false,
+					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("type", path),
+				},
+			];
 		}
 		return [];
 	}
@@ -769,7 +1056,10 @@ export class AppBoundVirtualFileSystemSurface extends VirtualFileSystem {
 		readonly owner: VirtualFileSystemController,
 		readonly vfsScope: VirtualFileSystemScope,
 	) {
-		super(vfsScope.appId, vfsScope.surfaceId, owner.id, { rows: [] });
+		super(vfsScope.appId, vfsScope.surfaceId, owner.id, {
+			schema: { fileNodeKinds: {}, descriptorKinds: {}, descriptorColumnIds: [] },
+			rows: [],
+		});
 	}
 
 	override buildSnapshot(): VirtualFileSystemModel {

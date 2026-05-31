@@ -1,0 +1,10 @@
+{
+  "title": "Generalize Virtual File System Kinds",
+  "emoji": "📁",
+  "status": "open",
+  "description": "Generalize virtual file system: FileNodeKind (id, name, icon, description, descriptors), DescriptorKind (Time, Avatar, etc), FileNode with fileNodeKindId and descriptor values that become table columns.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪82fb54a2b9fb486eab4b93cfd37a95ea"
+  ]
+}

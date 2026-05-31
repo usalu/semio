@@ -30,6 +30,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
+import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
 import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
@@ -22556,22 +22557,172 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
 // #endregion 🛎️Table
 
 // #region 📁VirtualFileSystem
-/** @emoji 📁 Kit virtual file system node kind aligned with GraphQL `FileSystemNodeKind`. */
-export type VirtualFileSystemNodeKind = "kit" | "folder" | "file" | "design" | "type" | "family" | "piece" | "connection";
+/** @emoji 🏷️ Render-agnostic descriptor presentation kinds for {@link VirtualFileSystem} columns. */
+export type DescriptorKind =
+  | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "text" }
+  | {
+      readonly id: string;
+      readonly name: string;
+      readonly description?: string;
+      readonly presentation: "time";
+      readonly format?: "date" | "datetime" | "relative";
+    }
+  | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "avatar" };
+
+/** @emoji 🏷️ Column binding on a {@link FileNodeKind} referencing a {@link DescriptorKind}. */
+export interface FileNodeDescriptor {
+  readonly id: string;
+  readonly descriptorKindId: string;
+  readonly label?: string;
+  readonly description?: string;
+}
+
+/** @emoji 📁 File node kind registry entry (icon, labels, column descriptors). */
+export interface FileNodeKind {
+  readonly id: string;
+  readonly name: string;
+  readonly icon?: string;
+  readonly description?: string;
+  readonly descriptors: readonly FileNodeDescriptor[];
+}
+
+/** @emoji 📁 Cell value for one {@link FileNodeDescriptor} column on a {@link FileNode}. */
+export type FileNodeDescriptorValue =
+  | { readonly presentation: "text"; readonly text: string }
+  | { readonly presentation: "time"; readonly iso: string }
+  | { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
+
+/** @emoji 📁 Schema driving {@link VirtualFileSystem} columns and glyphs. */
+export interface VirtualFileSystemSchema {
+  readonly fileNodeKinds: Readonly<Record<string, FileNodeKind>>;
+  readonly descriptorKinds: Readonly<Record<string, DescriptorKind>>;
+  readonly descriptorColumnIds: readonly string[];
+}
+
+/** @emoji 📁 Built-in kit VFS descriptor kinds (text, time, avatar). */
+export const KIT_VIRTUAL_FILE_SYSTEM_DESCRIPTOR_KINDS: Readonly<Record<string, DescriptorKind>> = {
+  text: { id: "text", name: "Text", presentation: "text" },
+  time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
+  avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
+};
+
+/** @emoji 📁 Built-in kit VFS file node kinds aligned with GraphQL `FileSystemNodeKind`. */
+export const KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS: Readonly<Record<string, FileNodeKind>> = {
+  kit: {
+    id: "kit",
+    name: "Kit",
+    icon: "layout-grid",
+    description: "Open kit workspace",
+    descriptors: [
+      { id: "version", descriptorKindId: "text", label: "Version" },
+      { id: "kitKind", descriptorKindId: "text", label: "Kind" },
+      { id: "updated", descriptorKindId: "time", label: "Updated" },
+      { id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  folder: {
+    id: "folder",
+    name: "Folder",
+    icon: "folder",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  file: {
+    id: "file",
+    name: "File",
+    icon: "file",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  design: {
+    id: "design",
+    name: "Design",
+    icon: "design",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  type: {
+    id: "type",
+    name: "Type",
+    icon: "type",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  family: {
+    id: "family",
+    name: "Family",
+    icon: "family",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  piece: {
+    id: "piece",
+    name: "Piece",
+    icon: "piece",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+  connection: {
+    id: "connection",
+    name: "Connection",
+    icon: "connection",
+    descriptors: [
+      { id: "path", descriptorKindId: "text", label: "Path" },
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+    ],
+  },
+};
+
+/** @emoji 📁 Default kit virtual file system schema for home and kit tree surfaces. */
+export const KIT_VIRTUAL_FILE_SYSTEM_SCHEMA: VirtualFileSystemSchema = {
+  fileNodeKinds: KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS,
+  descriptorKinds: KIT_VIRTUAL_FILE_SYSTEM_DESCRIPTOR_KINDS,
+  descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
+};
+
+/** @emoji 📁 Home kit list columns (version, kind, updated, path). */
+export const KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA: VirtualFileSystemSchema = {
+  ...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
+  descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
+};
+
+/** @emoji 📁 In-kit tree columns (path + node kind). */
+export const KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA: VirtualFileSystemSchema = {
+  ...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
+  descriptorColumnIds: ["path", "fileNodeKind"],
+};
 
 /** @emoji 📁 One node in a virtual file system tree (children may be loaded lazily by the host). */
-export interface VirtualFileSystemNode {
+export interface FileNode {
   readonly id: string;
-  readonly kind: VirtualFileSystemNodeKind;
+  readonly fileNodeKindId: string;
   readonly name: string;
   readonly path?: string;
   readonly parentId?: string | null;
   readonly hasChildren?: boolean;
   readonly icon?: string;
+  readonly descriptorValues?: Readonly<Record<string, FileNodeDescriptorValue>>;
 }
 
+/** @emoji 📁 {@link FileNode} alias used by {@link VirtualFileSystem}. */
+export type VirtualFileSystemNode = FileNode;
+
 /** @emoji 📁 Flattened visible row for {@link VirtualFileSystem} (only expanded branches). */
-export interface VirtualFileSystemRow extends VirtualFileSystemNode, HierarchicalRowData {
+export interface VirtualFileSystemRow extends FileNode, HierarchicalRowData {
   readonly level: number;
   readonly isExpanded?: boolean;
   readonly navigateUri?: string;
@@ -22579,6 +22730,7 @@ export interface VirtualFileSystemRow extends VirtualFileSystemNode, Hierarchica
 
 /** @emoji 📁 Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for kit VFS nodes. */
 export interface VirtualFileSystemProps {
+  readonly schema: VirtualFileSystemSchema;
   readonly rows: readonly VirtualFileSystemRow[];
   readonly selectedRowIds?: Set<string> | readonly string[];
   readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
@@ -22590,9 +22742,106 @@ export interface VirtualFileSystemProps {
   readonly extraColumns?: readonly TableColumn<VirtualFileSystemRow>[];
 }
 
-/** @emoji 📁 Returns a lucide icon component for a VFS node kind. */
-export function virtualFileSystemKindIcon(kind: VirtualFileSystemNodeKind | string): LucideIcon {
-  switch (kind) {
+/** @emoji 📁 Resolves a {@link FileNodeKind} from a {@link VirtualFileSystemSchema}. */
+export function resolveVirtualFileSystemFileNodeKind(schema: VirtualFileSystemSchema, fileNodeKindId: string): FileNodeKind | undefined {
+  return schema.fileNodeKinds[fileNodeKindId];
+}
+
+/** @emoji 📁 Resolves a {@link DescriptorKind} from a {@link VirtualFileSystemSchema}. */
+export function resolveVirtualFileSystemDescriptorKind(schema: VirtualFileSystemSchema, descriptorKindId: string): DescriptorKind | undefined {
+  return schema.descriptorKinds[descriptorKindId];
+}
+
+/** @emoji 📁 Finds the first {@link FileNodeDescriptor} binding for a column id across all file node kinds. */
+export function resolveVirtualFileSystemDescriptorBinding(
+  schema: VirtualFileSystemSchema,
+  descriptorColumnId: string,
+): { readonly binding: FileNodeDescriptor; readonly descriptorKind: DescriptorKind } | undefined {
+  for (const fileNodeKind of Object.values(schema.fileNodeKinds)) {
+    const binding = fileNodeKind.descriptors.find((entry) => entry.id === descriptorColumnId);
+    if (!binding) continue;
+    const descriptorKind = schema.descriptorKinds[binding.descriptorKindId];
+    if (!descriptorKind) continue;
+    return { binding, descriptorKind };
+  }
+  return undefined;
+}
+
+/** @emoji 📁 Builds standard path and file-node-kind descriptor values for a node. */
+export function buildKitVirtualFileSystemDescriptorValues(
+  fileNodeKindId: string,
+  options: {
+    readonly path?: string;
+    readonly version?: string;
+    readonly kitKind?: string;
+    readonly updatedIso?: string;
+    readonly createdBy?: { readonly name: string; readonly icon?: string };
+    readonly extra?: Readonly<Record<string, FileNodeDescriptorValue>>;
+  } = {},
+): Readonly<Record<string, FileNodeDescriptorValue>> {
+  const fileNodeKind = KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS[fileNodeKindId];
+  const values: Record<string, FileNodeDescriptorValue> = { ...options.extra };
+  if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
+  if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
+  if (options.version !== undefined) values.version = { presentation: "text", text: options.version };
+  if (options.kitKind !== undefined) values.kitKind = { presentation: "text", text: options.kitKind };
+  if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
+  if (options.createdBy) values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
+  return values;
+}
+
+/** @emoji 📁 Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
+export function renderVirtualFileSystemDescriptorCell(
+  descriptorKind: DescriptorKind,
+  value: FileNodeDescriptorValue | undefined,
+): React.ReactNode {
+  if (!value || value.presentation !== descriptorKind.presentation) return "";
+  switch (value.presentation) {
+    case "text":
+      return value.text;
+    case "time": {
+      const parsed = Date.parse(value.iso);
+      if (Number.isNaN(parsed)) return value.iso;
+      const date = new Date(parsed);
+      if (descriptorKind.presentation === "time" && descriptorKind.format === "relative") {
+        return formatDistanceToNow(date, { addSuffix: true });
+      }
+      if (descriptorKind.presentation === "time" && descriptorKind.format === "date") {
+        return format(date, "yyyy-MM-dd");
+      }
+      return format(date, "yyyy-MM-dd HH:mm");
+    }
+    case "avatar":
+      return <TableAvatar name={value.name} icon={value.icon} />;
+    default:
+      return "";
+  }
+}
+
+/** @emoji 📁 Builds {@link TableColumn} entries from {@link VirtualFileSystemSchema} descriptor columns. */
+export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSystemSchema): TableColumn<VirtualFileSystemRow>[] {
+  const columns: TableColumn<VirtualFileSystemRow>[] = [];
+  for (const columnId of schema.descriptorColumnIds) {
+    const resolved = resolveVirtualFileSystemDescriptorBinding(schema, columnId);
+    if (!resolved) continue;
+    const { binding, descriptorKind } = resolved;
+    columns.push({
+      id: columnId,
+      header: binding.label ?? descriptorKind.name,
+      width: descriptorKind.presentation === "avatar" ? "12%" : "14%",
+      accessor: (row) => {
+        const fileNodeKind = schema.fileNodeKinds[row.fileNodeKindId];
+        if (!fileNodeKind?.descriptors.some((entry) => entry.id === columnId)) return "";
+        return renderVirtualFileSystemDescriptorCell(descriptorKind, row.descriptorValues?.[columnId]);
+      },
+    });
+  }
+  return columns;
+}
+
+/** @emoji 📁 Returns a lucide icon component for a VFS file node kind id. */
+export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
+  switch (fileNodeKindId) {
     case "kit":
       return LayoutGridIcon;
     case "folder":
@@ -22637,18 +22886,23 @@ export function buildVirtualFileSystemVisibleRows(
     if (!children?.length) return;
     for (const child of children) visit(child, level + 1);
   };
-  const rootNode = root ?? { id: rootId, kind: "kit", name: rootId, hasChildren: childrenByParentId.has(rootId) || expandedIds.has(rootId) };
+  const rootNode = root ?? {
+    id: rootId,
+    fileNodeKindId: "kit",
+    name: rootId,
+    hasChildren: childrenByParentId.has(rootId) || expandedIds.has(rootId),
+  };
   visit(rootNode, 0);
   return rows;
 }
 
-const VirtualFileSystemNodeGlyph: React.FC<{ readonly kind: VirtualFileSystemNodeKind | string; readonly icon?: string; readonly name: string }> = ({
-  kind,
+const VirtualFileSystemNodeGlyph: React.FC<{ readonly fileNodeKindId: string; readonly icon?: string; readonly name: string }> = ({
+  fileNodeKindId,
   icon,
   name,
 }) => {
   if (icon) return <TableAvatar name={name} icon={icon} />;
-  const Icon = virtualFileSystemKindIcon(kind);
+  const Icon = virtualFileSystemKindIcon(fileNodeKindId);
   return (
     <span className="inline-flex size-small shrink-0 items-center justify-center text-muted-foreground">
       <Icon size={14} aria-hidden />
@@ -22658,6 +22912,7 @@ const VirtualFileSystemNodeGlyph: React.FC<{ readonly kind: VirtualFileSystemNod
 
 /** @emoji 📁 Hierarchical kit file-system table (specialized {@link Table}). */
 export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
+  schema,
   rows,
   selectedRowIds,
   onRowClick,
@@ -22673,7 +22928,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       {
         id: "name",
         header: "Name",
-        width: "45%",
+        width: "32%",
         accessor: (row) => (
           <div className="flex min-w-0 items-center gap-single" style={{ paddingLeft: (row.level ?? 0) * 14 }}>
             {row.hasChildren ? (
@@ -22692,26 +22947,15 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
             ) : (
               <span className="inline-block size-small shrink-0" aria-hidden />
             )}
-            <VirtualFileSystemNodeGlyph kind={row.kind} icon={row.icon} name={row.name} />
+            <VirtualFileSystemNodeGlyph fileNodeKindId={row.fileNodeKindId} icon={row.icon} name={row.name} />
             <span className="truncate">{row.name}</span>
           </div>
         ),
       },
-      {
-        id: "kind",
-        header: "Kind",
-        width: "20%",
-        accessor: (row) => row.kind,
-      },
-      {
-        id: "path",
-        header: "Path",
-        width: "35%",
-        accessor: (row) => row.path ?? "",
-      },
+      ...buildVirtualFileSystemDescriptorColumns(schema),
     ];
     return [...base, ...extraColumns];
-  }, [extraColumns, onToggleExpand]);
+  }, [extraColumns, onToggleExpand, schema]);
 
   return (
     <Table<VirtualFileSystemRow>
@@ -24806,7 +25050,7 @@ export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🌙Hotkeys
 
 // #region ⛅Date
-export { formatDistanceToNow } from "date-fns";
+export { format, formatDistanceToNow } from "date-fns";
 export { de as dateFnsDe, enUS as dateFnsEnUS } from "date-fns/locale";
 // #endregion ⛅Date
 
@@ -25467,16 +25711,16 @@ if (treeVitest) {
 
   describe("VirtualFileSystem", () => {
     it("buildVirtualFileSystemVisibleRows only includes children of expanded parents", () => {
-      const root: VirtualFileSystemNode = { id: "kit", kind: "kit", name: "Kit", hasChildren: true };
+      const root: VirtualFileSystemNode = { id: "kit", fileNodeKindId: "kit", name: "Kit", hasChildren: true };
       const childrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
         [
           "kit",
           [
-            { id: "f1", kind: "folder", name: "Models", parentId: "kit", hasChildren: true },
-            { id: "d1", kind: "design", name: "Tower", parentId: "kit", hasChildren: false },
+            { id: "f1", fileNodeKindId: "folder", name: "Models", parentId: "kit", hasChildren: true },
+            { id: "d1", fileNodeKindId: "design", name: "Tower", parentId: "kit", hasChildren: false },
           ],
         ],
-        ["f1", [{ id: "t1", kind: "type", name: "Capsule", parentId: "f1", hasChildren: false }]],
+        ["f1", [{ id: "t1", fileNodeKindId: "type", name: "Capsule", parentId: "f1", hasChildren: false }]],
       ]);
       const collapsed = buildVirtualFileSystemVisibleRows("kit", childrenByParentId, new Set(["kit"]), root);
       expect(collapsed.map((row) => row.id)).toEqual(["kit", "f1", "d1"]);
@@ -25484,12 +25728,50 @@ if (treeVitest) {
       expect(expanded.map((row) => row.id)).toEqual(["kit", "f1", "t1", "d1"]);
     });
 
+    it("buildVirtualFileSystemDescriptorColumns renders avatar and time cells", () => {
+      const columns = buildVirtualFileSystemDescriptorColumns(KIT_VIRTUAL_FILE_SYSTEM_SCHEMA);
+      const createdBy = columns.find((column) => column.id === "createdBy");
+      expect(createdBy?.header).toBe("Created by");
+      const updated = columns.find((column) => column.id === "updated");
+      expect(updated?.header).toBe("Updated");
+      const row: VirtualFileSystemRow = {
+        id: "kit:1",
+        fileNodeKindId: "kit",
+        name: "Alpha",
+        level: 0,
+        descriptorValues: {
+          updated: { presentation: "time", iso: "2026-05-01T12:00:00.000Z" },
+          createdBy: { presentation: "avatar", name: "Ada", icon: "https://example.com/a.png" },
+        },
+      };
+      const updatedMarkup = renderToStaticMarkup(<>{updated?.accessor(row)}</>);
+      expect(updatedMarkup).toContain("2026");
+      const avatarColumn = buildVirtualFileSystemDescriptorColumns({
+        ...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
+        descriptorColumnIds: ["createdBy"],
+        fileNodeKinds: {
+          ...KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS,
+          kit: {
+            ...KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS.kit,
+            descriptors: [
+              ...KIT_VIRTUAL_FILE_SYSTEM_FILE_NODE_KINDS.kit.descriptors,
+              { id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
+            ],
+          },
+        },
+      })[0];
+      const avatarMarkup = renderToStaticMarkup(<>{avatarColumn?.accessor(row)}</>);
+      expect(avatarMarkup).toContain("avatar-fallback");
+      expect(avatarMarkup).toContain(">A<");
+    });
+
     it("renders expand affordance only for rows with children", () => {
       const markup = renderToStaticMarkup(
         <VirtualFileSystem
+          schema={KIT_VIRTUAL_FILE_SYSTEM_SCHEMA}
           rows={[
-            { id: "kit", kind: "kit", name: "Kit", level: 0, hasChildren: true, isExpanded: true },
-            { id: "file", kind: "file", name: "readme.md", level: 1, hasChildren: false },
+            { id: "kit", fileNodeKindId: "kit", name: "Kit", level: 0, hasChildren: true, isExpanded: true },
+            { id: "file", fileNodeKindId: "file", name: "readme.md", level: 1, hasChildren: false },
           ]}
         />,
       );

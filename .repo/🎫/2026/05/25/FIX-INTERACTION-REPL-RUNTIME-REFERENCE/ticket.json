@@ -1,6 +1,6 @@
 {
   "title": "Fix Arc Preview and Output",
-  "status": "closed",
+  "status": "open",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
   "summary": "Fixed multi-tab mode dock chrome: grid columns now order active tab → gap → sibling tabs so body spans active+gap only (not under inactive tabs). Reordered tab bar DOM to match. Disabled full bg-active-base fill on stacked tabs so the primary stroke uses border classes only.",
   "goal": "🎯r2602🎯runningsketchpad",
@@ -10,6 +10,7 @@
     "⚪5dcd4182b1694dc2ab67fc6a8aad01af",
     "⚪4d8f1f2e358f42ccb663eb6add93803e",
     "⚪b7a3448a555346c69322367a22093c3c",
-    "⚪72e7184bfcf94d88aa3a7e41fae2e7fe"
+    "⚪72e7184bfcf94d88aa3a7e41fae2e7fe",
+    "⚪b55c9f31c82b4d58b7ee8fb46bf094f5"
   ]
 }
