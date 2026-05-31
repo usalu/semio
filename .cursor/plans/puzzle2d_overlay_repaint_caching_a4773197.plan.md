@@ -4,19 +4,19 @@ overview: Make hover/zoom/selection as fast as drag by repainting the text-overl
 todos:
   - id: epoch
     content: Add textOverlayContentEpoch and bump it in markDirty() and markSceneDescriptorDirty()
-    status: in_progress
+    status: completed
   - id: dirty-helper
     content: Add textOverlayDirty() comparing camera/size/dpr/lod/selection/preselect/epoch/theme to last painted snapshot; store lastOverlay* fields
-    status: pending
+    status: completed
   - id: paint-skip
     content: In paintTextOverlays(), early-return when not dirty and when isDraggingAreaSelect(); paint+store otherwise
-    status: pending
+    status: completed
   - id: preselect-local
     content: Stop routing marquee preselect through shell React state in the play pane (drop controlled preselection/onPreselect); add puzzle2dBroadcastPreselectSilent peer mirror and call it from updatePreselection emit path
-    status: pending
+    status: completed
   - id: tests
     content: "Extend vitest: textOverlayDirty cases (camera/selection/epoch/theme dirty, hover-only not dirty) and preselect peer broadcast without full syncDescriptorJson; run bun ./script.ts test"
-    status: pending
+    status: completed
 isProject: false
 ---
 

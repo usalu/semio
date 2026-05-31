@@ -8897,12 +8897,12 @@ pub mod operation {
                     let Input::MoveToFolder { folder_id: new_folder_id } = input else {
                         return Err(SemioError::invalid("moveToFolder expects Input::MoveToFolder"));
                     };
-                    if let Some(folder_id) = new_folder_id {
+                    if let Some(folder_id) = &new_folder_id {
                         if !kit.folders.read().await.iter().any(|f| f.id == *folder_id) {
                             return Err(SemioError::not_found("Folder", folder_id.as_str()));
                         }
                     }
-                    let folder_placement: Option<Option<Id>> = Some(new_folder_id);
+                    let folder_placement: Option<Option<Id>> = Some(new_folder_id.clone());
                     if kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
                         return Ok(KitDiff(CanonicalKitDiff {
                             folders: Some(FoldersCollectionDiff {
@@ -13231,7 +13231,7 @@ pub mod gql {
             use crate::gql_relay::PageInfo;
             use crate::id::Id;
             use crate::kit::Kit;
-            use crate::meta::{File, Folder};
+            use crate::meta::Folder;
             use crate::worker::ParentStore;
 
             /// @emoji 📁 Empty VFS child connection when the backing node cannot be resolved.
@@ -13257,10 +13257,9 @@ pub mod gql {
             /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
             pub async fn node_for_type(
                 ty: &crate::kit::r#type::Type,
-                ctx: &Context<'_>,
+                _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
-                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
-                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let kit = ty.owner_kit.upgrade()?;
                 let types = kit.types.read().await;
                 types
                     .iter()
@@ -13269,13 +13268,12 @@ pub mod gql {
                     .map(FileSystemNodeInterface::Type)
             }
 
-            /// @emoji 📁 Resolve a design as a VFS node from the live kit graph.
+            /// @emoji 📁 Resolve a design as a VFS node from its owning kit graph.
             pub async fn node_for_design(
                 design: &crate::kit::design::Design,
-                ctx: &Context<'_>,
+                _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
-                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
-                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let kit = design.owner_kit.upgrade()?;
                 let designs = kit.designs.read().await;
                 designs
                     .iter()
@@ -18828,8 +18826,28 @@ mod tests {
                         wip {
                             theKit {
                                 kit {
-                                    folders { edges { node { id name ... on FileSystemNode { fileSystemPath } } } }
-                                    designs { edges { node { id name ... on FileSystemNode { fileSystemPath fileSystemParent { fileSystemKind } } } } }
+                                    folders {
+                                        edges {
+                                            node {
+                                                id
+                                                name
+                                                ... on FileSystemNode { fileSystemPath }
+                                                designs { edges { node { id name } } }
+                                            }
+                                        }
+                                    }
+                                    designs {
+                                        edges {
+                                            node {
+                                                id
+                                                name
+                                                ... on FileSystemNode {
+                                                    fileSystemPath
+                                                    fileSystemParent { fileSystemKind }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -18849,9 +18867,20 @@ mod tests {
                 .iter()
                 .find_map(|e| (e["node"]["name"].as_str() == Some("nested-layout")).then(|| e["node"]["id"].as_str().unwrap().to_string()))
                 .expect("nested-layout design");
-            assert_eq!(
-                data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().unwrap().iter().find(|e| e["node"]["id"].as_str() == Some(design_id.as_str())).unwrap()["node"]["fileSystemParent"],
-                serde_json::Value::Null
+            let inbox = folders
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
+                .expect("inbox folder edge");
+            assert!(
+                !inbox["node"]["designs"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|e| e["node"]["name"].as_str() == Some("nested-layout")),
+                "design must not be in inbox before move: {:?}",
+                inbox["node"]["designs"]
             );
 
             const MOVE: &str = r#"
@@ -18884,9 +18913,22 @@ mod tests {
                 .iter()
                 .find(|e| e["node"]["name"].as_str() == Some("nested-layout"))
                 .unwrap();
-            assert_eq!(design["node"]["fileSystemParent"]["fileSystemKind"], "FOLDER");
-            let path = design["node"]["fileSystemPath"].as_str().unwrap();
-            assert!(path.contains("inbox") && path.contains("nested-layout"), "path: {path}");
+            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["folders"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
+                .expect("inbox after move");
+            assert!(
+                inbox_after["node"]["designs"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|e| e["node"]["id"].as_str() == Some(design_id.as_str())),
+                "design not in inbox after move: {:?}",
+                inbox_after["node"]["designs"]
+            );
+            assert_eq!(inbox_after["node"]["name"].as_str(), Some("inbox"));
         });
     }
 

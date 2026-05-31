@@ -2618,6 +2618,7 @@ export class Puzzle2dRenderer {
   /** @emoji 🔔 Marks the WASM descriptor cache stale after scene graph or selection chrome changes. */
   markSceneDescriptorDirty(): void {
     this.sceneDescriptorEpoch += 1;
+    this.textOverlayContentEpoch += 1;
     this.lastPushedDescriptorJson = null;
     this.lastPushedSceneDescriptorEpoch = -1;
   }
@@ -2747,6 +2748,19 @@ export class Puzzle2dRenderer {
   private sceneDescriptorEpoch = 0;
   private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
+  private textOverlayContentEpoch = 0;
+  private textOverlayPainted = false;
+  private lastOverlayCameraX = Number.NaN;
+  private lastOverlayCameraY = Number.NaN;
+  private lastOverlayCameraZoom = Number.NaN;
+  private lastOverlayWidth = -1;
+  private lastOverlayHeight = -1;
+  private lastOverlayDpr = -1;
+  private lastOverlayLod: Puzzle2dDrawLodKind | "" = "";
+  private lastOverlaySelection: Puzzle2dSelectionSnapshot | null = null;
+  private lastOverlayPreselect: Puzzle2dPreselectSnapshot | null = null;
+  private lastOverlayContentEpoch = -1;
+  private lastOverlayVelloThemeJson = "";
   private lastDescriptorPushDeferred = false;
   private kindCompatJson = "[]";
   private kindCatalogsBundle: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
@@ -3418,6 +3432,7 @@ export class Puzzle2dRenderer {
 
   /** @emoji 🖌️ Requests a repaint; pass `observeGraph: true` when scene topology or authored props changed. */
   markDirty(options?: { readonly observeGraph?: boolean }): void {
+    this.textOverlayContentEpoch += 1;
     this.invalidated = true;
     if (this.batchDepth > 0) {
       return;
@@ -4054,12 +4069,54 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 🧪 Whether the 2D text overlay must repaint (camera, LOD, selection chrome, scene text, theme). */
+  textOverlayDirty(): boolean {
+    if (!this.textOverlayPainted) {
+      return true;
+    }
+    const lod = this.effectiveDrawLodLabel();
+    const selection = this.selectionStore.getSnapshot();
+    const preselect = this.preselectStore.getSnapshot();
+    return (
+      this.camera.x !== this.lastOverlayCameraX ||
+      this.camera.y !== this.lastOverlayCameraY ||
+      !nearlyEqual(this.camera.zoom, this.lastOverlayCameraZoom) ||
+      this.width !== this.lastOverlayWidth ||
+      this.height !== this.lastOverlayHeight ||
+      this.dpr !== this.lastOverlayDpr ||
+      lod !== this.lastOverlayLod ||
+      selection !== this.lastOverlaySelection ||
+      preselect !== this.lastOverlayPreselect ||
+      this.textOverlayContentEpoch !== this.lastOverlayContentEpoch ||
+      this.lastVelloThemeJson !== this.lastOverlayVelloThemeJson
+    );
+  }
+
+  /** @emoji 📌 Records the overlay inputs used by the last {@link Puzzle2dRenderer.paintTextOverlays} pass. */
+  private rememberTextOverlayPainted(): void {
+    this.textOverlayPainted = true;
+    this.lastOverlayCameraX = this.camera.x;
+    this.lastOverlayCameraY = this.camera.y;
+    this.lastOverlayCameraZoom = this.camera.zoom;
+    this.lastOverlayWidth = this.width;
+    this.lastOverlayHeight = this.height;
+    this.lastOverlayDpr = this.dpr;
+    this.lastOverlayLod = this.effectiveDrawLodLabel();
+    this.lastOverlaySelection = this.selectionStore.getSnapshot();
+    this.lastOverlayPreselect = this.preselectStore.getSnapshot();
+    this.lastOverlayContentEpoch = this.textOverlayContentEpoch;
+    this.lastOverlayVelloThemeJson = this.lastVelloThemeJson;
+  }
+
   /** @emoji 🏷️ Draws node captions on {@link Puzzle2dRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
   private paintTextOverlays(): void {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
-    if (this.session.defersDescriptorSyncFromJs() || this.viewportWheelEmitRafId !== null) {
+    if (this.session.defersDescriptorSyncFromJs() || this.viewportWheelEmitRafId !== null || this.session.isDraggingAreaSelect()) {
+      return;
+    }
+    if (!this.textOverlayDirty()) {
       return;
     }
     const el = this.textOverlayCanvas;
@@ -4156,6 +4213,7 @@ export class Puzzle2dRenderer {
         ctx.fillText(caption, labelX, labelY);
       }
     }
+    this.rememberTextOverlayPainted();
   }
 
   /** @emoji 🎨 Presents one GPU frame after {@link Puzzle2dRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
@@ -4324,6 +4382,7 @@ export class Puzzle2dRenderer {
     this.preselectStore.setSnapshot(nextSnapshot, preselectSnapshotsEqual);
     this.applySelectionChromeToSceneObjects();
     if (emit) {
+      puzzle2dBroadcastPreselectSilent(this, nextSnapshot);
       this.emit("preselect", nextSnapshot);
     }
     this.scheduleInputInvalidate();
@@ -4933,6 +4992,61 @@ if (puzzle2dVitest) {
       renderer["pushSceneToWasmDriver"]();
       expect(syncDescriptorJson).not.toHaveBeenCalled();
       renderer.dispose();
+    });
+
+    it("textOverlayDirty stays false across hover-only updates", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "label" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      renderer["rememberTextOverlayPainted"]();
+      expect(renderer.textOverlayDirty()).toBe(false);
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "hover", payload: { id: "n" } }]));
+      expect(renderer.textOverlayDirty()).toBe(false);
+      renderer.dispose();
+    });
+
+    it("textOverlayDirty after camera, selection, content epoch, and theme changes", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "label" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      renderer["rememberTextOverlayPainted"]();
+      expect(renderer.textOverlayDirty()).toBe(false);
+      renderer.camera.x = 40;
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer["rememberTextOverlayPainted"]();
+      renderer.setSelectionIdsSilent(["n"]);
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer["rememberTextOverlayPainted"]();
+      renderer.markDirty();
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer["rememberTextOverlayPainted"]();
+      renderer["lastVelloThemeJson"] = '{"changed":true}';
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
+    it("broadcasts preselect to peer renderers without full syncDescriptorJson", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ id: "a", radius: 24, x: 0, y: 0 });
+      const nodeB = new Puzzle2dSceneNode({ id: "b", radius: 24, x: 80, y: 0 });
+      rendererA.scene.add(nodeA).add(nodeB);
+      rendererB.scene.add(new Puzzle2dSceneNode({ id: "a", radius: 24, x: 0, y: 0 })).add(new Puzzle2dSceneNode({ id: "b", radius: 24, x: 80, y: 0 }));
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(rendererB.session, "syncDescriptorJson");
+      rendererA.setSelectionIdsSilent(["a"]);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "preselect", payload: { ids: ["b"], removedIds: [] } }]));
+      expect(rendererB.preselection.getSnapshot().ids).toEqual(["b"]);
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
+      rendererA.dispose();
+      rendererB.dispose();
     });
 
     it("setSelectionIdsSilent does not enqueue graph observation change events", async () => {
@@ -7258,6 +7372,15 @@ function puzzle2dBroadcastSelectionSilent(source: Puzzle2dRenderer, ids: readonl
       continue;
     }
     peer.applySelectionFromPeerSilent(ids);
+  }
+}
+
+function puzzle2dBroadcastPreselectSilent(source: Puzzle2dRenderer, snapshot: Puzzle2dPreselectSnapshot): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (peer === source || !peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.syncPreselectionSilent(snapshot);
   }
 }
 //#endregion 🔖MultiViewAuthoring

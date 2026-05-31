@@ -1896,10 +1896,8 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     fixture,
     handleCanvasFixtureDrop,
     camerasByPane,
-    preselection,
     resetPuzzle2dRedrawProgressiveEpoch,
     selectionIds,
-    setPreselection,
     setSelectionIds,
     syncBaselineFromViewportCamera,
   } = usePuzzle2dPlayShell();
@@ -1909,7 +1907,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const selection = reactHostPort.useMemo(() => normalizePuzzle2dSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
-  const onPreselect = reactHostPort.useCallback((snapshot: Puzzle2dPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   const sceneMarkers = reactHostPort.useMemo(
@@ -1980,9 +1977,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         onDrag={onCanvasDrag}
         onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
-        onPreselect={onPreselect}
         onSelect={onSelect}
-        preselection={preselection}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
         selection={selection}
         selectionMethod={puzzle2dSelectionMethod}
