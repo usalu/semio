@@ -2717,7 +2717,7 @@ function SelectionMissBridge(): null {
   reactHostPort.useEffect(() => {
     const previous = getState().onPointerMissed;
     const onMiss = (event: MouseEvent) => {
-      if (event.button !== 0 || attractionBusyRef.current) {
+      if (event.button !== 0 || attractionBusyRef.current || puzzle3dRelocateDragActiveRef.current) {
         previous?.(event);
         return;
       }
@@ -3196,6 +3196,8 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
       mode={props.mode}
       translationSnap={props.translationSnap}
       onMouseDown={() => {
+        puzzle3dRelocateDragActiveRef.current = true;
+        cancelPuzzle3dMarqueeGesture();
         const g = props.object;
         props.beforeRef.current = {
           origin: g.position.clone(),
@@ -3203,7 +3205,17 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
           scale: g.scale.clone(),
         };
       }}
+      onDraggingChanged={(event) => {
+        if (!event) {
+          return;
+        }
+        puzzle3dRelocateDragActiveRef.current = event.value;
+        if (event.value) {
+          cancelPuzzle3dMarqueeGesture();
+        }
+      }}
       onMouseUp={() => {
+        puzzle3dRelocateDragActiveRef.current = false;
         const before = props.beforeRef.current;
         if (!before) return;
         const g = props.object;
@@ -3294,7 +3306,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   }, [selected, showSelectionOutline, meshStyle, invalidate]);
 
   const selectObject = reactHostPort.useCallback(() => {
-    if (attractionDragActive || attractionIndirectPickAwait || props.disabled) {
+    if (attractionDragActive || attractionIndirectPickAwait || props.disabled || puzzle3dRelocateDragActiveRef.current) {
       return;
     }
     commitSelection({ kind: "object", id: props.id });
@@ -3606,7 +3618,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
       }
       e.stopPropagation();
       vortexPointerGestureRef.current = null;
-      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current) {
+      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current) {
         selectVortex();
       }
     },
@@ -3758,7 +3770,7 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
   );
   const onClick = reactHostPort.useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current) {
+      if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current || puzzle3dRelocateDragActiveRef.current) {
         return;
       }
       e.stopPropagation();
@@ -3811,6 +3823,16 @@ export const puzzle3dRightDragActiveRef = { current: false };
 
 /** @emoji 🖱️ True after a marquee gesture consumed the click (mesh picks skip onClick). */
 export const puzzle3dMarqueeSuppressClickRef = { current: false };
+
+/** @emoji ✋ True while transform controls (relocate tool) are dragging — blocks marquee and picks. */
+export const puzzle3dRelocateDragActiveRef = { current: false };
+
+let puzzle3dMarqueeGestureCancel: (() => void) | null = null;
+
+/** @emoji 🖱️ Aborts an in-progress marquee gesture (e.g. when relocate drag starts). */
+export function cancelPuzzle3dMarqueeGesture(): void {
+  puzzle3dMarqueeGestureCancel?.();
+}
 
 export interface ScreenRect {
   readonly left: number;
@@ -4330,13 +4352,22 @@ function MarqueeBridge() {
     const resetOverlay = () => {
       puzzle3dMarqueeOverlayStore.setSnapshot(MARQUEE_OVERLAY_IDLE);
     };
+    const cancelGesture = () => {
+      gestureRef.current = null;
+      resetOverlay();
+    };
+    puzzle3dMarqueeGestureCancel = cancelGesture;
     const onPointerDown = (event: PointerEvent) => {
-      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) {
+      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current) {
         return;
       }
       gestureRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, active: false, path: [{ x: event.clientX, y: event.clientY }] };
     };
     const onPointerMove = (event: PointerEvent) => {
+      if (puzzle3dRelocateDragActiveRef.current) {
+        cancelGesture();
+        return;
+      }
       const gesture = gestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId) {
         return;
@@ -4360,6 +4391,10 @@ function MarqueeBridge() {
       invalidate();
     };
     const onPointerUp = (event: PointerEvent) => {
+      if (puzzle3dRelocateDragActiveRef.current) {
+        cancelGesture();
+        return;
+      }
       const gesture = gestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId) {
         return;
@@ -4386,6 +4421,7 @@ function MarqueeBridge() {
     bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
     bindings.listen(window, "pointercancel", onPointerUp as EventListener, true);
     return () => {
+      puzzle3dMarqueeGestureCancel = null;
       bindings.dispose();
       resetOverlay();
     };

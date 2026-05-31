@@ -80,15 +80,6 @@
 	text-align: center;
 }
 
-/** Pin every (sub)slide horizontally to its stack so reveal.js auto-animate measures a centered
- *  `from`/`to` rect even while a slide is briefly shown out of view-distance — otherwise an
- *  un-laid-out slide collapses to `left:auto` and morph elements fly by the slide's center offset. */
-.reveal .slides > section,
-.reveal .slides > section > section {
-	left: 0;
-	right: 0;
-}
-
 .reveal .progress span {
 	background: var(--color-primary);
 }

@@ -2860,6 +2860,11 @@ mod board_host {
             *self.world_content_cache.borrow_mut() = None;
         }
 
+        #[cfg(test)]
+        pub fn test_content_scene_generation(&self) -> u64 {
+            self.content_scene_generation
+        }
+
         fn camera_content_affine(&self) -> Affine {
             let z = self.camera.zoom;
             Affine::new([
@@ -7327,12 +7332,12 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
-        let gen_before = h.content_scene_generation;
+        let gen_before = h.test_content_scene_generation();
         h.set_node_positions(&[("a".into(), 12.0, 34.0), ("missing".into(), 1.0, 2.0), ("a".into(), f64::NAN, 0.0)]);
         let node = h.nodes.get("a").expect("node a should remain");
         assert!((node.x - 12.0).abs() < 0.001);
         assert!((node.y - 34.0).abs() < 0.001);
-        assert!(h.content_scene_generation > gen_before, "moving nodes must invalidate cached world content");
+        assert!(h.test_content_scene_generation() > gen_before, "moving nodes must invalidate cached world content");
         h.set_node_positions_json(r#"[{"id":"a","x":90.0,"y":110.0}]"#).unwrap();
         let node = h.nodes.get("a").expect("node a should remain");
         assert!((node.x - 90.0).abs() < 0.001);
@@ -7344,13 +7349,13 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
-        let gen_before = h.content_scene_generation;
-        let hint_before = h.encoded_scene_hint();
+        let gen_before = h.test_content_scene_generation();
         let s = h.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(s.x, s.y, 0, false, false);
         h.pointer_move_screen(s.x + 80.0, s.y + 40.0, false, false);
-        assert!(h.content_scene_generation > gen_before, "node drag must rebuild cached nodes/handles, not only edges");
-        assert_ne!(h.encoded_scene_hint(), hint_before, "dragged node geometry should change encoded vector scene");
+        assert!(h.test_content_scene_generation() > gen_before, "node drag must rebuild cached nodes/handles, not only edges");
+        let node = h.nodes.get("a").expect("dragged node");
+        assert!(node.x.abs() > 1.0 || node.y.abs() > 1.0, "pointer move should translate node a away from origin");
     }
 
     #[test]

@@ -1,8 +1,9 @@
 {
   "title": "Puzzle 2d Canvas Text Labels Wrong",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 2d Canvas Text Labels Wrong",
+  "summary": "Fixed puzzle 2d canvas text labels drifting away from nodes during pan, zoom, and drag. paintTextOverlays no longer skips repaints when wheelZoomGestureActive or defersDescriptorSyncFromJs — GPU kept updating while the overlay canvas stayed frozen. Added regression test paintTextOverlays repaints during wheel zoom and deferred descriptor sync. puzzle/2d/react vitest: 98 passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪43522a67a3da446ba6a9f77503215e32"

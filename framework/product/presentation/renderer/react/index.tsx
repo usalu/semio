@@ -94,6 +94,49 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
+//#region 🔖HiddenPreflight
+/**
+ * @emoji 🩹 Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
+ *
+ * `@ui/react` surface chrome ships Tailwind v4 preflight, whose layered
+ * `[hidden]{display:none!important}` outranks reveal.js's inline `display:block` on the off-screen
+ * slides it briefly un-hides to measure auto-animate `from`/`to` rects. The collapsed measurement
+ * makes morph elements fly in from the deck origin instead of morphing in place. Dropping only the
+ * `display` declaration restores the standard, non-important UA `[hidden]{display:none}` (so ordinary
+ * hidden elements stay hidden) while reveal's inline `display` again wins for slides — giving native
+ * reveal.js auto-animate exactly like {@link https://revealjs.com/auto-animate/}.
+ */
+export function relaxHiddenPreflight(): void {
+	if (typeof document === "undefined") {
+		return;
+	}
+	const visit = (rules: CSSRuleList): void => {
+		for (const rule of Array.from(rules)) {
+			const styleRule = rule as CSSStyleRule;
+			if (
+				typeof styleRule.selectorText === "string" &&
+				styleRule.selectorText.includes("[hidden]") &&
+				styleRule.style?.getPropertyValue("display") === "none"
+			) {
+				styleRule.style.removeProperty("display");
+			}
+			const grouping = rule as CSSGroupingRule;
+			if (grouping.cssRules) {
+				visit(grouping.cssRules);
+			}
+		}
+	};
+	const adopted = (document as unknown as { adoptedStyleSheets?: CSSStyleSheet[] }).adoptedStyleSheets ?? [];
+	for (const sheet of [...Array.from(document.styleSheets), ...adopted]) {
+		try {
+			visit(sheet.cssRules);
+		} catch {
+			// cross-origin stylesheet rules are not readable
+		}
+	}
+}
+//#endregion 🔖HiddenPreflight
+
 //#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
@@ -313,12 +356,14 @@ export const PresentationDeck: FC<{
 		if (options?.height ?? presentation.height) {
 			revealOptions.height = options?.height ?? presentation.height;
 		}
+		relaxHiddenPreflight();
 		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
 		const onSlideChanged = (): void => {
 			syncRevealBackgroundKind(deckEl);
 		};
 		void deck.initialize().then(() => {
+			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			deck.on("slidechanged", onSlideChanged);
 		});
@@ -480,6 +525,18 @@ if (import.meta.vitest) {
 			for (const section of morphSections) {
 				expect(section.querySelector('[data-id="name"]')?.tagName).toBe("H1");
 			}
+		});
+
+		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {
+			const style = document.createElement("style");
+			style.textContent = '[hidden]:where(:not([hidden="until-found"])) { display: none; color: red; }';
+			document.head.appendChild(style);
+			const hiddenRule = (style.sheet as CSSStyleSheet).cssRules[0] as CSSStyleRule;
+			expect(hiddenRule.style.getPropertyValue("display")).toBe("none");
+			relaxHiddenPreflight();
+			expect(hiddenRule.style.getPropertyValue("display")).toBe("");
+			expect(hiddenRule.style.getPropertyValue("color")).toBe("red");
+			style.remove();
 		});
 	});
 }
