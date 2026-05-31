@@ -86,6 +86,7 @@ import {
   type UiTreeNode,
   type UiTreeSectionNode,
   type UiVec3Node,
+  collectUiTreeItemDragData,
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   type WindowBodyViewContext,
@@ -356,7 +357,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
     isSelected: item.selected,
     draggable: item.draggable,
     dragData: item.dragData,
-    className: item.draggable ? "cursor-grab active:cursor-grabbing" : undefined,
+    className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
     items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
     onClick: item.command
       ? () => {
@@ -367,40 +368,22 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 }
 
 function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
-  const treeSections = uiTreeSectionsToTreeData(sections, commandBus);
-  const dragByItemId = new Map<string, Record<string, string>>();
-  const visit = (items: readonly TreeDataItem[]) => {
-    for (const item of items) {
-      if (item.dragData) {
-        dragByItemId.set(item.id, item.dragData);
-      }
-      if (item.items?.length) {
-        visit(item.items);
-      }
-    }
-  };
-  for (const section of treeSections) {
-    if (section.items?.length) {
-      visit(section.items);
-    }
-  }
+  void commandBus;
+  const dragByItemId = collectUiTreeItemDragData(sections);
   if (dragByItemId.size === 0) {
     return undefined;
   }
-  return {
-    getDragData: ({ sourceItem }) => dragByItemId.get(sourceItem.id),
-    onDragStart: ({ sourceItem }) => {
-      puzzle3dFixturePaletteDragRef.active = true;
-      const payload = dragByItemId.get(sourceItem.id)?.[FIXTURE_DRAG_V1_MIME];
-      if (payload) {
-        window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
-      }
-    },
-    onDragEnd: () => {
-      puzzle3dFixturePaletteDragRef.active = false;
-      window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
-    },
-  };
+  return puzzle3dFixturePaletteTreeDragController(dragByItemId);
+}
+
+/** @emoji 🌲 Renders a declarative {@link UiTreeNode} with optional puzzle fixture palette drag. */
+function renderPlaygroundDeclarativeTree(treeNode: UiTreeNode, commandBus: CommandBus): React.ReactElement {
+  const dragAndDropController = buildUiTreeDragAndDropController(treeNode.sections, commandBus);
+  return (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData(treeNode.sections, commandBus)} selectionMode="single" showLines dragAndDropController={dragAndDropController} />
+    </div>
+  );
 }
 
 function uiTreeSectionsToTreeData(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDataSection[] {
@@ -579,15 +562,8 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
         </dl>
       );
     }
-    case "tree": {
-      const treeNode = node as UiTreeNode;
-      const dragAndDropController = buildUiTreeDragAndDropController(treeNode.sections, commandBus);
-      return (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData(treeNode.sections, commandBus)} selectionMode="single" showLines dragAndDropController={dragAndDropController} />
-        </div>
-      );
-    }
+    case "tree":
+      return renderPlaygroundDeclarativeTree(node as UiTreeNode, commandBus);
     default:
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
@@ -694,12 +670,8 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
   void bus;
   return tabs.map((tab, orderIndex) => {
     const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
-    const Body = declarativeFactory ? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey) : () => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>;
-    const panelBody = (
-      <PlaygroundPanelBody>
-        <Body />
-      </PlaygroundPanelBody>
-    );
+    const Body = declarativeFactory ? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey) : () => <PlaygroundPanelBody><div className="p-2 text-xs">Missing panel {tab.bodyKey}</div></PlaygroundPanelBody>;
+    const panelBody = <Body />;
     const sectionLabel = tab.label?.trim();
     const sections: TreeDataSection[] = sectionLabel
       ? [{ id: `${tab.id}.section`, label: sectionLabel, defaultOpen: true, content: panelBody }]
@@ -713,6 +685,34 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
   });
 }
 
+/** @emoji 📑 Declarative side-panel body: tree nodes mount as a root {@link Tree} (not nested via {@link UiRenderer}). */
+function DeclarativeSidePanelBody(props: { readonly tabId: string; readonly bodyKey: string }): React.ReactElement {
+  const { runtime, activeModeId } = useApp();
+  const generation = reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribe(listener),
+    () => runtime.generation,
+    () => 0,
+  );
+  const ctx: SidePanelBodyViewContext = {
+    runtime,
+    windowKindId: props.tabId,
+    bodyKey: props.bodyKey,
+    activeModeId: activeModeId ?? null,
+    generation,
+  };
+  const bus = runtime.commandBus;
+  const factory = getSidePanelBodyFactory(props.bodyKey);
+  const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${props.bodyKey}"` };
+  if (node.type === "tree") {
+    return <PlaygroundPanelBody>{renderPlaygroundDeclarativeTree(node, bus)}</PlaygroundPanelBody>;
+  }
+  return (
+    <PlaygroundPanelBody>
+      <UiRenderer node={node} commandBus={bus} />
+    </PlaygroundPanelBody>
+  );
+}
+
 const declarativeSidePanelBodyComponents = new Map<string, React.FC>();
 
 function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): React.FC {
@@ -720,22 +720,7 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
   let component = declarativeSidePanelBodyComponents.get(cacheKey);
   if (!component) {
     component = function ShellDeclarativeSidePanelBody() {
-      const { runtime, activeModeId } = useApp();
-      const generation = reactHostPort.useSyncExternalStore(
-        (listener) => runtime.subscribe(listener),
-        () => runtime.generation,
-        () => 0,
-      );
-      const ctx: SidePanelBodyViewContext = {
-        runtime,
-        windowKindId: tabId,
-        bodyKey,
-        activeModeId: activeModeId ?? null,
-        generation,
-      };
-      const factory = getSidePanelBodyFactory(bodyKey);
-      const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
-      return <UiRenderer node={node} commandBus={runtime.commandBus} />;
+      return <DeclarativeSidePanelBody tabId={tabId} bodyKey={bodyKey} />;
     };
     declarativeSidePanelBodyComponents.set(cacheKey, component);
   }
@@ -1108,12 +1093,8 @@ import {
   applyConnectToFixture,
   applyPaletteObjectDropToFixture,
   blockedVortexFullIdsFromAttractions,
-  buildPaletteObjectDragFixture,
-  encodeFixtureForDragV1,
-  FIXTURE_DRAG_V1_MIME,
   mergePaletteObjectFromDrop,
-  puzzle3dFixturePaletteDragRef,
-  setPuzzle3dFixtureDragDataTransfer,
+  puzzle3dFixturePaletteTreeDragController,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
   type RelocatePayload,
@@ -1126,14 +1107,12 @@ import {
   PUZZLE_3D_PLAY_ICON_INSPECTOR,
   PUZZLE_3D_PLAY_ICON_KINDS,
   PUZZLE_3D_PLAY_ICON_SETTINGS,
-  PUZZLE_3D_PLAY_KINDS_TAB_ID,
   PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
   PUZZLE_3D_PLAY_APP_ID,
   PUZZLE_3D_PLAY_STORE_ID,
   Puzzle3dPlayShellController,
   parseKindCatalogs,
   parseKindCompatibility,
-  puzzle3dPlayKindCatalogSelectItems,
   type Puzzle3dPlaySnapshot,
 } from "@puzzle/3d/play";
 // #endregion 🔌Adapters
@@ -1250,85 +1229,6 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   );
 }
 
-//#region 🔖Puzzle3dPlayKindsPanel
-function Puzzle3dPlayKindsDraggableRow(props: { readonly objectKindId: string; readonly label: string }): ReactElement {
-  const dragFixture = reactHostPort.useMemo(() => buildPaletteObjectDragFixture(props.objectKindId), [props.objectKindId]);
-  const dragProps = useNativeDragAndDrop(
-    reactHostPort.useMemo(
-      () => ({
-        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          setPuzzle3dFixtureDragDataTransfer(event.dataTransfer, dragFixture);
-          puzzle3dFixturePaletteDragRef.active = true;
-          event.dataTransfer.effectAllowed = "copy";
-          const { clientWidth, clientHeight } = event.currentTarget;
-          event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
-          window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: encodeFixtureForDragV1(dragFixture) } }));
-        },
-        onDragEnd: () => {
-          puzzle3dFixturePaletteDragRef.active = false;
-          window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
-        },
-      }),
-      [dragFixture],
-    ),
-  );
-  return (
-    <div
-      className="border-element bg-background hover:bg-hover-panel flex cursor-grab items-center rounded-md border px-2 py-1.5 text-xs active:cursor-grabbing"
-      title={`Drag ${props.label} onto the 3D viewport`}
-      data-testid={`puzzle-3d-play-kind-${props.objectKindId}`}
-      {...dragProps}
-    >
-      {props.label}
-    </div>
-  );
-}
-
-/** @emoji 🏷️ Workbench kinds tab with native HTML drag for object catalog rows. */
-function Puzzle3dPlayKindsPanel(): ReactElement {
-  const snap = usePuzzle3dPlaySnapshot();
-  const catalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture?.meta), [snap.fixture?.meta]);
-  const objectKinds = reactHostPort.useMemo(() => puzzle3dPlayKindCatalogSelectItems(catalogs?.objects), [catalogs?.objects]);
-  if (!objectKinds.length) {
-    return <p className="text-muted-foreground p-3 text-xs">No object kinds in this fixture catalog</p>;
-  }
-  return (
-    <div className="flex min-h-0 flex-col gap-2 p-3" data-testid="puzzle-3d-play-kinds-panel">
-      <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Objects</p>
-      <div className="flex flex-col gap-1.5 overflow-auto">
-        {objectKinds.map((entry) => (
-          <Puzzle3dPlayKindsDraggableRow key={entry.value} objectKindId={entry.value} label={entry.label} />
-        ))}
-      </div>
-      <p className="text-muted-foreground text-[11px]">Drop onto the 3D viewport to place at the grid plane.</p>
-    </div>
-  );
-}
-
-class Puzzle3dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
-  buildTab(): SidePanelTabConfig {
-    return {
-      id: PUZZLE_3D_PLAY_KINDS_TAB_ID,
-      icon: Tags,
-      order: 1,
-      tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "puzzle-3d-play-kinds.panel",
-            label: "Kinds",
-            defaultOpen: true,
-            content: <Puzzle3dPlayKindsPanel />,
-            items: [],
-          },
-        ],
-      }),
-    };
-  }
-}
-
-const puzzle3dPlayKindsPanelDefinition = new Puzzle3dPlayKindsPanelDefinition();
-//#endregion 🔖Puzzle3dPlayKindsPanel
-
 let puzzle3dPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers puzzle 3D play surface host, tab icons, and mesh preload. */
@@ -1350,13 +1250,7 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
   mountPlaygroundApp(
-    <PlaygroundView
-      runtime={playground.runtime}
-      defaultAppId={PUZZLE_3D_PLAY_APP_ID}
-      initialPanelVisibility={playground.initialPanelVisibility}
-      playgroundKeybindings={playground.keybindings}
-      augmentPanelTabs={{ workbench: [puzzle3dPlayKindsPanelDefinition] }}
-    />,
+    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} playgroundKeybindings={playground.keybindings} />,
     rootId,
   );
 }

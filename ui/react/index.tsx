@@ -7472,6 +7472,7 @@ interface TreeItemProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
   draggable?: boolean;
   onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragEnd?: React.DragEventHandler<HTMLDivElement>;
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
@@ -8067,6 +8068,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   loading = false,
   draggable = false,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -8140,6 +8142,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         className={cn("group min-w-0 w-full", className)}
         draggable={draggable}
         onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -8251,6 +8254,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           className={itemClasses}
           draggable={draggable}
           onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
@@ -8359,6 +8363,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       className={itemClasses}
       draggable={draggable}
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -8817,6 +8822,16 @@ export const Tree = (({
     [dragAndDropController, itemMap, resolvedSelectedIds],
   );
 
+  const handleDragEnd = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      const sourceIds = draggedIds.length > 0 ? draggedIds : [item.id];
+      const sourceItems = sourceIds.map((id) => itemMap[id]).filter(Boolean);
+      dragAndDropController?.onDragEnd?.({ items: sourceItems, sourceItem: item, section });
+      setDraggedIds([]);
+    },
+    [dragAndDropController, draggedIds, itemMap],
+  );
+
   const handleDrop = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
       event.preventDefault();
@@ -8868,10 +8883,11 @@ export const Tree = (({
         loading={isLoading}
         isLastItem={isLastItem}
         actions={item.actions}
-        draggable={item.draggable ?? Boolean(dragAndDropController)}
+        draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
         onClick={(event) => handleSelectItem(event, item, section, path)}
         onDoubleClick={(event) => handleDoubleClickItem(event, item, section, path)}
         onDragStart={(event) => handleDragStart(event, item, section)}
+        onDragEnd={(event) => handleDragEnd(event, item, section)}
         onDragOver={handleDragOver}
         onDrop={(event) => handleDrop(event, item, "item", section)}
         onPointerEnter={item.onPointerEnter}

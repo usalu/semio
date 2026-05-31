@@ -2,7 +2,8 @@
 import {
   reactHostPort,
   sceneHostPort,
-  type ThreeEvent
+  type ThreeEvent,
+  type TreeDragAndDropController,
 } from "@ui/react";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -622,6 +623,24 @@ export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): bo
     return true;
   }
   return puzzle3dFixtureDragMimeInTypes(types);
+}
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 3D fixture palette `dragData`. */
+export function puzzle3dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
+  return {
+    getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+    onDragStart: ({ sourceItem }) => {
+      puzzle3dFixturePaletteDragRef.active = true;
+      const payload = dragDataByItemId.get(sourceItem.id)?.[FIXTURE_DRAG_V1_MIME];
+      if (payload) {
+        window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
+      }
+    },
+    onDragEnd: () => {
+      puzzle3dFixturePaletteDragRef.active = false;
+      window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+    },
+  };
 }
 
 /** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
@@ -7372,6 +7391,31 @@ if (import.meta.vitest) {
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
+    });
+    it("puzzle3dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
+      const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture("J"));
+      const dragData = new Map([["row-j", { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded }]]);
+      const controller = puzzle3dFixturePaletteTreeDragController(dragData);
+      const item = { id: "row-j", label: "J" };
+      const section = { id: "objects", label: "Objects" };
+      let session: string | null = "pending";
+      const onSession = (event: Event): void => {
+        const detail = (event as CustomEvent<{ readonly encoded: string } | null>).detail;
+        session = detail?.encoded ?? null;
+      };
+      window.addEventListener("puzzle3d-fixture-drag-session", onSession);
+      try {
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(false);
+        controller.onDragStart?.({ items: [item], sourceItem: item, section });
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(true);
+        expect(session).toBe(encoded);
+        controller.onDragEnd?.({ items: [item], sourceItem: item, section });
+        expect(puzzle3dFixturePaletteDragRef.active).toBe(false);
+        expect(session).toBeNull();
+      } finally {
+        window.removeEventListener("puzzle3d-fixture-drag-session", onSession);
+        puzzle3dFixturePaletteDragRef.active = false;
+      }
     });
     it("snapCadVec3ToGridStep rounds to grid step", () => {
       expect(snapCadVec3ToGridStep([12.3, 0.1, 56.8], 5)).toEqual([10, 0, 55]);

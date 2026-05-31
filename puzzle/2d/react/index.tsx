@@ -94,6 +94,13 @@ export interface WireKind {
   name: string;
 }
 
+/** @emoji 🌀 Local vortex template on a {@link NodeKind} (perimeter angle in board space). */
+export interface NodeKindVortexTemplate {
+  readonly vortexKind: string;
+  readonly angle: number;
+  readonly radius?: number;
+}
+
 /** @emoji 🟠 Node-kind catalog row (defaults for instances; richer fields reserved for future paint). */
 export interface NodeKind {
   color?: string;
@@ -104,6 +111,8 @@ export interface NodeKind {
   name: string;
   shape?: "circle" | "rectangle";
   stroke?: string;
+  /** @emoji 🌀 Local handle templates for palette / brush instantiation (`vortexKind` → instance `handleKind`). */
+  vortices?: readonly NodeKindVortexTemplate[];
 }
 
 /** @emoji 🪢 Edge-kind catalog row (defaults for instances; richer fields reserved for future stroke). */
@@ -183,6 +192,64 @@ export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: Ki
   };
 }
 
+function parseNodeKindVortexTemplates(raw: unknown): NodeKindVortexTemplate[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return undefined;
+  }
+  const vortices: NodeKindVortexTemplate[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") {
+      continue;
+    }
+    const box = row as Record<string, unknown>;
+    const vortexKind = typeof box.vortexKind === "string" ? box.vortexKind.trim() : "";
+    const angle = box.angle;
+    if (vortexKind === "" || typeof angle !== "number" || !Number.isFinite(angle)) {
+      continue;
+    }
+    const radius = box.radius;
+    vortices.push({
+      vortexKind,
+      angle,
+      ...(typeof radius === "number" && Number.isFinite(radius) ? { radius } : {}),
+    });
+  }
+  return vortices.length ? vortices : undefined;
+}
+
+function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+  const nodes: NodeKind[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") {
+      continue;
+    }
+    const box = row as Record<string, unknown>;
+    const id = typeof box.id === "string" ? box.id.trim() : "";
+    if (id === "") {
+      continue;
+    }
+    const name = typeof box.name === "string" ? box.name.trim() : id;
+    const shapeRaw = box.shape;
+    const shape = shapeRaw === "circle" || shapeRaw === "rectangle" ? shapeRaw : undefined;
+    const vortices = parseNodeKindVortexTemplates(box.vortices);
+    nodes.push({
+      id,
+      name,
+      ...(shape !== undefined ? { shape } : {}),
+      ...(typeof box.color === "string" && box.color.trim() !== "" ? { color: box.color.trim() } : {}),
+      ...(typeof box.stroke === "string" && box.stroke.trim() !== "" ? { stroke: box.stroke.trim() } : {}),
+      ...(typeof box.icon === "string" && box.icon.trim() !== "" ? { icon: box.icon.trim() } : {}),
+      ...(box.defaultShapeProps && typeof box.defaultShapeProps === "object" ? { defaultShapeProps: box.defaultShapeProps as Record<string, unknown> } : {}),
+      ...(typeof box.defaultHandleKind === "string" && box.defaultHandleKind.trim() !== "" ? { defaultHandleKind: box.defaultHandleKind.trim() } : {}),
+      ...(vortices ? { vortices } : {}),
+    });
+  }
+  return nodes.length ? nodes : undefined;
+}
+
 /** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present (nodes/handles slices only). */
 export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
   if (!raw || typeof raw !== "object") {
@@ -201,8 +268,9 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   const nodesRaw = box.nodes;
   const handlesRaw = box.handles;
   const out: KindCatalogBundle = {};
-  if (Array.isArray(nodesRaw)) {
-    out.nodes = nodesRaw as readonly NodeKind[];
+  const nodes = parseNodeKindsFromFixtureJson(nodesRaw);
+  if (nodes) {
+    out.nodes = nodes;
   }
   if (Array.isArray(handlesRaw)) {
     out.handles = handlesRaw as readonly HandleKind[];
@@ -277,6 +345,13 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
       }
       if (e.defaultHandleKind != null && String(e.defaultHandleKind).trim() !== "") {
         row.defaultHandleKind = String(e.defaultHandleKind).trim();
+      }
+      if (e.vortices?.length) {
+        row.vortices = e.vortices.map((v) => ({
+          vortexKind: v.vortexKind,
+          angle: v.angle,
+          ...(v.radius !== undefined ? { radius: v.radius } : {}),
+        }));
       }
       return row;
     })
@@ -1627,6 +1702,21 @@ export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puz
     x: detail.world.x,
     y: detail.world.y,
   };
+}
+
+/** @emoji 🧭 North-zero rectangle handle angle from type-local CAD `point` (x right, y front in kit space). */
+export function puzzle2dRectangleHandleAngleFromCadPoint(x: number, y: number): number {
+  return Math.atan2(-x, -y);
+}
+
+/** @emoji 🌀 Builds fixture handles for a new node from {@link NodeKind.vortices} templates. */
+export function puzzle2dFixtureHandlesFromNodeKindVortices(nodeId: string, vortices: readonly NodeKindVortexTemplate[]): Puzzle2dFixtureHandleV1[] {
+  return vortices.map((entry, index) => ({
+    id: `${nodeId}:v${index}`,
+    angle: entry.angle,
+    handleKind: entry.vortexKind,
+    ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
+  }));
 }
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
@@ -6303,6 +6393,32 @@ if (puzzle2dVitest) {
       });
       expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "semio.kit.node.a" });
       expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "semio.kit.node.b" });
+    });
+
+    it("parses node-kind vortices from fixture meta.kindCatalogs", () => {
+      const catalogs = fixtureMetaKindCatalogBundle({
+        meta: {
+          kindCatalogs: {
+            nodes: [
+              {
+                id: "semio.kit.node.capsule",
+                name: "Capsule",
+                vortices: [{ angle: 0.805, radius: 3, vortexKind: "semio.kit.handle.door" }],
+              },
+            ],
+          },
+        },
+      });
+      expect(catalogs?.nodes?.[0]?.vortices).toEqual([{ angle: 0.805, radius: 3, vortexKind: "semio.kit.handle.door" }]);
+    });
+
+    it("puzzle2dRectangleHandleAngleFromCadPoint matches board north-zero rectangle convention", () => {
+      expect(puzzle2dRectangleHandleAngleFromCadPoint(-1.3, -1.25)).toBeCloseTo(0.805, 3);
+    });
+
+    it("puzzle2dFixtureHandlesFromNodeKindVortices maps vortexKind to handleKind", () => {
+      const handles = puzzle2dFixtureHandlesFromNodeKindVortices("n1", [{ angle: 1.2, radius: 3, vortexKind: "semio.kit.handle.a" }]);
+      expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:v0", radius: 3 }]);
     });
 
     it("mergeKindCatalogBundleByRowId overlays rows by id", () => {

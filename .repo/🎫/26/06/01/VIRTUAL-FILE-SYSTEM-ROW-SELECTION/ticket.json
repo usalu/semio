@@ -1,0 +1,10 @@
+{
+  "title": "Virtual File System Row Selection",
+  "emoji": "📁",
+  "status": "open",
+  "description": "All VirtualFileSystem file nodes must show hover and support full multi-select: shift for range, ctrl/cmd for toggle, plain click for single select.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪8b6e55ae9edf4594ae3aebaaf034834e"
+  ]
+}

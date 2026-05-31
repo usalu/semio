@@ -164,6 +164,25 @@ export interface UiTreeNode {
   readonly sections: readonly UiTreeSectionNode[];
 }
 
+/** @emoji 🖱️ Collects declarative tree item `dragData` by row id (depth-first across sections). */
+export function collectUiTreeItemDragData(sections: readonly UiTreeSectionNode[]): Map<string, Record<string, string>> {
+  const out = new Map<string, Record<string, string>>();
+  const visitItems = (items: readonly UiTreeItemNode[]): void => {
+    for (const item of items) {
+      if (item.dragData) {
+        out.set(item.id, item.dragData);
+      }
+      if (item.items?.length) {
+        visitItems(item.items);
+      }
+    }
+  };
+  for (const section of sections) {
+    visitItems(section.items);
+  }
+  return out;
+}
+
 export type UiNode =
   | UiStackNode
   | UiTextNode
@@ -763,6 +782,33 @@ if (import.meta.vitest) {
       expect(ctrl.selectedId).toBe("entity-a");
       bus.dispatch(TEST_IDS.controllerId, "toggleVisibleKind", { kind: "a" });
       expect(ctrl.selectedId).toBeNull();
+    });
+  });
+
+  describe("collectUiTreeItemDragData", () => {
+    it("collects dragData from nested declarative tree items by id", () => {
+      const sections: readonly UiTreeSectionNode[] = [
+        {
+          id: "objects",
+          label: "Objects",
+          items: [
+            {
+              id: "objects.0.Base",
+              label: "Base",
+              dragData: { "application/x-test": "payload" },
+            },
+            {
+              id: "group",
+              label: "Group",
+              items: [{ id: "group.child", label: "Child", dragData: { "application/x-child": "c" } }],
+            },
+          ],
+        },
+      ];
+      const map = collectUiTreeItemDragData(sections);
+      expect(map.get("objects.0.Base")).toEqual({ "application/x-test": "payload" });
+      expect(map.get("group.child")).toEqual({ "application/x-child": "c" });
+      expect(map.size).toBe(2);
     });
   });
 
