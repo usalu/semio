@@ -2774,7 +2774,7 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 				}
 				canvas={canvasNode}
 			/>
-			{searchItems && searchItems.length > 0 ? <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} /> : null}
+			<UISearch items={searchItems ?? []} open={searchOpen} onOpenChange={setSearchOpen} />
 			{onFindOpenChange ? <UIFind open={findOpen} onOpenChange={onFindOpenChange} /> : null}
 		</>
 	);
@@ -3237,7 +3237,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					multiApp
 					activeModeId={activeModeId}
 					onActiveModeChange={setActiveModeId}
-					searchItems={searchItemsResolved.length > 0 ? searchItemsResolved : undefined}
+					searchItems={searchItemsResolved}
 					searchOpen={searchOpen}
 					onSearchOpenChange={setSearchOpen}
 					findOpen={findOpen}

@@ -4044,10 +4044,12 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 	const { test, expect } = await import("@playwright/test");
 	test.describe("sketchpad platform", () => {
 		async function openSketchpadCommandPalette(page: import("@playwright/test").Page): Promise<void> {
-			const searchToggle = page.locator("#ui\\.search\\.toggle");
+			const searchToggle = page.locator('[id="ui.search.toggle"]');
 			await expect(searchToggle).toBeVisible({ timeout: 30_000 });
 			await searchToggle.click();
-			await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+			const dialog = page.getByRole("dialog");
+			await expect(dialog).toBeVisible({ timeout: 10_000 });
+			await expect(dialog.getByPlaceholder("Search...")).toBeVisible({ timeout: 10_000 });
 		}
 
 		test("home table mounts on root", async ({ page }) => {
@@ -4063,11 +4065,12 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 
 		test("command palette lists fixture import commands", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
 			await openSketchpadCommandPalette(page);
-			const searchInput = page.locator("#ui\\.search\\.input");
-			await searchInput.fill("fixture");
-			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
-			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
+			const dialog = page.getByRole("dialog");
+			await dialog.getByPlaceholder("Search...").fill("fixture");
+			await expect(dialog.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
+			await expect(dialog.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
 		});
 	});
 }
