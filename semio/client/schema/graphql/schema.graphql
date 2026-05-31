@@ -1232,7 +1232,7 @@ type ConflictEdge {
 	node: Conflict!
 }
 
-type Connection implements Entity & StrongEntity {
+type Connection implements Entity & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -1642,6 +1642,36 @@ type CreatedFixedPieceInputConnection {
 type CreatedFixedPieceInputEdge {
 	cursor: String!
 	node: CreatedFixedPieceInput!
+}
+
+type CreatedFolder {
+	hash: String!
+}
+
+type CreatedFolderConnection {
+	edges: [CreatedFolderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedFolderEdge {
+	cursor: String!
+	node: CreatedFolder!
+}
+
+type CreatedFolderInput {
+	hash: String!
+}
+
+type CreatedFolderInputConnection {
+	edges: [CreatedFolderInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedFolderInputEdge {
+	cursor: String!
+	node: CreatedFolderInput!
 }
 
 type CreatedPort {
@@ -2109,7 +2139,7 @@ type DeletedTypesEdge {
 	node: DeletedTypes!
 }
 
-type Design implements Entity & Node & StrongEntity {
+type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -2134,16 +2164,49 @@ type Design implements Entity & Node & StrongEntity {
 	attributes: AttributeConnection!
 	stats: StatConnection!
 	qualitySum(qualityId: ID!): Float!
+	"""
+	@emoji 🧰 Types referenced by this design's pieces (one hop over blueprints).
+	"""
 	types: TypeConnection!
+	"""
+	@emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
+	"""
 	designs: DesignConnection!
+	"""
+	@emoji 📄 Files referenced via type blueprints on this design's pieces (one hop).
+	"""
 	files: FileConnection!
-	allTypes: TypeConnection!
-	allDesigns: DesignConnection!
-	allFiles: FileConnection!
+	"""
+	@emoji 💾 Representations on type blueprints referenced by this design's pieces (one hop).
+	"""
 	representations: RepresentationConnection!
+	"""
+	@emoji 💾 Representations on types referenced transitively through nested design blueprints.
+	"""
 	allRepresentations: RepresentationConnection!
+	"""
+	@emoji 🧰 Types referenced transitively through nested design blueprints.
+	"""
+	allTypes: TypeConnection!
+	"""
+	@emoji 🏘 Designs referenced transitively through nested design blueprints.
+	"""
+	allDesigns: DesignConnection!
+	"""
+	@emoji 📄 Files referenced transitively through nested design and type blueprints.
+	"""
+	allFiles: FileConnection!
+	"""
+	@emoji 🪢 Pieces in the owner kit whose blueprint is this design.
+	"""
 	referencedBy: PieceConnection!
+	"""
+	@emoji 🏘 Designs with a direct piece blueprinting this design.
+	"""
 	referencedByDesigns: DesignConnection!
+	"""
+	@emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+	"""
 	allReferencedByDesigns: DesignConnection!
 }
 
@@ -2406,12 +2469,15 @@ interface Event {
 """
 @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
 """
-type Family {
+type Family implements Entity & FileSystemNode {
 	id: ID!
 	name: String!
 	description: String
 	icon: String
+	folderId: ID
 	hash: String!
+	owner: Entity
+	owns: EntityConnection
 }
 
 type FamilyConnection {
@@ -2470,23 +2536,43 @@ type FamilyModificationsEdge {
 	node: FamilyModifications!
 }
 
-type File {
+type File implements Entity & FileSystemNode {
 	id: ID!
+	name: String!
 	url: String!
 	mime: String
 	size: Int
 	description: String
+	icon: String
+	folderId: ID
 	created: Timestamp
 	updated: Timestamp
 	hash: String!
-	representations: RepresentationConnection!
-	types: TypeConnection!
-	designs: DesignConnection!
-	allTypes: TypeConnection!
-	allDesigns: DesignConnection!
+	owner: Entity
+	owns: EntityConnection
 	tag(id: ID!): Tag
 	quality(id: ID!): Quality
 	attribute(id: ID!): Attribute
+	"""
+	@emoji 💾 Representations that reference this file.
+	"""
+	representations: RepresentationConnection!
+	"""
+	@emoji 🧰 Kinds that own a representation referencing this file.
+	"""
+	types: TypeConnection!
+	"""
+	@emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+	"""
+	designs: DesignConnection!
+	"""
+	@emoji 🧰 Kinds that reference this file (same as [`File::types`] — kinds do not nest).
+	"""
+	allTypes: TypeConnection!
+	"""
+	@emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+	"""
+	allDesigns: DesignConnection!
 }
 
 type FileBackbone implements Backbone {
@@ -2581,6 +2667,48 @@ type FileModificationsEdge {
 	node: FileModifications!
 }
 
+"""
+@emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
+"""
+interface FileSystemNode {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	fileSystemParent: FileSystemNode
+	fileSystemChildren: FileSystemNodeConnection!
+	fileSystemChild(id: ID!): FileSystemNode
+	fileSystemPath: String!
+	fileSystemName: String!
+	isFileSystemRoot: Boolean!
+	fileSystemKind: FileSystemNodeKind!
+}
+
+type FileSystemNodeConnection {
+	edges: [FileSystemNodeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileSystemNodeEdge {
+	cursor: String!
+	node: FileSystemNode!
+}
+
+"""
+@emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
+"""
+enum FileSystemNodeKind {
+	KIT
+	FOLDER
+	FILE
+	DESIGN
+	TYPE
+	FAMILY
+	PIECE
+	CONNECTION
+}
+
 type FixedPiece implements Operation {
 	id: ID!
 	hash: String!
@@ -2633,16 +2761,26 @@ type FlattenedDesignEdge {
 	node: FlattenedDesign!
 }
 
-type Folder {
+type Folder implements Entity & FileSystemNode {
 	id: ID!
+	name: String!
 	path: String!
 	description: String
+	icon: String
+	parentFolderId: ID
 	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	file(id: ID!): File
+	files: FileConnection!
 	subFolder(id: ID!): Folder
+	subFolders: FolderConnection!
 	family(id: ID!): Family
+	families: FamilyConnection!
 	type(id: ID!): Type
+	types: TypeConnection!
 	design(id: ID!): Design
+	designs: DesignConnection!
 }
 
 type FolderConnection {
@@ -2826,7 +2964,7 @@ type InputEdge {
 	node: Input!
 }
 
-type Kit implements Entity & Node & StrongEntity {
+type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -3244,6 +3382,36 @@ type MovedPiecesInputEdge {
 	node: MovedPiecesInput!
 }
 
+type MovedToFolder {
+	hash: String!
+}
+
+type MovedToFolderConnection {
+	edges: [MovedToFolderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedToFolderEdge {
+	cursor: String!
+	node: MovedToFolder!
+}
+
+type MovedToFolderInput {
+	hash: String!
+}
+
+type MovedToFolderInputConnection {
+	edges: [MovedToFolderInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedToFolderInputEdge {
+	cursor: String!
+	node: MovedToFolderInput!
+}
+
 type Mutation {
 	"""
 	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `schema.golden.graphql` Commands block.
@@ -3387,7 +3555,7 @@ type PageInfoEdge {
 	node: PageInfo!
 }
 
-type Piece implements Entity & Node & StrongEntity {
+type Piece implements Entity & Node & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -3756,6 +3924,7 @@ type Port implements Entity & StrongEntity {
 	code: String
 	label: String
 	order: Int
+	copatibleWith: PortConnection!
 	attribute(id: ID!): Attribute
 }
 
@@ -4684,10 +4853,25 @@ type Representation implements Entity & StrongEntity {
 	tag(id: ID!): Tag
 	quality(id: ID!): Quality
 	attribute(id: ID!): Attribute
+	"""
+	@emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+	"""
 	referencedBy: PieceConnection!
+	"""
+	@emoji 🧰 Owner kind of this representation.
+	"""
 	types: TypeConnection!
+	"""
+	@emoji 📄 File linked from this representation.
+	"""
 	files: FileConnection!
+	"""
+	@emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+	"""
 	referencedByDesigns: DesignConnection!
+	"""
+	@emoji 🏘 Designs that reference this representation's owner kind transitively.
+	"""
 	allReferencedByDesigns: DesignConnection!
 }
 
@@ -5143,7 +5327,7 @@ type TheKitEdge {
 
 scalar Timestamp
 
-type Type implements Entity & StrongEntity {
+type Type implements Entity & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -5162,9 +5346,21 @@ type Type implements Entity & StrongEntity {
 	representations: RepresentationConnection!
 	representation(id: ID!): Representation
 	bestRepresentation(tagIds: [ID!]!): Representation
+	"""
+	@emoji 📄 Files referenced indirectly via representations on this kind.
+	"""
 	files: FileConnection!
+	"""
+	@emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+	"""
 	referencedBy: PieceConnection!
+	"""
+	@emoji 🏘 Designs with a direct piece blueprinting this kind.
+	"""
 	referencedByDesigns: DesignConnection!
+	"""
+	@emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+	"""
 	allReferencedByDesigns: DesignConnection!
 	authors: AuthorConnection!
 	concepts: ConceptConnection!
