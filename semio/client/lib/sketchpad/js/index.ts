@@ -27,6 +27,9 @@ import {
 	buildPuzzle5dWindowBody,
 	buildVirtualFileSystemWindowBody,
 	virtualFileSystemSurfaceId,
+	KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL,
+	KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL,
+	kitVirtualFileSystemDescriptorValues,
 	type VirtualFileSystemDescriptorValueModel,
 	type VirtualFileSystemModel,
 	type VirtualFileSystemNodeRecord,
@@ -12121,127 +12124,6 @@ function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
 	return { schema: "puzzle.2d.fixture/v1", camera: { x: 0, y: 0, zoom: 1 }, nodes: [], edges: [] };
 }
 //#endregion 🔖Topology
-
-//#region 🔖KitVirtualFileSystem
-/** @emoji 📁 Sketchpad kit virtual file system schema (render-agnostic). */
-export const KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	descriptorKinds: {
-		text: { id: "text", name: "Text", presentation: "text" },
-		time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
-		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
-	},
-	fileNodeKinds: {
-		kit: {
-			id: "kit",
-			name: "Kit",
-			icon: "layout-grid",
-			description: "Open kit workspace",
-			descriptors: [
-				{ id: "version", descriptorKindId: "text", label: "Version" },
-				{ id: "kitKind", descriptorKindId: "text", label: "Kind" },
-				{ id: "updated", descriptorKindId: "time", label: "Updated" },
-				{ id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		folder: {
-			id: "folder",
-			name: "Folder",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		file: {
-			id: "file",
-			name: "File",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		design: {
-			id: "design",
-			name: "Design",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		type: {
-			id: "type",
-			name: "Type",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		family: {
-			id: "family",
-			name: "Family",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		piece: {
-			id: "piece",
-			name: "Piece",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		connection: {
-			id: "connection",
-			name: "Connection",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-	},
-	descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
-};
-
-/** @emoji 📁 Home kit tree columns (no per-row author column). */
-export const KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
-};
-
-/** @emoji 📁 In-kit tree columns (path + node kind only). */
-export const KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["path", "fileNodeKind"],
-};
-
-/** @emoji 📁 Builds kit descriptor values for sketchpad {@link VirtualFileSystemNodeRecord} rows. */
-export function kitVirtualFileSystemDescriptorValues(
-	fileNodeKindId: string,
-	options: {
-		readonly path?: string;
-		readonly version?: string;
-		readonly kitKind?: string;
-		readonly updatedIso?: string;
-		readonly createdBy?: { readonly name: string; readonly icon?: string };
-		readonly extra?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
-	} = {},
-): Readonly<Record<string, VirtualFileSystemDescriptorValueModel>> {
-	const fileNodeKind = KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds[fileNodeKindId];
-	const values: Record<string, VirtualFileSystemDescriptorValueModel> = { ...options.extra };
-	if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
-	if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
-	if (options.version !== undefined) values.version = { presentation: "text", text: options.version };
-	if (options.kitKind !== undefined) values.kitKind = { presentation: "text", text: options.kitKind };
-	if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
-	if (options.createdBy) {
-		values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
-	}
-	return values;
-}
-//#endregion 🔖KitVirtualFileSystem
 
 //#region 📁SketchpadVfs
 function sketchpadVfsScope(appId: string): VirtualFileSystemScope {

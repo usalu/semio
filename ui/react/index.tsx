@@ -2662,7 +2662,7 @@ export interface DraggableAvatarProps {
   onPointerLeave?: () => void;
   className?: string;
   avatarClassName?: string;
-  dataDragKind?: "type" | "design";
+  dataDragKind?: string;
   dataDragGuid?: string;
 }
 
@@ -12990,25 +12990,17 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
   return columns;
 }
 
-/** @emoji 📁 Returns a lucide icon component for a VFS file node kind id. */
+/** @emoji 📁 Returns a lucide icon component for a generic VFS file node kind id. */
 export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
   switch (fileNodeKindId) {
-    case "kit":
+    case "root":
       return LayoutGridIcon;
+    case "branch":
     case "folder":
       return FolderIcon;
+    case "leaf":
     case "file":
       return DocumentIcon;
-    case "design":
-      return Puzzle2dIconCatalogGlyphIcon;
-    case "type":
-      return Puzzle2dIconMathGlyphIcon;
-    case "family":
-      return FolderOpenIcon;
-    case "piece":
-      return BoxIcon;
-    case "connection":
-      return ExternalLinkIcon;
     default:
       return DocumentIcon;
   }
@@ -13047,12 +13039,14 @@ export function buildVirtualFileSystemVisibleRows(
   return rows;
 }
 
-const VirtualFileSystemNodeGlyph: React.FC<{ readonly fileNodeKindId: string; readonly icon?: string; readonly name: string }> = ({
-  fileNodeKindId,
-  icon,
-  name,
-}) => {
-  if (icon) return <TableAvatar name={name} icon={icon} />;
+const VirtualFileSystemNodeGlyph: React.FC<{
+  readonly schema: VirtualFileSystemSchema;
+  readonly fileNodeKindId: string;
+  readonly icon?: string;
+  readonly name: string;
+}> = ({ schema, fileNodeKindId, icon, name }) => {
+  const kindIcon = icon ?? schema.fileNodeKinds[fileNodeKindId]?.icon;
+  if (kindIcon) return <TableAvatar name={name} icon={kindIcon} />;
   const Icon = virtualFileSystemKindIcon(fileNodeKindId);
   return (
     <span className="inline-flex size-small shrink-0 items-center justify-center text-muted-foreground">
@@ -13061,7 +13055,7 @@ const VirtualFileSystemNodeGlyph: React.FC<{ readonly fileNodeKindId: string; re
   );
 };
 
-/** @emoji 📁 Hierarchical kit file-system table (specialized {@link Table}). */
+/** @emoji 📁 Hierarchical virtual file-system table (specialized {@link Table}). */
 export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   schema,
   rows,
@@ -13098,7 +13092,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
             ) : (
               <span className="inline-block size-small shrink-0" aria-hidden />
             )}
-            <VirtualFileSystemNodeGlyph fileNodeKindId={row.fileNodeKindId} icon={row.icon} name={row.name} />
+            <VirtualFileSystemNodeGlyph schema={schema} fileNodeKindId={row.fileNodeKindId} icon={row.icon} name={row.name} />
             <span className="truncate">{row.name}</span>
           </div>
         ),
@@ -14439,7 +14433,7 @@ if (import.meta.vitest) {
       render(
         <App
           modes={[
-            { id: "design", label: "Design", children: <div>Design Mode</div> },
+            { id: "edit", label: "Edit", children: <div>Edit Mode</div> },
             { id: "review", label: "Review", children: <div>Review Mode</div> },
           ]}
           activeModeId="review"
