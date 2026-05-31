@@ -606,9 +606,20 @@ export interface CanvasProps {
 
 export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture-v1";
 
+/** @emoji 🖱️ True while a workbench object-kind palette drag is in flight (some hosts hide custom MIME in `types`). */
+export const puzzle3dFixturePaletteDragRef = { active: false };
+
 /** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 3D fixture palette drag. */
 export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolean {
   return types.includes(FIXTURE_DRAG_V1_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
+}
+
+/** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
+export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): boolean {
+  if (puzzle3dFixturePaletteDragRef.active) {
+    return true;
+  }
+  return puzzle3dFixtureDragMimeInTypes(types);
 }
 
 /** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
@@ -6350,7 +6361,7 @@ function FixtureDropPointerBridge(props: {
     };
 
     const onDragEnter = (event: DragEvent): void => {
-      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
         return;
       }
       event.preventDefault();
@@ -6359,7 +6370,7 @@ function FixtureDropPointerBridge(props: {
     };
 
     const onDragLeave = (event: DragEvent): void => {
-      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
         return;
       }
       const target = event.currentTarget as HTMLElement;
@@ -6374,7 +6385,7 @@ function FixtureDropPointerBridge(props: {
     };
 
     const onDragOver = (event: DragEvent): void => {
-      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
         return;
       }
       event.preventDefault();
@@ -6382,7 +6393,7 @@ function FixtureDropPointerBridge(props: {
     };
 
     const onDrop = (event: DragEvent): void => {
-      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+      if (!puzzle3dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
         return;
       }
       event.preventDefault();

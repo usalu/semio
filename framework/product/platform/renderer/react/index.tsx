@@ -3070,7 +3070,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	extraFooterItems,
 	augmentPanelTabs,
 }) => {
-	reactHostPort.useSyncExternalStore(
+	const shellGen = reactHostPort.useSyncExternalStore(
 		(onStoreChange) => {
 			const unsubData = platform.subscribe(onStoreChange);
 			const unsubChrome = platform.subscribeChrome(onStoreChange);
@@ -3082,6 +3082,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		() => platform.generation * 1_000_000 + platform.chromeGeneration,
 		() => 0,
 	);
+	void shellGen;
 
 	reactHostPort.useEffect(() => {
 		if (defaultAppId) {
