@@ -1186,7 +1186,8 @@ pub mod geom {
 pub mod gql_relay {
     use std::sync::Arc;
 
-    use crate::external_adapters::async_graphql::SimpleObject;
+    use crate::external_adapters::async_graphql::{Object, SimpleObject};
+    use crate::external_adapters::async_lock::RwLock;
 
     use crate::hash::{h, merkle_collection};
     use crate::id::Id;
@@ -1470,6 +1471,120 @@ pub mod gql_relay {
     }
 
     crate::entity_relay_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
+
+    //#region 🏛️ typology
+    /// @emoji 🏛️ Kit [`Typology`] — owns [`Type`] and [`Design`] entities; [`Family`] stays at kit root for port compatibility.
+    #[derive(Debug)]
+    pub struct Typology {
+        pub id: Id,
+        pub name: RwLock<String>,
+        pub description: RwLock<Option<String>>,
+        pub icon: RwLock<Option<String>>,
+        pub folder_id: RwLock<Option<Id>>,
+        pub owner_kit: std::sync::Weak<crate::kit::Kit>,
+        pub types: RwLock<Vec<std::sync::Arc<crate::kit::r#type::Type>>>,
+        pub designs: RwLock<Vec<std::sync::Arc<crate::kit::design::Design>>>,
+    }
+
+    impl Default for Typology {
+        fn default() -> Self {
+            Self {
+                id: Id::default(),
+                name: RwLock::new(String::new()),
+                description: RwLock::new(None),
+                icon: RwLock::new(None),
+                folder_id: RwLock::new(None),
+                owner_kit: std::sync::Weak::new(),
+                types: RwLock::new(Vec::new()),
+                designs: RwLock::new(Vec::new()),
+            }
+        }
+    }
+
+    impl Typology {
+        pub async fn new(owner_kit: std::sync::Weak<crate::kit::Kit>, name: String) -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self {
+                id: Id::new().await,
+                name: RwLock::new(name),
+                owner_kit,
+                ..Default::default()
+            })
+        }
+
+        pub async fn new_with_external_id(
+            owner_kit: std::sync::Weak<crate::kit::Kit>,
+            id: Id,
+            name: String,
+        ) -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self {
+                id,
+                name: RwLock::new(name),
+                owner_kit,
+                ..Default::default()
+            })
+        }
+
+        pub async fn compute_entity_hash(&self) -> String {
+            let name = self.name.read().await;
+            let desc = self.description.read().await;
+            let icon = self.icon.read().await;
+            let folder_id = self.folder_id.read().await;
+            crate::hash::merkle_node_str(
+                &[
+                    "Typology",
+                    self.id.as_str(),
+                    name.as_str(),
+                    desc.as_deref().unwrap_or(""),
+                    icon.as_deref().unwrap_or(""),
+                    folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[Object(name = "Typology")]
+    impl Typology {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash().await
+        }
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            None
+        }
+        pub async fn name(&self) -> String {
+            self.name.read().await.clone()
+        }
+        pub async fn description(&self) -> Option<String> {
+            self.description.read().await.clone()
+        }
+        pub async fn icon(&self) -> Option<String> {
+            self.icon.read().await.clone()
+        }
+        #[graphql(name = "folderId")]
+        pub async fn folder_id(&self) -> Option<Id> {
+            self.folder_id.read().await.clone()
+        }
+        pub async fn types(&self) -> TypeConnection {
+            TypeConnection::from_types(self.types.read().await.clone()).await
+        }
+        pub async fn designs(&self) -> DesignConnection {
+            DesignConnection::from_designs(self.designs.read().await.clone()).await
+        }
+    }
+
+    crate::entity_relay!(TypologyConnection, TypologyEdge, std::sync::Arc<Typology>);
+    impl TypologyConnection {
+        pub async fn from_typologies(entities: Vec<std::sync::Arc<Typology>>) -> Self {
+            Self::from_entities(entities).await
+        }
+    }
+    //#endregion 🏛️ typology
 }
 
 //#endregion 🪢 gql_relay
@@ -2475,7 +2590,7 @@ pub mod meta {
             pub async fn types(&self) -> crate::gql_relay::TypeConnection {
                 if let Some(kit) = self.owner_kit.upgrade() {
                     let mut out = Vec::new();
-                    for ty in kit.types.read().await.iter() {
+                    for ty in kit.types_flat().await.iter() {
                         if ty.folder_id.read().await.as_ref() == Some(&self.id) {
                             out.push(ty.clone());
                         }
@@ -2496,7 +2611,7 @@ pub mod meta {
             pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
                 if let Some(kit) = self.owner_kit.upgrade() {
                     let mut out = Vec::new();
-                    for d in kit.designs.read().await.iter() {
+                    for d in kit.designs_flat().await.iter() {
                         if d.folder_id.read().await.as_ref() == Some(&self.id) {
                             out.push(d.clone());
                         }
@@ -3055,7 +3170,7 @@ pub mod kit {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
                 };
-                let Some(kit) = ty.owner_kit.upgrade() else {
+                let Some(kit) = ty.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_with_direct_blueprint_type(&ty.id).await
@@ -3066,7 +3181,7 @@ pub mod kit {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
                 };
-                let Some(kit) = ty.owner_kit.upgrade() else {
+                let Some(kit) = ty.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_referencing_type_transitive(&ty.id).await
@@ -3077,7 +3192,7 @@ pub mod kit {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
                 };
-                let Some(kit) = ty.owner_kit.upgrade() else {
+                let Some(kit) = ty.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.pieces_with_blueprint_type(&ty.id).await
@@ -3178,7 +3293,7 @@ pub mod kit {
         //#region 🏠 type
         pub struct Type {
             pub id: Id,
-            pub owner_kit: Weak<crate::kit::Kit>,
+            pub owner_typology: Weak<crate::gql_relay::Typology>,
             pub name: RwLock<String>,
             pub description: RwLock<String>,
             pub icon: RwLock<String>,
@@ -3207,7 +3322,7 @@ pub mod kit {
             fn default() -> Self {
                 Self {
                     id: Id::default(),
-                    owner_kit: Weak::new(),
+                    owner_typology: Weak::new(),
                     name: RwLock::new(String::new()),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
@@ -3234,13 +3349,17 @@ pub mod kit {
         }
 
         impl Type {
-            pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn owner_kit(&self) -> Option<Arc<crate::kit::Kit>> {
+                self.owner_typology.upgrade()?.owner_kit.upgrade()
+            }
+
+            pub async fn new(owner_typology: Weak<crate::gql_relay::Typology>, name: String) -> Arc<Self> {
+                Arc::new(Self { id: Id::new().await, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             /// 🧾 Insert a workspace kind with caller-controlled external [`Id`] (wasm / JSON snapshot hydration).
-            pub async fn new_with_external_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
-                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn new_with_external_id(owner_typology: Weak<crate::gql_relay::Typology>, id: Id, name: String) -> Arc<Self> {
+                Arc::new(Self { id, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -3311,7 +3430,7 @@ pub mod kit {
 
             /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
             pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.pieces_with_blueprint_type(&self.id).await
@@ -3319,7 +3438,7 @@ pub mod kit {
 
             /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
             pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_with_direct_blueprint_type(&self.id).await
@@ -3327,7 +3446,7 @@ pub mod kit {
 
             /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
             pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_referencing_type_transitive(&self.id).await
@@ -3343,7 +3462,9 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+                self.owner_typology
+                    .upgrade()
+                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -4001,7 +4122,7 @@ pub mod kit {
 
         pub struct Design {
             pub id: Id,
-            pub owner_kit: Weak<crate::kit::Kit>,
+            pub owner_typology: Weak<crate::gql_relay::Typology>,
             pub name: RwLock<String>,
             pub description: RwLock<Option<String>>,
             pub icon: RwLock<Option<String>>,
@@ -4028,7 +4149,7 @@ pub mod kit {
             fn default() -> Self {
                 Self {
                     id: Id::default(),
-                    owner_kit: Weak::new(),
+                    owner_typology: Weak::new(),
                     name: RwLock::new(String::new()),
                     description: RwLock::new(None),
                     icon: RwLock::new(None),
@@ -4053,12 +4174,16 @@ pub mod kit {
         }
 
         impl Design {
-            pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn owner_kit(&self) -> Option<Arc<crate::kit::Kit>> {
+                self.owner_typology.upgrade()?.owner_kit.upgrade()
             }
 
-            pub async fn with_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
-                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
+            pub async fn new(owner_typology: Weak<crate::gql_relay::Typology>, name: String) -> Arc<Self> {
+                Arc::new(Self { id: Id::new().await, owner_typology, name: RwLock::new(name), ..Default::default() })
+            }
+
+            pub async fn with_id(owner_typology: Weak<crate::gql_relay::Typology>, id: Id, name: String) -> Arc<Self> {
+                Arc::new(Self { id, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -4247,7 +4372,7 @@ pub mod kit {
 
             /// @emoji 🪢 Pieces anywhere in the owner kit whose blueprint is this design.
             pub async fn referenced_by_pieces(&self) -> Vec<Arc<piece::Piece>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.pieces_with_blueprint_design(&self.id).await
@@ -4255,7 +4380,7 @@ pub mod kit {
 
             /// @emoji 🏘 Designs with a direct piece blueprinting this design.
             pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<Design>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_with_direct_blueprint_design(&self.id).await
@@ -4263,7 +4388,7 @@ pub mod kit {
 
             /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
             pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<Design>> {
-                let Some(kit) = self.owner_kit.upgrade() else {
+                let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
                 };
                 kit.designs_referencing_design_transitive(&self.id).await
@@ -4279,7 +4404,9 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+                self.owner_typology
+                    .upgrade()
+                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -4723,7 +4850,7 @@ pub mod kit {
 
     use crate::hash::h;
     use crate::id::Id;
-    use crate::gql_relay::Family;
+    use crate::gql_relay::{Family, Typology};
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
 
@@ -4742,12 +4869,12 @@ pub mod kit {
         pub created: RwLock<Option<Timestamp>>,
         pub updated: RwLock<Option<Timestamp>>,
         pub version: RwLock<Option<String>>,
-        pub designs: RwLock<Vec<Arc<design::Design>>>,
-        /// 🧷 Write-side only: external design [`Id`] → `Weak` (GraphQL `design(id:)` upgrades here).
-        pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
-        pub types: RwLock<Vec<Arc<r#type::Type>>>,
-        /// 🧷 Write-side: type [`Id`] → `Weak` for GraphQL `type(id:)` (filled on snapshot hydration).
+        /// 🏛️ Typologies own kit [`Type`] and [`Design`] entities (kit no longer stores them directly).
+        pub typologies: RwLock<Vec<Arc<Typology>>>,
+        /// 🧷 Kit-wide type [`Id`] → `Weak` for GraphQL `type(id:)` across all typologies.
         pub type_weak_by_id: RwLock<HashMap<Id, Weak<r#type::Type>>>,
+        /// 🧷 Kit-wide design [`Id`] → `Weak` for GraphQL `design(id:)` across all typologies.
+        pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
         pub families: RwLock<Vec<Family>>,
@@ -4787,10 +4914,9 @@ pub mod kit {
                 created: RwLock::new(None),
                 updated: RwLock::new(None),
                 version: RwLock::new(None),
-                designs: RwLock::new(Vec::new()),
-                design_weak_by_id: RwLock::new(HashMap::new()),
-                types: RwLock::new(Vec::new()),
+                typologies: RwLock::new(Vec::new()),
                 type_weak_by_id: RwLock::new(HashMap::new()),
+                design_weak_by_id: RwLock::new(HashMap::new()),
                 files: RwLock::new(Vec::new()),
                 folders: RwLock::new(Vec::new()),
                 families: RwLock::new(Vec::new()),
@@ -4827,6 +4953,41 @@ pub mod kit {
         pub async fn bump_touch_epoch(&self) {
             let mut g = self.touch_epoch.write().await;
             *g = g.saturating_add(1);
+        }
+
+        /// @emoji 🏛️ Flatten all types owned by typologies (computed kit view).
+        pub async fn types_flat(&self) -> Vec<Arc<r#type::Type>> {
+            let mut out = Vec::new();
+            for topo in self.typologies.read().await.iter() {
+                out.extend(topo.types.read().await.iter().cloned());
+            }
+            out
+        }
+
+        /// @emoji 🏛️ Flatten all designs owned by typologies (computed kit view).
+        pub async fn designs_flat(&self) -> Vec<Arc<design::Design>> {
+            let mut out = Vec::new();
+            for topo in self.typologies.read().await.iter() {
+                out.extend(topo.designs.read().await.iter().cloned());
+            }
+            out
+        }
+
+        /// @emoji 🏛️ Ensure a default typology exists when legacy flat snapshots omit `typologies`.
+        pub async fn ensure_default_typology(self: &Arc<Self>) -> Arc<Typology> {
+            {
+                let tops = self.typologies.read().await;
+                if let Some(t) = tops.first() {
+                    return t.clone();
+                }
+            }
+            let topo = Typology::new(Arc::downgrade(self), "Default".to_string()).await;
+            self.typologies.write().await.push(topo.clone());
+            topo
+        }
+
+        pub async fn typology_by_id(&self, id: &Id) -> Option<Arc<Typology>> {
+            self.typologies.read().await.iter().find(|t| t.id == *id).cloned()
         }
 
         /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / operation replay.
@@ -4902,12 +5063,19 @@ pub mod kit {
             Ok(())
         }
 
+        async fn resolve_typology_owner(self: &Arc<Self>, owner_id: &Id) -> Arc<Typology> {
+            if let Some(topo) = self.typology_by_id(owner_id).await {
+                return topo;
+            }
+            self.ensure_default_typology().await
+        }
+
         async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::SemioError> {
             for r in &t.removed {
                 let id = r.id.clone();
-                let mut tys = self.types.write().await;
-                tys.retain(|ty| ty.id != id);
-                drop(tys);
+                for topo in self.typologies.read().await.iter() {
+                    topo.types.write().await.retain(|ty| ty.id != id);
+                }
                 self.type_weak_by_id.write().await.remove(&id);
             }
             for entity in &t.modified {
@@ -5009,9 +5177,9 @@ pub mod kit {
         async fn apply_designs_collection_diff(self: &Arc<Self>, d: &crate::operation::DesignsCollectionDiff) -> Result<(), crate::error::SemioError> {
             for r in &d.removed {
                 let id = r.id.clone();
-                let mut ds = self.designs.write().await;
-                ds.retain(|des| des.id != id);
-                drop(ds);
+                for topo in self.typologies.read().await.iter() {
+                    topo.designs.write().await.retain(|des| des.id != id);
+                }
                 self.design_weak_by_id.write().await.remove(&id);
             }
             for entity in &d.modified {
@@ -5306,7 +5474,7 @@ pub mod kit {
 
         async fn apply_create_type_scoped(
             self: &Arc<Self>,
-            _owner_id: &Id,
+            owner_id: &Id,
             type_id: &Id,
             name: String,
             description: Option<String>,
@@ -5317,13 +5485,14 @@ pub mod kit {
             if self.type_by_external_id(type_id).await.is_some() {
                 return Err(crate::error::SemioError::invalid(format!("Type already exists: {}", type_id.as_str())));
             }
-            let ty = crate::kit::r#type::Type::new_with_external_id(Arc::downgrade(self), type_id.clone(), name).await;
+            let topo = self.resolve_typology_owner(owner_id).await;
+            let ty = crate::kit::r#type::Type::new_with_external_id(std::sync::Arc::downgrade(&topo), type_id.clone(), name).await;
             *ty.description.write().await = description.unwrap_or_default();
             *ty.icon.write().await = icon.unwrap_or_default();
             *ty.image.write().await = image.unwrap_or_default();
             *ty.unit.write().await = unit.unwrap_or_default();
             self.type_weak_by_id.write().await.insert(type_id.clone(), Arc::downgrade(&ty));
-            self.types.write().await.push(ty);
+            topo.types.write().await.push(ty);
             Ok(())
         }
 
@@ -5342,7 +5511,7 @@ pub mod kit {
 
         /// @emoji 🔎 Locate a representation by id across all kit types.
         pub async fn find_representation(&self, id: &Id) -> Option<Arc<r#type::Representation>> {
-            let tys = self.types.read().await;
+            let tys = self.types_flat().await;
             for t in tys.iter() {
                 let reps = t.representations.read().await;
                 for r in reps.iter() {
@@ -5358,7 +5527,7 @@ pub mod kit {
         pub async fn pieces_with_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::piece::Piece>> {
             let target = type_id.clone();
             let mut out = Vec::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 for piece in design.pieces.read().await.iter() {
                     if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
                         if t.id == target {
@@ -5374,7 +5543,7 @@ pub mod kit {
         pub async fn pieces_with_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::piece::Piece>> {
             let target = design_id.clone();
             let mut out = Vec::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 for piece in design.pieces.read().await.iter() {
                     if let r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
                         if d.id == target {
@@ -5392,7 +5561,7 @@ pub mod kit {
             let target = type_id.clone();
             let mut out = Vec::new();
             let mut seen = HashSet::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 for piece in design.pieces.read().await.iter() {
                     if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
                         if t.id == target && seen.insert(design.id.clone()) {
@@ -5409,7 +5578,7 @@ pub mod kit {
         pub async fn designs_referencing_type_transitive(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
             let target = type_id.clone();
             let mut out = Vec::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 let (types, _, _) = design.transitive_reference_closure().await;
                 if types.iter().any(|t| t.id == target) {
                     out.push(design.clone());
@@ -5424,7 +5593,7 @@ pub mod kit {
             let target = design_id.clone();
             let mut out = Vec::new();
             let mut seen = HashSet::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 for piece in design.pieces.read().await.iter() {
                     if let r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
                         if d.id == target && seen.insert(design.id.clone()) {
@@ -5441,7 +5610,7 @@ pub mod kit {
         pub async fn designs_referencing_design_transitive(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
             let target = design_id.clone();
             let mut out = Vec::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 let (_, designs, _) = design.transitive_reference_closure().await;
                 if designs.iter().any(|d| d.id == target) {
                     out.push(design.clone());
@@ -5454,7 +5623,7 @@ pub mod kit {
         pub async fn representations_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Representation>> {
             let target = file_id.clone();
             let mut out = Vec::new();
-            for ty in self.types.read().await.iter() {
+            for ty in self.types_flat().await.iter() {
                 for rep in ty.representations.read().await.iter() {
                     if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
                         out.push(rep.clone());
@@ -5470,7 +5639,7 @@ pub mod kit {
             let target = file_id.clone();
             let mut out = Vec::new();
             let mut seen = HashSet::new();
-            for ty in self.types.read().await.iter() {
+            for ty in self.types_flat().await.iter() {
                 for rep in ty.representations.read().await.iter() {
                     if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
                         if seen.insert(ty.id.clone()) {
@@ -5489,7 +5658,7 @@ pub mod kit {
             let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
             let mut seen = HashSet::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 for piece in design.pieces.read().await.iter() {
                     if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
                         if type_ids.contains(&t.id) && seen.insert(design.id.clone()) {
@@ -5506,7 +5675,7 @@ pub mod kit {
         pub async fn designs_referencing_file_transitive(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
             let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
-            for design in self.designs.read().await.iter() {
+            for design in self.designs_flat().await.iter() {
                 let (types, _, _) = design.transitive_reference_closure().await;
                 if types.iter().any(|t| type_ids.contains(&t.id)) {
                     out.push(design.clone());
@@ -5517,7 +5686,7 @@ pub mod kit {
 
         /// @emoji 🔎 Locate a connector by id across all kit types.
         pub async fn find_connector(&self, id: &Id) -> Option<Arc<r#type::Connector>> {
-            let tys = self.types.read().await;
+            let tys = self.types_flat().await;
             for t in tys.iter() {
                 let conns = t.connectors.read().await;
                 for c in conns.iter() {
@@ -5816,16 +5985,16 @@ pub mod kit {
                     }
                 }
             }
-            let mut designs = self.designs.write().await;
+            let topo = self.ensure_default_typology().await;
             let mut map = self.design_weak_by_id.write().await;
             if let Some(w) = map.get(design_id) {
                 if let Some(d) = w.upgrade() {
                     return d;
                 }
             }
-            let d = design::Design::with_id(Arc::downgrade(self), design_id.clone(), format!("design-{}", design_id.as_str())).await;
+            let d = design::Design::with_id(std::sync::Arc::downgrade(&topo), design_id.clone(), format!("design-{}", design_id.as_str())).await;
             map.insert(design_id.clone(), Arc::downgrade(&d));
-            designs.push(d.clone());
+            topo.designs.write().await.push(d.clone());
             d
         }
 
@@ -5833,7 +6002,7 @@ pub mod kit {
         pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignSlot, Arc<design::Design>) {
             let design = self.ensure_design(design_id).await;
             let slot = {
-                let designs = self.designs.read().await;
+                let designs = self.designs_flat().await;
                 designs.iter().position(|d| &d.id == design_id).expect("design slot after ensure_design") as u32
             };
             (crate::kit_graph_engine::DesignSlot(slot), design)
@@ -5841,7 +6010,7 @@ pub mod kit {
 
         /// @emoji 🔁 Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
         pub async fn clear_piece_projections_for_backbone_replay(self: &Arc<Self>) {
-            let designs = self.designs.read().await;
+            let designs = self.designs_flat().await;
             for design in designs.iter() {
                 design.pieces.write().await.clear();
                 design.piece_weak_by_external_id.write().await.clear();
@@ -5908,14 +6077,14 @@ pub mod kit {
             self.design_by_external_id(&id).await
         }
         pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
-            crate::gql_relay::DesignConnection::from_designs(self.designs.read().await.clone()).await
+            crate::gql_relay::DesignConnection::from_designs(self.designs_flat().await.clone()).await
         }
         #[graphql(name = "type")]
         pub async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
             self.type_by_external_id(&id).await
         }
         pub async fn types(&self) -> crate::gql_relay::TypeConnection {
-            crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone()).await
+            crate::gql_relay::TypeConnection::from_types(self.types_flat().await.clone()).await
         }
         pub async fn files(&self) -> crate::gql_relay::FileConnection {
             crate::gql_relay::FileConnection::from_entities(self.files.read().await.clone())
@@ -5925,6 +6094,12 @@ pub mod kit {
         }
         pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
             crate::gql_relay::FamilyConnection::from_entities(self.families.read().await.clone())
+        }
+        pub async fn typologies(&self) -> crate::gql_relay::TypologyConnection {
+            crate::gql_relay::TypologyConnection::from_typologies(self.typologies.read().await.clone()).await
+        }
+        pub async fn typology(&self, id: Id) -> Option<Arc<Typology>> {
+            self.typology_by_id(&id).await
         }
         pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
             crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -7509,7 +7684,7 @@ pub mod interface {
             if let Some(q) = kit.find_quality(id).await {
                 return Some(KitGraphNavNode::Quality(q));
             }
-            let designs = kit.designs.read().await;
+            let designs = kit.designs_flat().await;
             for d in designs.iter() {
                 if &d.id == id {
                     return Some(KitGraphNavNode::Design(d.clone()));
@@ -7556,7 +7731,7 @@ pub mod interface {
     /// @emoji 📍 Resolve `alternativePieceKind` from the WIP kit: find the piece in any design and return the GraphQL `Blueprint` union tag (`Type` or `Design`).
     pub async fn alternative_piece_kind(rt: &crate::worker::ParentStore, piece_id: &Id) -> Option<String> {
         let kit = rt.wip_graph.mutable_kit.read().await.clone();
-        let designs = kit.designs.read().await;
+        let designs = kit.designs_flat().await;
         for d in designs.iter() {
             if let Some(p) = d.piece_by_external_id(piece_id).await {
                 let bp = p.blueprint.read().await.clone();
@@ -10118,7 +10293,7 @@ pub mod kit_graph_engine {
     //#region 🔖 projection_fingerprint
     /// @emoji 🔢 Stable `projectionFingerprint`: [`h`] over sorted piece centers keyed by design id (matches golden `kit-store.golden.expected`).
     pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
-        let designs = kit.designs.read().await;
+        let designs = kit.designs_flat().await;
         let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
         for d in designs.iter() {
             let mut pts: Vec<(f64, f64)> = Vec::new();
@@ -11108,7 +11283,7 @@ pub mod kit_backbone {
                 .collect()
         };
         let types_items: Vec<crate::external_adapters::serde_json::Value> = {
-            let tys = kit.types.read().await;
+            let tys = kit.types_flat().await;
             let mut out = Vec::with_capacity(tys.len());
             for t in tys.iter() {
                 let tid = t.id.as_str();
@@ -11189,7 +11364,7 @@ pub mod kit_backbone {
             out
         };
         let design_items: Vec<crate::external_adapters::serde_json::Value> = {
-            let des = kit.designs.read().await;
+            let des = kit.designs_flat().await;
             let mut out = Vec::with_capacity(des.len());
             for d in des.iter() {
                 let did = d.id.as_str();
@@ -11271,13 +11446,32 @@ pub mod kit_backbone {
                 crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }),
             );
         }
+        let typologies_items: Vec<crate::external_adapters::serde_json::Value> = {
+            let mut out = Vec::new();
+            for topo in kit.typologies.read().await.iter() {
+                let topo_type_ids: std::collections::HashSet<String> = topo.types.read().await.iter().map(|t| t.id.as_str().to_string()).collect();
+                let topo_types: Vec<_> = types_items.iter().filter(|v| v.get("id").and_then(|x| x.as_str()).map(|s| topo_type_ids.contains(s)).unwrap_or(false)).cloned().collect();
+                let topo_design_ids: std::collections::HashSet<String> = topo.designs.read().await.iter().map(|d| d.id.as_str().to_string()).collect();
+                let topo_designs: Vec<_> = design_items.iter().filter(|v| v.get("id").and_then(|x| x.as_str()).map(|s| topo_design_ids.contains(s)).unwrap_or(false)).cloned().collect();
+                let mut row = crate::external_adapters::serde_json::json!({
+                    "id": topo.id.as_str(),
+                    "name": topo.name.read().await.clone(),
+                    "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": topo_types },
+                    "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": topo_designs },
+                });
+                if let Some(desc) = topo.description.read().await.clone() {
+                    row["description"] = crate::external_adapters::serde_json::Value::String(desc);
+                }
+                if let Some(icon) = topo.icon.read().await.clone() {
+                    row["icon"] = crate::external_adapters::serde_json::Value::String(icon);
+                }
+                out.push(row);
+            }
+            out
+        };
         root.insert(
-            "types".into(),
-            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items }),
-        );
-        root.insert(
-            "designs".into(),
-            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
+            "typologies".into(),
+            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": typologies_items }),
         );
         if let Some(families) = kit.snapshot_families_projection.read().await.clone() {
             root.insert("families".into(), families);
@@ -11588,44 +11782,73 @@ pub mod kit_backbone {
 
         crate::kit_backbone::hydrate_kit_files_from_snapshot_value(kit, json).await?;
 
-        {
-            let mut tys = kit.types.write().await;
-            let mut tw = kit.type_weak_by_id.write().await;
-            tys.clear();
-            tw.clear();
-            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-            let kit_scope_ports = crate::kit_backbone::hydrate_kit_scope_ports_from_snapshot_value(json).await;
-            let owner = std::sync::Arc::downgrade(kit);
-            for t in &types_arr {
+        kit.typologies.write().await.clear();
+        kit.type_weak_by_id.write().await.clear();
+        kit.design_weak_by_id.write().await.clear();
+
+        let kit_scope_ports = crate::kit_backbone::hydrate_kit_scope_ports_from_snapshot_value(json).await;
+        let kit_owner = std::sync::Arc::downgrade(kit);
+
+        async fn hydrate_types_block(
+            topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            types_arr: &[crate::external_adapters::serde_json::Value],
+            kit_scope_ports: &std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
+        ) -> Result<(), crate::error::SemioError> {
+            let topo_owner = std::sync::Arc::downgrade(topo);
+            for t in types_arr {
                 let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
                 let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
-                let entity = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
-                crate::kit_backbone::hydrate_type_from_snapshot_value(&entity, t, &kit_scope_ports).await?;
-                tw.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
-                tys.push(entity);
+                let entity = crate::kit::r#type::Type::new_with_external_id(topo_owner.clone(), ts.into(), nm.to_string()).await;
+                crate::kit_backbone::hydrate_type_from_snapshot_value(&entity, t, kit_scope_ports).await?;
+                kit.type_weak_by_id.write().await.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
+                topo.types.write().await.push(entity);
             }
+            Ok(())
         }
 
-        let owner = std::sync::Arc::downgrade(kit);
-        let design_arr_owned = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-        let mut appended: Vec<std::sync::Arc<crate::kit::design::Design>> = Vec::new();
-        for d in &design_arr_owned {
-            let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
-            let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
-            let des = crate::kit::design::Design::with_id(owner.clone(), ds.into(), dn.to_string()).await;
-            hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
-            appended.push(des);
-        }
-        {
-            let mut designs_slot = kit.designs.write().await;
-            let mut weak_map = kit.design_weak_by_id.write().await;
-            designs_slot.clear();
-            weak_map.clear();
-            for des in appended {
-                let did = des.id.clone();
-                weak_map.insert(did, std::sync::Arc::downgrade(&des));
-                designs_slot.push(des);
+        async fn hydrate_designs_block(
+            topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            design_arr: &[crate::external_adapters::serde_json::Value],
+        ) -> Result<(), crate::error::SemioError> {
+            let topo_owner = std::sync::Arc::downgrade(topo);
+            for d in design_arr {
+                let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
+                let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
+                let des = crate::kit::design::Design::with_id(topo_owner.clone(), ds.into(), dn.to_string()).await;
+                hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
+                kit.design_weak_by_id.write().await.insert(des.id.clone(), std::sync::Arc::downgrade(&des));
+                topo.designs.write().await.push(des);
             }
+            Ok(())
+        }
+
+        let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
+        if let Some(topos) = typologies_arr {
+            for topo_json in &topos {
+                let tid = topo_json.get("id").and_then(|x| x.as_str()).unwrap_or("default-typology");
+                let tnm = topo_json.get("name").and_then(|x| x.as_str()).unwrap_or("Default");
+                let topo = crate::gql_relay::Typology::new_with_external_id(kit_owner.clone(), tid.into(), tnm.to_string()).await;
+                if let Some(desc) = topo_json.get("description").and_then(|x| x.as_str()) {
+                    *topo.description.write().await = Some(desc.to_string());
+                }
+                if let Some(icon) = topo_json.get("icon").and_then(|x| x.as_str()) {
+                    *topo.icon.write().await = Some(icon.to_string());
+                }
+                let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                hydrate_types_block(&topo, kit, &types_arr, &kit_scope_ports).await?;
+                hydrate_designs_block(&topo, kit, &designs_arr).await?;
+                kit.typologies.write().await.push(topo);
+            }
+        } else {
+            let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;
+            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            hydrate_types_block(&default_topo, kit, &types_arr, &kit_scope_ports).await?;
+            hydrate_designs_block(&default_topo, kit, &designs_arr).await?;
+            kit.typologies.write().await.push(default_topo);
         }
 
         Ok(())
@@ -11650,7 +11873,7 @@ pub mod kit_backbone {
                     return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
                 }
             };
-            let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+            let ty = kit.types_flat().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
             let pose = pj.get("pose");
             let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
@@ -13109,6 +13332,7 @@ pub mod gql {
             Folder(crate::meta::Folder),
             File(crate::meta::File),
             Family(crate::gql_relay::Family),
+            Typology(std::sync::Arc<crate::gql_relay::Typology>),
         }
 
         /// @emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
@@ -13127,6 +13351,8 @@ pub mod gql {
             Type,
             #[graphql(name = "FAMILY")]
             Family,
+            #[graphql(name = "TYPOLOGY")]
+            Typology,
             #[graphql(name = "PIECE")]
             Piece,
             #[graphql(name = "CONNECTION")]
@@ -13206,6 +13432,7 @@ pub mod gql {
             Design(Arc<crate::kit::design::Design>),
             Type(Arc<crate::kit::r#type::Type>),
             Family(crate::gql_relay::Family),
+            Typology(Arc<crate::gql_relay::Typology>),
             Piece(Arc<crate::kit::design::piece::Piece>),
             Connection(Arc<crate::kit::design::connection::Connection>),
             Representation(Arc<crate::kit::r#type::Representation>),
@@ -13223,6 +13450,7 @@ pub mod gql {
                     Self::Design(d) => d.id == *id,
                     Self::Type(t) => t.id == *id,
                     Self::Family(f) => f.id == *id,
+                    Self::Typology(t) => t.id == *id,
                     Self::Piece(p) => p.id == *id,
                     Self::Connection(c) => c.id == *id,
                     Self::Representation(r) => r.id == *id,
@@ -13269,7 +13497,7 @@ pub mod gql {
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
                 let kit = ty.owner_kit.upgrade()?;
-                let types = kit.types.read().await;
+                let types = kit.types_flat().await;
                 types
                     .iter()
                     .find(|t| t.id == ty.id)
@@ -13283,7 +13511,7 @@ pub mod gql {
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
                 let kit = design.owner_kit.upgrade()?;
-                let designs = kit.designs.read().await;
+                let designs = kit.designs_flat().await;
                 designs
                     .iter()
                     .find(|d| d.id == design.id)
@@ -13299,7 +13527,7 @@ pub mod gql {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
                 let design = piece.owner_design.upgrade()?;
-                let designs = kit.designs.read().await;
+                let designs = kit.designs_flat().await;
                 let design = designs.iter().find(|d| d.id == design.id)?;
                 let pieces = design.pieces.read().await;
                 pieces
@@ -13317,7 +13545,7 @@ pub mod gql {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
                 let design = connection.owner_design.upgrade()?;
-                let designs = kit.designs.read().await;
+                let designs = kit.designs_flat().await;
                 let design = designs.iter().find(|d| d.id == design.id)?;
                 let connections = design.connections.read().await;
                 connections
@@ -13333,8 +13561,8 @@ pub mod gql {
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
                 let owner = representation.owner_type.upgrade()?;
-                let kit = owner.owner_kit.upgrade()?;
-                let types = kit.types.read().await;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
                 let ty = types.iter().find(|t| t.id == owner.id)?.clone();
                 drop(types);
                 let reps = ty.representations.read().await;
@@ -13347,8 +13575,8 @@ pub mod gql {
             /// @emoji 📁 Resolve a port as a VFS node from its owning kind.
             pub async fn node_for_port(port: &crate::kit::r#type::Port, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = port.owner_type.upgrade()?;
-                let kit = owner.owner_kit.upgrade()?;
-                let types = kit.types.read().await;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
                 let ty = types.iter().find(|t| t.id == owner.id)?.clone();
                 drop(types);
                 let ports = ty.ports.read().await;
@@ -13361,8 +13589,8 @@ pub mod gql {
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
                 let owner = connector.owner_type.upgrade()?;
-                let kit = owner.owner_kit.upgrade()?;
-                let types = kit.types.read().await;
+                let kit = owner.owner_kit().await?;
+                let types = kit.types_flat().await;
                 let ty = types.iter().find(|t| t.id == owner.id)?.clone();
                 drop(types);
                 let connectors = ty.connectors.read().await;
@@ -13382,6 +13610,7 @@ pub mod gql {
                     FileSystemNodeInterface::Design(_) => super::FileSystemNodeKind::Design,
                     FileSystemNodeInterface::Type(_) => super::FileSystemNodeKind::Type,
                     FileSystemNodeInterface::Family(_) => super::FileSystemNodeKind::Family,
+                    FileSystemNodeInterface::Typology(_) => super::FileSystemNodeKind::Typology,
                     FileSystemNodeInterface::Piece(_) => super::FileSystemNodeKind::Piece,
                     FileSystemNodeInterface::Connection(_) => super::FileSystemNodeKind::Connection,
                     FileSystemNodeInterface::Representation(_) => super::FileSystemNodeKind::Representation,
@@ -13439,16 +13668,24 @@ pub mod gql {
                         }
                     }
                     FileSystemNodeInterface::Design(d) => {
-                        let kit = d.owner_kit.upgrade()?;
                         if let Some(folder_id) = d.folder_id.read().await.clone() {
+                            let kit = d.owner_kit().await?;
                             kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
                         } else {
-                            Some(FileSystemNodeInterface::Kit(kit))
+                            d.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
                         }
                     }
                     FileSystemNodeInterface::Type(t) => {
-                        let kit = t.owner_kit.upgrade()?;
                         if let Some(folder_id) = t.folder_id.read().await.clone() {
+                            let kit = t.owner_kit().await?;
+                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            t.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
+                        }
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let kit = topo.owner_kit.upgrade()?;
+                        if let Some(folder_id) = topo.folder_id.read().await.clone() {
                             kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
                         } else {
                             Some(FileSystemNodeInterface::Kit(kit))
@@ -13484,14 +13721,9 @@ pub mod gql {
                         for file in k.files.read().await.iter().filter(|f| f.folder_id.is_none()) {
                             out.push(FileSystemNodeInterface::File(file.clone()));
                         }
-                        for design in k.designs.read().await.iter() {
-                            if design.folder_id.read().await.is_none() {
-                                out.push(FileSystemNodeInterface::Design(design.clone()));
-                            }
-                        }
-                        for ty in k.types.read().await.iter() {
-                            if ty.folder_id.read().await.is_none() {
-                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                        for topo in k.typologies.read().await.iter() {
+                            if topo.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Typology(topo.clone()));
                             }
                         }
                         for family in k.families.read().await.iter().filter(|f| f.folder_id.is_none()) {
@@ -13511,18 +13743,37 @@ pub mod gql {
                         for file in kit.files.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
                             out.push(FileSystemNodeInterface::File(file.clone()));
                         }
-                        for design in kit.designs.read().await.iter() {
+                        for design in kit.designs_flat().await.iter() {
                             if design.folder_id.read().await.as_ref() == Some(fid) {
                                 out.push(FileSystemNodeInterface::Design(design.clone()));
                             }
                         }
-                        for ty in kit.types.read().await.iter() {
+                        for ty in kit.types_flat().await.iter() {
                             if ty.folder_id.read().await.as_ref() == Some(fid) {
                                 out.push(FileSystemNodeInterface::Type(ty.clone()));
                             }
                         }
                         for family in kit.families.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
                             out.push(FileSystemNodeInterface::Family(family.clone()));
+                        }
+                        for topo in kit.typologies.read().await.iter() {
+                            if topo.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Typology(topo.clone()));
+                            }
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let mut out = Vec::new();
+                        for ty in topo.types.read().await.iter() {
+                            if ty.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                            }
+                        }
+                        for design in topo.designs.read().await.iter() {
+                            if design.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Design(design.clone()));
+                            }
                         }
                         out
                     }
@@ -13600,7 +13851,7 @@ pub mod gql {
                         let segment = d.name.read().await;
                         match parent(node).await {
                             Some(FileSystemNodeInterface::Folder(folder)) => {
-                                if let Some(kit) = d.owner_kit.upgrade() {
+                                if let Some(kit) = d.owner_kit().await {
                                     join_path(&folder_path(&kit, &folder).await, segment.as_str())
                                 } else {
                                     join_path("", segment.as_str())
@@ -13613,7 +13864,20 @@ pub mod gql {
                         let segment = t.name.read().await;
                         match parent(node).await {
                             Some(FileSystemNodeInterface::Folder(folder)) => {
-                                if let Some(kit) = t.owner_kit.upgrade() {
+                                if let Some(kit) = t.owner_kit().await {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Typology(topo) => {
+                        let segment = topo.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = topo.owner_kit.upgrade() {
                                     join_path(&folder_path(&kit, &folder).await, segment.as_str())
                                 } else {
                                     join_path("", segment.as_str())
@@ -17509,7 +17773,7 @@ pub mod kit_store_comprehensive_e2e {
         let inv = &exp["invariants"];
         let workspace_id = g.id.clone();
         let kit = g.materialized_kit_for_workspace(&workspace_id).await;
-        let ds = kit.designs.read().await;
+        let ds = kit.designs_flat().await;
         assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
         let mut total = 0usize;
         let mut centers: Vec<[f64; 2]> = Vec::new();
@@ -19257,7 +19521,7 @@ mod tests {
 
             let inv = &exp["invariants"];
             let kit = g.materialized_kit_for_workspace(&workspace_id).await;
-            let ds = kit.designs.read().await;
+            let ds = kit.designs_flat().await;
             assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
             let mut total = 0usize;
             let mut centers: Vec<[f64; 2]> = Vec::new();

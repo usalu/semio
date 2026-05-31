@@ -4,10 +4,10 @@ overview: Introduce a new first-class `Typology` entity that owns `Type`s and `D
 todos:
   - id: ticket
     content: Open repo ticket (read repo://goals first); keep temp files in ticket folder
-    status: pending
+    status: completed
   - id: rust
     content: "Add Typology entity in lib.rs: Kit owns typologies, Type/Design owner_typology, computed Kit.types/designs, diff ladder, VFS, hydration; re-export GraphQL SDL"
-    status: pending
+    status: in_progress
   - id: graphql
     content: Update schema.golden.graphql (Typology type/connection/diff, Kit.typologies, Folder.typologies, owner->Typology); regenerate schema.graphql
     status: pending

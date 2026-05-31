@@ -8732,6 +8732,12 @@ export const Tree = (({
     startX: 0,
     startY: 0,
   });
+  const palettePointerWindowCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
+  const clearPalettePointerWindowListeners = reactHostPort.useCallback(() => {
+    palettePointerWindowCleanupRef.current?.();
+    palettePointerWindowCleanupRef.current = null;
+  }, []);
+  reactHostPort.useEffect(() => () => clearPalettePointerWindowListeners(), [clearPalettePointerWindowListeners]);
   const anchorIdRef = reactHostPort.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
   const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
 
@@ -8897,11 +8903,29 @@ export const Tree = (({
   );
 
   const buildPalettePointerProps = reactHostPort.useCallback(
-    (item: TreeDataItem, section: TreeDataSection): Pick<TreeItemProps, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel"> => {
+    (item: TreeDataItem, section: TreeDataSection): Pick<TreeItemProps, "onPointerDown"> => {
       const palettePointer = dragAndDropController?.pointerPaletteDrag;
       if (!palettePointer) {
         return {};
       }
+      const beginPalettePointerDrag = (): void => {
+        const gesture = palettePointerGestureRef.current;
+        if (!gesture.pending || !gesture.encoded) {
+          return;
+        }
+        gesture.pending = false;
+        gesture.dragging = true;
+        suppressPaletteClickRef.current = true;
+        palettePointer.begin(gesture.encoded);
+        dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
+      };
+      const finishPalettePointerGesture = (): void => {
+        clearPalettePointerWindowListeners();
+        if (palettePointerGestureRef.current.dragging) {
+          suppressPaletteClickRef.current = true;
+        }
+        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+      };
       return {
         onPointerDown: (event) => {
           if (event.button !== 0) {
@@ -8915,44 +8939,48 @@ export const Tree = (({
           if (!encoded) {
             return;
           }
+          clearPalettePointerWindowListeners();
           palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY };
-          event.currentTarget.setPointerCapture(event.pointerId);
-        },
-        onPointerMove: (event) => {
-          const gesture = palettePointerGestureRef.current;
-          if (!gesture.pending && !gesture.dragging) {
-            return;
-          }
-          const deltaX = event.clientX - gesture.startX;
-          const deltaY = event.clientY - gesture.startY;
-          if (gesture.pending && deltaX * deltaX + deltaY * deltaY < 36) {
-            return;
-          }
-          if (gesture.pending && gesture.encoded) {
-            gesture.pending = false;
-            gesture.dragging = true;
-            suppressPaletteClickRef.current = true;
-            palettePointer.begin(gesture.encoded);
-            dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
-          }
-        },
-        onPointerUp: () => {
-          const gesture = palettePointerGestureRef.current;
-          if (gesture.dragging) {
-            suppressPaletteClickRef.current = true;
-          }
-          palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
-        },
-        onPointerCancel: () => {
-          if (palettePointerGestureRef.current.dragging) {
-            palettePointer.cancel();
-            dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
-          }
-          palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+          event.preventDefault();
+          event.stopPropagation();
+          const onWindowPointerMove = (moveEvent: PointerEvent): void => {
+            const gesture = palettePointerGestureRef.current;
+            if (!gesture.pending && !gesture.dragging) {
+              return;
+            }
+            const deltaX = moveEvent.clientX - gesture.startX;
+            const deltaY = moveEvent.clientY - gesture.startY;
+            if (gesture.pending && deltaX * deltaX + deltaY * deltaY < 36) {
+              return;
+            }
+            beginPalettePointerDrag();
+          };
+          const onWindowPointerUp = (): void => {
+            if (palettePointerGestureRef.current.pending) {
+              finishPalettePointerGesture();
+              return;
+            }
+            finishPalettePointerGesture();
+          };
+          const onWindowPointerCancel = (): void => {
+            if (palettePointerGestureRef.current.dragging) {
+              palettePointer.cancel();
+              dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
+            }
+            finishPalettePointerGesture();
+          };
+          window.addEventListener("pointermove", onWindowPointerMove);
+          window.addEventListener("pointerup", onWindowPointerUp);
+          window.addEventListener("pointercancel", onWindowPointerCancel);
+          palettePointerWindowCleanupRef.current = () => {
+            window.removeEventListener("pointermove", onWindowPointerMove);
+            window.removeEventListener("pointerup", onWindowPointerUp);
+            window.removeEventListener("pointercancel", onWindowPointerCancel);
+          };
         },
       };
     },
-    [dragAndDropController, resolveItemDragData],
+    [clearPalettePointerWindowListeners, dragAndDropController, resolveItemDragData],
   );
 
   const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
@@ -8975,13 +9003,14 @@ export const Tree = (({
     }, [hasDynamicChildren, item, treeOpenState.open]);
 
     const palettePointerProps = buildPalettePointerProps(item, section);
+    const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
 
     return (
       <TreeItem
         id={item.id}
         label={getTreeItemLabel(item)}
         icon={item.icon}
-        className={item.className}
+        className={cn(item.className, palettePointerClassName)}
         isSelected={item.isSelected ?? resolvedSelectedIds.includes(item.id)}
         isHighlighted={item.isHighlighted}
         isDragHandle={item.isDragHandle}
@@ -13520,12 +13549,29 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
 export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
   switch (fileNodeKindId) {
     case "root":
+    case "kit":
       return LayoutGridIcon;
     case "branch":
     case "folder":
       return FolderIcon;
     case "leaf":
     case "file":
+      return DocumentIcon;
+    case "design":
+      return LayoutGridIcon;
+    case "type":
+      return LayoutGridIcon;
+    case "family":
+      return FolderIcon;
+    case "piece":
+      return DocumentIcon;
+    case "connection":
+      return DocumentIcon;
+    case "representation":
+      return DocumentIcon;
+    case "port":
+      return DocumentIcon;
+    case "connector":
       return DocumentIcon;
     default:
       return DocumentIcon;

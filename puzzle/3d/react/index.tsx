@@ -6398,7 +6398,7 @@ function DemandFrameloopKick(): null {
 function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: FixtureV1 }): React.ReactElement | null {
   const { camera, gl } = useThree();
   const lod = useLod();
-  const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(null);
+  const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(() => puzzle3dFixturePalettePointerDragRef.encoded);
   const [origin, setOrigin] = reactHostPort.useState<Vec3 | null>(null);
   const groupRef = reactHostPort.useRef<Group | null>(null);
 
@@ -6690,7 +6690,7 @@ function Inner(props: CanvasProps & {
             fixtureDragDepthRef={fixtureDragDepthRef}
           />
         ) : null}
-        {fixtureDragActive ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
+        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
         {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
@@ -7509,7 +7509,7 @@ if (import.meta.vitest) {
     });
     it("beginPuzzle3dFixturePalettePointerDrag commits drop on pointer up over host", () => {
       const host = document.createElement("div");
-      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
       puzzle3dFixtureDropPointerToCadRef.current = () => [5, 6, 7];
       const dragFixture = buildPaletteObjectDragFixture("J");
       const encoded = encodeFixtureForDragV1(dragFixture);

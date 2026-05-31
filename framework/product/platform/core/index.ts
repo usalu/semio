@@ -664,11 +664,18 @@ export abstract class VirtualFileSystemController extends Controller {
 
 	protected abstract loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[];
 
-	/** @emoji 📁 Optional async child loader; when set, {@link ensureChildrenLoaded} fetches over the network and emits when done. */
-	protected loadChildrenAsync?(
-		parentId: string,
-		scope: VirtualFileSystemScope,
-	): Promise<readonly VirtualFileSystemNodeRecord[]>;
+	/** @emoji 📁 When true, {@link loadChildrenAsync} loads rows; otherwise {@link loadChildren} runs synchronously. */
+	protected virtualFileSystemUsesAsyncChildren(): boolean {
+		return false;
+	}
+
+	/** @emoji 📁 Async child loader used when {@link virtualFileSystemUsesAsyncChildren} is true. */
+	protected loadChildrenAsync(
+		_parentId: string,
+		_scope: VirtualFileSystemScope,
+	): Promise<readonly VirtualFileSystemNodeRecord[]> {
+		return Promise.resolve([]);
+	}
 
 	protected resolveScope(args?: unknown, surfaceIdFallback?: string): VirtualFileSystemScope | null {
 		const payload = (args ?? {}) as { appId?: string; surfaceId?: string };
@@ -722,17 +729,16 @@ export abstract class VirtualFileSystemController extends Controller {
 			this.pendingChildrenLoadsByScope.set(scopeKey, pending);
 		}
 		if (pending.has(key)) return;
-		if (this.loadChildrenAsync) {
-			pending.add(key);
-			void this.loadChildrenAsync(parentId, scope).then((loaded) => {
-				pending!.delete(key);
-				childrenStore.setChildren(key, loaded);
-				this.emit();
-			});
+		if (!this.virtualFileSystemUsesAsyncChildren()) {
+			childrenStore.setChildren(key, this.loadChildren(parentId, scope));
 			return;
 		}
-		const loaded = this.loadChildren(parentId, scope);
-		childrenStore.setChildren(key, loaded);
+		pending.add(key);
+		void this.loadChildrenAsync(parentId, scope).then((loaded) => {
+			pending!.delete(key);
+			childrenStore.setChildren(key, loaded);
+			this.emit();
+		});
 	}
 
 	protected syncOpenBranches(scope: VirtualFileSystemScope): void {
@@ -1921,6 +1927,53 @@ if (import.meta.vitest) {
 				anchorRowId: "folder-models",
 			});
 			expect(ctrl.buildVirtualFileSystemModel(scope).selectedRowIds).toEqual(["folder-models", "branch-alpha"]);
+		});
+
+		it("virtualFileSystemUsesAsyncChildren enables async loader path", async () => {
+			class AsyncVfsDemoController extends VirtualFileSystemController {
+				constructor(commandBus: CommandBus, hostNotify: () => void) {
+					super("async-vfs-demo", commandBus, hostNotify);
+				}
+				protected override virtualFileSystemUsesAsyncChildren(): boolean {
+					return true;
+				}
+				protected override getSchema(_scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+					return PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA;
+				}
+				protected override getRoot(_scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
+					return {
+						id: "root",
+						fileNodeKindId: "root",
+						name: "Root",
+						hasChildren: true,
+						descriptorValues: platformVirtualFileSystemDemoDescriptorValues("workspace", "/"),
+					};
+				}
+				protected override loadChildren(_parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+					return [];
+				}
+				protected override loadChildrenAsync(
+					parentId: string,
+					_scope: VirtualFileSystemScope,
+				): Promise<readonly VirtualFileSystemNodeRecord[]> {
+					return Promise.resolve([
+						{
+							id: `${parentId}-async`,
+							fileNodeKindId: "leaf",
+							name: "Async child",
+							parentId,
+							hasChildren: false,
+							descriptorValues: platformVirtualFileSystemDemoDescriptorValues("leaf", "/Async"),
+						},
+					]);
+				}
+			}
+			const bus = new CommandBus();
+			const ctrl = new AsyncVfsDemoController(bus, () => {});
+			const scope: VirtualFileSystemScope = { appId: "async", surfaceId: "vfs:async" };
+			expect(ctrl.virtualFileSystemUsesAsyncChildren()).toBe(true);
+			const rows = await ctrl.loadChildrenAsync("root", scope);
+			expect(rows.map((row) => row.id)).toEqual(["root-async"]);
 		});
 	});
 

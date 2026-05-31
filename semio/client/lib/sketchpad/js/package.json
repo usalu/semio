@@ -14,6 +14,7 @@
     "@framework/platform/core": "workspace:*",
     "@mdx-js/react": "^3.1.1",
     "@semio/js": "*",
+    "@semio/react": "workspace:*",
     "@ui/react": "workspace:*",
     "fflate": "^0.8.2",
     "react": "^19.2.0",

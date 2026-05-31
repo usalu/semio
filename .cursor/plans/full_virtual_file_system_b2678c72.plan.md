@@ -19,16 +19,16 @@ todos:
     status: completed
   - id: framework
     content: Add async loadChildrenAsync support (in-flight dedupe + emit) to VirtualFileSystemController in framework platform core
-    status: in_progress
+    status: completed
   - id: sketchpad
     content: Rewire sketchpad kit/design VFS to rs-driven loadChildrenAsync; extend schema fileNodeKinds+icons; kind/navigateUri/descriptor mapping; keep home client-side
-    status: pending
+    status: completed
   - id: ui
     content: Add fallback kind icons in ui/react virtualFileSystemKindIcon
-    status: pending
+    status: completed
   - id: tests
     content: Extend rs/js/react/framework/sketchpad test regions and the VirtualFileSystem story; validate runtime and close ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

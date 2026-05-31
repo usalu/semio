@@ -32,6 +32,7 @@ import {
 	buildPuzzle5dWindowBody,
 	buildVirtualFileSystemWindowBody,
 	virtualFileSystemSurfaceId,
+	virtualFileSystemScopeKey,
 	virtualFileSystemDescriptorValues,
 	type VirtualFileSystemDescriptorValueModel,
 	type VirtualFileSystemModel,
@@ -13326,6 +13327,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		}
 		const platform = getSketchpadPlatform();
 		if (platform) sketchpadSyncTypeAppChrome(platform);
+		store.subscribe(() => this.invalidateKitVirtualFileSystem(kitId));
 		this.emit();
 	}
 
@@ -13580,22 +13582,85 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				parentId,
 			);
 		}
-		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
-			const kit = route.kitId ? this.getKitStore(route.kitId)?.getSnapshot().kit : undefined;
-			return kit ? sketchpadKitVfsChildren(kit, parentId) : [];
-		}
-		if (scope.appId === SKETCHPAD_DESIGN_APP_ID) {
-			const kit = route.kitId ? this.getKitStore(route.kitId)?.getSnapshot().kit : undefined;
-			return kit ? sketchpadKitVfsChildren(kit, parentId) : [];
-		}
 		return [];
 	}
 
-	/** @emoji 🔄 Sketchpad kits mutate often; always re-resolve vfs children instead of stale lazy cache. */
+	/** @emoji 📁 Loads kit/design VFS children from rs {@link FileSystemNode} over GraphQL. */
+	protected override virtualFileSystemUsesAsyncChildren(): boolean {
+		return true;
+	}
+
+	protected override loadChildrenAsync(
+		parentId: string,
+		scope: VirtualFileSystemScope,
+	): Promise<readonly VirtualFileSystemNodeRecord[]> {
+		const route = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath);
+		const kitId = route.kitId;
+		if (!kitId) return Promise.resolve([]);
+		const store = this.getKitStore(kitId);
+		if (!(store instanceof SemioJsKitStore)) return Promise.resolve([]);
+		const root = this.getRoot(scope);
+		const parentRef = sketchpadRsVfsParentRef(parentId, root, route, this.vfsMetaForScope(scope));
+		return fetchSemioFileSystemChildren(store.jsStore, parentRef).then((children) => {
+			const rows = sketchpadVfsRecordsFromRsChildren(kitId, route, parentId, children);
+			this.rememberVfsNodes(scope, rows, route);
+			return rows;
+		});
+	}
+
+	private vfsMetaForScope(
+		scope: VirtualFileSystemScope,
+	): ReadonlyMap<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }> {
+		return this.vfsNodeMetaByScope.get(virtualFileSystemScopeKey(scope)) ?? new Map();
+	}
+
+	private rememberVfsNodes(
+		scope: VirtualFileSystemScope,
+		rows: readonly VirtualFileSystemNodeRecord[],
+		route: ReturnType<typeof parseSketchpadRouteScopeFromPath>,
+	): void {
+		const key = virtualFileSystemScopeKey(scope);
+		let map = this.vfsNodeMetaByScope.get(key);
+		if (!map) {
+			map = new Map();
+			this.vfsNodeMetaByScope.set(key, map);
+		}
+		const root = this.getRoot(scope);
+		map.set(root.id, { fileNodeKindId: root.fileNodeKindId, designId: route.designId ?? undefined, typeId: route.typeId ?? undefined });
+		for (const row of rows) {
+			map.set(row.id, {
+				fileNodeKindId: row.fileNodeKindId,
+				designId: route.designId ?? undefined,
+				typeId: row.fileNodeKindId === "type" ? row.id : route.typeId ?? undefined,
+			});
+		}
+	}
+
+	/** @emoji 🔄 Home vfs stays synchronous; kit/design use async rs-backed children. */
 	protected override ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
-		const childrenStore = this.childrenStore(scope);
-		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
-		childrenStore.setChildren(key, this.loadChildren(parentId, scope));
+		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
+			const childrenStore = this.childrenStore(scope);
+			const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
+			childrenStore.setChildren(key, this.loadChildren(parentId, scope));
+			return;
+		}
+		if (scope.appId === SKETCHPAD_KIT_APP_ID || scope.appId === SKETCHPAD_DESIGN_APP_ID) {
+			super.ensureChildrenLoaded(parentId, scope);
+			return;
+		}
+		super.ensureChildrenLoaded(parentId, scope);
+	}
+
+	/** @emoji 🔄 Drops cached vfs children when the live kit changes. */
+	invalidateKitVirtualFileSystem(kitId: string): void {
+		for (const appId of [SKETCHPAD_KIT_APP_ID, SKETCHPAD_DESIGN_APP_ID] as const) {
+			const scope = sketchpadVfsScope(appId);
+			const scopeKey = virtualFileSystemScopeKey(scope);
+			this.vfsNodeMetaByScope.delete(scopeKey);
+			this.childrenByScope.delete(scopeKey);
+			this.pendingChildrenLoadsByScope.delete(scopeKey);
+		}
+		this.emit();
 	}
 
 	protected override selectedRows(scope: VirtualFileSystemScope): string[] {
@@ -14158,6 +14223,43 @@ if (import.meta.vitest) {
 		it("InMemorySemioKitStore exposes kit snapshot", () => {
 			const store = new InMemorySemioKitStore({ id: "k1", name: "Demo" } as Kit);
 			expect(store.getSnapshot().kit.name).toBe("Demo");
+		});
+	});
+
+	describe("Sketchpad virtual file system", () => {
+		it("schema includes representation port and connector node kinds", () => {
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.representation?.name).toBe("Representation");
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.port?.name).toBe("Port");
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.connector?.name).toBe("Connector");
+		});
+
+		it("maps rs vfs records from graphql child refs", () => {
+			const rows = sketchpadVfsRecordsFromRsChildren(
+				"kit-1",
+				parseSketchpadRouteScopeFromPath("/kits/kit-1"),
+				"kit-1",
+				[
+					{
+						id: "type-1",
+						kind: "TYPE",
+						name: "Window",
+						path: "/Window",
+						hasChildren: true,
+					},
+					{
+						id: "rep-1",
+						kind: "REPRESENTATION",
+						name: "Mesh",
+						path: "/Window/Mesh",
+						hasChildren: false,
+						typeId: "type-1",
+					},
+				],
+			);
+			expect(rows[0]?.fileNodeKindId).toBe("type");
+			expect(rows[0]?.hasChildren).toBe(true);
+			expect(rows[1]?.fileNodeKindId).toBe("representation");
+			expect(rows[1]?.navigateUri).toContain("/kits/kit-1/types/type-1");
 		});
 	});
 

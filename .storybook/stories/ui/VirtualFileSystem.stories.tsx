@@ -9,13 +9,15 @@
 // #endregion 🧲Header
 
 import {
-  VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
   VirtualFileSystem,
+  VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
+  VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
   buildVirtualFileSystemDescriptorValues,
   buildVirtualFileSystemVisibleRows,
   reactHostPort,
   type VirtualFileSystemNode,
   type VirtualFileSystemRow,
+  type VirtualFileSystemSchema,
 } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -33,13 +35,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const semioKitSchema: VirtualFileSystemSchema = {
+  descriptorKinds: VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
+  fileNodeKinds: {
+    ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
+    kit: { id: "kit", name: "Kit", icon: "layout-grid", descriptors: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root!.descriptors },
+    type: { id: "type", name: "Type", icon: "component", descriptors: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.branch!.descriptors },
+    design: { id: "design", name: "Design", icon: "layout", descriptors: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.branch!.descriptors },
+    representation: { id: "representation", name: "Representation", icon: "box", descriptors: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.leaf!.descriptors },
+  },
+  descriptorColumnIds: ["path", "fileNodeKind"],
+};
+
 const demoRoot: VirtualFileSystemNode = {
   id: "root-demo",
-  fileNodeKindId: "root",
+  fileNodeKindId: "kit",
   name: "Workspace",
   path: "/",
   hasChildren: true,
-  descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "root", { path: "/" }),
+  descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "kit", { path: "/" }),
 };
 
 const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
@@ -48,21 +62,21 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
     [
       {
         id: "branch-models",
-        fileNodeKindId: "branch",
+        fileNodeKindId: "folder",
         name: "Models",
         path: "/Models",
         parentId: "root-demo",
         hasChildren: true,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "branch", { path: "/Models" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "folder", { path: "/Models" }),
       },
       {
-        id: "leaf-alpha",
-        fileNodeKindId: "leaf",
+        id: "type-alpha",
+        fileNodeKindId: "type",
         name: "Alpha",
         path: "/Alpha",
         parentId: "root-demo",
         hasChildren: true,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "type", { path: "/Alpha" }),
       },
       {
         id: "leaf-readme",
@@ -71,7 +85,7 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
         path: "/README.md",
         parentId: "root-demo",
         hasChildren: false,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/README.md" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "file", { path: "/README.md" }),
       },
     ],
   ],
@@ -79,36 +93,36 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
     "branch-models",
     [
       {
-        id: "leaf-capsule",
-        fileNodeKindId: "leaf",
+        id: "design-capsule",
+        fileNodeKindId: "design",
         name: "Capsule",
         path: "/Models/Capsule",
         parentId: "branch-models",
         hasChildren: false,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Models/Capsule" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "design", { path: "/Models/Capsule" }),
       },
     ],
   ],
   [
-    "leaf-alpha",
+    "type-alpha",
     [
       {
-        id: "leaf-core",
-        fileNodeKindId: "leaf",
+        id: "rep-core",
+        fileNodeKindId: "representation",
         name: "Core",
         path: "/Alpha/Core",
-        parentId: "leaf-alpha",
+        parentId: "type-alpha",
         hasChildren: false,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha/Core" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "representation", { path: "/Alpha/Core" }),
       },
       {
-        id: "leaf-bridge",
-        fileNodeKindId: "leaf",
+        id: "rep-bridge",
+        fileNodeKindId: "representation",
         name: "Bridge",
         path: "/Alpha/Bridge",
-        parentId: "leaf-alpha",
+        parentId: "type-alpha",
         hasChildren: false,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha/Bridge" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "representation", { path: "/Alpha/Bridge" }),
       },
     ],
   ],
@@ -116,7 +130,7 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
 
 const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: readonly string[] }) => {
   const [expandedIds, setExpandedIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set(initialExpanded));
-  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<readonly string[]>(() => ["leaf-alpha"]);
+  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<readonly string[]>(() => ["type-alpha"]);
 
   const rows = buildVirtualFileSystemVisibleRows("root-demo", demoChildrenByParentId, expandedIds, demoRoot);
 
@@ -132,7 +146,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
   return (
     <div className="h-96 border border-element">
       <VirtualFileSystem
-        schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+        schema={semioKitSchema}
         rows={rows}
         selectedRowIds={selectedRowIds}
         onSelectionChange={(nextSelectedRowIds) => setSelectedRowIds(nextSelectedRowIds)}
@@ -152,17 +166,17 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
 };
 
 export const Collapsed: Story = {
-  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
+  args: { schema: semioKitSchema, rows: [] },
   render: () => <VirtualFileSystemDemo initialExpanded={["root-demo"]} />,
 };
 
 export const Expanded: Story = {
-  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
-  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo", "branch-models", "leaf-alpha"]} />,
+  args: { schema: semioKitSchema, rows: [] },
+  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo", "branch-models", "type-alpha"]} />,
 };
 
 export const StaticRows: Story = {
-  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
+  args: { schema: semioKitSchema, rows: [] },
   render: () => {
     const rows: VirtualFileSystemRow[] = [
       {
@@ -173,7 +187,7 @@ export const StaticRows: Story = {
         level: 0,
         hasChildren: true,
         isExpanded: true,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "root", { path: "/" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "kit", { path: "/" }),
       },
       {
         id: "branch",
@@ -182,12 +196,12 @@ export const StaticRows: Story = {
         path: "/Assets",
         level: 1,
         hasChildren: false,
-        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "branch", { path: "/Assets" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(semioKitSchema, "folder", { path: "/Assets" }),
       },
     ];
     return (
       <div className="h-64 border border-element">
-        <VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={rows} />
+        <VirtualFileSystem schema={semioKitSchema} rows={rows} />
       </div>
     );
   },

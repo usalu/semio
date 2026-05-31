@@ -4756,6 +4756,16 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(fixed).toContain("ok errors");
       expect(fixed).not.toMatch(/xAxis:\s*\{\s*\{\s*ok/);
     });
+    it("resolveFileSystemNode maps representation port and connector kinds", () => {
+      const session = { } as Session;
+      const rep = resolveFileSystemNode(session, "store-1", { id: "r1", kind: "REPRESENTATION" }, undefined, "type-1");
+      expect(rep).toBeInstanceOf(Representation);
+      const port = resolveFileSystemNode(session, "store-1", { id: "p1", kind: "PORT" }, undefined, "type-1");
+      expect(port).toBeInstanceOf(Port);
+      const connector = resolveFileSystemNode(session, "store-1", { id: "c1", kind: "CONNECTOR" }, undefined, "type-1");
+      expect(connector).toBeInstanceOf(Connector);
+    });
+
     it("Piece installs pathPieces and weak-geometry change subscriptions", () => {
       expect(typeof Piece.prototype.pathPieces).toBe("function");
       expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");

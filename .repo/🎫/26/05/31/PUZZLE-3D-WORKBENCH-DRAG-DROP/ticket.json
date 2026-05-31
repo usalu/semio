@@ -1,9 +1,9 @@
 {
   "title": "Puzzle 3d Workbench Drag Drop",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Make object kinds from the workbench panel draggable and droppable into puzzle 3d at cursor intersection with the grid plane.",
-  "summary": "Fixed declarative tree palette drag: (1) hoist tree-root panels via SidePanelTabConfig.panel + registerSidePanelBody mount treeRoot so kinds/hierarchy are a single Tree not nested in shell tree; (2) Tree draggable rows use select-none labels and cursor-grab so text selection no longer blocks HTML5 drag; (3) stopPropagation on tree dragstart. Extended ui SidePanel, playground/core mount registry.",
+  "summary": "Fixed puzzle 3D kinds tree palette drag when native HTML5 drag never starts. Tree pointer gestures now track on window pointermove (works inside Radix ScrollArea). FixtureDropPreview stays mounted during fixture drag-drop and reads active encoded payload from ref so drag-session is not missed after hover. Added pointer-drag unit test.",
   "goal": "🎯puzzle",
   "sessions": [
     "⚪d6fabd2a644c47d881448f3630e4dd0f",
