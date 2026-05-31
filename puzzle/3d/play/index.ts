@@ -56,8 +56,10 @@ import {
   type ObjectKind,
   type RelocateMode,
   type RelocatePayload,
+  type SelectionMethod,
   type SelectionMode,
   type SelectionSnapshot,
+  type MarqueeSelectableKinds,
   type VortexKind,
   type VortexProps,
 } from "../react/index.tsx";
@@ -192,7 +194,9 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
   selectedId: null,
   selectedLabel: null,
-  selectionMode: "single",
+  selectionMode: "default",
+  selectionMethod: "rectangle",
+  selectableKinds: { object: true, vortex: true, attraction: true },
   proximityRadius: 24,
   chunkSize: 256,
   gridFactor: 10,
@@ -504,6 +508,7 @@ export class Puzzle3dPlayShellController extends Controller {
   private relocateMode: RelocateMode;
   private selection: Puzzle3dPlaySelection;
   private selectionMode: SelectionMode;
+  private selectionMethod: SelectionMethod;
   private proximityRadius: number;
   private chunkSize: number;
   private gridFactor: number;
@@ -528,7 +533,8 @@ export class Puzzle3dPlayShellController extends Controller {
     this.lodTag = DEFAULT_MANUAL_LOD;
     this.relocateMode = "translate";
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
-    this.selectionMode = "single";
+    this.selectionMode = "default";
+    this.selectionMethod = "rectangle";
     this.proximityRadius = 24;
     this.chunkSize = 256;
     this.gridFactor = 10;
@@ -568,6 +574,8 @@ export class Puzzle3dPlayShellController extends Controller {
       selectedId: primaryPuzzle3dPlayObjectId(this.selection),
       selectedLabel: puzzle3dPlaySelectionLabel(this.fixture, this.selection),
       selectionMode: this.selectionMode,
+      selectionMethod: this.selectionMethod,
+      selectableKinds: { ...this.selectableKinds },
       proximityRadius: this.proximityRadius,
       chunkSize: this.chunkSize,
       gridFactor: this.gridFactor,
@@ -685,8 +693,53 @@ export class Puzzle3dPlayShellController extends Controller {
     ];
   }
 
+  private selectionMeasures(): readonly WindowMeasure[] {
+    return [
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-marquee-rectangle`,
+        label: "Select",
+        text: "Rectangle",
+        pressed: this.selectionMethod === "rectangle",
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelectionMethod", args: { method: "rectangle" } },
+      },
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-marquee-lasso`,
+        text: "Lasso",
+        pressed: this.selectionMethod === "lasso",
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelectionMethod", args: { method: "lasso" } },
+      },
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-objects`,
+        text: "Objects",
+        pressed: this.selectableKinds.object,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "object" } },
+      },
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-vortices`,
+        text: "Vortices",
+        pressed: this.selectableKinds.vortex,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "vortex" } },
+      },
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-attractions`,
+        text: "Attractions",
+        pressed: this.selectableKinds.attraction,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "attraction" } },
+      },
+    ];
+  }
+
+  private windowMeasures(): readonly WindowMeasure[] {
+    return [...this.lodMeasures(), ...this.selectionMeasures()];
+  }
+
   private rebuildShellMode(): void {
-    this.mainMode.windowKinds = [new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.lodMeasures())];
+    this.mainMode.windowKinds = [new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures())];
     const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
       id: `puzzle3d.relocate.${mode}`,
       kind: "toggle" as const,
@@ -886,8 +939,17 @@ export class Puzzle3dPlayShellController extends Controller {
       }
       case "setSelectionMode": {
         const mode = ((args as { mode?: SelectionMode; value?: string }).mode ?? (args as { value?: string }).value) as SelectionMode;
-        if (mode === "single" || mode === "additive" || mode === "subtractive" || mode === "toggle") {
+        if (mode === "default" || mode === "additive" || mode === "subtractive" || mode === "invertive") {
           this.selectionMode = mode;
+          this.notifySnapshot();
+        }
+        return;
+      }
+      case "setSelectionMethod": {
+        const method = (args as { method?: SelectionMethod }).method;
+        if (method === "rectangle" || method === "lasso") {
+          this.selectionMethod = method;
+          this.syncShell();
           this.notifySnapshot();
         }
         return;
@@ -1006,6 +1068,8 @@ export interface Puzzle3dPlaySnapshot {
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;
   readonly selectionMode: SelectionMode;
+  readonly selectionMethod: SelectionMethod;
+  readonly selectableKinds: MarqueeSelectableKinds;
   readonly proximityRadius: number;
   readonly chunkSize: number;
   readonly gridFactor: number;
@@ -1351,10 +1415,10 @@ export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiNod
               id: "puzzle-3d-play-settings.selectionMode.select",
               value: snap.selectionMode,
               items: [
-                { value: "single", label: "single" },
+                { value: "default", label: "default" },
                 { value: "additive", label: "additive" },
                 { value: "subtractive", label: "subtractive" },
-                { value: "toggle", label: "toggle" },
+                { value: "invertive", label: "invertive" },
               ],
               onChange: puzzle3dPlayCmd("setSelectionMode"),
             },
@@ -1527,6 +1591,29 @@ if (import.meta.vitest) {
       });
       trackingCtrl.run("setAutoLod", { pressed: true });
       expect(shellNotifyCount).toBe(1);
+    });
+
+    it("window measures include selection kind toggles and marquee method", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const texts = measures.map((measure) => measure.text);
+      expect(texts).toContain("Objects");
+      expect(texts).toContain("Vortices");
+      expect(texts).toContain("Attractions");
+      expect(texts).toContain("Rectangle");
+      expect(texts).toContain("Lasso");
+    });
+
+    it("setSelectionMethod and toggleSelectableKind update snapshot", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.run("setSelectionMethod", { method: "lasso" });
+      expect(ctrl.getSnapshot().selectionMethod).toBe("lasso");
+      ctrl.run("toggleSelectableKind", { kind: "object" });
+      expect(ctrl.getSnapshot().selectableKinds.object).toBe(false);
     });
 
     it("deleteSelection removes selected fixture rows and clears selection", () => {

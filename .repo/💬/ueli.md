@@ -746,6 +746,19 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+Introduce selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
+Make sure that the selection has a special behaviour:
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise it is not selected.
+Make sure to add three toggle window options for selection: objects, vortices, attractuibs
+holding down left button should trigger selection.
+The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
+
+---
+
 All the objects and vortex dont have the proper labels from the original asset (nakagin capsule tower). Make sure that in the ui only the labels show. Just one time migration, no permanent links. Clean assets with clean non-id poluted play
 
 ---

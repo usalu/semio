@@ -1005,6 +1005,8 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           selectedId={snap.selectedId}
           selectedLabel={snap.selectedLabel}
           selectionMode={snap.selectionMode}
+          selectionMethod={snap.selectionMethod}
+          marqueeSelectableKinds={snap.selectableKinds}
           selectedVortexFullIds={selectedVortexFullIds}
           proximityRadius={snap.proximityRadius}
           chunkSize={snap.chunkSize}
@@ -1501,9 +1503,6 @@ interface Puzzle2dPlayShellValue {
   clearHoverForPane: (pane: Puzzle2dPlayPaneId) => void;
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
-  camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
-  /** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link puzzle2dPlayPaneCamerasBaseline}; other panes unchanged. */
-  syncBaselineFromViewportCamera: (cam: CameraState) => void;
   puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
   setPuzzle2dSelectionMethod: (value: Puzzle2dSelectionMethod) => void;
   puzzle2dSelectionMode: Puzzle2dSelectionMode;
@@ -1559,6 +1558,12 @@ interface Puzzle2dPlaySelectionValue {
   setSelectionIds: (ids: readonly string[]) => void;
   preselection: Puzzle2dPreselectSnapshot;
   setPreselection: (snapshot: Puzzle2dPreselectSnapshot) => void;
+}
+
+interface Puzzle2dPlayCamerasValue {
+  camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
+  /** @emoji 📷 Writes the active pane’s imperative camera into {@link puzzle2dPlayPaneCamerasBaseline}. */
+  syncBaselineFromViewportCamera: (cam: CameraState) => void;
 }
 
 /** @emoji 🌳 Workbench hierarchy bound to play fixture + selection (not static tree snapshots). */
@@ -1661,6 +1666,8 @@ const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellVa
 
 const Puzzle2dPlaySelectionContext = reactHostPort.createContext<Puzzle2dPlaySelectionValue | null>(null);
 
+const Puzzle2dPlayCamerasContext = reactHostPort.createContext<Puzzle2dPlayCamerasValue | null>(null);
+
 const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => void) | null>(null);
 
 function usePuzzle2dPlayShell(): Puzzle2dPlayShellValue {
@@ -1675,6 +1682,14 @@ function usePuzzle2dPlaySelection(): Puzzle2dPlaySelectionValue {
   const value = reactHostPort.useContext(Puzzle2dPlaySelectionContext);
   if (!value) {
     throw new Error("usePuzzle2dPlaySelection must be used inside Puzzle2dPlaySelectionContext.");
+  }
+  return value;
+}
+
+function usePuzzle2dPlayCameras(): Puzzle2dPlayCamerasValue {
+  const value = reactHostPort.useContext(Puzzle2dPlayCamerasContext);
+  if (!value) {
+    throw new Error("usePuzzle2dPlayCameras must be used inside Puzzle2dPlayCamerasContext.");
   }
   return value;
 }
@@ -1934,11 +1949,10 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     puzzle2dSelectionTargets,
     fixture,
     handleCanvasFixtureDrop,
-    camerasByPane,
     resetPuzzle2dRedrawProgressiveEpoch,
     setSelectionIds,
-    syncBaselineFromViewportCamera,
   } = usePuzzle2dPlayShell();
+  const { camerasByPane, syncBaselineFromViewportCamera } = usePuzzle2dPlayCameras();
   const camera = camerasByPane[paneId];
   const lodProps = puzzle2dPlayLodCanvasProps(puzzle2dLodModeByPane[paneId]);
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
@@ -3413,8 +3427,6 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dSelectionMode,
       puzzle2dSelectionTargets,
       puzzle2dGridSnapEnabled,
-      camerasByPane,
-      syncBaselineFromViewportCamera,
       fixture,
       forceLayoutFullIterations,
       forceLayoutGravity,
@@ -3474,8 +3486,6 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dGridSnapEnabled,
       puzzle2dLodModeByPane,
       setPuzzle2dLodModeForPane,
-      camerasByPane,
-      syncBaselineFromViewportCamera,
       fixture,
       forceLayoutFullIterations,
       forceLayoutGravity,
@@ -3506,6 +3516,14 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setPreselection,
     }),
     [selectionIds, setSelectionIds, preselection, setPreselection],
+  );
+
+  const camerasValue = reactHostPort.useMemo(
+    (): Puzzle2dPlayCamerasValue => ({
+      camerasByPane,
+      syncBaselineFromViewportCamera,
+    }),
+    [camerasByPane, syncBaselineFromViewportCamera],
   );
 
   // #region 🔖ToolbarHostBridge
@@ -3642,9 +3660,11 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   return (
     <Puzzle2dPlayShellContext.Provider value={shellValue}>
-      <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-        <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
-      </Puzzle2dPlayLodRuntimeContext.Provider>
+      <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
+        <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
+          <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+        </Puzzle2dPlayLodRuntimeContext.Provider>
+      </Puzzle2dPlayCamerasContext.Provider>
     </Puzzle2dPlayShellContext.Provider>
   );
 }

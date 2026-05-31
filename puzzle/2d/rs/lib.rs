@@ -2794,6 +2794,8 @@ mod board_host {
         content_scene_generation: u64,
         /// @emoji 🎨 World-space Vello content reused across pan/zoom when generation and LOD match.
         world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
+        /// @emoji 🔍 True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
+        wheel_zoom_active: bool,
     }
 
     impl Default for Camera {
@@ -2847,6 +2849,7 @@ mod board_host {
                 last_preselect_emit_sig: None,
                 content_scene_generation: 0,
                 world_content_cache: RefCell::new(None),
+                wheel_zoom_active: false,
             }
         }
     }
@@ -5285,7 +5288,30 @@ mod board_host {
             }
         }
 
+        /// @emoji 📏 Screen-pixel edge stroke width (world-clip tiles and post-cache overlay).
+        fn edge_screen_stroke_width_px(&self, lod: BoardDrawLod) -> f64 {
+            if lod == BoardDrawLod::Minimap {
+                1.12_f64
+            } else {
+                2.0 * self.camera.zoom.max(0.75)
+            }
+        }
+
+        /// @emoji 📏 Edge stroke in world units so {@link BoardHost.camera_content_affine} yields ~{@link Self::edge_screen_stroke_width_px}.
+        fn edge_world_stroke_width(&self, lod: BoardDrawLod) -> f64 {
+            let screen_px = self.edge_screen_stroke_width_px(lod);
+            let z = self.camera.zoom.max(1e-9);
+            (screen_px / z).max(1e-3)
+        }
+
         fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
+            self.append_nodes_and_handles(scene, tile_filter, lod, world_space);
+            if !world_space {
+                self.append_edges_wires_and_link(scene, tile_filter, lod, world_space);
+            }
+        }
+
+        fn append_nodes_and_handles(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
             let pad = self.drawable_cull_pad_world();
             let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
@@ -5403,12 +5429,16 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h);
                 self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
             }
-            let edge_sw = if lod == BoardDrawLod::Minimap {
-                1.12_f64
-            } else if world_space {
-                2.0_f64
+            if let Some(node_id) = indirect_ring_node_id {
+                self.append_indirect_handle_ring(scene, tile_filter, &node_id);
+            }
+        }
+
+        fn append_edges_wires_and_link(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
+            let edge_sw = if world_space {
+                self.edge_world_stroke_width(lod)
             } else {
-                2.0 * self.camera.zoom.max(0.75)
+                self.edge_screen_stroke_width_px(lod)
             };
             let edge_stroke = Stroke::new(edge_sw);
             for e in self.edges.values() {
@@ -5447,9 +5477,6 @@ mod board_host {
                     scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
                 }
             }
-            if let Some(node_id) = indirect_ring_node_id {
-                self.append_indirect_handle_ring(scene, tile_filter, &node_id);
-            }
             let link_wire_sw = 2.85_f64;
             let link_wire_stroke = Stroke::new(link_wire_sw);
             let link_wire_color = self.vello_theme.node_stroke;
@@ -5470,31 +5497,38 @@ mod board_host {
             let needs_rebuild = cache.as_ref().map(|c| c.0 != gen || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
                 let mut content = Scene::new();
-                self.append_nodes_handles_edges(&mut content, None, lod, true);
+                self.append_nodes_and_handles(&mut content, None, lod, true);
                 *cache = Some((gen, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));
             }
+            self.append_edges_wires_and_link(scene, None, lod, false);
+        }
+
+        pub fn set_wheel_zoom_active(&mut self, active: bool) {
+            self.wheel_zoom_active = active;
         }
 
         pub fn build_vector_scene(&self) -> Scene {
             let mut inner = Scene::new();
             let lod = self.current_draw_lod();
-            let grid_color = self.vello_theme.grid_minor_stroke;
-            if lod != BoardDrawLod::Minimap {
-                self.stroke_world_step_grid(&mut inner, grid_color, 1.0, self.grid_step_large_world(), 0.0);
-                match lod {
-                    BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro => {
-                        self.stroke_world_step_grid(&mut inner, grid_color, 0.72, self.grid_step_medium_world(), 0.0);
+            if !self.wheel_zoom_active {
+                let grid_color = self.vello_theme.grid_minor_stroke;
+                if lod != BoardDrawLod::Minimap {
+                    self.stroke_world_step_grid(&mut inner, grid_color, 1.0, self.grid_step_large_world(), 0.0);
+                    match lod {
+                        BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro => {
+                            self.stroke_world_step_grid(&mut inner, grid_color, 0.72, self.grid_step_medium_world(), 0.0);
+                        }
+                        BoardDrawLod::Minimap | BoardDrawLod::Overview | BoardDrawLod::Compact => {}
                     }
-                    BoardDrawLod::Minimap | BoardDrawLod::Overview | BoardDrawLod::Compact => {}
-                }
-                if matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
-                    self.stroke_world_step_grid(&mut inner, grid_color, 0.48, self.grid_step_small_world(), 0.0);
-                }
-                if lod == BoardDrawLod::Micro {
-                    self.stroke_world_step_grid(&mut inner, grid_color, 0.32, self.grid_step_micro_world(), 0.0);
+                    if matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
+                        self.stroke_world_step_grid(&mut inner, grid_color, 0.48, self.grid_step_small_world(), 0.0);
+                    }
+                    if lod == BoardDrawLod::Micro {
+                        self.stroke_world_step_grid(&mut inner, grid_color, 0.32, self.grid_step_micro_world(), 0.0);
+                    }
                 }
             }
             if let Some(ref pts) = self.selection_screen_preview {
@@ -5509,34 +5543,7 @@ mod board_host {
                     inner.stroke(&Stroke::new(1.5), Affine::IDENTITY, self.vello_theme.selection_preview_stroke, None, &path);
                 }
             }
-            let use_tiles = self.world_raster_tiling == "world-clip";
-            if use_tiles {
-                let pad = self.drawable_cull_pad_world();
-                let vis = self.visible_world_box(pad);
-                let t = WORLD_CLIP_TILE_WORLD;
-                let ix0 = (vis.min_x / t).floor() as i32;
-                let iy0 = (vis.min_y / t).floor() as i32;
-                let ix1 = (vis.max_x / t).floor() as i32;
-                let iy1 = (vis.max_y / t).floor() as i32;
-                let nx = (ix1 - ix0 + 1).max(0) as u32;
-                let ny = (iy1 - iy0 + 1).max(0) as u32;
-                let n_tiles = nx.saturating_mul(ny);
-                if n_tiles == 0 || n_tiles > MAX_WORLD_CLIP_TILES {
-                    self.append_cached_world_content(&mut inner, lod);
-                } else {
-                    for iy in iy0..=iy1 {
-                        for ix in ix0..=ix1 {
-                            let tile_box = WorldBox { min_x: ix as f64 * t, min_y: iy as f64 * t, max_x: (ix as f64 + 1.0) * t, max_y: (iy as f64 + 1.0) * t };
-                            let clip = self.world_tile_screen_clip_rect(ix, iy, t);
-                            inner.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip);
-                            self.append_nodes_handles_edges(&mut inner, Some(&tile_box), lod, false);
-                            inner.pop_layer();
-                        }
-                    }
-                }
-            } else {
-                self.append_cached_world_content(&mut inner, lod);
-            }
+            self.append_cached_world_content(&mut inner, lod);
             let scale = self.dpr.max(1.0);
             if (scale - 1.0).abs() < f64::EPSILON {
                 inner
@@ -6966,6 +6973,11 @@ impl BoardSession {
     #[wasm_bindgen(js_name = wheelScreen)]
     pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
         self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
+    }
+
+    #[wasm_bindgen(js_name = setWheelZoomActive)]
+    pub fn set_wheel_zoom_active_wasm(&mut self, active: bool) {
+        self.state.borrow_mut().host.set_wheel_zoom_active(active);
     }
 
     #[wasm_bindgen(js_name = deleteSelection)]

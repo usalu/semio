@@ -94,6 +94,70 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
+//#region 🔖MorphMatcher
+interface MorphPair {
+	from: HTMLElement;
+	to: HTMLElement;
+	options?: Record<string, unknown>;
+}
+
+interface MorphMatcherHost {
+	getAutoAnimatePairs(fromSlide: HTMLElement, toSlide: HTMLElement): MorphPair[];
+}
+
+interface MorphRect {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+/**
+ * @emoji 📐 Measures an element with its slide forced visible.
+ *
+ * reveal.js hides out-of-view slides with the `hidden` attribute, but its auto-animate measurement
+ * only un-hides slides flagged via inline `style.display`. A `hidden` `from` slide therefore collapses
+ * to the deck origin and morph elements fly by the slide's centering offset. Removing `hidden` (and any
+ * `display:none`) before {@link Element.getBoundingClientRect} restores a centered, comparable rect.
+ */
+function measureMorphRect(element: HTMLElement): MorphRect {
+	const restore: Array<() => void> = [];
+	for (let node: HTMLElement | null = element.closest("section"); node; node = node.parentElement?.closest("section") ?? null) {
+		const slide = node;
+		if (slide.hasAttribute("hidden")) {
+			slide.removeAttribute("hidden");
+			restore.push(() => slide.setAttribute("hidden", ""));
+		}
+		if (slide.style.display === "none" || slide.style.display === "") {
+			const previous = slide.style.display;
+			slide.style.display = "block";
+			restore.push(() => {
+				slide.style.display = previous;
+			});
+		}
+	}
+	const rect = element.getBoundingClientRect();
+	for (let index = restore.length - 1; index >= 0; index -= 1) {
+		restore[index]?.();
+	}
+	return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+}
+
+/**
+ * @emoji 🔗 reveal.js `autoAnimateMatcher`: reveal's own pairing plus a visible-measure.
+ *
+ * Keeps reveal's declarative `data-id`/text matching while guaranteeing centered `from`/`to` rects
+ * so participants morph between embodiments instead of flying in from the deck origin.
+ */
+function morphMatcher(this: MorphMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): MorphPair[] {
+	const pairs = this.getAutoAnimatePairs(fromSlide, toSlide);
+	for (const pair of pairs) {
+		pair.options = { ...(pair.options ?? {}), measure: measureMorphRect };
+	}
+	return pairs;
+}
+//#endregion 🔖MorphMatcher
+
 //#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
@@ -301,8 +365,7 @@ export const PresentationDeck: FC<{
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
-			viewDistance: 10,
-			mobileViewDistance: 10,
+			autoAnimateMatcher: morphMatcher,
 		};
 		if (options?.hash === true) {
 			revealOptions.hash = true;
@@ -322,8 +385,6 @@ export const PresentationDeck: FC<{
 			syncRevealBackgroundKind(deckEl);
 		};
 		void deck.initialize().then(() => {
-			deck.sync();
-			deck.layout();
 			syncRevealBackgroundKind(deckEl);
 			deck.on("slidechanged", onSlideChanged);
 		});
@@ -429,6 +490,25 @@ if (import.meta.vitest) {
 			expect(container.querySelector('[data-id="subtitle"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="authors"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="institutions"]')).toBeTruthy();
+		});
+
+		it("morphs by reveal pairs and forces a visible measure so hidden from-slides never collapse", () => {
+			const from = document.createElement("section");
+			from.innerHTML = '<h1 data-id="name">semio</h1>';
+			const to = document.createElement("section");
+			to.setAttribute("hidden", "");
+			to.innerHTML = '<h1 data-id="name">semio</h1>';
+			document.body.append(from, to);
+			const defaultPairs: MorphPair[] = [{ from: from.firstElementChild as HTMLElement, to: to.firstElementChild as HTMLElement }];
+			const host: MorphMatcherHost = { getAutoAnimatePairs: () => defaultPairs };
+			const pairs = morphMatcher.call(host, from, to);
+			expect(pairs).toHaveLength(1);
+			const measure = pairs[0]?.options?.measure as ((el: HTMLElement) => MorphRect) | undefined;
+			expect(typeof measure).toBe("function");
+			measure?.(to.firstElementChild as HTMLElement);
+			expect(to.hasAttribute("hidden")).toBe(true);
+			from.remove();
+			to.remove();
 		});
 
 		it("applies muted opacity on layered title slide", () => {
