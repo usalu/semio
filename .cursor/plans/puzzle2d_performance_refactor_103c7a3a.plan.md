@@ -16,13 +16,13 @@ todos:
     status: completed
   - id: scene-sync-alloc
     content: "puzzle/2d/react: diff-and-push only changed entities in syncPuzzle2dScene/descriptorJsonForWasmHost instead of full rebuild + JSON.stringify each sync"
-    status: in_progress
+    status: completed
   - id: shell-perf-propagation
     content: Apply chrome-split + memoization + resize patterns to puzzle 3d/5d and PlatformView
-    status: pending
+    status: completed
   - id: validate-perf
     content: Add [DEBUG] render/redraw counters, extend existing vitest files per package, verify panel toggle is instant at runtime
-    status: pending
+    status: completed
 isProject: false
 ---
 

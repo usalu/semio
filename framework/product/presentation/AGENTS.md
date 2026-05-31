@@ -18,22 +18,32 @@ A praticipant has different embodiments.
 
 # Embodiment
 
+An embodiment is a representation of a participant in a certain shape.
+The embodiment has a default style which can be changed by dispositions.
+
 # Figure
+
+A figure embodiement of a participant.
 
 # Text
 
-# Bullet
+A text embodiement of a participant.
+
+# Disposition
+
+A disposition is a concrete positioned, styled embodiment.
 
 # Arrangement
 
-An arrangement positions participants with their
+An arrangement of dispositions.
 
 # Transition
 
 A transition from an arrangement into another arrangement.
 
-
 # Template
+
+A template is a parametric prefined sequence.
 
 ## Intro
 

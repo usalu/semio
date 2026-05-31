@@ -1592,6 +1592,43 @@ export function decodePuzzle2dFixtureFromDragV1(text: string): Puzzle2dFixtureV1
   return parsePuzzle2dFixtureV1(raw);
 }
 
+function puzzle2dAuthoringId(prefix: string): string {
+  if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
+    return `${prefix}-${globalThis.crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
+  if (fixture.meta?.puzzle2dFixtureDragKind === PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
+    return true;
+  }
+  if (fixture.nodes.length !== 1 || fixture.edges.length > 0) {
+    return false;
+  }
+  const seedId = fixture.nodes[0]?.id ?? "";
+  return seedId.startsWith("palette-seed-");
+}
+
+/** @emoji 🧩 When the drag payload is a palette seed, returns one node placed at the drop world point; else null so the scene should be replaced. */
+export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
+  if (!isPaletteNodeDragFixture(detail.fixture)) {
+    return null;
+  }
+  const template = detail.fixture.nodes[0];
+  if (!template) {
+    return null;
+  }
+  const newId = puzzle2dAuthoringId("node");
+  return {
+    ...template,
+    handles: template.handles.map((h, i) => ({ ...h, id: `${newId}.h${i}` })),
+    id: newId,
+    x: detail.world.x,
+    y: detail.world.y,
+  };
+}
+
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
 export function computeHandlePosition(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, angle: number): Point {
   if (node.shape === "rectangle") {
@@ -2582,6 +2619,20 @@ const PUZZLE2D_DRAIN_SKIP_GRAPH_OBSERVATION = new Set([
   "indirectConnect",
 ]);
 
+let puzzle2dDebugInvalidateCount = 0;
+let puzzle2dDebugRenderCount = 0;
+
+/** @emoji 📊 Test/diagnostic counters for invalidate/render churn ([DEBUG] perf validation). */
+export function puzzle2dDebugPerfCounters(): { readonly invalidate: number; readonly render: number } {
+  return { invalidate: puzzle2dDebugInvalidateCount, render: puzzle2dDebugRenderCount };
+}
+
+/** @emoji 🧹 Resets {@link puzzle2dDebugPerfCounters} tallies. */
+export function puzzle2dResetDebugPerfCounters(): void {
+  puzzle2dDebugInvalidateCount = 0;
+  puzzle2dDebugRenderCount = 0;
+}
+
 /** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
 export class Puzzle2dRenderer {
   static activeRenderer: Puzzle2dRenderer | null = null;
@@ -2635,7 +2686,20 @@ export class Puzzle2dRenderer {
     this.sceneDescriptorEpoch += 1;
     this.textOverlayContentEpoch += 1;
     this.lastPushedDescriptorJson = null;
+    this.lastSceneWasmFingerprint = null;
+    this.lastSyncedDescriptorFingerprint = null;
     this.lastPushedSceneDescriptorEpoch = -1;
+  }
+
+  /** @emoji ⏭️ Skips imperative scene graph work when the declarative descriptor fingerprint is unchanged. */
+  skipSceneSyncIfDescriptorUnchanged(descriptor: Puzzle2dSceneDescriptor): boolean {
+    const fingerprint = puzzle2dSceneDescriptorFingerprint(descriptor);
+    if (this.lastSyncedDescriptorFingerprint === fingerprint) {
+      this.syncInteractionChrome();
+      return true;
+    }
+    this.lastSyncedDescriptorFingerprint = fingerprint;
+    return false;
   }
 
   /** @emoji 🔇 Applies a peer pane selection commit without emitting {@link Puzzle2dEventMap.select}. */
@@ -2760,6 +2824,8 @@ export class Puzzle2dRenderer {
   private gpuSurfacePresentedFrame = false;
   private gpuSurfaceUnavailable = false;
   private lastPushedDescriptorJson: string | null = null;
+  private lastSceneWasmFingerprint: string | null = null;
+  private lastSyncedDescriptorFingerprint: string | null = null;
   private sceneDescriptorEpoch = 0;
   private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
@@ -3521,7 +3587,6 @@ export class Puzzle2dRenderer {
         this.canvas.height = nextH;
       }
     }
-    this.textOverlayLayoutCache.clear();
     this.markDirty();
     return true;
   }
@@ -3632,6 +3697,7 @@ export class Puzzle2dRenderer {
     if (this.isDisposed) {
       return;
     }
+    puzzle2dDebugInvalidateCount += 1;
     this.invalidated = true;
     if (this.renderPipelineDepth > 0) {
       return;
@@ -3673,6 +3739,7 @@ export class Puzzle2dRenderer {
       this.invalidated = true;
       return;
     }
+    puzzle2dDebugRenderCount += 1;
     this.renderPipelineDepth += 1;
     const frameDelta = this.lastRenderTimestamp === null ? 0 : timestamp - this.lastRenderTimestamp;
     this.lastRenderTimestamp = timestamp;
@@ -3762,6 +3829,10 @@ export class Puzzle2dRenderer {
   }
 
   private descriptorJsonForWasmHost(): string {
+    const fingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
+    if (this.lastSceneWasmFingerprint === fingerprint && this.lastPushedDescriptorJson !== null) {
+      return this.lastPushedDescriptorJson;
+    }
     const committedSelection = this.selectionIds;
     const nodes: Record<string, unknown>[] = [];
     for (const node of this.scene.nodes.values()) {
@@ -3865,7 +3936,9 @@ export class Puzzle2dRenderer {
       }
       wires.push(row);
     }
-    return JSON.stringify({ nodes, handles, edges, wires });
+    const json = JSON.stringify({ nodes, handles, edges, wires });
+    this.lastSceneWasmFingerprint = fingerprint;
+    return json;
   }
 
   private syncPuzzle2dAppearanceFromDocument(): void {
@@ -5112,6 +5185,43 @@ if (puzzle2dVitest) {
   });
 
   describe("puzzle 2d renderer render pipeline", () => {
+    it("setSize returns false when layout dimensions are unchanged", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      expect(renderer.setSize(640, 480, 1)).toBe(true);
+      expect(renderer.setSize(640, 480, 1)).toBe(false);
+      renderer.dispose();
+    });
+
+    it("unchanged setSize does not schedule extra invalidate passes", () => {
+      puzzle2dResetDebugPerfCounters();
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      renderer.setSize(100, 100, 1);
+      const afterFirst = puzzle2dDebugPerfCounters().invalidate;
+      renderer.setSize(100, 100, 1);
+      expect(puzzle2dDebugPerfCounters().invalidate).toBe(afterFirst);
+      renderer.dispose();
+    });
+
+    it("descriptorJsonForWasmHost reuses last json when scene wasm fingerprint is unchanged", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n1", radius: 20, x: 0, y: 0, text: "A" });
+      renderer.scene.add(node);
+      renderer.markSceneDescriptorDirty();
+      const first = (renderer as { descriptorJsonForWasmHost(): string }).descriptorJsonForWasmHost();
+      const second = (renderer as { descriptorJsonForWasmHost(): string }).descriptorJsonForWasmHost();
+      expect(second).toBe(first);
+      renderer.dispose();
+    });
+
+    it("syncPuzzle2dScene skips graph work when descriptor fingerprint is unchanged", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(<Node id="solo" radius={36} x={0} y={0} />);
+      expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(false);
+      syncPuzzle2dScene(renderer, descriptor);
+      expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(true);
+      renderer.dispose();
+    });
+
     it("coalesces nested render calls from frame listeners instead of re-entering the render pass", () => {
       const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       let frameCount = 0;
@@ -5939,6 +6049,24 @@ if (puzzle2dVitest) {
       expect(parsed?.nodes[1]).toMatchObject({ id: "b", shape: "circle" });
       expect(parsed?.edges[0]?.id).toBe("e1");
       expect(parsed?.camera.zoom).toBe(0.5);
+    });
+
+    it("mergePaletteNodeFromDrop places a palette seed at the drop world point", () => {
+      const dragFixture = decodePuzzle2dFixtureFromDragV1(
+        encodePuzzle2dFixtureForDragV1({
+          camera: { x: 0, y: 0, zoom: 1 },
+          edges: [],
+          meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
+          nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 24, x: 0, y: 0 }],
+          schema: "puzzle.2d.fixture/v1",
+        }),
+      );
+      expect(dragFixture).not.toBeNull();
+      const merged = mergePaletteNodeFromDrop({ fixture: dragFixture!, screen: { x: 0, y: 0 }, world: { x: 120, y: 80 } });
+      expect(merged).not.toBeNull();
+      expect(merged!.x).toBe(120);
+      expect(merged!.y).toBe(80);
+      expect(merged!.id).not.toBe("palette-seed-circle");
     });
 
     it("parses rectangle fixture nodes", () => {
@@ -7750,8 +7878,70 @@ export function puzzle2dSyncSelectionToAllAuthoringPeers(ids: readonly string[])
 }
 //#endregion 🔖MultiViewAuthoring
 
+/** @emoji 🔑 Stable fingerprint for declarative scene descriptors; skips no-op {@link syncPuzzle2dScene} passes. */
+export function puzzle2dSceneDescriptorFingerprint(descriptor: Puzzle2dSceneDescriptor): string {
+  const nodeParts = descriptor.nodes
+    .map((node) => {
+      const shape = node.shape === "rectangle" ? `r:${node.width},${node.height}` : `c:${node.radius}`;
+      const handleParts = node.handles
+        .map((h) => `${h.id}:${h.angle},${h.radius},${h.handleKind},${h.visible !== false ? 1 : 0}`)
+        .sort()
+        .join(";");
+      return `n:${node.id}:${node.x},${node.y},${shape},${node.text ?? ""},${node.visible !== false ? 1 : 0},${node.selected ? 1 : 0},${node.draggable !== false ? 1 : 0},${node.style ?? ""},${node.nodeKind ?? ""},${node.iconKind ?? ""},h[${handleParts}]`;
+    })
+    .sort()
+    .join("|");
+  const edgeParts = descriptor.edges
+    .map((e) => `e:${e.id}:${e.source}:${e.target},${e.visible !== false ? 1 : 0},${e.selected ? 1 : 0},${e.style ?? ""},${e.edgeKind ?? ""}`)
+    .sort()
+    .join("|");
+  const wireParts = descriptor.wires
+    .map((w) => `w:${w.id}:${w.source}:${w.target ?? ""},${w.endX ?? ""},${w.endY ?? ""},${w.visible !== false ? 1 : 0},${w.selected ? 1 : 0}`)
+    .sort()
+    .join("|");
+  return `${nodeParts}#${edgeParts}#${wireParts}`;
+}
+
+function puzzle2dSceneWasmFingerprintFromRenderer(renderer: Puzzle2dRenderer): string {
+  const selection = renderer.selectionStore.getSnapshot().ids.join(",");
+  const nodeParts: string[] = [];
+  for (const node of renderer.scene.nodes.values()) {
+    const shape = node.shape === "rectangle" ? `r:${node.width},${node.height}` : `c:${node.radius}`;
+    nodeParts.push(
+      `n:${node.id}:${node.x},${node.y},${shape},${node.text ?? ""},${node.visible ? 1 : 0},${renderer.selectionIds.has(node.id) ? 1 : 0},${node.draggable ? 1 : 0},${node.style ?? ""},${node.nodeKind},${node.iconKind ?? ""}`,
+    );
+  }
+  nodeParts.sort();
+  const handleParts: string[] = [];
+  for (const handle of renderer.scene.handles.values()) {
+    handleParts.push(
+      `h:${handle.id}:${handle.node.id},${handle.angle},${handle.radius},${handle.handleKind},${handle.visible ? 1 : 0},${renderer.selectionIds.has(handle.id) ? 1 : 0}`,
+    );
+  }
+  handleParts.sort();
+  const edgeParts: string[] = [];
+  for (const edge of renderer.scene.edges.values()) {
+    edgeParts.push(
+      `e:${edge.id}:${edge.source.id}:${edge.target.id},${edge.visible ? 1 : 0},${renderer.selectionIds.has(edge.id) ? 1 : 0},${edge.style ?? ""},${edge.edgeKind}`,
+    );
+  }
+  edgeParts.sort();
+  const wireParts: string[] = [];
+  for (const wire of renderer.scene.wires.values()) {
+    wireParts.push(
+      `w:${wire.id}:${wire.source.id}:${wire.target?.id ?? ""},${wire.endX ?? ""},${wire.endY ?? ""},${wire.visible ? 1 : 0},${renderer.selectionIds.has(wire.id) ? 1 : 0}`,
+    );
+  }
+  wireParts.sort();
+  return `${selection}#${nodeParts.join("|")}#${handleParts.join("|")}#${edgeParts.join("|")}#${wireParts.join("|")}`;
+}
+
 /** 🔁 Declarative-to-imperative scene sync that preserves stable instances by id. */
 export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
+  if (renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)) {
+    return;
+  }
+
   const desiredNodeIds = new Set(descriptor.nodes.map((node) => node.id));
   const desiredHandleIds = new Set(descriptor.handles.map((handle) => handle.id));
   const desiredEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));

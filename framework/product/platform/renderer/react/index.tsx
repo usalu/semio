@@ -3070,12 +3070,18 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	extraFooterItems,
 	augmentPanelTabs,
 }) => {
-	const shellGen = reactHostPort.useSyncExternalStore(
-		(onStoreChange) => platform.subscribe(onStoreChange),
-		() => platform.generation,
+	reactHostPort.useSyncExternalStore(
+		(onStoreChange) => {
+			const unsubData = platform.subscribe(onStoreChange);
+			const unsubChrome = platform.subscribeChrome(onStoreChange);
+			return () => {
+				unsubData();
+				unsubChrome();
+			};
+		},
+		() => platform.generation * 1_000_000 + platform.chromeGeneration,
 		() => 0,
 	);
-	void shellGen;
 
 	reactHostPort.useEffect(() => {
 		if (defaultAppId) {
@@ -3168,7 +3174,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const hasModeNav = activeAppBase.modes.length > 1;
 	const setActiveModeId = (id: string) => {
 		activeAppBase.setActiveModeId(id);
-		platform.notify();
+		platform.notifyChrome();
 	};
 	const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 

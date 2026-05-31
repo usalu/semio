@@ -338,6 +338,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
     isSelected: item.selected,
     draggable: item.draggable,
     dragData: item.dragData,
+    className: item.draggable ? "cursor-grab active:cursor-grabbing" : undefined,
     items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
     onClick: item.command
       ? () => {
@@ -370,6 +371,15 @@ function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[]
   }
   return {
     getDragData: ({ sourceItem }) => dragByItemId.get(sourceItem.id),
+    onDragStart: ({ sourceItem }) => {
+      const payload = dragByItemId.get(sourceItem.id)?.[FIXTURE_DRAG_V1_MIME];
+      if (payload) {
+        window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
+      }
+    },
+    onDragEnd: () => {
+      window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+    },
   };
 }
 
@@ -1040,6 +1050,7 @@ import {
   applyConnectToFixture,
   applyPaletteObjectDropToFixture,
   blockedVortexFullIdsFromAttractions,
+  FIXTURE_DRAG_V1_MIME,
   mergePaletteObjectFromDrop,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
@@ -1478,6 +1489,7 @@ import {
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
   encodePuzzle2dFixtureForDragV1,
+  mergePaletteNodeFromDrop,
   setPuzzle2dFixtureDragDataTransfer,
   PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
   PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE,
@@ -2245,36 +2257,6 @@ const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
   (() => {
     throw new Error("Puzzle 2d play: palette rectangle drag fixture failed validation.");
   })();
-
-function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
-  if (fixture.meta?.puzzle2dFixtureDragKind === PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
-    return true;
-  }
-  if (fixture.nodes.length !== 1 || fixture.edges.length > 0) {
-    return false;
-  }
-  const seedId = fixture.nodes[0]?.id ?? "";
-  return seedId.startsWith("palette-seed-");
-}
-
-/** @emoji 🧩 When the drag payload is a palette seed, returns one node placed at the drop world point; else null so the scene should be replaced. */
-export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
-  if (!isPaletteNodeDragFixture(detail.fixture)) {
-    return null;
-  }
-  const template = detail.fixture.nodes[0];
-  if (!template) {
-    return null;
-  }
-  const newId = newPuzzle2dAuthoringId("node");
-  return {
-    ...template,
-    handles: template.handles.map((h, i) => ({ ...h, id: `${newId}.h${i}` })),
-    id: newId,
-    x: detail.world.x,
-    y: detail.world.y,
-  };
-}
 
 /** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
 function Puzzle2dFixturePaletteDraggable(props: { fixture: Puzzle2dFixtureV1; label: string; preview: ReactNode }): ReactElement {
@@ -3859,6 +3841,16 @@ export function bootPlayground(playground: Playground, boot: PlaygroundChromeBoo
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
+  describe("PlaygroundView shell notify", () => {
+    it("panel visibility uses chrome generation without bumping data generation", () => {
+      const runtime = new Platform({ id: "p", name: "P" });
+      const dataGen = runtime.generation;
+      runtime.setPanelVisibility({ leftSidePanel: true, rightSidePanel: false });
+      expect(runtime.generation).toBe(dataGen);
+      expect(runtime.chromeGeneration).toBeGreaterThan(0);
+    });
+  });
+
   describe("Toolbar categories", () => {
     it("lists populated categories and omits separator-only groups", () => {
       expect(
@@ -4045,24 +4037,4 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("mergePaletteNodeFromDrop", () => {
-    it("merges palette circle seed at drop world coordinates", async () => {
-      const { PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE, decodePuzzle2dFixtureFromDragV1, encodePuzzle2dFixtureForDragV1 } = await import("@puzzle/2d/react");
-      const dragFixture = decodePuzzle2dFixtureFromDragV1(
-        encodePuzzle2dFixtureForDragV1({
-          camera: { x: 0, y: 0, zoom: 1 },
-          edges: [],
-          meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
-          nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 24, x: 0, y: 0 }],
-          schema: "puzzle.2d.fixture/v1",
-        }),
-      );
-      expect(dragFixture).not.toBeNull();
-      const merged = mergePaletteNodeFromDrop({ fixture: dragFixture!, screen: { x: 0, y: 0 }, world: { x: 120, y: 80 } });
-      expect(merged).not.toBeNull();
-      expect(merged!.x).toBe(120);
-      expect(merged!.y).toBe(80);
-      expect(merged!.id).not.toBe("palette-seed-circle");
-    });
-  });
 }

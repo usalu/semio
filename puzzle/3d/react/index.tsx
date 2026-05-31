@@ -604,7 +604,12 @@ export interface CanvasProps {
   children?: ReactNode;
 }
 
-export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture+json;v=1";
+export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture-v1";
+
+/** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 3D fixture palette drag. */
+export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolean {
+  return types.includes(FIXTURE_DRAG_V1_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
+}
 
 /** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
 export const FIXTURE_DRAG_PLAIN_MIME = "text/plain";
@@ -6229,10 +6234,93 @@ function DemandFrameloopKick(): null {
   return null;
 }
 
-/** @emoji 📍 Registers {@link puzzle3dFixtureDropPointerToCadRef} for DOM fixture drops on {@link Canvas3D}. */
-function FixtureDropPointerBridge(): null {
+/** @emoji 👻 Live grid-plane preview while a workbench object-kind drag hovers the viewport. */
+function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined }): React.ReactElement | null {
   const { camera, gl } = useThree();
   const lod = useLod();
+  const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(null);
+  const [origin, setOrigin] = reactHostPort.useState<Vec3 | null>(null);
+  const groupRef = reactHostPort.useRef<Group | null>(null);
+
+  reactHostPort.useEffect(() => {
+    const onSession = (event: Event): void => {
+      const detail = (event as CustomEvent<{ readonly encoded: string } | null>).detail;
+      setEncodedDrag(detail?.encoded ?? null);
+      if (!detail?.encoded) {
+        setOrigin(null);
+      }
+    };
+    window.addEventListener("puzzle3d-fixture-drag-session", onSession);
+    return () => window.removeEventListener("puzzle3d-fixture-drag-session", onSession);
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!encodedDrag) {
+      return;
+    }
+    const onMove = (event: PointerEvent): void => {
+      const cad = puzzle3dClientToGridPlaneCad({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        camera,
+        canvas: gl.domElement,
+        gridSnapEnabled: lod.gridSnapEnabled,
+        gridStepWorld: lod.gridStepWorld,
+      });
+      setOrigin(cad);
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [camera, encodedDrag, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+
+  const preview = reactHostPort.useMemo(() => {
+    if (!encodedDrag || !origin) {
+      return null;
+    }
+    const fixture = decodePuzzle3dFixtureFromDragV1(encodedDrag);
+    const kindId = fixture?.objects[0]?.objectKind;
+    if (!kindId) {
+      return null;
+    }
+    const kind = catalogObjectKindById(props.kindCatalogs, kindId);
+    if (!kind?.meshUrl) {
+      return null;
+    }
+    return { meshUrl: kind.meshUrl, scale: kind.scale, origin, orientation: [0, 0, 0, 1] as Quat };
+  }, [encodedDrag, origin, props.kindCatalogs]);
+
+  reactHostPort.useEffect(() => {
+    const group = groupRef.current;
+    if (!group || !preview) {
+      return;
+    }
+    applyObjectPose(group, preview.origin, preview.orientation, preview.scale);
+    updateWorldMatrixChain(group);
+  }, [preview]);
+
+  if (!preview) {
+    return null;
+  }
+  return (
+    <group ref={groupRef} raycast={() => null}>
+      <MeshBody meshUrl={preview.meshUrl} style="highlighted" scale={preview.scale} />
+    </group>
+  );
+}
+
+/** @emoji 📍 Registers grid-plane hit testing and canvas/window fixture drop targets for {@link Canvas3D}. */
+function FixtureDropPointerBridge(props: {
+  readonly enabled: boolean;
+  readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
+  readonly rootRef: React.RefObject<HTMLDivElement | null>;
+  readonly setFixtureDragActive: (active: boolean) => void;
+  readonly fixtureDragDepthRef: React.MutableRefObject<number>;
+}): null {
+  const { camera, gl } = useThree();
+  const lod = useLod();
+  const onFixtureDropRef = reactHostPort.useRef(props.onFixtureDrop);
+  onFixtureDropRef.current = props.onFixtureDrop;
+
   reactHostPort.useEffect(() => {
     puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) =>
       puzzle3dClientToGridPlaneCad({
@@ -6247,11 +6335,107 @@ function FixtureDropPointerBridge(): null {
       puzzle3dFixtureDropPointerToCadRef.current = null;
     };
   }, [camera, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+
+  reactHostPort.useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const canvas = gl.domElement;
+    const root = props.rootRef.current;
+    const bindings = new EventBindingController();
+
+    const resetDragDepth = (): void => {
+      props.fixtureDragDepthRef.current = 0;
+      props.setFixtureDragActive(false);
+    };
+
+    const onDragEnter = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      props.fixtureDragDepthRef.current += 1;
+      props.setFixtureDragActive(true);
+    };
+
+    const onDragLeave = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+        return;
+      }
+      const target = event.currentTarget as HTMLElement;
+      const related = event.relatedTarget as Node | null;
+      if (related && target.contains(related)) {
+        return;
+      }
+      props.fixtureDragDepthRef.current = Math.max(0, props.fixtureDragDepthRef.current - 1);
+      if (props.fixtureDragDepthRef.current === 0) {
+        props.setFixtureDragActive(false);
+      }
+    };
+
+    const onDragOver = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer!.dropEffect = "copy";
+    };
+
+    const onDrop = (event: DragEvent): void => {
+      if (!puzzle3dFixtureDragMimeInTypes([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      resetDragDepth();
+      const fixture = readPuzzle3dFixtureDragDataTransfer(event.dataTransfer!);
+      if (!fixture) {
+        return;
+      }
+      const toCad = puzzle3dFixtureDropPointerToCadRef.current;
+      if (!toCad) {
+        return;
+      }
+      const host = root ?? canvas.parentElement;
+      const rect = host?.getBoundingClientRect() ?? canvas.getBoundingClientRect();
+      const worldCad = toCad(event.clientX, event.clientY);
+      if (!worldCad) {
+        return;
+      }
+      onFixtureDropRef.current?.({
+        fixture,
+        screen: { x: event.clientX - rect.left, y: event.clientY - rect.top },
+        worldCad,
+      });
+    };
+
+    const attach = (element: HTMLElement | null | undefined): void => {
+      if (!element) {
+        return;
+      }
+      bindings.listen(element, "dragenter", onDragEnter);
+      bindings.listen(element, "dragleave", onDragLeave);
+      bindings.listen(element, "dragover", onDragOver);
+      bindings.listen(element, "drop", onDrop);
+    };
+
+    attach(canvas);
+    attach(root);
+    bindings.listen(window, "dragover", onDragOver);
+    bindings.listen(window, "drop", onDrop);
+    return () => bindings.dispose();
+  }, [gl, props.enabled, props.fixtureDragDepthRef, props.rootRef, props.setFixtureDragActive]);
+
   return null;
 }
 
-function Inner(props: CanvasProps) {
-  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility, fixtureDragDrop, onFixtureDrop } = props;
+function Inner(props: CanvasProps & {
+  readonly puzzle3dRootRef: React.RefObject<HTMLDivElement | null>;
+  readonly fixtureDragActive: boolean;
+  readonly setFixtureDragActive: (active: boolean) => void;
+  readonly fixtureDragDepthRef: React.MutableRefObject<number>;
+}) {
+  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility, fixtureDragDrop, onFixtureDrop, puzzle3dRootRef, fixtureDragActive, setFixtureDragActive, fixtureDragDepthRef } = props;
   reactHostPort.useEffect(() => {
     puzzle3dBrushToolActiveRef.current = brushActive;
     if (!brushActive) {
@@ -6321,7 +6505,16 @@ function Inner(props: CanvasProps) {
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
-        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? <FixtureDropPointerBridge /> : null}
+        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? (
+          <FixtureDropPointerBridge
+            enabled
+            onFixtureDrop={onFixtureDrop}
+            rootRef={puzzle3dRootRef}
+            setFixtureDragActive={setFixtureDragActive}
+            fixtureDragDepthRef={fixtureDragDepthRef}
+          />
+        ) : null}
+        {fixtureDragActive ? <FixtureDropPreview kindCatalogs={kindCatalogs} /> : null}
         {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
@@ -6457,83 +6650,12 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
     },
     [onLodChange],
   );
-  const handleFixtureDragEnter = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!resolvedFixtureDragDrop) {
-        return;
-      }
-      if (![...event.dataTransfer.types].includes(FIXTURE_DRAG_V1_MIME)) {
-        return;
-      }
-      fixtureDragDepthRef.current += 1;
-      setFixtureDragActive(true);
-    },
-    [resolvedFixtureDragDrop],
-  );
-  const handleFixtureDragLeave = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!resolvedFixtureDragDrop) {
-        return;
-      }
-      if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
-        return;
-      }
-      fixtureDragDepthRef.current = Math.max(0, fixtureDragDepthRef.current - 1);
-      if (fixtureDragDepthRef.current === 0) {
-        setFixtureDragActive(false);
-      }
-    },
-    [resolvedFixtureDragDrop],
-  );
-  const handleFixtureDragOver = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!resolvedFixtureDragDrop) {
-        return;
-      }
-      if ([...event.dataTransfer.types].includes(FIXTURE_DRAG_V1_MIME)) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-      }
-    },
-    [resolvedFixtureDragDrop],
-  );
-  const handleFixtureDrop = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!resolvedFixtureDragDrop) {
-        return;
-      }
-      event.preventDefault();
-      fixtureDragDepthRef.current = 0;
-      setFixtureDragActive(false);
-      const fixture = readPuzzle3dFixtureDragDataTransfer(event.dataTransfer);
-      if (!fixture) {
-        return;
-      }
-      const root = rootRef.current;
-      const toCad = puzzle3dFixtureDropPointerToCadRef.current;
-      if (!root || !toCad) {
-        return;
-      }
-      const rect = root.getBoundingClientRect();
-      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-      const worldCad = toCad(event.clientX, event.clientY);
-      if (!worldCad) {
-        return;
-      }
-      onFixtureDrop?.({ fixture, screen, worldCad });
-    },
-    [onFixtureDrop, resolvedFixtureDragDrop],
-  );
   return (
     <div
       ref={rootRef}
-      className={className}
+      className={`${className ?? ""}${fixtureDragActive ? " ring-primary ring-2 ring-inset" : ""}`.trim()}
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
       data-puzzle3d-fixture-drag-active={fixtureDragActive ? "true" : undefined}
-      onDragEnter={handleFixtureDragEnter}
-      onDragLeave={handleFixtureDragLeave}
-      onDragOver={handleFixtureDragOver}
-      onDrop={handleFixtureDrop}
       onContextMenu={(event) => {
         if (puzzle3dRightDragActiveRef.current || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current)) {
           event.preventDefault();
@@ -6545,7 +6667,17 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
     >
       <Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
         <DemandFrameloopKick />
-        <Inner {...rest} domain={domain} onLodChange={handleLod} fixtureDragDrop={resolvedFixtureDragDrop} onFixtureDrop={onFixtureDrop}>
+        <Inner
+          {...rest}
+          domain={domain}
+          onLodChange={handleLod}
+          fixtureDragDrop={resolvedFixtureDragDrop}
+          onFixtureDrop={onFixtureDrop}
+          puzzle3dRootRef={rootRef}
+          fixtureDragActive={fixtureDragActive}
+          setFixtureDragActive={setFixtureDragActive}
+          fixtureDragDepthRef={fixtureDragDepthRef}
+        >
           {children}
         </Inner>
       </Canvas>

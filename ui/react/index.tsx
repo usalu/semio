@@ -8803,6 +8803,14 @@ export const Tree = (({
       });
       if (customData && Object.keys(customData).length > 0) {
         event.dataTransfer.effectAllowed = "copy";
+        const labelText = typeof item.label === "string" ? item.label : typeof item.label === "number" ? String(item.label) : "Kind";
+        const ghost = document.createElement("div");
+        ghost.textContent = labelText;
+        ghost.setAttribute("data-puzzle3d-fixture-drag-ghost", "true");
+        ghost.className = "border-primary bg-panel text-foreground pointer-events-none fixed left-[-9999px] top-0 z-[9999] rounded-md border px-2 py-1 text-xs shadow-md";
+        document.body.appendChild(ghost);
+        event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
+        requestAnimationFrame(() => ghost.remove());
       }
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
@@ -14786,6 +14794,24 @@ if (import.meta.vitest) {
         />,
       );
       expect(screen.getByText("Review Mode")).toBeTruthy();
+    });
+
+    it("SidePanel stays mounted when visible is false", () => {
+      const StubIcon = (): null => null;
+      const tabs: SidePanelTabConfig[] = [
+        {
+          id: "tab-a",
+          icon: StubIcon,
+          tree: {
+            sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }],
+          },
+        },
+      ];
+      const { rerender } = render(<SidePanel position="left" visible tabs={tabs} />);
+      expect(screen.getByText("Leaf row")).toBeTruthy();
+      rerender(<SidePanel position="left" visible={false} tabs={tabs} />);
+      expect(screen.getByText("Leaf row")).toBeTruthy();
+      expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
     });
 
     it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
