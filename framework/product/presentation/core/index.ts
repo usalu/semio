@@ -79,6 +79,21 @@ export interface AuthorsEmbodiment {
 	readonly id?: string;
 	readonly people?: readonly AuthorPerson[];
 	readonly lines?: readonly (readonly AuthorPerson[])[];
+	readonly abbreviateFirstName?: boolean;
+}
+
+/** @emoji 👤 Abbreviates the first given name (`Ueli Saluz` → `U. Saluz`) for compact author rows with affiliation marks. */
+export function abbreviateAuthorFirstName(fullName: string): string {
+	const parts = fullName.trim().split(/\s+/).filter(Boolean);
+	if (parts.length < 2) {
+		return fullName.trim();
+	}
+	const [first, ...rest] = parts;
+	const initial = first.codePointAt(0);
+	if (initial === undefined) {
+		return fullName.trim();
+	}
+	return `${String.fromCodePoint(initial).toLocaleUpperCase("de-DE")}. ${rest.join(" ")}`;
 }
 
 /** @emoji 🏛 One affiliation line with optional second mark+name on the same row (e.g. university + chair). */
@@ -86,6 +101,30 @@ export interface AffiliationEntry {
 	readonly mark: string;
 	readonly name: string;
 	readonly suffix?: { readonly mark: string; readonly name: string };
+	readonly lineEmphasis?: ParticipantEmphasis;
+	readonly suffixEmphasis?: ParticipantEmphasis;
+}
+
+/** @emoji 🏛 Mutes prior affiliation lines; only marks or suffixes new vs `previousStep` stay active. */
+export function highlightAffiliationDelta(
+	currentStep: readonly AffiliationEntry[],
+	previousStep: readonly AffiliationEntry[],
+): AffiliationEntry[] {
+	const previousByMark = new Map(previousStep.map((entry) => [entry.mark, entry]));
+	return currentStep.map((entry) => {
+		const previous = previousByMark.get(entry.mark);
+		if (!previous) {
+			return { ...entry, lineEmphasis: "active" as const };
+		}
+		if (entry.suffix && !previous.suffix) {
+			return {
+				...entry,
+				lineEmphasis: "muted" as const,
+				suffixEmphasis: "active" as const,
+			};
+		}
+		return { ...entry, lineEmphasis: "muted" as const, suffixEmphasis: "muted" as const };
+	});
 }
 
 /** @emoji 🏛 Affiliation footnotes keyed by mark. */
@@ -250,6 +289,7 @@ const INTRO_EMBODIMENT_DESCRIPTION_FULL = "full";
 const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS = "marked-affiliations";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
@@ -320,6 +360,12 @@ export function intro(spec: IntroSpec): Presentation {
 					id: INTRO_EMBODIMENT_AUTHORS_MARKED,
 					lines: spec.authors.lines,
 				},
+				{
+					kind: "authors",
+					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS,
+					lines: spec.authors.lines,
+					abbreviateFirstName: true,
+				},
 			],
 		},
 		{
@@ -333,12 +379,12 @@ export function intro(spec: IntroSpec): Presentation {
 				{
 					kind: "affiliations",
 					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP2,
-					entries: spec.affiliations.steps[1],
+					entries: highlightAffiliationDelta(spec.affiliations.steps[1], spec.affiliations.steps[0]),
 				},
 				{
 					kind: "affiliations",
 					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP3,
-					entries: spec.affiliations.steps[2],
+					entries: highlightAffiliationDelta(spec.affiliations.steps[2], spec.affiliations.steps[1]),
 				},
 			],
 		},
@@ -397,7 +443,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-1",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
 				],
 			},
@@ -405,7 +451,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-2",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
 				],
 			},
@@ -413,7 +459,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-3",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
 				],
 			},
@@ -486,20 +532,35 @@ if (import.meta.vitest) {
 			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
 
-		it("shows one institutions block per affiliations slide (chairs extend marks 1 and 2)", () => {
+		it("abbreviates author first names on affiliation slides", () => {
+			expect(abbreviateAuthorFirstName("Ueli Saluz")).toBe("U. Saluz");
+			expect(abbreviateAuthorFirstName("Christoph Gengnagel")).toBe("C. Gengnagel");
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			for (const arrangementId of ["affiliations-1", "affiliations-2", "affiliations-3"] as const) {
-				const resolved = resolveArrangement(thought, arrangementId);
-				const institutions = resolved.filter((r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS);
-				expect(institutions).toHaveLength(1);
-				expect(institutions[0]!.emphasis).toBe("active");
+			const authors = resolveArrangement(thought, "affiliations-1").find(
+				(r) => r.participant.id === INTRO_PARTICIPANT_AUTHORS,
+			)!;
+			if (authors.embodiment.kind === "authors") {
+				expect(authors.embodiment.abbreviateFirstName).toBe(true);
+			}
+		});
+
+		it("highlights only new affiliation marks per slide", () => {
+			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const step2 = resolveArrangement(thought, "affiliations-2").find(
+				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			)!;
+			if (step2.embodiment.kind === "affiliations") {
+				expect(step2.embodiment.entries.find((e) => e.mark === "1")?.lineEmphasis).toBe("muted");
+				expect(step2.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("active");
 			}
 			const step3 = resolveArrangement(thought, "affiliations-3").find(
 				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step3.embodiment.kind === "affiliations") {
-				expect(step3.embodiment.id).toBe(INTRO_EMBODIMENT_INSTITUTIONS_STEP3);
-				expect(step3.embodiment.entries[0]?.suffix?.mark).toBe("x");
+				const uni = step3.embodiment.entries.find((e) => e.mark === "1");
+				expect(uni?.lineEmphasis).toBe("muted");
+				expect(uni?.suffixEmphasis).toBe("active");
+				expect(step3.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("muted");
 			}
 		});
 	});

@@ -1,8 +1,9 @@
 {
   "title": "Puzzle 3d Workbench Drag Drop",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Make object kinds from the workbench panel draggable and droppable into puzzle 3d at cursor intersection with the grid plane.",
+  "summary": "Workbench object kinds in puzzle 3D play are draggable (fixture MIME payload on kinds tree rows). Canvas3D accepts drops at the cursor ray intersection with the horizontal grid plane, converts to CAD, optional LOD grid snap, and play host appends the catalog object via mergePaletteObjectFromDrop. Extended UiTreeItemNode/TreeDataItem dragData, playground tree drag controller, and tests.",
   "goal": "🎯puzzle",
   "sessions": [
     "⚪d6fabd2a644c47d881448f3630e4dd0f"
