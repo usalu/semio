@@ -2778,6 +2778,8 @@ export class Puzzle2dRenderer {
   private lastOverlayVelloThemeJson = "";
   private lastDescriptorPushDeferred = false;
   private wasmDeferHadStructuralMutation = false;
+  private lastAppliedChromeSelectedIds = new Set<string>();
+  private lastAppliedChromeHighlightedIds = new Set<string>();
   private pointerGestureCameraAtStart: CameraState | null = null;
   private scheduledSelectEmitRafId: number | null = null;
   private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
@@ -4414,29 +4416,61 @@ export class Puzzle2dRenderer {
     this.applySelectionChromeToSceneObjects();
   }
 
-  /** @emoji 🧿 True when JS scene `selected` flags must mirror selection for the next descriptor push. */
+  /** @emoji 🧿 True when every scene object may need selection chrome flags (descriptor epoch or first push). */
   private selectionChromeNeedsSceneObjectSync(): boolean {
     return this.lastPushedDescriptorJson === null || this.lastPushedSceneDescriptorEpoch !== this.sceneDescriptorEpoch;
   }
 
   private syncSelectionChromeToSceneObjectsIfNeeded(): void {
-    if (!this.selectionChromeNeedsSceneObjectSync()) {
+    if (this.selectionChromeNeedsSceneObjectSync()) {
+      this.applySelectionChromeToSceneObjects();
       return;
     }
-    this.applySelectionChromeToSceneObjects();
+    this.applySelectionChromeDelta();
+  }
+
+  private rememberAppliedInteractionChrome(chrome: { highlightedIds: Set<string>; selectedIds: Set<string> }): void {
+    this.lastAppliedChromeSelectedIds = new Set(chrome.selectedIds);
+    this.lastAppliedChromeHighlightedIds = new Set(chrome.highlightedIds);
   }
 
   private applySelectionChromeToSceneObjects(): void {
-    const { highlightedIds, selectedIds } = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
+    const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const object of this.scene.getAllObjects()) {
-      const wantSelected = selectedIds.has(object.id);
-      const wantHighlighted = highlightedIds.has(object.id);
+      const wantSelected = chrome.selectedIds.has(object.id);
+      const wantHighlighted = chrome.highlightedIds.has(object.id);
       if (object.selected === wantSelected && object.highlighted === wantHighlighted) {
         continue;
       }
       object.selected = wantSelected;
       object.highlighted = wantHighlighted;
     }
+    this.rememberAppliedInteractionChrome(chrome);
+  }
+
+  /** @emoji 🎯 Updates only objects whose selection chrome changed (fast path when descriptor cache is valid). */
+  private applySelectionChromeDelta(): void {
+    const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
+    const touch = new Set([
+      ...this.lastAppliedChromeSelectedIds,
+      ...chrome.selectedIds,
+      ...this.lastAppliedChromeHighlightedIds,
+      ...chrome.highlightedIds,
+    ]);
+    for (const id of touch) {
+      const object = this.scene.getObjectById(id);
+      if (!object) {
+        continue;
+      }
+      const wantSelected = chrome.selectedIds.has(id);
+      const wantHighlighted = chrome.highlightedIds.has(id);
+      if (object.selected === wantSelected && object.highlighted === wantHighlighted) {
+        continue;
+      }
+      object.selected = wantSelected;
+      object.highlighted = wantHighlighted;
+    }
+    this.rememberAppliedInteractionChrome(chrome);
   }
 
   private updateSelection(ids: Iterable<string>, emit: boolean): void {
@@ -5169,6 +5203,23 @@ if (puzzle2dVitest) {
       renderer.setSelectionIdsSilent(["n"]);
       await Promise.resolve();
       expect(graphEvents).toEqual([]);
+      off();
+      renderer.dispose();
+    });
+
+    it("wasm drain select does not enqueue graph observation change events", async () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      await Promise.resolve();
+      const graphEvents: string[] = [];
+      const off = renderer.on("change", () => graphEvents.push("change"));
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: ["n"] } }]));
+      await Promise.resolve();
+      expect(graphEvents).toEqual([]);
+      expect([...renderer.selectionIds]).toEqual(["n"]);
       off();
       renderer.dispose();
     });

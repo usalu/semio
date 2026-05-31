@@ -3,7 +3,7 @@
   "emoji": "⌨️",
   "status": "closed",
   "description": "When a window is active and has engagement, auto-focus the engagement input. Fix CAD play typing hitting all panes (global key capture + replIsQueryTypingTarget). Wire window activation to focus model definition.",
-  "summary": "Empty engagement chrome dismisses on pointer leave from the overlay (and on blur), via shouldDismissEmptyWindowEngagement; non-empty command stays visible when the mouse leaves.",
+  "summary": "Empty engagement reveals on pointer enter (hover zone) with Engagement active=false (tabIndex -1, no focus). Click or typing sets engagementActivated so command becomes active; pointer leave with empty input dismisses reveal and activation.",
   "goal": "🎯ui",
   "sessions": [
     "⚪c05610cb1b334f46b076bcd7406d0ff4",
@@ -12,6 +12,7 @@
     "⚪a20b98195204488fac8a7c6f58a5bb7e",
     "⚪cf4f861c7dd04b2795a668758ac1f862",
     "⚪743886e412904acdb22beb8cfe3aa462",
-    "⚪75c10c80397d4d79a73c9e3cf26362e0"
+    "⚪75c10c80397d4d79a73c9e3cf26362e0",
+    "⚪e3cd8f691551418087cd14771a097c2e"
   ]
 }

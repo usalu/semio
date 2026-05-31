@@ -2199,9 +2199,48 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 function sketchpadHomeVfsChildren(
 	openKitIds: readonly string[],
 	kitById: (kitId: string) => Kit | undefined,
+	kitKind: (kitId: string) => string,
+	home: SketchpadHomeUiState,
 	parentId: string,
 ): readonly VirtualFileSystemNodeRecord[] {
 	if (parentId === "sketchpad-home") {
+		const kitEntries: { kitId: string; kit: Kit; kind: string }[] = [];
+		for (const kitId of openKitIds) {
+			const kit = kitById(kitId);
+			if (!kit) continue;
+			const kind = kitKind(kitId) || "temporary";
+			if (home.kindFilter && home.kindFilter !== kind) continue;
+			const name = kit.name ?? kitId;
+			if (home.searchQuery && !name.toLowerCase().includes(home.searchQuery.toLowerCase())) continue;
+			if (home.nameFilter && name !== home.nameFilter) continue;
+			const version = kit.version ?? "";
+			if (home.versionFilter && version !== home.versionFilter) continue;
+			kitEntries.push({ kitId, kit, kind });
+		}
+		kitEntries.sort((left, right) => {
+			const column = home.sortColumnId;
+			if (!column) return (left.kit.name ?? left.kitId).localeCompare(right.kit.name ?? right.kitId);
+			let comparison = 0;
+			switch (column) {
+				case "name":
+					comparison = (left.kit.name ?? left.kitId).localeCompare(right.kit.name ?? right.kitId);
+					break;
+				case "version":
+					comparison = (left.kit.version ?? "").localeCompare(right.kit.version ?? "");
+					break;
+				case "kind":
+					comparison = left.kind.localeCompare(right.kind);
+					break;
+				case "updated":
+					comparison = sketchpadFormatKitTimestamp(left.kit.updatedAt ?? left.kit.createdAt).localeCompare(
+						sketchpadFormatKitTimestamp(right.kit.updatedAt ?? right.kit.createdAt),
+					);
+					break;
+				default:
+					comparison = (left.kit.name ?? left.kitId).localeCompare(right.kit.name ?? right.kitId);
+			}
+			return home.sortDescending ? -comparison : comparison;
+		});
 		return [
 			{
 				id: "docs-root",
@@ -2211,9 +2250,8 @@ function sketchpadHomeVfsChildren(
 				parentId,
 				hasChildren: true,
 			},
-			...openKitIds.map((kitId) => {
-				const kit = kitById(kitId);
-				const name = kit?.name ?? kitId;
+			...kitEntries.map(({ kitId, kit }) => {
+				const name = kit.name ?? kitId;
 				return {
 					id: `kit:${kitId}`,
 					kind: "kit",
@@ -2265,11 +2303,9 @@ export const SKETCHPAD_FEEDBACK_APP_ID = "feedback";
 
 /** @emoji 🏠 Home virtual file system surface id. */
 export const SKETCHPAD_SURFACE_HOME_VFS = virtualFileSystemSurfaceId(SKETCHPAD_HOME_APP_ID);
-/** @emoji 🏠 @deprecated Use {@link SKETCHPAD_SURFACE_HOME_VFS}. */
-export const SKETCHPAD_SURFACE_HOME_TABLE = SKETCHPAD_SURFACE_HOME_VFS;
 
 const SKETCHPAD_BODY_HOME = "semio.sketchpad.window.home";
-const SKETCHPAD_BODY_KIT_TABLE = "semio.sketchpad.window.kit.table";
+const SKETCHPAD_BODY_KIT_VFS = "semio.sketchpad.window.kit.vfs";
 const SKETCHPAD_BODY_KIT_DIAGRAM = "semio.sketchpad.window.kit.diagram";
 const SKETCHPAD_BODY_DESIGN_SCENE = "semio.sketchpad.window.design.scene";
 const SKETCHPAD_BODY_DESIGN_DIAGRAM = "semio.sketchpad.window.design.diagram";
@@ -3100,9 +3136,12 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
 		const route = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath);
 		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
+			const shell = this.shellStore.get();
 			return sketchpadHomeVfsChildren(
 				this.listOpenKitIds(),
 				(kitId) => this.getKitStore(kitId)?.getSnapshot().kit,
+				(kitId) => this.getKitPersistenceKind(kitId) ?? "",
+				shell.home,
 				parentId,
 			);
 		}
@@ -3117,18 +3156,48 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return [];
 	}
 
-	override run(command: string, args?: unknown): void {
-		if (command === "toggleVirtualFileSystemExpand") {
-			const scope = this.resolveScope(args);
-			const nodeId = (args as { nodeId?: string }).nodeId;
-			if (scope?.appId === SKETCHPAD_HOME_APP_ID && nodeId) {
+	/** @emoji 🔄 Sketchpad kits mutate often; always re-resolve vfs children instead of stale lazy cache. */
+	protected override ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
+		const childrenStore = this.childrenStore(scope);
+		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
+		childrenStore.setChildren(key, this.loadChildren(parentId, scope));
+	}
+
+	protected override selectedRows(scope: VirtualFileSystemScope): string[] {
+		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
+			return this.shellStore.get().home.selectedKitIds.map((kitId) => `kit:${kitId}`);
+		}
+		return super.selectedRows(scope);
+	}
+
+	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+		const scope = this.resolveScope(args);
+		if (scope?.appId === SKETCHPAD_HOME_APP_ID) {
+			const payload = (args ?? {}) as { nodeId?: string; rowId?: string };
+			if (command === "toggleVirtualFileSystemExpand" && payload.nodeId) {
 				const shell = this.shellStore.get();
 				const expanded = new Set(shell.home.expandedRowIds);
-				if (expanded.has(nodeId)) expanded.delete(nodeId);
-				else expanded.add(nodeId);
+				if (expanded.has(payload.nodeId)) expanded.delete(payload.nodeId);
+				else expanded.add(payload.nodeId);
 				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
+				return super.runVirtualFileSystemCommand(command, args);
+			}
+			if (command === "toggleVirtualFileSystemRowSelection" && payload.rowId?.startsWith("kit:")) {
+				const kitId = payload.rowId.slice(4);
+				const shell = this.shellStore.get();
+				if (!shell.openKitIds.includes(kitId)) return true;
+				const selected = new Set(shell.home.selectedKitIds);
+				if (selected.has(kitId)) selected.delete(kitId);
+				else selected.add(kitId);
+				this.updateHome({ ...shell.home, selectedKitIds: [...selected] });
+				this.emit();
+				return true;
 			}
 		}
+		return super.runVirtualFileSystemCommand(command, args);
+	}
+
+	override run(command: string, args?: unknown): void {
 		if (this.runVirtualFileSystemCommand(command, args)) return;
 		const shell = this.shellStore.get();
 		switch (command) {
@@ -3143,24 +3212,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 							? parseSketchpadRouteSelectionQuery(path)
 							: sketchpadEmptyRouteSelection();
 				this.shellStore.set({ ...shell, navigationPath: path, home, routeSelection });
-				break;
-			}
-			case "toggleHomeRowExpand": {
-				const rowId = (args as { rowId: string }).rowId;
-				const expanded = new Set(shell.home.expandedRowIds);
-				if (expanded.has(rowId)) expanded.delete(rowId);
-				else expanded.add(rowId);
-				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
-				this.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID)).setAll([...expanded]);
-				break;
-			}
-			case "toggleTableRowSelection": {
-				const rowId = (args as { rowId: string }).rowId;
-				if (!shell.openKitIds.includes(rowId)) break;
-				const selected = new Set(shell.home.selectedKitIds);
-				if (selected.has(rowId)) selected.delete(rowId);
-				else selected.add(rowId);
-				this.updateHome({ ...shell.home, selectedKitIds: [...selected] });
 				break;
 			}
 			case "setHomeFilters": {
@@ -3185,18 +3236,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 					...shell.home,
 					sortColumnId: payload.columnId === undefined ? shell.home.sortColumnId : payload.columnId,
 					sortDescending: payload.descending === undefined ? shell.home.sortDescending : payload.descending,
-				});
-				break;
-			}
-			case "cycleTableSort": {
-				const payload = args as { columnId: string; surfaceId: string };
-				if (payload.surfaceId !== SKETCHPAD_SURFACE_HOME_VFS) break;
-				const home = shell.home;
-				const same = home.sortColumnId === payload.columnId;
-				this.updateHome({
-					...home,
-					sortColumnId: payload.columnId,
-					sortDescending: same ? !home.sortDescending : false,
 				});
 				break;
 			}
@@ -3435,10 +3474,10 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					label: "Kit",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 					windowKinds: [
-						{ id: "table", label: "Table", bodyKey: SKETCHPAD_BODY_KIT_TABLE },
+						{ id: "vfs", label: "File System", bodyKey: SKETCHPAD_BODY_KIT_VFS },
 						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_KIT_DIAGRAM },
 					],
-					defaultLayout: createDefaultLayout(["table", "diagram"], "row", [50, 50], ["Table", "Diagram"]),
+					defaultLayout: createDefaultLayout(["vfs", "diagram"], "row", [50, 50], ["File System", "Diagram"]),
 					commands: sketchpadKitAppCommands(),
 					panelTabs: sketchpadKitPanelTabs(),
 				},
@@ -3486,8 +3525,8 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_HOME, () =>
 		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_HOME_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "home-main"),
 	);
-	registerWindowBody(SKETCHPAD_BODY_KIT_TABLE, () =>
-		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_KIT_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "table"),
+	registerWindowBody(SKETCHPAD_BODY_KIT_VFS, () =>
+		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_KIT_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "vfs"),
 	);
 	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () =>
 		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
@@ -3634,12 +3673,6 @@ export async function ensureSketchpadPlatform(): Promise<Platform> {
 export function getSketchpadPlatform(): Platform | null {
 	return sketchpadPlatformSingleton;
 }
-
-/** @emoji 🚀 @deprecated Use {@link ensureSketchpadPlatform}. */
-export const ensureSketchpadDeclarativeShell = ensureSketchpadPlatform;
-
-/** @emoji 🔍 @deprecated Use {@link getSketchpadPlatform}. */
-export const getSketchpadProductRuntime = getSketchpadPlatform;
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -4156,27 +4189,6 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("sketchpadBuildHomeTableModel", () => {
-		it("includes documentation root and grouped kit rows", () => {
-			const model = sketchpadBuildHomeTableModel({
-				openKitIds: ["k1", "k2"],
-				kitById: (id) =>
-					id === "k1"
-						? ({ id: "k1", name: "Alpha", version: "r1" } as Kit)
-						: ({ id: "k2", name: "Alpha", version: "r2" } as Kit),
-				kitKind: () => "temporary",
-				home: {
-					...sketchpadEmptyHomeUiState(),
-					expandedRowIds: ["docs-root", "docs-section-intro", "kit-group-Alpha"],
-				},
-				docs: [{ id: "intro", label: "Intro", pages: [{ path: "intro/index", title: "Overview" }] }],
-			});
-			expect(model.rows.some((row) => row.id === "docs-root")).toBe(true);
-			expect(model.rows.some((row) => row.id === "docs-page-intro/index")).toBe(true);
-			expect(model.rows.some((row) => row.id === "k2")).toBe(true);
-		});
-	});
-
 	describe("Sketchpad home virtual file system", () => {
 		it("lists open kits under the home root", async () => {
 			const platform = await buildSketchpadPlatform();
@@ -4464,7 +4476,7 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(dialog.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
 		});
 
-		test("open nakagin fixture navigates to kit table", async ({ page }) => {
+		test("open nakagin fixture navigates to kit vfs", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
 			await openSketchpadCommandPalette(page);
@@ -4486,7 +4498,7 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(page.getByRole("button", { name: "Send feedback" })).toBeVisible({ timeout: 30_000 });
 		});
 
-		test("kit table navigates to design app", async ({ page }) => {
+		test("kit vfs navigates to design app", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await openSketchpadCommandPalette(page);
 			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();

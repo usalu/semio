@@ -19967,7 +19967,11 @@ export function engagementActiveCompletionSuffix(query: string, matches: readonl
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
 export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
-  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"] textarea'));
+  return Boolean(
+    t.closest(
+      '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea',
+    ),
+  );
 }
 
 /** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
@@ -19985,17 +19989,22 @@ export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolea
 
 /** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
 export function focusActiveEngagementInput(): boolean {
-  const field = document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+  const field = document.querySelector<HTMLInputElement>(
+    '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
+  );
   if (!field || field.disabled) return false;
   field.focus({ preventScroll: true });
   return true;
 }
 
-/** @emoji 👁 True when the window engagement chrome should render (non-empty command, click, or focus in the engagement zone). */
-export function windowEngagementChromeVisible(engagement: EngagementSpec | undefined, zone: { readonly activated: boolean; readonly focused: boolean }): boolean {
+/** @emoji 👁 True when the window engagement chrome should render (non-empty command, hover, click, or focus in the engagement zone). */
+export function windowEngagementChromeVisible(
+  engagement: EngagementSpec | undefined,
+  zone: { readonly hovered: boolean; readonly activated: boolean; readonly focused: boolean },
+): boolean {
   if (!engagement) return false;
   if (engagement.input?.value?.trim()) return true;
-  return zone.activated || zone.focused;
+  return zone.hovered || zone.activated || zone.focused;
 }
 
 /** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets). */
@@ -20017,7 +20026,9 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
-  const field = document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+  const field = document.querySelector<HTMLInputElement>(
+    '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
+  );
   input.onChange?.(`${input.value ?? field?.value ?? ""}${event.key}`);
   focusActiveEngagementInput();
   return true;
@@ -20345,9 +20356,12 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
   const [engagementActivated, setEngagementActivated] = reactHostPort.useState(false);
   const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
-  const showEngagementChrome = active && windowEngagementChromeVisible(engagement, { activated: engagementActivated, focused: engagementZoneFocused });
+  const engagementCommandActive = engagementActivated || engagementZoneFocused;
+  const showEngagementChrome =
+    active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
 
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.input) return;
@@ -20365,6 +20379,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   reactHostPort.useEffect(() => {
     if (!active) {
+      setEngagementZoneHovered(false);
       setEngagementActivated(false);
       setEngagementZoneFocused(false);
     }
@@ -20373,6 +20388,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const dismissEngagementIfEmpty = reactHostPort.useCallback(
     (relatedTarget: EventTarget | null) => {
       if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current)) return;
+      setEngagementZoneHovered(false);
       setEngagementActivated(false);
       setEngagementZoneFocused(false);
     },
@@ -20437,11 +20453,12 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 "pointer-events-auto absolute inset-x-0 top-0 z-panel flex min-h-large flex-col items-start justify-start pl-1 pt-1",
                 !showEngagementChrome && "h-large",
               )}
+              onPointerEnter={() => setEngagementZoneHovered(true)}
+              onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
               onPointerDownCapture={() => {
                 setEngagementActivated(true);
                 if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
               }}
-              onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
             >
               <div
                 data-slot="window-engagement-hover-zone"
@@ -20455,7 +20472,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                   dismissEngagementIfEmpty(event.relatedTarget);
                 }}
               >
-                {showEngagementChrome ? <Engagement {...engagement} active /> : null}
+                {showEngagementChrome ? <Engagement {...engagement} active={engagementCommandActive} /> : null}
               </div>
             </div>
           ) : null}
@@ -24516,11 +24533,12 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("windowEngagementChromeVisible hides until click, focus, or draft", () => {
+    it("windowEngagementChromeVisible hides until hover, click, focus, or draft", () => {
       const engagement = { input: { value: "" }, status: [{ id: "s", content: "Idle" }] };
-      expect(windowEngagementChromeVisible(engagement, { activated: false, focused: false })).toBe(false);
-      expect(windowEngagementChromeVisible(engagement, { activated: true, focused: false })).toBe(true);
-      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: false, focused: false })).toBe(false);
+      expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
     });
 
     it("Window routes printable keys before chrome is visible and then shows engagement", async () => {
@@ -24539,7 +24557,7 @@ if (import.meta.vitest) {
       expect((screen.getByPlaceholderText("Command") as HTMLInputElement).value).toBe("b");
     });
 
-    it("Window does not show engagement on hover but opens on click and typing", async () => {
+    it("Window reveals engagement on hover but activates only on click or typing", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
@@ -24552,16 +24570,23 @@ if (import.meta.vitest) {
       const zone = container.querySelector('[data-slot="window-engagement-overlay"]')!;
       expect(screen.queryByPlaceholderText("Command")).toBeNull();
       fireEvent.pointerEnter(zone);
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
-      fireEvent.pointerDown(zone, { bubbles: true });
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
       const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(field.tabIndex).toBe(-1);
+      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBeNull();
+      fireEvent.pointerDown(zone, { bubbles: true });
       await waitFor(() => expect(document.activeElement).toBe(field));
+      expect(field.tabIndex).toBe(0);
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.blur(field);
       fireEvent.pointerLeave(zone, { relatedTarget: document.body });
       await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
-      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
-      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).value).toBe("b");
+      await waitFor(() => {
+        const activeField = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        expect(activeField.value).toBe("b");
+        expect(activeField.tabIndex).toBe(0);
+      });
     });
 
     it("Window anchors engagement in a top overlay when active", () => {
@@ -24579,7 +24604,8 @@ if (import.meta.vitest) {
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.pointerEnter(overlay!);
-      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(overlay?.getAttribute("data-expanded")).toBe("true");
+      expect(screen.getByText("Idle")).toBeTruthy();
       fireEvent.pointerDown(overlay!, { bubbles: true });
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();

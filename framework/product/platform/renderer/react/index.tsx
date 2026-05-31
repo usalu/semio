@@ -1350,9 +1350,6 @@ export interface PlatformViewProps {
 	initialPanelVisibility?: UIPanelVisibility;
 }
 
-/** @emoji 🧭 @deprecated Use {@link PlatformViewProps}. */
-export type AppProps = PlatformViewProps;
-
 export interface UIPanelVisibility {
 	leftSidePanel: boolean;
 	rightSidePanel: boolean;

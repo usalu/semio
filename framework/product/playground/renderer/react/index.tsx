@@ -1565,6 +1565,10 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
 }
 
 class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(private readonly selectionValue: () => Puzzle2dPlaySelectionValue) {
+    super();
+  }
+
   resolveTab(): SidePanelTabConfig {
     return {
       id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
@@ -1575,7 +1579,11 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
           {
             id: "puzzle-2d-play-hierarchy.shell",
             defaultOpen: true,
-            content: <Puzzle2dPlayHierarchyPanel />,
+            content: (
+              <Puzzle2dPlaySelectionContext.Provider value={this.selectionValue()}>
+                <Puzzle2dPlayHierarchyPanel />
+              </Puzzle2dPlaySelectionContext.Provider>
+            ),
             items: [],
           },
         ],
@@ -3597,7 +3605,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   shellValueRef.current = shellValue;
   const selectionValueRef = reactHostPort.useRef(selectionValue);
   selectionValueRef.current = selectionValue;
-  const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
+  const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(
+    () => new Puzzle2dPlayHierarchyPanelDefinition(() => selectionValueRef.current),
+    [],
+  );
   const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
   const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
   const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(
@@ -3618,9 +3629,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   return (
     <Puzzle2dPlayShellContext.Provider value={shellValue}>
       <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-        <Puzzle2dPlaySelectionContext.Provider value={selectionValue}>
-          <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
-        </Puzzle2dPlaySelectionContext.Provider>
+        <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
       </Puzzle2dPlayLodRuntimeContext.Provider>
     </Puzzle2dPlayShellContext.Provider>
   );

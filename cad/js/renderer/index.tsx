@@ -4651,7 +4651,9 @@ export function InteractionRepl({
 
   const replCommandInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
     if (!showAside && showEngagement) {
-      return document.querySelector<HTMLInputElement>('[data-slot="window"][data-active="true"] [data-slot="engagement"] [data-slot="input"]');
+      return document.querySelector<HTMLInputElement>(
+        '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
+      );
     }
     return cmdRef.current;
   }, [showAside, showEngagement]);
