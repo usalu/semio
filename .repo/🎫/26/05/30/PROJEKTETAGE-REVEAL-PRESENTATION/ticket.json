@@ -1,13 +1,17 @@
 {
   "title": "Projektetage Reveal Presentation",
-  "status": "open",
+  "status": "closed",
   "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
-  "summary": "Replaced the 33.projektetage declarative intro (eg-ice-25 English paper copy) with German Mit Bestand content: brand mit-bestand, title Entwerfen mit Bestand, platform tagline and automation subtitle, authors Ueli Saluz / Kinan Sarakbi / Phillipp Geyer with full affiliation marks (1/2/a/x/y). Presentation core and renderer tests and projektetage production build pass.",
+  "summary": "Authors row uses full-width flex with justify-between so first author aligns left, last right, and middle authors distribute evenly. Added w-full on authors morph container in globals.css.",
   "goal": "🎯mitbestand",
   "sessions": [
     "⚪cbb72fbe25dd449982ea468572735bf6",
     "⚪54b2f60d961b4bb6b4871c42b7d4cca7",
     "⚪1f31f7ca2c2642419cdf022aa07c9ff4",
-    "⚪cc3149a6565d4adcb0a94619c350a383"
+    "⚪cc3149a6565d4adcb0a94619c350a383",
+    "⚪e175bbc026004630bf20e04e5116d409",
+    "⚪6de6c9d702df40d39cb0fed8938ba40a",
+    "⚪20a54e2bfaa24e529885652520fde061",
+    "⚪d8ee508941c44d228a6f38e9a5299358"
   ]
 }

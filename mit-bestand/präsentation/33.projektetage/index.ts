@@ -13,13 +13,16 @@ const deck = intro({
 	id: "projektetage",
 	name: "33. Projektetage",
 	title: {
-		full: ["Entwerfen", "mit Bestand"],
+		full: ["Entwerfen mit Bestand"],
 		short: "Entwerfen mit Bestand",
 	},
-	description: [
-		"Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten",
-		"Mehr Zeit zum manuellen Entwerfen dank Automatisierung!",
-	],
+	description: {
+		full: [
+			"Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten",
+		],
+		short: "Plattform zum Entwerfen mit wiederverwendete Bauteilen",
+	},
+	goal: ["Mehr Zeit zum manuellen Entwerfen dank Automatisierung!"],
 	authors: [
 		{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
 		{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
@@ -57,8 +60,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("projektetage deck", () => {
-		it("declares four intro slides", () => {
-			expect(countArrangements(deck)).toBe(4);
+		it("declares five intro slides", () => {
+			expect(countArrangements(deck)).toBe(5);
 		});
 	});
 }

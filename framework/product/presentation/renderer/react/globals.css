@@ -80,6 +80,31 @@
 	text-align: center;
 }
 
+/* #region 🔖IntroMorph */
+/**
+ * Intro auto-animate slides: fixed heading scale (no reveal fit-text rescaling) and a centered
+ * column so added blocks shift existing copy upward instead of shrinking it.
+ */
+.reveal .slides section[data-auto-animate] {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	box-sizing: border-box;
+}
+
+.reveal .slides section[data-auto-animate] [data-id="title"] h2,
+.reveal .slides section[data-auto-animate] [data-id="description"] h2,
+.reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
+	font-size: var(--r-intro-heading-size, var(--r-heading2-size));
+	line-height: var(--r-heading-line-height);
+}
+
+.reveal .slides section[data-auto-animate] [data-id="authors"] {
+	width: 100%;
+}
+/* #endregion 🔖IntroMorph */
+
 .reveal .progress span {
 	background: var(--color-primary);
 }

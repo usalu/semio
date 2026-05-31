@@ -180,9 +180,9 @@ function TextMorphView({
 		case "heading-line":
 		case "subheading-line":
 			return (
-				<h2 data-id={anchorId} className={fitLineClass}>
-					{embodiment.lines[0]}
-				</h2>
+				<div data-id={anchorId}>
+					<h2 className={fitLineClass}>{embodiment.lines[0]}</h2>
+				</div>
 			);
 		case "heading-block":
 			return (
@@ -210,10 +210,10 @@ function AuthorsMorphView({
 }): ReactNode {
 	const namesMuted = embodiment.id === "marked";
 	return (
-		<div data-id={anchorId}>
-			<div className="flex flex-row">
+		<div data-id={anchorId} className="w-full max-w-full">
+			<div className="flex w-full flex-row justify-between gap-4">
 				{embodiment.people.map((person) => (
-					<h4 key={person.name}>
+					<h4 key={person.name} className="m-0 shrink-0">
 						{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
 						{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
 					</h4>
@@ -343,6 +343,16 @@ export const PresentationDeck: FC<{
 		}
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
+			autoAnimate: true,
+			autoAnimateStyles: [
+				"opacity",
+				"color",
+				"background-color",
+				"padding",
+				"letter-spacing",
+				"word-spacing",
+				"transform",
+			],
 		};
 		if (options?.hash === true) {
 			revealOptions.hash = true;
@@ -448,10 +458,11 @@ if (import.meta.vitest) {
 			container.remove();
 		});
 
-		it("renders four vertical sections for the intro template", () => {
+		it("renders five vertical sections for the intro template", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
-				description: ["D1", "D2"],
+				description: { full: ["D1", "D2"], short: "D short" },
+				goal: ["G1"],
 				authors: [{ name: "Alice" }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
@@ -460,33 +471,36 @@ if (import.meta.vitest) {
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
-			expect(sections.length).toBe(4);
+			expect(sections.length).toBe(5);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
 			expect(container.querySelector('[data-id="title"]')).toBeTruthy();
-			expect(container.querySelector('[data-id="subtitle"]')).toBeTruthy();
+			expect(container.querySelector('[data-id="description"]')).toBeTruthy();
+			expect(container.querySelector('[data-id="goal"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="authors"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="institutions"]')).toBeTruthy();
 		});
 
-		it("applies muted opacity on layered title slide", () => {
+		it("applies muted opacity on layered description slide", () => {
 			const deck = intro({
 				title: { full: ["A"], short: "Short" },
-				description: ["D"],
+				description: { full: ["D"], short: "D short" },
+				goal: ["G"],
 				authors: [{ name: "Alice" }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const titleSlide = container.querySelector('.slides > section > section[title="subtitle"]');
-			expect(titleSlide?.querySelector(".opacity-20")).toBeTruthy();
+			const descriptionSlide = container.querySelector('.slides > section > section[title="description"]');
+			expect(descriptionSlide?.querySelector(".opacity-20")).toBeTruthy();
 		});
 
 		it("matches eg-ice-25 intro morph DOM per arrangement", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
-				description: ["D1", "D2"],
+				description: { full: ["D1", "D2"], short: "D short" },
+				goal: ["G1"],
 				authors: [{ name: "Alice", marks: ["1", "a"] }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
@@ -496,18 +510,39 @@ if (import.meta.vitest) {
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
 			expect(slide("title")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
 			expect(slide("title")?.querySelectorAll('div[data-id="title"] h2').length).toBe(3);
-			expect(slide("subtitle")?.querySelector('h2[data-id="title"]')).toBeTruthy();
-			expect(slide("subtitle")?.querySelector('div[data-id="subtitle"] h2')).toBeTruthy();
-			expect(slide("authors")?.querySelector('div[data-id="authors"] h4')).toBeTruthy();
+			expect(slide("description")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
+			expect(slide("description")?.querySelector('h2[data-id="title"]')).toBeNull();
+			expect(slide("description")?.querySelector('div[data-id="description"] h2')).toBeTruthy();
+			expect(slide("description")?.querySelectorAll('div[data-id="description"] h2').length).toBe(2);
+			expect(slide("goal")?.querySelector('div[data-id="description"] h2')?.textContent).toBe("D short");
+			expect(slide("goal")?.querySelector('div[data-id="goal"] h2')).toBeTruthy();
+			const authorsRow = slide("authors")?.querySelector('div[data-id="authors"] > div');
+			expect(authorsRow?.classList.contains("justify-between")).toBe(true);
+			expect(slide("authors")?.querySelectorAll('div[data-id="authors"] h4').length).toBe(1);
 			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
 			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');
 			expect(marked?.textContent).toBe("1,a");
 		});
 
+		it("does not use reveal fit-text on intro headings", () => {
+			const deck = intro({
+				title: { full: ["A", "B"], short: "Short" },
+				description: { full: ["D1"], short: "D short" },
+				goal: ["G1"],
+				authors: [{ name: "Alice" }],
+				affiliations: [{ mark: "1", name: "Uni" }],
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(container.querySelector(".r-fit-text")).toBeNull();
+		});
+
 		it("enables reveal auto-animate and tags every morph arrangement with data-auto-animate", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
-				description: ["D1", "D2"],
+				description: { full: ["D1", "D2"], short: "D short" },
+				goal: ["G1"],
 				authors: [{ name: "Alice" }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
@@ -515,7 +550,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const morphSections = container.querySelectorAll(".slides > section > section[data-auto-animate]");
-			expect(morphSections.length).toBe(4);
+			expect(morphSections.length).toBe(5);
 			for (const section of morphSections) {
 				expect(section.querySelector('[data-id="title"]')).toBeTruthy();
 			}

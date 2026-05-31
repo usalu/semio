@@ -199,7 +199,7 @@ export function countArrangements(presentation: Presentation): number {
 //#endregion 🔖Resolve
 
 //#region 🔖Intro
-/** @emoji 🎬 Spec for the standard paper intro template (title → subtitle → authors → affiliations). */
+/** @emoji 🎬 Spec for the standard paper intro template (title → description → goal → authors → affiliations). */
 export interface IntroSpec {
 	readonly id?: string;
 	readonly name?: string;
@@ -207,22 +207,29 @@ export interface IntroSpec {
 		readonly full: readonly string[];
 		readonly short: string;
 	};
-	readonly description: readonly string[];
+	readonly description: {
+		readonly full: readonly string[];
+		readonly short: string;
+	};
+	readonly goal: readonly string[];
 	readonly authors: readonly { readonly name: string; readonly marks?: readonly string[] }[];
 	readonly affiliations: readonly { readonly mark: string; readonly name: string }[];
 }
 
 const INTRO_PARTICIPANT_TITLE = "title";
-const INTRO_PARTICIPANT_SUBTITLE = "subtitle";
+const INTRO_PARTICIPANT_DESCRIPTION = "description";
+const INTRO_PARTICIPANT_GOAL = "goal";
 const INTRO_PARTICIPANT_AUTHORS = "authors";
 const INTRO_PARTICIPANT_INSTITUTIONS = "institutions";
 
 const INTRO_EMBODIMENT_TITLE_FULL = "full";
 const INTRO_EMBODIMENT_TITLE_SHORT = "short";
+const INTRO_EMBODIMENT_DESCRIPTION_FULL = "full";
+const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
 
-/** @emoji 🎬 Builds a four-slide intro thought (title → subtitle → authors → affiliations). */
+/** @emoji 🎬 Builds a five-slide intro thought (title → description → goal → authors → affiliations). */
 export function intro(spec: IntroSpec): Presentation {
 	const thoughtId = "intro";
 	const participants: Participant[] = [
@@ -234,27 +241,43 @@ export function intro(spec: IntroSpec): Presentation {
 					id: INTRO_EMBODIMENT_TITLE_FULL,
 					lines: spec.title.full,
 					level: "heading",
-					fit: true,
 					morphRoot: "heading-block",
 				},
 				{
 					kind: "text",
 					id: INTRO_EMBODIMENT_TITLE_SHORT,
 					lines: [spec.title.short],
-					level: "subheading",
-					fit: true,
-					morphRoot: "subheading-line",
+					level: "heading",
+					morphRoot: "heading-block",
 				},
 			],
 		},
 		{
-			id: INTRO_PARTICIPANT_SUBTITLE,
+			id: INTRO_PARTICIPANT_DESCRIPTION,
 			embodiments: [
 				{
 					kind: "text",
-					lines: spec.description,
+					id: INTRO_EMBODIMENT_DESCRIPTION_FULL,
+					lines: spec.description.full,
 					level: "heading",
-					fit: true,
+					morphRoot: "heading-block",
+				},
+				{
+					kind: "text",
+					id: INTRO_EMBODIMENT_DESCRIPTION_SHORT,
+					lines: [spec.description.short],
+					level: "heading",
+					morphRoot: "heading-block",
+				},
+			],
+		},
+		{
+			id: INTRO_PARTICIPANT_GOAL,
+			embodiments: [
+				{
+					kind: "text",
+					lines: spec.goal,
+					level: "heading",
 					morphRoot: "heading-block",
 				},
 			],
@@ -302,17 +325,26 @@ export function intro(spec: IntroSpec): Presentation {
 				placements: [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
 			},
 			{
-				id: "subtitle",
+				id: "description",
 				placements: [
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					active(INTRO_PARTICIPANT_SUBTITLE),
+					active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
+				],
+			},
+			{
+				id: "goal",
+				placements: [
+					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+					active(INTRO_PARTICIPANT_GOAL),
 				],
 			},
 			{
 				id: "authors",
 				placements: [
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_SUBTITLE),
+					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+					muted(INTRO_PARTICIPANT_GOAL),
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
 				],
 			},
@@ -320,7 +352,8 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "institutions",
 				placements: [
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_SUBTITLE),
+					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+					muted(INTRO_PARTICIPANT_GOAL),
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
 					active(INTRO_PARTICIPANT_INSTITUTIONS),
 				],
@@ -345,7 +378,8 @@ if (import.meta.vitest) {
 			full: ["Line A", "Line B", "Line C"],
 			short: "Short title",
 		},
-		description: ["D1", "D2", "D3"],
+		description: { full: ["D1", "D2"], short: "D short" },
+		goal: ["G1"],
 		authors: [
 			{ name: "Alice" },
 			{ name: "Bob", marks: ["1", "b"] },
@@ -357,10 +391,25 @@ if (import.meta.vitest) {
 	});
 
 	describe("intro", () => {
-		it("builds four arrangements in one thought", () => {
-			expect(countArrangements(sampleIntro)).toBe(4);
+		it("builds five arrangements in one thought", () => {
+			expect(countArrangements(sampleIntro)).toBe(5);
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			expect(thought.arrangements.map((a) => a.id)).toEqual(["title", "subtitle", "authors", "institutions"]);
+			expect(thought.arrangements.map((a) => a.id)).toEqual([
+				"title",
+				"description",
+				"goal",
+				"authors",
+				"institutions",
+			]);
+		});
+
+		it("uses fixed-size heading blocks without fit-text", () => {
+			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const textEmbodiments = thought.participants.flatMap((p) =>
+				p.embodiments.filter((e): e is TextEmbodiment => e.kind === "text"),
+			);
+			expect(textEmbodiments.every((e) => e.fit !== true)).toBe(true);
+			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
 
 		it("layers muted participants on the institutions slide", () => {
@@ -368,15 +417,16 @@ if (import.meta.vitest) {
 			const resolved = resolveArrangement(thought, "institutions");
 			expect(resolved.map((r) => r.participant.id)).toEqual([
 				INTRO_PARTICIPANT_TITLE,
-				INTRO_PARTICIPANT_SUBTITLE,
+				INTRO_PARTICIPANT_DESCRIPTION,
+				INTRO_PARTICIPANT_GOAL,
 				INTRO_PARTICIPANT_AUTHORS,
 				INTRO_PARTICIPANT_INSTITUTIONS,
 			]);
 			expect(resolved[0]!.emphasis).toBe("muted");
-			expect(resolved[3]!.emphasis).toBe("active");
-			expect(resolved[2]!.embodiment.kind).toBe("authors");
-			if (resolved[2]!.embodiment.kind === "authors") {
-				expect(resolved[2]!.embodiment.id).toBe(INTRO_EMBODIMENT_AUTHORS_MARKED);
+			expect(resolved[4]!.emphasis).toBe("active");
+			expect(resolved[3]!.embodiment.kind).toBe("authors");
+			if (resolved[3]!.embodiment.kind === "authors") {
+				expect(resolved[3]!.embodiment.id).toBe(INTRO_EMBODIMENT_AUTHORS_MARKED);
 			}
 		});
 	});
@@ -421,8 +471,8 @@ if (import.meta.vitest) {
 	describe("resolveArrangement morphId", () => {
 		it("resolves morphId per placement", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			const resolved = resolveArrangement(thought, "subtitle");
-			expect(resolved.map((r) => r.morphId)).toEqual(["title", "subtitle"]);
+			const resolved = resolveArrangement(thought, "goal");
+			expect(resolved.map((r) => r.morphId)).toEqual(["title", "description", "goal"]);
 		});
 	});
 }
