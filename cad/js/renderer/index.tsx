@@ -69,6 +69,7 @@ import {
   interactionNumericEntryApplyEvent,
   interactionNumericEntryCommitEvent,
   interactionNumericEntryLockedValue,
+  interactionStepFinalizeEvent,
   parseNumericCommandLine,
   isFinalInteractionState,
   mergeInteractionSpatial,
@@ -1958,16 +1959,33 @@ function HeightDragSurface({ origin, corner, enabled, onPointerMove }: { readonl
 }
 
 /** @emoji 🖱️ Z-aligned rod at `origin` so `pointer.move` drives peak height without XY drift. */
-function VerticalZDragRod({ origin, enabled, onPointerMove }: { readonly origin: Vec3; readonly enabled: boolean; readonly onPointerMove?: (point: Vec3) => void }): ReactNode {
+function VerticalZDragRod({
+  origin,
+  enabled,
+  onPointerMove,
+  onPointerDown,
+}: {
+  readonly origin: Vec3;
+  readonly enabled: boolean;
+  readonly onPointerMove?: (point: Vec3) => void;
+  readonly onPointerDown?: (point: Vec3) => void;
+}): ReactNode {
   const h = 22;
+  const toPoint = (e: ThreeEvent<PointerEvent>): Vec3 => [e.point.x, e.point.y, e.point.z] as unknown as Vec3;
   const onMove = (e: ThreeEvent<PointerEvent>) => {
     if (!enabled || !onPointerMove) return;
     e.stopPropagation();
-    const p = e.point;
-    onPointerMove([p.x, p.y, p.z] as unknown as Vec3);
+    onPointerMove(toPoint(e));
+  };
+  const onDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!enabled) return;
+    e.stopPropagation();
+    const p = toPoint(e);
+    onPointerMove?.(p);
+    onPointerDown?.(p);
   };
   return (
-    <mesh position={[origin[0], origin[1], origin[2] + h / 2]} rotation={[Math.PI / 2, 0, 0]} onPointerMove={onMove} renderOrder={3}>
+    <mesh position={[origin[0], origin[1], origin[2] + h / 2]} rotation={[Math.PI / 2, 0, 0]} onPointerMove={onMove} onPointerDown={onDown} renderOrder={3}>
       <cylinderGeometry args={[0.14, 0.14, h, 10]} />
       <meshStandardMaterial transparent opacity={0.14} color={spatialSceneColors().accentSecondary} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
@@ -3081,7 +3099,17 @@ export function InteractionSpatialView({
         />
       ) : null}
       {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} enabled={heightMoveOn} onPointerMove={onScenePointerMoveEvent} /> : null}
-      {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} /> : null}
+      {zRodMoveOn && origin ? (
+        <VerticalZDragRod
+          origin={origin}
+          enabled={zRodMoveOn}
+          onPointerMove={onScenePointerMoveEvent}
+          onPointerDown={(point) => {
+            const event = createSpatialPickEvent("pointer.down", point, null);
+            onInteractionEvent?.(event);
+          }}
+        />
+      ) : null}
       <CommittedMeshLayer
         meshes={layerMeshes}
         modelRevision={geometry?.revision ?? 0}
@@ -4428,13 +4456,23 @@ export function InteractionRepl({
     const applyEv = interactionNumericEntryApplyEvent(spec, state, value);
     if (applyEv) await rt.send(applyEv);
     const after = rt.getSnapshot();
-    const commitEv = interactionNumericEntryCommitEvent(spec, after.state, after.context);
+    const commitEv = interactionNumericEntryCommitEvent(spec, after.state, after.context, rt.previewKernel());
     if (!commitEv) return false;
     await rt.send(commitEv);
     setCmdLine("");
     setInteractionMenuOpen(false);
     return true;
   }, [replCmdLineValue, rt, spec, setCmdLine]);
+
+  const tryFinalizeInteractionStep = reactHostPort.useCallback(async (): Promise<boolean> => {
+    const snap = rt.getSnapshot();
+    const ev = interactionStepFinalizeEvent(spec, snap.state, snap.context, rt.previewKernel());
+    if (!ev) return false;
+    await rt.send(ev);
+    setCmdLine("");
+    setInteractionMenuOpen(false);
+    return true;
+  }, [rt, spec, setCmdLine]);
 
   const trySubmitLine = reactHostPort.useCallback((): boolean => {
     const raw = cmdLine.trim();
@@ -4489,12 +4527,11 @@ export function InteractionRepl({
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
-          const snap = rt.getSnapshot();
-          const parsed = parseNumericCommandLine(replCmdLineValue());
-          if (parsed !== undefined && (parsed !== null || interactionNumericEntryLockedValue(spec, snap.state, snap.context) != null)) {
-            void tryCommitNumericEntry();
-            return;
-          }
+          void (async () => {
+            if (await tryCommitNumericEntry()) return;
+            await tryFinalizeInteractionStep();
+          })();
+          return;
         }
         const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId);
         if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
@@ -4526,7 +4563,16 @@ export function InteractionRepl({
       if (e.key === "Enter") {
         e.preventDefault();
         setInteractionMenuOpen(false);
-        if (!cmdLine.trim() && confirmInteractionSelection()) return;
+        if (!cmdLine.trim()) {
+          void (async () => {
+            if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryCommitNumericEntry())) return;
+            if (await tryFinalizeInteractionStep()) return;
+            if (confirmInteractionSelection()) return;
+            if (trySubmitLine()) return;
+            if (filtered.length) runSuggestion(filtered[activeIndex]!);
+          })();
+          return;
+        }
         if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
           void tryCommitNumericEntry();
           return;
@@ -4536,19 +4582,24 @@ export function InteractionRepl({
         return;
       }
     },
-    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt],
+    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt],
   );
 
   const submitEngagementLine = reactHostPort.useCallback(() => {
     setInteractionMenuOpen(false);
-    if (!cmdLine.trim() && confirmInteractionSelection()) return;
-    if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
-      void tryCommitNumericEntry();
-      return;
-    }
-    if (trySubmitLine()) return;
-    if (filtered.length) runSuggestion(filtered[activeIndex] ?? filtered[0]!);
-  }, [cmdLine, confirmInteractionSelection, spec, rt, tryCommitNumericEntry, trySubmitLine, filtered, runSuggestion, activeIndex]);
+    void (async () => {
+      if (!cmdLine.trim()) {
+        if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryCommitNumericEntry())) return;
+        if (await tryFinalizeInteractionStep()) return;
+        if (confirmInteractionSelection()) return;
+      }
+      if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
+        if (await tryCommitNumericEntry()) return;
+      }
+      if (trySubmitLine()) return;
+      if (filtered.length) runSuggestion(filtered[activeIndex] ?? filtered[0]!);
+    })();
+  }, [cmdLine, confirmInteractionSelection, spec, rt, tryCommitNumericEntry, tryFinalizeInteractionStep, trySubmitLine, filtered, runSuggestion, activeIndex]);
 
   const engagementSpec = reactHostPort.useMemo<EngagementSpec | null>(
     () =>
@@ -4629,15 +4680,19 @@ export function InteractionRepl({
         e.stopPropagation();
         const snap = rt.getSnapshot();
         if (interactionInNumericEntryState(spec, snap.state)) {
-          const line = cmdRef.current?.value ?? cmdLine;
-          const parsed = parseNumericCommandLine(line);
-          const locked = interactionNumericEntryLockedValue(spec, snap.state, snap.context);
-          if (parsed !== undefined && (parsed !== null || locked != null)) {
-            void tryCommitNumericEntry();
-            return;
-          }
+          void (async () => {
+            if (await tryCommitNumericEntry()) return;
+            await tryFinalizeInteractionStep();
+          })();
+          return;
         }
-        if (!cmdLine.trim() && confirmInteractionSelection()) return;
+        if (!cmdLine.trim()) {
+          void (async () => {
+            if (await tryFinalizeInteractionStep()) return;
+            if (confirmInteractionSelection()) return;
+          })();
+          return;
+        }
         const matches = replPaletteRows(cmdLine, allSuggestions);
         const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId);
         if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
@@ -4661,9 +4716,16 @@ export function InteractionRepl({
       if (t !== cmdRef.current && e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        if (!cmdLine.trim() && confirmInteractionSelection()) return;
         cmdRef.current?.focus();
         const snap = rt.getSnapshot();
+        if (!cmdLine.trim()) {
+          void (async () => {
+            if (interactionInNumericEntryState(spec, snap.state) && (await tryCommitNumericEntry())) return;
+            if (await tryFinalizeInteractionStep()) return;
+            if (confirmInteractionSelection()) return;
+          })();
+          return;
+        }
         if (interactionInNumericEntryState(spec, snap.state)) {
           void tryCommitNumericEntry();
           return;
@@ -4680,7 +4742,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
@@ -5428,6 +5490,16 @@ if (import.meta.vitest) {
         spatialInteraction: mergeInteractionSpatial(spec!),
       } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
       expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(false);
+    });
+
+    it("surface.extrudeCrv enables ground pick during extrusion_distance for click finalize", () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv");
+      expect(spec).not.toBeNull();
+      const snapshot = {
+        state: "extrusion_distance",
+        spatialInteraction: mergeInteractionSpatial(spec!),
+      } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
+      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(true);
     });
 
     it("enables spatial ground pick plane during rubber-band states regardless of host selection accept", () => {

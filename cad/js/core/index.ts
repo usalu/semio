@@ -4627,12 +4627,30 @@ export function parseNumericCommandLine(cmdLine: string): number | null | undefi
   return v;
 }
 
+/** @emoji 📏 Live distance along a length-entry anchor→cursor axis (extrusion rod, rubber band). */
+export function interactionLengthEntryLiveDistance(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): number | null {
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  const cursor = readInteractionContextVec3(ctx, entry.field);
+  if (!anchor || !cursor) return null;
+  const direction = readInteractionContextVec3(ctx, "direction");
+  if (direction) {
+    const len = Math.hypot(direction[0], direction[1], direction[2]) || 1;
+    const dir: Vec3 = [direction[0] / len, direction[1] / len, direction[2] / len];
+    const distance = Math.abs((cursor[0] - anchor[0]) * dir[0] + (cursor[1] - anchor[1]) * dir[1] + (cursor[2] - anchor[2]) * dir[2]);
+    return distance > 1e-9 ? distance : null;
+  }
+  const distance = Math.hypot(cursor[0] - anchor[0], cursor[1] - anchor[1], cursor[2] - anchor[2]);
+  return distance > 1e-9 ? distance : null;
+}
+
 /** @emoji 🔢 Locked numeric value from context when live entry already applied. */
 export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) {
     const lock = ctx[LENGTH_LOCK_CTX];
     if (typeof lock === "number" && Number.isFinite(lock) && lock > 0) return lock;
+    const live = interactionLengthEntryLiveDistance(ctx, lengthEntry);
+    if (live != null) return live;
   }
   const scalarEntry = interactionScalarEntryForState(spec, state);
   if (scalarEntry) {
@@ -4691,6 +4709,31 @@ export function interactionNumericEntryCommitEvent(
   }
   if (events.has("confirm")) return { kind: "confirm", modifiers: {} };
   return null;
+}
+
+/** @emoji ✅ Whether `state` has a passable `confirm` transition (non-selection finalize). */
+export function interactionCanFinalizeStep(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): boolean {
+  const handler = spec.machine.states.find((s) => s.name === state)?.on?.find((h) => h.event === "confirm");
+  if (!handler) return false;
+  for (const tr of handler.transitions) {
+    if (tr.guard) {
+      const g = lookupGuard(spec, tr.guard);
+      if (!g || !evalGuard(g, { context: ctx, preview })) continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+/** @emoji ✅ Enter/Space finalize: `confirm` when available, else length-entry `pointer.down`. */
+export function interactionStepFinalizeEvent(
+  spec: InteractionSpec,
+  state: string,
+  ctx: Record<string, unknown>,
+  preview: SpatialPreviewKernel,
+): InteractionEvent | null {
+  if (interactionCanFinalizeStep(spec, state, ctx, preview)) return { kind: "confirm", modifiers: {} };
+  return interactionNumericEntryCommitEvent(spec, state, ctx, preview);
 }
 
 const LENGTH_LOCK_CTX = "__lengthLock";
@@ -7781,6 +7824,36 @@ if (import.meta.vitest) {
       const cursor = rt.getSnapshot().context.cursor as Vec3;
       expect(cursor).toEqual([10, 0, 0]);
       expect(rt.getSnapshot().context.__lengthLock).toBeNull();
+    });
+
+    it("interactionLengthEntryLiveDistance reads Z rod cursor offset for extrusion_distance", () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const entry = interactionLengthEntryForState(spec, "extrusion_distance")!;
+      const distance = interactionLengthEntryLiveDistance(
+        { origin: [0, 0, 0] as Vec3, cursor: [0, 0, 1.25] as Vec3, direction: [0, 0, 1] as Vec3 },
+        entry,
+      );
+      expect(distance).toBeCloseTo(1.25, 5);
+      expect(interactionNumericEntryLockedValue(spec, "extrusion_distance", { origin: [0, 0, 0], cursor: [0, 0, 2], direction: [0, 0, 1] })).toBe(2);
+    });
+
+    it("surface.extrudeCrv confirm in extrusion_distance commits solid", async () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const space = ModelSpace.fromJSON(geometryRoutesFixtureJson as ModelSpaceJson);
+      const model = space.models["spatial.shape"]!;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "selection.changed", targets: [{ kind: "wire", id: "stub-wire" }], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      await rt.send({ kind: "pointer.move", point: [0, 0, 0.8], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("committed");
+      expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
+      expect(Object.keys(model.solids).length).toBeGreaterThan(0);
     });
 
     it("interactionNumericEntryCommitEvent uses pointer.down for length and confirm for scalar", () => {

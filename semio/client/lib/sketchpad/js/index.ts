@@ -43,6 +43,7 @@ import {
 	type UiNode,
 	type WindowBodyViewContext,
 	getPlatformControllerById,
+	WindowKindRuntime,
 } from "@framework/platform/core";
 import type { PlatformBreadcrumbItem, SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
@@ -1176,7 +1177,11 @@ const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = "/assets/semio/metabolism/wip/initia
 export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	const map = new Map<string, string>();
 	for (const file of kit.files ?? []) {
-		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string };
+		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string; blob?: string };
+		if (row.blob && typeof row.blob === "string" && /^(?:blob:|data:|https?:)/i.test(row.blob)) {
+			map.set(row.id, row.blob);
+			continue;
+		}
 		const direct = row.url ?? row.uri;
 		if (direct) {
 			map.set(row.id, direct);
@@ -1188,7 +1193,7 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 			continue;
 		}
 		if (row.name && row.name.endsWith(".glb")) {
-			map.set(row.id, `${SKETCHPAD_METABOLISM_KIT_ASSET_ROOT}/files/${row.name}`);
+			map.set(row.id, `/assets/semio/metabolism/representations/${row.name}`);
 		}
 	}
 	return map;
@@ -1218,13 +1223,44 @@ export function sketchpadResolvePieceMeshUrl(
 	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
 }
 
+/** @emoji 🏷️ Normalized type representation row for routing and topology. */
+export interface SketchpadTypeRepresentationRef {
+	readonly id: string;
+	readonly name: string;
+	readonly file?: unknown;
+	readonly tags?: unknown;
+}
+
+/** @emoji 📋 Lists representation rows on a kit kind. */
+export function sketchpadListTypeRepresentations(type: Type): readonly SketchpadTypeRepresentationRef[] {
+	return (type.representations ?? [])
+		.filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null && "id" in entry)
+		.map((entry) => ({
+			id: String(entry["id"]),
+			name: typeof entry["name"] === "string" && entry["name"].length > 0 ? entry["name"] : String(entry["id"]),
+			file: entry["file"],
+			tags: entry["tags"],
+		}));
+}
+
+/** @emoji 🧊 Resolves the mesh URL for one type representation. */
+export function sketchpadResolveRepresentationMeshUrl(
+	representation: Pick<SketchpadTypeRepresentationRef, "file">,
+	kit: Kit,
+	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
+): string {
+	const fileId = sketchpadReadEntityId(representation.file);
+	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
+	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
+}
+
 /** @emoji 🧊 Picks the primary representation mesh URL for a kit kind. */
 export function sketchpadResolveTypeMeshUrl(
 	type: Type,
 	kit: Kit,
 	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
 ): string {
-	const reps = (type.representations ?? []) as readonly { readonly file?: unknown; readonly tags?: unknown }[];
+	const reps = sketchpadListTypeRepresentations(type);
 	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
 	const untagged =
 		reps.find((rep) => {
@@ -1232,9 +1268,7 @@ export function sketchpadResolveTypeMeshUrl(
 			if (Array.isArray(tags)) return tags.length === 0;
 			return !tags?.items?.length;
 		}) ?? reps[0];
-	const fileId = sketchpadReadEntityId(untagged?.file);
-	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
+	return sketchpadResolveRepresentationMeshUrl(untagged!, kit, fileUrls);
 }
 
 function sketchpadNewKitId(): string {
@@ -1330,9 +1364,34 @@ export function sketchpadDesignDiagramInstanceId(kitId: string, designId: string
 	return `${kitId}:${designId}:diagram`;
 }
 
+/** @emoji 🧩 Surface id prefix for per-representation type CAD windows. */
+export const SKETCHPAD_SURFACE_TYPE_REP_PREFIX = "semio.sketchpad.surface.type.representation/v1";
+
 /** @emoji 🧩 Stable FiveD instance id for a type CAD scene (volume). */
 export function sketchpadTypeSceneInstanceId(kitId: string, typeId: string): string {
 	return `${kitId}:type:${typeId}:scene`;
+}
+
+/** @emoji 🧩 Surface id for one type representation CAD window. */
+export function sketchpadTypeRepresentationSurfaceId(kitId: string, typeId: string, representationId: string): string {
+	return `${SKETCHPAD_SURFACE_TYPE_REP_PREFIX}:${kitId}:${typeId}:${representationId}`;
+}
+
+/** @emoji 🔍 Parses a type representation surface id into route segments. */
+export function sketchpadParseTypeRepresentationSurfaceId(surfaceId: string): {
+	readonly kitId: string;
+	readonly typeId: string;
+	readonly representationId: string;
+} | null {
+	if (!surfaceId.startsWith(`${SKETCHPAD_SURFACE_TYPE_REP_PREFIX}:`)) return null;
+	const parts = surfaceId.slice(SKETCHPAD_SURFACE_TYPE_REP_PREFIX.length + 1).split(":");
+	if (parts.length !== 3) return null;
+	return { kitId: parts[0]!, typeId: parts[1]!, representationId: parts[2]! };
+}
+
+/** @emoji 🧩 Stable FiveD instance id for one type representation scene. */
+export function sketchpadTypeRepresentationSceneInstanceId(kitId: string, typeId: string, representationId: string): string {
+	return `${kitId}:type:${typeId}:rep:${representationId}:scene`;
 }
 
 /** @emoji 🔍 Parses sketchpad FiveD {@link Puzzle5dModel.instanceId} segments. */
@@ -1345,6 +1404,9 @@ export function parseSketchpadPuzzleInstanceId(instanceId: string): {
 	const parts = instanceId.split(":");
 	if (parts.length === 3 && parts[1] === "kit" && parts[2] === "diagram") {
 		return { kitId: parts[0] ?? null, designId: null, typeId: null, pane: "kit-diagram" };
+	}
+	if (parts.length === 6 && parts[1] === "type" && parts[3] === "rep" && parts[5] === "scene") {
+		return { kitId: parts[0] ?? null, designId: null, typeId: parts[2] ?? null, pane: "type-scene" };
 	}
 	if (parts.length === 4 && parts[1] === "type" && parts[3] === "scene") {
 		return { kitId: parts[0] ?? null, designId: null, typeId: parts[2] ?? null, pane: "type-scene" };
@@ -2081,8 +2143,12 @@ function sketchpadTopologyPayloadForDesignDiagram(design: Design, kit?: Kit): Pl
 	return sketchpadTopologyPayload(sketchpadDesignPuzzle2dFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
 }
 
-/** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (type CAD scene). */
-export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixtureV1 {
+/** @emoji 🌐 Builds a single-mesh 3D volume for one type representation. */
+export function sketchpadTypeVolumeFixtureForRepresentation(
+	type: Type,
+	representation: SketchpadTypeRepresentationRef,
+	kit: Kit,
+): SketchpadVolumeFixtureV1 {
 	const fileUrls = sketchpadKitFileUrlById(kit);
 	return {
 		schema: "puzzle.3d.fixture/v1",
@@ -2090,13 +2156,13 @@ export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): Sketch
 		camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
 		objects: [
 			{
-				id: type.id,
-				objectKind: "semio.type",
-				meshUrl: sketchpadResolveTypeMeshUrl(type, kit, fileUrls),
+				id: representation.id,
+				objectKind: "semio.representation",
+				meshUrl: sketchpadResolveRepresentationMeshUrl(representation, kit, fileUrls),
 				origin: [0, 0, 0] as [number, number, number],
 				orientation: [0, 0, 0, 1] as [number, number, number, number],
 				scale: [1, 1, 1] as [number, number, number, number],
-				label: type.name ?? type.id,
+				label: representation.name,
 				vortices: [],
 			},
 		],
@@ -2104,8 +2170,31 @@ export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): Sketch
 	};
 }
 
+/** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (primary representation). */
+export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixtureV1 {
+	const reps = sketchpadListTypeRepresentations(type);
+	if (reps.length === 0) {
+		return {
+			schema: "puzzle.3d.fixture/v1",
+			domain: "architecture",
+			camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
+			objects: [],
+			attractions: [],
+		};
+	}
+	return sketchpadTypeVolumeFixtureForRepresentation(type, reps[0]!, kit);
+}
+
+function sketchpadTopologyPayloadForTypeRepresentation(type: Type, representation: SketchpadTypeRepresentationRef, kit: Kit): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureForRepresentation(type, representation, kit));
+}
+
 function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit): PlatformTopologyPayload {
-	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureFromType(type, kit));
+	const reps = sketchpadListTypeRepresentations(type);
+	if (reps.length === 0) {
+		return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureFromType(type, kit));
+	}
+	return sketchpadTopologyPayloadForTypeRepresentation(type, reps[0]!, kit);
 }
 
 function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
@@ -2127,6 +2216,7 @@ const SKETCHPAD_BODY_KIT_DIAGRAM = "semio.sketchpad.window.kit.diagram";
 const SKETCHPAD_BODY_DESIGN_SCENE = "semio.sketchpad.window.design.scene";
 const SKETCHPAD_BODY_DESIGN_DIAGRAM = "semio.sketchpad.window.design.diagram";
 const SKETCHPAD_BODY_TYPE = "semio.sketchpad.window.type";
+const SKETCHPAD_BODY_TYPE_REP = "semio.sketchpad.window.type.representation";
 const SKETCHPAD_BODY_DOCS = "semio.sketchpad.window.docs";
 const SKETCHPAD_BODY_FEEDBACK = "semio.sketchpad.window.feedback";
 const SKETCHPAD_SURFACE_KIT_TABLE = "semio.sketchpad.surface.kit.table/v1";
@@ -2141,6 +2231,64 @@ export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "semio.sketchpad.surface.feedback
 const SKETCHPAD_PANEL_WINDOWS_BODY = "semio.sketchpad.panel.windows";
 const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
 const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
+
+const sketchpadRegisteredTypeRepSurfaces = new Set<string>();
+
+function sketchpadWindowKindIdForRepresentation(representationId: string): string {
+	return `rep-${representationId}`;
+}
+
+function sketchpadUnregisterTypeRepresentationComponents(platform: Platform): void {
+	for (const surfaceId of sketchpadRegisteredTypeRepSurfaces) {
+		platform.unregisterComponent(surfaceId);
+	}
+	sketchpadRegisteredTypeRepSurfaces.clear();
+}
+
+function sketchpadSyncTypeRepresentationComponents(platform: Platform, kitId: string, typeId: string): void {
+	sketchpadUnregisterTypeRepresentationComponents(platform);
+	const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
+	const type = kit ? findTypeInKit(kit, typeId) : undefined;
+	if (!type) return;
+	for (const representation of sketchpadListTypeRepresentations(type)) {
+		const surfaceId = sketchpadTypeRepresentationSurfaceId(kitId, typeId, representation.id);
+		const component = new SketchpadTypeRepresentationScene(platform, surfaceId, representation.id);
+		registerPlatformComponent(platform, component);
+		sketchpadRegisteredTypeRepSurfaces.add(surfaceId);
+		component.refresh();
+		getSketchpadShellController()?.syncTopologyForSurface(surfaceId, { kitId, designId: null, typeId, docsPath: "index", qualityId: null });
+	}
+}
+
+/** @emoji 🪟 Rebuilds type-app window kinds (tab stack per representation) and topology components. */
+export function sketchpadSyncTypeAppChrome(platform: Platform): void {
+	const typeApp = platform.apps.find((app) => app.id === SKETCHPAD_TYPE_APP_ID);
+	if (!typeApp) return;
+	const route = parseSketchpadRouteScopeFromPath(platform.uri);
+	if (!route.kitId || !route.typeId) {
+		sketchpadUnregisterTypeRepresentationComponents(platform);
+		typeApp.windowKinds = [new WindowKindRuntime("type-empty", "Type", SKETCHPAD_BODY_TYPE_REP)];
+		typeApp.defaultLayout = createTabStackLayout(["type-empty"], ["Type"]);
+		platform.notify();
+		return;
+	}
+	const kit = getSketchpadShellController()?.getKitStore(route.kitId)?.getSnapshot().kit;
+	const type = kit ? findTypeInKit(kit, route.typeId) : undefined;
+	const representations = type ? sketchpadListTypeRepresentations(type) : [];
+	sketchpadSyncTypeRepresentationComponents(platform, route.kitId, route.typeId);
+	if (representations.length === 0) {
+		typeApp.windowKinds = [new WindowKindRuntime("type-empty", "No representations", SKETCHPAD_BODY_TYPE_REP)];
+		typeApp.defaultLayout = createTabStackLayout(["type-empty"], ["No representations"]);
+	} else {
+		const windowKindIds = representations.map((rep) => sketchpadWindowKindIdForRepresentation(rep.id));
+		const labels = representations.map((rep) => rep.name);
+		typeApp.windowKinds = representations.map(
+			(rep, index) => new WindowKindRuntime(windowKindIds[index]!, labels[index]!, SKETCHPAD_BODY_TYPE_REP),
+		);
+		typeApp.defaultLayout = createTabStackLayout(windowKindIds, labels);
+	}
+	platform.notify();
+}
 
 //#region 🔖SketchpadPlatformComponents
 abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> {
@@ -2419,30 +2567,38 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
 	}
 }
 
-/** @emoji 📐 Type CAD scene (5D volume with representation mesh). */
-export class SketchpadTypeScene extends SketchpadRoutedComponent<Puzzle5dModel> {
-	constructor(platform: Platform) {
+/** @emoji 📐 Type representation CAD scene (one mesh per representation window). */
+export class SketchpadTypeRepresentationScene extends SketchpadRoutedComponent<Puzzle5dModel> {
+	readonly representationId: string;
+
+	constructor(platform: Platform, surfaceId: string, representationId: string) {
 		super(
 			"puzzle5d",
-			SKETCHPAD_SURFACE_TYPE_SCENE,
+			surfaceId,
 			SKETCHPAD_SHELL_CONTROLLER_ID,
-			{ presentation: "volume", instanceId: SKETCHPAD_SURFACE_TYPE_SCENE },
+			{ presentation: "volume", instanceId: surfaceId },
 			platform,
 		);
+		this.representationId = representationId;
 	}
 
 	override buildSnapshot(): Puzzle5dModel {
 		const { kitId, typeId } = this.route;
 		if (!kitId || !typeId) {
-			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_TYPE_SCENE, emptyMessage: "Open a type to view the CAD scene" };
+			return { presentation: "volume", instanceId: this.surfaceId, emptyMessage: "Open a type to view representations" };
 		}
 		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
 		const type = kit ? findTypeInKit(kit, typeId) : undefined;
-		return {
-			presentation: "volume",
-			instanceId: sketchpadTypeSceneInstanceId(kitId, typeId),
-			emptyMessage: type ? undefined : `Type ${typeId} not found`,
-		};
+		const representation = type ? sketchpadListTypeRepresentations(type).find((row) => row.id === this.representationId) : undefined;
+		const instanceId = sketchpadTypeRepresentationSceneInstanceId(kitId, typeId, this.representationId);
+		if (!type || !representation) {
+			return { presentation: "volume", instanceId, emptyMessage: `Representation ${this.representationId} not found` };
+		}
+		const meshUrl = sketchpadResolveRepresentationMeshUrl(representation, kit!, sketchpadKitFileUrlById(kit!));
+		if (meshUrl === SKETCHPAD_PLACEHOLDER_MESH_URL) {
+			return { presentation: "volume", instanceId, emptyMessage: `Mesh unavailable for ${representation.name}` };
+		}
+		return { presentation: "volume", instanceId, emptyMessage: undefined };
 	}
 }
 
@@ -2691,7 +2847,6 @@ class SketchpadPlatformComponents {
 			new SketchpadKitDiagram(platform),
 			new SketchpadDesignScene(platform),
 			new SketchpadDesignDiagram(platform),
-			new SketchpadTypeScene(platform),
 			new SketchpadWorkbenchPanel(platform),
 			new SketchpadDetailsPanel(platform),
 		];
@@ -2799,6 +2954,20 @@ export class SketchpadShellController extends Controller {
 		if (!kit) return;
 		if (surfaceId === SKETCHPAD_SURFACE_KIT_DIAGRAM) {
 			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyPayloadForKitDiagram(kit));
+			return;
+		}
+		const typeRepSurface = sketchpadParseTypeRepresentationSurfaceId(surfaceId);
+		if (typeRepSurface && typeRepSurface.kitId === kitId && typeRepSurface.typeId === typeId) {
+			const type = findTypeInKit(kit, typeId);
+			const representation = type
+				? sketchpadListTypeRepresentations(type).find((row) => row.id === typeRepSurface.representationId)
+				: undefined;
+			if (type && representation) {
+				this.upsertTopologyStore(
+					sketchpadTypeRepresentationSceneInstanceId(kitId, typeId, representation.id),
+					sketchpadTopologyPayloadForTypeRepresentation(type, representation, kit),
+				);
+			}
 			return;
 		}
 		if (surfaceId === SKETCHPAD_SURFACE_TYPE_SCENE && typeId) {
@@ -3295,9 +3464,15 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () =>
 		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
 	);
-	registerWindowBody(SKETCHPAD_BODY_TYPE, () =>
-		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
-	);
+	registerWindowBody(SKETCHPAD_BODY_TYPE_REP, (ctx: WindowBodyViewContext) => {
+		const route = parseSketchpadRouteScopeFromPath(ctx.platform.uri);
+		const representationId = ctx.windowKindId.startsWith("rep-") ? ctx.windowKindId.slice(4) : "";
+		if (!route.kitId || !route.typeId || !representationId) {
+			return buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_TYPE_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, ctx.windowKindId);
+		}
+		const surfaceId = sketchpadTypeRepresentationSurfaceId(route.kitId, route.typeId, representationId);
+		return buildPuzzle5dWindowBody(surfaceId, SKETCHPAD_SHELL_CONTROLLER_ID, ctx.windowKindId);
+	});
 	registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
 	registerSidePanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {
@@ -3327,6 +3502,7 @@ function applySketchpadUri(platform: Platform, uri: string): void {
 	platform.uri = uri;
 	platform.activeAppId = sketchpadAppIdFromPath(path);
 	platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path });
+	sketchpadSyncTypeAppChrome(platform);
 	platform.notify();
 }
 

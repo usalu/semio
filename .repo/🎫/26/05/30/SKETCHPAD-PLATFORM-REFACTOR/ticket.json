@@ -1,7 +1,7 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "Deep rewrite pass for docs/feedback/quality routing: removed chrome-only SketchpadDocsPanel and SketchpadFeedbackPanel components; docs MDX and feedback form live in boot.ts panel surface hosts; feedback draft + mailto submit on shell; qualityId parsed from kit query with workbench/details panels; platform core allows panel-only window bodies (fixes docs/feedback apps). Added e2e for docs MDX, feedback form, design navigation. Vitest 45/45, Playwright 7/7, platform core 10/10.",
   "goal": "🎯r2602/🎯runningsketchpad",
@@ -36,6 +36,7 @@
     "⚪5dc2274c969f4ef2a011a3eb3df66517",
     "⚪79b9a9fd73fa4ee089de77f719eb0ebb",
     "⚪c07aebdb51f6402fb5ed8c1850effb4a",
-    "⚪0b93b211d01b41fbaae3d7e6f990f5fc"
+    "⚪0b93b211d01b41fbaae3d7e6f990f5fc",
+    "⚪e59742af76ae469ba43adaedc5a22847"
   ]
 }

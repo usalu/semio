@@ -99,7 +99,6 @@
     "pickDisabledStates": [
       "idle",
       "select_curves_to_extrude",
-      "extrusion_distance",
       "committed"
     ],
     "groundPointerMoveStates": [
@@ -434,6 +433,22 @@
                         }
                       ]
                     }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Finish",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.assignExtrusionDistance"
                   }
                 ]
               }
