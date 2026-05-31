@@ -7,10 +7,10 @@ todos:
     status: completed
   - id: golden-schema
     content: Add FileSystemNode interface/connection/kind enum to schema.golden.graphql and make Kit/Folder/File/Design/Type/Family/Piece/Connection implement it; add createFolder/moveToFolder command + operation shells
-    status: in_progress
+    status: completed
   - id: rs-storage
     content: Add folder-membership storage in lib.rs (Folder name/icon/parent, File/Design/Type/Family folder id, minimal Family model)
-    status: pending
+    status: in_progress
   - id: rs-interface
     content: Add FileSystemNodeInterface enum + connection and implement the 6 computed resolvers on all 8 kinds per the constraint table; register types in build_schema
     status: pending

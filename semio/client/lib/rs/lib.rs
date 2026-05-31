@@ -2071,6 +2071,7 @@ pub mod meta {
     crate::entity_family! {
         pub struct File {
             pub id: Id,
+            pub name: String,
             pub url: String,
             pub mime: Option<String>,
             pub size: Option<i32>,
@@ -2078,6 +2079,8 @@ pub mod meta {
             #[graphql(skip)]
             pub hash: String,
             pub description: Option<String>,
+            pub icon: Option<String>,
+            pub folder_id: Option<Id>,
             pub created: Option<Timestamp>,
             pub updated: Option<Timestamp>,
         }
@@ -2086,11 +2089,14 @@ pub mod meta {
                 &[
                     "File",
                     this.id.as_str(),
+                    this.name.as_str(),
                     this.url.as_str(),
                     this.mime.as_deref().unwrap_or(""),
                     &this.size.map(|sz| sz.to_string()).unwrap_or_default(),
                     this.hash.as_str(),
                     this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
                     this.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                     this.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                 ],
@@ -2106,6 +2112,41 @@ pub mod meta {
             }
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
                 None
+            }
+            /// @emoji 💾 Representations that reference this file.
+            pub async fn representations(
+                &self,
+                ctx: &async_graphql::Context<'_>,
+            ) -> async_graphql::Result<crate::gql_relay::RepresentationConnection> {
+                let rt = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                Ok(crate::gql_relay::RepresentationConnection::from_representations(kit.representations_for_file(&self.id).await).await)
+            }
+            /// @emoji 🧰 Kinds that own a representation referencing this file.
+            pub async fn types(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<crate::gql_relay::TypeConnection> {
+                let rt = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                Ok(crate::gql_relay::TypeConnection::from_types(kit.types_for_file(&self.id).await).await)
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+            pub async fn designs(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<crate::gql_relay::DesignConnection> {
+                let rt = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                Ok(crate::gql_relay::DesignConnection::from_designs(kit.designs_with_direct_file_reference(&self.id).await).await)
+            }
+            /// @emoji 🧰 Kinds that reference this file (same as [`File::types`] — kinds do not nest).
+            #[graphql(name = "allTypes")]
+            pub async fn all_types(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<crate::gql_relay::TypeConnection> {
+                let rt = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                Ok(crate::gql_relay::TypeConnection::from_types(kit.types_for_file(&self.id).await).await)
+            }
+            /// @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+            #[graphql(name = "allDesigns")]
+            pub async fn all_designs(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<crate::gql_relay::DesignConnection> {
+                let rt = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                Ok(crate::gql_relay::DesignConnection::from_designs(kit.designs_referencing_file_transitive(&self.id).await).await)
             }
         )
     }
@@ -2862,6 +2903,30 @@ pub mod kit {
                 }
                 out
             }
+
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
+                let Some(kit) = self.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.pieces_with_blueprint_type(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(kit) = self.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_type(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(kit) = self.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_type_transitive(&self.id).await
+            }
         }
 
         #[Object(name = "Type")]
@@ -2927,6 +2992,21 @@ pub mod kit {
             /// @emoji 📄 Files referenced indirectly via representations on this kind.
             pub async fn files(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.files_from_representations().await)
+            }
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            #[graphql(name = "referencedBy")]
+            pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            #[graphql(name = "allReferencedByDesigns")]
+            pub async fn all_referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
             pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
                 crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -3716,18 +3796,23 @@ pub mod kit {
                 let Some(kit) = self.owner_kit.upgrade() else {
                     return Vec::new();
                 };
-                let target = self.id.clone();
-                let mut out = Vec::new();
-                for design in kit.designs.read().await.iter() {
-                    for piece in design.pieces.read().await.iter() {
-                        if let super::r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
-                            if d.id == target {
-                                out.push(piece.clone());
-                            }
-                        }
-                    }
-                }
-                out
+                kit.pieces_with_blueprint_design(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<Design>> {
+                let Some(kit) = self.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_design(&self.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<Design>> {
+                let Some(kit) = self.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_design_transitive(&self.id).await
             }
         }
 
@@ -3843,6 +3928,16 @@ pub mod kit {
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            #[graphql(name = "allReferencedByDesigns")]
+            pub async fn all_referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
         }
         //#endregion 🏘 design
@@ -4725,6 +4820,167 @@ pub mod kit {
                 }
             }
             None
+        }
+
+        /// @emoji 🪢 Pieces in this kit whose blueprint is the given kind.
+        pub async fn pieces_with_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::piece::Piece>> {
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            for design in self.designs.read().await.iter() {
+                for piece in design.pieces.read().await.iter() {
+                    if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
+                        if t.id == target {
+                            out.push(piece.clone());
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🪢 Pieces in this kit whose blueprint is the given design.
+        pub async fn pieces_with_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::piece::Piece>> {
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            for design in self.designs.read().await.iter() {
+                for piece in design.pieces.read().await.iter() {
+                    if let r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
+                        if d.id == target {
+                            out.push(piece.clone());
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting the given kind.
+        pub async fn designs_with_direct_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
+            use std::collections::HashSet;
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.designs.read().await.iter() {
+                for piece in design.pieces.read().await.iter() {
+                    if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
+                        if t.id == target && seen.insert(design.id.clone()) {
+                            out.push(design.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given kind transitively through nested design blueprints.
+        pub async fn designs_referencing_type_transitive(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = type_id.clone();
+            let mut out = Vec::new();
+            for design in self.designs.read().await.iter() {
+                let (types, _, _) = design.transitive_reference_closure().await;
+                if types.iter().any(|t| t.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting the given design.
+        pub async fn designs_with_direct_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
+            use std::collections::HashSet;
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.designs.read().await.iter() {
+                for piece in design.pieces.read().await.iter() {
+                    if let r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
+                        if d.id == target && seen.insert(design.id.clone()) {
+                            out.push(design.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given design transitively through nested design blueprints.
+        pub async fn designs_referencing_design_transitive(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
+            let target = design_id.clone();
+            let mut out = Vec::new();
+            for design in self.designs.read().await.iter() {
+                let (_, designs, _) = design.transitive_reference_closure().await;
+                if designs.iter().any(|d| d.id == target) {
+                    out.push(design.clone());
+                }
+            }
+            out
+        }
+
+        /// @emoji 💾 Representations on kit kinds that reference the given file.
+        pub async fn representations_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Representation>> {
+            let target = file_id.clone();
+            let mut out = Vec::new();
+            for ty in self.types.read().await.iter() {
+                for rep in ty.representations.read().await.iter() {
+                    if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
+                        out.push(rep.clone());
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🧰 Kinds that own a representation referencing the given file.
+        pub async fn types_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Type>> {
+            use std::collections::HashSet;
+            let target = file_id.clone();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for ty in self.types.read().await.iter() {
+                for rep in ty.representations.read().await.iter() {
+                    if rep.file.read().await.as_ref().is_some_and(|f| f.id == target) {
+                        if seen.insert(ty.id.clone()) {
+                            out.push(ty.clone());
+                        }
+                        break;
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references the given file.
+        pub async fn designs_with_direct_file_reference(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
+            use std::collections::HashSet;
+            let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id).collect();
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for design in self.designs.read().await.iter() {
+                for piece in design.pieces.read().await.iter() {
+                    if let r#type::Blueprint::Type(t) = piece.blueprint.read().await.clone() {
+                        if type_ids.contains(&t.id) && seen.insert(design.id.clone()) {
+                            out.push(design.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🏘 Designs that reference the given file transitively through kinds and nested designs.
+        pub async fn designs_referencing_file_transitive(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
+            let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id).collect();
+            let mut out = Vec::new();
+            for design in self.designs.read().await.iter() {
+                let (types, _, _) = design.transitive_reference_closure().await;
+                if types.iter().any(|t| type_ids.contains(&t.id)) {
+                    out.push(design.clone());
+                }
+            }
+            out
         }
 
         /// @emoji 🔎 Locate a connector by id across all kit types.

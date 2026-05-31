@@ -2568,6 +2568,8 @@ export class Design extends Entity {
   declare allDesigns: () => Promise<readonly Design[]>;
   declare allFiles: () => Promise<readonly File[]>;
   declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare allReferencedByDesigns: () => Promise<readonly Design[]>;
   declare connections: () => Promise<readonly Connection[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
@@ -2757,6 +2759,20 @@ const DESIGN_FIELDS = defineBoundKitFields([
     parseEntity: (entity, frag) =>
       Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedBy").map((id) => (entity as Design).piece(id))),
   },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "allReferencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allReferencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
 ] as const);
 
 const DESIGN_OPERATIONS = defineBoundKitOperations([
@@ -2846,6 +2862,9 @@ export class Type extends Entity {
   declare connectors: () => Promise<readonly Connector[]>;
   declare representations: () => Promise<readonly Representation[]>;
   declare files: () => Promise<readonly File[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare allReferencedByDesigns: () => Promise<readonly Design[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare authors: () => Promise<readonly Author[]>;
   declare rename: (newName: string) => Promise<SetResult>;
@@ -2892,6 +2911,38 @@ const TYPE_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) =>
       Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "files").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const branch = ((frag as JsonObject | null)?.["type"] as JsonObject | undefined) ?? (frag as JsonObject | null);
+      const edges = ((branch?.["referencedBy"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "allReferencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "allReferencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",

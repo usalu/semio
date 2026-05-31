@@ -118,6 +118,52 @@ interface Artifact implements RichStrongEntity & StrongEntity & Entity & Node {
   edits: EditConnection # computed
 }
 
+#region FileSystem
+
+enum FileSystemNodeKind {
+  KIT
+  FOLDER
+  FILE
+  DESIGN
+  TYPE
+  FAMILY
+  PIECE
+  CONNECTION
+}
+
+interface FileSystemNode implements Entity & Node {
+  # Node
+  id: ID! # data
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference
+  owns: EntityConnection # reference
+  # FileSystemNode
+  fileSystemParent: FileSystemNode # computed
+  fileSystemChildren: FileSystemNodeConnection! # computed
+  fileSystemChild(id: ID!): FileSystemNode # computed
+  fileSystemPath: String! # computed
+  fileSystemName: String! # computed
+  isFileSystemRoot: Boolean! # computed
+  fileSystemKind: FileSystemNodeKind! # computed
+}
+
+type FileSystemNodeEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: FileSystemNode! # reference
+}
+
+type FileSystemNodeConnection implements EntityConnection {
+  # EntityConnection
+  edges: [FileSystemNodeEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion FileSystem
+
 interface Document implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
@@ -1579,7 +1625,7 @@ type PlaceModificationsConnection implements EntityConnection {
 
 #region Family
 
-type Family implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Family implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1702,7 +1748,7 @@ type FamilyModificationsConnection implements EntityConnection {
 
 #region Folder
 
-type Folder implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Folder implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1842,7 +1888,7 @@ type FolderModificationsConnection implements EntityConnection {
 
 #region File
 
-type File implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type File implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1866,6 +1912,11 @@ type File implements Artifact & RichStrongEntity & StrongEntity & Entity & Node 
   url: String! # data
   mime: String! # data
   size: Int # data
+  representations: RepresentationConnection! # computed
+  types: TypeConnection! # computed
+  designs: DesignConnection! # computed
+  allTypes: TypeConnection! # computed
+  allDesigns: DesignConnection! # computed
   tag(id: ID!): Tag # computed
   quality(id: ID!): Quality # computed
   attribute(id: ID!): Attribute # computed
@@ -5457,7 +5508,7 @@ type RepresentationModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5488,6 +5539,9 @@ type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node 
   representation(id: ID!): Representation # computed
   bestRepresentation: Representation # computed
   files: FileConnection! # computed
+  referencedBy: PieceConnection! # computed
+  referencedByDesigns: DesignConnection! # computed
+  allReferencedByDesigns: DesignConnection! # computed
   authors: AuthorConnection! # computed
   author(id: ID!): Author # computed
   concepts: ConceptConnection! # computed
@@ -6790,7 +6844,7 @@ type BlueprintConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Piece implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Piece implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6934,7 +6988,7 @@ type PieceModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Connection implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Connection implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8279,7 +8333,7 @@ type SideModificationsConnection implements EntityConnection {
 
 #endregion Connection
 
-type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8329,6 +8383,8 @@ type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Nod
   allDesigns: DesignConnection! # computed
   allFiles: FileConnection! # computed
   referencedBy: PieceConnection! # computed
+  referencedByDesigns: DesignConnection! # computed
+  allReferencedByDesigns: DesignConnection! # computed
 }
 
 type DesignEdge implements EntityEdge {
@@ -8577,6 +8633,96 @@ type CreatedDesignsConnection implements EntityConnection {
   edges: [CreatedDesignsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
+}
+
+type CreatedFolderInput implements Input & WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedFolder
+  owns: EntityConnection # reference
+  # Input
+  name: String!
+  path: String!
+  description: String
+  icon: String
+  parentFolderId: ID
+}
+
+type CreatedFolderInputEdge implements EntityEdge {
+  cursor: String!
+  node: CreatedFolderInput!
+}
+
+type CreatedFolderInputConnection implements EntityConnection {
+  edges: [CreatedFolderInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type CreatedFolder implements Operation & StrongEntity & Entity & Node {
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: CreatedFolderInput!
+  modification: Modification!
+  folder: Folder!
+}
+
+type CreatedFolderEdge implements EntityEdge {
+  cursor: String!
+  node: CreatedFolder!
+}
+
+type CreatedFolderConnection implements EntityConnection {
+  edges: [CreatedFolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type MovedToFolderInput implements Input & WeakEntity & Entity & Node {
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  nodeId: ID!
+  folderId: ID
+}
+
+type MovedToFolderInputEdge implements EntityEdge {
+  cursor: String!
+  node: MovedToFolderInput!
+}
+
+type MovedToFolderInputConnection implements EntityConnection {
+  edges: [MovedToFolderInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type MovedToFolder implements Operation & StrongEntity & Entity & Node {
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: MovedToFolderInput!
+  modification: Modification!
+  node: FileSystemNode!
+}
+
+type MovedToFolderEdge implements EntityEdge {
+  cursor: String!
+  node: MovedToFolder!
+}
+
+type MovedToFolderConnection implements EntityConnection {
+  edges: [MovedToFolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedDesign implements Operation & StrongEntity & Entity & Node {
@@ -8876,7 +9022,7 @@ type DesignOperationConnection implements EntityConnection {
 
 #endregion Design
 
-type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9077,6 +9223,10 @@ type KitOperation {
   design(id: ID!): DesignOperation!
   deleteDesign(id: ID!): Response!
   deleteDesigns(ids: [ID!]!): Response!
+
+  # Folders
+  createFolder(name: String!, path: String!, description: String, icon: String, parentFolderId: ID): Response!
+  moveToFolder(nodeId: ID!, folderId: ID): Response!
 }
 
 type KitOperationEdge implements EntityEdge {
