@@ -1320,6 +1320,7 @@ import {
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
+  puzzle2dSyncSelectionToAllAuthoringPeers,
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
   encodePuzzle2dFixtureForDragV1,
@@ -1482,10 +1483,8 @@ interface Puzzle2dPlayShellValue {
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
   activePaneId: Puzzle2dPlayPaneId;
   setActivePaneId: (id: Puzzle2dPlayPaneId) => void;
-  selectionIds: Set<string>;
+  /** @emoji ✅ Commits selection to WASM peers + selection context; stable callback (not `selectionIds`). */
   setSelectionIds: (ids: readonly string[]) => void;
-  preselection: Puzzle2dPreselectSnapshot;
-  setPreselection: (snapshot: Puzzle2dPreselectSnapshot) => void;
   hoveredId: string | null;
   /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link Puzzle2dPlayShellValue.hoveredId}. */
   hoverSourcePane: Puzzle2dPlayPaneId | null;
@@ -1547,9 +1546,17 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
-/** @emoji 🌳 Workbench hierarchy bound to {@link Puzzle2dPlayShellContext} fixture (not static tree snapshots). */
+interface Puzzle2dPlaySelectionValue {
+  selectionIds: Set<string>;
+  setSelectionIds: (ids: readonly string[]) => void;
+  preselection: Puzzle2dPreselectSnapshot;
+  setPreselection: (snapshot: Puzzle2dPreselectSnapshot) => void;
+}
+
+/** @emoji 🌳 Workbench hierarchy bound to play fixture + selection (not static tree snapshots). */
 function Puzzle2dPlayHierarchyPanel(): ReactElement {
-  const { fixture, selectionIds, setSelectionIds } = usePuzzle2dPlayShell();
+  const { fixture } = usePuzzle2dPlayShell();
+  const { selectionIds, setSelectionIds } = usePuzzle2dPlaySelection();
   const sections = reactHostPort.useMemo(
     () => buildPuzzle2dPlayHierarchySections(fixture, [...selectionIds], (id) => setSelectionIds([id])).sections as TreeDataSection[],
     [fixture, selectionIds, setSelectionIds],
@@ -1636,12 +1643,22 @@ class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
 
 const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellValue | null>(null);
 
+const Puzzle2dPlaySelectionContext = reactHostPort.createContext<Puzzle2dPlaySelectionValue | null>(null);
+
 const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => void) | null>(null);
 
 function usePuzzle2dPlayShell(): Puzzle2dPlayShellValue {
   const value = reactHostPort.useContext(Puzzle2dPlayShellContext);
   if (!value) {
     throw new Error("usePuzzle2dPlayShell must be used inside Puzzle2dPlayShellContext.");
+  }
+  return value;
+}
+
+function usePuzzle2dPlaySelection(): Puzzle2dPlaySelectionValue {
+  const value = reactHostPort.useContext(Puzzle2dPlaySelectionContext);
+  if (!value) {
+    throw new Error("usePuzzle2dPlaySelection must be used inside Puzzle2dPlaySelectionContext.");
   }
   return value;
 }
@@ -1897,7 +1914,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     handleCanvasFixtureDrop,
     camerasByPane,
     resetPuzzle2dRedrawProgressiveEpoch,
-    selectionIds,
     setSelectionIds,
     syncBaselineFromViewportCamera,
   } = usePuzzle2dPlayShell();
@@ -1905,7 +1921,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
   const lodProps = puzzle2dPlayLodCanvasProps(puzzle2dLodModeByPane[paneId]);
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
-  const selection = reactHostPort.useMemo(() => normalizePuzzle2dSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
@@ -1979,7 +1994,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
-        selection={selection}
         selectionMethod={puzzle2dSelectionMethod}
         selectionMode={puzzle2dSelectionMode}
         selectionTargets={puzzle2dSelectionTargets}
@@ -2610,8 +2624,9 @@ function InspectorEdgeBatch({
 }
 
 /** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
-function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue): TreeDataSection[] {
-  const { activePaneId, fixture, patchFixture, selectionIds } = shell;
+function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selection: Puzzle2dPlaySelectionValue): TreeDataSection[] {
+  const { activePaneId, fixture, patchFixture } = shell;
+  const { selectionIds } = selection;
   const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
   const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
   const nodeIds: string[] = [];
@@ -2876,6 +2891,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const setSelectionIds = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
+    puzzle2dSyncSelectionToAllAuthoringPeers(ids);
   }, []);
 
   const setHoverPane = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId) => {
@@ -3407,10 +3423,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setTreeLayoutLayerSpacing,
       setTreeLayoutDirection,
       setTreeLayoutSiblingGap,
-      selectionIds,
       setSelectionIds,
-      preselection,
-      setPreselection,
       sceneAuthoringEpoch,
       hoveredId,
       hoverSourcePane,
@@ -3450,8 +3463,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       patchFixture,
       remapIdInSelections,
       resetPuzzle2dRedrawProgressiveEpoch,
-      selectionIds,
-      preselection,
+      setSelectionIds,
       sceneAuthoringEpoch,
       hoveredId,
       hoverSourcePane,
@@ -3462,6 +3474,16 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       treeLayoutDirection,
       treeLayoutSiblingGap,
     ],
+  );
+
+  const selectionValue = reactHostPort.useMemo(
+    (): Puzzle2dPlaySelectionValue => ({
+      selectionIds,
+      setSelectionIds,
+      preselection,
+      setPreselection,
+    }),
+    [selectionIds, setSelectionIds, preselection, setPreselection],
   );
 
   // #region 🔖ToolbarHostBridge
@@ -3573,11 +3595,16 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const shellValueRef = reactHostPort.useRef(shellValue);
   shellValueRef.current = shellValue;
+  const selectionValueRef = reactHostPort.useRef(selectionValue);
+  selectionValueRef.current = selectionValue;
   const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
   const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
   const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
   const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(
-    () => new Puzzle2dPlayInspectorPanelDefinition(() => buildPuzzle2dPlayInspectorSections(shellValueRef.current)),
+    () =>
+      new Puzzle2dPlayInspectorPanelDefinition(() =>
+        buildPuzzle2dPlayInspectorSections(shellValueRef.current, selectionValueRef.current),
+      ),
     [],
   );
   const augmentPanelTabs = reactHostPort.useMemo(
@@ -3591,7 +3618,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   return (
     <Puzzle2dPlayShellContext.Provider value={shellValue}>
       <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-        <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+        <Puzzle2dPlaySelectionContext.Provider value={selectionValue}>
+          <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+        </Puzzle2dPlaySelectionContext.Provider>
       </Puzzle2dPlayLodRuntimeContext.Provider>
     </Puzzle2dPlayShellContext.Provider>
   );

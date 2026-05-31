@@ -21,12 +21,10 @@ import {
 	PlatformTopologyPayload,
 	platformTopologyStoreId,
 	PLATFORM_TOPOLOGY_STORE_PREFIX,
-	Table,
 	VirtualFileSystemController,
 	buildPanelWindowBody,
 	buildPuzzle2dWindowBody,
 	buildPuzzle5dWindowBody,
-	buildTableWindowBody,
 	buildVirtualFileSystemWindowBody,
 	virtualFileSystemSurfaceId,
 	type VirtualFileSystemModel,
@@ -44,7 +42,6 @@ import {
 	type PluginModule,
 	type Puzzle2dModel,
 	type Puzzle5dModel,
-	type TableModel,
 	type SideTabSpec,
 	type UiNode,
 	type WindowBodyViewContext,
@@ -689,150 +686,6 @@ export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 			pages: pages.sort((left, right) => left.path.localeCompare(right.path)),
 		}))
 		.sort((left, right) => left.label.localeCompare(right.label));
-}
-
-/** @emoji 🏠 Builds the home table model (docs tree + grouped kits). */
-export function sketchpadBuildHomeTableModel(input: {
-	readonly openKitIds: readonly string[];
-	readonly kitById: (kitId: string) => Kit | undefined;
-	readonly kitKind: (kitId: string) => string;
-	readonly home: SketchpadHomeUiState;
-	readonly docs?: readonly SketchpadDocSection[];
-}): TableModel {
-	const docs = input.docs ?? sketchpadBuildDocsRegistry();
-	const expanded = new Set(input.home.expandedRowIds);
-	const rows: TableModel["rows"][number][] = [];
-	const expandToggle = (rowId: string) => ({
-		command: "toggleHomeRowExpand",
-		args: { rowId },
-	});
-	const docsRootId = "docs-root";
-	rows.push({
-		id: docsRootId,
-		depth: 0,
-		hasChildren: true,
-		expanded: expanded.has(docsRootId),
-		expandToggle: expandToggle(docsRootId),
-		cells: { name: "Documentation", version: "", kind: "docs", updated: "" },
-	});
-	if (expanded.has(docsRootId)) {
-		for (const section of docs) {
-			const sectionId = `docs-section-${section.id}`;
-			rows.push({
-				id: sectionId,
-				depth: 1,
-				hasChildren: section.pages.length > 0,
-				expanded: expanded.has(sectionId),
-				expandToggle: expandToggle(sectionId),
-				cells: { name: section.label, version: "", kind: "docs", updated: "" },
-			});
-			if (expanded.has(sectionId)) {
-				for (const page of section.pages) {
-					rows.push({
-						id: `docs-page-${page.path}`,
-						depth: 2,
-						cells: { name: page.title, version: "", kind: "docs", updated: "" },
-						navigateUri: `/docs/${page.path}`,
-					});
-				}
-			}
-		}
-	}
-	const kitGroups = new Map<string, { readonly kitId: string; readonly kit: Kit; readonly kind: string }[]>();
-	for (const kitId of input.openKitIds) {
-		const kit = input.kitById(kitId);
-		if (!kit) continue;
-		const kind = input.kitKind(kitId) || "temporary";
-		if (input.home.kindFilter && input.home.kindFilter !== kind) continue;
-		const name = kit.name ?? kitId;
-		if (input.home.searchQuery && !name.toLowerCase().includes(input.home.searchQuery.toLowerCase())) continue;
-		if (input.home.nameFilter && name !== input.home.nameFilter) continue;
-		const version = kit.version ?? "";
-		if (input.home.versionFilter && version !== input.home.versionFilter) continue;
-		const group = kitGroups.get(name) ?? [];
-		group.push({ kitId, kit, kind });
-		kitGroups.set(name, group);
-	}
-	const sortedKitGroups = [...kitGroups.entries()].sort((left, right) => {
-		const column = input.home.sortColumnId;
-		if (!column) return left[0].localeCompare(right[0]);
-		const leftKit = (left[1].find((entry) => !entry.kit.version) ?? left[1][0]!).kit;
-		const rightKit = (right[1].find((entry) => !entry.kit.version) ?? right[1][0]!).kit;
-		const leftKind = left[1][0]?.kind ?? "";
-		const rightKind = right[1][0]?.kind ?? "";
-		let comparison = 0;
-		switch (column) {
-			case "name":
-				comparison = left[0].localeCompare(right[0]);
-				break;
-			case "version":
-				comparison = (leftKit.version ?? "").localeCompare(rightKit.version ?? "");
-				break;
-			case "kind":
-				comparison = leftKind.localeCompare(rightKind);
-				break;
-			case "updated":
-				comparison = sketchpadFormatKitTimestamp(leftKit.updatedAt ?? leftKit.createdAt).localeCompare(
-					sketchpadFormatKitTimestamp(rightKit.updatedAt ?? rightKit.createdAt),
-				);
-				break;
-			default:
-				comparison = left[0].localeCompare(right[0]);
-		}
-		return input.home.sortDescending ? -comparison : comparison;
-	});
-	for (const [name, group] of sortedKitGroups) {
-		const parentId = `kit-group-${name}`;
-		const defaultKit = group.find((entry) => !entry.kit.version) ?? group[0]!;
-		const hasChildren = group.length > 1;
-		rows.push({
-			id: parentId,
-			depth: 0,
-			hasChildren,
-			expanded: expanded.has(parentId),
-			expandToggle: hasChildren ? expandToggle(parentId) : undefined,
-			cells: {
-				name,
-				version: defaultKit.kit.version ?? "",
-				kind: defaultKit.kind,
-				updated: sketchpadFormatKitTimestamp(defaultKit.kit.updatedAt ?? defaultKit.kit.createdAt),
-			},
-			navigateUri: hasChildren ? undefined : `/kits/${defaultKit.kitId}`,
-		});
-		if (expanded.has(parentId) && hasChildren) {
-			for (const entry of group) {
-				if (entry.kitId === defaultKit.kitId) continue;
-				const versionLabel = entry.kit.version ?? "(default)";
-				rows.push({
-					id: entry.kitId,
-					depth: 1,
-					cells: {
-						name: versionLabel,
-						version: entry.kit.version ?? "",
-						kind: entry.kind,
-						updated: sketchpadFormatKitTimestamp(entry.kit.updatedAt ?? entry.kit.createdAt),
-					},
-					navigateUri: `/kits/${entry.kitId}`,
-				});
-			}
-		}
-	}
-	return {
-		columns: [
-			{ id: "name", label: "Name", sortable: true },
-			{ id: "version", label: "Version", sortable: true },
-			{ id: "kind", label: "Kind", sortable: true },
-			{ id: "updated", label: "Updated", sortable: true },
-		],
-		rows,
-		selectedRowIds: input.home.selectedKitIds,
-		sortColumnId: input.home.sortColumnId,
-		sortDescending: input.home.sortDescending,
-			emptyMessage:
-				rows.length === 0
-					? "No kits open — drop a .zip here, use Workbench → Import kit archive, or the command palette"
-					: undefined,
-	};
 }
 
 /** @emoji 🔌 Backend contract for {@link SemioKitStore} (memory, WASM worker, HTTP, …). */
@@ -3265,6 +3118,17 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	override run(command: string, args?: unknown): void {
+		if (command === "toggleVirtualFileSystemExpand") {
+			const scope = this.resolveScope(args);
+			const nodeId = (args as { nodeId?: string }).nodeId;
+			if (scope?.appId === SKETCHPAD_HOME_APP_ID && nodeId) {
+				const shell = this.shellStore.get();
+				const expanded = new Set(shell.home.expandedRowIds);
+				if (expanded.has(nodeId)) expanded.delete(nodeId);
+				else expanded.add(nodeId);
+				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
+			}
+		}
 		if (this.runVirtualFileSystemCommand(command, args)) return;
 		const shell = this.shellStore.get();
 		switch (command) {
@@ -4313,8 +4177,8 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("SketchpadHomeTable snapshot", () => {
-		it("lists open kits with version and kind columns", async () => {
+	describe("Sketchpad home virtual file system", () => {
+		it("lists open kits under the home root", async () => {
 			const platform = await buildSketchpadPlatform();
 			const ctrl = getSketchpadShellController()!;
 			ctrl.registerKitStore(
@@ -4322,12 +4186,44 @@ if (import.meta.vitest) {
 				new InMemorySemioKitStore({ id: "k-home", name: "Demo Kit", version: "r1", updatedAt: "2025-06-01T12:00:00.000Z" } as Kit),
 				{ kind: "fixture" },
 			);
-			const table = new SketchpadHomeTable(platform);
-			const snap = table.buildSnapshot();
-			expect(snap.columns?.map((column) => column.id)).toEqual(expect.arrayContaining(["name", "version", "kind", "updated"]));
-			expect(snap.rows.some((row) => row.id === "kit-group-Demo Kit")).toBe(true);
-			expect(snap.rows.find((row) => row.id === "kit-group-Demo Kit")?.cells.version).toBe("r1");
-			expect(snap.rows.find((row) => row.id === "kit-group-Demo Kit")?.cells.kind).toBe("fixture");
+			ctrl.navigateTo("/");
+			platform.uri = "/";
+			const scope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
+			ctrl.expandedStore(scope, ["sketchpad-home"]);
+			const snap = ctrl.buildVirtualFileSystemModel(scope);
+			expect(snap.rows.map((row) => row.id)).toContain("kit:k-home");
+			expect(snap.rows.find((row) => row.id === "kit:k-home")?.name).toBe("Demo Kit");
+			ctrl.dispose();
+		});
+	});
+
+	describe("Sketchpad kit virtual file system", () => {
+		it("projects kit entities as hierarchical vfs rows", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const designId = "66666666-7777-8888-9999-aaaaaaaaaaaa";
+			const folderId = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "VFS Kit",
+					types: [{ id: typeId, name: "Base" }],
+					designs: [{ id: designId, name: "Tower", pieces: [] }],
+					folders: [{ id: folderId, path: "/inbox" }],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			platform.uri = `/kits/${kitId}`;
+			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [kitId]);
+			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
+			const snap = vfs.buildSnapshot();
+			expect(snap.rows.some((row) => row.id === kitId && row.kind === "kit")).toBe(true);
+			expect(snap.rows.some((row) => row.id === `type:${typeId}`)).toBe(true);
+			expect(snap.rows.some((row) => row.id === `design:${designId}` && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
+			expect(snap.rows.some((row) => row.id === `folder:${folderId}`)).toBe(true);
 			ctrl.dispose();
 		});
 	});

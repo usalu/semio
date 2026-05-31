@@ -1,9 +1,9 @@
 {
   "title": "Kit Virtual File System UI",
   "emoji": "📁",
-  "status": "open",
+  "status": "closed",
   "description": "Add unified FileSystemNode interface with computed parent/children/path across GraphQL golden schema, Rust store, and semio/js. Wire folder membership storage and createFolder/moveToFolder via existing kit operation mechanism.",
-  "summary": "Added VirtualFileSystem UI component (specialized hierarchical Table with expand/collapse and drag-drop) in @ui/react with buildVirtualFileSystemVisibleRows helper and vitest coverage. Created Storybook stories (Collapsed, Expanded, StaticRows). Extended @framework/platform/core with virtualFileSystem component kind, VirtualFileSystemModel, VirtualFileSystemController (lazy child loading for expanded nodes only), PlatformVirtualFileSystemDemoController, and registerPlatformVirtualFileSystemDemo. Wired BuiltinVirtualFileSystemKindRenderer in @framework/platform/renderer/react with expand, selection, and drag-reparent commands. All platform core (11), ui react (76), and platform renderer (19) tests pass.",
+  "summary": "Scoped virtual file systems per app: VirtualFileSystemScope (appId + surfaceId), virtualFileSystemSurfaceId/registerAppVirtualFileSystem/registerAppVirtualFileSystem, per-app selection and lazy children stores, navigateUri on rows. Demo registers two apps with independent trees. SketchpadShellController extends VirtualFileSystemController; home/kit/design apps each use SketchpadAppVirtualFileSystem surfaces. Renderer passes appId on VFS commands. Platform core (11), renderer (19), ui (76) tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "plan": {
     "client": "cursor",
