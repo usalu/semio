@@ -336,6 +336,20 @@ export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot): Puzzl
 }
 
 /** @emoji 🎯 True when two selection snapshots match (skips redundant shell updates). */
+/** @emoji ⌨️ Select-all snapshot for the fixture honoring playground object/vortex/attraction kind toggles. */
+export function puzzle3dPlayAllSelectionFromFixture(
+  fixture: FixtureV1,
+  kinds: Readonly<Record<Puzzle3dPlayPickKind, boolean>>,
+): Puzzle3dPlaySelection {
+  return {
+    objectIds: kinds.object ? fixture.objects.map((object) => object.id) : [],
+    vortexIds: kinds.vortex
+      ? fixture.objects.flatMap((object) => object.vortices.map((vortex) => puzzle3dVortexFullId(object.id, vortex.id)))
+      : [],
+    attractionIds: kinds.attraction ? fixture.attractions.map((attraction) => attraction.id) : [],
+  };
+}
+
 export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3dPlaySelection): boolean {
   if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length) {
     return false;
@@ -864,6 +878,24 @@ export class Puzzle3dPlayShellController extends Controller {
       }
       case "deleteSelection": {
         this.applyDeleteSelection();
+        return;
+      }
+      case "selectAllSelection": {
+        if (!this.fixture) {
+          return;
+        }
+        const resolved = this.filterSelectionByPlaygroundKinds(
+          puzzle3dPlayAllSelectionFromFixture(this.fixture, {
+            object: this.selectableKinds.object && this.visibleKinds.object,
+            vortex: this.selectableKinds.vortex && this.visibleKinds.vortex,
+            attraction: this.selectableKinds.attraction && this.visibleKinds.attraction,
+          }),
+        );
+        if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
+          return;
+        }
+        this.selection = resolved;
+        this.notifySelection();
         return;
       }
       case "patchPuzzle3dObjects": {
@@ -1493,6 +1525,7 @@ export class Playground3d extends Playground {
   readonly id = PUZZLE_3D_PLAY_APP_ID;
   readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
   readonly keybindings = [
+    { key: "ctrl+a,meta+a", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
     { key: "Delete", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
     { key: "Backspace", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
   ];
@@ -1614,6 +1647,34 @@ if (import.meta.vitest) {
       expect(ctrl.getSnapshot().selectionMethod).toBe("lasso");
       ctrl.run("toggleSelectableKind", { kind: "object" });
       expect(ctrl.getSnapshot().selectableKinds.object).toBe(false);
+    });
+
+    it("puzzle3dPlayAllSelectionFromFixture lists every row for enabled kinds", () => {
+      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      expect(fixture).not.toBeNull();
+      const all = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: true, attraction: true });
+      expect(all.objectIds.length).toBe(fixture!.objects.length);
+      expect(all.vortexIds.length).toBe(fixture!.objects.reduce((count, object) => count + object.vortices.length, 0));
+      expect(all.attractionIds).toEqual(fixture!.attractions.map((attraction) => attraction.id));
+      const objectsOnly = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: false, attraction: false });
+      expect(objectsOnly.vortexIds).toEqual([]);
+      expect(objectsOnly.attractionIds).toEqual([]);
+    });
+
+    it("selectAllSelection selects every selectable fixture row", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
+      ctrl.run("selectAllSelection");
+      const snap = ctrl.getSnapshot();
+      expect(snap.selection.objectIds.length).toBe(fixture!.objects.length);
+      expect(snap.selection.vortexIds.length).toBe(fixture!.objects.reduce((count, object) => count + object.vortices.length, 0));
+      ctrl.run("toggleSelectableKind", { kind: "vortex" });
+      ctrl.run("selectAllSelection");
+      expect(ctrl.getSnapshot().selection.vortexIds).toEqual([]);
     });
 
     it("deleteSelection removes selected fixture rows and clears selection", () => {

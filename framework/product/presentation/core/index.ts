@@ -199,11 +199,10 @@ export function countArrangements(presentation: Presentation): number {
 //#endregion 🔖Resolve
 
 //#region 🔖Intro
-/** @emoji 🎬 Spec for the standard paper intro template (brand → title → subtitle → authors → affiliations). */
+/** @emoji 🎬 Spec for the standard paper intro template (title → subtitle → authors → affiliations). */
 export interface IntroSpec {
 	readonly id?: string;
 	readonly name?: string;
-	readonly brand: string;
 	readonly title: {
 		readonly full: readonly string[];
 		readonly short: string;
@@ -213,7 +212,6 @@ export interface IntroSpec {
 	readonly affiliations: readonly { readonly mark: string; readonly name: string }[];
 }
 
-const INTRO_PARTICIPANT_NAME = "name";
 const INTRO_PARTICIPANT_TITLE = "title";
 const INTRO_PARTICIPANT_SUBTITLE = "subtitle";
 const INTRO_PARTICIPANT_AUTHORS = "authors";
@@ -224,14 +222,10 @@ const INTRO_EMBODIMENT_TITLE_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
 
-/** @emoji 🎬 Builds a five-slide intro thought (brand → title → subtitle → authors → affiliations). */
+/** @emoji 🎬 Builds a four-slide intro thought (title → subtitle → authors → affiliations). */
 export function intro(spec: IntroSpec): Presentation {
 	const thoughtId = "intro";
 	const participants: Participant[] = [
-		{
-			id: INTRO_PARTICIPANT_NAME,
-			embodiments: [{ kind: "text", lines: [spec.brand], level: "title" }],
-		},
 		{
 			id: INTRO_PARTICIPANT_TITLE,
 			embodiments: [
@@ -303,15 +297,13 @@ export function intro(spec: IntroSpec): Presentation {
 		participants,
 		transition: { kind: "morph" },
 		arrangements: [
-			{ id: "brand", placements: [active(INTRO_PARTICIPANT_NAME)] },
 			{
 				id: "title",
-				placements: [muted(INTRO_PARTICIPANT_NAME), active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
+				placements: [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
 			},
 			{
 				id: "subtitle",
 				placements: [
-					muted(INTRO_PARTICIPANT_NAME),
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 					active(INTRO_PARTICIPANT_SUBTITLE),
 				],
@@ -319,7 +311,6 @@ export function intro(spec: IntroSpec): Presentation {
 			{
 				id: "authors",
 				placements: [
-					muted(INTRO_PARTICIPANT_NAME),
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 					muted(INTRO_PARTICIPANT_SUBTITLE),
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
@@ -328,7 +319,6 @@ export function intro(spec: IntroSpec): Presentation {
 			{
 				id: "institutions",
 				placements: [
-					muted(INTRO_PARTICIPANT_NAME),
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 					muted(INTRO_PARTICIPANT_SUBTITLE),
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
@@ -340,7 +330,7 @@ export function intro(spec: IntroSpec): Presentation {
 
 	return {
 		id: spec.id ?? "presentation",
-		name: spec.name ?? spec.brand,
+		name: spec.name ?? spec.title.short,
 		sequences: [{ id: "main", thoughts: [thought] }],
 	};
 }
@@ -351,7 +341,6 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	const sampleIntro = intro({
-		brand: "semio",
 		title: {
 			full: ["Line A", "Line B", "Line C"],
 			short: "Short title",
@@ -368,27 +357,26 @@ if (import.meta.vitest) {
 	});
 
 	describe("intro", () => {
-		it("builds five arrangements in one thought", () => {
-			expect(countArrangements(sampleIntro)).toBe(5);
+		it("builds four arrangements in one thought", () => {
+			expect(countArrangements(sampleIntro)).toBe(4);
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			expect(thought.arrangements.map((a) => a.id)).toEqual(["brand", "title", "subtitle", "authors", "institutions"]);
+			expect(thought.arrangements.map((a) => a.id)).toEqual(["title", "subtitle", "authors", "institutions"]);
 		});
 
 		it("layers muted participants on the institutions slide", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
 			const resolved = resolveArrangement(thought, "institutions");
 			expect(resolved.map((r) => r.participant.id)).toEqual([
-				INTRO_PARTICIPANT_NAME,
 				INTRO_PARTICIPANT_TITLE,
 				INTRO_PARTICIPANT_SUBTITLE,
 				INTRO_PARTICIPANT_AUTHORS,
 				INTRO_PARTICIPANT_INSTITUTIONS,
 			]);
 			expect(resolved[0]!.emphasis).toBe("muted");
-			expect(resolved[4]!.emphasis).toBe("active");
-			expect(resolved[3]!.embodiment.kind).toBe("authors");
-			if (resolved[3]!.embodiment.kind === "authors") {
-				expect(resolved[3]!.embodiment.id).toBe(INTRO_EMBODIMENT_AUTHORS_MARKED);
+			expect(resolved[3]!.emphasis).toBe("active");
+			expect(resolved[2]!.embodiment.kind).toBe("authors");
+			if (resolved[2]!.embodiment.kind === "authors") {
+				expect(resolved[2]!.embodiment.id).toBe(INTRO_EMBODIMENT_AUTHORS_MARKED);
 			}
 		});
 	});
@@ -434,7 +422,7 @@ if (import.meta.vitest) {
 		it("resolves morphId per placement", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
 			const resolved = resolveArrangement(thought, "subtitle");
-			expect(resolved.map((r) => r.morphId)).toEqual(["name", "title", "subtitle"]);
+			expect(resolved.map((r) => r.morphId)).toEqual(["title", "subtitle"]);
 		});
 	});
 }

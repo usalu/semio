@@ -1,5 +1,5 @@
 # React
 
-React + reveal.js renderer for `@framework/presentation/core`. Uses `@ui/react` surface chrome and design tokens; `./globals.css` maps reveal.js to those tokens.
+React + reveal.js renderer for `@framework/presentation/core`. 
 
-Apps must import `@ui/react/globals.css` before `@framework/presentation/renderer/react/globals.css`.
+You MUST use [auto-animate](https://revealjs.com/auto-animate) for declarative transitions.

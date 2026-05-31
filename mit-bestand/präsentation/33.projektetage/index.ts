@@ -12,29 +12,25 @@ import "./globals.css";
 const deck = intro({
 	id: "projektetage",
 	name: "33. Projektetage",
-	brand: "semio",
 	title: {
-		full: [
-			"Large-Language-Model-based",
-			"Building-Information-Model Alignment",
-			"for Automatic-Compliance-Checking",
-		],
-		short: "LLM-based BIM Alignment for ACC",
+		full: ["Entwerfen", "mit Bestand"],
+		short: "Entwerfen mit Bestand",
 	},
 	description: [
-		"Towards Closing the Gap between",
-		"Model Authoring and Model Checking",
-		"for Kit-of-Parts Architecture",
+		"Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten",
+		"Mehr Zeit zum manuellen Entwerfen dank Automatisierung!",
 	],
 	authors: [
-		{ name: "Ueli Saluz", marks: ["1", "a"] },
-		{ name: "Ildar Baimuratov", marks: ["1", "b"] },
-		{ name: "Philipp Geyer", marks: ["1", "a"] },
+		{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
+		{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
+		{ name: "Phillipp Geyer", marks: ["1", "a", "x"] },
 	],
 	affiliations: [
-		{ mark: "1", name: "Leibniz University Hannover" },
-		{ mark: "a", name: "Faculty of Architecture" },
-		{ mark: "b", name: "Faculty of Computer Science" },
+		{ mark: "1", name: "Leibniz Universität Hannover" },
+		{ mark: "2", name: "Universität der Künste" },
+		{ mark: "a", name: "Fakultät für Architektur" },
+		{ mark: "x", name: "Nachhaltige Gebäudesysteme" },
+		{ mark: "y", name: "Konstruktives Entwerfen" },
 	],
 });
 
@@ -61,8 +57,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("projektetage deck", () => {
-		it("declares five intro slides", () => {
-			expect(countArrangements(deck)).toBe(5);
+		it("declares four intro slides", () => {
+			expect(countArrangements(deck)).toBe(4);
 		});
 	});
 }

@@ -1,11 +1,13 @@
 {
   "title": "Projektetage Reveal Presentation",
-  "status": "closed",
+  "status": "open",
   "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
-  "summary": "Removed PlatformView navbar app switcher (Home/Kit/Design tabs). Breadcrumb now follows back/forward/up navigation directly. App switching remains via URI/breadcrumb (sketchpad applySketchpadUri). Added regression test.",
+  "summary": "Replaced the 33.projektetage declarative intro (eg-ice-25 English paper copy) with German Mit Bestand content: brand mit-bestand, title Entwerfen mit Bestand, platform tagline and automation subtitle, authors Ueli Saluz / Kinan Sarakbi / Phillipp Geyer with full affiliation marks (1/2/a/x/y). Presentation core and renderer tests and projektetage production build pass.",
   "goal": "🎯mitbestand",
   "sessions": [
     "⚪cbb72fbe25dd449982ea468572735bf6",
-    "⚪54b2f60d961b4bb6b4871c42b7d4cca7"
+    "⚪54b2f60d961b4bb6b4871c42b7d4cca7",
+    "⚪1f31f7ca2c2642419cdf022aa07c9ff4",
+    "⚪cc3149a6565d4adcb0a94619c350a383"
   ]
 }

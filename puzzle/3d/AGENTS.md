@@ -14,4 +14,4 @@
 
 # CableKind
 
-# CableKind
+# Cable

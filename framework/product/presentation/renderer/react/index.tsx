@@ -448,9 +448,8 @@ if (import.meta.vitest) {
 			container.remove();
 		});
 
-		it("renders five vertical sections for the intro template", () => {
+		it("renders four vertical sections for the intro template", () => {
 			const deck = intro({
-				brand: "semio",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: ["D1", "D2"],
 				authors: [{ name: "Alice" }],
@@ -461,10 +460,9 @@ if (import.meta.vitest) {
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
-			expect(sections.length).toBe(5);
+			expect(sections.length).toBe(4);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
-			expect(container.querySelector('[data-id="name"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="title"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="subtitle"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="authors"]')).toBeTruthy();
@@ -473,7 +471,6 @@ if (import.meta.vitest) {
 
 		it("applies muted opacity on layered title slide", () => {
 			const deck = intro({
-				brand: "semio",
 				title: { full: ["A"], short: "Short" },
 				description: ["D"],
 				authors: [{ name: "Alice" }],
@@ -488,7 +485,6 @@ if (import.meta.vitest) {
 
 		it("matches eg-ice-25 intro morph DOM per arrangement", () => {
 			const deck = intro({
-				brand: "semio",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: ["D1", "D2"],
 				authors: [{ name: "Alice", marks: ["1", "a"] }],
@@ -498,7 +494,6 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
-			expect(slide("brand")?.querySelector('h1[data-id="name"]')?.textContent).toBe("semio");
 			expect(slide("title")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
 			expect(slide("title")?.querySelectorAll('div[data-id="title"] h2').length).toBe(3);
 			expect(slide("subtitle")?.querySelector('h2[data-id="title"]')).toBeTruthy();
@@ -511,7 +506,6 @@ if (import.meta.vitest) {
 
 		it("enables reveal auto-animate and tags every morph arrangement with data-auto-animate", () => {
 			const deck = intro({
-				brand: "semio",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: ["D1", "D2"],
 				authors: [{ name: "Alice" }],
@@ -521,9 +515,9 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const morphSections = container.querySelectorAll(".slides > section > section[data-auto-animate]");
-			expect(morphSections.length).toBe(5);
+			expect(morphSections.length).toBe(4);
 			for (const section of morphSections) {
-				expect(section.querySelector('[data-id="name"]')?.tagName).toBe("H1");
+				expect(section.querySelector('[data-id="title"]')).toBeTruthy();
 			}
 		});
 

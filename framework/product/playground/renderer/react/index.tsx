@@ -18,6 +18,7 @@ import {
   Label,
   LevelProvider,
   staticTreePanelDefinition,
+  useCommandHotkey,
   useElementsSurfaceChrome,
   useMediaQuery,
   type EngagementSpec,
@@ -68,6 +69,7 @@ import {
   type AppTools,
   type CommandDescriptor,
   type Playground,
+  type PlaygroundKeybinding,
   type ResolvedAppState,
   type SidePanelBodyViewContext,
   type SideTabSpec,
@@ -679,6 +681,42 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 }
 //#endregion 🔖DeclarativeHosts
 
+//#region 🔖PlaygroundKeybindings
+/** @emoji ⌨️ Dispatches declarative {@link Playground.keybindings} through the active command bus. */
+function PlaygroundKeybindingHotkey(props: {
+  readonly binding: PlaygroundKeybinding;
+  readonly bus: CommandBus;
+}): null {
+  const { binding, bus } = props;
+  useCommandHotkey(
+    binding.key,
+    () => {
+      bus.dispatch(binding.controllerId, binding.command, binding.args);
+    },
+    { preventDefault: true },
+    [binding.command, binding.controllerId, binding.args, bus],
+  );
+  return null;
+}
+
+function PlaygroundKeybindings(props: {
+  readonly keybindings: readonly PlaygroundKeybinding[] | undefined;
+  readonly bus: CommandBus;
+}): React.ReactElement | null {
+  const { keybindings, bus } = props;
+  if (!keybindings?.length) {
+    return null;
+  }
+  return (
+    <>
+      {keybindings.map((binding) => (
+        <PlaygroundKeybindingHotkey key={`${binding.controllerId}:${binding.command}:${binding.key}`} binding={binding} bus={bus} />
+      ))}
+    </>
+  );
+}
+//#endregion 🔖PlaygroundKeybindings
+
 //#region 🔖PlaygroundView
 export interface PlaygroundPanelVisibility {
   leftSidePanel: boolean;
@@ -703,6 +741,7 @@ export function useApp(): PlaygroundContextValue {
 
 export interface PlaygroundViewProps {
   readonly runtime: Platform;
+  readonly playgroundKeybindings?: readonly PlaygroundKeybinding[];
   readonly defaultAppId?: string;
   readonly mobile?: boolean;
   readonly mobileQuery?: string;
@@ -722,7 +761,7 @@ function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: reado
 }
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
   reactHostPort.useSyncExternalStore(
     (onStoreChange) => runtime.subscribe(onStoreChange),
     () => runtime.generation,
@@ -835,6 +874,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, default
         activeModeId,
       }}
     >
+      <PlaygroundKeybindings keybindings={playgroundKeybindings} bus={bus} />
       <ProductShell
         platform={runtime}
         defaultAppId={defaultAppId}
@@ -1054,7 +1094,10 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
 
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} />, rootId);
+  mountPlaygroundApp(
+    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} playgroundKeybindings={playground.keybindings} />,
+    rootId,
+  );
 }
 
 const puzzle3dPlayChromeBoot: PlaygroundChromeBoot = {
