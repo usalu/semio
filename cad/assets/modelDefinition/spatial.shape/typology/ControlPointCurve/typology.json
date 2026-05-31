@@ -8,7 +8,7 @@
     "command.finish"
   ],
   "interactions": [
-    "curve.control-point-curve"
+    "curve.controlPointCurve"
   ],
   "primitiveKinds": [
     "edge",

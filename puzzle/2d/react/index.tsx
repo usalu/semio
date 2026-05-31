@@ -2615,6 +2615,13 @@ export class Puzzle2dRenderer {
     puzzle2dBroadcastStructuralRemove(this, structural);
   }
 
+  /** @emoji 🔔 Marks the WASM descriptor cache stale after scene graph or selection chrome changes. */
+  markSceneDescriptorDirty(): void {
+    this.sceneDescriptorEpoch += 1;
+    this.lastPushedDescriptorJson = null;
+    this.lastPushedSceneDescriptorEpoch = -1;
+  }
+
   /** @emoji 🔇 Applies a peer pane node drag without emitting {@link Puzzle2dEventMap.nodeMove}. */
   applyNodePositionSilent(nodeId: string, x: number, y: number): void {
     if (this.isDisposed) {
@@ -2672,7 +2679,7 @@ export class Puzzle2dRenderer {
       return;
     }
     this.bumpWasmHostSceneMergeResyncEpoch();
-    this.lastPushedDescriptorJson = null;
+    this.markSceneDescriptorDirty();
     this.invalidate();
   }
 
@@ -2714,6 +2721,8 @@ export class Puzzle2dRenderer {
   private gpuSurfacePresentedFrame = false;
   private gpuSurfaceUnavailable = false;
   private lastPushedDescriptorJson: string | null = null;
+  private sceneDescriptorEpoch = 0;
+  private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
   private lastDescriptorPushDeferred = false;
   private kindCompatJson = "[]";
@@ -3036,7 +3045,7 @@ export class Puzzle2dRenderer {
     }
     this.lastAutomaticLodForWasm = null;
     this.lastForcedDrawLodLabelForWasm = null;
-    this.lastPushedDescriptorJson = null;
+    this.markSceneDescriptorDirty();
     this.markDirty();
   }
 
@@ -3699,7 +3708,7 @@ export class Puzzle2dRenderer {
     }
     const deferDescriptorSync = this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs() || this.preselectIds.size > 0;
     if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
-      this.lastPushedDescriptorJson = null;
+      this.markSceneDescriptorDirty();
     }
     this.lastDescriptorPushDeferred = deferDescriptorSync;
     const flushedIncrementalNodeMoves = this.flushPendingIncrementalNodeMovesToWasm();
@@ -3708,16 +3717,21 @@ export class Puzzle2dRenderer {
         this.invalidated = true;
         return;
       }
-      const skipFullDescriptorSync = flushedIncrementalNodeMoves && this.lastPushedDescriptorJson !== null;
+      const descriptorCacheValid =
+        this.lastPushedDescriptorJson !== null && this.lastPushedSceneDescriptorEpoch === this.sceneDescriptorEpoch;
+      const skipFullDescriptorSync = (flushedIncrementalNodeMoves && descriptorCacheValid) || descriptorCacheValid;
       if (!skipFullDescriptorSync) {
         const desc = this.descriptorJsonForWasmHost();
         if (desc !== this.lastPushedDescriptorJson) {
           try {
             this.session.syncDescriptorJson(desc);
             this.lastPushedDescriptorJson = desc;
+            this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
           } catch (err) {
             console.error("[DEBUG] syncDescriptorJson failed", err);
           }
+        } else {
+          this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
         }
       }
     }
@@ -3909,6 +3923,7 @@ export class Puzzle2dRenderer {
       this.enqueuePuzzle2dGraphObservationFlush();
       if (graphMutatedForHostMerge) {
         this.bumpWasmHostSceneMergeResyncEpoch();
+        this.markSceneDescriptorDirty();
       }
     }
   }
@@ -4149,6 +4164,7 @@ export class Puzzle2dRenderer {
       this.updatePreselection([], [], false);
     }
     this.applySelectionChromeToSceneObjects();
+    this.markSceneDescriptorDirty();
     if (emit) {
       this.emit("select", nextSnapshot);
     }
@@ -4739,6 +4755,21 @@ if (puzzle2dVitest) {
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
+    });
+
+    it("skips full syncDescriptorJson when only the camera changes", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(renderer.session, "syncDescriptorJson");
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "camera", payload: { x: 12, y: 34, zoom: 1.5 } }]));
+      renderer["pushSceneToWasmDriver"]();
+      expect(renderer.camera.x).toBe(12);
+      expect(renderer.camera.zoom).toBe(1.5);
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
+      renderer.dispose();
     });
 
     it("wasm drain nodeDelete for missing scene ids does not emit structural delete events", () => {
@@ -7138,6 +7169,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
   });
 
   renderer.syncInteractionChrome();
+  renderer.markSceneDescriptorDirty();
   renderer.invalidate();
 }
 //#endregion 🔖Scene Sync

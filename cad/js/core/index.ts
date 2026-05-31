@@ -770,6 +770,8 @@ export interface InteractionSpec {
   };
   /** @emoji 📞 `standalone` (default) for hosts; `callable` only via `interaction.call`. */
   readonly invocation?: InteractionInvocation;
+  /** @emoji 🏷️ Typology object created when this interaction commits geometry. */
+  readonly produces?: { readonly typology: string };
 }
 
 /** @emoji 📞 How hosts may start an interaction (`standalone` vs nested-only `callable`). */
@@ -3151,7 +3153,12 @@ export function listConstructableTypologiesForModelDefinition(modelDefinitionId:
 
 /** @emoji 🧭 Typology id for an interaction commit (`construct` kit or typology `interactions` list). */
 export function typologyIdForInteractionCommit(interactionId: string): string | null {
-  return typologyConstructKitByInteraction().get(interactionId)?.typology ?? typologyForInteraction(interactionId)?.id ?? null;
+  const fromKit = typologyConstructKitByInteraction().get(interactionId)?.typology;
+  if (fromKit) return fromKit;
+  const fromTypology = typologyForInteraction(interactionId)?.id;
+  if (fromTypology) return fromTypology;
+  const produces = loadSpatialInteraction(interactionId)?.produces?.typology;
+  return typeof produces === "string" && produces.length > 0 ? produces : null;
 }
 
 /** @emoji 📦 Binds a typology object row to the primary primitive added by a create/construct diff. */
@@ -6708,6 +6715,27 @@ if (import.meta.vitest) {
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
+    it("curve.interpolateCurve commit binds typology object rows for hierarchy", async () => {
+      const typology = "spatial.shape.curve.interpolate-curve";
+      expect(typologyIdForInteractionCommit("curve.interpolateCurve")).toBe(typology);
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 1, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      const res = rt.getSnapshot().lastResponse!;
+      expect(res.ok).toBe(true);
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
+      expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
+      expect(model.objects[typology as ObjectRef]?.primitives.wire).toBeTruthy();
+    });
+
     it("primitive.box commit binds typology object rows for hierarchy", async () => {
       const typology = "spatial.shape.primitive.box";
       const spec = loadSpatialInteraction("primitive.box")!;

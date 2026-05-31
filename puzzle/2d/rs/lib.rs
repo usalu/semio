@@ -3964,7 +3964,7 @@ mod board_host {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
-        /// @emoji 🧿 True during area select, link gestures, or node drag so JS can defer full `syncDescriptorJson` round-trips.
+        /// @emoji 🧿 True during area select, link gestures, node drag, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
             matches!(
                 self.interaction,
@@ -3973,6 +3973,7 @@ mod board_host {
                     | Interaction::LinkTargetNode { .. }
                     | Interaction::ExternalLinkPreview { .. }
                     | Interaction::DragNodes { .. }
+                    | Interaction::Pan { .. }
             )
         }
 
@@ -7182,6 +7183,21 @@ mod host_tests {
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         }
+    }
+
+    #[test]
+    fn board_host_defers_descriptor_sync_while_panning() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let _ = h.drain_events_json();
+        h.pointer_down_screen(10.0, 10.0, 1, false, false);
+        assert!(h.defers_descriptor_sync_from_js());
+        h.pointer_move_screen(80.0, 60.0, false, false);
+        assert!(h.defers_descriptor_sync_from_js());
+        let _ = h.drain_events_json();
+        h.pointer_up_screen(80.0, 60.0, false, false);
+        assert!(!h.defers_descriptor_sync_from_js());
     }
 
     #[test]

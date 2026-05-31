@@ -68,7 +68,7 @@ export default defineConfig({
   webServer: {
     cwd: __dirname,
     command: `node "${viteBin}" --host ${previewHost} --port 4181 --strictPort`,
-    env: { NODE_OPTIONS: "" },
+    env: { NODE_OPTIONS: "", SEMIO_SKETCHPAD_E2E: "1" },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

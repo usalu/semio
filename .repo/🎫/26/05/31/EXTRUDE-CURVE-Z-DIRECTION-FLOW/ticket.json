@@ -1,0 +1,10 @@
+{
+  "title": "Extrude Curve Z Direction Flow",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "After selecting curves in extrude curve interaction, nothing happens. Should default extrude in Z with option to change direction.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪8e692228c8d846339c0655872ae3f1a4"
+  ]
+}

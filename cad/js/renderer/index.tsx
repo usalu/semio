@@ -4262,9 +4262,17 @@ export function InteractionRepl({
           modifiers: pointerModifiersFromNativeEvent(upEvent),
         };
         const distance = dragDistance(finalState.startClient, finalState.currentClient);
+        const clearSelectionOnEmptyBackgroundPick = () => {
+          if (spatialSelectionModeFromModifiers(finalState.modifiers as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean }) === "default") {
+            commitSelection(replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState, [], finalState.modifiers));
+          }
+        };
         if (distance < 4) {
           const candidates = spatialPickTargetsFromClientPoint(finalState.currentClient, camera, rect, selectablePickTargets, activeSelectionAccept, {});
-          if (candidates.length === 0) return;
+          if (candidates.length === 0) {
+            clearSelectionOnEmptyBackgroundPick();
+            return;
+          }
           onSelectionRequest({
             targets: candidates,
             point: candidates[0]!.point,
@@ -4283,9 +4291,7 @@ export function InteractionRepl({
           geometryPreviewTransform,
         );
         if (targets.length === 0) {
-          if (spatialSelectionModeFromModifiers(finalState.modifiers as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean }) === "default") {
-            commitSelection(replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState, [], finalState.modifiers));
-          }
+          clearSelectionOnEmptyBackgroundPick();
           return;
         }
         dispatchSelectionTargets(targets, finalState.modifiers);
@@ -5410,6 +5416,17 @@ if (import.meta.vitest) {
       expect(replHostGeometryPickingEnabled("", spec, "first_corner")).toBe(true);
     });
 
+    it("surface.extrudeCrv enables host curve picking and disables ground plane during select_curves_to_extrude", () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv");
+      expect(spec).not.toBeNull();
+      expect(replHostGeometryPickingEnabled("surface.extrudeCrv", spec!, "select_curves_to_extrude")).toBe(true);
+      const snapshot = {
+        state: "select_curves_to_extrude",
+        spatialInteraction: mergeInteractionSpatial(spec!),
+      } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
+      expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(false);
+    });
+
     it("enables spatial ground pick plane during rubber-band states regardless of host selection accept", () => {
       const snapshot = {
         state: "first_corner",
@@ -5664,6 +5681,14 @@ if (import.meta.vitest) {
       };
       expect(replMergeSelectionPickInView(false, defaultModelDefinitionId(), "idle", rendererByModel, {}, [{ kind: "wire", id: "w1", editable: true }], {})).toEqual([{ kind: "wire", id: "w1", editable: true }]);
       expect(replRendererSelectionTargets(rendererByModel, "aec.building.energy")).toEqual([{ kind: "object", id: "o0", editable: false }]);
+    });
+
+    it("clears selection on empty background pick in default modifier mode", () => {
+      const rendererByModel: SpatialRendererSelectionByModel = {
+        [defaultModelDefinitionId()]: [{ kind: "wire", id: "w0", editable: true }],
+      };
+      expect(replMergeSelectionPickInView(false, defaultModelDefinitionId(), "idle", rendererByModel, {}, [], {})).toEqual([]);
+      expect(replMergeSelectionPickInView(false, defaultModelDefinitionId(), "idle", rendererByModel, {}, [], { shift: true })).toEqual([{ kind: "wire", id: "w0", editable: true }]);
     });
 
     it("maps selection target keys to pick target keys for highlights", () => {

@@ -3363,7 +3363,11 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	if (typeof window !== "undefined") {
 		sketchpadInstallHomeDropzone();
 	}
-	if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+	if (
+		typeof import.meta !== "undefined" &&
+		(import.meta as { env?: { DEV?: boolean; SEMIO_SKETCHPAD_E2E?: string } }).env?.DEV &&
+		!(import.meta as { env?: { SEMIO_SKETCHPAD_E2E?: string } }).env?.SEMIO_SKETCHPAD_E2E
+	) {
 		void seedSketchpadDevFixtureKitIfEmpty();
 	}
 	return platform;
@@ -3500,6 +3504,26 @@ if (import.meta.vitest) {
 			expect(ctrl.navigationPath).toBe(`/kits/${id}`);
 			expect(ctrl.getKitStore(id)).toBeInstanceOf(SemioJsKitStore);
 			ctrl.dispose();
+		});
+
+		it("navigateTo invokes platform.onNavigate once without recursion", () => {
+			const bus = new CommandBus();
+			const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_HOME_APP_ID });
+			let calls = 0;
+			const paths: string[] = [];
+			platform.onNavigate = (uri: string) => {
+				calls += 1;
+				paths.push(uri);
+				if (calls > 2) throw new Error("onNavigate recursion");
+			};
+			sketchpadPlatformSingleton = platform;
+			const ctrl = new SketchpadShellController(bus, () => platform.notify());
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			ctrl.navigateTo(`/kits/${kitId}`);
+			expect(calls).toBe(1);
+			expect(paths).toEqual([`/kits/${kitId}`]);
+			ctrl.dispose();
+			sketchpadPlatformSingleton = null;
 		});
 	});
 
@@ -4037,14 +4061,13 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
 		});
 
-		test("workbench lists dev fixture import actions", async ({ page }) => {
+		test("command palette lists fixture import commands", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await openSketchpadCommandPalette(page);
 			const searchInput = page.locator("#ui\\.search\\.input");
-			await searchInput.fill("Nakagin");
-			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
-			await searchInput.fill("metabolism");
-			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
+			await searchInput.fill("fixture");
+			await expect(page.getByRole("option", { name: /Open metabolism fixture/i })).toBeVisible({ timeout: 30_000 });
+			await expect(page.getByRole("option", { name: /Open Nakagin filtered fixture/i })).toBeVisible({ timeout: 30_000 });
 		});
 	});
 }

@@ -190,6 +190,7 @@ export default defineConfig(async ({ mode }) => {
       __SEMIO_JS_RUN_BENCHMARKS__: "false",
       __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
       __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+      "import.meta.env.SEMIO_SKETCHPAD_E2E": JSON.stringify(process.env.SEMIO_SKETCHPAD_E2E ?? ""),
     },
     resolve: {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three"],

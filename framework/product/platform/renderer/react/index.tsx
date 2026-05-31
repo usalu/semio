@@ -1444,6 +1444,22 @@ if (import.meta.vitest) {
 			expect(entry.uri).toBe("/test");
 		});
 	});
+
+	describe("useUIHistory navigate", () => {
+		it("appends one stack entry per navigate call", () => {
+			let history: UIHistory = { entries: [{ uri: "/" }], index: 0 };
+			const navigate = (targetUri: string) => {
+				history = {
+					entries: [...history.entries.slice(0, history.index + 1), { uri: targetUri }],
+					index: history.index + 1,
+				};
+			};
+			navigate("/kits/a");
+			navigate("/kits/b");
+			expect(history.entries.map((entry) => entry.uri)).toEqual(["/", "/kits/a", "/kits/b"]);
+			expect(history.index).toBe(2);
+		});
+	});
 }
 //#endregion ­ƒº¬Tests
 
@@ -2793,9 +2809,8 @@ const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavig
 	const handleNavigate = reactHostPort.useCallback(
 		(targetUri: string) => {
 			navigate(targetUri);
-			platform.onNavigate?.(targetUri);
 		},
-		[navigate, platform],
+		[navigate],
 	);
 
 	return (

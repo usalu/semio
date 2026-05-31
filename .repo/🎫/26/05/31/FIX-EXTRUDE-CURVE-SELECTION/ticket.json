@@ -1,0 +1,10 @@
+{
+  "title": "Fix Extrude Curve Selection",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When starting extrude curve interaction, user cannot select any curve. Fix curve selection in surface.extrudeCrv interaction.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪a28806c0aa404b0b972753c4f3a31584"
+  ]
+}
