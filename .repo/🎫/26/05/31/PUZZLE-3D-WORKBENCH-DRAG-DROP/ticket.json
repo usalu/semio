@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 3d Workbench Drag Drop",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Make object kinds from the workbench panel draggable and droppable into puzzle 3d at cursor intersection with the grid plane.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪d6fabd2a644c47d881448f3630e4dd0f"
+  ]
+}

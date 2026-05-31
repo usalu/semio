@@ -142,19 +142,31 @@ export function relaxHiddenPreflight(): void {
 //#endregion 🔖HiddenPreflight
 
 //#region 🔖MorphView
+const presentationMorphTextClass = "presentation-morph-text";
+
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
 }
 
 function lineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
-	return [embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)].filter(Boolean).join(" ") || undefined;
+	return [presentationMorphTextClass, embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)]
+		.filter(Boolean)
+		.join(" ") || undefined;
 }
 
 function centeredLineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string {
 	return [lineClass(embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
 }
 
-/** @emoji 🎯 Renders {@link TextEmbodiment} with reveal.js `data-id` + eg-ice-25 DOM roots. */
+function morphTextClass(extra?: string): string {
+	return [presentationMorphTextClass, extra].filter(Boolean).join(" ");
+}
+
+/** @emoji 🎯 Renders {@link TextEmbodiment}; `data-id` sits on leaf headings/paragraphs so reveal.js does not double-match wrappers and text nodes. */
+function textMorphAnchorId(anchorId: string, lineIndex: number, lineCount: number): string {
+	return lineCount === 1 ? anchorId : `${anchorId}--${lineIndex}`;
+}
+
 function TextMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -164,22 +176,26 @@ function TextMorphView({
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
-	const mutedClass = emphasisClass(emphasis);
 	const root = resolveTextMorphRoot(embodiment);
 	const centeredHeadingClass = centeredLineClass(embodiment, emphasis);
+	const lineCount = embodiment.lines.length;
 
 	switch (root) {
 		case "title":
 			return (
-				<h1 data-id={anchorId} className={[mutedClass, "text-center"].filter(Boolean).join(" ") || "text-center"}>
+				<h1 data-id={anchorId} className={centeredLineClass(embodiment, emphasis)}>
 					{embodiment.lines[0]}
 				</h1>
 			);
 		case "body":
 			return (
-				<div data-id={anchorId}>
-					{embodiment.lines.map((line) => (
-						<p key={line} className={mutedClass}>
+				<div className="w-full text-center">
+					{embodiment.lines.map((line, lineIndex) => (
+						<p
+							key={line}
+							data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)}
+							className={[lineClass(embodiment, emphasis), "text-center"].filter(Boolean).join(" ") || "text-center"}
+						>
 							{line}
 						</p>
 					))}
@@ -188,15 +204,15 @@ function TextMorphView({
 		case "heading-line":
 		case "subheading-line":
 			return (
-				<div data-id={anchorId} className="w-full text-center">
-					<h2 className={centeredHeadingClass}>{embodiment.lines[0]}</h2>
-				</div>
+				<h2 data-id={anchorId} className={centeredHeadingClass}>
+					{embodiment.lines[0]}
+				</h2>
 			);
 		case "heading-block":
 			return (
-				<div data-id={anchorId} className="w-full text-center">
-					{embodiment.lines.map((line) => (
-						<h2 key={line} className={centeredHeadingClass}>
+				<div className="w-full text-center">
+					{embodiment.lines.map((line, lineIndex) => (
+						<h2 key={line} data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)} className={centeredHeadingClass}>
 							{line}
 						</h2>
 					))}
@@ -229,14 +245,14 @@ function AuthorsMorphView({
 	const namesMuted = embodiment.id === "marked";
 	const rows = authorRows(embodiment);
 	return (
-		<div data-id={anchorId} className="w-full max-w-full text-center">
+		<div className="w-full max-w-full text-center">
 			{rows.map((line, lineIndex) => (
 				<div
 					key={`${anchorId}-line-${lineIndex}`}
 					className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2"
 				>
 					{line.map((person) => (
-						<h4 key={person.name} className="m-0 shrink-0 text-center">
+						<h4 key={person.name} data-id={`${anchorId}--${person.name}`} className={morphTextClass("m-0 shrink-0 text-center")}>
 							{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
 							{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
 						</h4>
@@ -255,8 +271,8 @@ function AffiliationsMorphView({
 	readonly embodiment: AffiliationsEmbodiment;
 }): ReactNode {
 	return (
-		<div data-id={anchorId} className="w-full text-center">
-			<h5 className="text-center">
+		<div className="w-full text-center">
+			<h5 data-id={anchorId} className={morphTextClass("text-center")}>
 				{embodiment.entries.map((entry) => (
 					<span key={`${entry.mark}-${entry.suffix?.mark ?? ""}`}>
 						<sup>{entry.mark}</sup>
@@ -287,7 +303,7 @@ function BulletMorphView({
 }): ReactNode {
 	return (
 		<div data-id={anchorId} className={emphasisClass(emphasis)}>
-			<ul>
+			<ul className={presentationMorphTextClass}>
 				{embodiment.items.map((item) => (
 					<li key={item}>{item}</li>
 				))}
@@ -510,10 +526,10 @@ if (import.meta.vitest) {
 			expect(sections.length).toBe(7);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
-			expect(container.querySelector('[data-id="title"]')).toBeTruthy();
-			expect(container.querySelector('[data-id="description"]')).toBeTruthy();
+			expect(container.querySelector('[data-id^="title"]')).toBeTruthy();
+			expect(container.querySelector('[data-id^="description"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="goal"]')).toBeTruthy();
-			expect(container.querySelector('[data-id="authors"]')).toBeTruthy();
+			expect(container.querySelector('[data-id^="authors--"]')).toBeTruthy();
 			expect(container.querySelector('[data-id="institutions"]')).toBeTruthy();
 		});
 
@@ -549,23 +565,46 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
-			expect(slide("title")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
-			expect(slide("title")?.querySelectorAll('div[data-id="title"] h2').length).toBe(3);
-			expect(slide("description")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
-			expect(slide("description")?.querySelector('h2[data-id="title"]')).toBeNull();
-			expect(slide("description")?.querySelector('div[data-id="description"] h2')).toBeTruthy();
-			expect(slide("description")?.querySelectorAll('div[data-id="description"] h2').length).toBe(2);
-			expect(slide("goal")?.querySelector('div[data-id="description"] h2')?.textContent).toBe("D short");
-			expect(slide("goal")?.querySelector('div[data-id="goal"] h2')).toBeTruthy();
-			const authorLines = slide("authors")?.querySelectorAll('div[data-id="authors"] > div');
-			expect(authorLines?.length).toBe(2);
-			expect(slide("authors")?.querySelectorAll('div[data-id="authors"] h4').length).toBe(3);
-			expect(slide("affiliations-1")?.querySelectorAll('div[data-id="institutions"] sup').length).toBe(1);
-			expect(slide("affiliations-2")?.querySelectorAll('div[data-id="institutions"] sup').length).toBe(2);
-			expect(slide("affiliations-3")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
+			expect(slide("title")?.querySelectorAll('h2[data-id^="title"]').length).toBe(3);
+			expect(slide("description")?.querySelector('h2[data-id="title"]')).toBeTruthy();
+			expect(slide("description")?.querySelector('div[data-id="title"]')).toBeNull();
+			expect(slide("description")?.querySelectorAll('h2[data-id^="description"]').length).toBe(2);
+			expect(slide("goal")?.querySelector('h2[data-id="description"]')?.textContent).toBe("D short");
+			expect(slide("goal")?.querySelector('h2[data-id="goal"]')).toBeTruthy();
+			const authorLines = slide("authors")?.querySelectorAll('h4[data-id^="authors--"]');
+			expect(authorLines?.length).toBe(3);
+			expect(slide("affiliations-1")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(1);
+			expect(slide("affiliations-2")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(3);
+			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(5);
+			expect(slide("affiliations-3")?.querySelector('h5[data-id="institutions"]')).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
-			const marked = slide("affiliations-3")?.querySelector('div[data-id="authors"] sup');
+			const marked = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice"] sup');
 			expect(marked?.textContent).toBe("1,a");
+		});
+
+		it("tags every intro morph leaf with presentation-morph-text for uniform sizing", () => {
+			const deck = intro({
+				title: { full: ["A", "B", "C"], short: "Short" },
+				description: { full: ["D1", "D2"], short: "D short" },
+				goal: ["G1"],
+				authors: {
+					lines: [
+						[{ name: "Alice", marks: ["1"] }, { name: "Bob" }],
+						[{ name: "Carol" }],
+					],
+				},
+				affiliations: testAffiliationSteps,
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const morphLeaves = container.querySelectorAll(
+				'[data-id^="title"], [data-id^="description"], [data-id="goal"], [data-id^="authors--"], [data-id="institutions"]',
+			);
+			expect(morphLeaves.length).toBeGreaterThan(0);
+			for (const node of morphLeaves) {
+				expect(node.classList.contains("presentation-morph-text")).toBe(true);
+			}
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {
@@ -596,9 +635,9 @@ if (import.meta.vitest) {
 			const morphSections = container.querySelectorAll(".slides > section > section[data-auto-animate]");
 			expect(morphSections.length).toBe(7);
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
-			expect(slide("title")?.querySelector('[data-id="title"]')).toBeTruthy();
-			expect(slide("title")?.querySelector('[data-id="description"]')).toBeNull();
-			expect(slide("description")?.querySelector('[data-id="description"]')).toBeTruthy();
+			expect(slide("title")?.querySelector('[data-id^="title"]')).toBeTruthy();
+			expect(slide("title")?.querySelector('[data-id^="description"]')).toBeNull();
+			expect(slide("description")?.querySelector('[data-id^="description"]')).toBeTruthy();
 			expect(slide("goal")?.querySelector('[data-id="goal"]')).toBeTruthy();
 		});
 

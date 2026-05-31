@@ -10,6 +10,7 @@
 	--r-heading2-size: 1.6em;
 	--r-heading3-size: 1.3em;
 	--r-heading4-size: 1em;
+	--r-presentation-morph-size: 1.35em;
 	--r-main-color: var(--foreground);
 	--r-heading-font: var(--font-sans);
 	--r-heading-color: var(--foreground);
@@ -69,6 +70,10 @@
 .reveal p {
 	margin: var(--r-block-margin) 0;
 	line-height: 1.3;
+}
+
+.reveal .presentation-morph-text {
+	font-size: var(--r-presentation-morph-size);
 }
 /* #endregion 🔖RevealTypography */
 

@@ -6960,6 +6960,14 @@ const treeSubtreeGapPx = 0;
 const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
+const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
+
+/** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
+const renderTreeRowIcon = (icon: React.ReactNode | undefined, DefaultIcon: LucideIcon) => (
+  <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0">
+    {icon ?? <DefaultIcon className={treeRowDefaultIconClassName} />}
+  </span>
+);
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
 const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : `${anchorOffsetPx}px`);
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
@@ -7637,7 +7645,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, FolderIcon)}
               {id ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -7702,7 +7710,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 {id ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -7822,7 +7830,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
                   {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                  {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                  {renderTreeRowIcon(icon, FolderIcon)}
                   <span
                     data-slot="tree-label"
                     className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -7895,7 +7903,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -7956,7 +7964,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, DocumentIcon)}
               <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
@@ -7994,7 +8002,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-            {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+            {renderTreeRowIcon(icon, DocumentIcon)}
             <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
@@ -8167,7 +8175,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         >
           <div className={cn(treeHeaderRowClassName, "h-[22px]", treeInspectorInnerRowClassName)}>
             <div className={cn(treeHeaderMainClassName, "h-[22px]")}>
-              {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+              {renderTreeRowIcon(icon, isExpandable ? FolderIcon : DocumentIcon)}
               {id ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -8275,7 +8283,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                {renderTreeRowIcon(icon, FolderIcon)}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -8360,7 +8368,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
-            {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+            {renderTreeRowIcon(icon, DocumentIcon)}
             <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text" style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
@@ -15757,6 +15765,23 @@ if (treeVitest) {
       expect(markup.match(/grid-template-columns:24px minmax\(0, 1fr\)/g)?.length ?? 0).toBe(2);
       expect(markup).not.toContain("margin-left:-10px");
       expect(markup).not.toContain("padding-left:10px");
+    });
+
+    it("renders default icons before tree section and item labels when icon is omitted", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeSection id="tooltip.manual" label="Section">
+            <TreeItem id="tooltip.tutorial" label="Folder">
+              <TreeItem id="tooltip.docs" label="Leaf" />
+            </TreeItem>
+          </TreeSection>
+        </TreeContext.Provider>,
+      );
+
+      expect(markup.match(/data-slot="tree-icon"/g)?.length ?? 0).toBe(3);
+      expect(markup).toContain('data-slot="tree-section-row"');
+      expect(markup).toContain('data-tree-row-kind="group"');
+      expect(markup).toContain('data-tree-row-kind="leaf"');
     });
 
     it("renders steppers at full control width with the current numeric value visible", () => {
