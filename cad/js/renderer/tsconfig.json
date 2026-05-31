@@ -1,13 +1,28 @@
 {
-  "extends": "../../../tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "noEmit": true,
+    "types": ["react", "react-dom", "vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
+      "@ui/react": ["../../../ui/react/index.tsx"],
+      "@ui/react/*": ["../../../ui/react/*"],
+      "@framework/core": ["../../../framework/core/index.ts"],
+      "@framework/playground/core": ["../../../framework/product/playground/core/index.ts"],
+      "@framework/playground/renderer/react": ["../../../framework/product/playground/renderer/react/index.tsx"],
       "@cad/js/core": ["../core/index.ts"],
-      "@cad/js/kernel/brepjs": ["../kernel/brepjs/index.ts"]
+      "@cad/js/renderer": ["./index.tsx"]
     }
   },
-  "include": ["index.tsx", "play/index.tsx", "play/vite.config.ts"]
+  "include": ["i18n-typecheck.ts"]
 }

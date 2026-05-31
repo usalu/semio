@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["react", "react-dom", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@ui/react": ["../../../../ui/react/index.tsx"],
+      "@ui/react/*": ["../../../../ui/react/*"],
+      "@framework/core": ["../../core/index.ts"],
+      "@framework/playground/core": ["../core/index.ts"],
+      "@framework/playground/renderer/react": ["./index.tsx"],
+      "@framework/platform/renderer/react": ["../../platform/renderer/react/index.tsx"]
+    }
+  },
+  "include": ["i18n-typecheck.ts"]
+}

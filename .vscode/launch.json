@@ -365,6 +365,72 @@
       }
     },
     {
+      "name": "🛠️dev🌈ui🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @ui/react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.4
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/platform/renderer/react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.41
+      }
+    },
+    {
+      "name": "🛠️dev🧱framework🎛️playground🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/playground/renderer/react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.42
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🖱️sketchpad🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/sketchpad:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.43
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/renderer:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.44
+      }
+    },
+    {
+      "name": "🛠️dev🔬coda🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @coda/desktop:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.45
+      }
+    },
+    {
       "name": "🛠️dev👤semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",

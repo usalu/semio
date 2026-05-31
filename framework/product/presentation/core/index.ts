@@ -14,6 +14,33 @@ export interface Transition {
 }
 //#endregion 🔖Transition
 
+//#region 🔖Morph
+/** @emoji 📐 reveal.js auto-animate DOM root for {@link TextEmbodiment} (see temp/eg-ice-25 intro slides). */
+export type TextMorphRoot = "title" | "heading-block" | "heading-line" | "subheading-line" | "body";
+
+/** @emoji 🎯 Stable reveal.js `data-id` for a placed participant (participant-scoped across embodiments). */
+export function morphId(participantId: string): string {
+	return participantId;
+}
+
+/** @emoji 📐 Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
+export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot {
+	if (embodiment.morphRoot) {
+		return embodiment.morphRoot;
+	}
+	if (embodiment.level === "title") {
+		return "title";
+	}
+	if (embodiment.level === "body") {
+		return "body";
+	}
+	if (embodiment.lines.length === 1) {
+		return embodiment.level === "subheading" ? "subheading-line" : "heading-line";
+	}
+	return "heading-block";
+}
+//#endregion 🔖Morph
+
 //#region 🔖Embodiment
 /** @emoji 📝 Text lines at a heading level; optional `fit` hints fit-text in reveal renderers. */
 export interface TextEmbodiment {
@@ -22,6 +49,7 @@ export interface TextEmbodiment {
 	readonly lines: readonly string[];
 	readonly level: "title" | "heading" | "subheading" | "body";
 	readonly fit?: boolean;
+	readonly morphRoot?: TextMorphRoot;
 }
 
 /** @emoji 🖼 Raster or vector figure on a slide. */
@@ -117,6 +145,8 @@ export interface ResolvedPlacement {
 	readonly participant: Participant;
 	readonly embodiment: Embodiment;
 	readonly emphasis: ParticipantEmphasis;
+	readonly embodimentId?: string;
+	readonly morphId: string;
 }
 //#endregion 🔖Resolved
 
@@ -153,6 +183,8 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 			participant,
 			embodiment: resolveEmbodiment(participant, placement.embodimentId),
 			emphasis: placement.emphasis,
+			embodimentId: placement.embodimentId,
+			morphId: morphId(participant.id),
 		};
 	});
 }
@@ -209,6 +241,7 @@ export function intro(spec: IntroSpec): Presentation {
 					lines: spec.title.full,
 					level: "heading",
 					fit: true,
+					morphRoot: "heading-block",
 				},
 				{
 					kind: "text",
@@ -216,12 +249,21 @@ export function intro(spec: IntroSpec): Presentation {
 					lines: [spec.title.short],
 					level: "subheading",
 					fit: true,
+					morphRoot: "subheading-line",
 				},
 			],
 		},
 		{
 			id: INTRO_PARTICIPANT_SUBTITLE,
-			embodiments: [{ kind: "text", lines: spec.description, level: "heading", fit: true }],
+			embodiments: [
+				{
+					kind: "text",
+					lines: spec.description,
+					level: "heading",
+					fit: true,
+					morphRoot: "heading-block",
+				},
+			],
 		},
 		{
 			id: INTRO_PARTICIPANT_AUTHORS,
@@ -358,6 +400,41 @@ if (import.meta.vitest) {
 				embodiments: [{ kind: "text", lines: ["a"], level: "body" }],
 			};
 			expect(() => resolveEmbodiment(participant, "missing")).toThrow(/no embodiment/);
+		});
+	});
+
+	describe("morphId", () => {
+		it("uses participant id as reveal data-id", () => {
+			expect(morphId("title")).toBe("title");
+		});
+	});
+
+	describe("resolveTextMorphRoot", () => {
+		it("maps intro title embodiments like eg-ice-25", () => {
+			const full: TextEmbodiment = {
+				kind: "text",
+				id: "full",
+				lines: ["A", "B"],
+				level: "heading",
+				morphRoot: "heading-block",
+			};
+			const short: TextEmbodiment = {
+				kind: "text",
+				id: "short",
+				lines: ["Short"],
+				level: "subheading",
+				morphRoot: "subheading-line",
+			};
+			expect(resolveTextMorphRoot(full)).toBe("heading-block");
+			expect(resolveTextMorphRoot(short)).toBe("subheading-line");
+		});
+	});
+
+	describe("resolveArrangement morphId", () => {
+		it("resolves morphId per placement", () => {
+			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const resolved = resolveArrangement(thought, "subtitle");
+			expect(resolved.map((r) => r.morphId)).toEqual(["name", "title", "subtitle"]);
 		});
 	});
 }

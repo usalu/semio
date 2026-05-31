@@ -69,7 +69,7 @@ import {
 /** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiToolbarParentCategory}. */
 type SemioSketchpadToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
 
-const semioSketchpadToolbarParentDe: SemioSketchpadToolbarParentEntries = {
+export const semioSketchpadToolbarParentDe: SemioSketchpadToolbarParentEntries = {
 	history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
 	hand: { label: { normal: "Hand", beginner: "Hand" } },
 	selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
@@ -85,7 +85,7 @@ const semioSketchpadToolbarParentDe: SemioSketchpadToolbarParentEntries = {
 	settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
 };
 
-const semioSketchpadToolbarParentEn: SemioSketchpadToolbarParentEntries = {
+export const semioSketchpadToolbarParentEn: SemioSketchpadToolbarParentEntries = {
 	history: { label: { normal: "History", beginner: "History" } },
 	hand: { label: { normal: "Hand", beginner: "Hand" } },
 	selection: { label: { normal: "Selection", beginner: "Selection" } },
@@ -13866,6 +13866,32 @@ if (import.meta.vitest) {
 			expect(resourceAt("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")).toBeDefined();
 			expect(resourceAt("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")).toBeDefined();
 			expect(resourceAt("semio.sketchpad.app.kit.concepts.multipleSelected")).toBeDefined();
+		});
+
+		it("defines every toolbar parent category with label objects in en and de", () => {
+			const categories: readonly UiToolbarParentCategory[] = [
+				"history",
+				"hand",
+				"selection",
+				"lasso",
+				"filter",
+				"open",
+				"save",
+				"transfer",
+				"transform",
+				"create",
+				"view",
+				"actions",
+				"settings",
+			];
+			for (const locale of ["en", "de"] as const) {
+				const parent = semioSketchpadTranslationBundles[locale].translation.semio.sketchpad.toolbar.parent;
+				for (const category of categories) {
+					const entry = parent[category];
+					expect(entry?.label?.normal, `${locale}:${category}`).toBeTruthy();
+					expect(entry?.label?.beginner, `${locale}:${category}`).toBeTruthy();
+				}
+			}
 		});
 	});
 

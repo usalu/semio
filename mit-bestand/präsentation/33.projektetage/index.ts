@@ -4,7 +4,7 @@
 
 // #region 🔌Adapters
 import { countArrangements, intro } from "@framework/presentation/core";
-import { mountPresentation } from "@framework/presentation/renderer/react";
+import { Expertise, mountPresentation } from "@framework/presentation/renderer/react";
 import "./globals.css";
 // #endregion 🔌Adapters
 
@@ -47,6 +47,7 @@ function mount(): void {
 		transition: "fade",
 		hash: false,
 		slideNumber: false,
+		surfaceChrome: { theme: "dark", device: "desktop", expertise: Expertise.NORMAL },
 	});
 }
 

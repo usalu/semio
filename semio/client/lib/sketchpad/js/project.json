@@ -55,6 +55,14 @@
         "commands": ["vite build", "bun publish"],
         "parallel": false
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/lib/sketchpad/js",
+        "command": "bun ./script.ts typecheck",
+        "forwardAllArgs": true
+      }
     }
   }
 }

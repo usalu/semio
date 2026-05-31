@@ -27,7 +27,12 @@ import type {
 	Thought,
 	Transition,
 } from "@framework/presentation/core";
-import { intro, resolveArrangement } from "@framework/presentation/core";
+import {
+	intro,
+	resolveArrangement,
+	resolveTextMorphRoot,
+	type TextMorphRoot,
+} from "@framework/presentation/core";
 // #endregion 🔌Adapters
 
 export type {
@@ -51,14 +56,18 @@ export type {
 export {
 	countArrangements,
 	intro,
+	morphId,
 	resolveArrangement,
 	resolveEmbodiment,
+	resolveTextMorphRoot,
 } from "@framework/presentation/core";
+export type { TextMorphRoot } from "@framework/presentation/core";
+export { Expertise } from "@ui/react";
 
 //#region 🔖MountOptions
 /** @emoji ⚙️ Reveal.js and @ui/react surface chrome options for {@link mountPresentation}. */
 export interface PresentationMountOptions {
-	readonly surfaceChrome?: ElementsSurfaceChromeInput;
+	readonly surfaceChrome?: ElementsSurfaceChromeInput | false;
 	readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
 	readonly hash?: boolean;
 	readonly slideNumber?: boolean;
@@ -85,80 +94,85 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
-//#region 🔖EmbodimentView
+//#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
 }
 
-function TextEmbodimentView({
-	participantId,
+function lineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
+	return [embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)].filter(Boolean).join(" ") || undefined;
+}
+
+/** @emoji 🎯 Renders {@link TextEmbodiment} with reveal.js `data-id` + eg-ice-25 DOM roots. */
+function TextMorphView({
+	morphId: anchorId,
 	embodiment,
 	emphasis,
 }: {
-	readonly participantId: string;
+	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	const mutedClass = emphasisClass(emphasis);
-	const fit = embodiment.fit ? "r-fit-text" : undefined;
-	const lineClass = [fit, mutedClass].filter(Boolean).join(" ") || undefined;
+	const root = resolveTextMorphRoot(embodiment);
+	const fitLineClass = lineClass(embodiment, emphasis);
 
-	if (embodiment.level === "title") {
-		return (
-			<h1 data-id={participantId} className={mutedClass}>
-				{embodiment.lines[0]}
-			</h1>
-		);
-	}
-
-	if (embodiment.level === "body") {
-		return (
-			<div data-id={participantId}>
-				{embodiment.lines.map((line) => (
-					<p key={line} className={mutedClass}>
-						{line}
-					</p>
-				))}
-			</div>
-		);
-	}
-
-	if (embodiment.lines.length === 1) {
-		return (
-			<h2 data-id={participantId} className={lineClass}>
-				{embodiment.lines[0]}
-			</h2>
-		);
-	}
-
-	return (
-		<div data-id={participantId}>
-			{embodiment.lines.map((line) => (
-				<h2 key={line} className={lineClass}>
-					{line}
+	switch (root) {
+		case "title":
+			return (
+				<h1 data-id={anchorId} className={mutedClass}>
+					{embodiment.lines[0]}
+				</h1>
+			);
+		case "body":
+			return (
+				<div data-id={anchorId}>
+					{embodiment.lines.map((line) => (
+						<p key={line} className={mutedClass}>
+							{line}
+						</p>
+					))}
+				</div>
+			);
+		case "heading-line":
+		case "subheading-line":
+			return (
+				<h2 data-id={anchorId} className={fitLineClass}>
+					{embodiment.lines[0]}
 				</h2>
-			))}
-		</div>
-	);
+			);
+		case "heading-block":
+			return (
+				<div data-id={anchorId}>
+					{embodiment.lines.map((line) => (
+						<h2 key={line} className={fitLineClass}>
+							{line}
+						</h2>
+					))}
+				</div>
+			);
+		default: {
+			const _exhaustive: never = root;
+			return _exhaustive;
+		}
+	}
 }
 
-function AuthorsEmbodimentView({
-	participantId,
+function AuthorsMorphView({
+	morphId: anchorId,
 	embodiment,
 }: {
-	readonly participantId: string;
+	readonly morphId: string;
 	readonly embodiment: AuthorsEmbodiment;
 }): ReactNode {
 	const namesMuted = embodiment.id === "marked";
 	return (
-		<div data-id={participantId}>
+		<div data-id={anchorId}>
 			<div className="flex flex-row">
 				{embodiment.people.map((person) => (
 					<h4 key={person.name}>
 						{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
-						{person.marks?.map((mark) => (
-							<sup key={mark}>{mark}</sup>
-						))}
+						{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
 					</h4>
 				))}
 			</div>
@@ -166,15 +180,15 @@ function AuthorsEmbodimentView({
 	);
 }
 
-function AffiliationsEmbodimentView({
-	participantId,
+function AffiliationsMorphView({
+	morphId: anchorId,
 	embodiment,
 }: {
-	readonly participantId: string;
+	readonly morphId: string;
 	readonly embodiment: AffiliationsEmbodiment;
 }): ReactNode {
 	return (
-		<div data-id={participantId}>
+		<div data-id={anchorId}>
 			<h5>
 				{embodiment.entries.map((entry) => (
 					<span key={entry.mark}>
@@ -188,17 +202,17 @@ function AffiliationsEmbodimentView({
 	);
 }
 
-function BulletEmbodimentView({
-	participantId,
+function BulletMorphView({
+	morphId: anchorId,
 	embodiment,
 	emphasis,
 }: {
-	readonly participantId: string;
+	readonly morphId: string;
 	readonly embodiment: BulletEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	return (
-		<div data-id={participantId} className={emphasisClass(emphasis)}>
+		<div data-id={anchorId} className={emphasisClass(emphasis)}>
 			<ul>
 				{embodiment.items.map((item) => (
 					<li key={item}>{item}</li>
@@ -208,42 +222,42 @@ function BulletEmbodimentView({
 	);
 }
 
-function FigureEmbodimentView({
-	participantId,
+function FigureMorphView({
+	morphId: anchorId,
 	embodiment,
 	emphasis,
 }: {
-	readonly participantId: string;
+	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	return (
-		<div data-id={participantId} className={emphasisClass(emphasis)}>
+		<div data-id={anchorId} className={emphasisClass(emphasis)}>
 			<img src={embodiment.src} alt={embodiment.alt ?? ""} />
 		</div>
 	);
 }
 
-function EmbodimentView({ placement }: { readonly placement: ResolvedPlacement }): ReactNode {
-	const { participant, embodiment, emphasis } = placement;
+function MorphPlacementView({ placement }: { readonly placement: ResolvedPlacement }): ReactNode {
+	const { embodiment, emphasis, morphId: anchorId } = placement;
 	switch (embodiment.kind) {
 		case "text":
-			return <TextEmbodimentView participantId={participant.id} embodiment={embodiment} emphasis={emphasis} />;
+			return <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 		case "authors":
-			return <AuthorsEmbodimentView participantId={participant.id} embodiment={embodiment} />;
+			return <AuthorsMorphView morphId={anchorId} embodiment={embodiment} />;
 		case "affiliations":
-			return <AffiliationsEmbodimentView participantId={participant.id} embodiment={embodiment} />;
+			return <AffiliationsMorphView morphId={anchorId} embodiment={embodiment} />;
 		case "bullet":
-			return <BulletEmbodimentView participantId={participant.id} embodiment={embodiment} emphasis={emphasis} />;
+			return <BulletMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 		case "figure":
-			return <FigureEmbodimentView participantId={participant.id} embodiment={embodiment} emphasis={emphasis} />;
+			return <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 		default: {
 			const _exhaustive: never = embodiment;
 			return _exhaustive;
 		}
 	}
 }
-//#endregion 🔖EmbodimentView
+//#endregion 🔖MorphView
 
 //#region 🔖ArrangementSection
 function arrangementUsesMorph(transition: Transition | undefined): boolean {
@@ -258,9 +272,12 @@ const ArrangementSection: FC<{
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
 	return (
-		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
+		<section {...(morph ? { "data-auto-animate": true } : {})} title={arrangement.id}>
 			{resolved.map((placement) => (
-				<EmbodimentView key={`${arrangement.id}-${placement.participant.id}`} placement={placement} />
+				<MorphPlacementView
+					key={`${arrangement.id}-${placement.morphId}-${placement.embodimentId ?? "default"}`}
+					placement={placement}
+				/>
 			))}
 		</section>
 	);
@@ -297,7 +314,6 @@ export const PresentationDeck: FC<{
 		deckRef.current = deck;
 		const onSlideChanged = (): void => {
 			syncRevealBackgroundKind(deckDivRef.current);
-			deck.layout();
 		};
 		void deck.initialize().then(() => {
 			syncRevealBackgroundKind(deckDivRef.current);
@@ -347,12 +363,22 @@ export const PresentationDeck: FC<{
 //#endregion 🔖PresentationDeck
 
 //#region 🔖Shell
+const PresentationShellChrome: FC<{
+	readonly children: ReactNode;
+	readonly chrome: ElementsSurfaceChromeInput;
+}> = ({ children, chrome }) => {
+	useElementsSurfaceChrome(chrome);
+	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
+};
+
+const PresentationShellBare: FC<{ readonly children: ReactNode }> = ({ children }) => (
+	<div className="h-full w-full">{children}</div>
+);
+
 const PresentationShell: FC<{
 	readonly children: ReactNode;
 	readonly options?: PresentationMountOptions;
 }> = ({ children, options }) => {
-	useElementsSurfaceChrome(options?.surfaceChrome ?? DEFAULT_SURFACE_CHROME);
-
 	useEffect(() => {
 		if (typeof window === "undefined") {
 			return;
@@ -366,7 +392,13 @@ const PresentationShell: FC<{
 		return () => mq.removeEventListener("change", onThemeChange);
 	}, []);
 
-	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
+	const chrome = options?.surfaceChrome;
+	if (chrome === false) {
+		return <PresentationShellBare>{children}</PresentationShellBare>;
+	}
+	return (
+		<PresentationShellChrome chrome={chrome ?? DEFAULT_SURFACE_CHROME}>{children}</PresentationShellChrome>
+	);
 };
 //#endregion 🔖Shell
 
@@ -446,10 +478,33 @@ if (import.meta.vitest) {
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
-				mountPresentation(container, deck, { hash: false, slideNumber: false });
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const titleSlide = container.querySelector('.slides > section > section[title="subtitle"]');
 			expect(titleSlide?.querySelector(".opacity-20")).toBeTruthy();
+		});
+
+		it("matches eg-ice-25 intro morph DOM per arrangement", () => {
+			const deck = intro({
+				brand: "semio",
+				title: { full: ["A", "B", "C"], short: "Short" },
+				description: ["D1", "D2"],
+				authors: [{ name: "Alice", marks: ["1", "a"] }],
+				affiliations: [{ mark: "1", name: "Uni" }],
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
+			expect(slide("brand")?.querySelector('h1[data-id="name"]')?.textContent).toBe("semio");
+			expect(slide("title")?.querySelector('div[data-id="title"] h2')).toBeTruthy();
+			expect(slide("title")?.querySelectorAll('div[data-id="title"] h2').length).toBe(3);
+			expect(slide("subtitle")?.querySelector('h2[data-id="title"]')).toBeTruthy();
+			expect(slide("subtitle")?.querySelector('div[data-id="subtitle"] h2')).toBeTruthy();
+			expect(slide("authors")?.querySelector('div[data-id="authors"] h4')).toBeTruthy();
+			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
+			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');
+			expect(marked?.textContent).toBe("1,a");
 		});
 	});
 }

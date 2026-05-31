@@ -758,11 +758,35 @@ export function useControlInlineText(id: string | undefined, text?: string): str
 
 // #region 🪁I18n Resources
 
-// Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
-// Product-specific bundles (e.g. semio sketchpad) register via {@link registerUiTranslationBundles}.
+export type {
+  AssertUiToolbarParentKeysCovered,
+  UiI18nPort,
+  UiLabelPair,
+  UiLabelValue,
+  UiLocale,
+  UiToolbarParentCategory,
+  UiToolbarParentKey,
+  UiTranslateFn,
+  UiTranslationKey,
+  UiTranslationSchema,
+  UiTranslationBundlesInput,
+  UiTranslationLocaleCode,
+} from "./i18n-types.ts";
 
+import {
+  uiChromeTranslationBundles,
+  type UiI18nPort,
+  type UiLocale,
+  type UiTranslateFn,
+  type UiTranslationBundlesInput,
+  type UiTranslationKey,
+  type UiTranslationLocaleCode,
+  type UiToolbarParentCategory,
+} from "./i18n-types.ts";
+
+// PLACEHOLDER_REMOVE_START
 /** @emoji 🪁 Supported UI locale codes. */
-export type UiLocale = "en" | "de";
+export type UiLocale_DUP = "en" | "de";
 
 /** @emoji 🪁 Expertise-specific label pair. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
@@ -1361,7 +1385,7 @@ function registerUiChromeTranslationBundles() {
 
 function createUiI18nPort(instance: typeof i18next): UiI18nPort {
   return {
-    t: ((key, options) => instance.t(key, options)) as UiTranslateFn,
+    t: ((key, options) => instance.t(key as never, options as never)) as UiTranslateFn,
     changeLanguage: (locale) => instance.changeLanguage(locale),
     get language() {
       return instance.language;
@@ -15396,18 +15420,6 @@ export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, 
 
 // #region 🗿I18n
 export { useTranslation };
-export type {
-  UiI18nPort,
-  UiLabelPair,
-  UiLabelValue,
-  UiLocale,
-  UiToolbarParentCategory,
-  UiToolbarParentKey,
-  UiTranslateFn,
-  UiTranslationKey,
-  UiTranslationSchema,
-  AssertUiToolbarParentKeysCovered,
-};
 // #endregion 🗿I18n
 
 // #region 🌙Hotkeys
@@ -16244,6 +16256,34 @@ if (treeVitest) {
     it("maps ui shell ids to domain-neutral ui i18n keys by default", () => {
       expect(resolveControlLabelId("ui.nav.back")).toBe("ui.nav.back");
       expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("ui.panelToggle.workbench");
+    });
+
+    it("resolves every ui.toolbar.parent category in en and de", () => {
+      const categories: readonly UiToolbarParentCategory[] = [
+        "history",
+        "hand",
+        "selection",
+        "lasso",
+        "filter",
+        "open",
+        "save",
+        "transfer",
+        "transform",
+        "create",
+        "view",
+        "actions",
+        "settings",
+      ];
+      for (const locale of ["en", "de"] as const) {
+        void uiI18n.changeLanguage(locale);
+        for (const category of categories) {
+          const key = `ui.toolbar.parent.${category}` as const;
+          const label = resolveTranslationLabel(uiI18n.t(key));
+          expect(label, `${locale}:${key}`).toBeTruthy();
+          expect(label).not.toBe(key);
+        }
+      }
+      void uiI18n.changeLanguage("en");
     });
 
     it("renders navbar navigation buttons with inline labels when compact is off", () => {
