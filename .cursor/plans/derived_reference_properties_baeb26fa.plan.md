@@ -22,13 +22,13 @@ todos:
     status: completed
   - id: js-wrapper
     content: Add Type/Design facade accessors and field specs in js/index.ts
-    status: in_progress
+    status: completed
   - id: tests
     content: Extend Rust mod tests and JS embedded tests; run rust + vitest and confirm pass
-    status: pending
+    status: completed
   - id: close
     content: Remove debug logs and close the ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

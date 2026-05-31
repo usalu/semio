@@ -16516,25 +16516,24 @@ mod tests {
             assert_eq!(refs[0].id.as_str(), "p-ref");
 
             let rt = crate::worker::ParentStore::spawn().await;
-            *rt.wip_graph.mutable_kit.write().await = kit;
+            *rt.wip_graph.mutable_kit.write().await = kit.clone();
+            *rt.wip_graph.initial_kit.write().await = kit;
             let schema = crate::gql::build_schema_for(rt);
             let q = r#"
                 query {
                     store {
                         wip {
-                            theKit {
-                                kit {
-                                    type(id: "type-1") {
-                                        files { edges { node { id } } }
-                                    }
-                                    design(id: "design-2") {
-                                        types { edges { node { id } } }
-                                        designs { edges { node { id } } }
-                                        allTypes { edges { node { id } } }
-                                        allDesigns { edges { node { id } } }
-                                        allFiles { edges { node { id } } }
-                                        referencedBy { edges { node { id } } }
-                                    }
+                            initialKit {
+                                type(id: "type-1") {
+                                    files { edges { node { id } } }
+                                }
+                                design(id: "design-2") {
+                                    types { edges { node { id } } }
+                                    designs { edges { node { id } } }
+                                    allTypes { edges { node { id } } }
+                                    allDesigns { edges { node { id } } }
+                                    allFiles { edges { node { id } } }
+                                    referencedBy { edges { node { id } } }
                                 }
                             }
                         }
@@ -16543,7 +16542,7 @@ mod tests {
             let res = schema.execute(Request::new(q)).await;
             assert!(res.errors.is_empty(), "derived refs query: {:?}", res.errors);
             let json = res.data.into_json().unwrap();
-            let kit_json = &json["store"]["wip"]["theKit"]["kit"];
+            let kit_json = &json["store"]["wip"]["initialKit"];
             let type_files = kit_json["type"]["files"]["edges"].as_array().expect("type files");
             assert_eq!(type_files[0]["node"]["id"], "file-1");
             let design = &kit_json["design"];

@@ -2622,6 +2622,29 @@ export class Puzzle2dRenderer {
     this.lastPushedSceneDescriptorEpoch = -1;
   }
 
+  /** @emoji 🔇 Applies a peer pane selection commit without emitting {@link Puzzle2dEventMap.select}. */
+  applySelectionFromPeerSilent(ids: readonly string[]): void {
+    if (this.isDisposed) {
+      return;
+    }
+    const nextSnapshot = createSelectionSnapshot(new Set(ids));
+    if (puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
+      return;
+    }
+    this.selectionIds = new Set(ids);
+    this.applySelectionChromeToSceneObjects();
+    this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    try {
+      this.session.setSelectionIdsJsonSilent(JSON.stringify(nextSnapshot.ids));
+    } catch (err) {
+      console.error("[DEBUG] setSelectionIdsJsonSilent failed", err);
+    }
+    this.scheduleInputInvalidate();
+  }
+
   /** @emoji 🔇 Applies a peer pane node drag without emitting {@link Puzzle2dEventMap.nodeMove}. */
   applyNodePositionSilent(nodeId: string, x: number, y: number): void {
     if (this.isDisposed) {
@@ -2734,6 +2757,8 @@ export class Puzzle2dRenderer {
   private pendingIncrementalNodeMoves = new Map<string, { x: number; y: number }>();
   private wasmPushSceneDrainAlreadyApplied = false;
   private viewportWheelEmitRafId: number | null = null;
+  private inputInvalidateRafId: number | null = null;
+  private lastEmittedHoverId: string | null | undefined;
   private lastPushedWidth = -1;
   private lastPushedHeight = -1;
   private lastPushedDpr = -1;
@@ -3401,6 +3426,34 @@ export class Puzzle2dRenderer {
       this.enqueuePuzzle2dGraphObservationFlush();
     }
     this.invalidate();
+  }
+
+  /** @emoji ⏱️ Coalesces hover/pan/zoom repaints to one frame while WASM still receives every pointer/wheel event. */
+  scheduleInputInvalidate(): void {
+    if (this.isDisposed) {
+      return;
+    }
+    if (this.session.defersDescriptorSyncFromJs()) {
+      this.invalidate();
+      return;
+    }
+    if (this.renderMode === "headless-test") {
+      this.invalidate();
+      return;
+    }
+    this.invalidated = true;
+    if (this.rafId !== null || this.inputInvalidateRafId !== null) {
+      return;
+    }
+    const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+    if (!requestFrame) {
+      this.invalidate();
+      return;
+    }
+    this.inputInvalidateRafId = requestFrame(() => {
+      this.inputInvalidateRafId = null;
+      this.invalidate();
+    });
   }
 
   invalidate(): void {
@@ -4172,6 +4225,10 @@ export class Puzzle2dRenderer {
       globalThis.cancelAnimationFrame(this.viewportWheelEmitRafId);
       this.viewportWheelEmitRafId = null;
     }
+    if (this.inputInvalidateRafId !== null && globalThis.cancelAnimationFrame) {
+      globalThis.cancelAnimationFrame(this.inputInvalidateRafId);
+      this.inputInvalidateRafId = null;
+    }
     puzzle2dUnregisterAuthoringPeer(this);
     this.detachCanvasListeners();
     this.textOverlayCanvas = null;
@@ -4249,11 +4306,12 @@ export class Puzzle2dRenderer {
       this.updatePreselection([], [], false);
     }
     this.applySelectionChromeToSceneObjects();
+    this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     if (emit) {
+      puzzle2dBroadcastSelectionSilent(this, nextSnapshot.ids);
       this.emit("select", nextSnapshot);
     }
-    this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
-    this.invalidate();
+    this.scheduleInputInvalidate();
   }
 
   private updatePreselection(ids: Iterable<string>, removedIds: Iterable<string>, emit: boolean): void {
@@ -4268,7 +4326,7 @@ export class Puzzle2dRenderer {
     if (emit) {
       this.emit("preselect", nextSnapshot);
     }
-    this.invalidate();
+    this.scheduleInputInvalidate();
   }
 
   private updateHover(id: string | null): void {
@@ -4278,8 +4336,12 @@ export class Puzzle2dRenderer {
     this.hoveredId = id;
   }
 
-  /** @emoji 📡 Emits {@link Puzzle2dEventMap.hover} using the last recorded pointer and current {@link Puzzle2dRenderer.hoveredId}. */
+  /** @emoji 📡 Emits {@link Puzzle2dEventMap.hover} when {@link Puzzle2dRenderer.hoveredId} changes (not every pointermove). */
   private publishHover(): void {
+    if (this.lastEmittedHoverId === this.hoveredId) {
+      return;
+    }
+    this.lastEmittedHoverId = this.hoveredId;
     const world = this.screenToWorld({ x: this.lastPointerScreenX, y: this.lastPointerScreenY });
     this.emit("hover", {
       clientX: this.lastPointerClientX,
@@ -4391,10 +4453,9 @@ export class Puzzle2dRenderer {
     this.recordPointerClient(event.clientX, event.clientY, sx, sy);
     this.session.pointerMoveScreen(sx, sy, false, false);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
-    this.publishHover();
     const world = this.screenToWorld({ x: sx, y: sy });
     this.emit("contextmenu", { clientX: event.clientX, clientY: event.clientY, id: this.hoveredId, x: world.x, y: world.y });
-    this.invalidate();
+    this.scheduleInputInvalidate();
   };
 
   private readonly handlePointerDown = (event: PointerEvent): void => {
@@ -4423,8 +4484,7 @@ export class Puzzle2dRenderer {
     this.recordPointerClient(event.clientX, event.clientY, sx, sy);
     this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
-    this.publishHover();
-    this.invalidate();
+    this.scheduleInputInvalidate();
   };
 
   private readonly handlePointerMove = (event: PointerEvent): void => {
@@ -4443,10 +4503,7 @@ export class Puzzle2dRenderer {
     const silentCamera = this.session.defersDescriptorSyncFromJs();
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentCamera });
     this.wasmPushSceneDrainAlreadyApplied = true;
-    if (!this.session.isDraggingAreaSelect()) {
-      this.publishHover();
-    }
-    this.invalidate();
+    this.scheduleInputInvalidate();
   };
 
   private readonly handlePointerUp = (event: PointerEvent): void => {
@@ -4468,11 +4525,10 @@ export class Puzzle2dRenderer {
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.emitPublicCameraChange();
     this.wasmPushSceneDrainAlreadyApplied = true;
-    this.publishHover();
+    this.scheduleInputInvalidate();
     if (typeof event.pointerId === "number") {
       this.canvas.releasePointerCapture?.(event.pointerId);
     }
-    this.invalidate();
   };
 
   private readonly handlePointerLeave = (event: PointerEvent): void => {
@@ -4488,8 +4544,7 @@ export class Puzzle2dRenderer {
     }
     this.session.pointerLeaveScreen();
     this.applyWasmDrainToScene(this.session.drainEventsJson());
-    this.publishHover();
-    this.invalidate();
+    this.scheduleInputInvalidate();
   };
 
   private readonly handleWheel = (event: WheelEvent): void => {
@@ -4509,8 +4564,7 @@ export class Puzzle2dRenderer {
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentCamera: true });
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleDeferredPublicCameraEmit();
-    this.publishHover();
-    this.invalidate();
+    this.scheduleInputInvalidate();
   };
 }
 //#endregion 🔖Renderer
@@ -4844,6 +4898,26 @@ if (puzzle2dVitest) {
       expect(nodeDeletes).toContain("shared");
       expect(rendererA.scene.nodes.has("shared")).toBe(false);
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("broadcasts selection to peer renderers without full syncDescriptorJson", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ id: "shared", radius: 28, x: 0, y: 0 });
+      const nodeB = new Puzzle2dSceneNode({ id: "shared", radius: 28, x: 0, y: 0 });
+      rendererA.scene.add(nodeA);
+      rendererB.scene.add(nodeB);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(rendererB.session, "syncDescriptorJson");
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: ["shared"] } }]));
+      expect(rendererA.selection.getSnapshot().ids).toEqual(["shared"]);
+      expect(rendererB.selection.getSnapshot().ids).toEqual(["shared"]);
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
       rendererA.dispose();
       rendererB.dispose();
     });
@@ -7175,6 +7249,15 @@ function puzzle2dBroadcastStructuralRemove(source: Puzzle2dRenderer, payload: Pu
       continue;
     }
     peer.applyStructuralRemoveSilent(payload);
+  }
+}
+
+function puzzle2dBroadcastSelectionSilent(source: Puzzle2dRenderer, ids: readonly string[]): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (peer === source || !peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.applySelectionFromPeerSilent(ids);
   }
 }
 //#endregion 🔖MultiViewAuthoring

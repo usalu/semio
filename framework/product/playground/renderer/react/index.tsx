@@ -1896,11 +1896,9 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     fixture,
     handleCanvasFixtureDrop,
     camerasByPane,
-    hoveredId,
     preselection,
     resetPuzzle2dRedrawProgressiveEpoch,
     selectionIds,
-    setHoverForPane,
     setPreselection,
     setSelectionIds,
     syncBaselineFromViewportCamera,
@@ -1912,12 +1910,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
   const selection = reactHostPort.useMemo(() => normalizePuzzle2dSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
   const onPreselect = reactHostPort.useCallback((snapshot: Puzzle2dPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
-  const onHover = reactHostPort.useCallback(
-    (payload: { id: string | null }) => {
-      setHoverForPane(paneId, payload.id);
-    },
-    [paneId, setHoverForPane],
-  );
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   const sceneMarkers = reactHostPort.useMemo(
@@ -1981,7 +1973,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
         gridSnapEnabled={puzzle2dGridSnapEnabled}
-        hoveredId={hoveredId}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
@@ -1989,7 +1980,6 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         onDrag={onCanvasDrag}
         onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
-        onHover={onHover}
         onPreselect={onPreselect}
         onSelect={onSelect}
         preselection={preselection}

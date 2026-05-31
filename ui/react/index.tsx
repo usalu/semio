@@ -19997,6 +19997,18 @@ export function windowEngagementChromeVisible(engagement: EngagementSpec | undef
   return zone.activated || zone.focused;
 }
 
+/** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets). */
+export function shouldDismissEmptyWindowEngagement(
+  engagement: EngagementSpec | undefined,
+  relatedTarget: EventTarget | null,
+  zoneRoot: HTMLElement | null,
+): boolean {
+  if (engagement?.input?.value?.trim()) return false;
+  if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
+  if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
+  return true;
+}
+
 /** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
 export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = engagement?.input;
@@ -20357,6 +20369,15 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     }
   }, [active]);
 
+  const dismissEngagementIfEmpty = reactHostPort.useCallback(
+    (relatedTarget: EventTarget | null) => {
+      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current)) return;
+      setEngagementActivated(false);
+      setEngagementZoneFocused(false);
+    },
+    [engagement],
+  );
+
   if (!isVisible) return null;
 
   const hasControls = showControls || controls || onOpenInNewWindow || onMaximize || onMinimize || onClose;
@@ -20419,6 +20440,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 setEngagementActivated(true);
                 if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
               }}
+              onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
             >
               <div
                 data-slot="window-engagement-hover-zone"
@@ -20428,11 +20450,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                   setEngagementZoneFocused(true);
                 }}
                 onBlurCapture={(event) => {
-                  const next = event.relatedTarget;
-                  if (next instanceof Node && engagementZoneRef.current?.contains(next)) return;
-                  if (next instanceof Element && next.closest('[data-slot="engagement-autocomplete"]')) return;
                   setEngagementZoneFocused(false);
-                  if (!engagement?.input?.value?.trim()) setEngagementActivated(false);
+                  dismissEngagementIfEmpty(event.relatedTarget);
                 }}
               >
                 {showEngagementChrome ? <Engagement {...engagement} active /> : null}
@@ -24359,8 +24378,7 @@ if (import.meta.vitest) {
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
       const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
       await waitFor(() => expect(document.activeElement).toBe(field));
-      field.blur();
-      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
       await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
