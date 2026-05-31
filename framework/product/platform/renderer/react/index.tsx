@@ -2876,63 +2876,85 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	const activeAppBase = platform.getActiveApp();
 	if (!activeAppBase) return null;
 
-	const activeApp = activeAppBase.resolve(activeModeId ?? activeAppBase.getActiveModeId());
+	const activeModeIdResolved = activeModeId ?? activeAppBase.getActiveModeId();
+	const shellDataGeneration = platform.generation;
+	const activeApp = reactHostPort.useMemo(
+		() => activeAppBase.resolve(activeModeIdResolved),
+		[activeAppBase, activeModeIdResolved, shellDataGeneration],
+	);
 
-	const canvasNode = multiApp ? (
-		<Ui
-			apps={resolvedApps.map((app) => ({
-				id: app.id,
-				label: app.label,
-				icon: app.iconId ? resolveElementIcon(app.iconId) : undefined,
-				children: (
-					<App
-						modes={app.modes.length > 0 ? app.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: app.id, label: app.label, children: null }]}
-						activeModeId={app.id === activeAppId ? (activeModeId ?? app.modes[0]?.id ?? app.id) : (app.modes[0]?.id ?? app.id)}
-						onActiveModeChange={app.id === activeAppId ? onActiveModeChange : undefined}
-						chrome={false}
-					>
-						{app.id === activeAppId ? (
-							<ShellModeCanvas
-								windowKinds={goldenWindowKinds}
-								defaultLayout={defaultLayout}
-								activeWindowId={activeWindowKindId}
-								onActiveWindowChange={onActiveWindowKindChange}
-							/>
-						) : null}
-					</App>
-				),
-			}))}
-			activeAppId={activeAppId}
-			onActiveAppChange={setActiveAppId}
-			chrome={false}
-		/>
-	) : (
-		<Ui
-			apps={[
-				{
-					id: activeApp.id,
-					label: activeApp.label,
-					icon: activeApp.iconId ? resolveElementIcon(activeApp.iconId) : undefined,
-					children: (
-						<App
-							modes={activeAppBase.modes.length > 0 ? activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: activeApp.id, label: activeApp.label, children: null }]}
-							activeModeId={activeModeId ?? activeAppBase.modes[0]?.id ?? activeApp.id}
-							onActiveModeChange={onActiveModeChange}
-							chrome={false}
-						>
-							<ShellModeCanvas
-								windowKinds={goldenWindowKinds}
-								defaultLayout={defaultLayout}
-								activeWindowId={activeWindowKindId}
-								onActiveWindowChange={onActiveWindowKindChange}
-							/>
-						</App>
-					),
-				},
-			]}
-			activeAppId={activeAppId}
-			chrome={false}
-		/>
+	const canvasNode = reactHostPort.useMemo(
+		() =>
+			multiApp ? (
+				<Ui
+					apps={resolvedApps.map((app) => ({
+						id: app.id,
+						label: app.label,
+						icon: app.iconId ? resolveElementIcon(app.iconId) : undefined,
+						children: (
+							<App
+								modes={app.modes.length > 0 ? app.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: app.id, label: app.label, children: null }]}
+								activeModeId={app.id === activeAppId ? (activeModeId ?? app.modes[0]?.id ?? app.id) : (app.modes[0]?.id ?? app.id)}
+								onActiveModeChange={app.id === activeAppId ? onActiveModeChange : undefined}
+								chrome={false}
+							>
+								{app.id === activeAppId ? (
+									<ShellModeCanvas
+										windowKinds={goldenWindowKinds}
+										defaultLayout={defaultLayout}
+										activeWindowId={activeWindowKindId}
+										onActiveWindowChange={onActiveWindowKindChange}
+									/>
+								) : null}
+							</App>
+						),
+					}))}
+					activeAppId={activeAppId}
+					onActiveAppChange={setActiveAppId}
+					chrome={false}
+				/>
+			) : (
+				<Ui
+					apps={[
+						{
+							id: activeApp.id,
+							label: activeApp.label,
+							icon: activeApp.iconId ? resolveElementIcon(activeApp.iconId) : undefined,
+							children: (
+								<App
+									modes={activeAppBase.modes.length > 0 ? activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, children: null })) : [{ id: activeApp.id, label: activeApp.label, children: null }]}
+									activeModeId={activeModeId ?? activeAppBase.modes[0]?.id ?? activeApp.id}
+									onActiveModeChange={onActiveModeChange}
+									chrome={false}
+								>
+									<ShellModeCanvas
+										windowKinds={goldenWindowKinds}
+										defaultLayout={defaultLayout}
+										activeWindowId={activeWindowKindId}
+										onActiveWindowChange={onActiveWindowKindChange}
+									/>
+								</App>
+							),
+						},
+					]}
+					activeAppId={activeAppId}
+					chrome={false}
+				/>
+			),
+		[
+			activeApp,
+			activeAppBase.modes,
+			activeAppId,
+			activeModeId,
+			activeWindowKindId,
+			defaultLayout,
+			goldenWindowKinds,
+			multiApp,
+			onActiveModeChange,
+			onActiveWindowKindChange,
+			resolvedApps,
+			setActiveAppId,
+		],
 	);
 
 	return (
@@ -3114,7 +3136,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		(next: UIPanelVisibility | ((prev: UIPanelVisibility) => UIPanelVisibility)) => {
 			setPanelVisibilityState((prev) => {
 				const resolved = typeof next === "function" ? next(prev) : next;
-				platform.setPanelVisibility(resolved);
+				platform.assignPanelVisibility(resolved);
 				return resolved;
 			});
 		},

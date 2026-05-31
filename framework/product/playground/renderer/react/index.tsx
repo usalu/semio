@@ -206,13 +206,22 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
   }
 }
 
-/** @emoji 🌲 Tree panel that rebuilds sections on every {@link TreePanelDefinition.resolveTree} call. */
+/** @emoji 🌲 Tree panel that rebuilds sections when the builder returns a new section list. */
 export class CallbackTreePanelDefinition implements TreePanelDefinition {
+  private resolved: TreePanelConfig | null = null;
+  private resolvedSections: TreeDataSection[] | null = null;
+
   constructor(private readonly buildSections: () => TreeDataSection[]) {}
 
   resolveTree(): TreePanelConfig {
-    const config: TreePanelConfig = { sections: this.buildSections() };
+    const sections = this.buildSections();
+    if (this.resolved && this.resolvedSections === sections) {
+      return this.resolved;
+    }
+    const config: TreePanelConfig = { sections };
     enforcePlaygroundTreePanel(config);
+    this.resolved = config;
+    this.resolvedSections = sections;
     return config;
   }
 }
@@ -372,12 +381,14 @@ function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[]
   return {
     getDragData: ({ sourceItem }) => dragByItemId.get(sourceItem.id),
     onDragStart: ({ sourceItem }) => {
+      puzzle3dFixturePaletteDragRef.active = true;
       const payload = dragByItemId.get(sourceItem.id)?.[FIXTURE_DRAG_V1_MIME];
       if (payload) {
         window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: payload } }));
       }
     },
     onDragEnd: () => {
+      puzzle3dFixturePaletteDragRef.active = false;
       window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
     },
   };
@@ -834,7 +845,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     (next: PlaygroundPanelVisibility | ((prev: PlaygroundPanelVisibility) => PlaygroundPanelVisibility)) => {
       setPanelVisibilityState((prev) => {
         const resolved = typeof next === "function" ? next(prev) : next;
-        runtime.setPanelVisibility(resolved);
+        runtime.assignPanelVisibility(resolved);
         return resolved;
       });
     },
@@ -847,7 +858,11 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   if (!activeAppBase) return null;
 
   const activeModeId = activeAppBase.getActiveModeId();
-  const activeApp = activeAppBase.resolve(activeModeId);
+  const shellDataGeneration = runtime.generation;
+  const activeApp = reactHostPort.useMemo(
+    () => activeAppBase.resolve(activeModeId),
+    [activeAppBase, activeModeId, shellDataGeneration],
+  );
   const bus = runtime.commandBus;
 
   const workbenchTabs = reactHostPort.useMemo(
@@ -859,7 +874,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         ),
         augmentPanelTabs?.workbench,
       ),
-    [activeApp.panelTabs, augmentPanelTabs?.workbench, bus],
+    [activeApp.panelTabs, augmentPanelTabs?.workbench, bus, shellDataGeneration],
   );
   const detailsTabs = reactHostPort.useMemo(
     () =>
@@ -870,10 +885,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         ),
         augmentPanelTabs?.details,
       ),
-    [activeApp.panelTabs, augmentPanelTabs?.details, bus],
+    [activeApp.panelTabs, augmentPanelTabs?.details, bus, shellDataGeneration],
   );
 
-  const mergedTools = reactHostPort.useMemo(() => declareToolsToViewTools(activeApp.tools, bus), [activeApp.tools, bus, runtime.generation]);
+  const mergedTools = reactHostPort.useMemo(() => declareToolsToViewTools(activeApp.tools, bus), [activeApp.tools, bus, shellDataGeneration]);
   const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
   const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
@@ -885,14 +900,17 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     });
   }, [activeApp.defaultLayout, activeApp.windowKinds]);
 
-  const goldenWindowKinds = reactHostPort.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
+  const goldenWindowKinds = reactHostPort.useMemo(
+    () => windowKindsToGolden(activeApp.windowKinds, bus),
+    [activeApp.windowKinds, bus, shellDataGeneration],
+  );
 
   const footerItems = reactHostPort.useMemo(
     () =>
       [...mergePlatformFooterChromeRows(runtime, activeApp), ...(extraFooterItems ?? [])].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0),
       ),
-    [activeApp, extraFooterItems, runtime, runtime.generation],
+    [activeApp, extraFooterItems, runtime, shellDataGeneration],
   );
 
   const workbenchIcon = reactHostPort.useMemo(
@@ -1050,8 +1068,12 @@ import {
   applyConnectToFixture,
   applyPaletteObjectDropToFixture,
   blockedVortexFullIdsFromAttractions,
+  buildPaletteObjectDragFixture,
+  encodeFixtureForDragV1,
   FIXTURE_DRAG_V1_MIME,
   mergePaletteObjectFromDrop,
+  puzzle3dFixturePaletteDragRef,
+  setPuzzle3dFixtureDragDataTransfer,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
   type RelocatePayload,
@@ -1064,12 +1086,14 @@ import {
   PUZZLE_3D_PLAY_ICON_INSPECTOR,
   PUZZLE_3D_PLAY_ICON_KINDS,
   PUZZLE_3D_PLAY_ICON_SETTINGS,
+  PUZZLE_3D_PLAY_KINDS_TAB_ID,
   PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
   PUZZLE_3D_PLAY_APP_ID,
   PUZZLE_3D_PLAY_STORE_ID,
   Puzzle3dPlayShellController,
   parseKindCatalogs,
   parseKindCompatibility,
+  puzzle3dPlayKindCatalogSelectItems,
   type Puzzle3dPlaySnapshot,
 } from "@puzzle/3d/play";
 // #endregion 🔌Adapters
@@ -1114,7 +1138,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   const handleFixtureDrop = reactHostPort.useCallback(
     (detail: Puzzle3dFixtureDropDetail) => {
-      const placed = mergePaletteObjectFromDrop(detail, kindCatalogs);
+      const placed = mergePaletteObjectFromDrop(detail, kindCatalogs, snap.fixture);
       if (placed) {
         patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, placed));
         bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelection", {
@@ -1186,6 +1210,85 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   );
 }
 
+//#region 🔖Puzzle3dPlayKindsPanel
+function Puzzle3dPlayKindsDraggableRow(props: { readonly objectKindId: string; readonly label: string }): ReactElement {
+  const dragFixture = reactHostPort.useMemo(() => buildPaletteObjectDragFixture(props.objectKindId), [props.objectKindId]);
+  const dragProps = useNativeDragAndDrop(
+    reactHostPort.useMemo(
+      () => ({
+        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
+          setPuzzle3dFixtureDragDataTransfer(event.dataTransfer, dragFixture);
+          puzzle3dFixturePaletteDragRef.active = true;
+          event.dataTransfer.effectAllowed = "copy";
+          const { clientWidth, clientHeight } = event.currentTarget;
+          event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
+          window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: { encoded: encodeFixtureForDragV1(dragFixture) } }));
+        },
+        onDragEnd: () => {
+          puzzle3dFixturePaletteDragRef.active = false;
+          window.dispatchEvent(new CustomEvent("puzzle3d-fixture-drag-session", { detail: null }));
+        },
+      }),
+      [dragFixture],
+    ),
+  );
+  return (
+    <div
+      className="border-element bg-background hover:bg-hover-panel flex cursor-grab items-center rounded-md border px-2 py-1.5 text-xs active:cursor-grabbing"
+      title={`Drag ${props.label} onto the 3D viewport`}
+      data-testid={`puzzle-3d-play-kind-${props.objectKindId}`}
+      {...dragProps}
+    >
+      {props.label}
+    </div>
+  );
+}
+
+/** @emoji 🏷️ Workbench kinds tab with native HTML drag for object catalog rows. */
+function Puzzle3dPlayKindsPanel(): ReactElement {
+  const snap = usePuzzle3dPlaySnapshot();
+  const catalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture?.meta), [snap.fixture?.meta]);
+  const objectKinds = reactHostPort.useMemo(() => puzzle3dPlayKindCatalogSelectItems(catalogs?.objects), [catalogs?.objects]);
+  if (!objectKinds.length) {
+    return <p className="text-muted-foreground p-3 text-xs">No object kinds in this fixture catalog</p>;
+  }
+  return (
+    <div className="flex min-h-0 flex-col gap-2 p-3" data-testid="puzzle-3d-play-kinds-panel">
+      <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Objects</p>
+      <div className="flex flex-col gap-1.5 overflow-auto">
+        {objectKinds.map((entry) => (
+          <Puzzle3dPlayKindsDraggableRow key={entry.value} objectKindId={entry.value} label={entry.label} />
+        ))}
+      </div>
+      <p className="text-muted-foreground text-[11px]">Drop onto the 3D viewport to place at the grid plane.</p>
+    </div>
+  );
+}
+
+class Puzzle3dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab(): SidePanelTabConfig {
+    return {
+      id: PUZZLE_3D_PLAY_KINDS_TAB_ID,
+      icon: Tags,
+      order: 1,
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-3d-play-kinds.panel",
+            label: "Kinds",
+            defaultOpen: true,
+            content: <Puzzle3dPlayKindsPanel />,
+            items: [],
+          },
+        ],
+      }),
+    };
+  }
+}
+
+const puzzle3dPlayKindsPanelDefinition = new Puzzle3dPlayKindsPanelDefinition();
+//#endregion 🔖Puzzle3dPlayKindsPanel
+
 let puzzle3dPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers puzzle 3D play surface host, tab icons, and mesh preload. */
@@ -1207,7 +1310,13 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
   mountPlaygroundApp(
-    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} playgroundKeybindings={playground.keybindings} />,
+    <PlaygroundView
+      runtime={playground.runtime}
+      defaultAppId={PUZZLE_3D_PLAY_APP_ID}
+      initialPanelVisibility={playground.initialPanelVisibility}
+      playgroundKeybindings={playground.keybindings}
+      augmentPanelTabs={{ workbench: [puzzle3dPlayKindsPanelDefinition] }}
+    />,
     rootId,
   );
 }
@@ -1783,8 +1892,22 @@ class Puzzle2dPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
+  private cachedSections: TreeDataSection[] | null = null;
+  private cacheKey = "";
+
   constructor(private readonly buildSections: () => TreeDataSection[]) {
     super();
+  }
+
+  private resolveSections(): TreeDataSection[] {
+    const sections = this.buildSections();
+    const key = sections.map((section) => `${section.id}:${section.items?.length ?? 0}`).join("|");
+    if (key === this.cacheKey && this.cachedSections) {
+      return this.cachedSections;
+    }
+    this.cacheKey = key;
+    this.cachedSections = sections;
+    return sections;
   }
 
   resolveTab(): SidePanelTabConfig {
@@ -1792,7 +1915,7 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
       id: "puzzle-2d-play-inspector",
       icon: ClipboardList,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.buildSections()),
+      tree: new CallbackTreePanelDefinition(() => this.resolveSections()),
     };
   }
 }

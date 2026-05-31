@@ -595,6 +595,8 @@ export interface CanvasProps {
   fixtureDragDrop?: boolean;
   /** @emoji 📥 Palette / shelf fixture dropped on the canvas at the grid-plane intersection. */
   onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
+  /** @emoji 🎨 Loaded scene fixture used to resolve catalog kinds that omit `meshUrl` (e.g. Base). */
+  sceneFixture?: FixtureV1;
   /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
   attractionSession?: AttractionSessionSnapshot | null;
   /** @emoji 🖱️ Marquee tool shape (rectangle default, lasso optional). */
@@ -1222,7 +1224,31 @@ function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: 
   return catalogs?.objects?.find((entry) => entry.id === kindId);
 }
 
-function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3): FixtureObjectV1 {
+/** @emoji 🎨 Resolves a GLB URL for an object kind from the catalog, then from matching scene objects. */
+export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): string | undefined {
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  const catalogMesh = kind?.meshUrl?.trim();
+  if (catalogMesh) {
+    return catalogMesh;
+  }
+  const lodMesh = pickClosestMeshUrl(kind?.meshByLod, DEFAULT_MANUAL_LOD, undefined);
+  if (lodMesh) {
+    return lodMesh;
+  }
+  if (sceneFixture) {
+    for (const object of sceneFixture.objects) {
+      if (object.objectKind === kindId) {
+        const sceneMesh = object.meshUrl?.trim();
+        if (sceneMesh) {
+          return sceneMesh;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3, meshUrl: string): FixtureObjectV1 {
   const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
     id: `${objectId}:v${index}`,
     vortexKind: entry.vortexKind,
@@ -1234,7 +1260,7 @@ function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, or
   return {
     id: objectId,
     objectKind: kind.id,
-    meshUrl: kind.meshUrl!,
+    meshUrl,
     ...(kind.meshByLod ? { meshByLod: kind.meshByLod } : {}),
     label: kind.label ?? kind.name ?? kind.id,
     origin,
@@ -1245,7 +1271,7 @@ function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, or
 }
 
 /** @emoji 🧩 When the drag payload is a palette object kind, returns one object at the drop CAD point. */
-export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined): FixtureObjectV1 | null {
+export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 | null {
   if (!isPaletteObjectDragFixture(detail.fixture)) {
     return null;
   }
@@ -1254,11 +1280,15 @@ export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, ki
     return null;
   }
   const kind = catalogObjectKindById(kindCatalogs, kindId);
-  if (!kind?.meshUrl) {
+  if (!kind) {
+    return null;
+  }
+  const meshUrl = resolveObjectKindMeshUrl(kindId, kindCatalogs, sceneFixture);
+  if (!meshUrl) {
     return null;
   }
   const objectId = `puzzle3d.drop.${crypto.randomUUID()}`;
-  return buildFixtureObjectFromObjectKind(kind, objectId, detail.worldCad);
+  return buildFixtureObjectFromObjectKind(kind, objectId, detail.worldCad, meshUrl);
 }
 
 /** @emoji 📥 Appends a palette-dropped object kind at a CAD origin. */
@@ -6246,7 +6276,7 @@ function DemandFrameloopKick(): null {
 }
 
 /** @emoji 👻 Live grid-plane preview while a workbench object-kind drag hovers the viewport. */
-function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined }): React.ReactElement | null {
+function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: FixtureV1 }): React.ReactElement | null {
   const { camera, gl } = useThree();
   const lod = useLod();
   const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(null);
@@ -6294,11 +6324,12 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
       return null;
     }
     const kind = catalogObjectKindById(props.kindCatalogs, kindId);
-    if (!kind?.meshUrl) {
+    const meshUrl = resolveObjectKindMeshUrl(kindId, props.kindCatalogs, props.sceneFixture);
+    if (!meshUrl) {
       return null;
     }
-    return { meshUrl: kind.meshUrl, scale: kind.scale, origin, orientation: [0, 0, 0, 1] as Quat };
-  }, [encodedDrag, origin, props.kindCatalogs]);
+    return { meshUrl, scale: kind?.scale, origin, orientation: [0, 0, 0, 1] as Quat };
+  }, [encodedDrag, origin, props.kindCatalogs, props.sceneFixture]);
 
   reactHostPort.useEffect(() => {
     const group = groupRef.current;
@@ -6446,7 +6477,7 @@ function Inner(props: CanvasProps & {
   readonly setFixtureDragActive: (active: boolean) => void;
   readonly fixtureDragDepthRef: React.MutableRefObject<number>;
 }) {
-  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility, fixtureDragDrop, onFixtureDrop, puzzle3dRootRef, fixtureDragActive, setFixtureDragActive, fixtureDragDepthRef } = props;
+  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility, fixtureDragDrop, onFixtureDrop, sceneFixture, puzzle3dRootRef, fixtureDragActive, setFixtureDragActive, fixtureDragDepthRef } = props;
   reactHostPort.useEffect(() => {
     puzzle3dBrushToolActiveRef.current = brushActive;
     if (!brushActive) {
@@ -6525,7 +6556,7 @@ function Inner(props: CanvasProps & {
             fixtureDragDepthRef={fixtureDragDepthRef}
           />
         ) : null}
-        {fixtureDragActive ? <FixtureDropPreview kindCatalogs={kindCatalogs} /> : null}
+        {fixtureDragActive ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
         {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
@@ -6636,6 +6667,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onBrushPlace={props.onBrushPlace}
       fixtureDragDrop={props.fixtureDragDrop}
       onFixtureDrop={props.onFixtureDrop}
+      sceneFixture={props.fixture}
       {...props.lodProps}
     >
       <Objects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
@@ -7325,6 +7357,21 @@ if (import.meta.vitest) {
       expect(placed?.objectKind).toBe("J");
       expect(placed?.origin).toEqual([12, 34, 56]);
       expect(placed?.meshUrl).toBe("test.glb");
+    });
+    it("resolveObjectKindMeshUrl falls back to scene object mesh when catalog omits meshUrl", () => {
+      const catalogs: KindCatalogBundle = { objects: [{ id: "Base", label: "Base" }] };
+      const scene: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [{ id: "tower-base", objectKind: "Base", meshUrl: "/meshes/base.glb", origin: [0, 0, 0], vortices: [] }],
+      };
+      expect(resolveObjectKindMeshUrl("Base", catalogs, scene)).toBe("/meshes/base.glb");
+      const dragFixture = buildPaletteObjectDragFixture("Base");
+      const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
+      expect(placed?.meshUrl).toBe("/meshes/base.glb");
+      expect(placed?.origin).toEqual([1, 2, 3]);
     });
     it("snapCadVec3ToGridStep rounds to grid step", () => {
       expect(snapCadVec3ToGridStep([12.3, 0.1, 56.8], 5)).toEqual([10, 0, 55]);

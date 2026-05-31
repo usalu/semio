@@ -10193,10 +10193,16 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   }, [size]);
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const showTabBar = sortedTabs.length > 1;
-  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTab = reactHostPort.useMemo(
+    () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
+    [currentActiveTab, sortedTabs],
+  );
+  const activeTabTree = reactHostPort.useMemo(
+    () => (activeTab ? resolveTreePanelSource(activeTab.tree) : null),
+    [activeTab],
+  );
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {

@@ -670,6 +670,7 @@ export class BaseAppRuntime {
 
 	addMode(mode: BaseModeRuntime): void {
 		this.modes.push(mode);
+		this.invalidateResolvedState();
 	}
 
 	getActiveModeId(): string | null {
@@ -678,12 +679,25 @@ export class BaseAppRuntime {
 	}
 
 	setActiveModeId(modeId: string | null): void {
+		if (this.activeModeIdOverride === modeId) return;
 		this.activeModeIdOverride = modeId;
+		this.invalidateResolvedState();
+	}
+
+	private resolvedCache: { modeId: string | null; state: ResolvedAppState } | null = null;
+
+	invalidateResolvedState(): void {
+		this.resolvedCache = null;
 	}
 
 	resolve(requestedModeId?: string | null): ResolvedAppState {
 		const modeId = requestedModeId ?? this.getActiveModeId();
-		return resolveBaseAppState(this, modeId);
+		if (this.resolvedCache?.modeId === modeId) {
+			return this.resolvedCache.state;
+		}
+		const state = resolveBaseAppState(this, modeId);
+		this.resolvedCache = { modeId, state };
+		return state;
 	}
 }
 //#endregion 🔖AppRuntime
@@ -788,6 +802,9 @@ export class Platform {
 
 	notify(): void {
 		this.generation++;
+		for (const app of this.apps) {
+			app.invalidateResolvedState();
+		}
 		for (const listener of this.listeners) listener();
 	}
 
@@ -824,11 +841,17 @@ export class Platform {
 	}
 
 	setPanelVisibility(next: PanelVisibility): void {
+		if (!this.assignPanelVisibility(next)) return;
+		this.notifyChrome();
+	}
+
+	/** @emoji 🪟 Updates {@link Platform.panelVisibility} without notifying subscribers (local React shell owns UI). */
+	assignPanelVisibility(next: PanelVisibility): boolean {
 		const left = next.leftSidePanel;
 		const right = next.rightSidePanel;
-		if (this.panelVisibility.leftSidePanel === left && this.panelVisibility.rightSidePanel === right) return;
+		if (this.panelVisibility.leftSidePanel === left && this.panelVisibility.rightSidePanel === right) return false;
 		this.panelVisibility = { leftSidePanel: left, rightSidePanel: right };
-		this.notifyChrome();
+		return true;
 	}
 
 	private readonly componentsBySurfaceId = new Map<string, SurfaceComponent>();
