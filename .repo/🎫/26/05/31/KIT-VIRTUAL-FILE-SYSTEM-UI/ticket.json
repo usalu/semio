@@ -1,0 +1,17 @@
+{
+  "title": "Kit Virtual File System UI",
+  "emoji": "📁",
+  "status": "closed",
+  "description": "Add unified FileSystemNode interface with computed parent/children/path across GraphQL golden schema, Rust store, and semio/js. Wire folder membership storage and createFolder/moveToFolder via existing kit operation mechanism.",
+  "summary": "Added VirtualFileSystem UI component (specialized hierarchical Table with expand/collapse and drag-drop) in @ui/react with buildVirtualFileSystemVisibleRows helper and vitest coverage. Created Storybook stories (Collapsed, Expanded, StaticRows). Extended @framework/platform/core with virtualFileSystem component kind, VirtualFileSystemModel, VirtualFileSystemController (lazy child loading for expanded nodes only), PlatformVirtualFileSystemDemoController, and registerPlatformVirtualFileSystemDemo. Wired BuiltinVirtualFileSystemKindRenderer in @framework/platform/renderer/react with expand, selection, and drag-reparent commands. All platform core (11), ui react (76), and platform renderer (19) tests pass.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "f1e4f894",
+    "local": "kit_virtual_file_system_f1e4f894.plan.md"
+  },
+  "sessions": [
+    "⚪14b366a11a8445349f274734f68fdce3",
+    "⚪0ca3f3857f004fb68ae2c2474b4e551e"
+  ]
+}

@@ -90,6 +90,7 @@ import {
   Plus as AddIcon,
   AlertCircle as AlertCircleIcon,
   BookOpen as BookIcon,
+  Box as BoxIcon,
   Camera as CameraIcon,
   Check as CheckIcon,
   CheckIcon as CheckIconAlt,
@@ -22471,6 +22472,183 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
 
 // #endregion 🛎️Table
 
+// #region 📁VirtualFileSystem
+/** @emoji 📁 Kit virtual file system node kind aligned with GraphQL `FileSystemNodeKind`. */
+export type VirtualFileSystemNodeKind = "kit" | "folder" | "file" | "design" | "type" | "family" | "piece" | "connection";
+
+/** @emoji 📁 One node in a virtual file system tree (children may be loaded lazily by the host). */
+export interface VirtualFileSystemNode {
+  readonly id: string;
+  readonly kind: VirtualFileSystemNodeKind;
+  readonly name: string;
+  readonly path?: string;
+  readonly parentId?: string | null;
+  readonly hasChildren?: boolean;
+  readonly icon?: string;
+}
+
+/** @emoji 📁 Flattened visible row for {@link VirtualFileSystem} (only expanded branches). */
+export interface VirtualFileSystemRow extends VirtualFileSystemNode, HierarchicalRowData {
+  readonly level: number;
+  readonly isExpanded?: boolean;
+}
+
+/** @emoji 📁 Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for kit VFS nodes. */
+export interface VirtualFileSystemProps {
+  readonly rows: readonly VirtualFileSystemRow[];
+  readonly selectedRowIds?: Set<string> | readonly string[];
+  readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
+  readonly onToggleExpand?: (rowId: string) => void;
+  readonly emptyMessage?: string;
+  readonly className?: string;
+  readonly rowHeight?: TableProps<VirtualFileSystemRow>["rowHeight"];
+  readonly dragDrop?: DragDropConfig;
+  readonly extraColumns?: readonly TableColumn<VirtualFileSystemRow>[];
+}
+
+/** @emoji 📁 Returns a lucide icon component for a VFS node kind. */
+export function virtualFileSystemKindIcon(kind: VirtualFileSystemNodeKind | string): LucideIcon {
+  switch (kind) {
+    case "kit":
+      return LayoutGridIcon;
+    case "folder":
+      return FolderIcon;
+    case "file":
+      return DocumentIcon;
+    case "design":
+      return Puzzle2dIconCatalogGlyphIcon;
+    case "type":
+      return Puzzle2dIconMathGlyphIcon;
+    case "family":
+      return FolderOpenIcon;
+    case "piece":
+      return BoxIcon;
+    case "connection":
+      return ExternalLinkIcon;
+    default:
+      return DocumentIcon;
+  }
+}
+
+/** @emoji 📁 DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
+export function buildVirtualFileSystemVisibleRows(
+  rootId: string,
+  childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>,
+  expandedIds: ReadonlySet<string>,
+  root?: VirtualFileSystemNode,
+): VirtualFileSystemRow[] {
+  const rows: VirtualFileSystemRow[] = [];
+  const visit = (node: VirtualFileSystemNode, level: number) => {
+    const hasChildren = Boolean(node.hasChildren);
+    const expanded = hasChildren && expandedIds.has(node.id);
+    rows.push({
+      ...node,
+      level,
+      parentId: node.parentId ?? undefined,
+      hasChildren,
+      isExpanded: expanded,
+    });
+    if (!expanded) return;
+    const children = childrenByParentId.get(node.id);
+    if (!children?.length) return;
+    for (const child of children) visit(child, level + 1);
+  };
+  const rootNode = root ?? { id: rootId, kind: "kit", name: rootId, hasChildren: childrenByParentId.has(rootId) || expandedIds.has(rootId) };
+  visit(rootNode, 0);
+  return rows;
+}
+
+const VirtualFileSystemNodeGlyph: React.FC<{ readonly kind: VirtualFileSystemNodeKind | string; readonly icon?: string; readonly name: string }> = ({
+  kind,
+  icon,
+  name,
+}) => {
+  if (icon) return <TableAvatar name={name} icon={icon} />;
+  const Icon = virtualFileSystemKindIcon(kind);
+  return (
+    <span className="inline-flex size-small shrink-0 items-center justify-center text-muted-foreground">
+      <Icon size={14} aria-hidden />
+    </span>
+  );
+};
+
+/** @emoji 📁 Hierarchical kit file-system table (specialized {@link Table}). */
+export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
+  rows,
+  selectedRowIds,
+  onRowClick,
+  onToggleExpand,
+  emptyMessage = "No file system nodes",
+  className = "",
+  rowHeight = "normal",
+  dragDrop,
+  extraColumns = [],
+}) => {
+  const columns = reactHostPort.useMemo((): TableColumn<VirtualFileSystemRow>[] => {
+    const base: TableColumn<VirtualFileSystemRow>[] = [
+      {
+        id: "name",
+        header: "Name",
+        width: "45%",
+        accessor: (row) => (
+          <div className="flex min-w-0 items-center gap-single" style={{ paddingLeft: (row.level ?? 0) * 14 }}>
+            {row.hasChildren ? (
+              <button
+                type="button"
+                data-vfs-expand
+                className="inline-flex size-small shrink-0 items-center justify-center rounded hover:bg-hover-base"
+                aria-label={row.isExpanded ? "Collapse" : "Expand"}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleExpand?.(row.id);
+                }}
+              >
+                {row.isExpanded ? "▾" : "▸"}
+              </button>
+            ) : (
+              <span className="inline-block size-small shrink-0" aria-hidden />
+            )}
+            <VirtualFileSystemNodeGlyph kind={row.kind} icon={row.icon} name={row.name} />
+            <span className="truncate">{row.name}</span>
+          </div>
+        ),
+      },
+      {
+        id: "kind",
+        header: "Kind",
+        width: "20%",
+        accessor: (row) => row.kind,
+      },
+      {
+        id: "path",
+        header: "Path",
+        width: "35%",
+        accessor: (row) => row.path ?? "",
+      },
+    ];
+    return [...base, ...extraColumns];
+  }, [extraColumns, onToggleExpand]);
+
+  return (
+    <Table<VirtualFileSystemRow>
+      className={className}
+      columns={columns}
+      data={[...rows]}
+      getRowId={(row) => row.id}
+      selectedRows={selectedRowIds}
+      onRowClick={onRowClick}
+      emptyMessage={emptyMessage}
+      rowHeight={rowHeight}
+      hierarchical
+      dragDrop={dragDrop}
+    />
+  );
+};
+
+VirtualFileSystem.displayName = "VirtualFileSystem";
+
+// #endregion 📁VirtualFileSystem
+
 // #region ⚙️Canvas
 
 /**
@@ -25143,6 +25321,39 @@ if (treeVitest) {
       expect(emptyMarkup).toContain("opacity:0.6");
       expect(filledMarkup).toContain("opacity:1");
       expect(standaloneMarkup).not.toContain("opacity:0.6");
+    });
+  });
+
+  describe("VirtualFileSystem", () => {
+    it("buildVirtualFileSystemVisibleRows only includes children of expanded parents", () => {
+      const root: VirtualFileSystemNode = { id: "kit", kind: "kit", name: "Kit", hasChildren: true };
+      const childrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
+        [
+          "kit",
+          [
+            { id: "f1", kind: "folder", name: "Models", parentId: "kit", hasChildren: true },
+            { id: "d1", kind: "design", name: "Tower", parentId: "kit", hasChildren: false },
+          ],
+        ],
+        ["f1", [{ id: "t1", kind: "type", name: "Capsule", parentId: "f1", hasChildren: false }]],
+      ]);
+      const collapsed = buildVirtualFileSystemVisibleRows("kit", childrenByParentId, new Set(["kit"]), root);
+      expect(collapsed.map((row) => row.id)).toEqual(["kit", "f1", "d1"]);
+      const expanded = buildVirtualFileSystemVisibleRows("kit", childrenByParentId, new Set(["kit", "f1"]), root);
+      expect(expanded.map((row) => row.id)).toEqual(["kit", "f1", "t1", "d1"]);
+    });
+
+    it("renders expand affordance only for rows with children", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          rows={[
+            { id: "kit", kind: "kit", name: "Kit", level: 0, hasChildren: true, isExpanded: true },
+            { id: "file", kind: "file", name: "readme.md", level: 1, hasChildren: false },
+          ]}
+        />,
+      );
+      expect(markup).toContain("data-vfs-expand");
+      expect(markup).toContain("readme.md");
     });
   });
 

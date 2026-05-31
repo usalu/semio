@@ -10,28 +10,28 @@ todos:
     status: completed
   - id: rs-storage
     content: Add folder-membership storage in lib.rs (Folder name/icon/parent, File/Design/Type/Family folder id, minimal Family model)
-    status: in_progress
+    status: completed
   - id: rs-interface
     content: Add FileSystemNodeInterface enum + connection and implement the 6 computed resolvers on all 8 kinds per the constraint table; register types in build_schema
-    status: in_progress
+    status: completed
   - id: rs-writes
     content: Add Operation::CreateFolder and Operation::MoveToFolder (scope/input/to_diff/to_backwards via apply_kit_state) and the createFolder/moveToFolder command resolvers
-    status: pending
+    status: completed
   - id: rs-regen
     content: Regenerate schema.graphql and make schema_matches_target_graphql_file pass (golden strict)
-    status: pending
+    status: completed
   - id: js-read
     content: Add shared FileSystem field roster to semio/js and install on the 8 classes (+ new Family class); finish Folder navigation and add Kit.folders / Store.folder
-    status: pending
+    status: completed
   - id: js-write
     content: Add createFolder/moveToFolder to KIT_OPERATIONS with declare signatures and change subscriptions
-    status: pending
+    status: completed
   - id: tests
     content: Extend Rust tests and embedded vitest to cover the VFS projection and reparenting; run both suites
-    status: pending
+    status: completed
   - id: close
     content: Close the ticket with a summary of created/updated files
-    status: pending
+    status: completed
 isProject: false
 ---
 

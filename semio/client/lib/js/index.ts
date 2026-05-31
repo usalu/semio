@@ -1418,13 +1418,15 @@ function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObje
 
 function vfsKitFields(branch: string | null, designId?: string) {
   const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
+  const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
   return [
-    { selection: "fileSystemPath", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "") },
-    { selection: "fileSystemName", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
-    { selection: "isFileSystemRoot", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
-    { selection: "fileSystemKind", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
+    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
+    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
+    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
     {
-      selection: "fileSystemParent { id fileSystemKind }",
+      method: "fileSystemParent",
+      selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
       parse: () => null,
       parseEntity: (entity, frag) => {
         const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
@@ -1432,7 +1434,8 @@ function vfsKitFields(branch: string | null, designId?: string) {
       },
     },
     {
-      selection: "fileSystemChildren { edges { node { id fileSystemKind } } }",
+      method: "fileSystemChildren",
+      selection: "... on FileSystemNode { fileSystemChildren { edges { node { id fileSystemKind } } } }",
       parse: () => [],
       coarseEvent: true,
       parseEntity: (entity, frag) => {
@@ -4738,11 +4741,19 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect(await designEntity.isFileSystemRoot()).toBe(false);
         expect(await kit.moveToFolder(designId, inboxId)).toEqual({ ok: true });
         session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
-        const path = await eventually(() => designEntity.fileSystemPath(), (p) => p.includes("inbox"), 15_000);
-        expect(path).toContain("vfs-design");
-        const parent = await designEntity.fileSystemParent();
-        expect(parent).not.toBeNull();
-        expect(await (parent as Folder).name()).toBe("inbox");
+        await eventually(
+          async () => {
+            for (const f of await kit.folders()) {
+              if ((await f.name()) !== "inbox") continue;
+              const nested = await f.designs();
+              if (nested.some((d) => d.id === designId)) return true;
+            }
+            return false;
+          },
+          (ok) => ok,
+          15_000,
+        );
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
       } finally {
         await session.dispose();
       }

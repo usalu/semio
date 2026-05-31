@@ -60,16 +60,26 @@ export interface UiSeparatorNode {
 }
 
 //#region 🔖ComponentKind
-/** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "panel";
+/** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "puzzle2d", "puzzle3d", "puzzle5d", "cad"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
 	readonly type: "table";
 	readonly componentKind: "table";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 📁 Host-bound kit virtual file system surface (hierarchical table). */
+export interface UiVirtualFileSystemHostSurfaceNode {
+	readonly type: "virtualFileSystem";
+	readonly componentKind: "virtualFileSystem";
 	readonly surfaceId: string;
 	readonly controllerId: string;
 	readonly paneId?: string;
@@ -125,6 +135,7 @@ export interface UiPanelHostSurfaceNode {
 
 export type UiComponentHostSurfaceNode =
 	| UiTableHostSurfaceNode
+	| UiVirtualFileSystemHostSurfaceNode
 	| UiPuzzle2dHostSurfaceNode
 	| UiPuzzle3dHostSurfaceNode
 	| UiPuzzle5dHostSurfaceNode
@@ -143,6 +154,23 @@ export function buildTableWindowBody(surfaceId: string, controllerId: string, pa
 	return {
 		type: "table",
 		componentKind: "table",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 📁 Canonical virtual file system window body. */
+export function buildVirtualFileSystemWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	paneId?: string,
+	bindingId?: string,
+): UiVirtualFileSystemHostSurfaceNode {
+	return {
+		type: "virtualFileSystem",
+		componentKind: "virtualFileSystem",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),
@@ -206,9 +234,9 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
-	throw new Error(
-		`Declarative window body "${bodyKey}" must be a single table, puzzle2d, puzzle3d, puzzle5d, or cad surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
-	);
+		throw new Error(
+			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, or cad surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+		);
 }
 //#endregion 🔖UiNode
 
@@ -240,6 +268,37 @@ export interface TableModel {
 	readonly sortColumnId?: string | null;
 	readonly sortDescending?: boolean;
 	readonly emptyMessage?: string;
+}
+
+/** @emoji 📁 One lazy-loaded node record for {@link VirtualFileSystemController}. */
+export interface VirtualFileSystemNodeRecord {
+	readonly id: string;
+	readonly kind: string;
+	readonly name: string;
+	readonly path: string;
+	readonly parentId: string | null;
+	readonly hasChildren: boolean;
+}
+
+/** @emoji 📁 Flat row for {@link VirtualFileSystemModel}. */
+export interface VirtualFileSystemRowModel {
+	readonly id: string;
+	readonly kind: string;
+	readonly name: string;
+	readonly path: string;
+	readonly depth: number;
+	readonly hasChildren: boolean;
+	readonly expanded?: boolean;
+	readonly expandToggle?: { readonly command: string; readonly args?: unknown };
+	readonly canDrag?: boolean;
+}
+
+/** @emoji 📁 Render-agnostic kit VFS view-model for {@link VirtualFileSystem}. */
+export interface VirtualFileSystemModel {
+	readonly rows: readonly VirtualFileSystemRowModel[];
+	readonly selectedRowIds?: readonly string[];
+	readonly emptyMessage?: string;
+	readonly dragDropEnabled?: boolean;
 }
 
 /** @emoji 📋 Node descriptor for {@link Puzzle2dModel}. */
@@ -372,6 +431,313 @@ export class Table extends Component<TableModel> {
 	buildSnapshot(): TableModel {
 		return this.getSnapshot();
 	}
+}
+
+/** @emoji 📁 Virtual file system surface component base class. */
+export class VirtualFileSystem extends Component<VirtualFileSystemModel> {
+	constructor(surfaceId: string, controllerId: string, initialSnapshot: VirtualFileSystemModel = { rows: [] }) {
+		super("virtualFileSystem", surfaceId, controllerId, initialSnapshot);
+	}
+
+	buildSnapshot(): VirtualFileSystemModel {
+		return this.getSnapshot();
+	}
+}
+
+/** @emoji 📁 Controller store id for expanded VFS node ids (`vfs-expanded:<surfaceId>`). */
+export function virtualFileSystemExpandedStoreId(surfaceId: string): string {
+	return `vfs-expanded:${surfaceId}`;
+}
+
+/** @emoji 📁 Controller store id for lazily loaded VFS children (`vfs-children:<surfaceId>`). */
+export function virtualFileSystemChildrenStoreId(surfaceId: string): string {
+	return `vfs-children:${surfaceId}`;
+}
+
+/** @emoji 📁 Expanded node ids per VFS surface. */
+export class VirtualFileSystemExpandedStore extends Store<readonly string[]> {
+	private expanded: string[];
+
+	constructor(initial: readonly string[] = []) {
+		super();
+		this.expanded = [...initial];
+	}
+
+	override getSnapshot(): readonly string[] {
+		return this.expanded;
+	}
+
+	toggle(nodeId: string): void {
+		const index = this.expanded.indexOf(nodeId);
+		if (index >= 0) this.expanded.splice(index, 1);
+		else this.expanded.push(nodeId);
+		this.notify();
+	}
+
+	setAll(next: readonly string[]): void {
+		this.expanded = [...next];
+		this.notify();
+	}
+}
+
+/** @emoji 📁 Lazily loaded children keyed by parent node id. */
+export class VirtualFileSystemChildrenStore extends Store<Readonly<Record<string, readonly VirtualFileSystemNodeRecord[]>>> {
+	private childrenByParentId: Record<string, readonly VirtualFileSystemNodeRecord[]>;
+
+	constructor(initial: Readonly<Record<string, readonly VirtualFileSystemNodeRecord[]>> = {}) {
+		super();
+		this.childrenByParentId = { ...initial };
+	}
+
+	override getSnapshot(): Readonly<Record<string, readonly VirtualFileSystemNodeRecord[]>> {
+		return this.childrenByParentId;
+	}
+
+	setChildren(parentId: string, children: readonly VirtualFileSystemNodeRecord[]): void {
+		this.childrenByParentId = { ...this.childrenByParentId, [parentId]: children };
+		this.notify();
+	}
+
+	moveNode(nodeId: string, targetParentId: string | null, rootId: string): void {
+		let moved: VirtualFileSystemNodeRecord | undefined;
+		const next: Record<string, readonly VirtualFileSystemNodeRecord[]> = {};
+		for (const [parentId, children] of Object.entries(this.childrenByParentId)) {
+			const kept = children.filter((child) => {
+				if (child.id === nodeId) {
+					moved = { ...child, parentId: targetParentId === rootId ? rootId : targetParentId };
+					return false;
+				}
+				return true;
+			});
+			if (kept.length) next[parentId] = kept;
+		}
+		if (!moved) return;
+		const bucket = !targetParentId || targetParentId === rootId ? "__root__" : targetParentId;
+		next[bucket] = [...(next[bucket] ?? []), moved];
+		this.childrenByParentId = next;
+		this.notify();
+	}
+}
+
+/** @emoji 📁 Flattens visible VFS rows from expanded ids and lazily loaded children. */
+export function buildVirtualFileSystemModelRows(
+	root: VirtualFileSystemNodeRecord,
+	childrenByParentId: Readonly<Record<string, readonly VirtualFileSystemNodeRecord[]>>,
+	expandedIds: ReadonlySet<string>,
+	options?: {
+		readonly expandCommand?: string;
+		readonly surfaceId?: string;
+	},
+): VirtualFileSystemRowModel[] {
+	const rows: VirtualFileSystemRowModel[] = [];
+	const rootBucket = childrenByParentId["__root__"];
+	const visit = (node: VirtualFileSystemNodeRecord, depth: number) => {
+		const hasChildren = node.hasChildren;
+		const expanded = hasChildren && expandedIds.has(node.id);
+		rows.push({
+			id: node.id,
+			kind: node.kind,
+			name: node.name,
+			path: node.path,
+			depth,
+			hasChildren,
+			expanded,
+			...(hasChildren && options?.expandCommand
+				? {
+						expandToggle: {
+							command: options.expandCommand,
+							args: { nodeId: node.id, surfaceId: options.surfaceId },
+						},
+					}
+				: {}),
+			canDrag: node.kind !== "kit",
+		});
+		if (!expanded) return;
+		const children = childrenByParentId[node.id] ?? (depth === 0 ? rootBucket : undefined);
+		if (!children?.length) return;
+		for (const child of children) visit(child, depth + 1);
+	};
+	visit(root, 0);
+	return rows;
+}
+
+/** @emoji 📁 Base controller: loads VFS children only for expanded nodes; supports expand and drag-reparent. */
+export abstract class VirtualFileSystemController extends Controller {
+	protected readonly expandedBySurface = new Map<string, VirtualFileSystemExpandedStore>();
+	protected readonly childrenBySurface = new Map<string, VirtualFileSystemChildrenStore>();
+	protected selectedRowIds: string[] = [];
+
+	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
+		super(id, commandBus, hostNotify);
+	}
+
+	protected abstract getRoot(surfaceId: string): VirtualFileSystemNodeRecord;
+
+	protected abstract loadChildren(parentId: string, surfaceId: string): readonly VirtualFileSystemNodeRecord[];
+
+	protected expandedStore(surfaceId: string, initial: readonly string[] = []): VirtualFileSystemExpandedStore {
+		const existing = this.expandedBySurface.get(surfaceId);
+		if (existing) return existing;
+		const store = new VirtualFileSystemExpandedStore(initial.length ? initial : [this.getRoot(surfaceId).id]);
+		this.expandedBySurface.set(surfaceId, store);
+		this.provideStore(virtualFileSystemExpandedStoreId(surfaceId), store);
+		return store;
+	}
+
+	protected childrenStore(surfaceId: string): VirtualFileSystemChildrenStore {
+		const existing = this.childrenBySurface.get(surfaceId);
+		if (existing) return existing;
+		const store = new VirtualFileSystemChildrenStore();
+		this.childrenBySurface.set(surfaceId, store);
+		this.provideStore(virtualFileSystemChildrenStoreId(surfaceId), store);
+		return store;
+	}
+
+	protected ensureChildrenLoaded(parentId: string, surfaceId: string): void {
+		const childrenStore = this.childrenStore(surfaceId);
+		const snapshot = childrenStore.getSnapshot();
+		const key = parentId === this.getRoot(surfaceId).id ? "__root__" : parentId;
+		if (snapshot[key]) return;
+		const loaded = this.loadChildren(parentId, surfaceId);
+		childrenStore.setChildren(key, loaded);
+	}
+
+	protected syncOpenBranches(surfaceId: string): void {
+		const expanded = this.expandedStore(surfaceId).getSnapshot();
+		for (const nodeId of expanded) {
+			this.ensureChildrenLoaded(nodeId, surfaceId);
+		}
+	}
+
+	buildVirtualFileSystemModel(surfaceId: string): VirtualFileSystemModel {
+		this.syncOpenBranches(surfaceId);
+		const expandedIds = new Set(this.expandedStore(surfaceId).getSnapshot());
+		const rows = buildVirtualFileSystemModelRows(this.getRoot(surfaceId), this.childrenStore(surfaceId).getSnapshot(), expandedIds, {
+			expandCommand: "toggleVirtualFileSystemExpand",
+			surfaceId,
+		});
+		return {
+			rows,
+			selectedRowIds: this.selectedRowIds,
+			emptyMessage: rows.length ? undefined : "No file system nodes",
+			dragDropEnabled: true,
+		};
+	}
+
+	override run(command: string, args?: unknown): void {
+		const payload = (args ?? {}) as { surfaceId?: string; nodeId?: string; rowId?: string; active?: string; over?: string | null };
+		const surfaceId = payload.surfaceId ?? "";
+		switch (command) {
+			case "toggleVirtualFileSystemExpand": {
+				if (!payload.nodeId || !surfaceId) return;
+				const expanded = this.expandedStore(surfaceId);
+				expanded.toggle(payload.nodeId);
+				if (expanded.getSnapshot().includes(payload.nodeId)) {
+					this.ensureChildrenLoaded(payload.nodeId, surfaceId);
+				}
+				this.emit();
+				return;
+			}
+			case "toggleVirtualFileSystemRowSelection": {
+				if (!payload.rowId) return;
+				const index = this.selectedRowIds.indexOf(payload.rowId);
+				if (index >= 0) this.selectedRowIds.splice(index, 1);
+				else this.selectedRowIds.push(payload.rowId);
+				this.emit();
+				return;
+			}
+			case "virtualFileSystemDragEnd": {
+				if (!surfaceId || !payload.active || !payload.over) return;
+				const childrenStore = this.childrenStore(surfaceId);
+				const rootId = this.getRoot(surfaceId).id;
+				const targetParentId = payload.over === rootId ? rootId : payload.over;
+				childrenStore.moveNode(payload.active, targetParentId, rootId);
+				this.emit();
+				return;
+			}
+			default:
+				return;
+		}
+	}
+}
+
+/** @emoji 📁 Demo VFS controller with an in-memory kit tree (for platform tests and story wiring). */
+export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemController {
+	static readonly SURFACE_ID = "surface/platform/vfs-demo";
+	static readonly ROOT_ID = "kit-demo";
+
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super("platform-vfs-demo-ctrl", commandBus, hostNotify);
+	}
+
+	protected override getRoot(_surfaceId: string): VirtualFileSystemNodeRecord {
+		return {
+			id: PlatformVirtualFileSystemDemoController.ROOT_ID,
+			kind: "kit",
+			name: "Demo Kit",
+			path: "/",
+			parentId: null,
+			hasChildren: true,
+		};
+	}
+
+	protected override loadChildren(parentId: string, _surfaceId: string): readonly VirtualFileSystemNodeRecord[] {
+		if (parentId === PlatformVirtualFileSystemDemoController.ROOT_ID) {
+			return [
+				{
+					id: "folder-models",
+					kind: "folder",
+					name: "Models",
+					path: "/Models",
+					parentId,
+					hasChildren: true,
+				},
+				{
+					id: "design-alpha",
+					kind: "design",
+					name: "Alpha",
+					path: "/Alpha",
+					parentId,
+					hasChildren: false,
+				},
+			];
+		}
+		if (parentId === "folder-models") {
+			return [
+				{
+					id: "type-capsule",
+					kind: "type",
+					name: "Capsule",
+					path: "/Models/Capsule",
+					parentId,
+					hasChildren: false,
+				},
+			];
+		}
+		return [];
+	}
+}
+
+/** @emoji 📁 Demo {@link VirtualFileSystem} surface bound to {@link PlatformVirtualFileSystemDemoController}. */
+export class PlatformVirtualFileSystemDemoSurface extends VirtualFileSystem {
+	constructor(readonly owner: PlatformVirtualFileSystemDemoController) {
+		super(PlatformVirtualFileSystemDemoController.SURFACE_ID, owner.id, { rows: [] });
+	}
+
+	override buildSnapshot(): VirtualFileSystemModel {
+		return this.owner.buildVirtualFileSystemModel(this.surfaceId);
+	}
+}
+
+/** @emoji 📁 Registers demo controller, surface, and window body on a {@link Platform}. */
+export function registerPlatformVirtualFileSystemDemo(platform: Platform): PlatformVirtualFileSystemDemoController {
+	const ctrl = new PlatformVirtualFileSystemDemoController(platform.commandBus, () => platform.notify());
+	const surface = new PlatformVirtualFileSystemDemoSurface(ctrl);
+	registerPlatformComponent(platform, surface);
+	platform.subscribe(() => surface.refresh());
+	ctrl.expandedStore(PlatformVirtualFileSystemDemoController.SURFACE_ID, [PlatformVirtualFileSystemDemoController.ROOT_ID]);
+	surface.refresh();
+	return ctrl;
 }
 
 /** @emoji 📋 2D puzzle surface component base class. */
@@ -1171,6 +1537,7 @@ if (import.meta.vitest) {
 			expect(isCanvasOnlyWindowBody(buildPuzzle3dWindowBody("s", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildPuzzle2dWindowBody("b", "c", "pane"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildTableWindowBody("t", "c"))).toBe(true);
+			expect(isCanvasOnlyWindowBody(buildVirtualFileSystemWindowBody("vfs", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildPanelWindowBody("p", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody({ type: "text", value: "loading" })).toBe(true);
 		});
@@ -1190,7 +1557,7 @@ if (import.meta.vitest) {
 						buildPuzzle5dWindowBody("s", "c"),
 					],
 				}),
-			).toThrow(/table, puzzle2d, puzzle3d, puzzle5d, or cad/);
+			).toThrow(/table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, or cad/);
 		});
 	});
 
@@ -1200,6 +1567,19 @@ if (import.meta.vitest) {
 			expect(platform.id).toBe("demo");
 			expect(platform.name).toBe("Demo");
 			expect(platform.activeAppId).toBe("home");
+		});
+	});
+
+	describe("VirtualFileSystemController", () => {
+		it("loads children only for expanded nodes", () => {
+			const platform = new Platform({ id: "vfs", name: "VFS" });
+			const ctrl = registerPlatformVirtualFileSystemDemo(platform);
+			const surfaceId = PlatformVirtualFileSystemDemoController.SURFACE_ID;
+			let model = ctrl.buildVirtualFileSystemModel(surfaceId);
+			expect(model.rows.map((row) => row.id)).toEqual(["kit-demo", "folder-models", "design-alpha"]);
+			ctrl.run("toggleVirtualFileSystemExpand", { surfaceId, nodeId: "folder-models" });
+			model = ctrl.buildVirtualFileSystemModel(surfaceId);
+			expect(model.rows.map((row) => row.id)).toEqual(["kit-demo", "folder-models", "type-capsule", "design-alpha"]);
 		});
 	});
 

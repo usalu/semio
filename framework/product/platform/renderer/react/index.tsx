@@ -7,6 +7,10 @@ export {
 	Store,
 	APP_TOOL_CATEGORY_ORDER,
 	Table,
+	VirtualFileSystem,
+	buildVirtualFileSystemWindowBody,
+	registerPlatformVirtualFileSystemDemo,
+	PlatformVirtualFileSystemDemoController,
 	Puzzle2d,
 	Puzzle3d,
 	Puzzle5d,
@@ -17,6 +21,7 @@ export {
 	type AppToolCategory,
 	type ComponentKind,
 	type TableModel,
+	type VirtualFileSystemModel,
 	type Puzzle2dModel,
 	type Puzzle3dModel,
 	type Puzzle5dModel,
@@ -77,9 +82,11 @@ import {
 	Puzzle3d,
 	Puzzle5d,
 	Table,
+	VirtualFileSystem as VirtualFileSystemSurface,
 	type CadModel,
 	type Component,
 	type ComponentKind,
+	type VirtualFileSystemModel,
 	type PanelModel,
 	type Puzzle2dModel,
 	type Puzzle3dModel,
@@ -96,9 +103,12 @@ import {
 	type UiSeparatorNode,
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
+	type UiVirtualFileSystemHostSurfaceNode,
 	type UiTextNode,
 	getPlatformControllerById,
 	platformTopologyStoreId,
+	registerPlatformVirtualFileSystemDemo,
+	PlatformVirtualFileSystemDemoController,
 } from "@framework/platform/core";
 import {
 	ArrowLeft,
@@ -193,6 +203,8 @@ import {
 	useElementsSurfaceChrome,
 	writeStoredUiChromeCompact,
 	reactHostPort,
+	VirtualFileSystem as VirtualFileSystemView,
+	type VirtualFileSystemRow,
 	windowMeasureControlClass,
 	windowMeasureLabelClass,
 	windowMeasureSectionClass,
@@ -1511,6 +1523,62 @@ export function useControllerStore<TSnapshot>(controller: Controller | undefined
 	return store ? useStore(store) : undefined;
 }
 
+const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component, platform, commandBus }) => {
+	const model = useStore(component as VirtualFileSystemSurface);
+	const controllerId = component.controllerId;
+	const rows: VirtualFileSystemRow[] = model.rows.map((row) => ({
+		id: row.id,
+		kind: row.kind as VirtualFileSystemRow["kind"],
+		name: row.name,
+		path: row.path,
+		level: row.depth,
+		hasChildren: row.hasChildren,
+		isExpanded: row.expanded,
+		parentId: undefined,
+	}));
+	return (
+		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden p-2" data-component-kind="virtualFileSystem">
+			<VirtualFileSystemView
+				rows={rows}
+				selectedRowIds={model.selectedRowIds ? new Set(model.selectedRowIds) : undefined}
+				emptyMessage={model.emptyMessage ?? "No file system nodes"}
+				onToggleExpand={(rowId) => {
+					if (!platform) return;
+					platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemExpand", {
+						nodeId: rowId,
+						surfaceId: component.surfaceId,
+					});
+				}}
+				onRowClick={(row, _index, event) => {
+					if (!platform) return;
+					if (event.metaKey || event.ctrlKey) {
+						platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", { rowId: row.id });
+						return;
+					}
+					platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", { rowId: row.id });
+				}}
+				dragDrop={
+					model.dragDropEnabled
+						? {
+								enabled: true,
+								canDrag: (rowId) => rowId !== rows[0]?.id,
+								canDrop: (draggedId, targetId) => draggedId !== targetId,
+								onDragEnd: ({ active, over }) => {
+									if (!over) return;
+									commandBus.dispatch(controllerId, "virtualFileSystemDragEnd", {
+										active,
+										over,
+										surfaceId: component.surfaceId,
+									});
+								},
+							}
+						: undefined
+				}
+			/>
+		</div>
+	);
+};
+
 const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }) => {
 	const model = useStore(component as Table);
 	const controllerId = component.controllerId;
@@ -1755,6 +1823,7 @@ const BuiltinPanelKindRenderer: ComponentKindRenderer = ({ component, commandBus
 function ensureBuiltinComponentKindRenderers(): void {
 	if (componentKindRenderers.size > 0) return;
 	registerComponentKindRenderer("table", BuiltinTableKindRenderer);
+	registerComponentKindRenderer("virtualFileSystem", BuiltinVirtualFileSystemKindRenderer);
 	registerComponentKindRenderer("puzzle2d", BuiltinPuzzle2dKindRenderer);
 	registerComponentKindRenderer("puzzle3d", BuiltinPuzzle3dKindRenderer);
 	registerComponentKindRenderer("puzzle5d", BuiltinPuzzle5dKindRenderer);
@@ -1898,6 +1967,18 @@ export function unregisterUiTableSurfaceHost(surfaceId: string): void {
 	unregisterSurfaceBinding(surfaceId);
 }
 
+/** @emoji 📁 Binds a virtual file system `surfaceId` (alias for {@link registerSurfaceBinding}). */
+export function registerUiVirtualFileSystemSurfaceHost(
+	surfaceId: string,
+	Component: React.ComponentType<{ readonly node: UiVirtualFileSystemHostSurfaceNode }>,
+): void {
+	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
+}
+
+export function unregisterUiVirtualFileSystemSurfaceHost(surfaceId: string): void {
+	unregisterSurfaceBinding(surfaceId);
+}
+
 /** @emoji 🧩 Binds a panel `surfaceId` (alias for {@link registerSurfaceBinding}). */
 export function registerUiPanelSurfaceHost(surfaceId: string, Component: React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>): void {
 	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
@@ -1985,6 +2066,14 @@ function renderTable(node: UiTableHostSurfaceNode, platform: Platform | undefine
 	return renderBoundComponent(node, "panel", platform, commandBus);
 }
 
+function renderVirtualFileSystem(
+	node: UiVirtualFileSystemHostSurfaceNode,
+	platform: Platform | undefined,
+	commandBus: CommandBus,
+): React.ReactElement {
+	return renderBoundComponent(node, "panel", platform, commandBus);
+}
+
 function renderPanel(node: UiPanelHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
 	return renderBoundComponent(node, "panel", platform, commandBus);
 }
@@ -2030,6 +2119,8 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderSeparator(node, horizontalParent);
 		case "table":
 			return renderTable(node, platform, commandBus);
+		case "virtualFileSystem":
+			return renderVirtualFileSystem(node, platform, commandBus);
 		case "panel":
 			return renderPanel(node, platform, commandBus);
 		case "puzzle2d":
@@ -2109,6 +2200,26 @@ if (import.meta.vitest) {
 				),
 			);
 			expect(markup).toContain("kit-a");
+		});
+
+		it("renders registered virtual file system components with lazy-expanded rows", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			registerPlatformVirtualFileSystemDemo(platform);
+			const markup = renderToStaticMarkup(
+				renderComponentHostSurface(
+					{
+						type: "virtualFileSystem",
+						componentKind: "virtualFileSystem",
+						surfaceId: PlatformVirtualFileSystemDemoController.SURFACE_ID,
+						controllerId: "platform-vfs-demo-ctrl",
+					},
+					"panel",
+					platform,
+				),
+			);
+			expect(markup).toContain("Demo Kit");
+			expect(markup).toContain("Models");
+			expect(markup).not.toContain("Capsule");
 		});
 
 		it("maps puzzle5d flat and volume selections to applyPuzzle2dSelection args", () => {

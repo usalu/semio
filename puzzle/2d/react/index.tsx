@@ -2762,6 +2762,10 @@ export class Puzzle2dRenderer {
   private lastOverlayContentEpoch = -1;
   private lastOverlayVelloThemeJson = "";
   private lastDescriptorPushDeferred = false;
+  private wasmDeferHadStructuralMutation = false;
+  private pointerGestureCameraAtStart: CameraState | null = null;
+  private scheduledSelectEmitRafId: number | null = null;
+  private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
   private kindCompatJson = "[]";
   private kindCatalogsBundle: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
   private kindCatalogsJson = serializeKindCatalogBundle(DEFAULT_KIND_CATALOG_BUNDLE);
@@ -3222,6 +3226,36 @@ export class Puzzle2dRenderer {
   /** @emoji 📣 Notifies React hosts of the committed viewport camera after pan/zoom gestures complete. */
   private emitPublicCameraChange(): void {
     this.emitter.emit("camera", { ...this.camera });
+  }
+
+  /** @emoji ⏱️ Coalesces committed `select` events to one React update per animation frame (click / marquee end). */
+  private scheduleCommittedSelectEmit(snapshot: Puzzle2dSelectionSnapshot): void {
+    this.pendingSelectEmitSnapshot = snapshot;
+    if (this.renderMode === "headless-test") {
+      this.flushCommittedSelectEmit();
+      return;
+    }
+    if (this.scheduledSelectEmitRafId !== null) {
+      return;
+    }
+    const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+    if (!requestFrame) {
+      this.flushCommittedSelectEmit();
+      return;
+    }
+    this.scheduledSelectEmitRafId = requestFrame(() => {
+      this.scheduledSelectEmitRafId = null;
+      this.flushCommittedSelectEmit();
+    });
+  }
+
+  private flushCommittedSelectEmit(): void {
+    const snapshot = this.pendingSelectEmitSnapshot;
+    if (snapshot === null) {
+      return;
+    }
+    this.pendingSelectEmitSnapshot = null;
+    this.emitter.emit("select", snapshot);
   }
 
   /** @emoji ⏱️ Coalesces wheel zoom camera commits to one React update per animation frame. */
@@ -3793,6 +3827,21 @@ export class Puzzle2dRenderer {
     return true;
   }
 
+  /** @emoji ✅ Pushes committed selection and area-select preview to WASM without a full descriptor round-trip. */
+  private pushWasmSelectionAndPreselectToSession(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    const selectionJson = JSON.stringify(this.selectionStore.getSnapshot().ids);
+    const preselectJson = JSON.stringify(this.preselectStore.getSnapshot());
+    try {
+      this.session.setSelectionIdsJsonSilent(selectionJson);
+      this.session.setPreselectStateJsonSilent(preselectJson);
+    } catch (err) {
+      console.error("[DEBUG] pushWasmSelectionAndPreselectToSession failed", err);
+    }
+  }
+
   /** @emoji 📐 Pushes viewport size and camera when the scene descriptor cache is still valid (pan/zoom/selection chrome). */
   private pushWasmViewportAndSizeToSession(): void {
     if (this.lastPushedWidth !== this.width || this.lastPushedHeight !== this.height || this.lastPushedDpr !== this.dpr) {
@@ -3819,6 +3868,7 @@ export class Puzzle2dRenderer {
     if (descriptorCacheValid) {
       this.flushPendingIncrementalNodeMovesToWasm();
       this.pushWasmViewportAndSizeToSession();
+      this.pushWasmSelectionAndPreselectToSession();
       this.wasmPushSceneDrainAlreadyApplied = false;
       return;
     }
@@ -3839,10 +3889,13 @@ export class Puzzle2dRenderer {
       }
       this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
     }
-    if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
+    if (this.lastDescriptorPushDeferred && !deferDescriptorSync && this.wasmDeferHadStructuralMutation) {
       this.markSceneDescriptorDirty();
     }
     this.lastDescriptorPushDeferred = deferDescriptorSync;
+    if (!deferDescriptorSync) {
+      this.wasmDeferHadStructuralMutation = false;
+    }
     const flushedIncrementalNodeMoves = this.flushPendingIncrementalNodeMovesToWasm();
     if (!deferDescriptorSync) {
       if (this.scene.nodes.size === 0) {
@@ -4063,6 +4116,7 @@ export class Puzzle2dRenderer {
         this.enqueuePuzzle2dGraphObservationFlush();
       }
       if (graphMutatedForHostMerge) {
+        this.wasmDeferHadStructuralMutation = true;
         this.bumpWasmHostSceneMergeResyncEpoch();
         this.markSceneDescriptorDirty();
       }
@@ -4287,6 +4341,11 @@ export class Puzzle2dRenderer {
       globalThis.cancelAnimationFrame(this.inputInvalidateRafId);
       this.inputInvalidateRafId = null;
     }
+    if (this.scheduledSelectEmitRafId !== null && globalThis.cancelAnimationFrame) {
+      globalThis.cancelAnimationFrame(this.scheduledSelectEmitRafId);
+      this.scheduledSelectEmitRafId = null;
+    }
+    this.pendingSelectEmitSnapshot = null;
     puzzle2dUnregisterAuthoringPeer(this);
     this.detachCanvasListeners();
     this.textOverlayCanvas = null;
@@ -4360,14 +4419,14 @@ export class Puzzle2dRenderer {
       return;
     }
     this.selectionIds = nextIds;
-    if (emit) {
+    if (emit && !preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY)) {
       this.updatePreselection([], [], false);
     }
     this.applySelectionChromeToSceneObjects();
     this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     if (emit) {
       puzzle2dBroadcastSelectionSilent(this, nextSnapshot.ids);
-      this.emit("select", nextSnapshot);
+      this.scheduleCommittedSelectEmit(nextSnapshot);
     }
     this.scheduleInputInvalidate();
   }
@@ -4541,6 +4600,7 @@ export class Puzzle2dRenderer {
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
     this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+    this.pointerGestureCameraAtStart = { ...this.camera };
     this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.scheduleInputInvalidate();
@@ -4582,7 +4642,11 @@ export class Puzzle2dRenderer {
     this.recordPointerClient(event.clientX, event.clientY, sx, sy);
     this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
-    this.emitPublicCameraChange();
+    const gestureStart = this.pointerGestureCameraAtStart;
+    this.pointerGestureCameraAtStart = null;
+    if (gestureStart !== null && (!pointsEqual(gestureStart, this.camera) || !nearlyEqual(gestureStart.zoom, this.camera.zoom))) {
+      this.emitPublicCameraChange();
+    }
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleInputInvalidate();
     if (typeof event.pointerId === "number") {
@@ -4959,6 +5023,23 @@ if (puzzle2dVitest) {
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
+    });
+
+    it("ending area-select defer without structural mutation does not force full syncDescriptorJson", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(renderer.session, "syncDescriptorJson");
+      renderer["updatePreselection"](["n"], [], true);
+      renderer["pushSceneToWasmDriver"]();
+      syncDescriptorJson.mockClear();
+      renderer["updatePreselection"]([], [], false);
+      renderer["updateSelection"](["n"], false);
+      renderer["pushSceneToWasmDriver"]();
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
+      renderer.dispose();
     });
 
     it("broadcasts selection to peer renderers without full syncDescriptorJson", () => {
