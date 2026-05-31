@@ -146,6 +146,10 @@ function lineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): s
 	return [embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)].filter(Boolean).join(" ") || undefined;
 }
 
+function centeredLineClass(embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string {
+	return [lineClass(embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
+}
+
 /** @emoji 🎯 Renders {@link TextEmbodiment} with reveal.js `data-id` + eg-ice-25 DOM roots. */
 function TextMorphView({
 	morphId: anchorId,
@@ -158,12 +162,12 @@ function TextMorphView({
 }): ReactNode {
 	const mutedClass = emphasisClass(emphasis);
 	const root = resolveTextMorphRoot(embodiment);
-	const fitLineClass = lineClass(embodiment, emphasis);
+	const centeredHeadingClass = centeredLineClass(embodiment, emphasis);
 
 	switch (root) {
 		case "title":
 			return (
-				<h1 data-id={anchorId} className={mutedClass}>
+				<h1 data-id={anchorId} className={[mutedClass, "text-center"].filter(Boolean).join(" ") || "text-center"}>
 					{embodiment.lines[0]}
 				</h1>
 			);
@@ -180,15 +184,15 @@ function TextMorphView({
 		case "heading-line":
 		case "subheading-line":
 			return (
-				<div data-id={anchorId}>
-					<h2 className={fitLineClass}>{embodiment.lines[0]}</h2>
+				<div data-id={anchorId} className="w-full text-center">
+					<h2 className={centeredHeadingClass}>{embodiment.lines[0]}</h2>
 				</div>
 			);
 		case "heading-block":
 			return (
-				<div data-id={anchorId}>
+				<div data-id={anchorId} className="w-full text-center">
 					{embodiment.lines.map((line) => (
-						<h2 key={line} className={fitLineClass}>
+						<h2 key={line} className={centeredHeadingClass}>
 							{line}
 						</h2>
 					))}
@@ -210,10 +214,10 @@ function AuthorsMorphView({
 }): ReactNode {
 	const namesMuted = embodiment.id === "marked";
 	return (
-		<div data-id={anchorId} className="w-full max-w-full">
-			<div className="flex w-full flex-row justify-between gap-4">
+		<div data-id={anchorId} className="w-full max-w-full text-center">
+			<div className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2">
 				{embodiment.people.map((person) => (
-					<h4 key={person.name} className="m-0 shrink-0">
+					<h4 key={person.name} className="m-0 shrink-0 text-center">
 						{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
 						{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
 					</h4>
@@ -231,8 +235,8 @@ function AffiliationsMorphView({
 	readonly embodiment: AffiliationsEmbodiment;
 }): ReactNode {
 	return (
-		<div data-id={anchorId}>
-			<h5>
+		<div data-id={anchorId} className="w-full text-center">
+			<h5 className="text-center">
 				{embodiment.entries.map((entry) => (
 					<span key={entry.mark}>
 						<sup>{entry.mark}</sup>
@@ -553,7 +557,7 @@ if (import.meta.vitest) {
 			expect(slide("goal")?.querySelector('div[data-id="description"] h2')?.textContent).toBe("D short");
 			expect(slide("goal")?.querySelector('div[data-id="goal"] h2')).toBeTruthy();
 			const authorsRow = slide("authors")?.querySelector('div[data-id="authors"] > div');
-			expect(authorsRow?.classList.contains("justify-between")).toBe(true);
+			expect(authorsRow?.classList.contains("justify-center")).toBe(true);
 			expect(slide("authors")?.querySelectorAll('div[data-id="authors"] h4').length).toBe(1);
 			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
 			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');

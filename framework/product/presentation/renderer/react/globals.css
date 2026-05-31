@@ -124,8 +124,16 @@
 	white-space: nowrap;
 }
 
-.reveal .slides section[data-auto-animate] [data-id="authors"] {
+.reveal .slides section[data-auto-animate] [data-id] {
 	width: 100%;
+	text-align: center;
+}
+
+.reveal .slides section[data-auto-animate] [data-id] h1,
+.reveal .slides section[data-auto-animate] [data-id] h2,
+.reveal .slides section[data-auto-animate] [data-id] h4,
+.reveal .slides section[data-auto-animate] [data-id] h5 {
+	text-align: center;
 }
 /* #endregion 🔖IntroMorph */
 
