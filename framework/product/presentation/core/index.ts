@@ -192,7 +192,7 @@ const INTRO_EMBODIMENT_TITLE_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
 
-/** @emoji 🎬 Builds a five-slide intro thought (eg-ice-25 Semio → Institutions pattern). */
+/** @emoji 🎬 Builds a five-slide intro thought (brand → title → subtitle → authors → affiliations). */
 export function intro(spec: IntroSpec): Presentation {
 	const thoughtId = "intro";
 	const participants: Participant[] = [

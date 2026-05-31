@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📽 33. Projektetage — declarative eg-ice-25 intro via `@framework/presentation`. */
+/** @emoji 📽 33. Projektetage — declarative paper intro via `@framework/presentation`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -11,7 +11,7 @@ import "./globals.css";
 //#region 🔖Deck
 const deck = intro({
 	id: "projektetage",
-	name: "semio · EG-ICE intro",
+	name: "33. Projektetage",
 	brand: "semio",
 	title: {
 		full: [
@@ -43,7 +43,7 @@ function mount(): void {
 	if (!el) {
 		return;
 	}
-	mountPresentation(el, deck, { appearance: "eg-ice", transition: "fade" });
+	mountPresentation(el, deck, { transition: "fade" });
 }
 
 if (typeof document !== "undefined" && !import.meta.vitest) {

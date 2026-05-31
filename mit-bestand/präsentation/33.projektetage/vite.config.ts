@@ -4,17 +4,12 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import {
-	uiAssetsVitePlugin,
-	playgroundStaticSiteBuildOptions,
-} from "../../../ui/styling/vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../");
-const uiAssetsRoot = resolve(repoRoot, "ui/assets");
 const presentationCore = resolve(repoRoot, "framework/product/presentation/core/index.ts");
-const egIceRoot = resolve(repoRoot, "temp/eg-ice-25");
 const presentationRenderer = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");
 const frameworkCore = resolve(repoRoot, "framework/core/index.ts");
 
@@ -22,10 +17,10 @@ export default defineConfig({
 	root: dir,
 	base: "./",
 	publicDir: resolve(dir, "public"),
-	plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react()],
+	plugins: [tailwindcss(), react()],
 	build: playgroundStaticSiteBuildOptions(),
 	server: {
-		fs: { allow: [repoRoot, egIceRoot] },
+		fs: { allow: [repoRoot] },
 	},
 	resolve: {
 		alias: [

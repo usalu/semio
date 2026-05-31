@@ -56,8 +56,8 @@ export {
 } from "@framework/presentation/core";
 
 //#region 🔖MountOptions
-/** @emoji 🎨 Visual preset: eg-ice-25 dark deck or @ui/react system chrome. */
-export type PresentationAppearance = "eg-ice" | "elements";
+/** @emoji 🎨 Visual preset: fullscreen reveal deck chrome or @ui/react system shell. */
+export type PresentationAppearance = "deck" | "elements";
 
 /** @emoji ⚙️ Reveal.js and surface chrome options for {@link mountPresentation}. */
 export interface PresentationMountOptions {
@@ -280,7 +280,7 @@ export const PresentationDeck: FC<{
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
 
-	const appearance = options?.appearance ?? "elements";
+	const appearance = options?.appearance ?? "deck";
 
 	useEffect(() => {
 		if (!deckDivRef.current || deckRef.current) {
@@ -290,7 +290,7 @@ export const PresentationDeck: FC<{
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
 		};
-		if (appearance === "eg-ice") {
+		if (appearance === "deck") {
 			revealOptions.hash = options?.hash ?? false;
 			revealOptions.slideNumber = options?.slideNumber ?? false;
 		} else {
@@ -307,7 +307,7 @@ export const PresentationDeck: FC<{
 		const deck = new Reveal(deckDivRef.current, revealOptions);
 		deckRef.current = deck;
 		void deck.initialize().then(() => {
-			if (appearance !== "eg-ice") {
+			if (appearance !== "deck") {
 				syncRevealBackgroundKind(deckDivRef.current);
 				deck.on("slidechanged", () => syncRevealBackgroundKind(deckDivRef.current));
 			}
@@ -332,10 +332,10 @@ export const PresentationDeck: FC<{
 	]);
 
 	const revealStyle =
-		appearance === "eg-ice" ? ({ width: "100vw", height: "100vh" } as const) : undefined;
+		appearance === "deck" ? ({ width: "100vw", height: "100vh" } as const) : undefined;
 
 	return (
-		<div className={appearance === "eg-ice" ? "reveal" : "reveal h-full w-full"} ref={deckDivRef} style={revealStyle}>
+		<div className={appearance === "deck" ? "reveal" : "reveal h-full w-full"} ref={deckDivRef} style={revealStyle}>
 			<div className="slides">
 				{presentation.sequences.map((sequence) => (
 					<section key={sequence.id}>
@@ -358,7 +358,7 @@ export const PresentationDeck: FC<{
 //#endregion 🔖PresentationDeck
 
 //#region 🔖Shell
-const PresentationShellEgIce: FC<{ readonly children: ReactNode }> = ({ children }) => (
+const PresentationShellDeck: FC<{ readonly children: ReactNode }> = ({ children }) => (
 	<div className="h-full w-full">{children}</div>
 );
 
@@ -388,8 +388,8 @@ const PresentationShell: FC<{
 	readonly children: ReactNode;
 	readonly options?: PresentationMountOptions;
 }> = ({ children, options }) => {
-	if ((options?.appearance ?? "elements") === "eg-ice") {
-		return <PresentationShellEgIce>{children}</PresentationShellEgIce>;
+	if ((options?.appearance ?? "deck") === "deck") {
+		return <PresentationShellDeck>{children}</PresentationShellDeck>;
 	}
 	return (
 		<PresentationShellElements options={options}>{children}</PresentationShellElements>
@@ -450,7 +450,7 @@ if (import.meta.vitest) {
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
-				mountPresentation(container, deck, { appearance: "eg-ice", hash: false, slideNumber: false });
+				mountPresentation(container, deck, { hash: false, slideNumber: false });
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
@@ -471,7 +471,7 @@ if (import.meta.vitest) {
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
 			act(() => {
-				mountPresentation(container, deck, { appearance: "eg-ice", hash: false, slideNumber: false });
+				mountPresentation(container, deck, { hash: false, slideNumber: false });
 			});
 			const titleSlide = container.querySelector('.slides > section > section[title="subtitle"]');
 			expect(titleSlide?.querySelector(".opacity-20")).toBeTruthy();

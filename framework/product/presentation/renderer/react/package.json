@@ -8,7 +8,8 @@
 	"exports": {
 		".": "./index.tsx",
 		"./globals.css": "./globals.css",
-		"./eg-ice.css": "./eg-ice.css"
+		"./deck.css": "./deck.css",
+		"./theme.css": "./theme.css"
 	},
 	"dependencies": {
 		"@framework/core": "workspace:*",
