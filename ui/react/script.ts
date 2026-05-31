@@ -56,7 +56,7 @@ class TestScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root, storybookEnv());
+    runBunx(["tsc", "--noEmit", "-p", "tsconfig.i18n.json", ...segments], this.root, storybookEnv());
   }
 }
 

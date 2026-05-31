@@ -1,5 +1,5 @@
 /** @emoji 🪁 Ensures CAD play toolbar categories resolve to domain-neutral i18n keys. */
-import type { UiTranslationKey } from "@ui/react";
+import type { UiTranslationKey } from "@ui/react/i18n-types";
 
 const _cadPlayToolbarKeys = [
   "ui.toolbar.parent.view",

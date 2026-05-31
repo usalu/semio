@@ -15,10 +15,9 @@
     "types": ["react", "react-dom", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@ui/react": ["../../../../ui/react/index.tsx"],
+      "@ui/react": ["../../../../ui/react/i18n-types.ts"],
+      "@ui/react/i18n-types": ["../../../../ui/react/i18n-types.ts"],
       "@ui/react/*": ["../../../../ui/react/*"],
-      "@framework/core": ["../../../../core/index.ts"],
-      "@framework/platform/core": ["../../core/index.ts"],
       "@framework/platform/renderer/react": ["./index.tsx"],
       "@puzzle/2d/react": ["../../../../puzzle/2d/react/index.tsx"],
       "@puzzle/3d/react": ["../../../../puzzle/3d/react/index.tsx"],

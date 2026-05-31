@@ -15,9 +15,10 @@
     "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
-      "@ui/react": ["../../../ui/react/index.tsx"],
+      "@ui/react": ["../../../ui/react/i18n-types.ts"],
+      "@ui/react/i18n-types": ["../../../ui/react/i18n-types.ts"],
       "@ui/react/*": ["../../../ui/react/*"]
     }
   },
-  "include": ["renderer.tsx"]
+  "include": ["i18n-typecheck.ts"]
 }

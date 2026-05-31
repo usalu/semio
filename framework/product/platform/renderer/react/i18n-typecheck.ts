@@ -1,5 +1,4 @@
-/** @emoji 🪁 Compile-time gate: every {@link AppToolCategory} maps to a domain-neutral toolbar parent i18n key. */
-import type { AppToolCategory } from "@framework/core";
-import type { AssertUiToolbarParentKeysCovered } from "@ui/react";
+/** @emoji 🪁 Compile-time gate: every toolbar parent category has a domain-neutral chrome i18n key. */
+import type { AssertUiToolbarParentKeysCovered, UiToolbarParentCategory } from "@ui/react/i18n-types";
 
-const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
+const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;

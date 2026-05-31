@@ -140,16 +140,6 @@ export interface UiI18nPort {
   readonly isInitialized: boolean;
 }
 
-declare module "i18next" {
-  interface CustomTypeOptions {
-    defaultNS: "translation";
-    resources: {
-      readonly en: { readonly translation: UiTranslationSchema };
-      readonly de: { readonly translation: UiTranslationSchema };
-    };
-  }
-}
-
 const uiToolbarParentDe: UiToolbarParentEntries = {
   history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
   hand: { label: { normal: "Hand", beginner: "Hand" } },
@@ -572,5 +562,11 @@ export const uiChromeTranslationBundles = {
 } satisfies UiTranslationSchema,
   },
 } satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
+
+export type UiTranslationLocaleCode = UiLocale;
+
+export type UiTranslationBundlesInput = {
+  readonly [L in UiLocale]: { readonly translation: Record<string, unknown> };
+};
 
 // #endregion 🪁I18n Types

@@ -7,28 +7,28 @@ todos:
     status: completed
   - id: port
     content: Add typed I18n port wrapping i18next/react-i18next/LanguageDetector in ui/react/index.tsx; define UiTranslationSchema, UiLocale, UiTranslationKey
-    status: in_progress
+    status: completed
   - id: chrome-bundles
     content: Replace JSON.parse bundles with typed literals (satisfies schema + Record<UiLocale>); type useLabel/resolveControlLabelId/resolveTranslationLabel/registerUiTranslationBundles
-    status: pending
+    status: completed
   - id: toolbar
     content: Add ui.toolbar.parent.* keys for every AppToolCategory (en+de) and add compile-time toolbar-coverage assertion in framework/core
-    status: pending
+    status: completed
   - id: sketchpad
     content: Type semio sketchpad bundle, fix en/de parity for toolbar.parent.*, type resolver, register via port
-    status: pending
+    status: completed
   - id: coda
     content: Remove empty-resources i18next reinit in coda renderer; configure language via typed port
-    status: pending
+    status: completed
   - id: typecheck-targets
     content: Add typecheck (bunx tsc --noEmit) targets to script.ts/project.json for ui/framework/sketchpad/cad/coda and register in launch.json
-    status: pending
+    status: completed
   - id: tests
     content: Add type-level Expect assertions and extend existing vitest blocks for parity/coverage (no new test files)
-    status: pending
+    status: completed
   - id: validate-close
     content: Run typecheck + affected tests, then close the ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -18,7 +18,8 @@
       "@framework/core": ["../../../../../framework/core/index.ts"],
       "@framework/platform/core": ["../../../../../framework/product/platform/core/index.ts"],
       "@framework/platform/renderer/react": ["../../../../../framework/product/platform/renderer/react/index.tsx"],
-      "@ui/react": ["../../../../../ui/react/index.tsx"],
+      "@ui/react": ["../../../../../ui/react/i18n-types.ts"],
+      "@ui/react/i18n-types": ["../../../../../ui/react/i18n-types.ts"],
       "@ui/react/*": ["../../../../../ui/react/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
