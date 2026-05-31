@@ -1,8 +1,8 @@
 {
   "title": "Projektetage Reveal Presentation",
-  "status": "open",
+  "status": "closed",
   "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
-  "summary": "Aligned projektetage reveal deck with playground surface chrome: useElementsSurfaceChrome(system theme), semantic --base/--foreground for reveal.js CSS vars (replacing hardcoded dark palette), PresentationShell with bg-base, and semantic iframe/title tokens.",
+  "summary": "Overrode reveal.js hardcoded chrome in globals.css (controls, slide-number, progress, viewport) to use --foreground, --font-sans, and panel tokens; sync has-dark-background with html.dark on init, slidechange, and prefers-color-scheme.",
   "goal": "🎯mitbestand",
   "sessions": [
     "⚪cbb72fbe25dd449982ea468572735bf6"

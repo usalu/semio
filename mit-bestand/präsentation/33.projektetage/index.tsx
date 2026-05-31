@@ -61,6 +61,20 @@ const PRESENTATION_SURFACE_CHROME: ElementsSurfaceChromeInput = {
 
 const PresentationShell: FC<{ readonly children: ReactNode }> = ({ children }) => {
 	useElementsSurfaceChrome(PRESENTATION_SURFACE_CHROME);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+		const mq = window.matchMedia("(prefers-color-scheme: dark)");
+		const onThemeChange = (): void => {
+			syncRevealBackgroundKind(document.querySelector(".reveal"));
+		};
+		onThemeChange();
+		mq.addEventListener("change", onThemeChange);
+		return () => mq.removeEventListener("change", onThemeChange);
+	}, []);
+
 	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
 };
 //#endregion 🔖Shell
@@ -111,6 +125,16 @@ const EndSlide: FC = () => (
 //#endregion 🔖Slides
 
 //#region 🔖Deck
+/** @emoji 🌓 Reveal toggles `has-dark-background` from slide luminance; align with `html.dark` system chrome instead. */
+function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
+	if (!deckEl || typeof window === "undefined") {
+		return;
+	}
+	const dark = document.documentElement.classList.contains("dark");
+	deckEl.classList.toggle("has-dark-background", dark);
+	deckEl.classList.toggle("has-light-background", !dark);
+}
+
 function Deck(): ReactNode {
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
@@ -125,9 +149,13 @@ function Deck(): ReactNode {
 			slideNumber: true,
 			width: 1280,
 			height: 720,
+			backgroundColor: "var(--base)",
 		});
 		deckRef.current = deck;
-		void deck.initialize();
+		void deck.initialize().then(() => {
+			syncRevealBackgroundKind(deckDivRef.current);
+			deck.on("slidechanged", () => syncRevealBackgroundKind(deckDivRef.current));
+		});
 		return () => {
 			deckRef.current?.destroy();
 			deckRef.current = null;

@@ -46,3 +46,41 @@
 .reveal .progress span {
 	background: var(--color-primary);
 }
+
+/* #region 🔖RevealChrome */
+.reveal-viewport {
+	background-color: var(--base);
+	color: var(--foreground);
+}
+
+.reveal .controls,
+.reveal.has-dark-background .controls,
+.reveal.has-light-background .controls {
+	color: var(--foreground);
+}
+
+.reveal .progress {
+	background-color: color-mix(in srgb, var(--foreground) 18%, transparent);
+	color: var(--color-primary);
+}
+
+.reveal .slide-number,
+.reveal .slide-number a {
+	font-family: var(--font-sans);
+	font-size: var(--text-sm);
+	line-height: 1.2;
+	color: var(--foreground);
+	background-color: color-mix(in srgb, var(--panel) 88%, transparent);
+	padding: var(--spacing-single) var(--spacing-double);
+}
+
+.reveal .jump-to-slide-input {
+	font-family: var(--font-sans);
+	color: var(--foreground);
+}
+
+.reveal.has-dark-background .jump-to-slide-input,
+.reveal.has-light-background .jump-to-slide-input {
+	color: var(--foreground);
+}
+/* #endregion 🔖RevealChrome */

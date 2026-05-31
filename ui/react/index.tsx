@@ -19936,32 +19936,73 @@ export function filterEngagementPossibles(query: string, items: readonly Engagem
   });
 }
 
-/** @emoji ⌨️ Inline completion suffix for one {@link EngagementPossible} (longest prefix match on label, detail, or id). */
-export function engagementCompletionSuffix(query: string, item: EngagementPossible | undefined): string {
-  if (!query.trim() || !item) return "";
+/** @emoji ⌨️ Inline completion segments for one {@link EngagementPossible} using label casing for the matched name prefix. */
+export interface EngagementInlineCompletion {
+  readonly prefix: string;
+  readonly suffix: string;
+}
+
+/** @emoji ⌨️ Returns label-cased inline completion when query prefix-matches the possible's name, detail, or id. */
+export function engagementInlineCompletion(query: string, item: EngagementPossible | undefined): EngagementInlineCompletion | null {
+  if (!query.trim() || !item) return null;
   const q = query;
   const ql = q.toLowerCase();
-  let best = "";
-  for (const text of [item.label, item.detail ?? "", item.id]) {
-    if (!text.toLowerCase().startsWith(ql)) continue;
-    const suffix = text.slice(q.length);
-    if (suffix.length > best.length) best = suffix;
-  }
+  const label = item.label;
+  let best: EngagementInlineCompletion | null = null;
+  const consider = (matched: boolean) => {
+    if (!matched || !label.toLowerCase().startsWith(ql)) return;
+    const prefix = label.slice(0, q.length);
+    const suffix = label.slice(q.length);
+    if (!suffix.length) return;
+    if (!best || suffix.length > best.suffix.length) best = { prefix, suffix };
+  };
+  consider(label.toLowerCase().startsWith(ql));
+  consider(Boolean(item.detail?.toLowerCase().startsWith(ql)));
+  consider(item.id.toLowerCase().startsWith(ql));
   return best;
 }
 
-/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link EngagementPossible} matches. */
-export function engagementActiveCompletionSuffix(query: string, matches: readonly EngagementPossible[], index: number): string {
-  if (!query.trim() || !matches.length) return "";
+/** @emoji ⌨️ Inline completion suffix for one {@link EngagementPossible} (longest prefix match on label, detail, or id). */
+export function engagementCompletionSuffix(query: string, item: EngagementPossible | undefined): string {
+  return engagementInlineCompletion(query, item)?.suffix ?? "";
+}
+
+/** @emoji ⌨️ First non-empty inline completion across ranked {@link EngagementPossible} matches. */
+export function engagementActiveInlineCompletion(query: string, matches: readonly EngagementPossible[], index: number): EngagementInlineCompletion | null {
+  if (!query.trim() || !matches.length) return null;
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
   const seen = new Set<EngagementPossible>();
   for (const item of order) {
     if (seen.has(item)) continue;
     seen.add(item);
-    const suffix = engagementCompletionSuffix(query, item);
-    if (suffix) return suffix;
+    const completion = engagementInlineCompletion(query, item);
+    if (completion) return completion;
   }
-  return "";
+  return null;
+}
+
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link EngagementPossible} matches. */
+export function engagementActiveCompletionSuffix(query: string, matches: readonly EngagementPossible[], index: number): string {
+  return engagementActiveInlineCompletion(query, matches, index)?.suffix ?? "";
+}
+
+/** @emoji 🔎 Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
+export function engagementHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
+  const trimmed = query.trim();
+  if (!trimmed) return label;
+  const ql = trimmed.toLowerCase();
+  const ll = label.toLowerCase();
+  let start = ll.startsWith(ql) ? 0 : -1;
+  if (start < 0 && detail?.toLowerCase().startsWith(ql)) start = ll.indexOf(ql) >= 0 ? ll.indexOf(ql) : ll.indexOf(ql[0] ?? "");
+  if (start < 0) return label;
+  const end = start + trimmed.length;
+  return (
+    <>
+      {start > 0 ? <span>{label.slice(0, start)}</span> : null}
+      <span className="font-semibold text-foreground">{label.slice(start, end)}</span>
+      <span>{label.slice(end)}</span>
+    </>
+  );
 }
 
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
@@ -20117,8 +20158,8 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
-  const inlineCompletionSuffix = reactHostPort.useMemo(
-    () => (showPossiblesList ? "" : engagementActiveCompletionSuffix(draft, filteredPossibles, activePossibleIndex)),
+  const inlineCompletion = reactHostPort.useMemo(
+    () => (showPossiblesList ? null : engagementActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)),
     [activePossibleIndex, draft, filteredPossibles, showPossiblesList],
   );
 
@@ -20190,9 +20231,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       activatePossible();
                       return;
                     }
-                    if (event.key === "Tab" && !showPossiblesList && inlineCompletionSuffix) {
+                    if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
                       event.preventDefault();
-                      applyDraft(draft + inlineCompletionSuffix);
+                      applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
                       return;
                     }
                     if (event.key === "ArrowDown" && filteredPossibles.length) {
@@ -20214,15 +20255,18 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                   placeholder={input!.placeholder}
                   disabled={input!.disabled}
                 />
-                {inlineCompletionSuffix ? (
+                {inlineCompletion ? (
                   <div
                     aria-hidden
                     data-slot="engagement-inline-completion"
                     className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm"
                   >
-                    <span className="truncate text-transparent">{draft}</span>
+                    <span className="relative inline-flex min-w-0 truncate">
+                      <span className="truncate text-transparent">{draft}</span>
+                      <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
+                    </span>
                     <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
-                      {inlineCompletionSuffix}
+                      {inlineCompletion.suffix}
                     </span>
                   </div>
                 ) : null}
@@ -20257,7 +20301,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                           className={cn(index === activePossibleIndex && "bg-active-base")}
                           onSelect={() => selectPossible(item)}
                         >
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
                           {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
                         </CommandItem>
                       ))}
@@ -24512,11 +24556,13 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("engagementCompletionSuffix ranks prefix matches on label, detail, and id", () => {
+    it("engagementInlineCompletion uses label casing for matched name prefix", () => {
+      const box = { id: "primitive.box", label: "Box", detail: "b" };
       const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
-      expect(engagementCompletionSuffix("Sp", sphere)).toBe("here");
-      expect(engagementCompletionSuffix("sph", sphere)).toBe("ere");
-      expect(engagementActiveCompletionSuffix("Sp", [sphere], 0)).toBe("here");
+      expect(engagementInlineCompletion("b", box)).toEqual({ prefix: "B", suffix: "ox" });
+      expect(engagementInlineCompletion("Sp", sphere)).toEqual({ prefix: "Sp", suffix: "here" });
+      expect(engagementInlineCompletion("sph", sphere)).toEqual({ prefix: "Sph", suffix: "ere" });
+      expect(engagementActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
     });
 
     it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {
@@ -24535,12 +24581,20 @@ if (import.meta.vitest) {
       );
       const field = screen.getByPlaceholderText("Type an interaction");
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.change(field, { target: { value: "b" } });
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ox");
+        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.querySelector(".font-semibold")?.textContent).toBe("B");
+      });
       fireEvent.change(field, { target: { value: "Sp" } });
-      await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("here"));
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("here");
+        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.textContent).toContain("Sphere");
+      });
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
       fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
-      expect(screen.getByText("Sphere")).toBeTruthy();
+      expect(document.querySelector('[data-value="primitive.sphere"]')).toBeTruthy();
       fireEvent.change(field, { target: { value: "sph" } });
       fireEvent.keyDown(field, { key: "Enter" });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
