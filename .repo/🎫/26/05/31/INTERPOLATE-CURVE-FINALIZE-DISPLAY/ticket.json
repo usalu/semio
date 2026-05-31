@@ -1,0 +1,11 @@
+{
+  "title": "Interpolate Curve Finalize Display",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix interpolate curve command: preview shows correct Catmull-Rom curve but finalize leaves wrong points/lines.",
+  "summary": "Fixed interpolate curve finalize display mismatch with preview. Root cause: committed geometry wireframe drew only the first tessellation segment (or a start–end chord) instead of the full Catmull–Rom polyline. Updated geometryWireEdgeSegments and collectGeometryEdgeSegments to emit all consecutive sample segments; aligned preview with nurbsDisplaySamplePoints; marked interpolate curves with through:true and fit BREP via sampled through-points; extended ensureTypologyObjectFromCreateDiff to bind wire/edge primitives.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪35e8def8df2b4243b834996dabf61acb"
+  ]
+}

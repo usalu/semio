@@ -165,6 +165,7 @@ export type EdgeCurve =
       readonly kind: "nurbs";
       readonly poles: readonly Vec3[];
       readonly degree: number;
+      readonly through?: boolean;
       readonly weights?: readonly number[];
       readonly knots?: readonly number[];
       readonly multiplicities?: readonly number[];
@@ -3153,19 +3154,27 @@ export function typologyIdForInteractionCommit(interactionId: string): string | 
   return typologyConstructKitByInteraction().get(interactionId)?.typology ?? typologyForInteraction(interactionId)?.id ?? null;
 }
 
-/** @emoji 📦 Binds a typology object row to the primary solid added by a create/construct diff. */
+/** @emoji 📦 Binds a typology object row to the primary primitive added by a create/construct diff. */
 export function ensureTypologyObjectFromCreateDiff(model: Model, typology: string, diff: ModelDiff): ObjectRef | null {
   const typologySpec = loadTypology(typology);
   if (!typologySpec) return null;
   const solidId = diff.solids?.added?.[0]?.id;
-  if (!solidId) return null;
-  const primitiveKind = typologySpec.primitiveKinds[0] ?? "solid";
+  const wireId = diff.wires?.added?.[0]?.id;
+  const edgeId = diff.edges?.added?.[0]?.id;
+  const primitiveRef = solidId ?? wireId ?? edgeId;
+  if (!primitiveRef) return null;
+  const primitiveKind =
+    (solidId && typologySpec.primitiveKinds.includes("solid") && "solid") ||
+    (wireId && typologySpec.primitiveKinds.includes("wire") && "wire") ||
+    (edgeId && typologySpec.primitiveKinds.includes("edge") && "edge") ||
+    typologySpec.primitiveKinds[0] ||
+    "solid";
   const typologyObjectId = typology as ObjectRef;
-  const objectId = model.objects[typologyObjectId] ? (String(solidId) as ObjectRef) : typologyObjectId;
+  const objectId = model.objects[typologyObjectId] ? (String(primitiveRef) as ObjectRef) : typologyObjectId;
   model.objects[objectId] = {
     id: objectId,
     typology: typology as TypologyRef,
-    primitives: { [primitiveKind]: String(solidId) },
+    primitives: { [primitiveKind]: String(primitiveRef) },
   };
   model.bump();
   return objectId;
@@ -3319,7 +3328,7 @@ export interface SpatialPreviewKernel {
   edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number;
   edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
   circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null;
-  nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null;
+  nurbsCurveFromPoles(poles: readonly Vec3[], through?: boolean): EdgeCurve | null;
   aabbFromPoints(points: readonly Vec3[]): Aabb | null;
   aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[];
   aabbIntersect(a: Aabb, b: Aabb): Aabb | null;

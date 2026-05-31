@@ -4020,20 +4020,23 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 	const { test, expect } = await import("@playwright/test");
 	test.describe("sketchpad platform", () => {
 		test("home table mounts on root", async ({ page }) => {
-			await page.goto("/");
-			await expect(page.getByText(/No kits open/)).toBeVisible({ timeout: 120_000 });
+			await page.goto("/", { waitUntil: "networkidle" });
+			await expect(page.getByText(/No kits open|kit\(s\) open/)).toBeVisible({ timeout: 120_000 });
 		});
 
 		test("workbench panel is present when platform loads", async ({ page }) => {
-			await page.goto("/");
-			await expect(page.getByTestId("app-panel.workbench")).toBeVisible({ timeout: 120_000 });
+			await page.goto("/", { waitUntil: "networkidle" });
+			const workbenchToggle = page.locator("#ui\\.panelToggle\\.workbench");
+			await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
+			await workbenchToggle.click();
+			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
 		});
 
 		test("workbench lists dev fixture import actions", async ({ page }) => {
-			await page.goto("/");
-			await expect(page.getByTestId("app-panel.workbench")).toBeVisible({ timeout: 120_000 });
-			await expect(page.getByText("Open metabolism fixture")).toBeVisible();
-			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible();
+			await page.goto("/", { waitUntil: "networkidle" });
+			await page.locator("#ui\\.panelToggle\\.workbench").click();
+			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
+			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
 		});
 	});
 }

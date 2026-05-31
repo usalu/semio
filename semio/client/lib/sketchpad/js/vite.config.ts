@@ -68,17 +68,27 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
-/** @emoji ✂️ Drops embedded Playwright tests from the browser bundle (Node e2e keeps them via pw-loader). */
-function stripSketchpadEmbeddedE2ePlugin(): Plugin {
-  const region = /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/;
+/** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
+function stripSketchpadEmbeddedNodeTestsPlugin(): Plugin {
+  const regions = [
+    /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
+    /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
+  ];
   return {
-    name: "semio-sketchpad-strip-embedded-e2e",
+    name: "semio-sketchpad-strip-embedded-node-tests",
     enforce: "pre",
     transform(code, id) {
-      if (process.env.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1") return;
       if (!id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts")) return;
-      if (!region.test(code)) return;
-      return { code: code.replace(region, ""), map: null };
+      let next = code;
+      let changed = false;
+      for (const region of regions) {
+        if (region.test(next)) {
+          next = next.replace(region, "");
+          changed = true;
+        }
+      }
+      if (!changed) return;
+      return { code: next, map: null };
     },
   };
 }
@@ -241,7 +251,7 @@ export default defineConfig(async ({ mode }) => {
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
-      stripSketchpadEmbeddedE2ePlugin(),
+      stripSketchpadEmbeddedNodeTestsPlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
@@ -282,7 +292,7 @@ export default defineConfig(async ({ mode }) => {
       /** Workers + wasm-bindgen glue may use syntax older `esbuild` targets cannot downlevel (see vite-plugin-top-level-await). */
       target: "es2022",
       rollupOptions: {
-        external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism/wip/initialKit/kit.semio.json", "fs", "path", "url"],
+        external: ["@playwright/test", "@semio/assets/semio/metabolism/wip/initialKit/kit.semio.json"],
       },
     },
     worker: {

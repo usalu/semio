@@ -2387,6 +2387,7 @@ mod board_host {
     use super::elements_board_palette as board_palette;
     use super::scene_json::*;
     use crate::usvg;
+    use serde::Deserialize;
     use crate::vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
     use crate::vello::peniko::{Blob, Color, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
     use crate::vello::Scene;
@@ -4881,6 +4882,33 @@ mod board_host {
             Ok(())
         }
 
+        /// @emoji 📍 Applies peer-pane node drags without a full descriptor re-sync.
+        pub fn set_node_positions(&mut self, moves: &[(String, f64, f64)]) {
+            for (id, x, y) in moves {
+                if !x.is_finite() || !y.is_finite() {
+                    continue;
+                }
+                if let Some(node) = self.nodes.get_mut(id.as_str()) {
+                    node.x = *x;
+                    node.y = *y;
+                }
+            }
+        }
+
+        /// @emoji 📍 Parses `[{"id","x","y"},…]` and updates existing host nodes in place.
+        pub fn set_node_positions_json(&mut self, json: &str) -> Result<(), String> {
+            #[derive(Deserialize)]
+            struct NodePositionMoveJson {
+                id: String,
+                x: f64,
+                y: f64,
+            }
+            let rows: Vec<NodePositionMoveJson> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+            let moves: Vec<(String, f64, f64)> = rows.into_iter().map(|row| (row.id, row.x, row.y)).collect();
+            self.set_node_positions(&moves);
+            Ok(())
+        }
+
         pub fn clear_scene(&mut self) {
             self.edges.clear();
             self.wires.clear();
@@ -6774,6 +6802,11 @@ impl BoardSession {
         Ok(())
     }
 
+    #[wasm_bindgen(js_name = setNodePositionsJson)]
+    pub fn set_node_positions_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.set_node_positions_json(json).map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = setKindCatalogsJson)]
     pub fn set_board_kind_catalogs_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e))
@@ -7125,6 +7158,21 @@ mod host_tests {
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         }
+    }
+
+    #[test]
+    fn board_host_set_node_positions_updates_existing_nodes_only() {
+        let mut h = BoardHost::new();
+        h.set_size(400, 300, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        h.set_node_positions(&[("a".into(), 12.0, 34.0), ("missing".into(), 1.0, 2.0), ("a".into(), f64::NAN, 0.0)]);
+        let node = h.nodes.get("a").expect("node a should remain");
+        assert!((node.x - 12.0).abs() < 0.001);
+        assert!((node.y - 34.0).abs() < 0.001);
+        h.set_node_positions_json(r#"[{"id":"a","x":90.0,"y":110.0}]"#).unwrap();
+        let node = h.nodes.get("a").expect("node a should remain");
+        assert!((node.x - 90.0).abs() < 0.001);
+        assert!((node.y - 110.0).abs() < 0.001);
     }
 
     #[test]

@@ -430,11 +430,11 @@ export function circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { 
 	return { center, normal: frame.normal, radius: frame.radius };
 }
 
-/** @emoji 📈 Builds `EdgeCurve` nurbs from control points. */
-export function nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null {
+/** @emoji 📈 Builds `EdgeCurve` nurbs from poles (`through` = interpolation points, else B-spline control points). */
+export function nurbsCurveFromPoles(poles: readonly Vec3[], through = false): EdgeCurve | null {
 	if (poles.length < 2) return null;
 	const degree = Math.min(3, poles.length - 1);
-	return { kind: "nurbs", poles, degree };
+	return { kind: "nurbs", poles, degree, through };
 }
 
 function clamp01(value: number): number {
@@ -1781,7 +1781,8 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 		return threePointArc(p0, mid, p1);
 	}
 	if (c.kind === "nurbs" && c.poles.length >= 2) {
-		const r = bsplineApprox([...c.poles]);
+		const fitPoints = c.through ? [...nurbsDisplaySamplePoints(c.poles, 16)] : [...c.poles];
+		const r = bsplineApprox(fitPoints);
 		if (isOk(r)) return r.value;
 	}
 	if (c.kind === "ellipse") {
@@ -2157,9 +2158,11 @@ class BrepjsWasmEngine {
 		if (commandId === "curve.controlPointCurve" || commandId === "curve.interpolateCurve") {
 			const poles = poleList(params.points);
 			if (poles.length < 2) return { diff: {} };
-			const brepResult = bsplineApprox(poles);
+			const through = commandId === "curve.interpolateCurve";
+			const fitPoints = through ? [...nurbsDisplaySamplePoints(poles, 16)] : poles;
+			const brepResult = bsplineApprox(fitPoints);
 			if (!isOk(brepResult)) return { diff: {} };
-			const curve = nurbsCurveFromPoles(poles);
+			const curve = nurbsCurveFromPoles(poles, through);
 			if (!curve) return { diff: {} };
 			const vStart = createVertex(curveStartPoint(brepResult.value));
 			const vEnd = createVertex(curveEndPoint(brepResult.value));
@@ -3173,7 +3176,27 @@ if (import.meta.vitest) {
 			});
 			const edges = res.diff.edges?.added ?? [];
 			expect(edges[0]!.curve?.kind).toBe("nurbs");
-			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
+			if (edges[0]!.curve?.kind === "nurbs") {
+				expect(edges[0]!.curve.poles).toHaveLength(3);
+				expect(edges[0]!.curve.through).toBe(false);
+			}
+		});
+
+		it("executeCommandDiff curve.interpolateCurve marks through-points nurbs", async () => {
+			const res = await kernel.executeCommandDiff("curve.interpolateCurve", {
+				points: [
+					[0, 0, 0],
+					[2, 1, 0],
+					[4, 0, 0],
+				],
+			});
+			const edges = res.diff.edges?.added ?? [];
+			expect(edges[0]!.curve?.kind).toBe("nurbs");
+			if (edges[0]!.curve?.kind === "nurbs") {
+				expect(edges[0]!.curve.through).toBe(true);
+				expect(edges[0]!.curve.poles).toHaveLength(3);
+			}
+			expect((res.diff.wires?.added ?? []).length).toBe(1);
 		});
 
 		it("executeCommandDiff typology constructFrom2PointsAndHeight builds a solid", async () => {

@@ -67,7 +67,7 @@ export default defineConfig({
 
   webServer: {
     cwd: __dirname,
-    command: `node "${viteBin}" preview --port 4181 --host ${previewHost}`,
+    command: `node "${viteBin}" --host ${previewHost} --port 4181 --strictPort`,
     env: { NODE_OPTIONS: "" },
     url: baseURL,
     reuseExistingServer: !process.env.CI,

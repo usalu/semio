@@ -30,7 +30,7 @@ class Puzzle2dEventBindingController {
 // #region 🔖GpuWasmBridge
 import initPuzzle2dWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
 
-if (typeof process !== "undefined" && process.env.VITEST === "true") {
+if (import.meta.env.VITEST) {
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
@@ -2633,7 +2633,7 @@ export class Puzzle2dRenderer {
     } finally {
       this.suppressSceneToWasmPush = false;
     }
-    this.lastPushedDescriptorJson = null;
+    this.pendingIncrementalNodeMoves.set(nodeId, { x, y });
     this.invalidate();
   }
 
@@ -2721,6 +2721,7 @@ export class Puzzle2dRenderer {
   private lastPushedKindCatalogsJson: string | null = null;
   private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
   private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
+  private pendingIncrementalNodeMoves = new Map<string, { x: number; y: number }>();
   private suppressSceneToWasmPush = false;
   private graphObservationFlushPending = false;
   private lastGraphObservation: Puzzle2dGraphObservationSnapshot | null = null;
@@ -3656,6 +3657,22 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 📍 Flushes peer-pane node drags through {@link BoardSession.setNodePositionsJson} without invalidating the full descriptor cache. */
+  private flushPendingIncrementalNodeMovesToWasm(): boolean {
+    if (this.pendingIncrementalNodeMoves.size === 0) {
+      return false;
+    }
+    const moves = [...this.pendingIncrementalNodeMoves.entries()].map(([id, position]) => ({ id, x: position.x, y: position.y }));
+    this.pendingIncrementalNodeMoves.clear();
+    try {
+      this.session.setNodePositionsJson(JSON.stringify(moves));
+    } catch (err) {
+      console.error("[DEBUG] setNodePositionsJson failed", err);
+      return false;
+    }
+    return true;
+  }
+
   /** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link Puzzle2dRenderer.invalidated} so the next frame retries. */
   private pushSceneToWasmDriver(): void {
     if (this.suppressSceneToWasmPush) {
@@ -3684,18 +3701,22 @@ export class Puzzle2dRenderer {
       this.lastPushedDescriptorJson = null;
     }
     this.lastDescriptorPushDeferred = deferDescriptorSync;
+    const flushedIncrementalNodeMoves = this.flushPendingIncrementalNodeMovesToWasm();
     if (!deferDescriptorSync) {
       if (this.scene.nodes.size === 0) {
         this.invalidated = true;
         return;
       }
-      const desc = this.descriptorJsonForWasmHost();
-      if (desc !== this.lastPushedDescriptorJson) {
-        try {
-          this.session.syncDescriptorJson(desc);
-          this.lastPushedDescriptorJson = desc;
-        } catch (err) {
-          console.error("[DEBUG] syncDescriptorJson failed", err);
+      const skipFullDescriptorSync = flushedIncrementalNodeMoves && this.lastPushedDescriptorJson !== null;
+      if (!skipFullDescriptorSync) {
+        const desc = this.descriptorJsonForWasmHost();
+        if (desc !== this.lastPushedDescriptorJson) {
+          try {
+            this.session.syncDescriptorJson(desc);
+            this.lastPushedDescriptorJson = desc;
+          } catch (err) {
+            console.error("[DEBUG] syncDescriptorJson failed", err);
+          }
         }
       }
     }
@@ -4683,10 +4704,17 @@ if (puzzle2dVitest) {
       const nodeB = new Puzzle2dSceneNode({ id: "shared", radius: 28, x: 10, y: 20 });
       rendererA.scene.add(nodeA);
       rendererB.scene.add(nodeB);
+      rendererB["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(rendererB.session, "syncDescriptorJson");
+      const setNodePositionsJson = vi.spyOn(rendererB.session, "setNodePositionsJson");
       rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeMove", payload: { id: "shared", x: 90, y: 110 } }]));
+      rendererB["pushSceneToWasmDriver"]();
       expect(nodeA.x).toBe(90);
       expect(nodeB.x).toBe(90);
       expect(nodeB.y).toBe(110);
+      expect(setNodePositionsJson).toHaveBeenCalledTimes(1);
+      expect(setNodePositionsJson.mock.calls[0]?.[0]).toContain('"id":"shared"');
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
       const nodeDeletes: string[] = [];
       rendererA.on("nodeDelete", (event) => nodeDeletes.push(event.id));
       rendererA.setSelectionIdsSilent(["shared"]);

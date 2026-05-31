@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: rust-setter
     content: Add set_node_positions host method + setNodePositionsJson wasm_bindgen wrapper in puzzle/2d/rs/lib.rs and rebuild wasm bindings
-    status: in_progress
+    status: completed
   - id: js-incremental
     content: Add pendingIncrementalNodeMoves; rewrite applyNodePositionSilent to drop full re-push; flush incremental moves + skip full descriptor sync in pushSceneToWasmDriver
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing puzzle/2d/react/index.tsx peer-sync test and Rust lib.rs tests to cover the incremental path
-    status: pending
+    status: completed
   - id: verify
     content: Build wasm, run cargo test + vitest, and manually verify smooth multi-pane drag on the Metabolism fixture
-    status: pending
+    status: completed
   - id: close-ticket
     content: Close the MCP ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

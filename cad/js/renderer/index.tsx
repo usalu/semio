@@ -104,6 +104,7 @@ import {
   selectionTargetsHaveTransformableVertices,
   type CadTransformGumballMode,
   type ModelDiff,
+  ensureTypologyObjectFromCreateDiff,
 } from "@cad/js/core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
@@ -117,6 +118,7 @@ type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
 type VertexRecord = kernelGeometry.VertexRecord;
 type WireRecord = kernelGeometry.WireRecord;
+type EdgeRef = kernelGeometry.EdgeRef;
 
 export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
@@ -896,13 +898,20 @@ function geometryEntityPointsForPickTarget(buckets: ReturnType<typeof geometryBu
   return geometryEntityPoints(buckets, geometryKind, target.id);
 }
 
+/** @emoji 📐 Consecutive segment pairs along a sampled edge polyline. */
+export function polylineWireSegments(points: readonly Vec3[]): readonly (readonly [Vec3, Vec3])[] {
+  if (points.length < 2) return [];
+  const out: (readonly [Vec3, Vec3])[] = [];
+  for (let i = 1; i < points.length; i++) out.push([points[i - 1]!, points[i]!]);
+  return out;
+}
+
 function geometryWireEdgeSegments(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wire: WireRecord): readonly (readonly [Vec3, Vec3])[] {
   const out: (readonly [Vec3, Vec3])[] = [];
   for (const edgeId of wire.edgeIds) {
     const edge = edges[edgeId];
     if (!edge) continue;
-    const pts = geometryEdgePoints(vertices, edge);
-    if (pts.length >= 2) out.push([pts[0]!, pts[1]!]);
+    out.push(...polylineWireSegments(geometryEdgePoints(vertices, edge)));
   }
   return out;
 }
@@ -935,8 +944,7 @@ export function geometryEntityWireSegments(buckets: ReturnType<typeof geometryBu
 export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryBuckets>): readonly (readonly [Vec3, Vec3])[] {
   const out: (readonly [Vec3, Vec3])[] = [];
   for (const edge of geometryRecords(buckets.edges)) {
-    const pts = geometryEdgePoints(buckets.vertices, edge);
-    if (pts.length >= 2) out.push([pts[0]!, pts[pts.length - 1]!]);
+    out.push(...polylineWireSegments(geometryEdgePoints(buckets.vertices, edge)));
   }
   return out;
 }
@@ -1438,16 +1446,13 @@ function PreviewItem({ item, geometry }: { readonly item: DisplayItem; readonly 
   }
   // #endregion 🔵CircleArcPreview
   if (previewKind === "interpolated-curve" && linePoints.length >= 2) {
-    const splinePoints = linePoints.map((pt) => new THREE.Vector3(pt[0], pt[1], pt[2]));
-    const curve = new THREE.CatmullRomCurve3(splinePoints);
-    const segments = Math.max(64, splinePoints.length * 16);
-    const sampled = curve.getPoints(segments).map((v): [number, number, number] => [v.x, v.y, v.z]);
-    const placedCount = cursor ? splinePoints.length - 1 : splinePoints.length;
+    const sampled = scenePreview().nurbsDisplaySamplePoints(linePoints, Math.max(12, linePoints.length * 8));
+    const placedCount = cursor ? linePoints.length - 1 : linePoints.length;
     return (
       <group>
-        <Line raycast={raycastNone} points={sampled} color={palette.accent} lineWidth={2} />
-        {splinePoints.slice(0, placedCount).map((v, i) => (
-          <mesh key={i} position={[v.x, v.y, v.z]} raycast={raycastNone}>
+        <Line raycast={raycastNone} points={sampled.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.accent} lineWidth={2} />
+        {linePoints.slice(0, placedCount).map((pt, i) => (
+          <mesh key={i} position={pt} raycast={raycastNone}>
             <sphereGeometry args={[0.04, 10, 10]} />
             <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} />
           </mesh>
@@ -5421,6 +5426,44 @@ if (import.meta.vitest) {
       expect(filterSpatialPickTargetsForActiveView(targets, defaultModelDefinitionId()).map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0"]);
       expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.energy").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0", "object:energy.energy.hull"]);
       expect(filterSpatialPickTargetsForActiveView(targets, "aec.building.structure").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0", "object:energy.energy.hull"]);
+    });
+
+    it("polylineWireSegments tessellates nurbs edge samples for factory wireframe", () => {
+      const model = new Model();
+      const v0 = { id: "v0" as VertexRef, position: [0, 0, 0] as Vec3 };
+      const v1 = { id: "v1" as VertexRef, position: [4, 0, 0] as Vec3 };
+      const edge = {
+        id: "e0" as EdgeRef,
+        vertexIds: [v0.id, v1.id] as [VertexRef, VertexRef],
+        curve: {
+          kind: "nurbs" as const,
+          poles: [
+            [0, 0, 0],
+            [2, 1, 0],
+            [4, 0, 0],
+          ] as Vec3[],
+          degree: 2,
+          through: true,
+        },
+      };
+      const wire = { id: "w0" as WireRef, edgeIds: [edge.id] };
+      applyModelDiff(model, { vertices: { added: [v0, v1] }, edges: { added: [edge] }, wires: { added: [wire] } });
+      const buckets = geometryBuckets(model);
+      const segments = collectGeometryEdgeSegments(buckets);
+      const edgeSegments = geometryEntityWireSegments(buckets, "edge", edge.id);
+      expect(segments.length).toBeGreaterThan(2);
+      expect(edgeSegments.length).toBeGreaterThan(2);
+      expect(segments[0]).toEqual(edgeSegments[0]);
+    });
+
+    it("ensureTypologyObjectFromCreateDiff binds wire primitive for interpolate curve", () => {
+      const model = new Model();
+      const diff: ModelDiff = {
+        wires: { added: [{ id: "w0" as WireRef, edgeIds: ["e0" as EdgeRef] }] },
+        edges: { added: [{ id: "e0" as EdgeRef, vertexIds: ["v0" as VertexRef, "v1" as VertexRef] }] },
+      };
+      ensureTypologyObjectFromCreateDiff(model, "spatial.shape.curve.interpolate-curve", diff);
+      expect(model.objects["spatial.shape.curve.interpolate-curve"]?.primitives.wire).toBe("w0");
     });
 
     it("resolveSpatialSceneVisibility switches edit wireframe vs committed object mesh", () => {
