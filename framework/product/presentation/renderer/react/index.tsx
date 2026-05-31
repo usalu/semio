@@ -11,7 +11,7 @@ import {
 	Expertise,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, useEffect, useRef, type FC, type ReactNode } from "react";
+import { act, Fragment, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationEntry,
@@ -251,7 +251,10 @@ function AuthorsMorphView({
 	readonly morphId: string;
 	readonly embodiment: AuthorsEmbodiment;
 }): ReactNode {
-	const namesMuted = embodiment.id === "marked";
+	const namesMuted =
+		embodiment.id === "marked" ||
+		embodiment.id === "marked-affiliations" ||
+		embodiment.id?.startsWith("marked-affiliations-step");
 	const rows = authorRows(embodiment);
 	return (
 		<div className="w-full max-w-full text-center">
@@ -269,7 +272,18 @@ function AuthorsMorphView({
 								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
 							>
 								{namesMuted ? <span className="opacity-20">{displayName}</span> : displayName}
-								{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
+								{person.markEntries && person.markEntries.length > 0 ? (
+									<sup>
+										{person.markEntries.map((entry, markIndex) => (
+											<Fragment key={entry.mark}>
+												{markIndex > 0 ? "," : null}
+												<span className={emphasisClass(entry.emphasis)}>{entry.mark}</span>
+											</Fragment>
+										))}
+									</sup>
+								) : person.marks && person.marks.length > 0 ? (
+									<sup>{person.marks.join(",")}</sup>
+								) : null}
 							</h4>
 						);
 					})}
@@ -579,7 +593,7 @@ if (import.meta.vitest) {
 				goal: ["G1"],
 				authors: {
 					lines: [
-						[{ name: "Alice Example", marks: ["1", "a"] }, { name: "Bob Beta" }],
+						[{ name: "Alice Example", marks: ["1", "a", "x"] }, { name: "Bob Beta", marks: ["1", "a", "x"] }],
 						[{ name: "Carol Creator" }],
 					],
 				},
@@ -603,9 +617,16 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-3")?.querySelectorAll('h5[data-id="institutions"] sup').length).toBe(3);
 			expect(slide("affiliations-3")?.querySelector('h5[data-id="institutions"]')).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
-			const marked = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice Example"] sup');
-			expect(marked?.textContent).toBe("1,a");
+			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("1");
+			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
+			expect(marked2?.textContent).toBe("1,a");
+			expect(marked2?.querySelector("span:not(.opacity-20)")?.textContent).toBe("a");
+			const marked3 = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice Example"] sup');
+			expect(marked3?.textContent).toBe("1,a,x");
+			expect(marked3?.querySelector("span:not(.opacity-20)")?.textContent).toBe("x");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("A. Example");
+			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeTruthy();
+			expect(slide("authors")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeNull();
 			expect(slide("authors")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("Alice Example");
 			const aff2 = slide("affiliations-2");
 			expect(aff2?.querySelector('[data-id="institutions--1"] .opacity-20')).toBeTruthy();

@@ -67,10 +67,17 @@ export interface BulletEmbodiment {
 	readonly items: readonly string[];
 }
 
+/** @emoji 🔢 One superscript affiliation mark on an author (optional fade for marks introduced earlier). */
+export interface AuthorMark {
+	readonly mark: string;
+	readonly emphasis?: ParticipantEmphasis;
+}
+
 /** @emoji 👤 One author name with optional affiliation marks. */
 export interface AuthorPerson {
 	readonly name: string;
 	readonly marks?: readonly string[];
+	readonly markEntries?: readonly AuthorMark[];
 }
 
 /** @emoji 👤 Author rows (names with optional superscript marks); use `lines` for multiple rows. */
@@ -103,6 +110,39 @@ export interface AffiliationEntry {
 	readonly suffix?: { readonly mark: string; readonly name: string };
 	readonly lineEmphasis?: ParticipantEmphasis;
 	readonly suffixEmphasis?: ParticipantEmphasis;
+}
+
+/** @emoji 🏛 Collects `mark` and `suffix.mark` values present in one affiliation step. */
+export function affiliationMarksInStep(step: readonly AffiliationEntry[]): ReadonlySet<string> {
+	const marks = new Set<string>();
+	for (const entry of step) {
+		marks.add(entry.mark);
+		if (entry.suffix) {
+			marks.add(entry.suffix.mark);
+		}
+	}
+	return marks;
+}
+
+/** @emoji 👤 Author rows with only marks defined in `currentStep`; newer marks vs `previousStep` stay active. */
+export function authorLinesForAffiliationStep(
+	lines: readonly (readonly AuthorPerson[])[],
+	currentStep: readonly AffiliationEntry[],
+	previousStep: readonly AffiliationEntry[],
+): readonly (readonly AuthorPerson[])[] {
+	const allowed = affiliationMarksInStep(currentStep);
+	const previous = affiliationMarksInStep(previousStep);
+	return lines.map((line) =>
+		line.map((author) => ({
+			name: author.name,
+			markEntries: (author.marks ?? [])
+				.filter((mark) => allowed.has(mark))
+				.map((mark) => ({
+					mark,
+					emphasis: previous.has(mark) ? ("muted" as const) : ("active" as const),
+				})),
+		})),
+	);
 }
 
 /** @emoji 🏛 Mutes prior affiliation lines; only marks or suffixes new vs `previousStep` stay active. */
@@ -289,7 +329,9 @@ const INTRO_EMBODIMENT_DESCRIPTION_FULL = "full";
 const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
-const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS = "marked-affiliations";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1 = "marked-affiliations-step1";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2 = "marked-affiliations-step2";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3 = "marked-affiliations-step3";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
@@ -362,8 +404,28 @@ export function intro(spec: IntroSpec): Presentation {
 				},
 				{
 					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS,
-					lines: spec.authors.lines,
+					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1,
+					lines: authorLinesForAffiliationStep(spec.authors.lines, spec.affiliations.steps[0], []),
+					abbreviateFirstName: true,
+				},
+				{
+					kind: "authors",
+					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2,
+					lines: authorLinesForAffiliationStep(
+						spec.authors.lines,
+						spec.affiliations.steps[1],
+						spec.affiliations.steps[0],
+					),
+					abbreviateFirstName: true,
+				},
+				{
+					kind: "authors",
+					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3,
+					lines: authorLinesForAffiliationStep(
+						spec.authors.lines,
+						spec.affiliations.steps[2],
+						spec.affiliations.steps[1],
+					),
 					abbreviateFirstName: true,
 				},
 			],
@@ -443,7 +505,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-1",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
 				],
 			},
@@ -451,7 +513,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-2",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
 				],
 			},
@@ -459,7 +521,7 @@ export function intro(spec: IntroSpec): Presentation {
 				id: "affiliations-3",
 				placements: [
 					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS),
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
 				],
 			},
@@ -542,6 +604,27 @@ if (import.meta.vitest) {
 			if (authors.embodiment.kind === "authors") {
 				expect(authors.embodiment.abbreviateFirstName).toBe(true);
 			}
+		});
+
+		it("introduces author marks with each affiliation step", () => {
+			const lines = [
+				[{ name: "Alice", marks: ["1", "a", "x"] }],
+			] as const;
+			const steps = sampleIntro.sequences[0]!.thoughts[0]!.participants.find(
+				(p) => p.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			)!;
+			const step1 = (steps.embodiments[0] as AffiliationsEmbodiment).entries;
+			const step2 = (steps.embodiments[1] as AffiliationsEmbodiment).entries;
+			const step3 = (steps.embodiments[2] as AffiliationsEmbodiment).entries;
+			const aff1 = authorLinesForAffiliationStep(lines, step1, [])[0]![0]!;
+			expect(aff1.markEntries?.map((m) => m.mark)).toEqual(["1"]);
+			const aff2 = authorLinesForAffiliationStep(lines, step2, step1)[0]![0]!;
+			expect(aff2.markEntries?.map((m) => m.mark)).toEqual(["1", "a"]);
+			expect(aff2.markEntries?.find((m) => m.mark === "a")?.emphasis).toBe("active");
+			expect(aff2.markEntries?.find((m) => m.mark === "1")?.emphasis).toBe("muted");
+			const aff3 = authorLinesForAffiliationStep(lines, step3, step2)[0]![0]!;
+			expect(aff3.markEntries?.map((m) => m.mark)).toEqual(["1", "a", "x"]);
+			expect(aff3.markEntries?.find((m) => m.mark === "x")?.emphasis).toBe("active");
 		});
 
 		it("highlights only new affiliation marks per slide", () => {
