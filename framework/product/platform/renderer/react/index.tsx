@@ -185,6 +185,8 @@ import {
 	type ContextMenuItem,
 	type NavbarItem,
 	Expertise,
+	LevelProvider,
+	getLevelBgClass,
 	useElementsSurfaceChrome,
 	reactHostPort,
 	windowMeasureControlClass,

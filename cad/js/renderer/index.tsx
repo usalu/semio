@@ -849,6 +849,28 @@ function geometryEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRe
   return scenePreview().edgeSamplePoints(vertices, edge, 32);
 }
 
+/** @emoji 📍 NURBS through-points stored on an edge (`through` interpolation curves). */
+export function nurbsThroughPointsFromEdge(edge: EdgeRecord): readonly Vec3[] | null {
+  const curve = edge.curve;
+  if (curve?.kind !== "nurbs" || !curve.through || curve.poles.length < 2) return null;
+  return curve.poles;
+}
+
+/** @emoji 📍 Through-points for edge/wire pick highlights (interpolate curves). */
+export function geometryEntityThroughPoints(buckets: ReturnType<typeof geometryBuckets>, kind: ModelEntityKind, id: string): readonly Vec3[] {
+  if (kind === "edge" && buckets.edges[id]) {
+    return nurbsThroughPointsFromEdge(buckets.edges[id]!) ?? [];
+  }
+  if (kind === "wire" && buckets.wires[id]) {
+    const poles = buckets.wires[id]!.edgeIds.flatMap((edgeId) => {
+      const edge = buckets.edges[edgeId];
+      return edge ? (nurbsThroughPointsFromEdge(edge) ?? []) : [];
+    });
+    return uniqueGeometryPoints(poles);
+  }
+  return [];
+}
+
 function geometryFacePoints(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wires: Record<string, WireRecord>, face: FaceRecord): readonly Vec3[] {
   const ids = face.wireIds.flatMap((wireId) => wires[wireId]?.edgeIds ?? []);
   const points = ids.flatMap((id) => {
@@ -2246,7 +2268,12 @@ function SpatialPickTargetNode({
     if (!geometry || !wireKind) return [] as readonly (readonly [Vec3, Vec3])[];
     return geometryEntityWireSegments(geometryBuckets(geometry), wireKind, target.id);
   }, [geometry, wireKind, target.id]);
+  const throughPoints = reactHostPort.useMemo(() => {
+    if (!geometry || !wireKind) return [] as readonly Vec3[];
+    return geometryEntityThroughPoints(geometryBuckets(geometry), wireKind, target.id);
+  }, [geometry, wireKind, target.id]);
   if (wireSegments.length > 0) {
+    const palette = spatialSceneColors();
     return (
       <group userData={userData}>
         {wireSegments.map(([a, b], i) => (
@@ -2263,6 +2290,22 @@ function SpatialPickTargetNode({
             opacity={style.opacity}
           />
         ))}
+        {(selected || hovered) && throughPoints.length > 0
+          ? throughPoints.map((pt, i) => {
+              const p = mapPt(pt);
+              return (
+                <mesh key={`through-${i}`} position={[p[0], p[1], p[2]]} raycast={raycastNone} renderOrder={9}>
+                  <sphereGeometry args={[0.04, 10, 10]} />
+                  <meshStandardMaterial
+                    color={palette.construction}
+                    emissive={palette.constructionEmissive}
+                    emissiveIntensity={0.35}
+                    depthTest={false}
+                  />
+                </mesh>
+              );
+            })
+          : null}
       </group>
     );
   }
@@ -5464,6 +5507,32 @@ if (import.meta.vitest) {
       };
       ensureTypologyObjectFromCreateDiff(model, "spatial.shape.curve.interpolate-curve", diff);
       expect(model.objects["spatial.shape.curve.interpolate-curve"]?.primitives.wire).toBe("w0");
+    });
+
+    it("geometryEntityThroughPoints returns nurbs interpolation poles for wire selection", () => {
+      const model = new Model();
+      const v0 = { id: "v0" as VertexRef, position: [0, 0, 0] as Vec3 };
+      const v1 = { id: "v1" as VertexRef, position: [4, 0, 0] as Vec3 };
+      const edge = {
+        id: "e0" as EdgeRef,
+        vertexIds: [v0.id, v1.id] as [VertexRef, VertexRef],
+        curve: {
+          kind: "nurbs" as const,
+          poles: [
+            [0, 0, 0],
+            [2, 1, 0],
+            [4, 0, 0],
+          ] as Vec3[],
+          degree: 2,
+          through: true,
+        },
+      };
+      const wire = { id: "w0" as WireRef, edgeIds: [edge.id] };
+      applyModelDiff(model, { vertices: { added: [v0, v1] }, edges: { added: [edge] }, wires: { added: [wire] } });
+      const buckets = geometryBuckets(model);
+      expect(geometryEntityThroughPoints(buckets, "edge", edge.id)).toHaveLength(3);
+      expect(geometryEntityThroughPoints(buckets, "wire", wire.id)).toHaveLength(3);
+      expect(nurbsThroughPointsFromEdge(edge)).toEqual(edge.curve!.kind === "nurbs" ? edge.curve.poles : null);
     });
 
     it("resolveSpatialSceneVisibility switches edit wireframe vs committed object mesh", () => {

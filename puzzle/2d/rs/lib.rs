@@ -3774,6 +3774,21 @@ mod board_host {
             self.events.push(json!({ "name": name, "payload": payload }));
         }
 
+        /// @emoji 🏁 Emits final node coordinates after a drag gesture so hosts can commit declarative fixture state once.
+        fn push_node_drag_end_events(&mut self, start_positions: &BTreeMap<String, (f64, f64)>) {
+            let mut moves = Vec::with_capacity(start_positions.len());
+            for id in start_positions.keys() {
+                let Some(node) = self.nodes.get(id) else {
+                    continue;
+                };
+                moves.push(json!({ "id": id, "x": node.x, "y": node.y }));
+            }
+            if moves.is_empty() {
+                return;
+            }
+            self.push_event("nodeDragEnd", json!({ "moves": moves }));
+        }
+
         pub fn drain_events_json(&mut self) -> String {
             let out = serde_json::to_string(&self.events).unwrap_or_else(|_| "[]".into());
             self.events.clear();
@@ -3949,9 +3964,16 @@ mod board_host {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
-        /// @emoji 🧿 True while a handle link gesture is active so JS can defer `syncDescriptorJson` the same way as area select.
+        /// @emoji 🧿 True during area select, link gestures, or node drag so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
-            matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. })
+            matches!(
+                self.interaction,
+                Interaction::LinkAtSourceHandle { .. }
+                    | Interaction::LinkDragSnap { .. }
+                    | Interaction::LinkTargetNode { .. }
+                    | Interaction::ExternalLinkPreview { .. }
+                    | Interaction::DragNodes { .. }
+            )
         }
 
         pub fn world_to_screen(&self, p: Point) -> Point {
@@ -5977,12 +5999,14 @@ mod board_host {
                     self.clear_link_gesture_events();
                     self.update_hover_from_world(world);
                 }
-                Interaction::DragNodes { proximity_pair: Some((src, tgt)), .. } => {
+                Interaction::DragNodes { start_positions, proximity_pair: Some((src, tgt)), .. } => {
                     let _ = self.try_commit_link_edge(&src, &tgt, Some("proximityConnect"));
+                    self.push_node_drag_end_events(&start_positions);
                     self.interaction = Interaction::None;
                     self.update_hover_from_world(world);
                 }
-                Interaction::DragNodes { .. } => {
+                Interaction::DragNodes { start_positions, .. } => {
+                    self.push_node_drag_end_events(&start_positions);
                     self.interaction = Interaction::None;
                     self.update_hover_from_world(world);
                 }
@@ -7158,6 +7182,25 @@ mod host_tests {
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         }
+    }
+
+    #[test]
+    fn board_host_defers_descriptor_sync_while_dragging_nodes() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let _ = h.drain_events_json();
+        let start = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_down_screen(start.x, start.y, 0, false, false);
+        assert!(matches!(h.interaction, Interaction::DragNodes { .. }));
+        h.pointer_move_screen(start.x + 40.0, start.y, false, false);
+        assert!(h.defers_descriptor_sync_from_js());
+        let ev = h.drain_events_json();
+        assert!(ev.contains("nodeMove"));
+        h.pointer_up_screen(start.x + 40.0, start.y, false, false);
+        assert!(!h.defers_descriptor_sync_from_js());
+        let end = h.drain_events_json();
+        assert!(end.contains("nodeDragEnd"));
     }
 
     #[test]

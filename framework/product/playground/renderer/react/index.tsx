@@ -1947,16 +1947,28 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
     [queueStructuralDelete],
   );
   const onCanvasDrag = reactHostPort.useCallback(
-    (payload: { id: string; x: number; y: number }) => {
-      patchFixture((prev) => ({
-        ...prev,
-        nodes: prev.nodes.map((n) => (n.id === payload.id ? { ...n, x: payload.x, y: payload.y } : n)),
-      }));
+    (_payload: { id: string; x: number; y: number }) => {
       if (puzzle2dRedrawPlaying) {
         resetPuzzle2dRedrawProgressiveEpoch();
       }
     },
-    [patchFixture, puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
+    [puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
+  );
+  const onCanvasDragEnd = reactHostPort.useCallback(
+    (payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+      if (payload.moves.length === 0) {
+        return;
+      }
+      const byId = new Map(payload.moves.map((move) => [move.id, move]));
+      patchFixture((prev) => ({
+        ...prev,
+        nodes: prev.nodes.map((node) => {
+          const move = byId.get(node.id);
+          return move ? { ...node, x: move.x, y: move.y } : node;
+        }),
+      }));
+    },
+    [patchFixture],
   );
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
@@ -1974,6 +1986,7 @@ function Puzzle2dPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: Puzzle
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onDelete={onCanvasDelete}
         onDrag={onCanvasDrag}
+        onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onHover={onHover}
         onPreselect={onPreselect}

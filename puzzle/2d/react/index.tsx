@@ -706,6 +706,7 @@ export interface Puzzle2dEventMap {
   nodeCreate: Puzzle2dGraphNodeIdPayload;
   nodeDelete: { id: string };
   nodeMove: { id: string; x: number; y: number };
+  nodeDragEnd: { moves: Array<{ id: string; x: number; y: number }> };
   parentEdgeChange: Puzzle2dGraphEdgeIdPayload;
   parentNodeChange: Puzzle2dGraphNodeIdPayload;
   proximityConnect: Puzzle2dEdgeLinkPayload;
@@ -3792,6 +3793,20 @@ export class Puzzle2dRenderer {
             puzzle2dBroadcastNodeMove(this, { id, x, y });
             break;
           }
+          case "nodeDragEnd": {
+            const moves = (row.payload as { moves?: Array<{ id?: string; x?: number; y?: number }> }).moves ?? [];
+            const payload = moves
+              .map((move) => ({
+                id: String(move.id ?? ""),
+                x: Number(move.x),
+                y: Number(move.y),
+              }))
+              .filter((move) => move.id !== "" && Number.isFinite(move.x) && Number.isFinite(move.y));
+            if (payload.length > 0) {
+              this.emitter.emit("nodeDragEnd", { moves: payload });
+            }
+            break;
+          }
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
             const edge = this.scene.edges.get(id);
@@ -6633,8 +6648,10 @@ export interface Puzzle2dCanvasProps {
   onCreate?: (payload: Puzzle2dStructureCreatePayload) => void;
   /** @emoji 📦 Fires once for {@link Puzzle2dEventMap.nodeDelete}, {@link Puzzle2dEventMap.edgeDelete}, or {@link Puzzle2dEventMap.wireDestroy}. */
   onDelete?: (payload: Puzzle2dStructureDeletePayload) => void;
-  /** @emoji 🖱️ Node drag motion from WASM (`nodeMove`). */
+  /** @emoji 🖱️ Node drag motion from WASM (`nodeMove`); live panes sync imperatively — avoid heavy declarative fixture commits per frame. */
   onDrag?: (payload: Puzzle2dEventMap["nodeMove"]) => void;
+  /** @emoji 🏁 Node drag release from WASM (`nodeDragEnd`); commit declarative fixture coordinates once. */
+  onDragEnd?: (payload: Puzzle2dEventMap["nodeDragEnd"]) => void;
   onEdgeChange?: (payload: Puzzle2dGraphEdgeIdPayload) => void;
   onEdgeCreate?: (payload: Puzzle2dEdgeLinkPayload) => void;
   onEdgeDelete?: (payload: { id: string }) => void;
@@ -7214,6 +7231,7 @@ export function Puzzle2dCanvas({
   onCreate,
   onDelete,
   onDrag,
+  onDragEnd,
   onEdgeChange,
   onEdgeCreate,
   onEdgeDelete,
@@ -7546,12 +7564,15 @@ export function Puzzle2dCanvas({
     if (onDrag) {
       unsubs.push(contextRenderer.on("nodeMove", onDrag));
     }
+    if (onDragEnd) {
+      unsubs.push(contextRenderer.on("nodeDragEnd", onDragEnd));
+    }
     return () => {
       for (const u of unsubs) {
         u();
       }
     };
-  }, [contextRenderer, onDrag, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
+  }, [contextRenderer, onDrag, onDragEnd, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
 
   reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onCreate && !onDelete)) {

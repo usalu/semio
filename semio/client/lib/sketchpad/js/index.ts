@@ -4019,22 +4019,28 @@ if (import.meta.vitest) {
 if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__) {
 	const { test, expect } = await import("@playwright/test");
 	test.describe("sketchpad platform", () => {
+		async function openSketchpadWorkbench(page: import("@playwright/test").Page): Promise<void> {
+			const toggle = page.locator("#ui\\.panelToggle\\.workbench");
+			if (await toggle.isVisible()) {
+				await toggle.click();
+			}
+		}
+
 		test("home table mounts on root", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
-			await expect(page.getByText(/No kits open|kit\(s\) open/)).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
 		});
 
 		test("workbench panel is present when platform loads", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
-			const workbenchToggle = page.locator("#ui\\.panelToggle\\.workbench");
-			await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
-			await workbenchToggle.click();
+			await openSketchpadWorkbench(page);
+			await expect(page.getByText("Workbench", { exact: true })).toBeVisible({ timeout: 30_000 });
 			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
 		});
 
 		test("workbench lists dev fixture import actions", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
-			await page.locator("#ui\\.panelToggle\\.workbench").click();
+			await openSketchpadWorkbench(page);
 			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
 			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
 		});
