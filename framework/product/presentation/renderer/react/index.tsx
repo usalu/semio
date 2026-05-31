@@ -307,6 +307,9 @@ function arrangementUsesMorph(transition: Transition | undefined): boolean {
 	return (transition?.kind ?? "morph") === "morph";
 }
 
+/** @emoji 📋 Stable reveal.js `data-id` order for {@link intro} morph slides. */
+const INTRO_MORPH_PARTICIPANT_IDS = ["title", "description", "goal", "authors", "institutions"] as const;
+
 const ArrangementSection: FC<{
 	readonly thought: Thought;
 	readonly arrangement: Arrangement;
@@ -322,6 +325,38 @@ const ArrangementSection: FC<{
 					placement={placement}
 				/>
 			))}
+		</section>
+	);
+};
+
+/** @emoji 🎬 Intro slides: fixed morph stack + zero-height ghosts so reveal measures in-place (not from deck origin). */
+const IntroArrangementSection: FC<{
+	readonly thought: Thought;
+	readonly arrangement: Arrangement;
+	readonly transition?: Transition;
+}> = ({ thought, arrangement, transition }) => {
+	const resolved = resolveArrangement(thought, arrangement.id);
+	const morph = arrangementUsesMorph(transition);
+	const byMorphId = new Map(resolved.map((placement) => [placement.morphId, placement]));
+	return (
+		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
+			<div className="presentation-morph-stack">
+				<div className="presentation-morph-stack__spacer" aria-hidden="true" />
+				{INTRO_MORPH_PARTICIPANT_IDS.map((morphId) => {
+					const placement = byMorphId.get(morphId);
+					if (placement) {
+						return (
+							<MorphPlacementView
+								key={`${arrangement.id}-${placement.morphId}-${placement.embodimentId ?? "default"}`}
+								placement={placement}
+							/>
+						);
+					}
+					return (
+						<div key={`${arrangement.id}-${morphId}-ghost`} data-id={morphId} className="presentation-morph-ghost" />
+					);
+				})}
+			</div>
 		</section>
 	);
 };
@@ -370,6 +405,7 @@ export const PresentationDeck: FC<{
 		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
 		const onSlideChanged = (): void => {
+			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 		};
 		void deck.initialize().then(() => {
@@ -394,14 +430,15 @@ export const PresentationDeck: FC<{
 				{presentation.sequences.map((sequence) => (
 					<section key={sequence.id}>
 						{sequence.thoughts.flatMap((thought) =>
-							thought.arrangements.map((arrangement) => (
-								<ArrangementSection
-									key={`${sequence.id}-${thought.id}-${arrangement.id}`}
-									thought={thought}
-									arrangement={arrangement}
-									transition={thought.transition}
-								/>
-							)),
+							thought.arrangements.map((arrangement) => {
+								const key = `${sequence.id}-${thought.id}-${arrangement.id}`;
+								const props = { thought, arrangement, transition: thought.transition };
+								return thought.id === "intro" ? (
+									<IntroArrangementSection key={key} {...props} />
+								) : (
+									<ArrangementSection key={key} {...props} />
+								);
+							}),
 						)}
 					</section>
 				))}
@@ -522,6 +559,23 @@ if (import.meta.vitest) {
 			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
 			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');
 			expect(marked?.textContent).toBe("1,a");
+		});
+
+		it("renders intro morph ghosts on the title slide for stable auto-animate measurement", () => {
+			const deck = intro({
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D1"], short: "D short" },
+				goal: ["G1"],
+				authors: [{ name: "Alice" }],
+				affiliations: [{ mark: "1", name: "Uni" }],
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const titleSlide = container.querySelector('.slides > section > section[title="title"]');
+			expect(titleSlide?.querySelector(".presentation-morph-stack__spacer")).toBeTruthy();
+			expect(titleSlide?.querySelector('[data-id="description"].presentation-morph-ghost')).toBeTruthy();
+			expect(titleSlide?.querySelector('[data-id="goal"].presentation-morph-ghost')).toBeTruthy();
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {

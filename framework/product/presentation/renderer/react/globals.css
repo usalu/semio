@@ -82,15 +82,38 @@
 
 /* #region 🔖IntroMorph */
 /**
- * Intro auto-animate slides: fixed heading scale (no reveal fit-text rescaling) and a centered
- * column so added blocks shift existing copy upward instead of shrinking it.
+ * Intro auto-animate: fixed heading scale and a bottom-anchored morph stack (flex spacer on top)
+ * so reveal.js measures matching `data-id` nodes in place instead of flying from the deck origin.
  */
 .reveal .slides section[data-auto-animate] {
+	display: block;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+.presentation-morph-stack {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 	align-items: center;
+	width: 100%;
+	min-height: 100%;
 	box-sizing: border-box;
+}
+
+.presentation-morph-stack__spacer {
+	flex: 1 1 auto;
+	width: 100%;
+	min-height: 0;
+}
+
+.presentation-morph-ghost {
+	visibility: hidden;
+	height: 0;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
 }
 
 .reveal .slides section[data-auto-animate] [data-id="title"] h2,
