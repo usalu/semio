@@ -3160,6 +3160,11 @@ function replCommandTextWithoutSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
+/** @emoji ⌨️ Normalizes REPL command text: engagement input keeps spaces, aside REPL strips them. */
+export function replNormalizeCommandText(text: string, engagementMode: boolean): string {
+  return engagementMode ? text : replCommandTextWithoutSpaces(text);
+}
+
 function replFirstWireId(model: Model): string | null {
   const ks = Object.keys(model.wires);
   return ks.length ? model.wires[ks[0]!]!.id : null;
@@ -3845,6 +3850,7 @@ export function InteractionRepl({
   transformGumballMode = null,
   onTransformGumballCommit,
 }: InteractionReplProps): ReactNode {
+  const engagementCommandMode = !showAside && showEngagement;
   const snapshot = useInteractionSnapshot(rt);
   const rtRef = reactHostPort.useRef(rt);
   rtRef.current = rt;
@@ -4616,10 +4622,10 @@ export function InteractionRepl({
         interactions: scopedInteractions,
         onTransition: runTransitionRow,
         onStartInteraction: (id: string) => onInteractionId(id),
-        onInputChange: (value: string) => setCmdLine(replCommandTextWithoutSpaces(value)),
+        onInputChange: (value: string) => setCmdLine(replNormalizeCommandText(value, engagementCommandMode)),
         onInputSubmit: () => submitEngagementLine(),
       }),
-    [showEngagement, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
+    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
   );
 
   reactHostPort.useEffect(() => {
@@ -4688,6 +4694,13 @@ export function InteractionRepl({
         return;
       }
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (engagementCommandMode) {
+          e.preventDefault();
+          e.stopPropagation();
+          focusReplCommandInput();
+          setCmdLineRef.current((prev) => `${prev} `);
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         const snap = rt.getSnapshot();
@@ -4761,11 +4774,11 @@ export function InteractionRepl({
       e.preventDefault();
       e.stopPropagation();
       focusReplCommandInput();
-      setCmdLineRef.current((prev) => replCommandTextWithoutSpaces(`${prev}${one}`));
+      setCmdLineRef.current((prev) => replNormalizeCommandText(`${prev}${one}`, engagementCommandMode));
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
@@ -4905,7 +4918,7 @@ export function InteractionRepl({
               spellCheck={false}
               value={cmdLine}
               onChange={(e) => {
-                setCmdLine(replCommandTextWithoutSpaces(e.target.value));
+                setCmdLine(replNormalizeCommandText(e.target.value, engagementCommandMode));
                 if (interactionMenuOpen) setInteractionMenuOpen(true);
               }}
               onKeyDown={onInputKeyDown}
@@ -5389,6 +5402,14 @@ const __cadRendererTestKernel = import.meta.vitest ? await import("@cad/js/kerne
 if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
+
+  describe("replNormalizeCommandText", () => {
+    it("keeps spaces in engagement mode and strips them in aside REPL mode", () => {
+      expect(replNormalizeCommandText("set height 5", true)).toBe("set height 5");
+      expect(replNormalizeCommandText("Apply Number", false)).toBe("ApplyNumber");
+      expect(replNormalizeCommandText("b ", false)).toBe("b");
+    });
+  });
 
   describe("replIsQueryTypingTarget", () => {
     it("treats text inputs and engagement fields as typing targets", () => {

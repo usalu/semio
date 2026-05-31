@@ -15412,6 +15412,25 @@ if (import.meta.vitest) {
       });
     });
 
+    it("Engagement input keeps spaces while typing", async () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <div data-testid="window-body">Body</div>
+          </Window>
+        );
+      };
+      render(<Harness />);
+      fireEvent.keyDown(document.querySelector('[data-slot="window"]')!, { key: "s", bubbles: true });
+      const field = await waitFor(() => screen.getByPlaceholderText("Command") as HTMLInputElement);
+      fireEvent.change(field, { target: { value: "set height" } });
+      fireEvent.keyDown(field, { key: " " });
+      fireEvent.change(field, { target: { value: "set height " } });
+      fireEvent.change(field, { target: { value: "set height 5" } });
+      await waitFor(() => expect(field.value).toBe("set height 5"));
+    });
+
     it("Window anchors engagement in a top overlay when active", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ status: [{ id: "s", content: "Idle" }] }}>

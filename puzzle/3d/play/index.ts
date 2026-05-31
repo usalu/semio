@@ -33,6 +33,7 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
+  applyBrushPlacementToFixture,
   applyRelocateToFixture,
   fixturePoseFingerprint,
   fixtureStateFingerprint,
@@ -54,6 +55,7 @@ import {
   type KindCatalogBundle,
   type KindCompatEntry,
   type ObjectKind,
+  type BrushPlacePayload,
   type RelocateMode,
   type RelocatePayload,
   type SelectionMethod,
@@ -207,7 +209,11 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   indirectCount: 0,
   compatibleObjectsCount: 0,
   targetRingCount: 0,
+  activeTool: "select",
 };
+
+/** @emoji 🖌️ Puzzle 3D play active viewport tool. */
+export type Puzzle3dActiveTool = "select" | "brush";
 
 export { puzzle3dVortexFullId };
 
@@ -520,6 +526,7 @@ export class Puzzle3dPlayShellController extends Controller {
   private lodSlider: number;
   private lodTag: number;
   private relocateMode: RelocateMode;
+  private activeTool: Puzzle3dActiveTool;
   private selection: Puzzle3dPlaySelection;
   private selectionMode: SelectionMode;
   private selectionMethod: SelectionMethod;
@@ -546,6 +553,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.lodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
     this.lodTag = DEFAULT_MANUAL_LOD;
     this.relocateMode = "translate";
+    this.activeTool = "select";
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.selectionMode = "default";
     this.selectionMethod = "rectangle";
@@ -584,6 +592,7 @@ export class Puzzle3dPlayShellController extends Controller {
       automaticLod: this.automaticLod,
       depthVariableLod: this.depthVariableLod,
       relocateMode: this.relocateMode,
+      activeTool: this.activeTool,
       selection: this.selection,
       selectedId: primaryPuzzle3dPlayObjectId(this.selection),
       selectedLabel: puzzle3dPlaySelectionLabel(this.fixture, this.selection),
@@ -758,16 +767,39 @@ export class Puzzle3dPlayShellController extends Controller {
       id: `puzzle3d.relocate.${mode}`,
       kind: "toggle" as const,
       text: mode.charAt(0).toUpperCase() + mode.slice(1),
-      order,
+      order: order + 2,
       pressed: this.relocateMode === mode,
       controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
       command: "setRelocateMode",
       args: { mode },
     }));
+    const toolModeItems: ToolItem[] = [
+      {
+        id: "puzzle3d.tool.select",
+        kind: "toggle",
+        text: "Select",
+        order: 0,
+        pressed: this.activeTool === "select",
+        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
+        command: "setActiveTool",
+        args: { tool: "select" },
+      },
+      {
+        id: "puzzle3d.tool.brush",
+        kind: "toggle",
+        text: "Brush",
+        order: 1,
+        pressed: this.activeTool === "brush",
+        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
+        command: "setActiveTool",
+        args: { tool: "brush" },
+      },
+      ...relocateTools,
+    ];
     this.mainMode.tools = {
       selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      actions: relocateTools,
+      actions: toolModeItems,
     };
   }
 
@@ -814,6 +846,25 @@ export class Puzzle3dPlayShellController extends Controller {
         const mode = (args as { mode: RelocateMode }).mode;
         if (mode === "translate" || mode === "rotate" || mode === "scale") this.relocateMode = mode;
         this.syncShell();
+        return;
+      }
+      case "setActiveTool": {
+        const tool = (args as { tool?: Puzzle3dActiveTool }).tool;
+        if (tool === "select" || tool === "brush") {
+          this.activeTool = tool;
+        }
+        this.syncShell();
+        this.notifySnapshot();
+        return;
+      }
+      case "addBrushObject": {
+        const payload = args as BrushPlacePayload;
+        if (!payload?.targetVortexFullId || !payload.objectKindId) {
+          return;
+        }
+        const catalogs = parseKindCatalogs(this.fixture?.meta);
+        this.patchFixture((fixture) => applyBrushPlacementToFixture(fixture, payload, catalogs));
+        this.notifySnapshot();
         return;
       }
       case "toggleSelectableKind": {
@@ -1096,6 +1147,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly automaticLod: boolean;
   readonly depthVariableLod: boolean;
   readonly relocateMode: RelocateMode;
+  readonly activeTool: Puzzle3dActiveTool;
   readonly selection: Puzzle3dPlaySelection;
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;
@@ -1647,6 +1699,31 @@ if (import.meta.vitest) {
       expect(ctrl.getSnapshot().selectionMethod).toBe("lasso");
       ctrl.run("toggleSelectableKind", { kind: "object" });
       expect(ctrl.getSnapshot().selectableKinds.object).toBe(false);
+    });
+
+    it("setActiveTool and addBrushObject update fixture and snapshot", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const revisionBefore = ctrl.getSnapshot().fixtureRevision;
+      ctrl.run("setActiveTool", { tool: "brush" });
+      expect(ctrl.getSnapshot().activeTool).toBe("brush");
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      const host = fixture!.objects[0]!;
+      const targetFullId = puzzle3dVortexFullId(host.id, host.vortices[0]!.id);
+      ctrl.run("addBrushObject", {
+        targetVortexFullId: targetFullId,
+        objectKindId: "J",
+        sourceVortexIndex: 0,
+        origin: [0, 0, 0],
+        orientation: [0, 0, 0, 1],
+        objectId: "play-brush-test",
+      });
+      const snap = ctrl.getSnapshot();
+      expect(snap.fixture?.objects.some((object) => object.id === "play-brush-test")).toBe(true);
+      expect(snap.fixture?.attractions.length).toBeGreaterThan(0);
+      expect(snap.fixtureRevision).toBeGreaterThan(revisionBefore);
     });
 
     it("puzzle3dPlayAllSelectionFromFixture lists every row for enabled kinds", () => {

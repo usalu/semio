@@ -504,6 +504,8 @@ export interface BrushPlacePayload {
   readonly orientation: Quat;
   readonly scale?: number | Vec3;
   readonly attractionId?: string;
+  /** @emoji 🧪 Optional fixed object id (tests); otherwise a random id is generated. */
+  readonly objectId?: string;
 }
 
 /** @emoji 🖌️ Live brush preview pose and catalog candidate index. */
@@ -2407,7 +2409,7 @@ export function applyBrushPlacementToFixture(fixture: FixtureV1, payload: BrushP
   if (!kind?.meshUrl || !template) {
     return fixture;
   }
-  const objectId = `puzzle3d.brush.${crypto.randomUUID()}`;
+  const objectId = payload.objectId ?? `puzzle3d.brush.${crypto.randomUUID()}`;
   const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
     id: `${objectId}:v${index}`,
     vortexKind: entry.vortexKind,
@@ -4431,6 +4433,9 @@ export type BrushUiStore = ReturnType<typeof createBrushUiStore>;
 
 export const puzzle3dBrushUiStore = createBrushUiStore();
 
+/** @emoji 🖌️ True while the brush tool is the active play tool. */
+export const puzzle3dBrushToolActiveRef = { current: false };
+
 /** @emoji 🖌️ True while the cursor is over a free vortex in brush mode (suppresses orbit right-drag). */
 export const puzzle3dBrushVortexHoverRef = { current: false };
 
@@ -4446,7 +4451,7 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
   const { camera, gl } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
-  const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
+  const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current);
   const invalidate = useThree((s) => s.invalidate);
   const rightPointerRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number } | null>(null);
   const reportCamera = reactHostPort.useCallback(() => {
@@ -4489,6 +4494,9 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
     };
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 2) {
+        return;
+      }
+      if (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current) {
         return;
       }
       puzzle3dRightDragActiveRef.current = false;
@@ -4671,10 +4679,8 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
     props.onCollision(brushPreviewCollides(reg, group));
     invalidate();
   }, [props.preview, props.onCollision, reg, invalidate]);
-  const originThree = cadVec3ToThree(props.preview.origin);
-  const quat = quatToThree(props.preview.orientation);
   return (
-    <group ref={groupRef} position={originThree} quaternion={quat} scale={scaleToThree(props.preview.scale)} raycast={() => null}>
+    <group ref={groupRef} raycast={() => null}>
       <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />
     </group>
   );
@@ -4751,6 +4757,9 @@ function BrushSession(props: {
         return;
       }
       const vortexIndex = findVortexIndexOnRecord(record, fullId);
+      if (vortexIndex < 0) {
+        return;
+      }
       const world = vortexWorldCadFromObject(record, vortexIndex);
       if (!world) {
         return;
@@ -4781,25 +4790,12 @@ function BrushSession(props: {
 
   const onPreviewCollision = reactHostPort.useCallback(
     (collides: boolean) => {
-      if (!collides || !props.brushActive) {
+      if (!collides || !props.brushActive || candidatesRef.current.length <= 1) {
         return;
       }
-      const list = candidatesRef.current;
-      if (list.length <= 1) {
-        return;
-      }
-      const start = indexRef.current;
-      let next = (start + 1) % list.length;
-      while (next !== start) {
-        indexRef.current = next;
-        applyCandidateIndex(targetRef.current!, next);
-        next = (next + 1) % list.length;
-        if (puzzle3dBrushUiStore.getSnapshot().preview) {
-          break;
-        }
-      }
+      advanceCandidate();
     },
-    [applyCandidateIndex, props.brushActive],
+    [advanceCandidate, props.brushActive],
   );
 
   reactHostPort.useEffect(() => {
@@ -4809,15 +4805,191 @@ function BrushSession(props: {
   }, [clearBrush, props.brushActive]);
 
   reactHostPort.useEffect(() => {
+    const onPick = (event: Event) => {
+      const index = (event as CustomEvent<{ index: number }>).detail.index;
+      if (!props.brushActive || !targetRef.current || index < 0) {
+        return;
+      }
+      indexRef.current = index;
+      applyCandidateIndex(targetRef.current, index);
+      invalidate();
+    };
+    window.addEventListener("puzzle3d-brush-pick-candidate", onPick);
+    return () => window.removeEventListener("puzzle3d-brush-pick-candidate", onPick);
+  }, [applyCandidateIndex, invalidate, props.brushActive]);
+
+  return (
+    <>
+      <BrushPointerBridge
+        brushActive={props.brushActive}
+        blockedVortexFullIds={reg.blockedVortexFullIds}
+        targetRef={targetRef}
+        candidatesRef={candidatesRef}
+        enterTarget={enterTarget}
+        leaveTarget={leaveTarget}
+        commitCurrentPreview={commitCurrentPreview}
+        clearBrush={clearBrush}
+        advanceCandidate={advanceCandidate}
+        invalidate={invalidate}
+      />
+      {ui.preview ? <BrushPreviewGhost preview={ui.preview} onCollision={onPreviewCollision} /> : null}
+    </>
+  );
+}
+
+function BrushPointerBridge(props: {
+  readonly brushActive: boolean;
+  readonly blockedVortexFullIds: ReadonlySet<string>;
+  readonly targetRef: MutableRefObject<string | null>;
+  readonly candidatesRef: MutableRefObject<readonly BrushCompatibleCandidate[]>;
+  readonly enterTarget: (fullId: string, meta: VortexBindingMeta) => void;
+  readonly leaveTarget: () => void;
+  readonly commitCurrentPreview: () => void;
+  readonly clearBrush: () => void;
+  readonly advanceCandidate: () => void;
+  readonly invalidate: () => void;
+}) {
+  const reg = useRegistryCore();
+  const { camera, gl } = useThree();
+  const raycasterRef = reactHostPort.useRef(new Raycaster());
+  const ndcRef = reactHostPort.useRef(new Vector2());
+
+  reactHostPort.useEffect(() => {
     if (!props.brushActive) {
       return;
     }
-    const onMove = (event: PointerEvent) => {
-      const env = reg.attachAttractionThreeEnv as unknown as { current?: { camera: Camera; gl: WebGLRenderer } | null };
+    const collectPickRoots = (): Object3D[] => {
+      const out: Object3D[] = [];
+      for (const group of reg.collectObjectGroups()) {
+        if (group) {
+          out.push(group);
+        }
+      }
+      return out;
     };
-  }, [props.brushActive, reg]);
+    const onMove = (event: PointerEvent) => {
+      const canvas = gl.domElement;
+      const rect = canvas.getBoundingClientRect();
+      ndcRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      ndcRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycasterRef.current.setFromCamera(ndcRef.current, camera);
+      const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
+      const surfaceDist = hits[0]?.distance ?? 80;
+      const screenCandidates: ScreenVortexCandidate[] = [];
+      for (const meta of reg.listVortexBindings()) {
+        if (props.blockedVortexFullIds.has(meta.fullId)) {
+          continue;
+        }
+        const world = reg.getVortexWorld(meta.fullId);
+        if (!world) {
+          continue;
+        }
+        const projected = world.clone().project(camera);
+        if (projected.z > 1) {
+          continue;
+        }
+        const sx = rect.left + (projected.x * 0.5 + 0.5) * rect.width;
+        const sy = rect.top + (-projected.y * 0.5 + 0.5) * rect.height;
+        screenCandidates.push({
+          fullId: meta.fullId,
+          objectId: meta.objectId,
+          sx,
+          sy,
+          dist: camera.position.distanceTo(world),
+        });
+      }
+      const picked = pickNearestScreenVortex({
+        cursorX: event.clientX,
+        cursorY: event.clientY,
+        surfaceDist,
+        candidates: screenCandidates,
+      });
+      puzzle3dBrushVortexHoverRef.current = picked !== null;
+      if (!picked) {
+        if (props.targetRef.current) {
+          props.leaveTarget();
+        }
+        return;
+      }
+      const meta = reg.listVortexBindings().find((entry) => entry.fullId === picked.fullId);
+      if (!meta) {
+        return;
+      }
+      if (picked.fullId !== props.targetRef.current) {
+        if (props.targetRef.current) {
+          props.commitCurrentPreview();
+          props.clearBrush();
+        }
+        props.enterTarget(picked.fullId, meta);
+      }
+      props.invalidate();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !props.targetRef.current) {
+        return;
+      }
+      event.preventDefault();
+      props.advanceCandidate();
+      props.invalidate();
+    };
+    const onContextMenu = (event: MouseEvent) => {
+      if (!props.targetRef.current || !puzzle3dBrushVortexHoverRef.current) {
+        return;
+      }
+      event.preventDefault();
+      const snap = puzzle3dBrushUiStore.getSnapshot();
+      puzzle3dBrushUiStore.setSnapshot({
+        preview: snap.preview,
+        menu: {
+          x: event.clientX,
+          y: event.clientY,
+          targetVortexFullId: props.targetRef.current,
+          candidates: [...props.candidatesRef.current],
+        },
+      });
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "pointermove", onMove);
+    bindings.listen(window, "keydown", onKeyDown, true);
+    bindings.listen(window, "contextmenu", onContextMenu, true);
+    return () => bindings.dispose();
+  }, [camera, gl, props, reg]);
+  return null;
+}
 
-  return ui.preview ? <BrushPreviewGhost preview={ui.preview} onCollision={onPreviewCollision} /> : null;
+function Puzzle3dBrushContextMenu(props: { readonly rootRef: React.RefObject<HTMLDivElement | null> }): React.ReactElement | null {
+  const snap = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
+  if (!snap.menu) {
+    return null;
+  }
+  const root = props.rootRef.current;
+  if (!root) {
+    return null;
+  }
+  const rootRect = root.getBoundingClientRect();
+  const left = snap.menu.x - rootRect.left;
+  const top = snap.menu.y - rootRect.top;
+  return (
+    <div className="pointer-events-auto absolute z-20 min-w-[12rem] rounded-md border border-border bg-panel py-1 text-sm shadow-lg" style={{ left, top }} data-puzzle3d-brush-menu>
+      {snap.menu.candidates.map((candidate) => {
+        const label = `${candidate.objectKindId} · ${candidate.sourceVortexIndex}`;
+        return (
+          <button
+            key={`${candidate.objectKindId}:${candidate.sourceVortexIndex}`}
+            type="button"
+            className="block w-full px-3 py-1.5 text-left hover:bg-muted"
+            onClick={() => {
+              const idx = snap.menu!.candidates.findIndex((entry) => entry.objectKindId === candidate.objectKindId && entry.sourceVortexIndex === candidate.sourceVortexIndex);
+              puzzle3dBrushUiStore.setSnapshot({ preview: snap.preview, menu: null });
+              window.dispatchEvent(new CustomEvent("puzzle3d-brush-pick-candidate", { detail: { index: idx >= 0 ? idx : 0 } }));
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function AttractionThreeBinder() {
@@ -4886,7 +5058,7 @@ function MarqueeBridge() {
     };
     puzzle3dMarqueeGestureCancel = cancelGesture;
     const onPointerDown = (event: PointerEvent) => {
-      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current) {
+      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || puzzle3dBrushToolActiveRef.current) {
         return;
       }
       gestureRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, active: false, path: [{ x: event.clientX, y: event.clientY }] };
@@ -5884,7 +6056,17 @@ function DemandFrameloopKick(): null {
 }
 
 function Inner(props: CanvasProps) {
-  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children } = props;
+  const { camera: camProp, chunkSize = 256, proximityRadius = 12, proximityRelocateEnabled = true, children, brushActive = false, onBrushPlace, kindCatalogs, kindCompatibility } = props;
+  reactHostPort.useEffect(() => {
+    puzzle3dBrushToolActiveRef.current = brushActive;
+    if (!brushActive) {
+      puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+      puzzle3dBrushVortexHoverRef.current = false;
+    }
+    return () => {
+      puzzle3dBrushToolActiveRef.current = false;
+    };
+  }, [brushActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
   const [puzzle3dCamera, setCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
@@ -5944,6 +6126,7 @@ function Inner(props: CanvasProps) {
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
+        {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
         <directionalLight position={[120, 180, 80]} intensity={0.85} />
@@ -5985,6 +6168,8 @@ export interface PlayCanvasProps {
   readonly onCamera?: (s: CameraState) => void;
   readonly onAttractionCompatibleObjects?: () => void;
   readonly onAttractionTargetRing?: () => void;
+  readonly brushActive?: boolean;
+  readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
 }
 
 /** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
@@ -6045,6 +6230,8 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onProximityConnect={onProximityConnect}
       onAttractionCompatibleObjects={onAttractionCompatibleObjects}
       onAttractionTargetRing={onAttractionTargetRing}
+      brushActive={props.brushActive}
+      onBrushPlace={props.onBrushPlace}
       {...props.lodProps}
     >
       <Objects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
@@ -6073,7 +6260,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
       className={className}
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
       onContextMenu={(event) => {
-        if (puzzle3dRightDragActiveRef.current) {
+        if (puzzle3dRightDragActiveRef.current || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current)) {
           event.preventDefault();
         }
       }}
@@ -6088,6 +6275,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
         </Inner>
       </Canvas>
       <Puzzle3dMarqueeOverlay rootRef={rootRef} />
+      <Puzzle3dBrushContextMenu rootRef={rootRef} />
     </div>
   );
 }
@@ -6700,6 +6888,101 @@ if (import.meta.vitest) {
       const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [] };
       expect(mergeSelectionSnapshot("default", current, incoming).objectIds).toEqual(["b"]);
       expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
+    });
+  });
+  describe("brush", () => {
+    const brushCatalogs: KindCatalogBundle = {
+      objects: [
+        {
+          id: "J",
+          meshUrl: "/meshes/capsule_J.glb",
+          vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+        },
+        {
+          id: "Tambour",
+          meshUrl: "/meshes/tambour.glb",
+          vortices: [{ vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 }],
+        },
+      ],
+      vortices: [
+        { id: "door capsule east", defaultCableKind: "cable.link" },
+        { id: "door tambour east", defaultCableKind: "cable.link" },
+      ],
+      cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
+    };
+    const brushCompat: readonly KindCompatEntry[] = [{ bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour east" }];
+    it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
+      const targetPos: Vec3 = [10, 20, 30];
+      const targetDir: Vec3 = [0, 1, 0];
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [-1.3, -1.25, 0],
+        sourceLocalDirection: [-1, 0, 0],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [-1.3, -1.25, 0], direction: [-1, 0, 0] }] },
+        0,
+      );
+      expect(world).not.toBeNull();
+      expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
+      expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
+      expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      expect(world!.direction[0]).toBeCloseTo(0, 4);
+      expect(world!.direction[1]).toBeCloseTo(-1, 4);
+      expect(world!.direction[2]).toBeCloseTo(0, 4);
+    });
+    it("brushCompatibleCandidates filters by kind compatibility", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
+    });
+    it("boxesIntersect detects overlapping axis-aligned boxes", () => {
+      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
+      const b = new Box3(new Vector3(1, 1, 1), new Vector3(3, 3, 3));
+      const c = new Box3(new Vector3(4, 4, 4), new Vector3(5, 5, 5));
+      expect(boxesIntersect(a, b)).toBe(true);
+      expect(boxesIntersect(a, c)).toBe(false);
+    });
+    it("applyBrushPlacementToFixture appends object and attraction", () => {
+      const fixture: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [
+          {
+            id: "host",
+            objectKind: "Tambour",
+            meshUrl: "/meshes/tambour.glb",
+            origin: [0, 0, 0],
+            vortices: [{ id: "host:v0", vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] }],
+          },
+        ],
+      };
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [-1.3, -1.25, 0],
+        sourceLocalDirection: [-1, 0, 0],
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+      });
+      const next = applyBrushPlacementToFixture(
+        fixture,
+        {
+          targetVortexFullId: "host:v0",
+          objectKindId: "J",
+          sourceVortexIndex: 0,
+          origin: pose.origin,
+          orientation: pose.orientation,
+          objectId: "brush-test-1",
+        },
+        brushCatalogs,
+      );
+      expect(next.objects.length).toBe(2);
+      expect(next.attractions.length).toBe(1);
+      expect(next.attractions[0]?.attracted).toBe("host:v0");
+      expect(next.attractions[0]?.attracting.startsWith("brush-test-1:")).toBe(true);
     });
   });
 }
