@@ -486,9 +486,15 @@
  * which live in @layer utilities and beat @layer base by cascade priority.
  * Uses design tokens (--toolbar-*, --spacing-*, --text-*, --size-*) for all values. */
 
+[data-slot="toolbar-zone"] :is([data-slot="toolbar-group"], [data-slot="toolbar-item"]) {
+  height: 100%;
+  min-height: 0;
+}
+
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) {
   border-style: none;
   height: 100%;
+  min-height: 0;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) > :not(:first-child) {

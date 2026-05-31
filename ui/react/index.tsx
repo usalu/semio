@@ -10283,7 +10283,14 @@ interface ToolbarZoneProps extends React.ComponentProps<"div"> {
 
 function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
   return (
-    <div data-slot="toolbar-zone" className={cn("bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] rounded-md shadow-sm overflow-hidden", className)} {...props}>
+    <div
+      data-slot="toolbar-zone"
+      className={cn(
+        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );

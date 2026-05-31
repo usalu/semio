@@ -181,9 +181,11 @@ import {
 	Stepper,
 	Textarea,
 	Toggle,
+	ToggleGroup,
 	ActionGroup,
 	ActionGroupItem,
 	ToolbarDivider,
+	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
 	Window,
@@ -1162,36 +1164,76 @@ function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode 
 
 const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
   const sorted = reactHostPort.useMemo(() => sortToolbarItems(items), [items]);
-  return (
-    <>
-      {sorted.map((item) => {
-        if (item.kind === "separator") {
-          return <ToolbarDivider key={item.id} />;
-        }
-        if (item.kind === "toggle") {
-          return (
-            <ToolbarItem key={item.id}>
-              <Toggle
-                id={item.id}
-                pressed={item.pressed ?? false}
-                onPressedChange={(pressed) => item.onPressedChange?.(pressed)}
-                icon={item.icon}
-                text={item.text ?? item.label}
-              />
-            </ToolbarItem>
-          );
-        }
-        return (
-          <ToolbarItem key={item.id}>
-            <button onClick={item.onClick} className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer">
-              {item.icon}
-              {(item.text ?? item.label) && <span>{item.text ?? item.label}</span>}
-            </button>
-          </ToolbarItem>
-        );
-      })}
-    </>
-  );
+  const nodes = reactHostPort.useMemo(() => {
+    const rendered: React.ReactNode[] = [];
+    let buttonRun: UIToolbarItem[] = [];
+    let toggleRun: UIToolbarItem[] = [];
+
+    const flushButtons = () => {
+      if (buttonRun.length === 0) return;
+      const run = buttonRun;
+      buttonRun = [];
+      rendered.push(
+        <ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
+          <ButtonGroup>
+            {run.map((entry) => (
+              <ButtonGroupItem key={entry.id} id={entry.id} icon={entry.icon} text={entry.text ?? entry.label} onClick={entry.onClick} />
+            ))}
+          </ButtonGroup>
+        </ToolbarItem>,
+      );
+    };
+
+    const flushToggles = () => {
+      if (toggleRun.length === 0) return;
+      const run = toggleRun;
+      toggleRun = [];
+      rendered.push(
+        <ToolbarItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
+          <ToggleGroup
+            kind="multiple"
+            value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
+            onValueChange={(values) => {
+              for (const entry of run) {
+                const pressed = values.includes(entry.id);
+                if ((entry.pressed ?? false) !== pressed) entry.onPressedChange?.(pressed);
+              }
+            }}
+            items={run.map((entry) => ({
+              value: entry.id,
+              id: entry.id,
+              icon: entry.icon,
+              text: entry.text ?? entry.label,
+            }))}
+          />
+        </ToolbarItem>,
+      );
+    };
+
+    const flushRuns = () => {
+      flushButtons();
+      flushToggles();
+    };
+
+    for (const item of sorted) {
+      if (item.kind === "separator") {
+        flushRuns();
+        rendered.push(<ToolbarDivider key={item.id} />);
+        continue;
+      }
+      if (item.kind === "toggle") {
+        flushButtons();
+        toggleRun.push(item);
+        continue;
+      }
+      flushToggles();
+      buttonRun.push(item);
+    }
+    flushRuns();
+    return rendered;
+  }, [sorted]);
+
+  return <ToolbarGroup>{nodes}</ToolbarGroup>;
 };
 
 /**
@@ -1226,34 +1268,31 @@ const UIToolbar: React.FC<{
       <div
         role="toolbar"
         id="ui.toolbar"
-        className={cn(
-          "pointer-events-auto flex max-w-full items-center gap-single",
-          showCategoryNav && "relative h-[var(--toolbar-item-height)] w-full max-w-[min(100%,48rem)] px-2",
-        )}
+        className={cn("pointer-events-auto flex max-w-full items-stretch gap-single", showCategoryNav && "w-full max-w-[min(100%,48rem)] px-2")}
       >
         {showCategoryNav ? (
           <>
             <ToolbarZone id="ui.toolbar.zone.categories" className="shrink-0">
-              {populatedCategories.map((category) => (
-                <Toggle
-                  key={category}
-                  kind="single"
-                  id={`ui.toolbar.group.${category}`}
-                  pressed={activeCategory === category}
-                  onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
-                  icon={resolveAppToolCategoryIcon(category)}
-                  text={resolveTranslationLabel(t(`ui.toolbar.parent.${category}` as const))}
-                />
-              ))}
+              <ToggleGroup
+                kind="single"
+                value={activeCategory ?? ""}
+                onValueChange={(value) => setActiveCategory(value ? (value as AppToolCategory) : null)}
+                items={populatedCategories.map((category) => ({
+                  value: category,
+                  id: `ui.toolbar.group.${category}`,
+                  icon: resolveAppToolCategoryIcon(category),
+                  text: resolveTranslationLabel(t(`ui.toolbar.parent.${category}` as const)),
+                }))}
+              />
             </ToolbarZone>
             {activeCategory && hasAppToolCategoryItems(activeItems) ? (
-              <ToolbarZone id="ui.toolbar.zone.tools" className="min-w-0 flex-1 flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
+              <ToolbarZone id="ui.toolbar.zone.tools" className="min-w-0 flex-1">
                 <UIToolbarItems items={activeItems} />
               </ToolbarZone>
             ) : null}
           </>
         ) : (
-          <ToolbarZone className="max-w-full flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
+          <ToolbarZone className="max-w-full">
             <UIToolbarItems items={tools[populatedCategories[0]!] ?? []} />
           </ToolbarZone>
         )}

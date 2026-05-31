@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
+import { ButtonGroup, ButtonGroupItem, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
@@ -38,37 +38,21 @@ export const Default: Story = {
     <ToolbarZone>
       <ToolbarGroup>
         <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <MousePointer size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <Hand size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <Move size={16} />
-          </button>
+          <ButtonGroup>
+            <ButtonGroupItem icon={<MousePointer className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<Hand className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<Move className="size-tiny" aria-hidden />} />
+          </ButtonGroup>
         </ToolbarItem>
       </ToolbarGroup>
       <ToolbarDivider />
       <ToolbarGroup>
         <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <ZoomIn size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <ZoomOut size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <Maximize2 size={16} />
-          </button>
+          <ButtonGroup>
+            <ButtonGroupItem icon={<ZoomIn className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<ZoomOut className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<Maximize2 className="size-tiny" aria-hidden />} />
+          </ButtonGroup>
         </ToolbarItem>
       </ToolbarGroup>
     </ToolbarZone>
@@ -81,40 +65,32 @@ export const WithUndoRedo: Story = {
     <ToolbarZone>
       <ToolbarGroup>
         <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <RotateCcw size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <RotateCw size={16} />
-          </button>
+          <ButtonGroup>
+            <ButtonGroupItem icon={<RotateCcw className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<RotateCw className="size-tiny" aria-hidden />} />
+          </ButtonGroup>
         </ToolbarItem>
       </ToolbarGroup>
       <ToolbarDivider />
       <ToolbarGroup>
         <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <MousePointer size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <Hand size={16} />
-          </button>
+          <ButtonGroup>
+            <ButtonGroupItem icon={<MousePointer className="size-tiny" aria-hidden />} />
+            <ButtonGroupItem icon={<Hand className="size-tiny" aria-hidden />} />
+          </ButtonGroup>
         </ToolbarItem>
       </ToolbarGroup>
       <ToolbarDivider />
       <ToolbarGroup>
         <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <Eye size={16} />
-          </button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <button className="p-1 hover:bg-hover-panel rounded">
-            <EyeOff size={16} />
-          </button>
+          <ToggleGroup
+            kind="multiple"
+            defaultValue={["visible"]}
+            items={[
+              { value: "visible", icon: <Eye className="size-tiny" aria-hidden /> },
+              { value: "hidden", icon: <EyeOff className="size-tiny" aria-hidden /> },
+            ]}
+          />
         </ToolbarItem>
       </ToolbarGroup>
     </ToolbarZone>
@@ -124,32 +100,24 @@ export const WithUndoRedo: Story = {
 export const MultipleZones: Story = {
   args: { children: null },
   render: () => (
-    <div className="flex gap-4 items-center">
+    <div className="flex gap-4 items-stretch">
       <ToolbarZone>
         <ToolbarGroup>
           <ToolbarItem>
-            <button className="p-1 hover:bg-hover-panel rounded">
-              <MousePointer size={16} />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button className="p-1 hover:bg-hover-panel rounded">
-              <Hand size={16} />
-            </button>
+            <ButtonGroup>
+              <ButtonGroupItem icon={<MousePointer className="size-tiny" aria-hidden />} />
+              <ButtonGroupItem icon={<Hand className="size-tiny" aria-hidden />} />
+            </ButtonGroup>
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarZone>
       <ToolbarZone>
         <ToolbarGroup>
           <ToolbarItem>
-            <button className="p-1 hover:bg-hover-panel rounded">
-              <ZoomIn size={16} />
-            </button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <button className="p-1 hover:bg-hover-panel rounded">
-              <ZoomOut size={16} />
-            </button>
+            <ButtonGroup>
+              <ButtonGroupItem icon={<ZoomIn className="size-tiny" aria-hidden />} />
+              <ButtonGroupItem icon={<ZoomOut className="size-tiny" aria-hidden />} />
+            </ButtonGroup>
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarZone>
