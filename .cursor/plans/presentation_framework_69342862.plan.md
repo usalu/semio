@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: scaffold
     content: Create framework/product/presentation namespace package.json + core and renderer/react package.json, project.json, script.ts, vitest.config.ts; add both to root workspaces and bun install
-    status: in_progress
+    status: completed
   - id: core-model
     content: "Implement @framework/presentation/core/index.ts: Presentation/Sequence/Thought/Participant/Embodiment/Arrangement/Transition + resolver + intro() template, with inline vitest"
-    status: pending
+    status: completed
   - id: renderer
     content: "Implement @framework/presentation/renderer/react/index.tsx: declarative→reveal.js DOM mapping, mountPresentation, surface chrome + theme sync, globals.css, inline vitest"
-    status: pending
+    status: completed
   - id: migrate-app
     content: "Migrate 33.projektetage: index.ts declarative eg-ice-25 intro + mountPresentation; update package.json/vite.config.ts/globals.css/index.html; drop react/reveal/@ui/react deps"
-    status: pending
+    status: completed
   - id: verify
     content: Run core + renderer tests and projektetage dev server; confirm 5-slide auto-animate intro renders; close ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

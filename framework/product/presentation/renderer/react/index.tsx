@@ -11,7 +11,7 @@ import {
 	useElementsSurfaceChrome,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { StrictMode, useEffect, useRef, type FC, type ReactNode } from "react";
+import { act, StrictMode, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationsEmbodiment,
@@ -141,11 +141,9 @@ function TextEmbodimentView({
 function AuthorsEmbodimentView({
 	participantId,
 	embodiment,
-	emphasis,
 }: {
 	readonly participantId: string;
 	readonly embodiment: AuthorsEmbodiment;
-	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	const namesMuted = embodiment.id === "marked";
 	return (
@@ -228,7 +226,7 @@ function EmbodimentView({ placement }: { readonly placement: ResolvedPlacement }
 		case "text":
 			return <TextEmbodimentView participantId={participant.id} embodiment={embodiment} emphasis={emphasis} />;
 		case "authors":
-			return <AuthorsEmbodimentView participantId={participant.id} embodiment={embodiment} emphasis={emphasis} />;
+			return <AuthorsEmbodimentView participantId={participant.id} embodiment={embodiment} />;
 		case "affiliations":
 			return <AffiliationsEmbodimentView participantId={participant.id} embodiment={embodiment} />;
 		case "bullet":
@@ -399,7 +397,9 @@ if (import.meta.vitest) {
 				authors: [{ name: "Alice" }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
-			mountPresentation(container, deck, { hash: false, slideNumber: false });
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false });
+			});
 			const sections = container.querySelectorAll(".slides > section > section");
 			expect(sections.length).toBe(5);
 			expect(container.querySelector('[data-id="name"]')).toBeTruthy();
@@ -417,7 +417,9 @@ if (import.meta.vitest) {
 				authors: [{ name: "Alice" }],
 				affiliations: [{ mark: "1", name: "Uni" }],
 			});
-			mountPresentation(container, deck, { hash: false, slideNumber: false });
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false });
+			});
 			const titleSlide = container.querySelector('.slides > section > section[title="subtitle"]');
 			expect(titleSlide?.querySelector(".opacity-20")).toBeTruthy();
 		});

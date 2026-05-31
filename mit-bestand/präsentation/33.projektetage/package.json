@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@mit-bestand/praesentation/projektetage",
   "version": "0.1.0",
-  "description": "mit-bestand · 33. projektetage reveal presentation",
+  "description": "mit-bestand · 33. projektetage declarative presentation",
   "type": "module",
   "private": true,
   "scripts": {
@@ -10,14 +10,11 @@
     "build": "bun nx run @mit-bestand/praesentation/projektetage:build"
   },
   "dependencies": {
-    "@ui/react": "workspace:*",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "reveal.js": "^5.2.1"
+    "@framework/presentation/core": "workspace:*",
+    "@framework/presentation/renderer/react": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "@types/reveal.js": "^5.2.0",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
