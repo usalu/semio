@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, focusActiveEngagementInput, Input, Label, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, focusActiveEngagementInput, Input, Label, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -4651,9 +4651,7 @@ export function InteractionRepl({
 
   const replCommandInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
     if (!showAside && showEngagement) {
-      return document.querySelector<HTMLInputElement>(
-        '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
-      );
+      return queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
     }
     return cmdRef.current;
   }, [showAside, showEngagement]);
@@ -4747,6 +4745,16 @@ export function InteractionRepl({
         }
         if (cmdLine.trim()) void trySubmitLine();
         return;
+      }
+      if (!showAside && showEngagement && e.key === "Tab" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+        if (field && t !== field) {
+          e.preventDefault();
+          e.stopPropagation();
+          focusReplCommandInput();
+          field.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }));
+          return;
+        }
       }
       if (!one || e.ctrlKey || e.metaKey || e.altKey) return;
       if (t === commandInput) return;

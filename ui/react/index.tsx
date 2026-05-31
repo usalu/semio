@@ -19987,11 +19987,17 @@ export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolea
   return true;
 }
 
+/** @emoji ⌨️ Returns the window engagement command input, optionally requiring {@link EngagementProps.active}. */
+export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement | null {
+  const engagementActive = activeOnly ? '[data-active="true"]' : "";
+  return document.querySelector<HTMLInputElement>(
+    `[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`,
+  );
+}
+
 /** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
 export function focusActiveEngagementInput(): boolean {
-  const field = document.querySelector<HTMLInputElement>(
-    '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
-  );
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   if (!field || field.disabled) return false;
   field.focus({ preventScroll: true });
   return true;
@@ -20007,12 +20013,14 @@ export function windowEngagementChromeVisible(
   return zone.hovered || zone.activated || zone.focused;
 }
 
-/** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets). */
+/** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets and active command). */
 export function shouldDismissEmptyWindowEngagement(
   engagement: EngagementSpec | undefined,
   relatedTarget: EventTarget | null,
   zoneRoot: HTMLElement | null,
+  zone: { readonly commandActive: boolean },
 ): boolean {
+  if (zone.commandActive) return false;
   if (engagement?.input?.value?.trim()) return false;
   if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
   if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
@@ -20026,11 +20034,8 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
-  const field = document.querySelector<HTMLInputElement>(
-    '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"]',
-  );
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   input.onChange?.(`${input.value ?? field?.value ?? ""}${event.key}`);
-  focusActiveEngagementInput();
   return true;
 }
 
@@ -20356,6 +20361,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const engagementDraftRef = reactHostPort.useRef("");
   const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
   const [engagementActivated, setEngagementActivated] = reactHostPort.useState(false);
   const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
@@ -20372,13 +20378,25 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
       setEngagementActivated(true);
       event.preventDefault();
       event.stopPropagation();
+      queueMicrotask(() => focusActiveEngagementInput());
     };
     root.addEventListener("keydown", onKeyDown, true);
     return () => root.removeEventListener("keydown", onKeyDown, true);
   }, [active, engagement]);
 
   reactHostPort.useEffect(() => {
+    const draft = engagement?.input?.value ?? "";
+    const hadDraft = engagementDraftRef.current.trim().length > 0;
+    const hasDraft = draft.trim().length > 0;
+    engagementDraftRef.current = draft;
+    if (!hasDraft || hadDraft) return;
+    setEngagementActivated(true);
+    queueMicrotask(() => focusActiveEngagementInput());
+  }, [engagement?.input?.value]);
+
+  reactHostPort.useEffect(() => {
     if (!active) {
+      engagementDraftRef.current = "";
       setEngagementZoneHovered(false);
       setEngagementActivated(false);
       setEngagementZoneFocused(false);
@@ -20387,12 +20405,12 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   const dismissEngagementIfEmpty = reactHostPort.useCallback(
     (relatedTarget: EventTarget | null) => {
-      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current)) return;
+      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current, { commandActive: engagementActivated })) return;
       setEngagementZoneHovered(false);
       setEngagementActivated(false);
       setEngagementZoneFocused(false);
     },
-    [engagement],
+    [engagement, engagementActivated],
   );
 
   if (!isVisible) return null;
@@ -24553,8 +24571,12 @@ if (import.meta.vitest) {
       const { container } = render(<Harness />);
       expect(screen.queryByPlaceholderText("Command")).toBeNull();
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
-      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
-      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).value).toBe("b");
+      await waitFor(() => {
+        const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        expect(typedField.value).toBe("b");
+        expect(typedField.tabIndex).toBe(0);
+        expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
+      });
     });
 
     it("Window reveals engagement on hover but activates only on click or typing", async () => {
@@ -24574,18 +24596,23 @@ if (import.meta.vitest) {
       const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
       expect(field.tabIndex).toBe(-1);
       expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBeNull();
-      fireEvent.pointerDown(zone, { bubbles: true });
-      await waitFor(() => expect(document.activeElement).toBe(field));
-      expect(field.tabIndex).toBe(0);
-      fireEvent.change(field, { target: { value: "" } });
-      fireEvent.blur(field);
       fireEvent.pointerLeave(zone, { relatedTarget: document.body });
       await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
+      fireEvent.pointerEnter(zone);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      fireEvent.pointerDown(zone, { bubbles: true });
+      const activeField = await waitFor(() => {
+        const next = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        expect(document.activeElement).toBe(next);
+        return next;
+      });
+      expect(activeField.tabIndex).toBe(0);
+      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
+      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
+      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
-        const activeField = screen.getByPlaceholderText("Command") as HTMLInputElement;
         expect(activeField.value).toBe("b");
-        expect(activeField.tabIndex).toBe(0);
       });
     });
 
