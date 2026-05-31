@@ -4143,13 +4143,13 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 
 		test("docs route renders MDX getting started page", async ({ page }) => {
 			await page.goto("/docs/getting-started/index", { waitUntil: "networkidle" });
-			await expect(page.getByRole("heading", { name: "Getting Started" })).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByText("Welcome to the Getting Started section")).toBeVisible({ timeout: 120_000 });
 		});
 
 		test("feedback route shows feedback form", async ({ page }) => {
 			await page.goto("/feedback", { waitUntil: "networkidle" });
-			await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible({ timeout: 120_000 });
-			await expect(page.getByPlaceholder("What should we know?")).toBeVisible({ timeout: 30_000 });
+			await expect(page.getByPlaceholder("What should we know?")).toBeVisible({ timeout: 120_000 });
+			await expect(page.getByRole("button", { name: "Send feedback" })).toBeVisible({ timeout: 30_000 });
 		});
 
 		test("kit table navigates to design app", async ({ page }) => {

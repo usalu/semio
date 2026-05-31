@@ -3,9 +3,10 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Interpolate Curve Disappears On Finish",
-  "summary": "Finishing interpolate curve with only one placed point committed an empty diff: preview was stripped in `committed` while factory wireframe had no new edges. Added `hasTwoCurvePoints` guard on finish transitions and commit, `runCommit` rejects empty `command.finish` diffs, `replBaseDisplayForHistory` keeps preview until geometry commits, and through-nurbs wireframe sampling matches the in-command Catmull-Rom preview density.",
+  "summary": "Committed + Error(1) was interaction.emptyCommit: WASM worker postMessage did not serialize nested params.model, so executeCommandDiff saw no model and returned {}. Deep serialize/deserialize for Model in RPC payloads; failed final-state commit restores the pre-finish undo snapshot (back to next_point) instead of leaving the session stuck in committed.",
   "goal": "🎯cad",
   "sessions": [
-    "⚪bb5141f99f65447fa5893ba825159316"
+    "⚪bb5141f99f65447fa5893ba825159316",
+    "⚪00d5e64fc36b4ff696ea8692df167cad"
   ]
 }

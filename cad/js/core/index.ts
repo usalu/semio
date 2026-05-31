@@ -5375,9 +5375,17 @@ export class InteractionRuntime {
     return true;
   }
 
+  private restoreUndoSnapshotAfterFailedFinalCommit(): void {
+    const snap = this.snapUndoStack.pop();
+    if (!snap) return;
+    this.sm.restore(snap.state, JSON.parse(snap.context) as Record<string, unknown>);
+    this.snapRedoStack.length = 0;
+  }
+
   private async continueHostSessionAfterEngineSend(): Promise<void> {
     if (isFinalInteractionState(this.spec, this.sm.getState())) {
-      await this.runCommit(false);
+      const res = await this.runCommit(false);
+      if (!res.ok) this.restoreUndoSnapshotAfterFailedFinalCommit();
       return;
     }
     if (this.canCommit()) {
@@ -6837,6 +6845,26 @@ if (import.meta.vitest) {
       expect(model.objects[typology]?.typology).toBe(typology);
       expect(model.objects[typology]?.primitives.solid).toBeTruthy();
     });
+    it("curve.interpolateCurve rolls back from committed when kernel returns empty commit diff", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const kernel = {
+        executeCommandDiff: async () => ({ diff: {} }),
+      } as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        previewKernel: kernel as unknown as SpatialPreviewKernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({ kind: "pointer.down", point: [0, 0, 0], modifiers: {} });
+      await rt.send({ kind: "pointer.down", point: [2, 1, 0], modifiers: {} });
+      await rt.send({ kind: "confirm", modifiers: {} });
+      expect(rt.getSnapshot().state).toBe("next_point");
+      expect(rt.getSnapshot().lastResponse?.ok).toBe(false);
+      expect(rt.getSnapshot().lastResponse?.errors?.[0]?.code).toBe("interaction.emptyCommit");
+    });
+
     it("curve.interpolateCurve confirm with one point stays in next_point", async () => {
       const spec = loadSpatialInteraction("curve.interpolateCurve")!;
       const model = new Model();

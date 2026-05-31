@@ -191,7 +191,7 @@ export function buildPanelWindowBody(surfaceId: string, controllerId: string, bi
 
 function isCanvasComponentNode(node: UiNode): boolean {
 	if (node.type === "text") return true;
-	if (node.type === "panel") return false;
+	if (node.type === "panel") return true;
 	return CANVAS_COMPONENT_KINDS.includes(node.type as ComponentKind);
 }
 
@@ -1171,6 +1171,7 @@ if (import.meta.vitest) {
 			expect(isCanvasOnlyWindowBody(buildPuzzle3dWindowBody("s", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildPuzzle2dWindowBody("b", "c", "pane"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildTableWindowBody("t", "c"))).toBe(true);
+			expect(isCanvasOnlyWindowBody(buildPanelWindowBody("p", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody({ type: "text", value: "loading" })).toBe(true);
 		});
 

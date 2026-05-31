@@ -2592,20 +2592,40 @@ type BrepjsWorkerResponse =
 	| { readonly type: "rpc-result"; readonly id: string; readonly result: unknown }
 	| { readonly type: "rpc-error"; readonly id: string; readonly error: string };
 
+/** @emoji 📨 Walks RPC payloads so nested `Model` / `ModelSpace` survive worker `postMessage`. */
+function serializeWorkerValue(value: unknown): unknown {
+	if (value instanceof Model) return { __modelJson: value.toJSON() };
+	if (value instanceof ModelSpace) return { __modelSpaceJson: value.toJSON() };
+	if (Array.isArray(value)) return value.map(serializeWorkerValue);
+	if (!value || typeof value !== "object") return value;
+	const row = value as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
+	for (const [key, entry] of Object.entries(row)) out[key] = serializeWorkerValue(entry);
+	return out;
+}
+
 function serializeWorkerArg(arg: unknown): unknown {
-	if (arg instanceof Model) return { __modelJson: arg.toJSON() };
-	if (arg instanceof ModelSpace) return { __modelSpaceJson: arg.toJSON() };
-	return arg;
+	return serializeWorkerValue(arg);
+}
+
+/** @emoji 📨 Restores `Model` / `ModelSpace` instances from worker RPC payloads. */
+function deserializeWorkerValue(value: unknown): unknown {
+	if (value && typeof value === "object" && "__modelJson" in value) {
+		return Model.fromJSON((value as { readonly __modelJson: ModelJson }).__modelJson);
+	}
+	if (value && typeof value === "object" && "__modelSpaceJson" in value) {
+		return ModelSpace.fromJSON((value as { readonly __modelSpaceJson: Parameters<typeof ModelSpace.fromJSON>[0] }).__modelSpaceJson);
+	}
+	if (Array.isArray(value)) return value.map(deserializeWorkerValue);
+	if (!value || typeof value !== "object") return value;
+	const row = value as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
+	for (const [key, entry] of Object.entries(row)) out[key] = deserializeWorkerValue(entry);
+	return out;
 }
 
 function deserializeWorkerArg(arg: unknown): unknown {
-	if (arg && typeof arg === "object" && "__modelJson" in arg) {
-		return Model.fromJSON((arg as { readonly __modelJson: ModelJson }).__modelJson);
-	}
-	if (arg && typeof arg === "object" && "__modelSpaceJson" in arg) {
-		return ModelSpace.fromJSON((arg as { readonly __modelSpaceJson: Parameters<typeof ModelSpace.fromJSON>[0] }).__modelSpaceJson);
-	}
-	return arg;
+	return deserializeWorkerValue(arg);
 }
 // #endregion 📨WorkerProtocol
 
@@ -3290,8 +3310,19 @@ if (import.meta.vitest) {
 			}
 		});
 
+		it("worker arg serialization roundtrips nested model in command params", () => {
+			const g = new Model();
+			const bag = serializeWorkerValue({ model: g, points: [[0, 0, 0], [2, 1, 0]] }) as Record<string, unknown>;
+			expect(bag.model).toEqual(expect.objectContaining({ __modelJson: expect.objectContaining({ schema: "spatial.model/v1" }) }));
+			const restored = deserializeWorkerValue(bag) as { model: Model; points: readonly Vec3[] };
+			expect(restored.model).toBeInstanceOf(Model);
+			expect(restored.points).toHaveLength(2);
+		});
+
 		it("executeCommandDiff curve.interpolateCurve marks through-points nurbs", async () => {
+			const g = new Model();
 			const res = await kernel.executeCommandDiff("curve.interpolateCurve", {
+				model: g,
 				points: [
 					[0, 0, 0],
 					[2, 1, 0],
