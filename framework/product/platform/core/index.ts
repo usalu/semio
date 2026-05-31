@@ -651,6 +651,7 @@ export abstract class VirtualFileSystemController extends Controller {
 	protected readonly expandedByScope = new Map<string, VirtualFileSystemExpandedStore>();
 	protected readonly childrenByScope = new Map<string, VirtualFileSystemChildrenStore>();
 	protected readonly selectedRowIdsByScope = new Map<string, string[]>();
+	protected readonly selectionAnchorRowIdByScope = new Map<string, string>();
 
 	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
 		super(id, commandBus, hostNotify);
@@ -754,12 +755,16 @@ export abstract class VirtualFileSystemController extends Controller {
 				this.emit();
 				return true;
 			}
-			case "toggleVirtualFileSystemRowSelection": {
-				if (!payload.rowId) return true;
-				const selected = this.selectedRows(scope);
-				const index = selected.indexOf(payload.rowId);
-				if (index >= 0) selected.splice(index, 1);
-				else selected.push(payload.rowId);
+			case "setVirtualFileSystemRowSelection": {
+				const selectionPayload = args as { rowIds?: readonly string[]; anchorRowId?: string };
+				const key = virtualFileSystemScopeKey(scope);
+				const rowIds = selectionPayload.rowIds ? [...selectionPayload.rowIds] : [];
+				this.selectedRowIdsByScope.set(key, rowIds);
+				if (selectionPayload.anchorRowId) {
+					this.selectionAnchorRowIdByScope.set(key, selectionPayload.anchorRowId);
+				} else if (!rowIds.length) {
+					this.selectionAnchorRowIdByScope.delete(key);
+				}
 				this.emit();
 				return true;
 			}
@@ -1878,6 +1883,21 @@ if (import.meta.vitest) {
 				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B),
 			};
 			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["workspace-b", "branch-b1"]);
+		});
+
+		it("replaces row selection from setVirtualFileSystemRowSelection", () => {
+			const platform = new Platform({ id: "vfs", name: "VFS" });
+			const ctrl = registerPlatformVirtualFileSystemDemo(platform);
+			const scope: VirtualFileSystemScope = {
+				appId: PlatformVirtualFileSystemDemoController.APP_A,
+				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_A),
+			};
+			ctrl.run("setVirtualFileSystemRowSelection", {
+				...scope,
+				rowIds: ["folder-models", "branch-alpha"],
+				anchorRowId: "folder-models",
+			});
+			expect(ctrl.buildVirtualFileSystemModel(scope).selectedRowIds).toEqual(["folder-models", "branch-alpha"]);
 		});
 	});
 

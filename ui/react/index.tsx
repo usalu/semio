@@ -8127,9 +8127,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }, [onPointerLeave]);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
+  const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property" && resolvedLabel) {
     return (
@@ -8376,7 +8377,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
             {renderTreeRowIcon(icon, DocumentIcon)}
-            <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text" style={treeItemLabelStyle}>
+            <span data-slot="tree-label" className={cn("flex-1 text-xs font-normal truncate text-foreground", draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
           </div>
@@ -8797,6 +8798,7 @@ export const Tree = (({
 
   const handleDragStart = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      event.stopPropagation();
       const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
       setDraggedIds(nextDraggedIds);
@@ -10063,7 +10065,10 @@ export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
   order?: number;
-  tree: TreePanelSource;
+  /** @emoji 🌲 Static or callback tree sections; omit when {@link panel} is set. */
+  tree?: TreePanelSource;
+  /** @emoji 🌲 Live React panel body (e.g. declarative `UiTreeNode` rebuilt from runtime snapshot). */
+  panel?: React.ReactNode;
 }
 
 export interface TreePanelConfig {
@@ -10235,9 +10240,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
     [currentActiveTab, sortedTabs],
   );
   const activeTabTree = reactHostPort.useMemo(
-    () => (activeTab ? resolveTreePanelSource(activeTab.tree) : null),
+    () => (activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
     [activeTab],
   );
+  const activeTabPanel = activeTab?.panel;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -10322,7 +10328,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
+            {activeTabPanel ?? (activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null)}
           </div>
         </Scrollable>
         {visible && onSizeChange ? (
@@ -10364,7 +10370,8 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabTree = activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabPanel = activeTab?.panel;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -10404,7 +10411,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
         )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? (
+            {activeTabPanel ?? (activeTabTree ? (
               <TreeStateProvider>
                 <Tree
                   className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
@@ -10418,7 +10425,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                   selectionMode={activeTabTree.selectionMode}
                 />
               </TreeStateProvider>
-            ) : null}
+            ) : null)}
           </div>
         </Scrollable>
       </div>
@@ -13256,7 +13263,10 @@ export interface VirtualFileSystemRow extends FileNode, HierarchicalRowData {
 export interface VirtualFileSystemProps {
   readonly schema: VirtualFileSystemSchema;
   readonly rows: readonly VirtualFileSystemRow[];
+  readonly selectionMode?: TreeSelectionMode;
   readonly selectedRowIds?: Set<string> | readonly string[];
+  readonly defaultSelectedRowIds?: readonly string[];
+  readonly onSelectionChange?: (selectedRowIds: readonly string[], context: { readonly anchorRowId?: string }) => void;
   readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
   readonly onToggleExpand?: (rowId: string) => void;
   readonly emptyMessage?: string;
@@ -13264,6 +13274,38 @@ export interface VirtualFileSystemProps {
   readonly rowHeight?: TableProps<VirtualFileSystemRow>["rowHeight"];
   readonly dragDrop?: DragDropConfig;
   readonly extraColumns?: readonly TableColumn<VirtualFileSystemRow>[];
+}
+
+/** @emoji 📁 Visible row order for shift-range selection in {@link VirtualFileSystem}. */
+export function getVirtualFileSystemOrderedRowIds(rows: readonly VirtualFileSystemRow[]): string[] {
+  return rows.map((row) => row.id);
+}
+
+/** @emoji 📁 Normalizes selected row ids for {@link VirtualFileSystem} selection mode. */
+export function normalizeVirtualFileSystemSelectedRowIds(selectedRowIds: readonly string[], selectionMode: TreeSelectionMode): string[] {
+  return normalizeTreeSelectedIds([...selectedRowIds], selectionMode);
+}
+
+/** @emoji 📁 Next selection after a row click (shift range, ctrl/cmd toggle, plain replace). */
+export function getVirtualFileSystemNextSelectionState(args: {
+  readonly selectionMode: TreeSelectionMode;
+  readonly selectedRowIds: readonly string[];
+  readonly orderedRowIds: readonly string[];
+  readonly targetRowId: string;
+  readonly anchorRowId?: string;
+  readonly additiveKey: boolean;
+  readonly rangeKey: boolean;
+}): { readonly selectedRowIds: string[]; readonly anchorRowId?: string } {
+  const next = getTreeNextSelectionState({
+    selectionMode: args.selectionMode,
+    selectedIds: [...args.selectedRowIds],
+    orderedIds: [...args.orderedRowIds],
+    targetId: args.targetRowId,
+    anchorId: args.anchorRowId,
+    additiveKey: args.additiveKey,
+    rangeKey: args.rangeKey,
+  });
+  return { selectedRowIds: next.selectedIds, anchorRowId: next.anchorId };
 }
 
 /** @emoji 📁 Resolves a {@link FileNodeKind} from a {@link VirtualFileSystemSchema}. */
@@ -13435,7 +13477,10 @@ const VirtualFileSystemNodeGlyph: React.FC<{
 export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   schema,
   rows,
-  selectedRowIds,
+  selectionMode = "multiple",
+  selectedRowIds: controlledSelectedRowIds,
+  defaultSelectedRowIds = [],
+  onSelectionChange,
   onRowClick,
   onToggleExpand,
   emptyMessage = "No file system nodes",
@@ -13444,6 +13489,44 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   dragDrop,
   extraColumns = [],
 }) => {
+  const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(
+    () => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)),
+  );
+  const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(
+    normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0],
+  );
+  const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
+  const resolvedSelectedRowIds = reactHostPort.useMemo(() => {
+    if (controlledSelectedRowIds === undefined) return uncontrolledSelectedRowIds;
+    return controlledSelectedRowIds instanceof Set ? controlledSelectedRowIds : new Set(controlledSelectedRowIds);
+  }, [controlledSelectedRowIds, uncontrolledSelectedRowIds]);
+  const applySelection = reactHostPort.useCallback(
+    (next: { readonly selectedRowIds: string[]; readonly anchorRowId?: string }) => {
+      const normalized = normalizeVirtualFileSystemSelectedRowIds(next.selectedRowIds, selectionMode);
+      selectionAnchorRowIdRef.current = next.anchorRowId ?? normalized[normalized.length - 1];
+      if (controlledSelectedRowIds === undefined) {
+        setUncontrolledSelectedRowIds(new Set(normalized));
+      }
+      onSelectionChange?.(normalized, { anchorRowId: selectionAnchorRowIdRef.current });
+    },
+    [controlledSelectedRowIds, onSelectionChange, selectionMode],
+  );
+  const handleRowClick = reactHostPort.useCallback(
+    (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => {
+      const next = getVirtualFileSystemNextSelectionState({
+        selectionMode,
+        selectedRowIds: [...resolvedSelectedRowIds],
+        orderedRowIds,
+        targetRowId: row.id,
+        anchorRowId: selectionAnchorRowIdRef.current,
+        additiveKey: event.metaKey || event.ctrlKey,
+        rangeKey: event.shiftKey,
+      });
+      applySelection(next);
+      onRowClick?.(row, index, event);
+    },
+    [applySelection, onRowClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
+  );
   const columns = reactHostPort.useMemo((): TableColumn<VirtualFileSystemRow>[] => {
     const base: TableColumn<VirtualFileSystemRow>[] = [
       {
@@ -13484,8 +13567,8 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       columns={columns}
       data={[...rows]}
       getRowId={(row) => row.id}
-      selectedRows={selectedRowIds}
-      onRowClick={onRowClick}
+      selectedRows={resolvedSelectedRowIds}
+      onRowClick={handleRowClick}
       emptyMessage={emptyMessage}
       rowHeight={rowHeight}
       hierarchical
@@ -16361,6 +16444,43 @@ if (treeVitest) {
       );
       expect(markup).toContain("data-vfs-expand");
       expect(markup).toContain("readme.md");
+      expect(markup).toContain("cursor-selectable");
+    });
+
+    it("computes shift range and ctrl toggle selection for visible rows", () => {
+      const orderedRowIds = ["root", "branch", "leaf-a", "leaf-b"];
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "multiple",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-b",
+          anchorRowId: "root",
+          additiveKey: false,
+          rangeKey: true,
+        }).selectedRowIds,
+      ).toEqual(["root", "branch", "leaf-a", "leaf-b"]);
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "multiple",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-b",
+          anchorRowId: "root",
+          additiveKey: true,
+          rangeKey: false,
+        }).selectedRowIds,
+      ).toEqual(["root", "leaf-b"]);
+      expect(
+        getVirtualFileSystemNextSelectionState({
+          selectionMode: "single",
+          selectedRowIds: ["root"],
+          orderedRowIds,
+          targetRowId: "leaf-a",
+          additiveKey: true,
+          rangeKey: true,
+        }).selectedRowIds,
+      ).toEqual(["leaf-a"]);
     });
   });
 

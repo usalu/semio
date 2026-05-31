@@ -1,0 +1,8 @@
+{
+  "title": "Full Virtual File System",
+  "emoji": "📁",
+  "status": "open",
+  "description": "Make semio/rs FileSystemNode the single source of truth for the virtual file system. Extend with Representation/Port/Connector nodes and fileSystemHasChildren. Rewire sketchpad kit/design VFS to lazy-load children over GraphQL.",
+  "goal": "🎯semio",
+  "sessions": []
+}

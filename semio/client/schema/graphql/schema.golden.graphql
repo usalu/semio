@@ -129,6 +129,9 @@ enum FileSystemNodeKind {
   FAMILY
   PIECE
   CONNECTION
+  REPRESENTATION
+  PORT
+  CONNECTOR
 }
 
 interface FileSystemNode implements Entity & Node {
@@ -146,6 +149,7 @@ interface FileSystemNode implements Entity & Node {
   fileSystemName: String! # computed
   isFileSystemRoot: Boolean! # computed
   fileSystemKind: FileSystemNodeKind! # computed
+  fileSystemHasChildren: Boolean! # computed
 }
 
 type FileSystemNodeEdge implements EntityEdge {
@@ -4561,7 +4565,7 @@ type StatModificationsConnection implements EntityConnection {
 
 #region Port
 
-type Port implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Port implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5223,7 +5227,7 @@ type DeletedPortsConnection implements EntityConnection {
 
 #region Type
 
-type Connector implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Connector implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5378,7 +5382,7 @@ type ConnectorOperationConnection implements EntityConnection {
 
 #endregion Commands
 
-type Representation implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
+type Representation implements Artifact & RichStrongEntity & StrongEntity & Entity & Node & FileSystemNode {
   # Node
   id: ID! # data // uuidv7
   # Entity

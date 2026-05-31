@@ -1313,6 +1313,16 @@ There MUST be only one schema, no migrations or legacy api support.
 
 ---
 
+Currently types and designs have families.
+Introduce a new entity: Typology
+This changes the ownership.
+A typology now owns types and designs and kit only has typologies.
+Every design or type hence has typology as owner and not longer kit.
+e.g. metabolism has typologies: base, capsule, tambour, capital, bridge, tower
+Refactor everything. Dont leave any legacy.
+
+---
+
 The main class of semio/js is Session. not Store, Not graph, not kit, etc
 
 There is no active store.

@@ -116,7 +116,7 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
 
 const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: readonly string[] }) => {
   const [expandedIds, setExpandedIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set(initialExpanded));
-  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(["leaf-alpha"]));
+  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<readonly string[]>(() => ["leaf-alpha"]);
 
   const rows = buildVirtualFileSystemVisibleRows("root-demo", demoChildrenByParentId, expandedIds, demoRoot);
 
@@ -135,18 +135,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
         schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
         rows={rows}
         selectedRowIds={selectedRowIds}
-        onRowClick={(row, _index, event) => {
-          if (event.metaKey || event.ctrlKey) {
-            setSelectedRowIds((previous) => {
-              const next = new Set(previous);
-              if (next.has(row.id)) next.delete(row.id);
-              else next.add(row.id);
-              return next;
-            });
-            return;
-          }
-          setSelectedRowIds(new Set([row.id]));
-        }}
+        onSelectionChange={(nextSelectedRowIds) => setSelectedRowIds(nextSelectedRowIds)}
         onToggleExpand={onToggleExpand}
         dragDrop={{
           enabled: true,

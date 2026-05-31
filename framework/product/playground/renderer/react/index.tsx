@@ -87,6 +87,7 @@ import {
   type UiTreeSectionNode,
   type UiVec3Node,
   collectUiTreeItemDragData,
+  getSidePanelBodyMount,
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   type WindowBodyViewContext,
@@ -254,11 +255,15 @@ function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
 function resolveSidePanelTabSource(tab: SidePanelTabConfig | SidePanelTabDefinition): SidePanelTabConfig {
   if (typeof (tab as SidePanelTabDefinition).resolveTab === "function") {
     const resolved = (tab as SidePanelTabDefinition).resolveTab();
-    resolveTreePanelSource(resolved.tree);
+    if (!resolved.panel && resolved.tree) {
+      resolveTreePanelSource(resolved.tree);
+    }
     return resolved;
   }
   const config = tab as SidePanelTabConfig;
-  resolveTreePanelSource(config.tree);
+  if (!config.panel && config.tree) {
+    resolveTreePanelSource(config.tree);
+  }
   return config;
 }
 
@@ -670,6 +675,14 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
   void bus;
   return tabs.map((tab, orderIndex) => {
     const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
+    if (declarativeFactory && getSidePanelBodyMount(tab.bodyKey) === "treeRoot") {
+      return resolveSidePanelTabSource({
+        id: tab.id,
+        icon: shellTabIconComponent(tab.iconId),
+        order: tab.order ?? orderIndex,
+        panel: <DeclarativeTreeWorkbenchPanel tabId={tab.id} bodyKey={tab.bodyKey} />,
+      });
+    }
     const Body = declarativeFactory ? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey) : () => <PlaygroundPanelBody><div className="p-2 text-xs">Missing panel {tab.bodyKey}</div></PlaygroundPanelBody>;
     const panelBody = <Body />;
     const sectionLabel = tab.label?.trim();
@@ -683,6 +696,30 @@ export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus:
       tree: staticTreePanelDefinition({ sections }),
     });
   });
+}
+
+/** @emoji 🌲 Declarative `type: "tree"` workbench tab mounted as the side-panel root (no nested shell tree). */
+function DeclarativeTreeWorkbenchPanel(props: { readonly tabId: string; readonly bodyKey: string }): React.ReactElement {
+  const { runtime, activeModeId } = useApp();
+  reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribe(listener),
+    () => runtime.generation,
+    () => 0,
+  );
+  const ctx: SidePanelBodyViewContext = {
+    runtime,
+    windowKindId: props.tabId,
+    bodyKey: props.bodyKey,
+    activeModeId: activeModeId ?? null,
+    generation: runtime.generation,
+  };
+  const bus = runtime.commandBus;
+  const factory = getSidePanelBodyFactory(props.bodyKey);
+  const node = factory?.(ctx);
+  if (node?.type !== "tree") {
+    return <PlaygroundPanelBody><div className="p-2 text-xs text-destructive">Expected tree panel {props.bodyKey}</div></PlaygroundPanelBody>;
+  }
+  return <PlaygroundPanelBody>{renderPlaygroundDeclarativeTree(node, bus)}</PlaygroundPanelBody>;
 }
 
 /** @emoji 📑 Declarative side-panel body: tree nodes mount as a root {@link Tree} (not nested via {@link UiRenderer}). */
@@ -814,7 +851,7 @@ function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: reado
 /** @emoji 🛝 Playground shell data plane: subscribes to runtime generation, not local panel chrome. */
 function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundViewProps, "augmentPanelTabs" | "extraFooterItems" | "slotToolbar" | "onActiveWindowChange">) {
   const { augmentPanelTabs, extraFooterItems, slotToolbar, onActiveWindowChange } = options;
-  reactHostPort.useSyncExternalStore(runtime.subscribe, () => runtime.generation, () => 0);
+  reactHostPort.useSyncExternalStore((listener) => runtime.subscribe(listener), () => runtime.generation, () => 0);
 
   const activeAppBase = runtime.getActiveApp();
   const activeModeId = activeAppBase?.getActiveModeId() ?? null;
@@ -937,7 +974,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
-  reactHostPort.useSyncExternalStore(runtime.subscribeChrome, () => runtime.chromeGeneration, () => 0);
+  reactHostPort.useSyncExternalStore((listener) => runtime.subscribeChrome(listener), () => runtime.chromeGeneration, () => 0);
 
   reactHostPort.useEffect(() => {
     if (defaultAppId) runtime.setActiveAppId(defaultAppId);

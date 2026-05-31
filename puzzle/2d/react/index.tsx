@@ -2835,6 +2835,7 @@ export class Puzzle2dRenderer {
       this.suppressSceneToWasmPush = false;
     }
     this.pendingIncrementalNodeMoves.set(nodeId, { x, y });
+    this.bumpTextOverlayGeometryEpoch();
     this.invalidate();
   }
 
@@ -3741,6 +3742,11 @@ export class Puzzle2dRenderer {
     };
   }
 
+  /** @emoji 🏷️ Marks the 2D text overlay stale after node/handle geometry moves without a full scene descriptor push. */
+  private bumpTextOverlayGeometryEpoch(): void {
+    this.textOverlayContentEpoch += 1;
+  }
+
   /** @emoji 🖌️ Requests a repaint; pass `observeGraph: true` when scene topology or authored props changed. */
   markDirty(options?: { readonly observeGraph?: boolean }): void {
     this.textOverlayContentEpoch += 1;
@@ -4290,6 +4296,7 @@ export class Puzzle2dRenderer {
               }
               node.setPosition(x, y);
               this.lastNodeAuthoringPositionById.set(id, { x, y });
+              this.bumpTextOverlayGeometryEpoch();
             }
             this.emitter.emit("nodeMove", { id, x, y });
             puzzle2dBroadcastNodeMove(this, { id, x, y });
@@ -5479,6 +5486,20 @@ if (puzzle2dVitest) {
       renderer.setSelectionIdsSilent(["n"]);
       renderer["pushSceneToWasmDriver"]();
       expect(syncDescriptorJson).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("textOverlayDirty after live node drag geometry", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer.render();
+      renderer["rememberTextOverlayPainted"]();
+      expect(renderer.textOverlayDirty()).toBe(false);
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeMove", payload: { id: "n", x: 40, y: 30 } }]));
+      expect(node.x).toBe(40);
+      expect(renderer.textOverlayDirty()).toBe(true);
       renderer.dispose();
     });
 

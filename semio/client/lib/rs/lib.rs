@@ -265,16 +265,17 @@ macro_rules! file_system_node_complex_methods {
             ctx: &crate::external_adapters::async_graphql::Context<'_>,
         ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
             let _ = ctx;
-            Ok(match $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()) {
-                $crate::gql::interfaces::FileSystemNodeInterface::Kit(_) => $crate::gql::interfaces::FileSystemNodeKind::Kit,
-                $crate::gql::interfaces::FileSystemNodeInterface::Folder(_) => $crate::gql::interfaces::FileSystemNodeKind::Folder,
-                $crate::gql::interfaces::FileSystemNodeInterface::File(_) => $crate::gql::interfaces::FileSystemNodeKind::File,
-                $crate::gql::interfaces::FileSystemNodeInterface::Design(_) => $crate::gql::interfaces::FileSystemNodeKind::Design,
-                $crate::gql::interfaces::FileSystemNodeInterface::Type(_) => $crate::gql::interfaces::FileSystemNodeKind::Type,
-                $crate::gql::interfaces::FileSystemNodeInterface::Family(_) => $crate::gql::interfaces::FileSystemNodeKind::Family,
-                $crate::gql::interfaces::FileSystemNodeInterface::Piece(_) => $crate::gql::interfaces::FileSystemNodeKind::Piece,
-                $crate::gql::interfaces::FileSystemNodeInterface::Connection(_) => $crate::gql::interfaces::FileSystemNodeKind::Connection,
-            })
+            Ok($crate::gql::interfaces::file_system_vfs::kind(
+                &$crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
+            ))
+        }
+        pub async fn file_system_has_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::has_children(&iface).await)
         }
     };
 }
@@ -349,32 +350,18 @@ macro_rules! file_system_node_vfs_complex_ctx {
                 ctx: &crate::external_adapters::async_graphql::Context<'_>,
             ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
                 Ok(match $node_for(self, ctx).await {
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Kit
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Folder(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Folder
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::File(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::File
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Design(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Design
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Type(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Type
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Family(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Family
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Piece(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Piece
-                    }
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Connection(_)) => {
-                        $crate::gql::interfaces::FileSystemNodeKind::Connection
-                    }
+                    Some(node) => $crate::gql::interfaces::file_system_vfs::kind(&node),
                     None => $crate::gql::interfaces::FileSystemNodeKind::Kit,
                 })
+            }
+            pub async fn file_system_has_children(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<bool> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(false);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::has_children(&node).await)
             }
         }
     };
@@ -2874,6 +2861,8 @@ pub mod kit {
                 None
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(Port, crate::gql::interfaces::file_system_vfs::node_for_port);
         //#endregion 🛟 port
 
         //#region ⚓ connector
@@ -2990,6 +2979,8 @@ pub mod kit {
                 self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(Connector, crate::gql::interfaces::file_system_vfs::node_for_connector);
         //#endregion ⚓ connector
 
         //#region 💾 representation
@@ -3177,6 +3168,11 @@ pub mod kit {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Representation,
+            crate::gql::interfaces::file_system_vfs::node_for_representation
+        );
         //#endregion 💾 representation
 
         //#region 🏠 type
@@ -13135,6 +13131,12 @@ pub mod gql {
             Piece,
             #[graphql(name = "CONNECTION")]
             Connection,
+            #[graphql(name = "REPRESENTATION")]
+            Representation,
+            #[graphql(name = "PORT")]
+            Port,
+            #[graphql(name = "CONNECTOR")]
+            Connector,
         }
 
         /// @emoji 📁 SDL `FileSystemNodeEdge` — relay edge for constrained VFS children.
@@ -13194,7 +13196,8 @@ pub mod gql {
             field(name = "fileSystemPath", method = "file_system_path", ty = "String"),
             field(name = "fileSystemName", method = "file_system_name", ty = "String"),
             field(name = "isFileSystemRoot", method = "is_file_system_root", ty = "bool"),
-            field(name = "fileSystemKind", method = "file_system_kind", ty = "FileSystemNodeKind")
+            field(name = "fileSystemKind", method = "file_system_kind", ty = "FileSystemNodeKind"),
+            field(name = "fileSystemHasChildren", method = "file_system_has_children", ty = "bool")
         )]
         pub enum FileSystemNodeInterface {
             Kit(Arc<crate::kit::Kit>),
@@ -13205,6 +13208,9 @@ pub mod gql {
             Family(crate::gql_relay::Family),
             Piece(Arc<crate::kit::design::piece::Piece>),
             Connection(Arc<crate::kit::design::connection::Connection>),
+            Representation(Arc<crate::kit::r#type::Representation>),
+            Port(Arc<crate::kit::r#type::Port>),
+            Connector(Arc<crate::kit::r#type::Connector>),
         }
 
         impl FileSystemNodeInterface {
@@ -13219,6 +13225,9 @@ pub mod gql {
                     Self::Family(f) => f.id == *id,
                     Self::Piece(p) => p.id == *id,
                     Self::Connection(c) => c.id == *id,
+                    Self::Representation(r) => r.id == *id,
+                    Self::Port(p) => p.id == *id,
+                    Self::Connector(c) => c.id == *id,
                 }
             }
         }
@@ -13318,6 +13327,69 @@ pub mod gql {
                     .map(FileSystemNodeInterface::Connection)
             }
 
+            /// @emoji 📁 Resolve a representation as a VFS node from its owning kind.
+            pub async fn node_for_representation(
+                representation: &crate::kit::r#type::Representation,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let owner = representation.owner_type.upgrade()?;
+                let kit = owner.owner_kit.upgrade()?;
+                let types = kit.types.read().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let reps = ty.representations.read().await;
+                reps.iter()
+                    .find(|r| r.id == representation.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Representation)
+            }
+
+            /// @emoji 📁 Resolve a port as a VFS node from its owning kind.
+            pub async fn node_for_port(port: &crate::kit::r#type::Port, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
+                let owner = port.owner_type.upgrade()?;
+                let kit = owner.owner_kit.upgrade()?;
+                let types = kit.types.read().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let ports = ty.ports.read().await;
+                ports.iter().find(|p| p.id == port.id).cloned().map(FileSystemNodeInterface::Port)
+            }
+
+            /// @emoji 📁 Resolve a connector as a VFS node from its owning kind.
+            pub async fn node_for_connector(
+                connector: &crate::kit::r#type::Connector,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let owner = connector.owner_type.upgrade()?;
+                let kit = owner.owner_kit.upgrade()?;
+                let types = kit.types.read().await;
+                let ty = types.iter().find(|t| t.id == owner.id)?.clone();
+                drop(types);
+                let connectors = ty.connectors.read().await;
+                connectors
+                    .iter()
+                    .find(|c| c.id == connector.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Connector)
+            }
+
+            /// @emoji 📁 Maps a VFS node to its SDL kind discriminant.
+            pub fn kind(node: &FileSystemNodeInterface) -> super::FileSystemNodeKind {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => super::FileSystemNodeKind::Kit,
+                    FileSystemNodeInterface::Folder(_) => super::FileSystemNodeKind::Folder,
+                    FileSystemNodeInterface::File(_) => super::FileSystemNodeKind::File,
+                    FileSystemNodeInterface::Design(_) => super::FileSystemNodeKind::Design,
+                    FileSystemNodeInterface::Type(_) => super::FileSystemNodeKind::Type,
+                    FileSystemNodeInterface::Family(_) => super::FileSystemNodeKind::Family,
+                    FileSystemNodeInterface::Piece(_) => super::FileSystemNodeKind::Piece,
+                    FileSystemNodeInterface::Connection(_) => super::FileSystemNodeKind::Connection,
+                    FileSystemNodeInterface::Representation(_) => super::FileSystemNodeKind::Representation,
+                    FileSystemNodeInterface::Port(_) => super::FileSystemNodeKind::Port,
+                    FileSystemNodeInterface::Connector(_) => super::FileSystemNodeKind::Connector,
+                }
+            }
+
             fn join_path(parent: &str, segment: &str) -> String {
                 if parent.is_empty() {
                     if segment.starts_with('/') {
@@ -13392,6 +13464,13 @@ pub mod gql {
                     }
                     FileSystemNodeInterface::Piece(p) => p.owner_design.upgrade().map(FileSystemNodeInterface::Design),
                     FileSystemNodeInterface::Connection(c) => c.owner_design.upgrade().map(FileSystemNodeInterface::Design),
+                    FileSystemNodeInterface::Representation(r) => {
+                        r.owner_type.upgrade().map(FileSystemNodeInterface::Type)
+                    }
+                    FileSystemNodeInterface::Port(p) => p.owner_type.upgrade().map(FileSystemNodeInterface::Type),
+                    FileSystemNodeInterface::Connector(c) => {
+                        c.owner_type.upgrade().map(FileSystemNodeInterface::Type)
+                    }
                 }
             }
 
@@ -13457,8 +13536,26 @@ pub mod gql {
                         }
                         out
                     }
+                    FileSystemNodeInterface::Type(t) => {
+                        let mut out = Vec::new();
+                        for rep in t.representations.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Representation(rep.clone()));
+                        }
+                        for port in t.ports.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Port(port.clone()));
+                        }
+                        for connector in t.connectors.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Connector(connector.clone()));
+                        }
+                        out
+                    }
                     _ => Vec::new(),
                 }
+            }
+
+            /// @emoji 📁 Whether the node has at least one VFS child.
+            pub async fn has_children(node: &FileSystemNodeInterface) -> bool {
+                !children_nodes(node).await.is_empty()
             }
 
             pub async fn children(node: &FileSystemNodeInterface) -> FileSystemNodeConnection {
@@ -13556,6 +13653,38 @@ pub mod gql {
                             String::new()
                         }
                     }
+                    FileSystemNodeInterface::Representation(r) => {
+                        if let Some(ty) = r.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let segment = r.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Port(p) => {
+                        if let Some(ty) = p.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let label = p.label.read().await.clone();
+                            let code = p.code.read().await.clone();
+                            let segment = label
+                                .filter(|s| !s.is_empty())
+                                .or(code)
+                                .unwrap_or_else(|| p.id.as_str().to_string());
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Connector(c) => {
+                        if let Some(ty) = c.owner_type.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
+                            let segment = c.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
                 }
             }
 
@@ -13569,6 +13698,16 @@ pub mod gql {
                     FileSystemNodeInterface::Family(f) => f.name.clone(),
                     FileSystemNodeInterface::Piece(p) => p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string()),
                     FileSystemNodeInterface::Connection(c) => c.name.read().await.clone(),
+                    FileSystemNodeInterface::Representation(r) => r.name.read().await.clone(),
+                    FileSystemNodeInterface::Port(p) => {
+                        let label = p.label.read().await.clone();
+                        let code = p.code.read().await.clone();
+                        label
+                            .filter(|s| !s.is_empty())
+                            .or(code)
+                            .unwrap_or_else(|| p.id.as_str().to_string())
+                    }
+                    FileSystemNodeInterface::Connector(c) => c.name.read().await.clone(),
                 }
             }
         }

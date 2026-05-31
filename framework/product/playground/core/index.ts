@@ -374,18 +374,37 @@ export function unregisterWindowBody(bodyKey: string): void {
 //#region 🔖SidePanelBodyViewContext
 export type SidePanelBodyViewContext = WindowBodyViewContext;
 
-const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
+/** @emoji 🌲 `nested` wraps the body in a shell tree section; `treeRoot` mounts a declarative tree as the tab root. */
+export type SidePanelBodyMount = "nested" | "treeRoot";
 
-export function registerSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
+const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
+const sidePanelBodyMountByKey = new Map<string, SidePanelBodyMount>();
+
+export function registerSidePanelBody(
+  bodyKey: string,
+  build: (ctx: SidePanelBodyViewContext) => UiNode,
+  options?: { readonly mount?: SidePanelBodyMount },
+): void {
   sidePanelBodyByKey.set(bodyKey, build);
+  if (options?.mount) {
+    sidePanelBodyMountByKey.set(bodyKey, options.mount);
+  } else {
+    sidePanelBodyMountByKey.delete(bodyKey);
+  }
 }
 
 export function getSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiNode) | undefined {
   return sidePanelBodyByKey.get(bodyKey);
 }
 
+/** @emoji 🌲 How a declarative side-panel body mounts in the workbench shell tree. */
+export function getSidePanelBodyMount(bodyKey: string): SidePanelBodyMount {
+  return sidePanelBodyMountByKey.get(bodyKey) ?? "nested";
+}
+
 export function unregisterSidePanelBody(bodyKey: string): void {
   sidePanelBodyByKey.delete(bodyKey);
+  sidePanelBodyMountByKey.delete(bodyKey);
 }
 //#endregion 🔖SidePanelBodyViewContext
 
@@ -782,6 +801,17 @@ if (import.meta.vitest) {
       expect(ctrl.selectedId).toBe("entity-a");
       bus.dispatch(TEST_IDS.controllerId, "toggleVisibleKind", { kind: "a" });
       expect(ctrl.selectedId).toBeNull();
+    });
+  });
+
+  describe("getSidePanelBodyMount", () => {
+    it("defaults to nested and remembers treeRoot registration", () => {
+      const key = "test.playground.mount";
+      registerSidePanelBody(key, () => ({ type: "text", value: "x" }));
+      expect(getSidePanelBodyMount(key)).toBe("nested");
+      registerSidePanelBody(key, () => ({ type: "tree", sections: [] }), { mount: "treeRoot" });
+      expect(getSidePanelBodyMount(key)).toBe("treeRoot");
+      unregisterSidePanelBody(key);
     });
   });
 

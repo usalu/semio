@@ -1310,7 +1310,7 @@ type ConnectionModificationsEdge {
 	node: ConnectionModifications!
 }
 
-type Connector implements Entity & StrongEntity {
+type Connector implements Entity & StrongEntity & FileSystemNode {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -2682,6 +2682,7 @@ interface FileSystemNode {
 	fileSystemName: String!
 	isFileSystemRoot: Boolean!
 	fileSystemKind: FileSystemNodeKind!
+	fileSystemHasChildren: Boolean!
 }
 
 type FileSystemNodeConnection {
@@ -2707,6 +2708,9 @@ enum FileSystemNodeKind {
 	FAMILY
 	PIECE
 	CONNECTION
+	REPRESENTATION
+	PORT
+	CONNECTOR
 }
 
 type FixedPiece implements Operation {
@@ -3916,7 +3920,7 @@ type PointModificationsEdge {
 	node: PointModifications!
 }
 
-type Port implements Entity & StrongEntity {
+type Port implements Entity & StrongEntity & FileSystemNode {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -4837,7 +4841,7 @@ type RenamedTypeInputEdge {
 	node: RenamedTypeInput!
 }
 
-type Representation implements Entity & StrongEntity {
+type Representation implements Entity & StrongEntity & FileSystemNode {
 	id: ID!
 	hash: String!
 	owner: Entity

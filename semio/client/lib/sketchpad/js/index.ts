@@ -13470,14 +13470,14 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
 				return super.runVirtualFileSystemCommand(command, args);
 			}
-			if (command === "toggleVirtualFileSystemRowSelection" && payload.rowId?.startsWith("kit:")) {
-				const kitId = payload.rowId.slice(4);
+			if (command === "setVirtualFileSystemRowSelection") {
+				const selectionPayload = args as { rowIds?: readonly string[] };
+				const kitIds = (selectionPayload.rowIds ?? [])
+					.filter((rowId) => rowId.startsWith("kit:"))
+					.map((rowId) => rowId.slice(4));
 				const shell = this.shellStore.get();
-				if (!shell.openKitIds.includes(kitId)) return true;
-				const selected = new Set(shell.home.selectedKitIds);
-				if (selected.has(kitId)) selected.delete(kitId);
-				else selected.add(kitId);
-				this.updateHome({ ...shell.home, selectedKitIds: [...selected] });
+				const selectedKitIds = kitIds.filter((kitId) => shell.openKitIds.includes(kitId));
+				this.updateHome({ ...shell.home, selectedKitIds });
 				this.emit();
 				return true;
 			}
