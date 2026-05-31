@@ -67,18 +67,32 @@ export interface BulletEmbodiment {
 	readonly items: readonly string[];
 }
 
-/** @emoji 👤 Author row (names with optional superscript marks). */
+/** @emoji 👤 One author name with optional affiliation marks. */
+export interface AuthorPerson {
+	readonly name: string;
+	readonly marks?: readonly string[];
+}
+
+/** @emoji 👤 Author rows (names with optional superscript marks); use `lines` for multiple rows. */
 export interface AuthorsEmbodiment {
 	readonly kind: "authors";
 	readonly id?: string;
-	readonly people: readonly { readonly name: string; readonly marks?: readonly string[] }[];
+	readonly people?: readonly AuthorPerson[];
+	readonly lines?: readonly (readonly AuthorPerson[])[];
+}
+
+/** @emoji 🏛 One affiliation line with optional second mark+name on the same row (e.g. university + chair). */
+export interface AffiliationEntry {
+	readonly mark: string;
+	readonly name: string;
+	readonly suffix?: { readonly mark: string; readonly name: string };
 }
 
 /** @emoji 🏛 Affiliation footnotes keyed by mark. */
 export interface AffiliationsEmbodiment {
 	readonly kind: "affiliations";
 	readonly id?: string;
-	readonly entries: readonly { readonly mark: string; readonly name: string }[];
+	readonly entries: readonly AffiliationEntry[];
 }
 
 /** @emoji 🎭 One visual form a {@link Participant} may take on a slide. */
@@ -199,7 +213,7 @@ export function countArrangements(presentation: Presentation): number {
 //#endregion 🔖Resolve
 
 //#region 🔖Intro
-/** @emoji 🎬 Spec for the standard paper intro template (title → description → goal → authors → affiliations). */
+/** @emoji 🎬 Spec for the standard paper intro template (title → description → goal → authors → affiliations ×3). */
 export interface IntroSpec {
 	readonly id?: string;
 	readonly name?: string;
@@ -212,8 +226,16 @@ export interface IntroSpec {
 		readonly short: string;
 	};
 	readonly goal: readonly string[];
-	readonly authors: readonly { readonly name: string; readonly marks?: readonly string[] }[];
-	readonly affiliations: readonly { readonly mark: string; readonly name: string }[];
+	readonly authors: {
+		readonly lines: readonly (readonly AuthorPerson[])[];
+	};
+	readonly affiliations: {
+		readonly steps: readonly [
+			readonly AffiliationEntry[],
+			readonly AffiliationEntry[],
+			readonly AffiliationEntry[],
+		];
+	};
 }
 
 const INTRO_PARTICIPANT_TITLE = "title";
@@ -228,8 +250,11 @@ const INTRO_EMBODIMENT_DESCRIPTION_FULL = "full";
 const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "short";
 const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
 const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
 
-/** @emoji 🎬 Builds a five-slide intro thought (title → description → goal → authors → affiliations). */
+/** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
 export function intro(spec: IntroSpec): Presentation {
 	const thoughtId = "intro";
 	const participants: Participant[] = [
@@ -288,18 +313,34 @@ export function intro(spec: IntroSpec): Presentation {
 				{
 					kind: "authors",
 					id: INTRO_EMBODIMENT_AUTHORS_PLAIN,
-					people: spec.authors.map((a) => ({ name: a.name })),
+					lines: spec.authors.lines.map((line) => line.map((a) => ({ name: a.name }))),
 				},
 				{
 					kind: "authors",
 					id: INTRO_EMBODIMENT_AUTHORS_MARKED,
-					people: spec.authors,
+					lines: spec.authors.lines,
 				},
 			],
 		},
 		{
 			id: INTRO_PARTICIPANT_INSTITUTIONS,
-			embodiments: [{ kind: "affiliations", entries: spec.affiliations }],
+			embodiments: [
+				{
+					kind: "affiliations",
+					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP1,
+					entries: spec.affiliations.steps[0],
+				},
+				{
+					kind: "affiliations",
+					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP2,
+					entries: spec.affiliations.steps[1],
+				},
+				{
+					kind: "affiliations",
+					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP3,
+					entries: spec.affiliations.steps[2],
+				},
+			],
 		},
 	];
 
@@ -314,6 +355,12 @@ export function intro(spec: IntroSpec): Presentation {
 		...(embodimentId ? { embodimentId } : {}),
 		emphasis: "active",
 	});
+
+	const introMutedAboveAuthors = [
+		muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+		muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+		muted(INTRO_PARTICIPANT_GOAL),
+	];
 
 	const thought: Thought = {
 		id: thoughtId,
@@ -342,20 +389,34 @@ export function intro(spec: IntroSpec): Presentation {
 			{
 				id: "authors",
 				placements: [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-					muted(INTRO_PARTICIPANT_GOAL),
+					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
 				],
 			},
 			{
-				id: "institutions",
+				id: "affiliations-1",
 				placements: [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-					muted(INTRO_PARTICIPANT_GOAL),
+					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
-					active(INTRO_PARTICIPANT_INSTITUTIONS),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
+				],
+			},
+			{
+				id: "affiliations-2",
+				placements: [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
+					muted(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
+				],
+			},
+			{
+				id: "affiliations-3",
+				placements: [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED),
+					muted(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
 				],
 			},
 		],
@@ -380,26 +441,41 @@ if (import.meta.vitest) {
 		},
 		description: { full: ["D1", "D2"], short: "D short" },
 		goal: ["G1"],
-		authors: [
-			{ name: "Alice" },
-			{ name: "Bob", marks: ["1", "b"] },
-		],
-		affiliations: [
-			{ mark: "1", name: "University" },
-			{ mark: "b", name: "Faculty" },
-		],
+		authors: {
+			lines: [[{ name: "Alice" }, { name: "Bob" }], [{ name: "Carol", marks: ["1", "b"] }]],
+		},
+		affiliations: {
+			steps: [
+				[
+					{ mark: "1", name: "University" },
+					{ mark: "2", name: "Other University" },
+				],
+				[
+					{ mark: "1", name: "University" },
+					{ mark: "2", name: "Other University" },
+					{ mark: "a", name: "Faculty" },
+				],
+				[
+					{ mark: "1", name: "University", suffix: { mark: "x", name: "Chair X" } },
+					{ mark: "2", name: "Other University", suffix: { mark: "y", name: "Chair Y" } },
+					{ mark: "a", name: "Faculty" },
+				],
+			],
+		},
 	});
 
 	describe("intro", () => {
-		it("builds five arrangements in one thought", () => {
-			expect(countArrangements(sampleIntro)).toBe(5);
+		it("builds seven arrangements in one thought", () => {
+			expect(countArrangements(sampleIntro)).toBe(7);
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
 			expect(thought.arrangements.map((a) => a.id)).toEqual([
 				"title",
 				"description",
 				"goal",
 				"authors",
-				"institutions",
+				"affiliations-1",
+				"affiliations-2",
+				"affiliations-3",
 			]);
 		});
 
@@ -412,21 +488,21 @@ if (import.meta.vitest) {
 			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
 
-		it("layers muted participants on the institutions slide", () => {
+		it("layers affiliation steps on the final affiliations slide", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
-			const resolved = resolveArrangement(thought, "institutions");
+			const resolved = resolveArrangement(thought, "affiliations-3");
 			expect(resolved.map((r) => r.participant.id)).toEqual([
 				INTRO_PARTICIPANT_TITLE,
 				INTRO_PARTICIPANT_DESCRIPTION,
 				INTRO_PARTICIPANT_GOAL,
 				INTRO_PARTICIPANT_AUTHORS,
 				INTRO_PARTICIPANT_INSTITUTIONS,
+				INTRO_PARTICIPANT_INSTITUTIONS,
 			]);
-			expect(resolved[0]!.emphasis).toBe("muted");
-			expect(resolved[4]!.emphasis).toBe("active");
-			expect(resolved[3]!.embodiment.kind).toBe("authors");
-			if (resolved[3]!.embodiment.kind === "authors") {
-				expect(resolved[3]!.embodiment.id).toBe(INTRO_EMBODIMENT_AUTHORS_MARKED);
+			expect(resolved[4]!.emphasis).toBe("muted");
+			expect(resolved[5]!.emphasis).toBe("active");
+			if (resolved[5]!.embodiment.kind === "affiliations") {
+				expect(resolved[5]!.embodiment.id).toBe(INTRO_EMBODIMENT_INSTITUTIONS_STEP3);
 			}
 		});
 	});

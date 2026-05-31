@@ -23,18 +23,44 @@ const deck = intro({
 		short: "Plattform zum Entwerfen mit wiederverwendete Bauteilen",
 	},
 	goal: ["Mehr Zeit zum manuellen Entwerfen", "dank Automatisierung!"],
-	authors: [
-		{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
-		{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
-		{ name: "Phillipp Geyer", marks: ["1", "a", "x"] },
-	],
-	affiliations: [
-		{ mark: "1", name: "Leibniz Universität Hannover" },
-		{ mark: "2", name: "Universität der Künste" },
-		{ mark: "a", name: "Fakultät für Architektur" },
-		{ mark: "x", name: "Nachhaltige Gebäudesysteme" },
-		{ mark: "y", name: "Konstruktives Entwerfen" },
-	],
+	authors: {
+		lines: [
+			[
+				{ name: "Ueli Saluz", marks: ["1", "a", "x"] },
+				{ name: "Phillipp Geyer", marks: ["1", "a", "x"] },
+			],
+			[
+				{ name: "Kinan Sarakbi", marks: ["2", "a", "y"] },
+				{ name: "Christoph Gengnagel", marks: ["2", "a", "y"] },
+			],
+		],
+	},
+	affiliations: {
+		steps: [
+			[
+				{ mark: "1", name: "Leibniz Universität Hannover" },
+				{ mark: "2", name: "Universität der Künste" },
+			],
+			[
+				{ mark: "1", name: "Leibniz Universität Hannover" },
+				{ mark: "2", name: "Universität der Künste" },
+				{ mark: "a", name: "Fakultät für Architektur" },
+			],
+			[
+				{
+					mark: "1",
+					name: "Leibniz Universität Hannover",
+					suffix: { mark: "x", name: "Nachhaltige Gebäudesysteme" },
+				},
+				{
+					mark: "2",
+					name: "Universität der Künste",
+					suffix: { mark: "y", name: "Konstruktives Entwerfen" },
+				},
+				{ mark: "a", name: "Fakultät für Architektur" },
+			],
+		],
+	},
 });
 
 function mount(): void {
@@ -60,8 +86,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("projektetage deck", () => {
-		it("declares five intro slides", () => {
-			expect(countArrangements(deck)).toBe(5);
+		it("declares seven intro slides", () => {
+			expect(countArrangements(deck)).toBe(7);
 		});
 	});
 }

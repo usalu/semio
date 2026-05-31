@@ -2,7 +2,7 @@
   "title": "Projektetage Reveal Presentation",
   "status": "closed",
   "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
-  "summary": "Fixed intro title flying in from bottom: IntroArrangementSection uses a bottom-anchored morph stack (flex spacer + fixed participant order) and zero-height data-id ghosts on every intro slide so reveal.js can measure matching nodes. Re-run relaxHiddenPreflight on slidechanged. Replaced flex-centered slide layout that broke off-screen measurement.",
+  "summary": "Removed empty-frame causes: intro morph ghosts, IntroArrangementSection, presentation-intro-slide/stack CSS, and custom autoAnimateStyles. Each intro arrangement now renders only its declared placements via ArrangementSection; reveal.js owns centering and auto-animate defaults. Kept relaxHiddenPreflight and minimal goal nowrap CSS.",
   "goal": "🎯mitbestand",
   "sessions": [
     "⚪cbb72fbe25dd449982ea468572735bf6",
@@ -13,6 +13,7 @@
     "⚪6de6c9d702df40d39cb0fed8938ba40a",
     "⚪20a54e2bfaa24e529885652520fde061",
     "⚪d8ee508941c44d228a6f38e9a5299358",
-    "⚪9288bce17dd64902a20af6c81d72cc4a"
+    "⚪9288bce17dd64902a20af6c81d72cc4a",
+    "⚪b4b59d0c6edb460da62c82414009133b"
   ]
 }

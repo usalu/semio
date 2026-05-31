@@ -14,8 +14,10 @@ import {
 import { act, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
+	AffiliationEntry,
 	AffiliationsEmbodiment,
 	Arrangement,
+	AuthorPerson,
 	AuthorsEmbodiment,
 	BulletEmbodiment,
 	Embodiment,
@@ -36,8 +38,10 @@ import {
 // #endregion 🔌Adapters
 
 export type {
+	AffiliationEntry,
 	AffiliationsEmbodiment,
 	Arrangement,
+	AuthorPerson,
 	AuthorsEmbodiment,
 	BulletEmbodiment,
 	Embodiment,
@@ -205,6 +209,16 @@ function TextMorphView({
 	}
 }
 
+function authorRows(embodiment: AuthorsEmbodiment): readonly (readonly AuthorPerson[])[] {
+	if (embodiment.lines && embodiment.lines.length > 0) {
+		return embodiment.lines;
+	}
+	if (embodiment.people && embodiment.people.length > 0) {
+		return [embodiment.people];
+	}
+	return [];
+}
+
 function AuthorsMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -213,16 +227,22 @@ function AuthorsMorphView({
 	readonly embodiment: AuthorsEmbodiment;
 }): ReactNode {
 	const namesMuted = embodiment.id === "marked";
+	const rows = authorRows(embodiment);
 	return (
 		<div data-id={anchorId} className="w-full max-w-full text-center">
-			<div className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2">
-				{embodiment.people.map((person) => (
-					<h4 key={person.name} className="m-0 shrink-0 text-center">
-						{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
-						{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
-					</h4>
-				))}
-			</div>
+			{rows.map((line, lineIndex) => (
+				<div
+					key={`${anchorId}-line-${lineIndex}`}
+					className="flex w-full flex-row flex-wrap items-center justify-center gap-x-10 gap-y-2"
+				>
+					{line.map((person) => (
+						<h4 key={person.name} className="m-0 shrink-0 text-center">
+							{namesMuted ? <span className="opacity-20">{person.name}</span> : person.name}
+							{person.marks && person.marks.length > 0 ? <sup>{person.marks.join(",")}</sup> : null}
+						</h4>
+					))}
+				</div>
+			))}
 		</div>
 	);
 }
@@ -238,9 +258,16 @@ function AffiliationsMorphView({
 		<div data-id={anchorId} className="w-full text-center">
 			<h5 className="text-center">
 				{embodiment.entries.map((entry) => (
-					<span key={entry.mark}>
+					<span key={`${entry.mark}-${entry.suffix?.mark ?? ""}`}>
 						<sup>{entry.mark}</sup>
 						{entry.name}
+						{entry.suffix ? (
+							<>
+								{" "}
+								<sup>{entry.suffix.mark}</sup>
+								{entry.suffix.name}
+							</>
+						) : null}
 						<br />
 					</span>
 				))}
@@ -311,9 +338,6 @@ function arrangementUsesMorph(transition: Transition | undefined): boolean {
 	return (transition?.kind ?? "morph") === "morph";
 }
 
-/** @emoji 📋 Stable reveal.js `data-id` order for {@link intro} morph slides. */
-const INTRO_MORPH_PARTICIPANT_IDS = ["title", "description", "goal", "authors", "institutions"] as const;
-
 const ArrangementSection: FC<{
 	readonly thought: Thought;
 	readonly arrangement: Arrangement;
@@ -329,37 +353,6 @@ const ArrangementSection: FC<{
 					placement={placement}
 				/>
 			))}
-		</section>
-	);
-};
-
-/** @emoji 🎬 Intro slides: fixed morph stack + zero-height ghosts so reveal measures in-place (not from deck origin). */
-const IntroArrangementSection: FC<{
-	readonly thought: Thought;
-	readonly arrangement: Arrangement;
-	readonly transition?: Transition;
-}> = ({ thought, arrangement, transition }) => {
-	const resolved = resolveArrangement(thought, arrangement.id);
-	const morph = arrangementUsesMorph(transition);
-	const byMorphId = new Map(resolved.map((placement) => [placement.morphId, placement]));
-	return (
-		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
-			<div className="presentation-morph-stack">
-				{INTRO_MORPH_PARTICIPANT_IDS.map((morphId) => {
-					const placement = byMorphId.get(morphId);
-					if (placement) {
-						return (
-							<MorphPlacementView
-								key={`${arrangement.id}-${placement.morphId}-${placement.embodimentId ?? "default"}`}
-								placement={placement}
-							/>
-						);
-					}
-					return (
-						<div key={`${arrangement.id}-${morphId}-ghost`} data-id={morphId} className="presentation-morph-ghost" />
-					);
-				})}
-			</div>
 		</section>
 	);
 };
@@ -381,16 +374,6 @@ export const PresentationDeck: FC<{
 		}
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
-			autoAnimate: true,
-			autoAnimateStyles: [
-				"opacity",
-				"color",
-				"background-color",
-				"padding",
-				"letter-spacing",
-				"word-spacing",
-				"transform",
-			],
 		};
 		if (options?.hash === true) {
 			revealOptions.hash = true;
@@ -433,15 +416,14 @@ export const PresentationDeck: FC<{
 				{presentation.sequences.map((sequence) => (
 					<section key={sequence.id}>
 						{sequence.thoughts.flatMap((thought) =>
-							thought.arrangements.map((arrangement) => {
-								const key = `${sequence.id}-${thought.id}-${arrangement.id}`;
-								const props = { thought, arrangement, transition: thought.transition };
-								return thought.id === "intro" ? (
-									<IntroArrangementSection key={key} {...props} />
-								) : (
-									<ArrangementSection key={key} {...props} />
-								);
-							}),
+							thought.arrangements.map((arrangement) => (
+								<ArrangementSection
+									key={`${sequence.id}-${thought.id}-${arrangement.id}`}
+									thought={thought}
+									arrangement={arrangement}
+									transition={thought.transition}
+								/>
+							)),
 						)}
 					</section>
 				))}
@@ -488,6 +470,20 @@ if (import.meta.vitest) {
 	describe("PresentationDeck", () => {
 		let container: HTMLDivElement;
 
+		const testAffiliationSteps = {
+			steps: [
+				[{ mark: "1", name: "Uni" }],
+				[
+					{ mark: "1", name: "Uni" },
+					{ mark: "a", name: "Faculty" },
+				],
+				[
+					{ mark: "1", name: "Uni", suffix: { mark: "x", name: "Chair X" } },
+					{ mark: "a", name: "Faculty" },
+				],
+			],
+		} as const;
+
 		beforeEach(() => {
 			container = document.createElement("div");
 			document.body.appendChild(container);
@@ -498,20 +494,20 @@ if (import.meta.vitest) {
 			container.remove();
 		});
 
-		it("renders five vertical sections for the intro template", () => {
+		it("renders seven vertical sections for the intro template", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
-				authors: [{ name: "Alice" }],
-				affiliations: [{ mark: "1", name: "Uni" }],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false });
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
-			expect(sections.length).toBe(5);
+			expect(sections.length).toBe(7);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
 			expect(container.querySelector('[data-id="title"]')).toBeTruthy();
@@ -526,8 +522,8 @@ if (import.meta.vitest) {
 				title: { full: ["A"], short: "Short" },
 				description: { full: ["D"], short: "D short" },
 				goal: ["G"],
-				authors: [{ name: "Alice" }],
-				affiliations: [{ mark: "1", name: "Uni" }],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
@@ -541,8 +537,13 @@ if (import.meta.vitest) {
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
-				authors: [{ name: "Alice", marks: ["1", "a"] }],
-				affiliations: [{ mark: "1", name: "Uni" }],
+				authors: {
+					lines: [
+						[{ name: "Alice", marks: ["1", "a"] }, { name: "Bob" }],
+						[{ name: "Carol" }],
+					],
+				},
+				affiliations: testAffiliationSteps,
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
@@ -556,29 +557,15 @@ if (import.meta.vitest) {
 			expect(slide("description")?.querySelectorAll('div[data-id="description"] h2').length).toBe(2);
 			expect(slide("goal")?.querySelector('div[data-id="description"] h2')?.textContent).toBe("D short");
 			expect(slide("goal")?.querySelector('div[data-id="goal"] h2')).toBeTruthy();
-			const authorsRow = slide("authors")?.querySelector('div[data-id="authors"] > div');
-			expect(authorsRow?.classList.contains("justify-center")).toBe(true);
-			expect(slide("authors")?.querySelectorAll('div[data-id="authors"] h4').length).toBe(1);
-			expect(slide("institutions")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
-			const marked = slide("institutions")?.querySelector('div[data-id="authors"] sup');
+			const authorLines = slide("authors")?.querySelectorAll('div[data-id="authors"] > div');
+			expect(authorLines?.length).toBe(2);
+			expect(slide("authors")?.querySelectorAll('div[data-id="authors"] h4').length).toBe(3);
+			expect(slide("affiliations-1")?.querySelectorAll('div[data-id="institutions"] sup').length).toBe(1);
+			expect(slide("affiliations-2")?.querySelectorAll('div[data-id="institutions"] sup').length).toBe(2);
+			expect(slide("affiliations-3")?.querySelector('div[data-id="institutions"] h5')).toBeTruthy();
+			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
+			const marked = slide("affiliations-3")?.querySelector('div[data-id="authors"] sup');
 			expect(marked?.textContent).toBe("1,a");
-		});
-
-		it("renders intro morph ghosts on the title slide for stable auto-animate measurement", () => {
-			const deck = intro({
-				title: { full: ["A"], short: "Short" },
-				description: { full: ["D1"], short: "D short" },
-				goal: ["G1"],
-				authors: [{ name: "Alice" }],
-				affiliations: [{ mark: "1", name: "Uni" }],
-			});
-			act(() => {
-				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
-			});
-			const titleSlide = container.querySelector('.slides > section > section[title="title"]');
-			expect(titleSlide?.querySelector(".presentation-morph-stack")).toBeTruthy();
-			expect(titleSlide?.querySelector('[data-id="description"].presentation-morph-ghost')).toBeTruthy();
-			expect(titleSlide?.querySelector('[data-id="goal"].presentation-morph-ghost')).toBeTruthy();
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {
@@ -586,8 +573,8 @@ if (import.meta.vitest) {
 				title: { full: ["A", "B"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
 				goal: ["G1"],
-				authors: [{ name: "Alice" }],
-				affiliations: [{ mark: "1", name: "Uni" }],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
@@ -600,17 +587,19 @@ if (import.meta.vitest) {
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
-				authors: [{ name: "Alice" }],
-				affiliations: [{ mark: "1", name: "Uni" }],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
 			});
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const morphSections = container.querySelectorAll(".slides > section > section[data-auto-animate]");
-			expect(morphSections.length).toBe(5);
-			for (const section of morphSections) {
-				expect(section.querySelector('[data-id="title"]')).toBeTruthy();
-			}
+			expect(morphSections.length).toBe(7);
+			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
+			expect(slide("title")?.querySelector('[data-id="title"]')).toBeTruthy();
+			expect(slide("title")?.querySelector('[data-id="description"]')).toBeNull();
+			expect(slide("description")?.querySelector('[data-id="description"]')).toBeTruthy();
+			expect(slide("goal")?.querySelector('[data-id="goal"]')).toBeTruthy();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

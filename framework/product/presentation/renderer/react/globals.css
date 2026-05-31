@@ -80,62 +80,9 @@
 	text-align: center;
 }
 
-/* #region 🔖IntroMorph */
-/**
- * Intro auto-animate: fixed heading scale and a vertically centered morph stack; zero-height ghosts
- * keep every `data-id` on every slide so reveal.js measures in place (not from the deck origin).
- */
-.reveal .slides section[data-auto-animate] {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 100%;
-	box-sizing: border-box;
-}
-
-.presentation-morph-stack {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	box-sizing: border-box;
-}
-
-.presentation-morph-ghost {
-	visibility: hidden;
-	height: 0;
-	width: 100%;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	border: 0;
-}
-
-.reveal .slides section[data-auto-animate] [data-id="title"] h2,
-.reveal .slides section[data-auto-animate] [data-id="description"] h2,
-.reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
-	font-size: var(--r-intro-heading-size, var(--r-heading2-size));
-	line-height: var(--r-heading-line-height);
-}
-
 .reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
 	white-space: nowrap;
 }
-
-.reveal .slides section[data-auto-animate] [data-id] {
-	width: 100%;
-	text-align: center;
-}
-
-.reveal .slides section[data-auto-animate] [data-id] h1,
-.reveal .slides section[data-auto-animate] [data-id] h2,
-.reveal .slides section[data-auto-animate] [data-id] h4,
-.reveal .slides section[data-auto-animate] [data-id] h5 {
-	text-align: center;
-}
-/* #endregion 🔖IntroMorph */
 
 .reveal .progress span {
 	background: var(--color-primary);
