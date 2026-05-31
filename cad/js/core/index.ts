@@ -3837,7 +3837,7 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         if (points && typeof points === "object" && !Array.isArray(points)) Object.assign(bag, points as Record<string, unknown>);
         for (const k of ["commandId", "resultKind", "__context", "__event"]) delete bag[k];
         if (!ctx.kernel.executeCommandDiff) return { diff: EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
-        const { diff } = await ctx.kernel.executeCommandDiff(commandId, bag);
+        const { diff } = await ctx.kernel.executeCommandDiff(commandId, { ...bag, model: ctx.model });
         return { diff: diff ?? EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
       },
     },
