@@ -11,6 +11,8 @@
     "framework/product/platform/renderer/react",
     "framework/product/playground/core",
     "framework/product/playground/renderer/react",
+    "framework/product/presentation/core",
+    "framework/product/presentation/renderer/react",
     "puzzle/assets",
     "puzzle/2d/react",
     "puzzle/2d/play",

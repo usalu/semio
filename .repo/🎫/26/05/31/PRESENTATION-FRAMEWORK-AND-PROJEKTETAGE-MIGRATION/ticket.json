@@ -1,0 +1,10 @@
+{
+  "title": "Presentation Framework And Projektetage Migration",
+  "emoji": "📽",
+  "status": "open",
+  "description": "Build @framework/presentation/core (declarative render-independent presentation model) + @framework/presentation/renderer/react (React+reveal.js). Migrate mit-bestand/präsentation/33.projektetage to eg-ice-25 intro (5 slides) with no direct react/reveal deps.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪d22c8b9bb3fd48a0b6050838b526c8d9"
+  ]
+}

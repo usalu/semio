@@ -37,4 +37,7 @@ A transition from an arrangement into another arrangement.
 
 ## Intro
 
-Participants: title, description, action, authors, affiliations
+Participants: title, description, goal, authors, affiliations
+
+## Analogy
+
