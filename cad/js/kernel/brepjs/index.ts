@@ -1163,6 +1163,14 @@ export function transformPointsForPreviewKind(
 			origin[2] + (point[2] - origin[2]) * scale,
 		];
 	}
+	if (previewKind === "extrusion") {
+		const origin = readVec3(params.origin) ?? prevPoint ?? from;
+		if (!origin || !cursor) return identity;
+		const dir = vec3Normalize(readVec3(params.direction) ?? ([0, 0, 1] as Vec3));
+		const dist = vec3Dot(vec3Sub(cursor, origin), dir);
+		const delta: Vec3 = [dir[0] * dist, dir[1] * dist, dir[2] * dist];
+		return (point) => vec3Add(point, delta);
+	}
 	return identity;
 }
 
@@ -1844,6 +1852,61 @@ function extrudeModelWire(
 	return isOk(solid) ? (solid.value as ValidSolid) : null;
 }
 
+type SelectionPick = { readonly kind: string; readonly id: string };
+
+function selectionPicksFromParams(params: Record<string, unknown>): SelectionPick[] {
+	const raw = params.curves ?? params.targets ?? [];
+	if (!Array.isArray(raw)) return [];
+	const out: SelectionPick[] = [];
+	for (const row of raw) {
+		if (!row || typeof row !== "object") continue;
+		const kind = (row as { kind?: unknown }).kind;
+		const id = (row as { id?: unknown }).id;
+		if (typeof kind === "string" && typeof id === "string") out.push({ kind, id });
+	}
+	return out;
+}
+
+/** @emoji 🧵 Resolves wire ids from curve selection targets (`wire` or parent wire of `edge`). */
+function wireIdsFromSelectionPicks(model: Model, picks: readonly SelectionPick[]): WireRef[] {
+	const g = geom(model);
+	const out: WireRef[] = [];
+	const seen = new Set<string>();
+	for (const pick of picks) {
+		if (pick.kind === "wire") {
+			if (g.wires[pick.id] && !seen.has(pick.id)) {
+				seen.add(pick.id);
+				out.push(pick.id as WireRef);
+			}
+			continue;
+		}
+		if (pick.kind !== "edge") continue;
+		for (const wire of Object.values(g.wires)) {
+			if (!wire.edgeIds.includes(pick.id as EdgeRef) || seen.has(wire.id)) continue;
+			seen.add(wire.id);
+			out.push(wire.id);
+		}
+	}
+	return out;
+}
+
+function mergeSolidAdds(diffs: readonly ModelDiff[]): ModelDiff {
+	const added = diffs.flatMap((d) => d.solids?.added ?? []);
+	return added.length ? { solids: { added } } : {};
+}
+
+function extrusionDistanceFromParams(params: Record<string, unknown>): number {
+	if (typeof params.distance === "number" && Number.isFinite(params.distance)) return Math.abs(params.distance);
+	const origin = readVec3(params.origin) ?? readVec3(params.prevPoint) ?? ([0, 0, 0] as Vec3);
+	let end = readVec3(params.cursor) ?? origin;
+	const points = params.points;
+	if (points && typeof points === "object" && !Array.isArray(points)) {
+		end = readVec3((points as { distancePoint?: unknown }).distancePoint) ?? end;
+	}
+	const dir = vec3Normalize(readVec3(params.direction) ?? ([0, 0, 1] as Vec3));
+	return Math.abs(vec3Dot(vec3Sub(end, origin), dir));
+}
+
 /** @emoji ✅ True when `cell` references at least one face through its shell graph. */
 function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
 	return modelFaceIdsForSolid(model, cell).length > 0;
@@ -2240,6 +2303,21 @@ class BrepjsWasmEngine {
 			const model = params.model instanceof Model ? params.model : null;
 			if (faceId && model) return this.offsetFacesDiff({ faceIds: [faceId], distance: 0.01, model });
 			return { diff: {} };
+		}
+		if (commandId === "surface.extrudeCrv") {
+			const model = params.model instanceof Model ? params.model : null;
+			if (!model) return { diff: {} };
+			const distance = extrusionDistanceFromParams(params);
+			if (!(distance > 1e-9)) return { diff: {} };
+			const direction = asVec3(params.direction, [0, 0, 1]);
+			const wireIds = wireIdsFromSelectionPicks(model, selectionPicksFromParams(params));
+			if (!wireIds.length) return { diff: {} };
+			const diffs: ModelDiff[] = [];
+			for (const wireId of wireIds) {
+				const row = await this.extrudeWireDiff({ wireId, distance, direction, model });
+				if (!isEmptyModelDiff(row.diff)) diffs.push(row.diff);
+			}
+			return { diff: mergeSolidAdds(diffs) };
 		}
 
 		return { diff: {} };
@@ -2886,6 +2964,33 @@ if (import.meta.vitest) {
 			const mesh = await kernel.tessellate(solid, 1e-3, g);
 			expect(mesh.index.length).toBeGreaterThan(0);
 			expect(Object.keys(g.faces).some((id) => id.startsWith("cm-"))).toBe(false);
+		});
+
+		it("executeCommandDiff surface.extrudeCrv extrudes selected wires along direction", async () => {
+			const g = new Model();
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const e0 = "e0" as EdgeRef;
+			const w0 = "w0" as WireRef;
+			applyModelDiff(g, {
+				vertices: {
+					added: [
+						{ id: v0, position: [0, 0, 0] },
+						{ id: v1, position: [1, 0, 0] },
+					],
+				},
+				edges: { added: [{ id: e0, vertexIds: [v0, v1] }] },
+				wires: { added: [{ id: w0, edgeIds: [e0] }] },
+			});
+			const res = await kernel.executeCommandDiff("surface.extrudeCrv", {
+				model: g,
+				curves: [{ kind: "wire", id: w0 }],
+				direction: [0, 0, 1],
+				distance: 1.5,
+				origin: [0, 0, 0],
+				cursor: [0, 0, 1.5],
+			});
+			expect(res.diff.solids?.added?.length).toBe(1);
 		});
 
 		it("syncSolidsFromModel follows sheared box shell (not axis-aligned primitive proxy)", async () => {

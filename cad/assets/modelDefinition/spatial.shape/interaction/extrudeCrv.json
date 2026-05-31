@@ -3,23 +3,117 @@
   "id": "surface.extrudeCrv",
   "version": "1.0.0",
   "label": "ExtrudeCrv",
+  "requires": {
+    "kernel": {
+      "operations": [
+        "wire.extrudeToSolid",
+        "entity.tessellate"
+      ]
+    }
+  },
+  "guards": [
+    {
+      "name": "selectionHasCurves",
+      "expr": {
+        "kind": "exists",
+        "target": {
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "curves"
+            },
+            {
+              "kind": "index",
+              "index": 0
+            },
+            {
+              "kind": "field",
+              "name": "id"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "hasExtrusionReady",
+      "expr": {
+        "kind": "all",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "curves"
+                },
+                {
+                  "kind": "index",
+                  "index": 0
+                },
+                {
+                  "kind": "field",
+                  "name": "id"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "distance"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "binop",
+            "op": ">",
+            "left": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "distance"
+                }
+              ]
+            },
+            "right": {
+              "kind": "const",
+              "value": 0
+            }
+          }
+        ]
+      }
+    }
+  ],
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [
       "idle",
       "select_curves_to_extrude",
+      "extrusion_distance",
       "committed"
     ],
     "groundPointerMoveStates": [
-      "extrusion_distance"
+      "pick_direction"
     ],
     "heightDragStates": [],
-    "verticalRodStates": [],
+    "verticalRodStates": [
+      "extrusion_distance"
+    ],
     "heightConfirmState": null,
     "lengthEntry": [
       {
         "state": "extrusion_distance",
-        "anchor": "prevPoint",
+        "anchor": "origin",
         "field": "cursor"
       }
     ]
@@ -143,19 +237,96 @@
             "event": "confirm",
             "transitions": [
               {
-                "target": "committed",
+                "target": "extrusion_distance",
+                "guard": "selectionHasCurves",
                 "key": "Enter",
-                "label": "Finish"
-              }
-            ]
-          },
-          {
-            "event": "contextmenu",
-            "transitions": [
-              {
-                "target": "committed",
-                "key": "RightClick",
-                "label": "Finish"
+                "label": "Set distance",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.selectionBboxCenter",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "origin"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "context",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "curves"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "prevPoint"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "origin"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "direction"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        1
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "origin"
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -225,6 +396,10 @@
                         ]
                       }
                     }
+                  },
+                  {
+                    "op": "action",
+                    "action": "command.assignExtrusionDistance"
                   }
                 ]
               }
@@ -261,6 +436,57 @@
                     }
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "pick_direction",
+                "key": "d",
+                "label": "Direction"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pick_direction",
+        "on": [
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "extrusion_distance",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.assignDirectionFromPoint",
+                    "params": {
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "extrusion_distance",
+                "key": "x",
+                "label": "Cancel"
               }
             ]
           }
@@ -348,7 +574,7 @@
             "kind": "label",
             "id": "extrusion_distance-prompt",
             "role": "prompt",
-            "text": "Extrusion distance",
+            "text": "Extrusion distance (Z default, d = direction)",
             "position": {
               "kind": "const",
               "value": [
@@ -400,7 +626,27 @@
                 "segments": [
                   {
                     "kind": "field",
-                    "name": "targets"
+                    "name": "curves"
+                  }
+                ]
+              },
+              "direction": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "direction"
+                  }
+                ]
+              },
+              "origin": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "origin"
                   }
                 ]
               }
@@ -431,7 +677,7 @@
               "segments": [
                 {
                   "kind": "field",
-                  "name": "prevPoint"
+                  "name": "origin"
                 }
               ]
             },
@@ -447,12 +693,32 @@
             }
           }
         ]
+      },
+      {
+        "state": "pick_direction",
+        "items": [
+          {
+            "kind": "label",
+            "id": "pick_direction-prompt",
+            "role": "prompt",
+            "text": "Pick extrusion direction",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          }
+        ]
       }
     ]
   },
   "commit": {
+    "when": "hasExtrusionReady",
     "fromStates": [
-      "ready"
+      "committed"
     ],
     "operation": {
       "kind": "action",

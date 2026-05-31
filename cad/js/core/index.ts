@@ -1215,9 +1215,90 @@ function normalizeSpatialObjectRecord(row: SpatialObjectRecord | Record<string, 
   return {
     id: String(row.id) as ObjectRef,
     typology: String(row.typology ?? "spatial.shape.object") as TypologyRef,
-    primitives: normalizeSpatialObjectPrimitives(row.primitives),
+    primitives: Array.isArray(row.primitives) ? {} : normalizeSpatialObjectPrimitives(row.primitives),
     ...(row.attributes && typeof row.attributes === "object" ? { attributes: row.attributes as Readonly<Record<string, unknown>> } : {}),
   };
+}
+
+function readVec3FromUnknown(value: unknown): Vec3 | null {
+  if (!Array.isArray(value) || value.length < 3) return null;
+  const x = Number(value[0]);
+  const y = Number(value[1]);
+  const z = Number(value[2]);
+  if (![x, y, z].every((n) => Number.isFinite(n))) return null;
+  return [x, y, z];
+}
+
+/** @emoji 🧱 Promotes inline `objects[].primitives[]` rows into kernel geometry tables and slot refs. */
+export function materializeInlineObjectPrimitives(model: Model, rawObjects: readonly unknown[] = []): void {
+  let changed = false;
+  const rawById = new Map<string, Record<string, unknown>>();
+  for (const entry of rawObjects) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    if (typeof row.id === "string") rawById.set(row.id, row);
+  }
+  for (const [objectId, object] of Object.entries(model.objects)) {
+    const raw = rawById.get(objectId)?.primitives;
+    if (!Array.isArray(raw)) continue;
+    const slots: Record<string, string> = {};
+    for (const entry of raw) {
+      if (!entry || typeof entry !== "object") continue;
+      const row = entry as Record<string, unknown>;
+      const kind = typeof row.kind === "string" ? row.kind : "";
+      const id = typeof row.id === "string" ? row.id : "";
+      if (!kind || !id) continue;
+      const slot = typeof row.slot === "string" && row.slot.length > 0 ? row.slot : kind;
+      slots[slot] = id;
+      if (kind === "vertex") {
+        const position = readVec3FromUnknown(row.position);
+        if (position) {
+          model.vertices[id as VertexRef] = { id: id as VertexRef, position };
+          changed = true;
+        }
+        continue;
+      }
+      if (kind === "edge" && Array.isArray(row.vertexIds) && row.vertexIds.length >= 2) {
+        model.edges[id as EdgeRef] = {
+          id: id as EdgeRef,
+          vertexIds: [String(row.vertexIds[0]), String(row.vertexIds[1])] as [VertexRef, VertexRef],
+          ...(row.curve && typeof row.curve === "object" ? { curve: row.curve as EdgeCurve } : {}),
+        };
+        changed = true;
+        continue;
+      }
+      if (kind === "wire" && Array.isArray(row.edgeIds)) {
+        model.wires[id as WireRef] = { id: id as WireRef, edgeIds: row.edgeIds.map(String) as EdgeRef[] };
+        changed = true;
+        continue;
+      }
+      if (kind === "face" && Array.isArray(row.wireIds)) {
+        model.faces[id as FaceRef] = {
+          id: id as FaceRef,
+          wireIds: row.wireIds.map(String) as WireRef[],
+          ...(row.surface && typeof row.surface === "object" ? { surface: row.surface as FaceSurface } : {}),
+        };
+        changed = true;
+        continue;
+      }
+      if (kind === "shell" && Array.isArray(row.faceIds)) {
+        model.shells[id as ShellRef] = { id: id as ShellRef, faceIds: row.faceIds.map(String) as FaceRef[] };
+        changed = true;
+        continue;
+      }
+      if (kind === "solid") {
+        model.solids[id as SolidRef] = {
+          id: id as SolidRef,
+          shellIds: Array.isArray(row.shellIds) ? (row.shellIds.map(String) as ShellRef[]) : [],
+          ...(row.solid && typeof row.solid === "object" ? { solid: row.solid as SolidPrimitive } : {}),
+        };
+        changed = true;
+      }
+    }
+    model.objects[objectId] = { ...object, primitives: normalizeSpatialObjectPrimitives(slots) };
+    changed = true;
+  }
+  if (changed) model.bump();
 }
 
 export function objectPrimitiveEntries(object: SpatialObjectRecord): readonly (readonly [string, string])[] {
@@ -1269,7 +1350,8 @@ export class Model {
   static fromJSON(j: ModelJson): Model {
     const g = new Model();
     g.revision = j.revision;
-    g.objects = recordsById((j.objects ?? []).map((row) => normalizeSpatialObjectRecord(row as SpatialObjectRecord | Record<string, unknown>)));
+    const rawObjects = j.objects ?? [];
+    g.objects = recordsById(rawObjects.map((row) => normalizeSpatialObjectRecord(row as SpatialObjectRecord | Record<string, unknown>)));
     const geo = j.geometry ?? (j as unknown as KernelGeometryJson);
     g.anchors = recordsById(geo.anchors ?? []);
     g.vertices = recordsById(geo.vertices ?? []);
@@ -1279,6 +1361,7 @@ export class Model {
     g.shells = recordsById(geo.shells ?? []);
     g.solids = recordsById(geo.solids ?? []);
     if (j.metadata?.length) g.metadata.loadSnapshot(j.metadata, false);
+    materializeInlineObjectPrimitives(g, rawObjects);
     return g;
   }
 
@@ -3676,6 +3759,33 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
       },
     },
     {
+      id: "command.assignExtrusionDistance",
+      run: (params) => {
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const origin = vec3Param(bag, "origin", vec3Param(bag, "prevPoint", [0, 0, 0]));
+        const cursor = vec3Param(bag, "cursor", origin);
+        const direction = vec3Param(bag, "direction", [0, 0, 1]);
+        const len = Math.hypot(direction[0], direction[1], direction[2]) || 1;
+        const dir: Vec3 = [direction[0] / len, direction[1] / len, direction[2] / len];
+        const delta = [cursor[0] - origin[0], cursor[1] - origin[1], cursor[2] - origin[2]] as Vec3;
+        const distance = Math.abs(delta[0] * dir[0] + delta[1] * dir[1] + delta[2] * dir[2]);
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { distance } }, data: distance };
+      },
+    },
+    {
+      id: "command.assignDirectionFromPoint",
+      run: (params) => {
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const event = params.__event as InteractionEvent | undefined;
+        const origin = vec3Param(bag, "origin", vec3Param(bag, "prevPoint", [0, 0, 0]));
+        const point = vec3Param(params, "point", event?.point ?? origin);
+        const delta = [point[0] - origin[0], point[1] - origin[1], point[2] - origin[2]] as Vec3;
+        const len = Math.hypot(delta[0], delta[1], delta[2]);
+        const direction: Vec3 = len > 1e-9 ? [delta[0] / len, delta[1] / len, delta[2] / len] : [0, 0, 1];
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { direction } }, data: direction };
+      },
+    },
+    {
       id: "command.addSelection",
       run: (params) => {
         const field = String(params.field ?? "targets");
@@ -5679,7 +5789,9 @@ export class InteractionRuntime {
     if (advanceToFinalState && isFinalInteractionState(this.spec, st)) {
       return fail("interaction.alreadyCommitted", "Interaction already finalized.");
     }
-    if (advanceToFinalState && !this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
+    if (!this.canCommitFromState(st)) {
+      return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
+    }
     const ctx = this.sm.getContext();
     const op = this.spec.commit.operation;
     const env: ExprEnv = { context: ctx, preview: this.previewKernel() };
@@ -6310,6 +6422,13 @@ if (import.meta.vitest) {
   });
 
   describe("@cad/js/core model json", () => {
+    it("materializeInlineObjectPrimitives promotes play fixture wires into model geometry", () => {
+      const space = ModelSpace.fromJSON(geometryRoutesFixtureJson as ModelSpaceJson);
+      const model = space.models["spatial.shape"]!;
+      expect(model.wires["stub-wire"]?.edgeIds.length).toBeGreaterThan(0);
+      expect(model.objects["object-wire-stub-wire"]?.primitives.wire).toBe("stub-wire");
+    });
+
     it("parseModelJson fills missing entity arrays with empty lists", () => {
       const model = parseModelJson({
         schema: "spatial.model/v1",
@@ -8057,6 +8176,10 @@ if (import.meta.vitest) {
     const modelFromFixture = (kind: InteractionE2EFixtureKind): Model => {
       if (kind === "empty") return new Model();
       const raw = kind === "loom" ? geometryLoomFixtureJson : kind === "routes" ? geometryRoutesFixtureJson : smallBuildingModelFixtureJson;
+      if (raw && typeof raw === "object" && (raw as ModelSpaceJson).schema === "spatial.modelspace/v1") {
+        const space = ModelSpace.fromJSON(raw as ModelSpaceJson);
+        return space.models["spatial.shape"] ?? space.models[Object.keys(space.models)[0]!] ?? new Model();
+      }
       return parseModelJson(raw) ?? new Model();
     };
 
@@ -8456,6 +8579,10 @@ if (import.meta.vitest) {
           { kind: "confirm", modifiers: MOD },
           { kind: "set.distance", value: 0.8, modifiers: MOD },
         ],
+        assert: ({ after, model }) => {
+          expect(after.solids).toBeGreaterThanOrEqual(1);
+          expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId()).length).toBeGreaterThanOrEqual(1);
+        },
       },
       {
         id: "solid.booleanUnion",

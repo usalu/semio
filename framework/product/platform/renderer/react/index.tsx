@@ -881,14 +881,18 @@ const UISearch: React.FC<{
   );
 
   return (
-    <CommandDialog title="Search" description="Search for items..." open={open} onOpenChange={onOpenChange}>
+    <CommandDialog title="Search" description="Search for items..." open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>{emptyMessage}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (
-              <CommandItem key={`${result.item.id}-${idx}`} onSelect={() => handleSelect(result.item)}>
+              <CommandItem
+                key={`${result.item.id}-${idx}`}
+                value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()}
+                onSelect={() => handleSelect(result.item)}
+              >
                 <div className="flex items-center gap-single">
                   {result.item.icon}
                   <div className="flex flex-col">
@@ -1042,14 +1046,18 @@ const UIFind: React.FC<{
   if (!findContext || findItems.length === 0) return null;
 
   return (
-    <CommandDialog title="Find" description="Find items in this app..." open={open} onOpenChange={onOpenChange}>
+    <CommandDialog title="Find" description="Find items in this app..." open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>{emptyMessage}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (
-              <CommandItem key={`${result.item.id}-${idx}`} onSelect={() => handleSelect(result.item)}>
+              <CommandItem
+                key={`${result.item.id}-${idx}`}
+                value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()}
+                onSelect={() => handleSelect(result.item)}
+              >
                 <div className="flex flex-col">
                   <span>{result.item.label}</span>
                   {result.item.description && <span className="text-xs text-muted-foreground">{result.item.description}</span>}

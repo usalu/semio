@@ -4066,8 +4066,8 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await openSketchpadCommandPalette(page);
 			const searchInput = page.locator("#ui\\.search\\.input");
 			await searchInput.fill("fixture");
-			await expect(page.getByRole("option", { name: /Open metabolism fixture/i })).toBeVisible({ timeout: 30_000 });
-			await expect(page.getByRole("option", { name: /Open Nakagin filtered fixture/i })).toBeVisible({ timeout: 30_000 });
+			await expect(page.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
+			await expect(page.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
 		});
 	});
 }

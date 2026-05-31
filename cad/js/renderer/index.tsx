@@ -3008,7 +3008,7 @@ export function InteractionSpatialView({
   const autoFitSources = reactHostPort.useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
   const ctx = snapshot.context;
   const geometryPreviewTransform = reactHostPort.useMemo(() => geometryPreviewTransformFromDisplay(displayModel ?? snapshot.display), [displayModel, snapshot.display]);
-  const origin = vec3FromSnapshotContext(ctx, "origin") ?? vec3FromSnapshotContext(ctx, "pointA");
+  const origin = vec3FromSnapshotContext(ctx, "origin") ?? vec3FromSnapshotContext(ctx, "prevPoint") ?? vec3FromSnapshotContext(ctx, "pointA");
   const corner = vec3FromSnapshotContext(ctx, "corner") ?? vec3FromSnapshotContext(ctx, "pointB");
   const si = snapshot.spatialInteraction;
   const groundMoveOn = si.spatialGroundPick && si.groundPointerMoveStates.includes(snapshot.state) && Boolean(onScenePointerMove);

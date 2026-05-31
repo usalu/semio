@@ -11,6 +11,6 @@
     "surface.extrudeCrv"
   ],
   "primitiveKinds": [
-    "face"
+    "solid"
   ]
 }

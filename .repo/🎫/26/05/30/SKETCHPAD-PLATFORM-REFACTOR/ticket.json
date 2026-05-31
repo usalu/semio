@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
-  "summary": "Fixed Playwright: pw-loader uses module.register + --no-strip-types + esbuild for workspace TS; playwright uses vite dev + SEMIO_SKETCHPAD_E2E skips auto-seed. Fixed blank app: LevelProvider/getLevelBgClass imported in PlatformShell. Vite strips vitest/e2e from browser bundle; puzzle/2d uses import.meta.env.VITEST; removed node builtins from rollup external. Playwright 3/3; sketchpad vitest 42/42; platform 17/17; vite build OK.",
+  "summary": "Fixed infinite Platform.onNavigate recursion: PlatformViewWithHistory handleNavigate only updates useUIHistory (removed self-call on platform.onNavigate). Dev Nakagin seed no longer blows stack. Tests: platform 18/18, sketchpad 43/43, playwright 3/3.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪cf127c05a58a49ee9af34eb7e31c47a5",
@@ -33,6 +33,7 @@
     "⚪7619e7f023ca4ce790f014bf2e6e0e9c",
     "⚪0147bdac0a3942c487a5840815bedc83",
     "⚪2686a158df4541ad91ac27ec101b8a06",
-    "⚪5dc2274c969f4ef2a011a3eb3df66517"
+    "⚪5dc2274c969f4ef2a011a3eb3df66517",
+    "⚪79b9a9fd73fa4ee089de77f719eb0ebb"
   ]
 }
