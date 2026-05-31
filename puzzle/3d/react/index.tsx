@@ -24,8 +24,6 @@ const {
   BoxGeometry,
   BufferGeometry,
   Color,
-  DepthFormat,
-  DepthTexture,
   EdgesGeometry,
   Euler,
   Float32BufferAttribute,
@@ -37,24 +35,15 @@ const {
   Matrix4,
   Mesh,
   MeshStandardMaterial,
-  NearestFilter,
-  OrthographicCamera,
   Plane,
-  PlaneGeometry,
   Points,
   PointsMaterial,
   Quaternion,
   Raycaster,
-  RGBAFormat,
-  Scene: ThreeScene,
-  ShaderMaterial,
   Line: ThreeLine,
   PerspectiveCamera: ThreePerspectiveCamera,
-  UnsignedByteType,
-  UnsignedIntType,
   Vector2,
   Vector3,
-  WebGLRenderTarget,
 } = sceneHostPort.three;
 type Camera = import("three").Camera;
 type Object3D = import("three").Object3D;
@@ -2495,7 +2484,6 @@ export interface RegistryValue {
   unregisterVortexBinding(fullId: string): void;
   registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
   collectObjectGroups(): readonly Group[];
-  collectVortexTargets(): VortexScreenTarget[];
   getObjectGroup(id: string): Group | null;
   getObjectKind(id: string): string | undefined;
   kindCatalogs: KindCatalogBundle | undefined;
@@ -2645,24 +2633,6 @@ function SelectionInvalidateBridge(): null {
   return null;
 }
 
-/** @emoji 🌀 Screen-space pick descriptor for a vortex: world center, world radius, owning object. */
-interface VortexScreenTarget {
-  readonly fullId: string;
-  readonly world: Vector3;
-  readonly radiusWorld: number;
-  readonly objectId: string;
-}
-
-/** @emoji 👁️ True when an object and its whole parent chain are visible (so toggled-off vortices are not pickable). */
-function objectChainVisible(obj: Object3D): boolean {
-  let node: Object3D | null = obj;
-  while (node) {
-    if (node.visible === false) return false;
-    node = node.parent;
-  }
-  return true;
-}
-
 /** @emoji 🎯 True when a raycast hit belongs to a selectable scene object or vortex mesh. */
 function raycastHitTargetsPick(hitObject: Object3D): boolean {
   let node: Object3D | null = hitObject;
@@ -2708,220 +2678,6 @@ function SelectionMissBridge(): null {
   return null;
 }
 
-//#region 🔖SceneDepthCapture
-/** @emoji 🌊 O(1) scene depth at a screen pixel for vortex occlusion (GPU readback, no mesh raycast). */
-interface SceneDepthSampler {
-  sampleDepthDistance(clientX: number, clientY: number): number | null;
-}
-
-const SceneDepthContext = reactHostPort.createContext<SceneDepthSampler | null>(null);
-
-/** @emoji 🌊 {@link SceneDepthSampler} from {@link SceneDepthCapture} (must render inside the capture provider). */
-function useSceneDepth(): SceneDepthSampler {
-  const sampler = reactHostPort.useContext(SceneDepthContext);
-  if (!sampler) throw new Error("useSceneDepth requires SceneDepthCapture");
-  return sampler;
-}
-
-/** @emoji 📦 Unpacks RGBA bytes written by three `packDepthToRGBA` into normalized depth [0,1]. */
-function unpackRGBAToDepth01(pixel: Uint8Array): number {
-  const r = pixel[0]! / 255;
-  const g = pixel[1]! / 255;
-  const b = pixel[2]! / 255;
-  const a = pixel[3]! / 255;
-  return r + g / 255 + b / 65025 + a / 16581375;
-}
-
-/** @emoji 📏 Converts a perspective depth buffer value to positive eye-space distance. */
-function depth01ToEyeDistance(depth01: number, near: number, far: number): number {
-  const viewZ = (near * far) / ((far - near) * depth01 - far);
-  return Math.abs(viewZ);
-}
-
-const SCENE_DEPTH_BLIT_VERT = /* glsl */ `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
-}
-`;
-
-const SCENE_DEPTH_BLIT_FRAG = /* glsl */ `
-uniform sampler2D tDiffuse;
-varying vec2 vUv;
-void main() {
-  gl_FragColor = texture2D(tDiffuse, vUv);
-}
-`;
-
-const SCENE_DEPTH_SAMPLE_FRAG = /* glsl */ `
-#include <packing>
-uniform sampler2D tDepth;
-uniform vec2 uUv;
-void main() {
-  float depth = texture2D(tDepth, uUv).x;
-  gl_FragColor = packDepthToRGBA(depth);
-}
-`;
-
-/**
- * 🌊 Renders the scene to an offscreen target (preserving MSAA) and exposes {@link SceneDepthSampler}
- * for O(1) cursor-depth reads used by {@link VortexScreenPick} occlusion.
- */
-function SceneDepthCapture(props: { readonly children: ReactNode }): React.ReactElement {
-  const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
-  const size = useThree((s) => s.size);
-
-  const colorTargetRef = reactHostPort.useRef<WebGLRenderTarget | null>(null);
-  const readTargetRef = reactHostPort.useRef<WebGLRenderTarget | null>(null);
-  const depthTextureRef = reactHostPort.useRef<DepthTexture | null>(null);
-  const blitSceneRef = reactHostPort.useRef<ThreeScene | null>(null);
-  const blitCamRef = reactHostPort.useRef<OrthographicCamera | null>(null);
-  const blitMatRef = reactHostPort.useRef<ShaderMaterial | null>(null);
-  const depthSampleSceneRef = reactHostPort.useRef<ThreeScene | null>(null);
-  const depthSampleCamRef = reactHostPort.useRef<OrthographicCamera | null>(null);
-  const depthSampleMatRef = reactHostPort.useRef<ShaderMaterial | null>(null);
-  const readPixelRef = reactHostPort.useRef(new Uint8Array(4));
-  const sampleUvRef = reactHostPort.useRef(new Vector2());
-  const cameraRef = reactHostPort.useRef(camera);
-  cameraRef.current = camera;
-
-  const samplerRef = reactHostPort.useRef<SceneDepthSampler>({
-    sampleDepthDistance: () => null,
-  });
-
-  reactHostPort.useEffect(() => {
-    const w = Math.max(1, Math.floor(size.width));
-    const h = Math.max(1, Math.floor(size.height));
-
-    const depthTexture = new DepthTexture(w, h);
-    depthTexture.format = DepthFormat;
-    depthTexture.type = UnsignedIntType;
-
-    const colorTarget = new WebGLRenderTarget(w, h, { samples: 4 });
-    colorTarget.depthTexture = depthTexture;
-
-    const readTarget = new WebGLRenderTarget(1, 1, {
-      format: RGBAFormat,
-      type: UnsignedByteType,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      depthBuffer: false,
-      stencilBuffer: false,
-    });
-
-    const blitScene = new ThreeScene();
-    const blitCam = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const blitMat = new ShaderMaterial({
-      uniforms: { tDiffuse: { value: colorTarget.texture } },
-      vertexShader: SCENE_DEPTH_BLIT_VERT,
-      fragmentShader: SCENE_DEPTH_BLIT_FRAG,
-      depthTest: false,
-      depthWrite: false,
-    });
-    blitScene.add(new Mesh(new PlaneGeometry(2, 2), blitMat));
-
-    const depthSampleScene = new ThreeScene();
-    const depthSampleCam = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const depthSampleMat = new ShaderMaterial({
-      uniforms: {
-        tDepth: { value: depthTexture },
-        uUv: { value: sampleUvRef.current },
-      },
-      vertexShader: SCENE_DEPTH_BLIT_VERT,
-      fragmentShader: SCENE_DEPTH_SAMPLE_FRAG,
-      depthTest: false,
-      depthWrite: false,
-    });
-    depthSampleScene.add(new Mesh(new PlaneGeometry(2, 2), depthSampleMat));
-
-    colorTargetRef.current = colorTarget;
-    readTargetRef.current = readTarget;
-    depthTextureRef.current = depthTexture;
-    blitSceneRef.current = blitScene;
-    blitCamRef.current = blitCam;
-    blitMatRef.current = blitMat;
-    depthSampleSceneRef.current = depthSampleScene;
-    depthSampleCamRef.current = depthSampleCam;
-    depthSampleMatRef.current = depthSampleMat;
-
-    samplerRef.current.sampleDepthDistance = (clientX: number, clientY: number): number | null => {
-      const dom = gl.domElement;
-      const rect = dom.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return null;
-      const u = (clientX - rect.left) / rect.width;
-      const v = 1 - (clientY - rect.top) / rect.height;
-      if (u < 0 || u > 1 || v < 0 || v > 1) return null;
-
-      const cam = cameraRef.current;
-      if (!(cam instanceof ThreePerspectiveCamera)) return null;
-
-      sampleUvRef.current.set(u, v);
-      depthSampleMat.uniforms.tDepth!.value = depthTexture;
-      depthSampleMat.uniforms.uUv!.value = sampleUvRef.current;
-
-      const prevTarget = gl.getRenderTarget();
-      gl.setRenderTarget(readTarget);
-      gl.render(depthSampleScene, depthSampleCam);
-      gl.readRenderTargetPixels(readTarget, 0, 0, 1, 1, readPixelRef.current);
-      gl.setRenderTarget(prevTarget);
-
-      const depth01 = unpackRGBAToDepth01(readPixelRef.current);
-      if (depth01 >= 1) return Infinity;
-      return depth01ToEyeDistance(depth01, cam.near, cam.far);
-    };
-
-    return () => {
-      colorTarget.dispose();
-      readTarget.dispose();
-      depthTexture.dispose();
-      blitMat.dispose();
-      blitScene.children[0]?.traverse((obj) => {
-        if (obj instanceof Mesh) {
-          obj.geometry.dispose();
-        }
-      });
-      depthSampleMat.dispose();
-      depthSampleScene.children[0]?.traverse((obj) => {
-        if (obj instanceof Mesh) {
-          obj.geometry.dispose();
-        }
-      });
-      colorTargetRef.current = null;
-      readTargetRef.current = null;
-      depthTextureRef.current = null;
-      blitSceneRef.current = null;
-      blitCamRef.current = null;
-      blitMatRef.current = null;
-      depthSampleSceneRef.current = null;
-      depthSampleCamRef.current = null;
-      depthSampleMatRef.current = null;
-      samplerRef.current.sampleDepthDistance = () => null;
-    };
-  }, [gl, size.width, size.height]);
-
-  useFrame(() => {
-    const colorTarget = colorTargetRef.current;
-    const blitScene = blitSceneRef.current;
-    const blitCam = blitCamRef.current;
-    const blitMat = blitMatRef.current;
-    if (!colorTarget || !blitScene || !blitCam || !blitMat) return;
-
-    gl.setRenderTarget(colorTarget);
-    gl.clear();
-    gl.render(scene, camera);
-
-    blitMat.uniforms.tDiffuse!.value = colorTarget.texture;
-    gl.setRenderTarget(null);
-    gl.render(blitScene, blitCam);
-  }, 1);
-
-  return <SceneDepthContext.Provider value={samplerRef.current}>{props.children}</SceneDepthContext.Provider>;
-}
-//#endregion
-
 //#region 🔖VortexScreenPick
 /** @emoji 🌀 Screen-space pixel radius around a vortex center that counts as a hover/click on that vortex. */
 const VORTEX_SCREEN_PICK_RADIUS_PX = 18;
@@ -2959,161 +2715,6 @@ function pickNearestScreenVortex(args: {
   for (const { c } of within) {
     if (c.dist <= args.surfaceDist + depthTolerance) return c;
   }
-  return null;
-}
-
-/** @emoji 🌀 Projects vortices near the cursor and picks the nearest unoccluded one via {@link SceneDepthSampler}. */
-function screenPickVortexAt(args: {
-  readonly dom: HTMLElement;
-  readonly clientX: number;
-  readonly clientY: number;
-  readonly projected: Vector3;
-  readonly collectVortexTargets: () => readonly VortexScreenTarget[];
-  readonly blockedVortexFullIds: ReadonlySet<string>;
-  readonly camera: Camera;
-  readonly sceneDepth: SceneDepthSampler;
-}): ScreenVortexCandidate | null {
-  const rect = args.dom.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return null;
-  const cursorX = args.clientX - rect.left;
-  const cursorY = args.clientY - rect.top;
-  const camPos = (args.camera as unknown as { position: Vector3 }).position;
-  const candidates: ScreenVortexCandidate[] = [];
-  for (const target of args.collectVortexTargets()) {
-    if (args.blockedVortexFullIds.has(target.fullId)) continue;
-    args.projected.copy(target.world).project(args.camera as never);
-    if (args.projected.z > 1) continue;
-    const sx = ((args.projected.x + 1) / 2) * rect.width;
-    const sy = ((1 - args.projected.y) / 2) * rect.height;
-    if (Math.hypot(sx - cursorX, sy - cursorY) > VORTEX_SCREEN_PICK_RADIUS_PX) continue;
-    candidates.push({ fullId: target.fullId, objectId: target.objectId, sx, sy, dist: camPos.distanceTo(target.world) });
-  }
-  if (candidates.length === 0) return null;
-  const surfaceDist = args.sceneDepth.sampleDepthDistance(args.clientX, args.clientY) ?? Infinity;
-  return pickNearestScreenVortex({ cursorX, cursorY, surfaceDist, candidates });
-}
-
-/**
- * 🌀 Centralized screen-space hover/selection for vortices.
- *
- * Vortex markers sit on/inside dense object meshes, so the depth raycaster always hits the
- * object first and never the vortex. This bridge projects every visible vortex to screen space
- * and, when the pointer is within {@link VORTEX_SCREEN_PICK_RADIUS_PX} of a vortex that is not
- * occluded by foreground geometry (within {@link VORTEX_PICK_DEPTH_TOLERANCE}), hovers/selects
- * that vortex and suppresses the object pick underneath.
- */
-function VortexScreenPick(): null {
-  const gl = useThree((s) => s.gl);
-  const camera = useThree((s) => s.camera);
-  const invalidate = useThree((s) => s.invalidate);
-  const sceneDepth = useSceneDepth();
-  const { collectVortexTargets, blockedVortexFullIds } = useRegistryCore();
-  const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const { setHover } = useRegistryHover();
-
-  const stateRef = reactHostPort.useRef({
-    collectVortexTargets,
-    blockedVortexFullIds,
-    commitSelection,
-    setActiveRelocateObjectId,
-    setHover,
-    invalidate,
-    camera,
-    sceneDepth,
-  });
-  stateRef.current.collectVortexTargets = collectVortexTargets;
-  stateRef.current.blockedVortexFullIds = blockedVortexFullIds;
-  stateRef.current.commitSelection = commitSelection;
-  stateRef.current.setActiveRelocateObjectId = setActiveRelocateObjectId;
-  stateRef.current.setHover = setHover;
-  stateRef.current.invalidate = invalidate;
-  stateRef.current.camera = camera;
-  stateRef.current.sceneDepth = sceneDepth;
-
-  const pendingPickRef = reactHostPort.useRef<{ readonly x: number; readonly y: number } | null>(null);
-  const buttonsDownRef = reactHostPort.useRef(false);
-
-  reactHostPort.useEffect(() => {
-    const dom = gl.domElement;
-    const projected = new Vector3();
-
-    const onPointerMove = (e: PointerEvent) => {
-      pendingPickRef.current = { x: e.clientX, y: e.clientY };
-      stateRef.current.invalidate();
-    };
-
-    const onPointerDown = () => {
-      buttonsDownRef.current = true;
-      pendingPickRef.current = null;
-    };
-
-    const onPointerUp = () => {
-      buttonsDownRef.current = false;
-    };
-
-    const onPointerCancel = () => {
-      buttonsDownRef.current = false;
-    };
-
-    const onClickCapture = (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      const st = stateRef.current;
-      const hit = screenPickVortexAt({
-        dom,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        projected,
-        collectVortexTargets: st.collectVortexTargets,
-        blockedVortexFullIds: st.blockedVortexFullIds,
-        camera: st.camera,
-        sceneDepth: st.sceneDepth,
-      });
-      if (!hit) return;
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      st.commitSelection({ kind: "vortex", fullId: hit.fullId });
-      st.setActiveRelocateObjectId(hit.objectId);
-      st.invalidate();
-    };
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerCancel);
-    dom.addEventListener("click", onClickCapture, true);
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerCancel);
-      dom.removeEventListener("click", onClickCapture, true);
-    };
-  }, [gl, sceneDepth]);
-
-  const projectedRef = reactHostPort.useRef(new Vector3());
-
-  useFrame(() => {
-    if (buttonsDownRef.current) return;
-    const pending = pendingPickRef.current;
-    if (!pending) return;
-    pendingPickRef.current = null;
-    const st = stateRef.current;
-    const hit = screenPickVortexAt({
-      dom: gl.domElement,
-      clientX: pending.x,
-      clientY: pending.y,
-      projected: projectedRef.current,
-      collectVortexTargets: st.collectVortexTargets,
-      blockedVortexFullIds: st.blockedVortexFullIds,
-      camera: st.camera,
-      sceneDepth: st.sceneDepth,
-    });
-    if (hit) {
-      st.setHover({ kind: "vortex", fullId: hit.fullId });
-      st.invalidate();
-    }
-  }, 2);
-
   return null;
 }
 //#endregion
@@ -3719,6 +3320,21 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 //#region ­ƒîÇVortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
+//#region 🔖VortexPickPriority
+/** @emoji 🎯 World-space depth bias (units) so a vortex pick wins over the object surface it sits on, without hijacking clicks on distant geometry. */
+const VORTEX_PICK_DEPTH_BIAS = 1.5;
+
+/** @emoji 🎯 Mesh raycast biasing vortex hits closer so occluding object meshes do not swallow vortex hover/selection ({@link VORTEX_PICK_DEPTH_BIAS}). */
+function vortexPickRaycast(this: import("three").Mesh, raycaster: Raycaster, intersects: import("three").Intersection[]): void {
+  const local: import("three").Intersection[] = [];
+  Mesh.prototype.raycast.call(this, raycaster, local);
+  for (const hit of local) {
+    hit.distance = Math.max(hit.distance - VORTEX_PICK_DEPTH_BIAS, hit.distance * 0.01);
+    intersects.push(hit);
+  }
+}
+//#endregion
+
 function VortexMeshGltf(props: { meshUrl: string; fullId: string; radius: number; style: MeshStyleKind; onPointerOver?: (e: ThreeEvent<PointerEvent>) => void; onPointerOut?: (e: ThreeEvent<PointerEvent>) => void }) {
   const scale = (props.radius / 0.35) * 0.9;
   const { onPointerOver, onPointerOut, ...meshProps } = props;
@@ -3870,6 +3486,16 @@ export const Vortex = reactHostPort.memo(function Vortex(
     setActiveRelocateObjectId(props.objectId);
   }, [commitSelection, fullId, props.objectId, reg, setActiveRelocateObjectId]);
 
+  const onVortexClick = reactHostPort.useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      if (e.nativeEvent.button !== 0) {
+        return;
+      }
+      e.stopPropagation();
+    },
+    [],
+  );
+
   const onPointerDown = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       const pe = e.nativeEvent;
@@ -3948,7 +3574,6 @@ export const Vortex = reactHostPort.memo(function Vortex(
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
   const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
-  const pickProxy = (drawVortexBody ? false : trackVortexLod ? lodVisual.pickProxy : lodVortexPickProxy(lodCtx.lod)) && !linger;
   const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
@@ -3975,7 +3600,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
   const vis = props.visible !== false;
   const showDirection = vis && isVec3(props.direction);
   return (
-    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
+    <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onVortexClick}>
       {showDirection ? (
         <VortexDirectionArrow directionCad={props.direction!} objectOrigin={props.objectOrigin} objectOrientation={props.objectOrientation} radius={r} selected={vortexSelected || highlight !== "none"} />
       ) : null}
@@ -3988,12 +3613,10 @@ export const Vortex = reactHostPort.memo(function Vortex(
       ) : drawVortexBody ? (
         <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} hovered={vortexPointerHovered} {...vortexPointerHoverHandlers} />
       ) : null}
-      {pickProxy ? (
-        <mesh userData={{ puzzle3dVortexFullId: fullId }} renderOrder={-1} {...vortexPointerHoverHandlers}>
-          <sphereGeometry args={[r, 12, 12]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-      ) : null}
+      <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
+        <sphereGeometry args={[r * 1.15, 12, 12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+      </mesh>
     </group>
   );
 });
@@ -4526,19 +4149,6 @@ function RegistryProvider({
     return out;
   }, []);
 
-  const collectVortexTargets = reactHostPort.useCallback((): VortexScreenTarget[] => {
-    const out: VortexScreenTarget[] = [];
-    for (const [fullId, getter] of vortexGettersRef.current) {
-      const pickRoot = vortexPickRef.current.get(fullId);
-      if (pickRoot && !objectChainVisible(pickRoot)) continue;
-      const world = getter();
-      if (!world) continue;
-      const meta = vortexMetaRef.current.get(fullId);
-      out.push({ fullId, world, radiusWorld: meta?.radiusWorld ?? 0.35, objectId: meta?.objectId ?? fullId.split(":")[0]! });
-    }
-    return out;
-  }, []);
-
   const getObjectGroup = reactHostPort.useCallback((id: string) => objectGroupMap.current.get(id) ?? null, []);
 
   const getObjectKind = reactHostPort.useCallback((id: string) => objectKindsRef.current.get(id), []);
@@ -4876,7 +4486,6 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
-      collectVortexTargets,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4913,7 +4522,6 @@ function RegistryProvider({
       unregisterVortexBinding,
       registerObject,
       collectObjectGroups,
-      collectVortexTargets,
       getObjectGroup,
       getObjectKind,
       kindCatalogs,
@@ -4979,14 +4587,11 @@ function RegistryProvider({
         <RegistryInteractionContext.Provider value={interactionValue}>
           <RegistryHoverContext.Provider value={hoverValue}>
             <RegistryDragContext.Provider value={dragValue}>
-              <SceneDepthCapture>
-                {children}
-                <HoverMissBridge />
-                <HoverInvalidateBridge />
-                <SelectionInvalidateBridge />
-                <SelectionMissBridge />
-                <VortexScreenPick />
-              </SceneDepthCapture>
+              {children}
+              <HoverMissBridge />
+              <HoverInvalidateBridge />
+              <SelectionInvalidateBridge />
+              <SelectionMissBridge />
             </RegistryDragContext.Provider>
           </RegistryHoverContext.Provider>
         </RegistryInteractionContext.Provider>
@@ -5299,20 +4904,6 @@ if (import.meta.vitest) {
     it("draws vortices at detail bands", () => {
       expect(lodVortexPrimaryVisible(100)).toBe(true);
       expect(lodVortexPrimaryVisible(201)).toBe(false);
-    });
-  });
-  describe("unpackRGBAToDepth01", () => {
-    it("returns 0 for cleared depth (all zero bytes)", () => {
-      expect(unpackRGBAToDepth01(new Uint8Array([0, 0, 0, 0]))).toBe(0);
-    });
-    it("returns ~1 for saturated depth bytes", () => {
-      expect(unpackRGBAToDepth01(new Uint8Array([255, 255, 255, 255]))).toBeCloseTo(1, 2);
-    });
-  });
-  describe("depth01ToEyeDistance", () => {
-    it("maps near-plane depth to ~near and far-plane depth to ~far", () => {
-      expect(depth01ToEyeDistance(0, 0.1, 1000)).toBeCloseTo(0.1, 3);
-      expect(depth01ToEyeDistance(1, 0.1, 1000)).toBeGreaterThan(500);
     });
   });
   describe("pickNearestScreenVortex", () => {
