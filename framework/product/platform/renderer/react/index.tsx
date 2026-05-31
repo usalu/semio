@@ -11,6 +11,7 @@ export {
 	buildVirtualFileSystemWindowBody,
 	registerPlatformVirtualFileSystemDemo,
 	PlatformVirtualFileSystemDemoController,
+	virtualFileSystemSurfaceId,
 	Puzzle2d,
 	Puzzle3d,
 	Puzzle5d,
@@ -109,6 +110,7 @@ import {
 	platformTopologyStoreId,
 	registerPlatformVirtualFileSystemDemo,
 	PlatformVirtualFileSystemDemoController,
+	virtualFileSystemSurfaceId,
 } from "@framework/platform/core";
 import {
 	ArrowLeft,
@@ -1535,6 +1537,7 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 		hasChildren: row.hasChildren,
 		isExpanded: row.expanded,
 		parentId: undefined,
+		navigateUri: row.navigateUri,
 	}));
 	return (
 		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden p-2" data-component-kind="virtualFileSystem">
@@ -1544,18 +1547,33 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 				emptyMessage={model.emptyMessage ?? "No file system nodes"}
 				onToggleExpand={(rowId) => {
 					if (!platform) return;
+					const vfs = component as VirtualFileSystemSurface;
 					platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemExpand", {
+						appId: vfs.appId,
 						nodeId: rowId,
 						surfaceId: component.surfaceId,
 					});
 				}}
 				onRowClick={(row, _index, event) => {
 					if (!platform) return;
+					const vfs = component as VirtualFileSystemSurface;
 					if (event.metaKey || event.ctrlKey) {
-						platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", { rowId: row.id });
+						platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", {
+							appId: vfs.appId,
+							rowId: row.id,
+							surfaceId: component.surfaceId,
+						});
 						return;
 					}
-					platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", { rowId: row.id });
+					if (row.navigateUri && platform.onNavigate) {
+						platform.onNavigate(row.navigateUri);
+						return;
+					}
+					platform.commandBus.dispatch(controllerId, "toggleVirtualFileSystemRowSelection", {
+						appId: vfs.appId,
+						rowId: row.id,
+						surfaceId: component.surfaceId,
+					});
 				}}
 				dragDrop={
 					model.dragDropEnabled
@@ -1565,7 +1583,9 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 								canDrop: (draggedId, targetId) => draggedId !== targetId,
 								onDragEnd: ({ active, over }) => {
 									if (!over) return;
+									const vfs = component as VirtualFileSystemSurface;
 									commandBus.dispatch(controllerId, "virtualFileSystemDragEnd", {
+										appId: vfs.appId,
 										active,
 										over,
 										surfaceId: component.surfaceId,
@@ -2202,24 +2222,41 @@ if (import.meta.vitest) {
 			expect(markup).toContain("kit-a");
 		});
 
-		it("renders registered virtual file system components with lazy-expanded rows", () => {
+		it("renders per-app virtual file system surfaces independently", () => {
 			const platform = new Platform({ id: "demo", name: "Demo" });
 			registerPlatformVirtualFileSystemDemo(platform);
-			const markup = renderToStaticMarkup(
+			const surfaceIdA = virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_A);
+			const markupA = renderToStaticMarkup(
 				renderComponentHostSurface(
 					{
 						type: "virtualFileSystem",
 						componentKind: "virtualFileSystem",
-						surfaceId: PlatformVirtualFileSystemDemoController.SURFACE_ID,
+						surfaceId: surfaceIdA,
 						controllerId: "platform-vfs-demo-ctrl",
 					},
 					"panel",
 					platform,
 				),
 			);
-			expect(markup).toContain("Demo Kit");
-			expect(markup).toContain("Models");
-			expect(markup).not.toContain("Capsule");
+			expect(markupA).toContain("Alpha Kit");
+			expect(markupA).toContain("Models");
+			expect(markupA).not.toContain("Capsule");
+			const surfaceIdB = virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B);
+			const markupB = renderToStaticMarkup(
+				renderComponentHostSurface(
+					{
+						type: "virtualFileSystem",
+						componentKind: "virtualFileSystem",
+						surfaceId: surfaceIdB,
+						controllerId: "platform-vfs-demo-ctrl",
+					},
+					"panel",
+					platform,
+				),
+			);
+			expect(markupB).toContain("Beta Kit");
+			expect(markupB).toContain("Beta Design");
+			expect(markupB).not.toContain("Alpha");
 		});
 
 		it("maps puzzle5d flat and volume selections to applyPuzzle2dSelection args", () => {

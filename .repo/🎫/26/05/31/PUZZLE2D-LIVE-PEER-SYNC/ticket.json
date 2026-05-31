@@ -1,7 +1,7 @@
 {
   "title": "Puzzle2d Live Peer Sync",
   "emoji": "⚡",
-  "status": "closed",
+  "status": "open",
   "description": "Restore commit-93 canvas speed while keeping commit-94 live cross-pane node-move/delete sync, by replacing per-frame full-scene WASM re-push on peer panes with lightweight incremental per-node position update in Rust/WASM BoardSession.",
   "summary": "Fixed slow selection initiate/finalize: area-select end no longer calls markSceneDescriptorDirty unless wasmDeferHadStructuralMutation during defer; fast path pushes selection/preselect via setSelectionIdsJsonSilent; coalesced select React emit per RAF; pointer-up camera emit only when camera moved. 96 vitest pass.",
   "goal": "🎯r2602",
@@ -10,6 +10,7 @@
     "⚪cc65e234f8234210b6fccd0a95cbf41d",
     "⚪15f38168cdd347a7b02b10c57b340e49",
     "⚪9d765a844bea45b3b6f2a4bff24b3352",
-    "⚪ab610ae806c547a6ada26f5ee1d0c198"
+    "⚪ab610ae806c547a6ada26f5ee1d0c198",
+    "⚪9d3d0e903f5146b9ae823f6a54f54910"
   ]
 }

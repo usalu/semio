@@ -278,6 +278,7 @@ export interface VirtualFileSystemNodeRecord {
 	readonly path: string;
 	readonly parentId: string | null;
 	readonly hasChildren: boolean;
+	readonly navigateUri?: string;
 }
 
 /** @emoji 📁 Flat row for {@link VirtualFileSystemModel}. */
@@ -291,6 +292,7 @@ export interface VirtualFileSystemRowModel {
 	readonly expanded?: boolean;
 	readonly expandToggle?: { readonly command: string; readonly args?: unknown };
 	readonly canDrag?: boolean;
+	readonly navigateUri?: string;
 }
 
 /** @emoji 📁 Render-agnostic kit VFS view-model for {@link VirtualFileSystem}. */
@@ -433,10 +435,17 @@ export class Table extends Component<TableModel> {
 	}
 }
 
-/** @emoji 📁 Virtual file system surface component base class. */
+/** @emoji 📁 Virtual file system surface component base class (scoped to one app). */
 export class VirtualFileSystem extends Component<VirtualFileSystemModel> {
-	constructor(surfaceId: string, controllerId: string, initialSnapshot: VirtualFileSystemModel = { rows: [] }) {
+	readonly appId: string;
+
+	constructor(appId: string, surfaceId: string, controllerId: string, initialSnapshot: VirtualFileSystemModel = { rows: [] }) {
 		super("virtualFileSystem", surfaceId, controllerId, initialSnapshot);
+		this.appId = appId;
+	}
+
+	get scope(): VirtualFileSystemScope {
+		return { appId: this.appId, surfaceId: this.surfaceId };
 	}
 
 	buildSnapshot(): VirtualFileSystemModel {
@@ -444,14 +453,37 @@ export class VirtualFileSystem extends Component<VirtualFileSystemModel> {
 	}
 }
 
-/** @emoji 📁 Controller store id for expanded VFS node ids (`vfs-expanded:<surfaceId>`). */
-export function virtualFileSystemExpandedStoreId(surfaceId: string): string {
-	return `vfs-expanded:${surfaceId}`;
+/** @emoji 📁 One app-bound virtual file system instance (`appId` + host `surfaceId`). */
+export interface VirtualFileSystemScope {
+	readonly appId: string;
+	readonly surfaceId: string;
 }
 
-/** @emoji 📁 Controller store id for lazily loaded VFS children (`vfs-children:<surfaceId>`). */
-export function virtualFileSystemChildrenStoreId(surfaceId: string): string {
-	return `vfs-children:${surfaceId}`;
+/** @emoji 📁 Stable scope key for controller-owned VFS stores. */
+export function virtualFileSystemScopeKey(scope: VirtualFileSystemScope): string {
+	return `${scope.appId}::${scope.surfaceId}`;
+}
+
+/** @emoji 📁 Canonical surface id for an app VFS (`vfs:<appId>:<slot>`). */
+export function virtualFileSystemSurfaceId(appId: string, slot = "main"): string {
+	return `vfs:${appId}:${slot}`;
+}
+
+/** @emoji 📁 Parses {@link virtualFileSystemSurfaceId} into a {@link VirtualFileSystemScope}. */
+export function parseVirtualFileSystemSurfaceId(surfaceId: string): VirtualFileSystemScope | null {
+	const match = /^vfs:([^:]+):(.+)$/.exec(surfaceId);
+	if (!match) return null;
+	return { appId: match[1]!, surfaceId };
+}
+
+/** @emoji 📁 Controller store id for expanded VFS node ids. */
+export function virtualFileSystemExpandedStoreId(scope: VirtualFileSystemScope): string {
+	return `vfs-expanded:${virtualFileSystemScopeKey(scope)}`;
+}
+
+/** @emoji 📁 Controller store id for lazily loaded VFS children. */
+export function virtualFileSystemChildrenStoreId(scope: VirtualFileSystemScope): string {
+	return `vfs-children:${virtualFileSystemScopeKey(scope)}`;
 }
 
 /** @emoji 📁 Expanded node ids per VFS surface. */
@@ -526,7 +558,7 @@ export function buildVirtualFileSystemModelRows(
 	expandedIds: ReadonlySet<string>,
 	options?: {
 		readonly expandCommand?: string;
-		readonly surfaceId?: string;
+		readonly scope?: VirtualFileSystemScope;
 	},
 ): VirtualFileSystemRowModel[] {
 	const rows: VirtualFileSystemRowModel[] = [];
@@ -546,11 +578,12 @@ export function buildVirtualFileSystemModelRows(
 				? {
 						expandToggle: {
 							command: options.expandCommand,
-							args: { nodeId: node.id, surfaceId: options.surfaceId },
+							args: { nodeId: node.id, appId: options.scope?.appId, surfaceId: options.scope?.surfaceId },
 						},
 					}
 				: {}),
 			canDrag: node.kind !== "kit",
+			...(node.navigateUri ? { navigateUri: node.navigateUri } : {}),
 		});
 		if (!expanded) return;
 		const children = childrenByParentId[node.id] ?? (depth === 0 ? rootBucket : undefined);
@@ -561,182 +594,237 @@ export function buildVirtualFileSystemModelRows(
 	return rows;
 }
 
-/** @emoji 📁 Base controller: loads VFS children only for expanded nodes; supports expand and drag-reparent. */
+/** @emoji 📁 Base controller: per-app VFS; loads children only for expanded nodes. */
 export abstract class VirtualFileSystemController extends Controller {
-	protected readonly expandedBySurface = new Map<string, VirtualFileSystemExpandedStore>();
-	protected readonly childrenBySurface = new Map<string, VirtualFileSystemChildrenStore>();
-	protected selectedRowIds: string[] = [];
+	protected readonly expandedByScope = new Map<string, VirtualFileSystemExpandedStore>();
+	protected readonly childrenByScope = new Map<string, VirtualFileSystemChildrenStore>();
+	protected readonly selectedRowIdsByScope = new Map<string, string[]>();
 
 	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
 		super(id, commandBus, hostNotify);
 	}
 
-	protected abstract getRoot(surfaceId: string): VirtualFileSystemNodeRecord;
+	protected abstract getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord;
 
-	protected abstract loadChildren(parentId: string, surfaceId: string): readonly VirtualFileSystemNodeRecord[];
+	protected abstract loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[];
 
-	protected expandedStore(surfaceId: string, initial: readonly string[] = []): VirtualFileSystemExpandedStore {
-		const existing = this.expandedBySurface.get(surfaceId);
+	protected resolveScope(args?: unknown, surfaceIdFallback?: string): VirtualFileSystemScope | null {
+		const payload = (args ?? {}) as { appId?: string; surfaceId?: string };
+		const surfaceId = payload.surfaceId ?? surfaceIdFallback ?? "";
+		if (!surfaceId) return null;
+		const parsed = parseVirtualFileSystemSurfaceId(surfaceId);
+		if (parsed) return payload.appId ? { appId: payload.appId, surfaceId: parsed.surfaceId } : parsed;
+		if (!payload.appId) return null;
+		return { appId: payload.appId, surfaceId };
+	}
+
+	protected expandedStore(scope: VirtualFileSystemScope, initial: readonly string[] = []): VirtualFileSystemExpandedStore {
+		const key = virtualFileSystemScopeKey(scope);
+		const existing = this.expandedByScope.get(key);
 		if (existing) return existing;
-		const store = new VirtualFileSystemExpandedStore(initial.length ? initial : [this.getRoot(surfaceId).id]);
-		this.expandedBySurface.set(surfaceId, store);
-		this.provideStore(virtualFileSystemExpandedStoreId(surfaceId), store);
+		const store = new VirtualFileSystemExpandedStore(initial.length ? initial : [this.getRoot(scope).id]);
+		this.expandedByScope.set(key, store);
+		this.provideStore(virtualFileSystemExpandedStoreId(scope), store);
 		return store;
 	}
 
-	protected childrenStore(surfaceId: string): VirtualFileSystemChildrenStore {
-		const existing = this.childrenBySurface.get(surfaceId);
+	protected childrenStore(scope: VirtualFileSystemScope): VirtualFileSystemChildrenStore {
+		const key = virtualFileSystemScopeKey(scope);
+		const existing = this.childrenByScope.get(key);
 		if (existing) return existing;
 		const store = new VirtualFileSystemChildrenStore();
-		this.childrenBySurface.set(surfaceId, store);
-		this.provideStore(virtualFileSystemChildrenStoreId(surfaceId), store);
+		this.childrenByScope.set(key, store);
+		this.provideStore(virtualFileSystemChildrenStoreId(scope), store);
 		return store;
 	}
 
-	protected ensureChildrenLoaded(parentId: string, surfaceId: string): void {
-		const childrenStore = this.childrenStore(surfaceId);
+	protected selectedRows(scope: VirtualFileSystemScope): string[] {
+		const key = virtualFileSystemScopeKey(scope);
+		let selected = this.selectedRowIdsByScope.get(key);
+		if (!selected) {
+			selected = [];
+			this.selectedRowIdsByScope.set(key, selected);
+		}
+		return selected;
+	}
+
+	protected ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
+		const childrenStore = this.childrenStore(scope);
 		const snapshot = childrenStore.getSnapshot();
-		const key = parentId === this.getRoot(surfaceId).id ? "__root__" : parentId;
+		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
 		if (snapshot[key]) return;
-		const loaded = this.loadChildren(parentId, surfaceId);
+		const loaded = this.loadChildren(parentId, scope);
 		childrenStore.setChildren(key, loaded);
 	}
 
-	protected syncOpenBranches(surfaceId: string): void {
-		const expanded = this.expandedStore(surfaceId).getSnapshot();
+	protected syncOpenBranches(scope: VirtualFileSystemScope): void {
+		const expanded = this.expandedStore(scope).getSnapshot();
 		for (const nodeId of expanded) {
-			this.ensureChildrenLoaded(nodeId, surfaceId);
+			this.ensureChildrenLoaded(nodeId, scope);
 		}
 	}
 
-	buildVirtualFileSystemModel(surfaceId: string): VirtualFileSystemModel {
-		this.syncOpenBranches(surfaceId);
-		const expandedIds = new Set(this.expandedStore(surfaceId).getSnapshot());
-		const rows = buildVirtualFileSystemModelRows(this.getRoot(surfaceId), this.childrenStore(surfaceId).getSnapshot(), expandedIds, {
+	/** @emoji 📁 Root node id when binding an app VFS surface. */
+	virtualFileSystemRootId(scope: VirtualFileSystemScope): string {
+		return this.getRoot(scope).id;
+	}
+
+	buildVirtualFileSystemModel(scope: VirtualFileSystemScope): VirtualFileSystemModel {
+		this.syncOpenBranches(scope);
+		const expandedIds = new Set(this.expandedStore(scope).getSnapshot());
+		const rows = buildVirtualFileSystemModelRows(this.getRoot(scope), this.childrenStore(scope).getSnapshot(), expandedIds, {
 			expandCommand: "toggleVirtualFileSystemExpand",
-			surfaceId,
+			scope,
 		});
 		return {
 			rows,
-			selectedRowIds: this.selectedRowIds,
+			selectedRowIds: this.selectedRows(scope),
 			emptyMessage: rows.length ? undefined : "No file system nodes",
 			dragDropEnabled: true,
 		};
 	}
 
-	override run(command: string, args?: unknown): void {
-		const payload = (args ?? {}) as { surfaceId?: string; nodeId?: string; rowId?: string; active?: string; over?: string | null };
-		const surfaceId = payload.surfaceId ?? "";
+	protected runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+		const scope = this.resolveScope(args);
+		if (!scope) return false;
+		const payload = (args ?? {}) as { nodeId?: string; rowId?: string; active?: string; over?: string | null };
 		switch (command) {
 			case "toggleVirtualFileSystemExpand": {
-				if (!payload.nodeId || !surfaceId) return;
-				const expanded = this.expandedStore(surfaceId);
+				if (!payload.nodeId) return true;
+				const expanded = this.expandedStore(scope);
 				expanded.toggle(payload.nodeId);
 				if (expanded.getSnapshot().includes(payload.nodeId)) {
-					this.ensureChildrenLoaded(payload.nodeId, surfaceId);
+					this.ensureChildrenLoaded(payload.nodeId, scope);
 				}
 				this.emit();
-				return;
+				return true;
 			}
 			case "toggleVirtualFileSystemRowSelection": {
-				if (!payload.rowId) return;
-				const index = this.selectedRowIds.indexOf(payload.rowId);
-				if (index >= 0) this.selectedRowIds.splice(index, 1);
-				else this.selectedRowIds.push(payload.rowId);
+				if (!payload.rowId) return true;
+				const selected = this.selectedRows(scope);
+				const index = selected.indexOf(payload.rowId);
+				if (index >= 0) selected.splice(index, 1);
+				else selected.push(payload.rowId);
 				this.emit();
-				return;
+				return true;
 			}
 			case "virtualFileSystemDragEnd": {
-				if (!surfaceId || !payload.active || !payload.over) return;
-				const childrenStore = this.childrenStore(surfaceId);
-				const rootId = this.getRoot(surfaceId).id;
+				if (!payload.active || !payload.over) return true;
+				const childrenStore = this.childrenStore(scope);
+				const rootId = this.getRoot(scope).id;
 				const targetParentId = payload.over === rootId ? rootId : payload.over;
 				childrenStore.moveNode(payload.active, targetParentId, rootId);
 				this.emit();
-				return;
+				return true;
 			}
 			default:
-				return;
+				return false;
 		}
+	}
+
+	override run(command: string, args?: unknown): void {
+		if (this.runVirtualFileSystemCommand(command, args)) return;
 	}
 }
 
-/** @emoji 📁 Demo VFS controller with an in-memory kit tree (for platform tests and story wiring). */
+/** @emoji 📁 Demo VFS controller: each app id gets its own in-memory tree. */
 export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemController {
-	static readonly SURFACE_ID = "surface/platform/vfs-demo";
-	static readonly ROOT_ID = "kit-demo";
+	static readonly APP_A = "demo-app-a";
+	static readonly APP_B = "demo-app-b";
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super("platform-vfs-demo-ctrl", commandBus, hostNotify);
 	}
 
-	protected override getRoot(_surfaceId: string): VirtualFileSystemNodeRecord {
-		return {
-			id: PlatformVirtualFileSystemDemoController.ROOT_ID,
-			kind: "kit",
-			name: "Demo Kit",
-			path: "/",
-			parentId: null,
-			hasChildren: true,
-		};
+	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
+		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
+			return { id: "kit-b", kind: "kit", name: "Beta Kit", path: "/", parentId: null, hasChildren: true };
+		}
+		return { id: "kit-a", kind: "kit", name: "Alpha Kit", path: "/", parentId: null, hasChildren: true };
 	}
 
-	protected override loadChildren(parentId: string, _surfaceId: string): readonly VirtualFileSystemNodeRecord[] {
-		if (parentId === PlatformVirtualFileSystemDemoController.ROOT_ID) {
+	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
+			if (parentId === "kit-b") {
+				return [{ id: "design-b1", kind: "design", name: "Beta Design", path: "/Beta Design", parentId, hasChildren: false }];
+			}
+			return [];
+		}
+		if (parentId === "kit-a") {
 			return [
-				{
-					id: "folder-models",
-					kind: "folder",
-					name: "Models",
-					path: "/Models",
-					parentId,
-					hasChildren: true,
-				},
-				{
-					id: "design-alpha",
-					kind: "design",
-					name: "Alpha",
-					path: "/Alpha",
-					parentId,
-					hasChildren: false,
-				},
+				{ id: "folder-models", kind: "folder", name: "Models", path: "/Models", parentId, hasChildren: true },
+				{ id: "design-alpha", kind: "design", name: "Alpha", path: "/Alpha", parentId, hasChildren: false },
 			];
 		}
 		if (parentId === "folder-models") {
-			return [
-				{
-					id: "type-capsule",
-					kind: "type",
-					name: "Capsule",
-					path: "/Models/Capsule",
-					parentId,
-					hasChildren: false,
-				},
-			];
+			return [{ id: "type-capsule", kind: "type", name: "Capsule", path: "/Models/Capsule", parentId, hasChildren: false }];
 		}
 		return [];
 	}
 }
 
-/** @emoji 📁 Demo {@link VirtualFileSystem} surface bound to {@link PlatformVirtualFileSystemDemoController}. */
-export class PlatformVirtualFileSystemDemoSurface extends VirtualFileSystem {
-	constructor(readonly owner: PlatformVirtualFileSystemDemoController) {
-		super(PlatformVirtualFileSystemDemoController.SURFACE_ID, owner.id, { rows: [] });
+/** @emoji 📁 App-bound {@link VirtualFileSystem} surface driven by a {@link VirtualFileSystemController}. */
+export class AppBoundVirtualFileSystemSurface extends VirtualFileSystem {
+	constructor(
+		readonly owner: VirtualFileSystemController,
+		readonly vfsScope: VirtualFileSystemScope,
+	) {
+		super(vfsScope.appId, vfsScope.surfaceId, owner.id, { rows: [] });
 	}
 
 	override buildSnapshot(): VirtualFileSystemModel {
-		return this.owner.buildVirtualFileSystemModel(this.surfaceId);
+		return this.owner.buildVirtualFileSystemModel(this.vfsScope);
 	}
 }
 
-/** @emoji 📁 Registers demo controller, surface, and window body on a {@link Platform}. */
+/** @emoji 📁 Registers one app-owned VFS surface on a {@link Platform}. */
+export function registerAppVirtualFileSystem(
+	platform: Platform,
+	app: AppRuntime,
+	controller: VirtualFileSystemController,
+	options: {
+		readonly bodyKey: string;
+		readonly slot?: string;
+		readonly surfaceId?: string;
+		readonly paneId?: string;
+		readonly initialExpanded?: readonly string[];
+	},
+): AppBoundVirtualFileSystemSurface {
+	const surfaceId = options.surfaceId ?? virtualFileSystemSurfaceId(app.id, options.slot ?? "main");
+	const scope: VirtualFileSystemScope = { appId: app.id, surfaceId };
+	const surface = new AppBoundVirtualFileSystemSurface(controller, scope);
+	registerPlatformComponent(platform, surface);
+	const refresh = () => surface.refresh();
+	platform.subscribe(refresh);
+	controller.expandedStore(scope, options.initialExpanded ?? [controller.virtualFileSystemRootId(scope)]);
+	surface.refresh();
+	registerWindowBody(options.bodyKey, () => buildVirtualFileSystemWindowBody(surfaceId, controller.id, options.paneId));
+	return surface;
+}
+
+/** @emoji 📁 Registers two demo apps (A/B) each with its own VFS on a {@link Platform}. */
 export function registerPlatformVirtualFileSystemDemo(platform: Platform): PlatformVirtualFileSystemDemoController {
 	const ctrl = new PlatformVirtualFileSystemDemoController(platform.commandBus, () => platform.notify());
-	const surface = new PlatformVirtualFileSystemDemoSurface(ctrl);
-	registerPlatformComponent(platform, surface);
-	platform.subscribe(() => surface.refresh());
-	ctrl.expandedStore(PlatformVirtualFileSystemDemoController.SURFACE_ID, [PlatformVirtualFileSystemDemoController.ROOT_ID]);
-	surface.refresh();
+	const appA = new AppRuntime(
+		PlatformVirtualFileSystemDemoController.APP_A,
+		"Demo A",
+		undefined,
+		ctrl,
+		createTabStackLayout(["main"], ["Main"]),
+		[new WindowKindRuntime("main", "Main", "demo.vfs.a.main")],
+	);
+	const appB = new AppRuntime(
+		PlatformVirtualFileSystemDemoController.APP_B,
+		"Demo B",
+		undefined,
+		ctrl,
+		createTabStackLayout(["main"], ["Main"]),
+		[new WindowKindRuntime("main", "Main", "demo.vfs.b.main")],
+	);
+	platform.addApp(appA);
+	platform.addApp(appB);
+	registerAppVirtualFileSystem(platform, appA, ctrl, { bodyKey: "demo.vfs.a.main" });
+	registerAppVirtualFileSystem(platform, appB, ctrl, { bodyKey: "demo.vfs.b.main" });
 	return ctrl;
 }
 
@@ -1571,15 +1659,23 @@ if (import.meta.vitest) {
 	});
 
 	describe("VirtualFileSystemController", () => {
-		it("loads children only for expanded nodes", () => {
+		it("loads children only for expanded nodes per app", () => {
 			const platform = new Platform({ id: "vfs", name: "VFS" });
 			const ctrl = registerPlatformVirtualFileSystemDemo(platform);
-			const surfaceId = PlatformVirtualFileSystemDemoController.SURFACE_ID;
-			let model = ctrl.buildVirtualFileSystemModel(surfaceId);
-			expect(model.rows.map((row) => row.id)).toEqual(["kit-demo", "folder-models", "design-alpha"]);
-			ctrl.run("toggleVirtualFileSystemExpand", { surfaceId, nodeId: "folder-models" });
-			model = ctrl.buildVirtualFileSystemModel(surfaceId);
-			expect(model.rows.map((row) => row.id)).toEqual(["kit-demo", "folder-models", "type-capsule", "design-alpha"]);
+			const scopeA: VirtualFileSystemScope = {
+				appId: PlatformVirtualFileSystemDemoController.APP_A,
+				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_A),
+			};
+			let model = ctrl.buildVirtualFileSystemModel(scopeA);
+			expect(model.rows.map((row) => row.id)).toEqual(["kit-a", "folder-models", "design-alpha"]);
+			ctrl.run("toggleVirtualFileSystemExpand", { ...scopeA, nodeId: "folder-models" });
+			model = ctrl.buildVirtualFileSystemModel(scopeA);
+			expect(model.rows.map((row) => row.id)).toEqual(["kit-a", "folder-models", "type-capsule", "design-alpha"]);
+			const scopeB: VirtualFileSystemScope = {
+				appId: PlatformVirtualFileSystemDemoController.APP_B,
+				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B),
+			};
+			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["kit-b", "design-b1"]);
 		});
 	});
 

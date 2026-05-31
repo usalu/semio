@@ -2567,6 +2567,21 @@ export function puzzle2dFixtureObjectDisplayLabel(objectId: string, fixture: Puz
 }
 
 //#region 🔖Renderer
+/** @emoji 🧿 WASM drain rows that never change scene topology (skip {@link Puzzle2dRenderer.enqueuePuzzle2dGraphObservationFlush}). */
+const PUZZLE2D_DRAIN_SKIP_GRAPH_OBSERVATION = new Set([
+  "camera",
+  "hover",
+  "select",
+  "preselect",
+  "preselectCancel",
+  "nodeMove",
+  "nodeDragEnd",
+  "linkCompatibleNodes",
+  "linkTargetRing",
+  "proximityConnect",
+  "indirectConnect",
+]);
+
 /** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
 export class Puzzle2dRenderer {
   static activeRenderer: Puzzle2dRenderer | null = null;
@@ -2633,7 +2648,7 @@ export class Puzzle2dRenderer {
       return;
     }
     this.selectionIds = new Set(ids);
-    this.applySelectionChromeToSceneObjects();
+    this.syncSelectionChromeToSceneObjectsIfNeeded();
     this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     if (this.wasmSessionCallBlockedForReentry()) {
       return;
@@ -3937,12 +3952,12 @@ export class Puzzle2dRenderer {
       return;
     }
     let graphMutatedForHostMerge = false;
-    let viewportOnlyDrain = true;
+    let needsGraphObservation = false;
     this.suppressSceneToWasmPush = true;
     try {
       for (const row of rows) {
-        if (row.name !== "camera") {
-          viewportOnlyDrain = false;
+        if (!PUZZLE2D_DRAIN_SKIP_GRAPH_OBSERVATION.has(row.name)) {
+          needsGraphObservation = true;
         }
         switch (row.name) {
           case "camera": {
@@ -3972,7 +3987,7 @@ export class Puzzle2dRenderer {
           }
           case "preselectCancel": {
             this.updatePreselection([], [], false);
-            this.applySelectionChromeToSceneObjects();
+            this.syncSelectionChromeToSceneObjectsIfNeeded();
             this.emit("preselectCancel", PUZZLE_2D_PRESELECT_EMPTY);
             break;
           }
@@ -4112,7 +4127,7 @@ export class Puzzle2dRenderer {
       }
     } finally {
       this.suppressSceneToWasmPush = false;
-      if (!viewportOnlyDrain || graphMutatedForHostMerge) {
+      if (graphMutatedForHostMerge || needsGraphObservation) {
         this.enqueuePuzzle2dGraphObservationFlush();
       }
       if (graphMutatedForHostMerge) {
@@ -4399,6 +4414,18 @@ export class Puzzle2dRenderer {
     this.applySelectionChromeToSceneObjects();
   }
 
+  /** @emoji 🧿 True when JS scene `selected` flags must mirror selection for the next descriptor push. */
+  private selectionChromeNeedsSceneObjectSync(): boolean {
+    return this.lastPushedDescriptorJson === null || this.lastPushedSceneDescriptorEpoch !== this.sceneDescriptorEpoch;
+  }
+
+  private syncSelectionChromeToSceneObjectsIfNeeded(): void {
+    if (!this.selectionChromeNeedsSceneObjectSync()) {
+      return;
+    }
+    this.applySelectionChromeToSceneObjects();
+  }
+
   private applySelectionChromeToSceneObjects(): void {
     const { highlightedIds, selectedIds } = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const object of this.scene.getAllObjects()) {
@@ -4422,7 +4449,7 @@ export class Puzzle2dRenderer {
     if (emit && !preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY)) {
       this.updatePreselection([], [], false);
     }
-    this.applySelectionChromeToSceneObjects();
+    this.syncSelectionChromeToSceneObjectsIfNeeded();
     this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     if (emit) {
       puzzle2dBroadcastSelectionSilent(this, nextSnapshot.ids);
@@ -4439,7 +4466,7 @@ export class Puzzle2dRenderer {
     this.preselectIds = new Set(nextSnapshot.ids);
     this.preselectRemovedIds = new Set(nextSnapshot.removedIds);
     this.preselectStore.setSnapshot(nextSnapshot, preselectSnapshotsEqual);
-    this.applySelectionChromeToSceneObjects();
+    this.syncSelectionChromeToSceneObjectsIfNeeded();
     if (emit) {
       puzzle2dBroadcastPreselectSilent(this, nextSnapshot);
       this.emit("preselect", nextSnapshot);
@@ -7462,6 +7489,16 @@ function puzzle2dBroadcastPreselectSilent(source: Puzzle2dRenderer, snapshot: Pu
       continue;
     }
     peer.syncPreselectionSilent(snapshot);
+  }
+}
+
+/** @emoji ✅ Imperatively mirrors committed selection onto every authoring pane (hierarchy / shell without canvas re-render). */
+export function puzzle2dSyncSelectionToAllAuthoringPeers(ids: readonly string[]): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.applySelectionFromPeerSilent(ids);
   }
 }
 //#endregion 🔖MultiViewAuthoring

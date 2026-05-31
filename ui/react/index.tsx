@@ -22491,6 +22491,7 @@ export interface VirtualFileSystemNode {
 export interface VirtualFileSystemRow extends VirtualFileSystemNode, HierarchicalRowData {
   readonly level: number;
   readonly isExpanded?: boolean;
+  readonly navigateUri?: string;
 }
 
 /** @emoji 📁 Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for kit VFS nodes. */
