@@ -1,13 +1,14 @@
 {
   "title": "Puzzle2d Live Peer Sync",
   "emoji": "⚡",
-  "status": "closed",
+  "status": "open",
   "description": "Restore commit-93 canvas speed while keeping commit-94 live cross-pane node-move/delete sync, by replacing per-frame full-scene WASM re-push on peer panes with lightweight incremental per-node position update in Rust/WASM BoardSession.",
   "summary": "Hover/zoom/selection slowness was mostly React + redundant per-event work, not GPU like drag. Fixed: coalesce repaint to one RAF per frame (scheduleInputInvalidate) for hover/pan/wheel while WASM still gets every event; publishHover only when hovered id changes; stop lifting hover to triptych React state (removed hoveredId/onHover from play canvases); broadcast selection to peer panes via applySelectionFromPeerSilent before shell re-render. 92 vitest pass.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪887338089ca7486f83371483c95c03de",
     "⚪cc65e234f8234210b6fccd0a95cbf41d",
-    "⚪15f38168cdd347a7b02b10c57b340e49"
+    "⚪15f38168cdd347a7b02b10c57b340e49",
+    "⚪9d765a844bea45b3b6f2a4bff24b3352"
   ]
 }

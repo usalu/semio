@@ -1377,6 +1377,79 @@ function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: stri
   return out;
 }
 
+//#region 📁FileSystem
+type FileSystemNodeRef = { readonly id: string; readonly kind: string };
+
+function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystemNodeRef | null {
+  if (node == null) return null;
+  const id = String(node["id"] ?? "");
+  if (id === "") return null;
+  return { id, kind: String(node["fileSystemKind"] ?? "") };
+}
+
+function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string): Entity {
+  switch (ref.kind) {
+    case "KIT":
+      return new Kit(session, ref.id, storeId);
+    case "FOLDER":
+      return new Folder(session, ref.id, storeId);
+    case "FILE":
+      return new File(session, ref.id, storeId);
+    case "DESIGN":
+      return new Design(session, ref.id, storeId);
+    case "TYPE":
+      return new Type(session, ref.id, storeId);
+    case "FAMILY":
+      return new Family(session, ref.id, storeId);
+    case "PIECE":
+      return new Piece(session, designId ?? "", ref.id, storeId);
+    case "CONNECTION":
+      return new Connection(session, designId ?? "", ref.id, storeId);
+    default:
+      return new Entity(session, ref.id, storeId);
+  }
+}
+
+function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObject | null {
+  if (branch == null) return frag;
+  const b = frag?.[branch];
+  return isJsonObjectNode(b) ? b : null;
+}
+
+function vfsKitFields(branch: string | null, designId?: string) {
+  const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
+  return [
+    { selection: "fileSystemPath", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "") },
+    { selection: "fileSystemName", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
+    { selection: "isFileSystemRoot", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
+    { selection: "fileSystemKind", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    {
+      selection: "fileSystemParent { id fileSystemKind }",
+      parse: () => null,
+      parseEntity: (entity, frag) => {
+        const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
+        return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : null;
+      },
+    },
+    {
+      selection: "fileSystemChildren { edges { node { id fileSystemKind } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => {
+        const edges = (b(frag as JsonObject | null)?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
+        if (!Array.isArray(edges)) return Object.freeze([]);
+        return Object.freeze(
+          edges.map((e) => {
+            const ref = parseFileSystemNodeRef((e as JsonObject)?.["node"] as JsonObject | undefined);
+            return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : new Entity(entity.session, "", entity.storeId);
+          }),
+        );
+      },
+    },
+  ] as const;
+}
+//#endregion 📁FileSystem
+
 /** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
 function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const arr = frag?.[key] as readonly JsonValue[] | undefined;
@@ -1834,6 +1907,17 @@ export class Kit extends Entity {
   declare createDesign: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
   declare deleteDesign: (id: string) => Promise<SetResult>;
   declare deleteDesigns: (ids: readonly string[]) => Promise<SetResult>;
+  declare folders: () => Promise<readonly Folder[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare families: () => Promise<readonly Family[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null) => Promise<SetResult>;
+  declare moveToFolder: (nodeId: string, folderId?: string | null) => Promise<SetResult>;
 }
 
 const KIT_FIELDS = defineBoundKitFields([
@@ -1882,6 +1966,25 @@ const KIT_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "concepts").map((id) => new Concept(entity.session, id, entity.storeId))),
   },
+  {
+    selection: "folders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "folders").map((id) => new Folder(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "files").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "families { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "families").map((id) => new Family(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields(null),
 ] as const);
 
 const KIT_OPERATIONS = defineBoundKitOperations([
@@ -1922,6 +2025,16 @@ const KIT_OPERATIONS = defineBoundKitOperations([
   },
   { method: "deleteDesign", buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteDesigns", buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createFolder",
+    buildInner: (_e, name, path, description, icon, parentFolderId) =>
+      `cF: createFolder(name: ${gqlString(String(name ?? ""))}, path: ${gqlString(String(path ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, parentFolderId: ${parentFolderId == null ? "null" : gqlString(String(parentFolderId))})`,
+  },
+  {
+    method: "moveToFolder",
+    buildInner: (_e, nodeId, folderId) =>
+      `mF: moveToFolder(nodeId: ${gqlString(String(nodeId ?? ""))}, folderId: ${folderId == null ? "null" : gqlString(String(folderId))})`,
+  },
 ] as const);
 
 installEntityKitMethods(Kit, KIT_FIELDS as readonly BoundKitFieldSpec<unknown, Kit>[], KIT_OPERATIONS);
@@ -1965,6 +2078,14 @@ export class Store extends Entity {
 
   file(id: string): File {
     return this.entity(File, id, this.id);
+  }
+
+  folder(id: string): Folder {
+    return this.entity(Folder, id, this.id);
+  }
+
+  family(id: string): Family {
+    return this.entity(Family, id, this.id);
   }
 
   tag(id: string): Tag {
@@ -2567,6 +2688,8 @@ export class Design extends Entity {
   declare allTypes: () => Promise<readonly Type[]>;
   declare allDesigns: () => Promise<readonly Design[]>;
   declare allFiles: () => Promise<readonly File[]>;
+  declare representations: () => Promise<readonly Representation[]>;
+  declare allRepresentations: () => Promise<readonly Representation[]>;
   declare referencedBy: () => Promise<readonly Piece[]>;
   declare referencedByDesigns: () => Promise<readonly Design[]>;
   declare allReferencedByDesigns: () => Promise<readonly Design[]>;
@@ -2753,6 +2876,44 @@ const DESIGN_FIELDS = defineBoundKitFields([
       Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allFiles").map((id) => new File(entity.session, id, entity.storeId))),
   },
   {
+    selection: "representations { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.representations as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "allRepresentations { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.allRepresentations as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
     selection: "referencedBy { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
@@ -2773,6 +2934,7 @@ const DESIGN_FIELDS = defineBoundKitFields([
     parseEntity: (entity, frag) =>
       Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allReferencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
   },
+  ...vfsKitFields("design"),
 ] as const);
 
 const DESIGN_OPERATIONS = defineBoundKitOperations([
@@ -2956,6 +3118,7 @@ const TYPE_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
   },
+  ...vfsKitFields("type"),
 ] as const);
 
 const TYPE_OPERATIONS = defineBoundKitOperations([
@@ -3911,6 +4074,16 @@ export class Representation extends Entity {
   declare tags: () => Promise<readonly Tag[]>;
   declare qualities: () => Promise<readonly Quality[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare types: () => Promise<readonly Type[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare allReferencedByDesigns: () => Promise<readonly Design[]>;
+}
+
+function parseRepresentationBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const node = readKitPathNode(frag, KIT_PATH_TYPE_REPRESENTATION);
+  return parseEntityConnectionIds(node, key);
 }
 
 installEntityKitMethods(Representation, defineBoundKitFields([
@@ -3941,6 +4114,66 @@ installEntityKitMethods(Representation, defineBoundKitFields([
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)),
   },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges =
+        ((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)?.["referencedBy"] as JsonObject | undefined)?.[
+          "edges"
+        ] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "types { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "types").map((id) => new Type(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "files").map((id) => new File(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencedByDesigns").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
+  {
+    selection: "allReferencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "allReferencedByDesigns").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
 ]) as readonly BoundKitFieldSpec<unknown, Representation>[]);
 //#endregion 🎨Representation
 
@@ -3951,49 +4184,207 @@ export class Family extends Entity {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `family(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
   declare name: () => Promise<string>;
   declare description: () => Promise<string>;
   declare icon: () => Promise<string>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
 }
 
-installEntityNodeMethods(Family, "Family", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
-] as const));
+const FAMILY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "icon") },
+  ...vfsKitFields("family"),
+] as const);
+
+installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unknown, Family>[], []);
 //#endregion 👨‍👩‍👦Family
 
 //#region 📄File
+/** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
 export class File extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `file(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  representation(representationId: string): Representation {
+    return new Representation(this.session, "", representationId, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
   declare name: () => Promise<string>;
+  declare representations: () => Promise<readonly Representation[]>;
+  declare types: () => Promise<readonly Type[]>;
+  declare designs: () => Promise<readonly Design[]>;
+  declare allTypes: () => Promise<readonly Type[]>;
+  declare allDesigns: () => Promise<readonly Design[]>;
 }
 
-installEntityNodeMethods(File, "File", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-] as const));
+function parseFileBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["file"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FILE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "file", "name") },
+  {
+    selection: "representations { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseFileBranchConnection(frag as JsonObject | null, "representations").map((id) => (entity as File).representation(id)),
+      ),
+  },
+  {
+    selection: "types { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "types").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "designs { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "designs").map((id) => (entity as File).design(id))),
+  },
+  {
+    selection: "allTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "allTypes").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "allDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "allDesigns").map((id) => (entity as File).design(id))),
+  },
+  ...vfsKitFields("file"),
+] as const);
+
+installEntityKitMethods(File, FILE_FIELDS as readonly BoundKitFieldSpec<unknown, File>[], []);
 //#endregion 📄File
 
 //#region 📁Folder
-/** @emoji 📁 Folder artifact: read-only in current kit API. */
+/** @emoji 📁 Folder artifact with constrained virtual file system navigation. */
 export class Folder extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
   }
 
+  kitInnerPath(inner: string): string {
+    return `folder(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  subFolder(id: string): Folder {
+    return new Folder(this.session, id, this.storeId);
+  }
+
+  file(id: string): File {
+    return new File(this.session, id, this.storeId);
+  }
+
+  family(id: string): Family {
+    return new Family(this.session, id, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
   declare name: () => Promise<string>;
   declare description: () => Promise<string>;
   declare path: () => Promise<string>;
+  declare subFolders: () => Promise<readonly Folder[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare families: () => Promise<readonly Family[]>;
+  declare types: () => Promise<readonly Type[]>;
+  declare designs: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
 }
 
-installEntityNodeMethods(Folder, "Folder", defineBoundNodeFields([
-  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { selection: "path", parse: (node) => String(node?.["path"] ?? "") },
-] as const));
+function parseFolderBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["folder"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FOLDER_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "description") },
+  { selection: "path", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "path") },
+  {
+    selection: "subFolders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "subFolders").map((id) => (entity as Folder).subFolder(id))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "files").map((id) => (entity as Folder).file(id))),
+  },
+  {
+    selection: "families { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "families").map((id) => (entity as Folder).family(id))),
+  },
+  {
+    selection: "types { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "types").map((id) => (entity as Folder).type(id))),
+  },
+  {
+    selection: "designs { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "designs").map((id) => (entity as Folder).design(id))),
+  },
+  ...vfsKitFields("folder"),
+] as const);
+
+installEntityKitMethods(Folder, FOLDER_FIELDS as readonly BoundKitFieldSpec<unknown, Folder>[], []);
 //#endregion 📁Folder
 
 //#region 🪟Layer
@@ -4173,8 +4564,11 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(typeof Piece.prototype.onPositionChanged).toBe("function");
       expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
     });
-    it("Type and Design install derived reference accessors", () => {
+    it("Type, Design, and File install derived reference accessors", () => {
       expect(typeof Type.prototype.files).toBe("function");
+      expect(typeof Type.prototype.referencedBy).toBe("function");
+      expect(typeof Type.prototype.referencedByDesigns).toBe("function");
+      expect(typeof Type.prototype.allReferencedByDesigns).toBe("function");
       expect(typeof Design.prototype.types).toBe("function");
       expect(typeof Design.prototype.designs).toBe("function");
       expect(typeof Design.prototype.files).toBe("function");
@@ -4182,6 +4576,20 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(typeof Design.prototype.allDesigns).toBe("function");
       expect(typeof Design.prototype.allFiles).toBe("function");
       expect(typeof Design.prototype.referencedBy).toBe("function");
+      expect(typeof Design.prototype.referencedByDesigns).toBe("function");
+      expect(typeof Design.prototype.allReferencedByDesigns).toBe("function");
+      expect(typeof Design.prototype.representations).toBe("function");
+      expect(typeof Design.prototype.allRepresentations).toBe("function");
+      expect(typeof Representation.prototype.referencedBy).toBe("function");
+      expect(typeof Representation.prototype.types).toBe("function");
+      expect(typeof Representation.prototype.files).toBe("function");
+      expect(typeof Representation.prototype.referencedByDesigns).toBe("function");
+      expect(typeof Representation.prototype.allReferencedByDesigns).toBe("function");
+      expect(typeof File.prototype.representations).toBe("function");
+      expect(typeof File.prototype.types).toBe("function");
+      expect(typeof File.prototype.designs).toBe("function");
+      expect(typeof File.prototype.allTypes).toBe("function");
+      expect(typeof File.prototype.allDesigns).toBe("function");
     });
     it("Kit and Graph install field change subscriptions", () => {
       expect(typeof Kit.prototype.onNameChanged).toBe("function");
@@ -4292,6 +4700,49 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
         expect(Reflect.get(session as object, "gqlLoopRunning")).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("kit virtual file system createFolder and moveToFolder", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.createFolder("inbox", "/inbox")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const folders = await eventually(() => kit.folders(), (rows) => rows.length >= 1, 15_000);
+        const inbox = folders.find((f) => (f as Folder) && true);
+        const inboxFolder = folders.find(async (f) => (await f.name()) === "inbox");
+        let inboxId = "";
+        for (const f of folders) {
+          if ((await f.name()) === "inbox") {
+            inboxId = f.id;
+            break;
+          }
+        }
+        expect(inboxId).not.toBe("");
+        expect(await kit.createDesign("vfs-design")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const designs = await eventually(() => kit.designs(), (rows) => rows.length >= 1, 15_000);
+        const design = designs.find((d) => d.id);
+        let designId = "";
+        for (const d of designs) {
+          if ((await d.name()) === "vfs-design") {
+            designId = d.id;
+            break;
+          }
+        }
+        expect(designId).not.toBe("");
+        const designEntity = new Design(session, designId, (await session.stores())[0]!.id);
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
+        expect(await kit.moveToFolder(designId, inboxId)).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const path = await eventually(() => designEntity.fileSystemPath(), (p) => p.includes("inbox"), 15_000);
+        expect(path).toContain("vfs-design");
+        const parent = await designEntity.fileSystemParent();
+        expect(parent).not.toBeNull();
+        expect(await (parent as Folder).name()).toBe("inbox");
       } finally {
         await session.dispose();
       }

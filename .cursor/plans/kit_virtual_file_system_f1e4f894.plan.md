@@ -13,7 +13,7 @@ todos:
     status: in_progress
   - id: rs-interface
     content: Add FileSystemNodeInterface enum + connection and implement the 6 computed resolvers on all 8 kinds per the constraint table; register types in build_schema
-    status: pending
+    status: in_progress
   - id: rs-writes
     content: Add Operation::CreateFolder and Operation::MoveToFolder (scope/input/to_diff/to_backwards via apply_kit_state) and the createFolder/moveToFolder command resolvers
     status: pending

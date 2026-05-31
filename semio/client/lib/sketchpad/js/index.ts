@@ -126,7 +126,7 @@ export async function importKit(
 	const kitDto = await sketchpadKitDtoFromJsStore(store);
 	const portCompatSource = (bundleKit ?? kitDto) as Kit;
 	const compat = sketchpadMergePortCompatMaps(sketchpadExtractPortCompatById(portCompatSource), sketchpadExtractPortCompatById(kitDto));
-	const kit = sketchpadApplyPortCompatById(kitDto, compat);
+	const kit = sketchpadApplyPortCompatById(sketchpadMergeKitDtoFromBundleProjection(kitDto, portCompatSource), compat);
 	return { kit, session, portCompatSource };
 }
 
@@ -1040,8 +1040,9 @@ export async function createSemioKitStoreFromJsStore(
 	);
 	const materializeKit = async (): Promise<Kit> => {
 		const dto = await sketchpadKitDtoFromJsStore(jsStore);
-		const compat = sketchpadMergePortCompatMaps(portCompatById, sketchpadExtractPortCompatById(dto));
-		return sketchpadApplyPortCompatById(dto, compat);
+		const merged = options?.portCompatSource ? sketchpadMergeKitDtoFromBundleProjection(dto, options.portCompatSource) : dto;
+		const compat = sketchpadMergePortCompatMaps(portCompatById, sketchpadExtractPortCompatById(merged));
+		return sketchpadApplyPortCompatById(merged, compat);
 	};
 	let kit = await materializeKit();
 	const refresh = async (): Promise<void> => {
@@ -1232,6 +1233,28 @@ export interface SketchpadTypeRepresentationRef {
 	readonly name: string;
 	readonly file?: unknown;
 	readonly tags?: unknown;
+}
+
+/** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
+export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
+	const sourceFiles = source.files ?? [];
+	const targetFiles = target.files ?? [];
+	const files =
+		sourceFiles.length === 0
+			? targetFiles
+			: [
+					...targetFiles,
+					...sourceFiles.filter((file) => !targetFiles.some((row) => row.id === file.id)),
+				];
+	const types = (target.types ?? []).map((type) => {
+		const sourceType = source.types?.find((row) => row.id === type.id);
+		if (!sourceType) return type;
+		const liveReps = sketchpadListTypeRepresentations(type);
+		const bundleReps = sketchpadListTypeRepresentations(sourceType);
+		if (liveReps.length > 0 || bundleReps.length === 0) return type;
+		return { ...type, representations: sourceType.representations } as Type;
+	});
+	return { ...target, files, types } as Kit;
 }
 
 /** @emoji 📋 Lists representation rows on a kit kind. */
@@ -3885,6 +3908,24 @@ if (import.meta.vitest) {
 				files: [{ id: "f1", name: "mesh.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
 			} as Kit;
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
+		});
+	});
+
+	describe("sketchpadMergeKitDtoFromBundleProjection", () => {
+		it("copies representations and files from bundle when live kit has none", () => {
+			const live = {
+				id: "k",
+				types: [{ id: "t1", name: "A", representations: [] }],
+				files: [],
+			} as Kit;
+			const bundle = {
+				id: "k",
+				types: [{ id: "t1", name: "A", representations: [{ id: "r1", name: "mesh", file: { id: "f1" } }] }],
+				files: [{ id: "f1", blob: "data:model/gltf-binary;base64,AAAA" }],
+			} as Kit;
+			const merged = sketchpadMergeKitDtoFromBundleProjection(live, bundle);
+			expect(sketchpadListTypeRepresentations(merged.types![0]!)).toHaveLength(1);
+			expect(merged.files).toHaveLength(1);
 		});
 	});
 

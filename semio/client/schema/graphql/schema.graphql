@@ -2140,6 +2140,8 @@ type Design implements Entity & Node & StrongEntity {
 	allTypes: TypeConnection!
 	allDesigns: DesignConnection!
 	allFiles: FileConnection!
+	representations: RepresentationConnection!
+	allRepresentations: RepresentationConnection!
 	referencedBy: PieceConnection!
 	referencedByDesigns: DesignConnection!
 	allReferencedByDesigns: DesignConnection!
@@ -4682,6 +4684,11 @@ type Representation implements Entity & StrongEntity {
 	tag(id: ID!): Tag
 	quality(id: ID!): Quality
 	attribute(id: ID!): Attribute
+	referencedBy: PieceConnection!
+	types: TypeConnection!
+	files: FileConnection!
+	referencedByDesigns: DesignConnection!
+	allReferencedByDesigns: DesignConnection!
 }
 
 type RepresentationConnection {

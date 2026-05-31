@@ -5408,6 +5408,11 @@ type Representation implements Artifact & RichStrongEntity & StrongEntity & Enti
   quality(id: ID!): Quality # computed
   attributes: AttributeConnection! # computed
   attribute(id: ID!): Attribute # computed
+  referencedBy: PieceConnection! # computed
+  types: TypeConnection! # computed
+  files: FileConnection! # computed
+  referencedByDesigns: DesignConnection! # computed
+  allReferencedByDesigns: DesignConnection! # computed
 }
 
 type RepresentationEdge implements EntityEdge {
@@ -8382,6 +8387,8 @@ type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Nod
   allTypes: TypeConnection! # computed
   allDesigns: DesignConnection! # computed
   allFiles: FileConnection! # computed
+  representations: RepresentationConnection! # computed
+  allRepresentations: RepresentationConnection! # computed
   referencedBy: PieceConnection! # computed
   referencedByDesigns: DesignConnection! # computed
   allReferencedByDesigns: DesignConnection! # computed

@@ -1,12 +1,14 @@
 {
   "title": "Derived Reference Computed Properties",
   "emoji": "🔗",
-  "status": "open",
+  "status": "closed",
   "description": "Add computed derived-reference properties to semio kit graph: Type.files; Design.types/designs/files (direct) and allTypes/allDesigns/allFiles (transitive); implement Design.referencedBy.",
-  "summary": "Implemented derived reference computed properties on the semio kit graph. Rust store: Type.files from representations; Design.types/designs/files (direct one-hop over piece blueprints); Design.allTypes/allDesigns/allFiles (transitive closure with cycle guard and root-design exclusion); Design.referencedBy inverse across owner kit. Removed stub Design.references (renamed to designs). Updated golden and companion GraphQL SDL. Extended JS facade with matching accessors. Added Rust unit+GraphQL test and JS accessor install test. All 58 Rust tests and 14 JS vitest tests pass.",
+  "summary": "Completed symmetric derived-reference computed properties: Representation inverse fields (referencedBy, types, files, referencedByDesigns, allReferencedByDesigns) mirroring Type/Design; Design↔Representation forward fields; kit scan helpers and GraphQL/JS accessors; fixed entity_family vfs macro arm, FileSystemNode Interface dispatch (Result returns, fileSystemChild id arg), and removed duplicate enum VFS impl so the crate compiles. Rust test derived_reference_computed_properties_resolve passes.",
   "goal": "🎯semio",
   "sessions": [
     "⚪bf4b9f1fdfdf4e068a35176beb2cca99",
-    "⚪76d92179413940e0b87c9b5ab947dc79"
+    "⚪76d92179413940e0b87c9b5ab947dc79",
+    "⚪8313cfe17a1b4e959250f387f39944a8",
+    "⚪fdae1bc730484750898eabcfa6fc3845"
   ]
 }

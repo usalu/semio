@@ -201,6 +201,185 @@ macro_rules! entity_input {
     };
 }
 
+/// @emoji 📁 VFS computed fields for types implementing golden `FileSystemNode`.
+#[macro_export]
+macro_rules! file_system_node_complex_methods {
+    ($variant:ident) => {
+        pub async fn file_system_parent(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::parent(&iface).await)
+        }
+        pub async fn file_system_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::children(&iface).await)
+        }
+        pub async fn file_system_child(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            id: $crate::id::Id,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::child(&iface, &id).await)
+        }
+        pub async fn file_system_path(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::path(&iface).await)
+        }
+        pub async fn file_system_name(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let _ = ctx;
+            let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
+            Ok($crate::gql::interfaces::file_system_vfs::name(&iface).await)
+        }
+        pub async fn is_file_system_root(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let _ = ctx;
+            Ok(matches!(
+                $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
+                $crate::gql::interfaces::FileSystemNodeInterface::Kit(_)
+            ))
+        }
+        pub async fn file_system_kind(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            let _ = ctx;
+            Ok(match $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()) {
+                $crate::gql::interfaces::FileSystemNodeInterface::Kit(_) => $crate::gql::interfaces::FileSystemNodeKind::Kit,
+                $crate::gql::interfaces::FileSystemNodeInterface::Folder(_) => $crate::gql::interfaces::FileSystemNodeKind::Folder,
+                $crate::gql::interfaces::FileSystemNodeInterface::File(_) => $crate::gql::interfaces::FileSystemNodeKind::File,
+                $crate::gql::interfaces::FileSystemNodeInterface::Design(_) => $crate::gql::interfaces::FileSystemNodeKind::Design,
+                $crate::gql::interfaces::FileSystemNodeInterface::Type(_) => $crate::gql::interfaces::FileSystemNodeKind::Type,
+                $crate::gql::interfaces::FileSystemNodeInterface::Family(_) => $crate::gql::interfaces::FileSystemNodeKind::Family,
+                $crate::gql::interfaces::FileSystemNodeInterface::Piece(_) => $crate::gql::interfaces::FileSystemNodeKind::Piece,
+                $crate::gql::interfaces::FileSystemNodeInterface::Connection(_) => $crate::gql::interfaces::FileSystemNodeKind::Connection,
+            })
+        }
+    };
+}
+
+/// @emoji 📁 `#[ComplexObject]` VFS fields resolved via `file_system_vfs::node_for_*` (for `#[Object]` types without a direct `Arc` handle).
+#[macro_export]
+macro_rules! file_system_node_vfs_complex_ctx {
+    ($ty:ty, $node_for:path) => {
+        #[crate::external_adapters::async_graphql::ComplexObject]
+        impl $ty {
+            pub async fn file_system_parent(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<
+                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+            > {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(None);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
+            }
+            pub async fn file_system_children(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
+            }
+            pub async fn file_system_child(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+                id: $crate::id::Id,
+            ) -> crate::external_adapters::async_graphql::Result<
+                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+            > {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(None);
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
+            }
+            pub async fn file_system_path(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<String> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(String::new());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
+            }
+            pub async fn file_system_name(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<String> {
+                let Some(node) = $node_for(self, ctx).await else {
+                    return Ok(String::new());
+                };
+                Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
+            }
+            pub async fn is_file_system_root(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<bool> {
+                Ok(matches!(
+                    $node_for(self, ctx).await,
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
+                ))
+            }
+            pub async fn file_system_kind(
+                &self,
+                ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+                Ok(match $node_for(self, ctx).await {
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Kit
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Folder(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Folder
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::File(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::File
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Design(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Design
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Type(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Type
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Family(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Family
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Piece(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Piece
+                    }
+                    Some($crate::gql::interfaces::FileSystemNodeInterface::Connection(_)) => {
+                        $crate::gql::interfaces::FileSystemNodeKind::Connection
+                    }
+                    None => $crate::gql::interfaces::FileSystemNodeKind::Kit,
+                })
+            }
+        }
+    };
+}
+
 /// @emoji 🏷️ `entity_family!` — `SimpleObject` + sync `compute_entity_hash` + `ComplexObject::hash` resolver shell.
 #[macro_export]
 macro_rules! entity_family {
@@ -210,7 +389,8 @@ macro_rules! entity_family {
             $($(#[$fm:meta])* $fvis:vis $field:ident : $ftype:ty),* $(,)?
         }
         hash = |$this:ident| $body:block
-        $(, extra = ($($extra:item)+))?
+        $(, extra = ( $($extra:tt)* ))?
+        , vfs = $vfs_variant:ident
     ) => {
         $(#[$sm])*
         #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
@@ -229,7 +409,36 @@ macro_rules! entity_family {
             pub async fn hash(&self) -> String {
                 self.compute_entity_hash()
             }
-            $($($extra)+)?
+            $($($extra)*)?
+            $crate::file_system_node_complex_methods!($vfs_variant);
+        }
+    };
+    (
+        $(#[$sm:meta])*
+        $vis:vis struct $Name:ident {
+            $($(#[$fm:meta])* $fvis:vis $field:ident : $ftype:ty),* $(,)?
+        }
+        hash = |$this:ident| $body:block
+        $(, extra = ( $($extra:tt)* ))?
+    ) => {
+        $(#[$sm])*
+        #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
+        #[graphql(complex)]
+        $vis struct $Name {
+            $($(#[$fm])* $fvis $field : $ftype),*
+        }
+        impl $Name {
+            pub fn compute_entity_hash(&self) -> String {
+                let $this = self;
+                $body
+            }
+        }
+        #[async_graphql::ComplexObject]
+        impl $Name {
+            pub async fn hash(&self) -> String {
+                self.compute_entity_hash()
+            }
+            $($($extra)*)?
         }
     };
 }
@@ -501,6 +710,12 @@ pub mod id {
     impl From<&str> for Id {
         fn from(s: &str) -> Self {
             Self(s.to_string())
+        }
+    }
+
+    impl From<&Id> for Id {
+        fn from(id: &Id) -> Self {
+            id.clone()
         }
     }
 
@@ -1239,13 +1454,32 @@ pub mod gql_relay {
             pub name: String,
             pub description: Option<String>,
             pub icon: Option<String>,
+            pub folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
         }
         hash = |this| {
             crate::hash::merkle_node_str(
-                &["Family", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or("")],
+                &[
+                    "Family",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
                 Vec::new(),
             )
         }
+        , extra = (
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+                None
+            }
+        )
+        , vfs = Family
     }
 
     crate::entity_relay_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
@@ -1450,6 +1684,10 @@ pub mod schema_gap_surfaces {
         CreatedDesignInput,
         CreatedDesigns,
         CreatedDesignsInput,
+        CreatedFolder,
+        CreatedFolderInput,
+        MovedToFolder,
+        MovedToFolderInput,
         CreatedPort,
         CreatedPorts,
         CreatedQualities,
@@ -1650,6 +1888,10 @@ pub mod schema_gap_surfaces {
         CreatedDesignInput,
         CreatedDesigns,
         CreatedDesignsInput,
+        CreatedFolder,
+        CreatedFolderInput,
+        MovedToFolder,
+        MovedToFolderInput,
         CreatedPort,
         CreatedPorts,
         CreatedQualities,
@@ -2081,6 +2323,8 @@ pub mod meta {
             pub description: Option<String>,
             pub icon: Option<String>,
             pub folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
             pub created: Option<Timestamp>,
             pub updated: Option<Timestamp>,
         }
@@ -2104,6 +2348,12 @@ pub mod meta {
             )
         }
         , extra = (
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+                None
+            }
             pub async fn tag(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Tag>> {
                 None
             }
@@ -2149,36 +2399,127 @@ pub mod meta {
                 Ok(crate::gql_relay::DesignConnection::from_designs(kit.designs_referencing_file_transitive(&self.id).await).await)
             }
         )
+        , vfs = File
     }
 
     crate::entity_family! {
         pub struct Folder {
             pub id: Id,
+            pub name: String,
             pub path: String,
             pub description: Option<String>,
+            pub icon: Option<String>,
+            pub parent_folder_id: Option<Id>,
+            #[graphql(skip)]
+            pub owner_kit: std::sync::Weak<crate::kit::Kit>,
         }
         hash = |this| {
-            crate::hash::merkle_node_str(&["Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
+            crate::hash::merkle_node_str(
+                &[
+                    "Folder",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.path.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.icon.as_deref().unwrap_or(""),
+                    this.parent_folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
+                ],
+                Vec::new(),
+            )
         }
         , extra = (
-            pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
+            pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+                self.owner_kit.upgrade().map(crate::gql::interfaces::EntityInterface::Kit)
+            }
+            pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 None
+            }
+            pub async fn file(&self, #[graphql(name = "id")] id: Id) -> Option<File> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.files.read().await;
+                rows.iter().find(|f| f.id == id && f.folder_id.as_ref() == Some(&self.id)).cloned()
+            }
+            pub async fn files(&self) -> crate::gql_relay::FileConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.files.read().await.iter().filter(|f| f.folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FileConnection::from_entities(rows)
             }
             #[graphql(name = "subFolder")]
-            pub async fn sub_folder(&self, #[graphql(name = "id")] _id: Id) -> Option<Folder> {
-                None
+            pub async fn sub_folder(&self, #[graphql(name = "id")] id: Id) -> Option<Folder> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.folders.read().await;
+                rows.iter().find(|f| f.id == id && f.parent_folder_id.as_ref() == Some(&self.id)).cloned()
             }
-            pub async fn family(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::gql_relay::Family> {
-                None
+            #[graphql(name = "subFolders")]
+            pub async fn sub_folders(&self) -> crate::gql_relay::FolderConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.folders.read().await.iter().filter(|f| f.parent_folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FolderConnection::from_entities(rows)
+            }
+            pub async fn family(&self, #[graphql(name = "id")] id: Id) -> Option<crate::gql_relay::Family> {
+                let kit = self.owner_kit.upgrade()?;
+                let rows = kit.families.read().await;
+                rows.iter().find(|f| f.id == id && f.folder_id.as_ref() == Some(&self.id)).cloned()
+            }
+            pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
+                let rows = if let Some(kit) = self.owner_kit.upgrade() {
+                    kit.families.read().await.iter().filter(|f| f.folder_id.as_ref() == Some(&self.id)).cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                crate::gql_relay::FamilyConnection::from_entities(rows)
             }
             #[graphql(name = "type")]
-            pub async fn type_(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-                None
+            pub async fn type_(&self, #[graphql(name = "id")] id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+                let kit = self.owner_kit.upgrade()?;
+                let ty = kit.type_by_external_id(&id).await?;
+                if ty.folder_id.read().await.as_ref() == Some(&self.id) {
+                    Some(ty)
+                } else {
+                    None
+                }
             }
-            pub async fn design(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-                None
+            pub async fn types(&self) -> crate::gql_relay::TypeConnection {
+                if let Some(kit) = self.owner_kit.upgrade() {
+                    let mut out = Vec::new();
+                    for ty in kit.types.read().await.iter() {
+                        if ty.folder_id.read().await.as_ref() == Some(&self.id) {
+                            out.push(ty.clone());
+                        }
+                    }
+                    return crate::gql_relay::TypeConnection::from_types(out).await;
+                }
+                crate::gql_relay::TypeConnection::from_types(Vec::new()).await
+            }
+            pub async fn design(&self, #[graphql(name = "id")] id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
+                let kit = self.owner_kit.upgrade()?;
+                let d = kit.design_by_external_id(&id).await?;
+                if d.folder_id.read().await.as_ref() == Some(&self.id) {
+                    Some(d)
+                } else {
+                    None
+                }
+            }
+            pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
+                if let Some(kit) = self.owner_kit.upgrade() {
+                    let mut out = Vec::new();
+                    for d in kit.designs.read().await.iter() {
+                        if d.folder_id.read().await.as_ref() == Some(&self.id) {
+                            out.push(d.clone());
+                        }
+                    }
+                    return crate::gql_relay::DesignConnection::from_designs(out).await;
+                }
+                crate::gql_relay::DesignConnection::from_designs(Vec::new()).await
             }
         )
+        , vfs = Folder
     }
 
     crate::entity_family! {
@@ -2717,6 +3058,49 @@ pub mod kit {
                 let icon = self.icon.read().await;
                 h(&[self.id.as_str(), name.as_str(), url.as_str(), desc.as_str(), icon.as_str()])
             }
+
+            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_with_direct_blueprint_type(&ty.id).await
+            }
+
+            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.designs_referencing_type_transitive(&ty.id).await
+            }
+
+            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this representation's owner kind.
+            pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
+                let Some(ty) = self.owner_type.upgrade() else {
+                    return Vec::new();
+                };
+                let Some(kit) = ty.owner_kit.upgrade() else {
+                    return Vec::new();
+                };
+                kit.pieces_with_blueprint_type(&ty.id).await
+            }
+
+            /// @emoji 🧰 Owner kind of this representation (zero or one).
+            pub async fn owner_types(&self) -> Vec<Arc<Type>> {
+                self.owner_type.upgrade().into_iter().collect()
+            }
+
+            /// @emoji 📄 Linked file for this representation (zero or one).
+            pub async fn linked_files(&self) -> Vec<File> {
+                self.file.read().await.clone().into_iter().collect()
+            }
         }
 
         #[Object(name = "Representation")]
@@ -2769,6 +3153,29 @@ pub mod kit {
             pub async fn attribute(&self, id: Id) -> Option<Attribute> {
                 self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
+            /// @emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+            #[graphql(name = "referencedBy")]
+            pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
+            }
+            /// @emoji 🧰 Owner kind of this representation.
+            pub async fn types(&self) -> crate::gql_relay::TypeConnection {
+                crate::gql_relay::TypeConnection::from_types(self.owner_types().await).await
+            }
+            /// @emoji 📄 File linked from this representation.
+            pub async fn files(&self) -> crate::gql_relay::FileConnection {
+                crate::gql_relay::FileConnection::from_entities(self.linked_files().await)
+            }
+            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            #[graphql(name = "referencedByDesigns")]
+            pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
+            }
+            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            #[graphql(name = "allReferencedByDesigns")]
+            pub async fn all_referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
+            }
         }
         //#endregion 💾 representation
 
@@ -2797,6 +3204,7 @@ pub mod kit {
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
+            pub folder_id: RwLock<Option<Id>>,
         }
 
         impl Default for Type {
@@ -2824,6 +3232,7 @@ pub mod kit {
                     props: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
                     stats: RwLock::new(Vec::new()),
+                    folder_id: RwLock::new(None),
                 }
             }
         }
@@ -3058,6 +3467,12 @@ pub mod kit {
                 self.stats.read().await.iter().find(|s| s.id == id).cloned()
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Type,
+            crate::gql::interfaces::file_system_vfs::node_for_type
+        );
+
         //#endregion 🏠 type
 
         //#region 🧩 blueprint
@@ -3281,6 +3696,11 @@ pub mod kit {
                     self.child_pieces.read().await.iter().find(|p| p.id == id).cloned()
                 }
             }
+
+            crate::file_system_node_vfs_complex_ctx!(
+                Piece,
+                crate::gql::interfaces::file_system_vfs::node_for_piece
+            );
         }
         //#endregion ⭕ piece
 
@@ -3489,6 +3909,11 @@ pub mod kit {
                 }
             }
 
+            crate::file_system_node_vfs_complex_ctx!(
+                Connection,
+                crate::gql::interfaces::file_system_vfs::node_for_connection
+            );
+
             #[Object(name = "Side")]
             impl Side {
                 pub async fn id(&self) -> Id {
@@ -3600,6 +4025,7 @@ pub mod kit {
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
+            pub folder_id: RwLock<Option<Id>>,
         }
 
         impl Default for Design {
@@ -3625,6 +4051,7 @@ pub mod kit {
                     props: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
                     stats: RwLock::new(Vec::new()),
+                    folder_id: RwLock::new(None),
                 }
             }
         }
@@ -3709,6 +4136,37 @@ pub mod kit {
                     for f in t.files_from_representations().await {
                         if seen.insert(f.id.clone()) {
                             out.push(f);
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 💾 Representations on direct [`Type`] blueprints on this design's pieces.
+            pub async fn direct_representations_from_type_blueprints(&self) -> Vec<Arc<super::r#type::Representation>> {
+                use std::collections::HashSet;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for t in self.direct_blueprint_types().await {
+                    for r in t.representations.read().await.iter() {
+                        if seen.insert(r.id.clone()) {
+                            out.push(r.clone());
+                        }
+                    }
+                }
+                out
+            }
+
+            /// @emoji 💾 Representations on [`Type`] blueprints reachable transitively through nested designs.
+            pub async fn all_representations_from_type_blueprints(&self) -> Vec<Arc<super::r#type::Representation>> {
+                use std::collections::HashSet;
+                let (types, _, _) = self.transitive_reference_closure().await;
+                let mut out = Vec::new();
+                let mut seen = HashSet::new();
+                for t in types {
+                    for r in t.representations.read().await.iter() {
+                        if seen.insert(r.id.clone()) {
+                            out.push(r.clone());
                         }
                     }
                 }
@@ -3906,6 +4364,15 @@ pub mod kit {
             pub async fn files(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.direct_files_from_type_blueprints().await)
             }
+            /// @emoji 💾 Representations on type blueprints referenced by this design's pieces (one hop).
+            pub async fn representations(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.direct_representations_from_type_blueprints().await).await
+            }
+            /// @emoji 💾 Representations on types referenced transitively through nested design blueprints.
+            #[graphql(name = "allRepresentations")]
+            pub async fn all_representations(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.all_representations_from_type_blueprints().await).await
+            }
             /// @emoji 🧰 Types referenced transitively through nested design blueprints.
             #[graphql(name = "allTypes")]
             pub async fn all_types(&self) -> crate::gql_relay::TypeConnection {
@@ -3940,6 +4407,11 @@ pub mod kit {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Design,
+            crate::gql::interfaces::file_system_vfs::node_for_design
+        );
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
@@ -4255,6 +4727,7 @@ pub mod kit {
 
     use crate::hash::h;
     use crate::id::Id;
+    use crate::gql_relay::Family;
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
 
@@ -4281,6 +4754,7 @@ pub mod kit {
         pub type_weak_by_id: RwLock<HashMap<Id, Weak<r#type::Type>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
+        pub families: RwLock<Vec<Family>>,
         pub authors: RwLock<Vec<Author>>,
         pub concepts: RwLock<Vec<Arc<Concept>>>,
         pub tags: RwLock<Vec<Arc<Tag>>>,
@@ -4323,6 +4797,7 @@ pub mod kit {
                 type_weak_by_id: RwLock::new(HashMap::new()),
                 files: RwLock::new(Vec::new()),
                 folders: RwLock::new(Vec::new()),
+                families: RwLock::new(Vec::new()),
                 authors: RwLock::new(Vec::new()),
                 concepts: RwLock::new(Vec::new()),
                 tags: RwLock::new(Vec::new()),
@@ -4413,15 +4888,14 @@ pub mod kit {
             if let Some(q) = &d.qualities {
                 self.apply_qualities_collection_diff(q).await?;
             }
-            if let Some(v) = &d.files {
-                if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
-                }
+            if let Some(f) = &d.files {
+                self.apply_files_collection_diff(f).await?;
             }
-            if let Some(v) = &d.folders {
-                if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
-                }
+            if let Some(f) = &d.folders {
+                self.apply_folders_collection_diff(f).await?;
+            }
+            if let Some(f) = &d.families {
+                self.apply_families_collection_diff(f).await?;
             }
             if let Some(v) = &d.authors {
                 if *v {
@@ -4461,6 +4935,9 @@ pub mod kit {
                 if diff.unit.is_some() {
                     *ty.unit.write().await = diff.unit.clone().unwrap_or_default();
                 }
+                if let Some(folder_id) = &diff.folder_id {
+                    *ty.folder_id.write().await = folder_id.clone();
+                }
             }
             for entity in &t.added {
                 self.apply_create_type_scoped(
@@ -4473,6 +4950,62 @@ pub mod kit {
                     entity.unit.clone(),
                 )
                 .await?;
+            }
+            Ok(())
+        }
+
+        async fn apply_folders_collection_diff(self: &Arc<Self>, f: &crate::operation::FoldersCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &f.removed {
+                let id = r.id.clone();
+                self.folders.write().await.retain(|folder| folder.id != id);
+            }
+            for entity in &f.modified {
+                let fid = entity.folder.id.clone();
+                let mut folders = self.folders.write().await;
+                if let Some(folder) = folders.iter_mut().find(|x| x.id == fid) {
+                    if let Some(parent_folder_id) = &entity.patch.parent_folder_id {
+                        folder.parent_folder_id = parent_folder_id.clone();
+                    }
+                }
+            }
+            for entity in &f.added {
+                self.folders.write().await.push(crate::meta::Folder {
+                    id: entity.id.clone(),
+                    name: entity.name.clone(),
+                    path: entity.path.clone(),
+                    description: entity.description.clone(),
+                    icon: entity.icon.clone(),
+                    parent_folder_id: entity.parent_folder_id.clone(),
+                    owner_kit: std::sync::Arc::downgrade(self),
+                });
+            }
+            Ok(())
+        }
+
+        async fn apply_files_collection_diff(self: &Arc<Self>, f: &crate::operation::FilesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for entity in &f.modified {
+                let fid = entity.file.id.clone();
+                let mut files = self.files.write().await;
+                if let Some(file) = files.iter_mut().find(|x| x.id == fid) {
+                    if let Some(folder_id) = &entity.patch.folder_id {
+                        file.folder_id = folder_id.clone();
+                        file.owner_kit = std::sync::Arc::downgrade(self);
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        async fn apply_families_collection_diff(self: &Arc<Self>, f: &crate::operation::FamiliesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for entity in &f.modified {
+                let fid = entity.family.id.clone();
+                let mut families = self.families.write().await;
+                if let Some(family) = families.iter_mut().find(|x| x.id == fid) {
+                    if let Some(folder_id) = &entity.patch.folder_id {
+                        family.folder_id = folder_id.clone();
+                        family.owner_kit = std::sync::Arc::downgrade(self);
+                    }
+                }
             }
             Ok(())
         }
@@ -4501,6 +5034,9 @@ pub mod kit {
                     }
                     if sc.image.is_some() {
                         *design.image.write().await = sc.image.clone();
+                    }
+                    if let Some(folder_id) = &sc.folder_id {
+                        *design.folder_id.write().await = folder_id.clone();
                     }
                 }
                 if let Some(pc) = &diff.pieces {
@@ -4954,7 +5490,7 @@ pub mod kit {
         /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references the given file.
         pub async fn designs_with_direct_file_reference(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
             use std::collections::HashSet;
-            let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id).collect();
+            let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
             let mut seen = HashSet::new();
             for design in self.designs.read().await.iter() {
@@ -4972,7 +5508,7 @@ pub mod kit {
 
         /// @emoji 🏘 Designs that reference the given file transitively through kinds and nested designs.
         pub async fn designs_referencing_file_transitive(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
-            let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id).collect();
+            let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
             for design in self.designs.read().await.iter() {
                 let (types, _, _) = design.transitive_reference_closure().await;
@@ -5392,7 +5928,7 @@ pub mod kit {
             crate::gql_relay::FolderConnection::from_entities(self.folders.read().await.clone())
         }
         pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
-            crate::gql_relay::FamilyConnection::from_entities(Vec::new())
+            crate::gql_relay::FamilyConnection::from_entities(self.families.read().await.clone())
         }
         pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
             crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
@@ -5425,8 +5961,7 @@ pub mod kit {
         }
 
         pub async fn family(&self, id: Id) -> Option<crate::gql_relay::Family> {
-            let _ = id;
-            None
+            self.families.read().await.iter().find(|f| f.id == id).cloned()
         }
 
         pub async fn author(&self, id: Id) -> Option<Author> {
@@ -5457,6 +5992,8 @@ pub mod kit {
             self.stats.read().await.iter().find(|s| s.id == id).cloned()
         }
     }
+
+    crate::file_system_node_vfs_complex_ctx!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit);
     //#endregion 📦 kit
 }
 
@@ -7392,6 +7929,7 @@ pub mod operation {
         pub icon: Option<String>,
         pub image: Option<String>,
         pub unit: Option<String>,
+        pub folder_id: Option<Option<Id>>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -7432,6 +7970,7 @@ pub mod operation {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
+        pub folder_id: Option<Option<Id>>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -7457,7 +7996,75 @@ pub mod operation {
 
     //#endregion 🔖canonical_kit_types_designs_mod
 
-    /// @emoji 📦 `files` / `folders` / `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
+    /// @emoji 📁 One `folders.added[]` entry.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FolderAdded {
+        pub id: Id,
+        pub name: String,
+        pub path: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub parent_folder_id: Option<Id>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FolderPatch {
+        pub parent_folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FolderModified {
+        pub folder: IdRef,
+        pub patch: FolderPatch,
+    }
+
+    /// @emoji 📦 Sparse `folders` triple.
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FoldersCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FolderModified>,
+        pub added: Vec<FolderAdded>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FilePatch {
+        pub folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FileModified {
+        pub file: IdRef,
+        pub patch: FilePatch,
+    }
+
+    /// @emoji 📦 Sparse `files` triple (kit-level file folder membership).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FilesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FileModified>,
+        pub added: Vec<IdRef>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FamilyPatch {
+        pub folder_id: Option<Option<Id>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct FamilyModified {
+        pub family: IdRef,
+        pub patch: FamilyPatch,
+    }
+
+    /// @emoji 📦 Sparse `families` triple (kit-level family folder membership).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct FamiliesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<FamilyModified>,
+        pub added: Vec<IdRef>,
+    }
+
+    /// @emoji 📦 `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
     pub type KitAuxSubtree = Option<bool>;
 
     /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees use tri-state `KitAuxSubtree` flags).
@@ -7477,8 +8084,9 @@ pub mod operation {
         pub tags: Option<TagsCollectionDiff>,
         pub concepts: Option<ConceptsCollectionDiff>,
         pub qualities: Option<QualitiesCollectionDiff>,
-        pub files: KitAuxSubtree,
-        pub folders: KitAuxSubtree,
+        pub files: Option<FilesCollectionDiff>,
+        pub folders: Option<FoldersCollectionDiff>,
+        pub families: Option<FamiliesCollectionDiff>,
         pub authors: KitAuxSubtree,
     }
 
@@ -7513,6 +8121,7 @@ pub mod operation {
             opt!(qualities);
             opt!(files);
             opt!(folders);
+            opt!(families);
             opt!(authors);
         }
     }
@@ -7677,6 +8286,7 @@ pub mod operation {
         CreateQuality { owner_id: Id, quality_id: Id, attribute_ids: Vec<Id>, benchmark_ids: Vec<Id> },
         CreateDesign { owner_id: Id, design_id: Id },
         CreateType { owner_id: Id, type_id: Id },
+        CreateFolder { owner_id: Id, folder_id: Id },
         Design { design_id: Id },
         Type { type_id: Id },
         CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, attribute_ids: Vec<Id> },
@@ -7699,6 +8309,8 @@ pub mod operation {
         EntityScalars { name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String> },
         FixedPiece { position: PositionInput, name: Option<String>, description: Option<String> },
         Offset { offset: OffsetInput },
+        CreateFolder { name: String, path: String, description: Option<String>, icon: Option<String>, parent_folder_id: Option<Id> },
+        MoveToFolder { folder_id: Option<Id> },
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
@@ -7726,6 +8338,9 @@ pub mod operation {
         DragPieceInDesign { scope: Scope, input: Input },
         DragPiecesInDesign { scope: Scope, input: Input },
         FixPieceInDesign { scope: Scope, input: Input },
+        CreateFolder { scope: Scope, input: Input },
+        DeleteFolder { scope: Scope, input: Input },
+        MoveToFolder { scope: Scope, input: Input },
     }
 
     impl Operation {
@@ -7753,6 +8368,9 @@ pub mod operation {
                 Operation::DragPieceInDesign { .. } => "dragPieceInDesign",
                 Operation::DragPiecesInDesign { .. } => "dragPiecesInDesign",
                 Operation::FixPieceInDesign { .. } => "fixPieceInDesign",
+                Operation::CreateFolder { .. } => "createFolder",
+                Operation::DeleteFolder { .. } => "deleteFolder",
+                Operation::MoveToFolder { .. } => "moveToFolder",
             }
         }
 
@@ -8249,6 +8867,104 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
+                Operation::CreateFolder { scope, input } => {
+                    let Scope::CreateFolder { folder_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFolder expects Scope::CreateFolder"));
+                    };
+                    let Input::CreateFolder { name, path, description, icon, parent_folder_id } = input else {
+                        return Err(SemioError::invalid("createFolder expects Input::CreateFolder"));
+                    };
+                    if let Some(parent_id) = parent_folder_id {
+                        if !kit.folders.read().await.iter().any(|f| f.id == *parent_id) {
+                            return Err(SemioError::not_found("Folder", parent_id.as_str()));
+                        }
+                    }
+                    if kit.folders.read().await.iter().any(|f| f.id == *folder_id) {
+                        return Err(SemioError::invalid(format!("Folder already exists: {}", folder_id.as_str())));
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        folders: Some(FoldersCollectionDiff {
+                            added: vec![FolderAdded { id: folder_id.clone(), name: name.clone(), path: path.clone(), description: description.clone(), icon: icon.clone(), parent_folder_id: parent_folder_id.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
+                }
+                Operation::MoveToFolder { scope, input } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("moveToFolder expects Scope::Entity"));
+                    };
+                    let Input::MoveToFolder { folder_id: new_folder_id } = input else {
+                        return Err(SemioError::invalid("moveToFolder expects Input::MoveToFolder"));
+                    };
+                    if let Some(folder_id) = new_folder_id {
+                        if !kit.folders.read().await.iter().any(|f| f.id == *folder_id) {
+                            return Err(SemioError::not_found("Folder", folder_id.as_str()));
+                        }
+                    }
+                    let folder_placement: Option<Option<Id>> = Some(new_folder_id);
+                    if kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            folders: Some(FoldersCollectionDiff {
+                                modified: vec![FolderModified { folder: IdRef { id: entity_id.clone() }, patch: FolderPatch { parent_folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.files.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            files: Some(FilesCollectionDiff {
+                                modified: vec![FileModified { file: IdRef { id: entity_id.clone() }, patch: FilePatch { folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.families.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            families: Some(FamiliesCollectionDiff {
+                                modified: vec![FamilyModified { family: IdRef { id: entity_id.clone() }, patch: FamilyPatch { folder_id: folder_placement } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.design_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModified {
+                                    design: IdRef { id: entity_id.clone() },
+                                    diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.type_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            types: Some(TypesCollectionDiff {
+                                modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { folder_id: folder_placement, ..Default::default() } }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    Err(SemioError::not_found("FileSystemNode", entity_id.as_str()))
+                }
+                Operation::DeleteFolder { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("deleteFolder expects Scope::Entity"));
+                    };
+                    if !kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
+                        return Err(SemioError::not_found("Folder", entity_id.as_str()));
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        folders: Some(FoldersCollectionDiff { removed: vec![IdRef { id: entity_id.clone() }], ..Default::default() }),
+                        ..Default::default()
+                    }))
+                }
             }
         }
 
@@ -8474,8 +9190,54 @@ pub mod operation {
                         input: entity_scalars_from_type(&ty).await,
                     }])
                 }
+                Operation::CreateFolder { scope, .. } => {
+                    let Scope::CreateFolder { folder_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFolder expects Scope::CreateFolder"));
+                    };
+                    Ok(vec![Operation::DeleteFolder { scope: Scope::Entity { entity_id: folder_id.clone() }, input: Input::None }])
+                }
+                Operation::MoveToFolder { scope, input } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("moveToFolder expects Scope::Entity"));
+                    };
+                    let Input::MoveToFolder { folder_id: _ } = input else {
+                        return Err(SemioError::invalid("moveToFolder expects Input::MoveToFolder"));
+                    };
+                    let previous = vfs_node_folder_placement(kit, entity_id).await?;
+                    Ok(vec![Operation::MoveToFolder { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::MoveToFolder { folder_id: previous } }])
+                }
+                Operation::DeleteFolder { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("deleteFolder expects Scope::Entity"));
+                    };
+                    let folder = kit.folders.read().await.iter().find(|f| f.id == *entity_id).cloned().ok_or_else(|| SemioError::not_found("Folder", entity_id.as_str()))?;
+                    let owner_id = kit.workspace_kit_id().await;
+                    Ok(vec![Operation::CreateFolder {
+                        scope: Scope::CreateFolder { owner_id, folder_id: entity_id.clone() },
+                        input: Input::CreateFolder { name: folder.name.clone(), path: folder.path.clone(), description: folder.description.clone(), icon: folder.icon.clone(), parent_folder_id: folder.parent_folder_id.clone() },
+                    }])
+                }
             }
         }
+    }
+
+    async fn vfs_node_folder_placement(kit: &Arc<crate::kit::Kit>, node_id: &Id) -> Result<Option<Id>, SemioError> {
+        if let Some(folder) = kit.folders.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(folder.parent_folder_id.clone());
+        }
+        if let Some(file) = kit.files.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(file.folder_id.clone());
+        }
+        if let Some(family) = kit.families.read().await.iter().find(|f| f.id == *node_id) {
+            return Ok(family.folder_id.clone());
+        }
+        if let Some(design) = kit.design_by_external_id(node_id).await {
+            return Ok(design.folder_id.read().await.clone());
+        }
+        if let Some(ty) = kit.type_by_external_id(node_id).await {
+            return Ok(ty.folder_id.read().await.clone());
+        }
+        Err(SemioError::not_found("FileSystemNode", node_id.as_str()))
     }
 
     fn validate_attribute_ids(expected: usize, actual: &[Id]) -> Result<(), SemioError> {
@@ -9533,11 +10295,14 @@ pub mod kit_backbone {
         if let Some(q) = &d.qualities {
             root.insert("qualities".to_string(), qualities_collection_diff_wire(q));
         }
-        if let Some(v) = d.files {
-            root.insert("files".to_string(), Value::Bool(v));
+        if let Some(_f) = &d.files {
+            root.insert("files".to_string(), Value::Object(Map::new()));
         }
-        if let Some(v) = d.folders {
-            root.insert("folders".to_string(), Value::Bool(v));
+        if let Some(_f) = &d.folders {
+            root.insert("folders".to_string(), Value::Object(Map::new()));
+        }
+        if let Some(_f) = &d.families {
+            root.insert("families".to_string(), Value::Object(Map::new()));
         }
         if let Some(v) = d.authors {
             root.insert("authors".to_string(), Value::Bool(v));
@@ -9880,6 +10645,9 @@ pub mod kit_backbone {
             Scope::CreateType { owner_id, type_id } => crate::external_adapters::serde_json::json!({
                 "CreateType": { "owner_id": owner_id.as_str(), "type_id": type_id.as_str() }
             }),
+            Scope::CreateFolder { owner_id, folder_id } => crate::external_adapters::serde_json::json!({
+                "CreateFolder": { "owner_id": owner_id.as_str(), "folder_id": folder_id.as_str() }
+            }),
             Scope::Design { design_id } => crate::external_adapters::serde_json::json!({ "Design": { "design_id": design_id.as_str() } }),
             Scope::Type { type_id } => crate::external_adapters::serde_json::json!({ "Type": { "type_id": type_id.as_str() } }),
         }
@@ -9958,6 +10726,12 @@ pub mod kit_backbone {
             Input::EntityScalars { name, description, icon, image, unit } => crate::external_adapters::serde_json::json!({
                 "EntityScalars": { "name": name, "description": description, "icon": icon, "image": image, "unit": unit }
             }),
+            Input::CreateFolder { name, path, description, icon, parent_folder_id } => crate::external_adapters::serde_json::json!({
+                "CreateFolder": { "name": name, "path": path, "description": description, "icon": icon, "parent_folder_id": parent_folder_id.as_ref().map(|id| id.as_str()) }
+            }),
+            Input::MoveToFolder { folder_id } => crate::external_adapters::serde_json::json!({
+                "MoveToFolder": { "folder_id": folder_id.as_ref().map(|id| id.as_str()) }
+            }),
         }
     }
 
@@ -9987,6 +10761,9 @@ pub mod kit_backbone {
             Operation::CreateType { scope, input } => crate::external_adapters::serde_json::json!({ "CreateType": pair(scope, input) }),
             Operation::DeleteDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteDesign": pair(scope, input) }),
             Operation::DeleteType { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteType": pair(scope, input) }),
+            Operation::CreateFolder { scope, input } => crate::external_adapters::serde_json::json!({ "CreateFolder": pair(scope, input) }),
+            Operation::DeleteFolder { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteFolder": pair(scope, input) }),
+            Operation::MoveToFolder { scope, input } => crate::external_adapters::serde_json::json!({ "MoveToFolder": pair(scope, input) }),
         }
     }
 
@@ -10108,6 +10885,10 @@ pub mod kit_backbone {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
                 type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("type_id"))?),
             },
+            "CreateFolder" => Scope::CreateFolder {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                folder_id: id_from_str(m.get("folder_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("folder_id"))?),
+            },
             "Design" => Scope::Design { design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?) },
             "Type" => Scope::Type { type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("type_id"))?) },
             other => return Err(SemioError::invalid(format!("unknown scope `{other}`"))),
@@ -10225,6 +11006,20 @@ pub mod kit_backbone {
                     unit: m.get("unit").and_then(|x| x.as_str()).map(|s| s.to_string()),
                 }
             }
+            "CreateFolder" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("CreateFolder"))?;
+                Input::CreateFolder {
+                    name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                    path: m.get("path").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                    description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    parent_folder_id: m.get("parent_folder_id").and_then(|x| x.as_str()).map(id_from_str),
+                }
+            }
+            "MoveToFolder" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("MoveToFolder"))?;
+                Input::MoveToFolder { folder_id: m.get("folder_id").and_then(|x| x.as_str()).map(id_from_str) }
+            }
             other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
         })
     }
@@ -10259,6 +11054,9 @@ pub mod kit_backbone {
             "CreateType" => Operation::CreateType { scope, input },
             "DeleteDesign" => Operation::DeleteDesign { scope, input },
             "DeleteType" => Operation::DeleteType { scope, input },
+            "CreateFolder" => Operation::CreateFolder { scope, input },
+            "DeleteFolder" => Operation::DeleteFolder { scope, input },
+            "MoveToFolder" => Operation::MoveToFolder { scope, input },
             other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
@@ -10289,12 +11087,55 @@ pub mod kit_backbone {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
         let name = kit.name.read().await.clone();
+        let files_items: Vec<crate::external_adapters::serde_json::Value> = {
+            kit.files
+                .read()
+                .await
+                .iter()
+                .map(|f| {
+                    let mut file_obj = crate::external_adapters::serde_json::json!({
+                        "id": f.id.as_str(),
+                        "hash": f.hash.as_str(),
+                    });
+                    if !f.url.is_empty() {
+                        if f.url.starts_with("data:") || f.url.starts_with("blob:") {
+                            file_obj["blob"] = crate::external_adapters::serde_json::Value::String(f.url.clone());
+                        } else {
+                            file_obj["url"] = crate::external_adapters::serde_json::Value::String(f.url.clone());
+                        }
+                    }
+                    if let Some(desc) = &f.description {
+                        file_obj["description"] = crate::external_adapters::serde_json::Value::String(desc.clone());
+                    }
+                    file_obj
+                })
+                .collect()
+        };
         let types_items: Vec<crate::external_adapters::serde_json::Value> = {
             let tys = kit.types.read().await;
             let mut out = Vec::with_capacity(tys.len());
             for t in tys.iter() {
                 let tid = t.id.as_str();
                 let nm = t.name.read().await.clone();
+                let ports: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut pj = Vec::new();
+                    for port in t.ports.read().await.iter() {
+                        let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
+                            .compatible_with
+                            .read()
+                            .await
+                            .iter()
+                            .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
+                            .collect();
+                        pj.push(crate::external_adapters::serde_json::json!({
+                            "id": port.id.as_str(),
+                            "label": port.label.read().await.clone(),
+                            "code": port.code.read().await.clone(),
+                            "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
+                        }));
+                    }
+                    pj
+                };
                 let connectors: Vec<crate::external_adapters::serde_json::Value> = {
                     let mut cj = Vec::new();
                     for c in t.connectors.read().await.iter() {
@@ -10323,10 +11164,30 @@ pub mod kit_backbone {
                     }
                     cj
                 };
+                let representations: Vec<crate::external_adapters::serde_json::Value> = {
+                    let mut rj = Vec::new();
+                    for rep in t.representations.read().await.iter() {
+                        let mut row = crate::external_adapters::serde_json::json!({
+                            "id": rep.id.as_str(),
+                            "name": rep.name.read().await.clone(),
+                        });
+                        if let Some(file) = rep.file.read().await.clone() {
+                            row["file"] = crate::external_adapters::serde_json::json!({ "id": file.id.as_str() });
+                        }
+                        let url = rep.url.read().await.clone();
+                        if !url.is_empty() {
+                            row["url"] = crate::external_adapters::serde_json::Value::String(url);
+                        }
+                        rj.push(row);
+                    }
+                    rj
+                };
                 out.push(crate::external_adapters::serde_json::json!({
                     "id": tid,
                     "name": nm,
+                    "ports": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": ports },
                     "connectors": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": connectors },
+                    "representations": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": representations },
                 }));
             }
             out
@@ -10407,6 +11268,12 @@ pub mod kit_backbone {
         }
         if let Some(ts) = kit.updated.read().await.clone() {
             root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
+        }
+        if !files_items.is_empty() {
+            root.insert(
+                "files".into(),
+                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }),
+            );
         }
         root.insert(
             "types".into(),
@@ -10519,11 +11386,20 @@ pub mod kit_backbone {
                 .to_string();
             files_slot.push(crate::meta::File {
                 id: fid.into(),
+                name: f_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string(),
                 url,
                 mime: f_json.get("mime").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 size: f_json.get("size").and_then(|v| v.as_i64()).map(|n| n as i32),
                 hash,
                 description: f_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                icon: f_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                folder_id: f_json
+                    .get("folderId")
+                    .or_else(|| f_json.get("folder_id"))
+                    .and_then(|v| v.as_str())
+                    .or_else(|| f_json.get("folder").and_then(crate::kit_backbone::json_entity_id_ref))
+                    .map(|s| s.into()),
+                owner_kit: std::sync::Arc::downgrade(kit),
                 created: None,
                 updated: None,
             });
@@ -12234,6 +13110,469 @@ pub mod gql {
             Plane(Arc<Plane>),
             Position(Arc<Position>),
             Location(Arc<Location>),
+            Folder(crate::meta::Folder),
+            File(crate::meta::File),
+            Family(crate::gql_relay::Family),
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
+        #[derive(Clone, Copy, Debug, Eq, PartialEq, crate::external_adapters::async_graphql::Enum)]
+        #[graphql(name = "FileSystemNodeKind")]
+        pub enum FileSystemNodeKind {
+            #[graphql(name = "KIT")]
+            Kit,
+            #[graphql(name = "FOLDER")]
+            Folder,
+            #[graphql(name = "FILE")]
+            File,
+            #[graphql(name = "DESIGN")]
+            Design,
+            #[graphql(name = "TYPE")]
+            Type,
+            #[graphql(name = "FAMILY")]
+            Family,
+            #[graphql(name = "PIECE")]
+            Piece,
+            #[graphql(name = "CONNECTION")]
+            Connection,
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeEdge` — relay edge for constrained VFS children.
+        #[derive(Clone)]
+        pub struct FileSystemNodeEdge {
+            pub cursor: String,
+            pub node: FileSystemNodeInterface,
+        }
+
+        #[Object(name = "FileSystemNodeEdge")]
+        impl FileSystemNodeEdge {
+            async fn cursor(&self) -> String {
+                self.cursor.clone()
+            }
+            async fn node(&self) -> FileSystemNodeInterface {
+                self.node.clone()
+            }
+        }
+
+        /// @emoji 📁 SDL `FileSystemNodeConnection` — relay connection for constrained VFS children.
+        #[derive(Clone)]
+        pub struct FileSystemNodeConnection {
+            pub edges: Vec<FileSystemNodeEdge>,
+            pub page_info: crate::gql_relay::PageInfo,
+            pub hash: String,
+        }
+
+        #[Object(name = "FileSystemNodeConnection")]
+        impl FileSystemNodeConnection {
+            async fn edges(&self) -> &Vec<FileSystemNodeEdge> {
+                &self.edges
+            }
+            async fn page_info(&self) -> &crate::gql_relay::PageInfo {
+                &self.page_info
+            }
+            async fn hash(&self) -> String {
+                self.hash.clone()
+            }
+        }
+
+        /// @emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "FileSystemNode",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<EntityInterface>"),
+            field(name = "owns", ty = "Option<EntityConnectionInterface>"),
+            field(name = "fileSystemParent", method = "file_system_parent", ty = "Option<FileSystemNodeInterface>"),
+            field(name = "fileSystemChildren", method = "file_system_children", ty = "FileSystemNodeConnection"),
+            field(
+                name = "fileSystemChild",
+                method = "file_system_child",
+                arg(name = "id", ty = "crate::id::Id"),
+                ty = "Option<FileSystemNodeInterface>"
+            ),
+            field(name = "fileSystemPath", method = "file_system_path", ty = "String"),
+            field(name = "fileSystemName", method = "file_system_name", ty = "String"),
+            field(name = "isFileSystemRoot", method = "is_file_system_root", ty = "bool"),
+            field(name = "fileSystemKind", method = "file_system_kind", ty = "FileSystemNodeKind")
+        )]
+        pub enum FileSystemNodeInterface {
+            Kit(Arc<crate::kit::Kit>),
+            Folder(crate::meta::Folder),
+            File(crate::meta::File),
+            Design(Arc<crate::kit::design::Design>),
+            Type(Arc<crate::kit::r#type::Type>),
+            Family(crate::gql_relay::Family),
+            Piece(Arc<crate::kit::design::piece::Piece>),
+            Connection(Arc<crate::kit::design::connection::Connection>),
+        }
+
+        impl FileSystemNodeInterface {
+            /// @emoji 🆔 Whether this VFS node matches the given id.
+            pub fn matches_id(&self, id: &crate::id::Id) -> bool {
+                match self {
+                    Self::Kit(k) => k.id == *id,
+                    Self::Folder(f) => f.id == *id,
+                    Self::File(f) => f.id == *id,
+                    Self::Design(d) => d.id == *id,
+                    Self::Type(t) => t.id == *id,
+                    Self::Family(f) => f.id == *id,
+                    Self::Piece(p) => p.id == *id,
+                    Self::Connection(c) => c.id == *id,
+                }
+            }
+        }
+
+        pub mod file_system_vfs {
+            use std::sync::Arc;
+
+            use super::{FileSystemNodeConnection, FileSystemNodeEdge, FileSystemNodeInterface};
+            use crate::external_adapters::async_graphql::Context;
+            use crate::gql_relay::PageInfo;
+            use crate::id::Id;
+            use crate::kit::Kit;
+            use crate::meta::{File, Folder};
+            use crate::worker::ParentStore;
+
+            /// @emoji 📁 Empty VFS child connection when the backing node cannot be resolved.
+            pub fn empty_connection() -> FileSystemNodeConnection {
+                FileSystemNodeConnection {
+                    edges: Vec::new(),
+                    page_info: PageInfo::default(),
+                    hash: String::new(),
+                }
+            }
+
+            /// @emoji 📁 Resolve the active kit as a VFS node (ignores the `#[Object]` receiver).
+            pub async fn node_for_kit(
+                _kit: &Kit,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                Some(FileSystemNodeInterface::Kit(
+                    rt.wip_graph.mutable_kit.read().await.clone(),
+                ))
+            }
+
+            /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
+            pub async fn node_for_type(
+                ty: &crate::kit::r#type::Type,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let types = kit.types.read().await;
+                types
+                    .iter()
+                    .find(|t| t.id == ty.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Type)
+            }
+
+            /// @emoji 📁 Resolve a design as a VFS node from the live kit graph.
+            pub async fn node_for_design(
+                design: &crate::kit::design::Design,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let designs = kit.designs.read().await;
+                designs
+                    .iter()
+                    .find(|d| d.id == design.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Design)
+            }
+
+            /// @emoji 📁 Resolve a piece as a VFS node from its owning design.
+            pub async fn node_for_piece(
+                piece: &crate::kit::design::piece::Piece,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let design = piece.owner_design.upgrade()?;
+                let designs = kit.designs.read().await;
+                let design = designs.iter().find(|d| d.id == design.id)?;
+                let pieces = design.pieces.read().await;
+                pieces
+                    .iter()
+                    .find(|p| p.id == piece.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Piece)
+            }
+
+            /// @emoji 📁 Resolve a connection as a VFS node from its owning design.
+            pub async fn node_for_connection(
+                connection: &crate::kit::design::connection::Connection,
+                ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let rt = ctx.data::<Arc<ParentStore>>().ok()?;
+                let kit = rt.wip_graph.mutable_kit.read().await.clone();
+                let design = connection.owner_design.upgrade()?;
+                let designs = kit.designs.read().await;
+                let design = designs.iter().find(|d| d.id == design.id)?;
+                let connections = design.connections.read().await;
+                connections
+                    .iter()
+                    .find(|c| c.id == connection.id)
+                    .cloned()
+                    .map(FileSystemNodeInterface::Connection)
+            }
+
+            fn join_path(parent: &str, segment: &str) -> String {
+                if parent.is_empty() {
+                    if segment.starts_with('/') {
+                        segment.to_string()
+                    } else {
+                        format!("/{segment}")
+                    }
+                } else {
+                    format!("{parent}/{segment}")
+                }
+            }
+
+            async fn folder_path(kit: &Arc<Kit>, folder: &Folder) -> String {
+                if !folder.path.is_empty() {
+                    return folder.path.clone();
+                }
+                let mut segments = vec![folder.name.clone()];
+                let mut current_parent = folder.parent_folder_id.clone();
+                let folders = kit.folders.read().await;
+                while let Some(parent_id) = current_parent {
+                    let Some(parent) = folders.iter().find(|f| f.id == parent_id) else {
+                        break;
+                    };
+                    segments.insert(0, parent.name.clone());
+                    current_parent = parent.parent_folder_id.clone();
+                }
+                join_path("", &segments.join("/"))
+            }
+
+            pub async fn parent(node: &FileSystemNodeInterface) -> Option<FileSystemNodeInterface> {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => None,
+                    FileSystemNodeInterface::Folder(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(parent_id) = &f.parent_folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == parent_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::File(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(folder_id) = &f.folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        let kit = d.owner_kit.upgrade()?;
+                        if let Some(folder_id) = d.folder_id.read().await.clone() {
+                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Type(t) => {
+                        let kit = t.owner_kit.upgrade()?;
+                        if let Some(folder_id) = t.folder_id.read().await.clone() {
+                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Family(f) => {
+                        let kit = f.owner_kit.upgrade()?;
+                        if let Some(folder_id) = &f.folder_id {
+                            kit.folders.read().await.iter().find(|x| &x.id == folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                        } else {
+                            Some(FileSystemNodeInterface::Kit(kit))
+                        }
+                    }
+                    FileSystemNodeInterface::Piece(p) => p.owner_design.upgrade().map(FileSystemNodeInterface::Design),
+                    FileSystemNodeInterface::Connection(c) => c.owner_design.upgrade().map(FileSystemNodeInterface::Design),
+                }
+            }
+
+            async fn children_nodes(node: &FileSystemNodeInterface) -> Vec<FileSystemNodeInterface> {
+                match node {
+                    FileSystemNodeInterface::Kit(k) => {
+                        let mut out = Vec::new();
+                        for folder in k.folders.read().await.iter().filter(|f| f.parent_folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::Folder(folder.clone()));
+                        }
+                        for file in k.files.read().await.iter().filter(|f| f.folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::File(file.clone()));
+                        }
+                        for design in k.designs.read().await.iter() {
+                            if design.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Design(design.clone()));
+                            }
+                        }
+                        for ty in k.types.read().await.iter() {
+                            if ty.folder_id.read().await.is_none() {
+                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                            }
+                        }
+                        for family in k.families.read().await.iter().filter(|f| f.folder_id.is_none()) {
+                            out.push(FileSystemNodeInterface::Family(family.clone()));
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Folder(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return Vec::new();
+                        };
+                        let fid = &f.id;
+                        let mut out = Vec::new();
+                        for sub in kit.folders.read().await.iter().filter(|x| x.parent_folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::Folder(sub.clone()));
+                        }
+                        for file in kit.files.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::File(file.clone()));
+                        }
+                        for design in kit.designs.read().await.iter() {
+                            if design.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Design(design.clone()));
+                            }
+                        }
+                        for ty in kit.types.read().await.iter() {
+                            if ty.folder_id.read().await.as_ref() == Some(fid) {
+                                out.push(FileSystemNodeInterface::Type(ty.clone()));
+                            }
+                        }
+                        for family in kit.families.read().await.iter().filter(|x| x.folder_id.as_ref() == Some(fid)) {
+                            out.push(FileSystemNodeInterface::Family(family.clone()));
+                        }
+                        out
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        let mut out = Vec::new();
+                        for piece in d.pieces.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Piece(piece.clone()));
+                        }
+                        for conn in d.connections.read().await.iter() {
+                            out.push(FileSystemNodeInterface::Connection(conn.clone()));
+                        }
+                        out
+                    }
+                    _ => Vec::new(),
+                }
+            }
+
+            pub async fn children(node: &FileSystemNodeInterface) -> FileSystemNodeConnection {
+                let nodes = children_nodes(node).await;
+                let edges: Vec<_> = nodes.into_iter().enumerate().map(|(i, n)| FileSystemNodeEdge { cursor: format!("{i}"), node: n }).collect();
+                let hash = crate::hash::merkle_node_str(&["FileSystemNodeConnection"], Vec::<String>::new());
+                FileSystemNodeConnection {
+                    edges,
+                    page_info: PageInfo { has_next_page: false, has_previous_page: false, start_cursor: None, end_cursor: None },
+                    hash,
+                }
+            }
+
+            pub async fn child(node: &FileSystemNodeInterface, id: &Id) -> Option<FileSystemNodeInterface> {
+                children_nodes(node).await.into_iter().find(|n| FileSystemNodeInterface::matches_id(n, id))
+            }
+
+            pub async fn path(node: &FileSystemNodeInterface) -> String {
+                Box::pin(path_inner(node)).await
+            }
+
+            async fn path_inner(node: &FileSystemNodeInterface) -> String {
+                match node {
+                    FileSystemNodeInterface::Kit(_) => String::new(),
+                    FileSystemNodeInterface::Folder(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return String::new();
+                        };
+                        folder_path(&kit, f).await
+                    }
+                    FileSystemNodeInterface::File(f) => {
+                        let Some(kit) = f.owner_kit.upgrade() else {
+                            return String::new();
+                        };
+                        let segment = f.name.as_str();
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => join_path(&folder_path(&kit, &folder).await, segment),
+                            _ => join_path("", segment),
+                        }
+                    }
+                    FileSystemNodeInterface::Design(d) => {
+                        let segment = d.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = d.owner_kit.upgrade() {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Type(t) => {
+                        let segment = t.name.read().await;
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = t.owner_kit.upgrade() {
+                                    join_path(&folder_path(&kit, &folder).await, segment.as_str())
+                                } else {
+                                    join_path("", segment.as_str())
+                                }
+                            }
+                            _ => join_path("", segment.as_str()),
+                        }
+                    }
+                    FileSystemNodeInterface::Family(f) => {
+                        let segment = f.name.as_str();
+                        match parent(node).await {
+                            Some(FileSystemNodeInterface::Folder(folder)) => {
+                                if let Some(kit) = f.owner_kit.upgrade() {
+                                    join_path(&folder_path(&kit, &folder).await, segment)
+                                } else {
+                                    join_path("", segment)
+                                }
+                            }
+                            _ => join_path("", segment),
+                        }
+                    }
+                    FileSystemNodeInterface::Piece(p) => {
+                        if let Some(design) = p.owner_design.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Design(design))).await;
+                            let segment = p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string());
+                            join_path(&base, &segment)
+                        } else {
+                            String::new()
+                        }
+                    }
+                    FileSystemNodeInterface::Connection(c) => {
+                        if let Some(design) = c.owner_design.upgrade() {
+                            let base = Box::pin(path_inner(&FileSystemNodeInterface::Design(design))).await;
+                            let segment = c.name.read().await;
+                            join_path(&base, segment.as_str())
+                        } else {
+                            String::new()
+                        }
+                    }
+                }
+            }
+
+            pub async fn name(node: &FileSystemNodeInterface) -> String {
+                match node {
+                    FileSystemNodeInterface::Kit(k) => k.name.read().await.clone(),
+                    FileSystemNodeInterface::Folder(f) => f.name.clone(),
+                    FileSystemNodeInterface::File(f) => f.name.clone(),
+                    FileSystemNodeInterface::Design(d) => d.name.read().await.clone(),
+                    FileSystemNodeInterface::Type(t) => t.name.read().await.clone(),
+                    FileSystemNodeInterface::Family(f) => f.name.clone(),
+                    FileSystemNodeInterface::Piece(p) => p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string()),
+                    FileSystemNodeInterface::Connection(c) => c.name.read().await.clone(),
+                }
+            }
         }
 
         impl KitGraphParentWeak {
@@ -14788,6 +16127,56 @@ pub mod gql {
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
+        #[graphql(name = "createFolder")]
+        async fn create_folder(
+            &self,
+            ctx: &Context<'_>,
+            name: String,
+            path: String,
+            description: Option<String>,
+            icon: Option<String>,
+            #[graphql(name = "parentFolderId")] parent_folder_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
+            if transaction_id != self.change_id {
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
+            }
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let owner_id = kit.workspace_kit_id().await;
+            let folder_id = Id::new().await;
+            let request_id = Id::new().await;
+            let cmd = Command::ApplyOperation {
+                request_id: request_id.clone(),
+                workspace_id,
+                transaction_id,
+                operation: crate::operation::Operation::CreateFolder {
+                    scope: Scope::CreateFolder { owner_id, folder_id },
+                    input: Input::CreateFolder { name, path, description, icon, parent_folder_id },
+                },
+            };
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
+        }
+
+        #[graphql(name = "moveToFolder")]
+        async fn move_to_folder(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "nodeId")] node_id: Id,
+            #[graphql(name = "folderId")] folder_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_unsaved_kit_operation(
+                rt,
+                &self.change_id,
+                crate::operation::Operation::MoveToFolder { scope: Scope::Entity { entity_id: node_id }, input: Input::MoveToFolder { folder_id } },
+            )
+            .await
+            .into())
+        }
+
         async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationInput {
             DesignOperationInput { change_id: self.change_id.clone(), design_id: id }
         }
@@ -15452,6 +16841,10 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::EntityEdgeInterface>()
             .register_output_type::<crate::gql::interfaces::EntityConnectionInterface>()
             .register_output_type::<crate::gql::interfaces::EntityInterface>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeKind>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeEdge>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeConnection>()
+            .register_output_type::<crate::gql::interfaces::FileSystemNodeInterface>()
             .register_output_type::<crate::gql::interfaces::WorkspaceInterface>()
             .register_output_type::<crate::gql::BackboneStatus>()
             .register_output_type::<crate::gql::BackboneInterface>()
@@ -16801,20 +18194,24 @@ mod tests {
 
             let file = File {
                 id: "file-1".into(),
+                name: "file-1".to_string(),
                 url: "kit://file-1".to_string(),
                 mime: None,
                 size: None,
                 hash: "blob-1".to_string(),
                 description: None,
+                icon: None,
+                folder_id: None,
+                owner_kit: owner.clone(),
                 created: None,
                 updated: None,
             };
             kit.files.write().await.push(file.clone());
 
             let ty = Type::new_with_external_id(owner.clone(), "type-1".into(), "Type One".to_string()).await;
-            let rep = Representation::new(Arc::downgrade(&ty), "rep://a".to_string()).await;
+            let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-1".into(), "rep://a".to_string()).await;
             *rep.file.write().await = Some(file);
-            ty.representations.write().await.push(rep);
+            ty.representations.write().await.push(rep.clone());
 
             let d1 = Design::with_id(owner.clone(), "design-1".into(), "D1".to_string()).await;
             let d2 = Design::with_id(owner.clone(), "design-2".into(), "D2".to_string()).await;
@@ -16866,6 +18263,34 @@ mod tests {
             assert_eq!(refs.len(), 1);
             assert_eq!(refs[0].id.as_str(), "p-ref");
 
+            let ty_refs = ty.referenced_by_pieces().await;
+            assert_eq!(ty_refs.len(), 2);
+            let ty_ref_designs = ty.referenced_by_designs_direct().await;
+            assert_eq!(ty_ref_designs.len(), 2);
+            assert!(ty.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(d3.referenced_by_designs_direct().await.len(), 1);
+            assert_eq!(d3.referenced_by_designs_direct().await[0].id.as_str(), "design-2");
+            assert!(d1.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(kit.representations_for_file(&"file-1".into()).await.len(), 1);
+            assert_eq!(kit.types_for_file(&"file-1".into()).await.len(), 1);
+            assert!(kit.designs_with_direct_file_reference(&"file-1".into()).await.iter().any(|d| d.id.as_str() == "design-1"));
+            assert!(kit.designs_referencing_file_transitive(&"file-1".into()).await.iter().any(|d| d.id.as_str() == "design-2"));
+
+            assert_eq!(d1.direct_representations_from_type_blueprints().await.len(), 1);
+            assert_eq!(d1.direct_representations_from_type_blueprints().await[0].id.as_str(), "rep-1");
+            assert_eq!(d2.direct_representations_from_type_blueprints().await.len(), 0);
+            assert_eq!(d2.all_representations_from_type_blueprints().await.len(), 1);
+            let rep_ref_designs = rep.referenced_by_designs_direct().await;
+            assert_eq!(rep_ref_designs.len(), 2);
+            assert!(rep.referenced_by_designs_transitive().await.iter().any(|d| d.id.as_str() == "design-2"));
+            assert_eq!(rep.referenced_by_pieces().await.len(), 2);
+            assert_eq!(rep.owner_types().await.len(), 1);
+            assert_eq!(rep.owner_types().await[0].id.as_str(), "type-1");
+            assert_eq!(rep.linked_files().await.len(), 1);
+            assert_eq!(rep.linked_files().await[0].id.as_str(), "file-1");
+
             let rt = crate::worker::ParentStore::spawn().await;
             *rt.wip_graph.mutable_kit.write().await = kit.clone();
             *rt.wip_graph.initial_kit.write().await = kit;
@@ -16877,14 +18302,43 @@ mod tests {
                             initialKit {
                                 type(id: "type-1") {
                                     files { edges { node { id } } }
+                                    referencedBy { edges { node { id } } }
+                                    referencedByDesigns { edges { node { id } } }
+                                    allReferencedByDesigns { edges { node { id } } }
                                 }
-                                design(id: "design-2") {
+                                designD1: design(id: "design-1") {
+                                    representations { edges { node { id } } }
+                                    allRepresentations { edges { node { id } } }
+                                }
+                                designD2: design(id: "design-2") {
                                     types { edges { node { id } } }
                                     designs { edges { node { id } } }
                                     allTypes { edges { node { id } } }
                                     allDesigns { edges { node { id } } }
                                     allFiles { edges { node { id } } }
+                                    representations { edges { node { id } } }
+                                    allRepresentations { edges { node { id } } }
                                     referencedBy { edges { node { id } } }
+                                    referencedByDesigns { edges { node { id } } }
+                                    allReferencedByDesigns { edges { node { id } } }
+                                }
+                                type(id: "type-1") {
+                                    representation(id: "rep-1") {
+                                        referencedBy { edges { node { id } } }
+                                        types { edges { node { id } } }
+                                        files { edges { node { id } } }
+                                        referencedByDesigns { edges { node { id } } }
+                                        allReferencedByDesigns { edges { node { id } } }
+                                    }
+                                }
+                                designD3: design(id: "design-3") {
+                                    referencedByDesigns { edges { node { id } } }
+                                }
+                                fileF1: file(id: "file-1") {
+                                    representations { edges { node { id } } }
+                                    types { edges { node { id } } }
+                                    designs { edges { node { id } } }
+                                    allDesigns { edges { node { id } } }
                                 }
                             }
                         }
@@ -16896,11 +18350,11 @@ mod tests {
             let kit_json = &json["store"]["wip"]["initialKit"];
             let type_files = kit_json["type"]["files"]["edges"].as_array().expect("type files");
             assert_eq!(type_files[0]["node"]["id"], "file-1");
-            let design = &kit_json["design"];
-            assert!(design["types"]["edges"].as_array().unwrap().is_empty());
-            assert_eq!(design["designs"]["edges"][0]["node"]["id"], "design-3");
-            assert_eq!(design["allTypes"]["edges"][0]["node"]["id"], "type-1");
-            let all_design_ids: Vec<_> = design["allDesigns"]["edges"]
+            let design_d2 = &kit_json["designD2"];
+            assert!(design_d2["types"]["edges"].as_array().unwrap().is_empty());
+            assert_eq!(design_d2["designs"]["edges"][0]["node"]["id"], "design-3");
+            assert_eq!(design_d2["allTypes"]["edges"][0]["node"]["id"], "type-1");
+            let all_design_ids: Vec<_> = design_d2["allDesigns"]["edges"]
                 .as_array()
                 .unwrap()
                 .iter()
@@ -16908,8 +18362,34 @@ mod tests {
                 .collect();
             assert!(all_design_ids.contains(&"design-3"));
             assert!(all_design_ids.contains(&"design-1"));
-            assert_eq!(design["allFiles"]["edges"][0]["node"]["id"], "file-1");
-            assert_eq!(design["referencedBy"]["edges"][0]["node"]["id"], "p-ref");
+            assert_eq!(design_d2["allFiles"]["edges"][0]["node"]["id"], "file-1");
+            assert_eq!(design_d2["referencedBy"]["edges"][0]["node"]["id"], "p-ref");
+            assert_eq!(design_d2["referencedByDesigns"]["edges"][0]["node"]["id"], "design-1");
+            assert_eq!(kit_json["designD1"]["representations"]["edges"][0]["node"]["id"], "rep-1");
+            assert_eq!(kit_json["designD2"]["representations"]["edges"].as_array().unwrap().len(), 0);
+            assert_eq!(kit_json["designD2"]["allRepresentations"]["edges"][0]["node"]["id"], "rep-1");
+            assert_eq!(kit_json["type"]["representation"]["referencedBy"]["edges"].as_array().unwrap().len(), 2);
+            assert_eq!(kit_json["type"]["representation"]["types"]["edges"][0]["node"]["id"], "type-1");
+            assert_eq!(kit_json["type"]["representation"]["files"]["edges"][0]["node"]["id"], "file-1");
+            assert_eq!(kit_json["type"]["representation"]["referencedByDesigns"]["edges"].as_array().unwrap().len(), 2);
+            assert!(kit_json["type"]["representation"]["allReferencedByDesigns"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
+            assert_eq!(kit_json["type"]["referencedBy"]["edges"].as_array().unwrap().len(), 2);
+            assert!(kit_json["type"]["allReferencedByDesigns"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
+            assert_eq!(kit_json["designD3"]["referencedByDesigns"]["edges"][0]["node"]["id"], "design-2");
+            assert_eq!(kit_json["fileF1"]["types"]["edges"][0]["node"]["id"], "type-1");
+            assert!(kit_json["fileF1"]["allDesigns"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["node"]["id"] == "design-2"));
         });
     }
 
@@ -17293,6 +18773,120 @@ mod tests {
             let data = res.data.into_json().unwrap();
             let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "layout-alpha"), "designs missing new name: {:?}", names);
+        });
+    }
+
+    #[test]
+    fn kit_virtual_file_system_create_folder_and_move_design() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+
+            const CREATE_FOLDER: &str = r#"
+                mutation($tx: ID!) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        createFolder(name: "inbox", path: "/inbox") { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id.clone() });
+            let res = schema.execute(Request::new(CREATE_FOLDER).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createFolder errors: {:?}", res.errors);
+
+            const CREATE_DESIGN: &str = r#"
+                mutation($tx: ID!, $name: String!) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        createDesign(name: $name) { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id.clone(), "name": "nested-layout" });
+            let res = schema.execute(Request::new(CREATE_DESIGN).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createDesign errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let folder_q = r#"
+                query {
+                    store {
+                        wip {
+                            theKit {
+                                kit {
+                                    folders { edges { node { id name ... on FileSystemNode { fileSystemPath } } } }
+                                    designs { edges { node { id name ... on FileSystemNode { fileSystemPath fileSystemParent { fileSystemKind } } } } }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let res = schema.execute(folder_q).await;
+            assert!(res.errors.is_empty(), "vfs query errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let folders = &data["store"]["wip"]["theKit"]["kit"]["folders"]["edges"];
+            let folder_id = folders.as_array().unwrap().iter().find_map(|e| {
+                (e["node"]["name"].as_str() == Some("inbox")).then(|| e["node"]["id"].as_str().unwrap().to_string())
+            }).expect("inbox folder");
+            let design_id = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find_map(|e| (e["node"]["name"].as_str() == Some("nested-layout")).then(|| e["node"]["id"].as_str().unwrap().to_string()))
+                .expect("nested-layout design");
+            assert_eq!(
+                data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().unwrap().iter().find(|e| e["node"]["id"].as_str() == Some(design_id.as_str())).unwrap()["node"]["fileSystemParent"],
+                serde_json::Value::Null
+            );
+
+            const MOVE: &str = r#"
+                mutation($tx: ID!, $nodeId: ID!, $folderId: ID) {
+                    session {
+                        store(id: "test-store") {
+                            theKit {
+                                unsavedChange(id: $tx) {
+                                    kit {
+                                        moveToFolder(nodeId: $nodeId, folderId: $folderId) { ok }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            "#;
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "nodeId": design_id, "folderId": folder_id });
+            let res = schema.execute(Request::new(MOVE).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "moveToFolder errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let res = schema.execute(folder_q).await;
+            assert!(res.errors.is_empty(), "vfs query after move errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let design = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["node"]["name"].as_str() == Some("nested-layout"))
+                .unwrap();
+            assert_eq!(design["node"]["fileSystemParent"]["fileSystemKind"], "FOLDER");
+            let path = design["node"]["fileSystemPath"].as_str().unwrap();
+            assert!(path.contains("inbox") && path.contains("nested-layout"), "path: {path}");
         });
     }
 
@@ -18109,7 +19703,20 @@ mod tests {
 
     #[test]
     fn file_blob_digest_field_is_exposed_on_entity() {
-        let f = crate::meta::File { id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"), url: "https://example.com/f".to_string(), mime: None, size: None, hash: "sha256:abc".to_string(), description: None, created: None, updated: None };
+        let f = crate::meta::File {
+            id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"),
+            name: "f".to_string(),
+            url: "https://example.com/f".to_string(),
+            mime: None,
+            size: None,
+            hash: "sha256:abc".to_string(),
+            description: None,
+            icon: None,
+            folder_id: None,
+            owner_kit: std::sync::Weak::new(),
+            created: None,
+            updated: None,
+        };
         assert_eq!(f.hash, "sha256:abc");
     }
 
