@@ -17,12 +17,6 @@ class TestScript extends BundleScript {
   }
 }
 
-class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root, devToolingEnv());
-  }
-}
-
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

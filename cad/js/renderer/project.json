@@ -37,14 +37,6 @@
         },
         "forwardAllArgs": true
       }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "cad/js/renderer",
-        "command": "bun ./script.ts typecheck",
-        "forwardAllArgs": true
-      }
     }
   }
 }

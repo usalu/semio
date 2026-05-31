@@ -36,8 +36,18 @@ import {
   useNativeDragAndDrop,
   usePointerDrag,
   type ContextMenuItem,
+  type UiTranslationKey,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
+
+//#region 🪁I18n Compile Gate
+const _playgroundCadToolbarI18nKeys = [
+  "ui.toolbar.parent.save",
+  "ui.toolbar.parent.view",
+  "ui.toolbar.parent.transform",
+  "ui.toolbar.parent.transfer",
+] as const satisfies readonly UiTranslationKey[];
+//#endregion 🪁I18n Compile Gate
 import type { LucideIcon } from "lucide-react";
 import { ClipboardList, Folder, Info, Library, ListTree, Settings, Tags } from "lucide-react";
 import * as React from "react";

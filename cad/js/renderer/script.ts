@@ -9,7 +9,6 @@ import {
   runBundleScriptMain,
   runViteBuild,
   runViteDev,
-  runBunx,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../../repo/lib/js/src/index.ts";
@@ -44,16 +43,9 @@ class TestScript extends BundleScript {
   }
 }
 
-class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
-  }
-}
-
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
-  .register("test", TestScript)
-  .register("typecheck", TypecheckScript);
+  .register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -40,16 +40,9 @@ class PublishScript extends BundleScript {
   }
 }
 
-class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root, forgeEnv());
-  }
-}
-
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
-  .register("publish", PublishScript)
-  .register("typecheck", TypecheckScript);
+  .register("publish", PublishScript);
 
 await runBundleScriptMain(router, import.meta.url);

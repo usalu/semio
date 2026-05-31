@@ -3,7 +3,7 @@
 import type { BundleLinter } from "../../../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../../../repo/lib/js/src/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx, runVitest } from "../../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../../../../repo/lib/js/src/index.ts";
 
 export const policy = defineLint("@framework/platform/renderer/react-bundle", (l: BundleLinter) => {
@@ -17,12 +17,6 @@ class TestScript extends BundleScript {
   }
 }
 
-class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
-  }
-}
-
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

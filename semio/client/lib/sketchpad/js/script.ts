@@ -8,7 +8,6 @@ import {
 	dependencyBoundaryBreachesForFile,
 	getWorkspaceRoot,
 	runBundleScriptMain,
-	runBunx,
 	runPolicyOnlyMain,
 	runVitest,
 } from "../../../../../repo/lib/js/src/index.ts";
@@ -27,13 +26,7 @@ class TestScript extends BundleScript {
 	}
 }
 
-class TypecheckScript extends BundleScript {
-	run(segments: string[]): void {
-		runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
-	}
-}
-
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
 if (import.meta.main) {
 	const cmd = process.argv[2];

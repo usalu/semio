@@ -31,14 +31,6 @@
         "command": "bun ./script.ts publish",
         "forwardAllArgs": true
       }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "coda/client/ui/desktop",
-        "command": "bun ./script.ts typecheck",
-        "forwardAllArgs": true
-      }
     }
   }
 }

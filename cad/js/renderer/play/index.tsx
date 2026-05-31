@@ -700,9 +700,30 @@ export function buildCadPlayRuntime(): Platform {
 
 import "./globals.css";
 // #region 🔌Adapters
-import { Label, reactHostPort, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type EngagementSpec, type TreeDataItem, type TreeDataSection } from "@ui/react";
+import {
+  Label,
+  reactHostPort,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  type EngagementSpec,
+  type TreeDataItem,
+  type TreeDataSection,
+  type UiTranslationKey,
+} from "@ui/react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
+
+//#region 🪁I18n Compile Gate
+const _cadPlayToolbarI18nKeys = [
+  "ui.toolbar.parent.view",
+  "ui.toolbar.parent.save",
+  "ui.toolbar.parent.transform",
+  "ui.toolbar.parent.transfer",
+] as const satisfies readonly UiTranslationKey[];
+//#endregion 🪁I18n Compile Gate
 import {
   PlaygroundView,
   CallbackTreePanelDefinition,
