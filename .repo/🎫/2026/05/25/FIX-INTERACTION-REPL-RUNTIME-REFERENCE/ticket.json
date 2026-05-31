@@ -1,8 +1,8 @@
 {
   "title": "Fix Arc Preview and Output",
-  "status": "open",
+  "status": "closed",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Fixed multi-tab mode dock chrome: grid columns now order active tab → gap → sibling tabs so body spans active+gap only (not under inactive tabs). Reordered tab bar DOM to match. Disabled full bg-active-base fill on stacked tabs so the primary stroke uses border classes only.",
+  "summary": "Generalized virtual file system with FileNodeKind, DescriptorKind (text, time, avatar), FileNode.fileNodeKindId + descriptorValues, schema-driven table columns. Updated ui/react VirtualFileSystem, framework/platform/core models and controller getSchema(), sketchpad VFS, platform renderer, and Storybook.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8d10652d4d464f29ad354d87cca945e4",

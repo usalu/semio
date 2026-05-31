@@ -11,6 +11,7 @@ export {
 	buildVirtualFileSystemWindowBody,
 	registerPlatformVirtualFileSystemDemo,
 	PlatformVirtualFileSystemDemoController,
+	PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
 	virtualFileSystemSurfaceId,
 	Puzzle2d,
 	Puzzle3d,
@@ -112,6 +113,7 @@ import {
 	registerPlatformVirtualFileSystemDemo,
 	PlatformVirtualFileSystemDemoController,
 	virtualFileSystemSurfaceId,
+	PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
 } from "@framework/platform/core";
 import {
 	ArrowLeft,
@@ -207,7 +209,6 @@ import {
 	writeStoredUiChromeCompact,
 	reactHostPort,
 	VirtualFileSystem as VirtualFileSystemView,
-	KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
 	type VirtualFileSystemRow,
 	type VirtualFileSystemSchema,
 	windowMeasureControlClass,
@@ -362,26 +363,6 @@ export interface WindowLayout {
  * Union of supported abstract UI layout nodes.
  **/
 export type WindowLayoutNode = WindowLayout["root"];
-
-/**
- * Alias for WindowLayout used by the sketchpad layer.
- **/
-export type LayoutNode = WindowLayout;
-
-/**
- * Alias for WindowLayoutStackNode used by the sketchpad layer.
- **/
-export type LayoutStack = WindowLayoutStackNode;
-
-/**
- * Alias for WindowLayoutAxisNode with kind "row" used by the sketchpad layer.
- **/
-export type LayoutRow = WindowLayoutAxisNode & { kind: "row" };
-
-/**
- * Alias for WindowLayoutAxisNode with kind "column" used by the sketchpad layer.
- **/
-export type LayoutColumn = WindowLayoutAxisNode & { kind: "column" };
 
 function isWindowLayoutWindowNode(value: unknown): value is WindowLayoutWindowNode {
   if (!value || typeof value !== "object") return false;
@@ -539,9 +520,7 @@ function convertWindowLayoutToGoldenConfig(layout: WindowLayout): Record<string,
   return { root: convertWindowLayoutNodeToGoldenConfig(layout.root) };
 }
 
-/**
- * Alias for convertWindowLayoutToGoldenConfig used by the sketchpad layer.
- **/
+/** @emoji 🧩 Converts {@link WindowLayout} to legacy Golden Layout JSON (interop). */
 export function layoutNodeToGoldenLayoutConfig(layout: WindowLayout): Record<string, unknown> {
   return convertWindowLayoutToGoldenConfig(layout);
 }
@@ -1258,7 +1237,7 @@ const UIToolbar: React.FC<{
                   pressed={activeCategory === category}
                   onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
                   icon={resolveAppToolCategoryIcon(category)}
-                  text={resolveTranslationLabel(t(`semio.sketchpad.toolbar.parent.${category}`))}
+                  text={resolveTranslationLabel(t(`ui.toolbar.parent.${category}`))}
                 />
               ))}
             </ToolbarZone>
@@ -1479,9 +1458,9 @@ if (import.meta.vitest) {
 					index: history.index + 1,
 				};
 			};
-			navigate("/kits/a");
-			navigate("/kits/b");
-			expect(history.entries.map((entry) => entry.uri)).toEqual(["/", "/kits/a", "/kits/b"]);
+			navigate("/apps/a");
+			navigate("/apps/b");
+			expect(history.entries.map((entry) => entry.uri)).toEqual(["/", "/apps/a", "/apps/b"]);
 			expect(history.index).toBe(2);
 		});
 	});
@@ -1534,7 +1513,7 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 	const controllerId = component.controllerId;
 	const schema = model.schema.fileNodeKinds && Object.keys(model.schema.fileNodeKinds).length
 		? virtualFileSystemSchemaFromModel(model.schema)
-		: KIT_VIRTUAL_FILE_SYSTEM_SCHEMA;
+		: virtualFileSystemSchemaFromModel(PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA);
 	const rows: VirtualFileSystemRow[] = model.rows.map((row) => ({
 		id: row.id,
 		fileNodeKindId: row.fileNodeKindId,
@@ -1753,8 +1732,8 @@ function usePlatformTopologyStore(
 	return topologyStore;
 }
 
-/** @emoji 🎯 Maps FiveD flat/volume selection to sketchpad `applyPuzzle2dSelection` command args. */
-export function platformPuzzle5dSelectionToApplyArgs(
+/** @emoji 🎯 Maps FiveD flat/volume selection to `puzzle5dSelection` command payload. */
+export function puzzle5dSelectionPayload(
 	instanceId: string,
 	presentation: Puzzle5dModel["presentation"],
 	snapshot: Puzzle2dSelectionSnapshot | Puzzle3dSelectionSnapshot,
@@ -1776,11 +1755,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "flat"
 				? {
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
-							commandBus.dispatch(
-								component.controllerId,
-								"applyPuzzle2dSelection",
-								platformPuzzle5dSelectionToApplyArgs(instanceId, "flat", snapshot),
-							);
+							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "flat", snapshot));
 						},
 					}
 				: undefined,
@@ -1791,11 +1766,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			model.presentation === "volume"
 				? {
 						onSelect: (snapshot: Puzzle3dSelectionSnapshot) => {
-							commandBus.dispatch(
-								component.controllerId,
-								"applyPuzzle2dSelection",
-								platformPuzzle5dSelectionToApplyArgs(instanceId, "volume", snapshot),
-							);
+							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "volume", snapshot));
 						},
 					}
 				: undefined,
@@ -2213,7 +2184,7 @@ if (import.meta.vitest) {
 				override buildSnapshot(): TableModel {
 					return {
 						columns: [{ id: "name", label: "Name" }],
-						rows: [{ id: "1", cells: { name: "kit-a" } }],
+						rows: [{ id: "1", cells: { name: "row-alpha" } }],
 					};
 				}
 			}
@@ -2228,7 +2199,7 @@ if (import.meta.vitest) {
 					platform,
 				),
 			);
-			expect(markup).toContain("kit-a");
+			expect(markup).toContain("row-alpha");
 		});
 
 		it("renders per-app virtual file system surfaces independently", () => {
@@ -2247,7 +2218,7 @@ if (import.meta.vitest) {
 					platform,
 				),
 			);
-			expect(markupA).toContain("Alpha Kit");
+			expect(markupA).toContain("Alpha Workspace");
 			expect(markupA).toContain("Models");
 			expect(markupA).not.toContain("Capsule");
 			const surfaceIdB = virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B);
@@ -2263,18 +2234,18 @@ if (import.meta.vitest) {
 					platform,
 				),
 			);
-			expect(markupB).toContain("Beta Kit");
-			expect(markupB).toContain("Beta Design");
+			expect(markupB).toContain("Beta Workspace");
+			expect(markupB).toContain("Beta Branch");
 			expect(markupB).not.toContain("Alpha");
 		});
 
-		it("maps puzzle5d flat and volume selections to applyPuzzle2dSelection args", () => {
-			expect(platformPuzzle5dSelectionToApplyArgs("inst-1", "flat", { ids: ["a", "b"] })).toEqual({
+		it("maps puzzle5d flat and volume selections to puzzle5dSelection payload", () => {
+			expect(puzzle5dSelectionPayload("inst-1", "flat", { ids: ["a", "b"] })).toEqual({
 				instanceId: "inst-1",
 				puzzle2dIds: ["a", "b"],
 			});
 			expect(
-				platformPuzzle5dSelectionToApplyArgs("inst-2", "volume", {
+				puzzle5dSelectionPayload("inst-2", "volume", {
 					objectIds: ["o1"],
 					vortexIds: ["v1"],
 					attractionIds: ["c1"],
@@ -2720,7 +2691,7 @@ function readBrowserUri(): string {
 /**
  * Left panel toggle for the navbar.
  * Uses the first tab icon as the toggle icon.
- * Styled to match sketchpad: border border-element, h-medium.
+ * Panel toggle strip: border border-element, h-medium.
  **/
 const UIPanelToggleGroup: React.FC<{
   items: Array<{
@@ -3540,9 +3511,9 @@ if (import.meta.vitest) {
 			]);
 			registerWindowBody("test.workbench-view.breadcrumb", () => <div>Main</div>);
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/kits/demo" />);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/apps/demo" />);
 			expect(markup).toContain('aria-label="breadcrumb"');
-			expect(markup).toContain("kits");
+			expect(markup).toContain("apps");
 		});
 
 		it("does not render app switcher tabs when multiple apps are registered", () => {
@@ -3561,8 +3532,8 @@ if (import.meta.vitest) {
 				return app;
 			};
 			wb.addApp(mkApp("home"));
-			wb.addApp(mkApp("kit"));
-			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/kits/demo" />);
+			wb.addApp(mkApp("secondary"));
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/apps/demo" />);
 			expect(markup).toContain('aria-label="breadcrumb"');
 			expect(markup).not.toContain('id="ui.appNav"');
 		});
@@ -3594,7 +3565,7 @@ if (import.meta.vitest) {
 
 		it("renders navbar buttons and toggles with inline labels when compact is off", () => {
 			if (typeof localStorage !== "undefined") {
-				localStorage.setItem("semio.ui.compact", "false");
+				localStorage.setItem("ui.chrome.compact", "false");
 			}
 			const wb = new Platform();
 			class TCtrl extends Controller {
@@ -3613,7 +3584,8 @@ if (import.meta.vitest) {
 
 			expect(markup).toContain("Go back");
 			expect(markup).toContain("Search");
-			expect(markup).toContain("Toggle Workbench");
+			expect(markup).toContain('id="ui.panelToggle.workbench"');
+			expect(markup).toContain("Compact");
 		});
 
 		it("renders panel kind icons for unregistered tab iconIds", () => {
@@ -3629,8 +3601,8 @@ if (import.meta.vitest) {
 			]);
 			registerWindowBody("test.workbench-view.icons", () => <div>Main</div>);
 			app.panelTabs = [
-				{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
-				{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
+				{ id: "workbench", iconId: "lucide.folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
+				{ id: "details", iconId: "lucide.info", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
 			];
 			registerSidePanelBody("test.platform.panel.workbench", () => <div />);
 			registerSidePanelBody("test.platform.panel.details", () => <div />);
@@ -3688,7 +3660,7 @@ if (import.meta.vitest) {
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
 
-			expect(markup).toContain('id="semio.sketchpad.footer"');
+			expect(markup).toContain('data-slot="footer"');
 		});
 
 		it("renders a leading mode dropdown when an app has multiple modes", () => {

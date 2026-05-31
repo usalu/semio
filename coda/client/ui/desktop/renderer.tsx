@@ -16,7 +16,7 @@
 // #region 🔌Adapters
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { elementUiI18n as i18next, initReactI18next, reactHostPort, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
+import { uiI18n as i18next, initReactI18next, reactHostPort, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
 // #endregion 🔌Adapters
 
 import "./globals.css";

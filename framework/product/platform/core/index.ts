@@ -76,7 +76,7 @@ export interface UiTableHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
-/** @emoji 📁 Host-bound kit virtual file system surface (hierarchical table). */
+/** @emoji 📁 Host-bound virtual file system surface (hierarchical table). */
 export interface UiVirtualFileSystemHostSurfaceNode {
 	readonly type: "virtualFileSystem";
 	readonly componentKind: "virtualFileSystem";
@@ -322,6 +322,7 @@ export interface VirtualFileSystemNodeRecord {
 	readonly hasChildren: boolean;
 	readonly navigateUri?: string;
 	readonly descriptorValues?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
+	readonly canDrag?: boolean;
 }
 
 /** @emoji 📁 Flat row for {@link VirtualFileSystemModel}. */
@@ -339,7 +340,7 @@ export interface VirtualFileSystemRowModel {
 	readonly descriptorValues?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
 }
 
-/** @emoji 📁 Render-agnostic kit VFS view-model for {@link VirtualFileSystem}. */
+/** @emoji 📁 Render-agnostic virtual file system view-model for {@link VirtualFileSystem}. */
 export interface VirtualFileSystemModel {
 	readonly schema: VirtualFileSystemSchemaModel;
 	readonly rows: readonly VirtualFileSystemRowModel[];
@@ -632,7 +633,7 @@ export function buildVirtualFileSystemModelRows(
 						},
 					}
 				: {}),
-			canDrag: node.fileNodeKindId !== "kit",
+			...(node.canDrag === false ? { canDrag: false } : { canDrag: true }),
 			...(node.navigateUri ? { navigateUri: node.navigateUri } : {}),
 			...(node.descriptorValues ? { descriptorValues: node.descriptorValues } : {}),
 		});
@@ -781,126 +782,7 @@ export abstract class VirtualFileSystemController extends Controller {
 	}
 }
 
-/** @emoji 📁 Built-in kit virtual file system schema (render-agnostic). */
-export const KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	descriptorKinds: {
-		text: { id: "text", name: "Text", presentation: "text" },
-		time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
-		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
-	},
-	fileNodeKinds: {
-		kit: {
-			id: "kit",
-			name: "Kit",
-			icon: "layout-grid",
-			description: "Open kit workspace",
-			descriptors: [
-				{ id: "version", descriptorKindId: "text", label: "Version" },
-				{ id: "kitKind", descriptorKindId: "text", label: "Kind" },
-				{ id: "updated", descriptorKindId: "time", label: "Updated" },
-				{ id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		folder: {
-			id: "folder",
-			name: "Folder",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		file: {
-			id: "file",
-			name: "File",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		design: {
-			id: "design",
-			name: "Design",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		type: {
-			id: "type",
-			name: "Type",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		family: {
-			id: "family",
-			name: "Family",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		piece: {
-			id: "piece",
-			name: "Piece",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-		connection: {
-			id: "connection",
-			name: "Connection",
-			descriptors: [
-				{ id: "path", descriptorKindId: "text", label: "Path" },
-				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-			],
-		},
-	},
-	descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
-};
-
-/** @emoji 📁 Home kit tree columns (no per-row author column). */
-export const KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
-};
-
-/** @emoji 📁 In-kit tree columns (path + node kind only). */
-export const KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-	...KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["path", "fileNodeKind"],
-};
-
-/** @emoji 📁 Builds kit descriptor values for {@link VirtualFileSystemNodeRecord}. */
-export function kitVirtualFileSystemDescriptorValues(
-	fileNodeKindId: string,
-	options: {
-		readonly path?: string;
-		readonly version?: string;
-		readonly kitKind?: string;
-		readonly updatedIso?: string;
-		readonly createdBy?: { readonly name: string; readonly icon?: string };
-		readonly extra?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
-	} = {},
-): Readonly<Record<string, VirtualFileSystemDescriptorValueModel>> {
-	const fileNodeKind = KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds[fileNodeKindId];
-	const values: Record<string, VirtualFileSystemDescriptorValueModel> = { ...options.extra };
-	if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
-	if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
-	if (options.version !== undefined) values.version = { presentation: "text", text: options.version };
-	if (options.kitKind !== undefined) values.kitKind = { presentation: "text", text: options.kitKind };
-	if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
-	if (options.createdBy) {
-		values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
-	}
-	return values;
-}
-
-/** @emoji 📁 Demo kit virtual file system schema (render-agnostic). */
+/** @emoji 📁 Demo virtual file system schema (render-agnostic). */
 export const PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchemaModel = {
 	descriptorKinds: {
 		text: { id: "text", name: "Text", presentation: "text" },
@@ -908,9 +790,9 @@ export const PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchemaMo
 		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
 	},
 	fileNodeKinds: {
-		kit: {
-			id: "kit",
-			name: "Kit",
+		workspace: {
+			id: "workspace",
+			name: "Workspace",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -924,17 +806,17 @@ export const PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchemaMo
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
 			],
 		},
-		design: {
-			id: "design",
-			name: "Design",
+		branch: {
+			id: "branch",
+			name: "Branch",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
 			],
 		},
-		type: {
-			id: "type",
-			name: "Type",
+		leaf: {
+			id: "leaf",
+			name: "Leaf",
 			descriptors: [
 				{ id: "path", descriptorKindId: "text", label: "Path" },
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
@@ -972,45 +854,47 @@ export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemCo
 	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
 		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
 			return {
-				id: "kit-b",
-				fileNodeKindId: "kit",
-				name: "Beta Kit",
+				id: "workspace-b",
+				fileNodeKindId: "workspace",
+				name: "Beta Workspace",
 				path: "/",
 				parentId: null,
 				hasChildren: true,
-				descriptorValues: platformVirtualFileSystemDemoDescriptorValues("kit", "/"),
+				canDrag: false,
+				descriptorValues: platformVirtualFileSystemDemoDescriptorValues("workspace", "/"),
 			};
 		}
 		return {
-			id: "kit-a",
-			fileNodeKindId: "kit",
-			name: "Alpha Kit",
+			id: "workspace-a",
+			fileNodeKindId: "workspace",
+			name: "Alpha Workspace",
 			path: "/",
 			parentId: null,
 			hasChildren: true,
-			descriptorValues: platformVirtualFileSystemDemoDescriptorValues("kit", "/"),
+			canDrag: false,
+			descriptorValues: platformVirtualFileSystemDemoDescriptorValues("workspace", "/"),
 		};
 	}
 
 	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
 		if (scope.appId === PlatformVirtualFileSystemDemoController.APP_B) {
-			if (parentId === "kit-b") {
-				const path = "/Beta Design";
+			if (parentId === "workspace-b") {
+				const path = "/Beta Branch";
 				return [
 					{
-						id: "design-b1",
-						fileNodeKindId: "design",
-						name: "Beta Design",
+						id: "branch-b1",
+						fileNodeKindId: "branch",
+						name: "Beta Branch",
 						path,
 						parentId,
 						hasChildren: false,
-						descriptorValues: platformVirtualFileSystemDemoDescriptorValues("design", path),
+						descriptorValues: platformVirtualFileSystemDemoDescriptorValues("branch", path),
 					},
 				];
 			}
 			return [];
 		}
-		if (parentId === "kit-a") {
+		if (parentId === "workspace-a") {
 			return [
 				{
 					id: "folder-models",
@@ -1022,13 +906,13 @@ export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemCo
 					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("folder", "/Models"),
 				},
 				{
-					id: "design-alpha",
-					fileNodeKindId: "design",
+					id: "branch-alpha",
+					fileNodeKindId: "branch",
 					name: "Alpha",
 					path: "/Alpha",
 					parentId,
 					hasChildren: false,
-					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("design", "/Alpha"),
+					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("branch", "/Alpha"),
 				},
 			];
 		}
@@ -1036,13 +920,13 @@ export class PlatformVirtualFileSystemDemoController extends VirtualFileSystemCo
 			const path = "/Models/Capsule";
 			return [
 				{
-					id: "type-capsule",
-					fileNodeKindId: "type",
+					id: "leaf-capsule",
+					fileNodeKindId: "leaf",
 					name: "Capsule",
 					path,
 					parentId,
 					hasChildren: false,
-					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("type", path),
+					descriptorValues: platformVirtualFileSystemDemoDescriptorValues("leaf", path),
 				},
 			];
 		}
@@ -1957,15 +1841,15 @@ if (import.meta.vitest) {
 				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_A),
 			};
 			let model = ctrl.buildVirtualFileSystemModel(scopeA);
-			expect(model.rows.map((row) => row.id)).toEqual(["kit-a", "folder-models", "design-alpha"]);
+			expect(model.rows.map((row) => row.id)).toEqual(["workspace-a", "folder-models", "branch-alpha"]);
 			ctrl.run("toggleVirtualFileSystemExpand", { ...scopeA, nodeId: "folder-models" });
 			model = ctrl.buildVirtualFileSystemModel(scopeA);
-			expect(model.rows.map((row) => row.id)).toEqual(["kit-a", "folder-models", "type-capsule", "design-alpha"]);
+			expect(model.rows.map((row) => row.id)).toEqual(["workspace-a", "folder-models", "leaf-capsule", "branch-alpha"]);
 			const scopeB: VirtualFileSystemScope = {
 				appId: PlatformVirtualFileSystemDemoController.APP_B,
 				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B),
 			};
-			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["kit-b", "design-b1"]);
+			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["workspace-b", "branch-b1"]);
 		});
 	});
 
@@ -2037,7 +1921,7 @@ if (import.meta.vitest) {
 			windowKindId: "wk",
 			surfaceId: "s1",
 			surfaceKind: "diagram",
-			capabilities: ["design.model.read", "energy.overlay"],
+			capabilities: ["diagram.read", "energy.overlay"],
 			surface: {
 				id: "s1",
 				appId: "a",

@@ -9,10 +9,9 @@
 // #endregion 🧲Header
 
 import {
-  KIT_VIRTUAL_FILE_SYSTEM_SCHEMA,
-  KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA,
+  VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
   VirtualFileSystem,
-  buildKitVirtualFileSystemDescriptorValues,
+  buildVirtualFileSystemDescriptorValues,
   buildVirtualFileSystemVisibleRows,
   reactHostPort,
   type VirtualFileSystemNode,
@@ -35,81 +34,81 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const demoRoot: VirtualFileSystemNode = {
-  id: "kit-demo",
-  fileNodeKindId: "kit",
-  name: "Metabolism",
+  id: "root-demo",
+  fileNodeKindId: "root",
+  name: "Workspace",
   path: "/",
   hasChildren: true,
-  descriptorValues: buildKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+  descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "root", { path: "/" }),
 };
 
 const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
   [
-    "kit-demo",
+    "root-demo",
     [
       {
-        id: "folder-types",
-        fileNodeKindId: "folder",
-        name: "Types",
-        path: "/Types",
-        parentId: "kit-demo",
+        id: "branch-models",
+        fileNodeKindId: "branch",
+        name: "Models",
+        path: "/Models",
+        parentId: "root-demo",
         hasChildren: true,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("folder", { path: "/Types" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "branch", { path: "/Models" }),
       },
       {
-        id: "design-tower",
-        fileNodeKindId: "design",
-        name: "Tower A",
-        path: "/Tower A",
-        parentId: "kit-demo",
+        id: "leaf-alpha",
+        fileNodeKindId: "leaf",
+        name: "Alpha",
+        path: "/Alpha",
+        parentId: "root-demo",
         hasChildren: true,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("design", { path: "/Tower A" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha" }),
       },
       {
-        id: "file-readme",
-        fileNodeKindId: "file",
+        id: "leaf-readme",
+        fileNodeKindId: "leaf",
         name: "README.md",
         path: "/README.md",
-        parentId: "kit-demo",
+        parentId: "root-demo",
         hasChildren: false,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("file", { path: "/README.md" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/README.md" }),
       },
     ],
   ],
   [
-    "folder-types",
+    "branch-models",
     [
       {
-        id: "type-capsule",
-        fileNodeKindId: "type",
+        id: "leaf-capsule",
+        fileNodeKindId: "leaf",
         name: "Capsule",
-        path: "/Types/Capsule",
-        parentId: "folder-types",
+        path: "/Models/Capsule",
+        parentId: "branch-models",
         hasChildren: false,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("type", { path: "/Types/Capsule" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Models/Capsule" }),
       },
     ],
   ],
   [
-    "design-tower",
+    "leaf-alpha",
     [
       {
-        id: "piece-core",
-        fileNodeKindId: "piece",
+        id: "leaf-core",
+        fileNodeKindId: "leaf",
         name: "Core",
-        path: "/Tower A/Core",
-        parentId: "design-tower",
+        path: "/Alpha/Core",
+        parentId: "leaf-alpha",
         hasChildren: false,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("piece", { path: "/Tower A/Core" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha/Core" }),
       },
       {
-        id: "conn-bridge",
-        fileNodeKindId: "connection",
+        id: "leaf-bridge",
+        fileNodeKindId: "leaf",
         name: "Bridge",
-        path: "/Tower A/Bridge",
-        parentId: "design-tower",
+        path: "/Alpha/Bridge",
+        parentId: "leaf-alpha",
         hasChildren: false,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("connection", { path: "/Tower A/Bridge" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "leaf", { path: "/Alpha/Bridge" }),
       },
     ],
   ],
@@ -117,9 +116,9 @@ const demoChildrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>
 
 const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: readonly string[] }) => {
   const [expandedIds, setExpandedIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set(initialExpanded));
-  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(["design-tower"]));
+  const [selectedRowIds, setSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(["leaf-alpha"]));
 
-  const rows = buildVirtualFileSystemVisibleRows("kit-demo", demoChildrenByParentId, expandedIds, demoRoot);
+  const rows = buildVirtualFileSystemVisibleRows("root-demo", demoChildrenByParentId, expandedIds, demoRoot);
 
   const onToggleExpand = (rowId: string) => {
     setExpandedIds((previous) => {
@@ -133,7 +132,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
   return (
     <div className="h-96 border border-element">
       <VirtualFileSystem
-        schema={KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA}
+        schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
         rows={rows}
         selectedRowIds={selectedRowIds}
         onRowClick={(row, _index, event) => {
@@ -151,8 +150,8 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
         onToggleExpand={onToggleExpand}
         dragDrop={{
           enabled: true,
-          canDrag: (rowId) => rowId !== "kit-demo",
-          canDrop: (draggedId, targetId) => draggedId !== targetId && targetId !== "file-readme",
+          canDrag: (rowId) => rowId !== "root-demo",
+          canDrop: (draggedId, targetId) => draggedId !== targetId && targetId !== "leaf-readme",
           onDragEnd: ({ active, over }) => {
             if (!over) return;
             console.log("[story] vfs drag", { active, over });
@@ -164,42 +163,42 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
 };
 
 export const Collapsed: Story = {
-  args: { schema: KIT_VIRTUAL_FILE_SYSTEM_SCHEMA, rows: [] },
-  render: () => <VirtualFileSystemDemo initialExpanded={["kit-demo"]} />,
+  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
+  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo"]} />,
 };
 
 export const Expanded: Story = {
-  args: { schema: KIT_VIRTUAL_FILE_SYSTEM_SCHEMA, rows: [] },
-  render: () => <VirtualFileSystemDemo initialExpanded={["kit-demo", "folder-types", "design-tower"]} />,
+  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
+  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo", "branch-models", "leaf-alpha"]} />,
 };
 
 export const StaticRows: Story = {
-  args: { schema: KIT_VIRTUAL_FILE_SYSTEM_SCHEMA, rows: [] },
+  args: { schema: VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, rows: [] },
   render: () => {
     const rows: VirtualFileSystemRow[] = [
       {
-        id: "kit",
-        fileNodeKindId: "kit",
-        name: "Kit",
+        id: "root",
+        fileNodeKindId: "root",
+        name: "Root",
         path: "/",
         level: 0,
         hasChildren: true,
         isExpanded: true,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "root", { path: "/" }),
       },
       {
-        id: "folder",
-        fileNodeKindId: "folder",
+        id: "branch",
+        fileNodeKindId: "branch",
         name: "Assets",
         path: "/Assets",
         level: 1,
         hasChildren: false,
-        descriptorValues: buildKitVirtualFileSystemDescriptorValues("folder", { path: "/Assets" }),
+        descriptorValues: buildVirtualFileSystemDescriptorValues(VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, "branch", { path: "/Assets" }),
       },
     ];
     return (
       <div className="h-64 border border-element">
-        <VirtualFileSystem schema={KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA} rows={rows} />
+        <VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={rows} />
       </div>
     );
   },
