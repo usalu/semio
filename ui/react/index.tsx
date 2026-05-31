@@ -13135,16 +13135,15 @@ export function resolveVirtualFileSystemDescriptorBinding(
   return undefined;
 }
 
-/** @emoji 📁 Builds standard path and file-node-kind descriptor values for a node. */
+/** @emoji 📁 Builds descriptor cell values from a {@link VirtualFileSystemSchema}. */
 export function buildVirtualFileSystemDescriptorValues(
   schema: VirtualFileSystemSchema,
   fileNodeKindId: string,
   options: {
     readonly path?: string;
-    readonly version?: string;
-    readonly kindLabel?: string;
     readonly updatedIso?: string;
     readonly createdBy?: { readonly name: string; readonly icon?: string };
+    readonly textByDescriptorId?: Readonly<Record<string, string>>;
     readonly extra?: Readonly<Record<string, FileNodeDescriptorValue>>;
   } = {},
 ): Readonly<Record<string, FileNodeDescriptorValue>> {
@@ -13152,10 +13151,13 @@ export function buildVirtualFileSystemDescriptorValues(
   const values: Record<string, FileNodeDescriptorValue> = { ...options.extra };
   if (options.path !== undefined) values.path = { presentation: "text", text: options.path };
   if (fileNodeKind) values.fileNodeKind = { presentation: "text", text: fileNodeKind.name };
-  if (options.version !== undefined) values.version = { presentation: "text", text: options.version };
-  if (options.kindLabel !== undefined) values.kindLabel = { presentation: "text", text: options.kindLabel };
   if (options.updatedIso) values.updated = { presentation: "time", iso: options.updatedIso };
   if (options.createdBy) values.createdBy = { presentation: "avatar", name: options.createdBy.name, icon: options.createdBy.icon };
+  if (options.textByDescriptorId) {
+    for (const [descriptorId, text] of Object.entries(options.textByDescriptorId)) {
+      values[descriptorId] = { presentation: "text", text };
+    }
+  }
   return values;
 }
 

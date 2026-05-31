@@ -94,49 +94,6 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
-//#region 🔖RevealMorphMatcher
-interface MorphPair {
-	readonly from: HTMLElement;
-	readonly to: HTMLElement;
-	options?: { scale?: boolean };
-}
-
-interface RevealMorphMatcherHost {
-	findAutoAnimateMatches(
-		pairs: MorphPair[],
-		fromScope: HTMLElement,
-		toScope: HTMLElement,
-		selector: string,
-		serializer: (node: HTMLElement) => string,
-		animationOptions?: object,
-	): void;
-}
-
-/** @emoji 🔗 reveal.js `autoAnimateMatcher`: pair `[data-id]` by {@link morphId} only (eg-ice-25 cross-shape morph). */
-function revealMorphMatcher(this: RevealMorphMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): MorphPair[] {
-	const pairs: MorphPair[] = [];
-	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => node.getAttribute("data-id") ?? "");
-	const textNodes = "h1, h2, h3, h4, h5, h6, p, li";
-	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, textNodes, (node) => {
-		if (node.hasAttribute("data-id")) {
-			return "";
-		}
-		return `${node.nodeName}:::${node.textContent.trim()}`;
-	});
-	const reserved: HTMLElement[] = [];
-	return pairs.filter((pair) => {
-		if (reserved.includes(pair.to)) {
-			return false;
-		}
-		reserved.push(pair.to);
-		if (/^H[1-6]$|^P$|^LI$/i.test(pair.from.nodeName)) {
-			pair.options = { scale: false };
-		}
-		return true;
-	});
-}
-//#endregion 🔖RevealMorphMatcher
-
 //#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
@@ -344,7 +301,6 @@ export const PresentationDeck: FC<{
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
-			autoAnimateMatcher: revealMorphMatcher,
 		};
 		if (options?.hash === true) {
 			revealOptions.hash = true;
@@ -364,8 +320,6 @@ export const PresentationDeck: FC<{
 			syncRevealBackgroundKind(deckEl);
 		};
 		void deck.initialize().then(() => {
-			deck.sync();
-			deck.layout();
 			syncRevealBackgroundKind(deckEl);
 			deck.on("slidechanged", onSlideChanged);
 		});

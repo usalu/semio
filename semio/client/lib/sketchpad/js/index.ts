@@ -27,9 +27,7 @@ import {
 	buildPuzzle5dWindowBody,
 	buildVirtualFileSystemWindowBody,
 	virtualFileSystemSurfaceId,
-	KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL,
-	KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL,
-	kitVirtualFileSystemDescriptorValues,
+	virtualFileSystemDescriptorValues,
 	type VirtualFileSystemDescriptorValueModel,
 	type VirtualFileSystemModel,
 	type VirtualFileSystemNodeRecord,
@@ -12186,6 +12184,120 @@ function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
 //#endregion 🔖Topology
 
 //#region 📁SketchpadVfs
+const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	descriptorKinds: {
+		text: { id: "text", name: "Text", presentation: "text" },
+		time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
+		avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
+	},
+	fileNodeKinds: {
+		kit: {
+			id: "kit",
+			name: "Kit",
+			icon: "layout-grid",
+			description: "Open kit workspace",
+			descriptors: [
+				{ id: "version", descriptorKindId: "text", label: "Version" },
+				{ id: "kitKind", descriptorKindId: "text", label: "Kind" },
+				{ id: "updated", descriptorKindId: "time", label: "Updated" },
+				{ id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		folder: {
+			id: "folder",
+			name: "Folder",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		file: {
+			id: "file",
+			name: "File",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		design: {
+			id: "design",
+			name: "Design",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		type: {
+			id: "type",
+			name: "Type",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		family: {
+			id: "family",
+			name: "Family",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		piece: {
+			id: "piece",
+			name: "Piece",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+		connection: {
+			id: "connection",
+			name: "Connection",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
+	},
+	descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
+};
+
+const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
+	descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
+};
+
+const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
+	descriptorColumnIds: ["path", "fileNodeKind"],
+};
+
+function sketchpadKitVirtualFileSystemDescriptorValues(
+	fileNodeKindId: string,
+	options: {
+		readonly path?: string;
+		readonly version?: string;
+		readonly kitKind?: string;
+		readonly updatedIso?: string;
+		readonly createdBy?: { readonly name: string; readonly icon?: string };
+		readonly extra?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
+	} = {},
+): Readonly<Record<string, VirtualFileSystemDescriptorValueModel>> {
+	const textByDescriptorId: Record<string, string> = {};
+	if (options.version !== undefined) textByDescriptorId.version = options.version;
+	if (options.kitKind !== undefined) textByDescriptorId.kitKind = options.kitKind;
+	return virtualFileSystemDescriptorValues(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, fileNodeKindId, {
+		path: options.path,
+		updatedIso: options.updatedIso,
+		createdBy: options.createdBy,
+		extra: options.extra,
+		...(Object.keys(textByDescriptorId).length ? { textByDescriptorId } : {}),
+	});
+}
+
 function sketchpadVfsScope(appId: string): VirtualFileSystemScope {
 	return { appId, surfaceId: virtualFileSystemSurfaceId(appId) };
 }
@@ -12219,7 +12331,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				parentId: kitId,
 				hasChildren: true,
 				navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
 			});
 		}
 		for (const type of kit.types ?? []) {
@@ -12234,7 +12346,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				parentId: kitId,
 				hasChildren: false,
 				navigateUri: `/kits/${kitId}/types/${t.id}`,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("type", { path: typePath }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("type", { path: typePath }),
 			});
 		}
 		for (const design of kit.designs ?? []) {
@@ -12249,7 +12361,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				parentId: kitId,
 				hasChildren: true,
 				navigateUri: `/kits/${kitId}/designs/${d.id}`,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path: designPath }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("design", { path: designPath }),
 			});
 		}
 		for (const file of kit.files ?? []) {
@@ -12265,7 +12377,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				parentId: kitId,
 				hasChildren: false,
 				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("file", { path: filePath }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
 			});
 		}
 		return rows;
@@ -12286,7 +12398,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				path: piecePath,
 				parentId,
 				hasChildren: false,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("piece", { path: piecePath }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("piece", { path: piecePath }),
 			});
 		}
 		for (const connection of (design as { connections?: readonly unknown[] }).connections ?? []) {
@@ -12300,7 +12412,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				path: connectionPath,
 				parentId,
 				hasChildren: false,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("connection", { path: connectionPath }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("connection", { path: connectionPath }),
 			});
 		}
 		return out;
@@ -12361,7 +12473,7 @@ function sketchpadHomeVfsChildren(
 				path: "/Documentation",
 				parentId,
 				hasChildren: true,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path: "/Documentation" }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path: "/Documentation" }),
 			},
 			...kitEntries.map(({ kitId, kit, kind }) => {
 				const name = kit.name ?? kitId;
@@ -12377,7 +12489,7 @@ function sketchpadHomeVfsChildren(
 					hasChildren: false,
 					canDrag: false,
 					navigateUri: `/kits/${kitId}`,
-					descriptorValues: kitVirtualFileSystemDescriptorValues("kit", {
+					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", {
 						path,
 						version: kit.version ?? "",
 						kitKind: kind,
@@ -12398,7 +12510,7 @@ function sketchpadHomeVfsChildren(
 				path,
 				parentId,
 				hasChildren: section.pages.length > 0,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("folder", { path }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
 			};
 		});
 	}
@@ -12416,7 +12528,7 @@ function sketchpadHomeVfsChildren(
 				parentId,
 				hasChildren: false,
 				navigateUri: `/docs/${page.path}`,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("file", { path }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path }),
 			};
 		});
 	}
@@ -13229,8 +13341,8 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	protected override getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) return KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL;
-		return KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL;
+		if (scope.appId === SKETCHPAD_HOME_APP_ID) return SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL;
+		return SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL;
 	}
 
 	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
@@ -13244,7 +13356,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				parentId: null,
 				hasChildren: true,
 				canDrag: false,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
 			};
 		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
@@ -13257,7 +13369,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 					parentId: null,
 					hasChildren: false,
 					canDrag: false,
-					descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
 				};
 			}
 			const kit = this.getKitStore(route.kitId)?.getSnapshot().kit;
@@ -13269,7 +13381,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				parentId: null,
 				hasChildren: true,
 				canDrag: false,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
 			};
 		}
 		if (scope.appId === SKETCHPAD_DESIGN_APP_ID) {
@@ -13281,7 +13393,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 					path: "/",
 					parentId: null,
 					hasChildren: false,
-					descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path: "/" }),
+					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("design", { path: "/" }),
 				};
 			}
 			const kit = this.getKitStore(route.kitId)?.getSnapshot().kit;
@@ -13294,7 +13406,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				path,
 				parentId: route.kitId,
 				hasChildren: true,
-				descriptorValues: kitVirtualFileSystemDescriptorValues("design", { path }),
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("design", { path }),
 			};
 		}
 		return {
@@ -13305,7 +13417,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			parentId: null,
 			hasChildren: false,
 			canDrag: false,
-			descriptorValues: kitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
+			descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
 		};
 	}
 
