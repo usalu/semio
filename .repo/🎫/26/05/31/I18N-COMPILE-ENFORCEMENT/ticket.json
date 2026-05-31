@@ -3,7 +3,7 @@
   "emoji": "🪁",
   "status": "closed",
   "description": "Wrap i18next behind a typed port; enforce translation keys, locale parity, and toolbar category coverage at compile time; add nx typecheck gates.",
-  "summary": "Extracted typed chrome bundles to ui/react/i18n-types.ts with UiTranslationSchema, UiTranslationKey, and ui.toolbar.parent.* for all toolbar categories. Wrapped i18next in UiI18nPort (uiI18n, useUiTranslation, setUiLocale); removed raw i18next reinit from coda. Sketchpad toolbar parent entries are typed and applied at register time; en/de parity fixed. Added nx typecheck targets and i18n-typecheck.ts gates for ui, framework platform/playground, cad, coda, and sketchpad. Framework UIToolbar uses typed keys; vitest covers toolbar parent resolution.",
+  "summary": "Typed i18n lives in ui/react/index.tsx (🪁I18n Resources): UiTranslationSchema, ui.toolbar.parent.*, UiI18nPort, useUiTranslation, setUiLocale. Compile gates via satisfies on bundles, AssertUiToolbarParentKeysCovered in framework platform renderer and cad play/playground shells, typed sketchpad toolbar parent entries. nx typecheck only on @ui/react (existing tsconfig.json + script.ts). No separate i18n-types or i18n-typecheck files.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": []
 }

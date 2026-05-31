@@ -7,11 +7,11 @@ import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
 import "./globals.css";
 import {
+	applyElementsSurfaceChrome,
 	Expertise,
-	useElementsSurfaceChrome,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, StrictMode, useEffect, useLayoutEffect, useRef, type FC, type ReactNode } from "react";
+import { act, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationsEmbodiment,
@@ -93,6 +93,49 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 	deckEl.classList.toggle("has-light-background", !dark);
 }
 //#endregion 🔖RevealChrome
+
+//#region 🔖RevealMorphMatcher
+interface MorphPair {
+	readonly from: HTMLElement;
+	readonly to: HTMLElement;
+	options?: { scale?: boolean };
+}
+
+interface RevealMorphMatcherHost {
+	findAutoAnimateMatches(
+		pairs: MorphPair[],
+		fromScope: HTMLElement,
+		toScope: HTMLElement,
+		selector: string,
+		serializer: (node: HTMLElement) => string,
+		animationOptions?: object,
+	): void;
+}
+
+/** @emoji 🔗 reveal.js `autoAnimateMatcher`: pair `[data-id]` by {@link morphId} only (eg-ice-25 cross-shape morph). */
+function revealMorphMatcher(this: RevealMorphMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): MorphPair[] {
+	const pairs: MorphPair[] = [];
+	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => node.getAttribute("data-id") ?? "");
+	const textNodes = "h1, h2, h3, h4, h5, h6, p, li";
+	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, textNodes, (node) => {
+		if (node.hasAttribute("data-id")) {
+			return "";
+		}
+		return `${node.nodeName}:::${node.textContent.trim()}`;
+	});
+	const reserved: HTMLElement[] = [];
+	return pairs.filter((pair) => {
+		if (reserved.includes(pair.to)) {
+			return false;
+		}
+		reserved.push(pair.to);
+		if (/^H[1-6]$|^P$|^LI$/i.test(pair.from.nodeName)) {
+			pair.options = { scale: false };
+		}
+		return true;
+	});
+}
+//#endregion 🔖RevealMorphMatcher
 
 //#region 🔖MorphView
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
@@ -272,7 +315,7 @@ const ArrangementSection: FC<{
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
 	return (
-		<section {...(morph ? { "data-auto-animate": true } : {})} title={arrangement.id}>
+		<section {...(morph ? { "data-auto-animate": "" } : {})} title={arrangement.id}>
 			{resolved.map((placement) => (
 				<MorphPlacementView
 					key={`${arrangement.id}-${placement.morphId}-${placement.embodimentId ?? "default"}`}
@@ -293,51 +336,49 @@ export const PresentationDeck: FC<{
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
 
-	useLayoutEffect(() => {
-		if (!deckDivRef.current || deckRef.current) {
+	useEffect(() => {
+		const deckEl = deckDivRef.current;
+		if (!deckEl || deckRef.current) {
 			return;
 		}
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
-			center: true,
-			hash: options?.hash ?? false,
-			slideNumber: options?.slideNumber ?? false,
+			autoAnimateMatcher: revealMorphMatcher,
 		};
+		if (options?.hash === true) {
+			revealOptions.hash = true;
+		}
+		if (options?.slideNumber === true) {
+			revealOptions.slideNumber = true;
+		}
 		if (options?.width ?? presentation.width) {
 			revealOptions.width = options?.width ?? presentation.width;
 		}
 		if (options?.height ?? presentation.height) {
 			revealOptions.height = options?.height ?? presentation.height;
 		}
-		const deck = new Reveal(deckDivRef.current, revealOptions);
+		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
 		const onSlideChanged = (): void => {
-			syncRevealBackgroundKind(deckDivRef.current);
+			syncRevealBackgroundKind(deckEl);
 		};
 		void deck.initialize().then(() => {
-			syncRevealBackgroundKind(deckDivRef.current);
+			deck.sync();
 			deck.layout();
+			syncRevealBackgroundKind(deckEl);
 			deck.on("slidechanged", onSlideChanged);
 		});
 		return () => {
 			deck.off("slidechanged", onSlideChanged);
 			try {
-				deckRef.current?.destroy();
+				deck.destroy();
 			} catch {
 				// reveal destroy may throw if already torn down
 			}
 			deckRef.current = null;
 		};
-	}, [
-		presentation.height,
-		presentation.width,
-		options?.hash,
-		options?.height,
-		options?.slideNumber,
-		options?.transition,
-		options?.width,
-	]);
+	}, []);
 
 	return (
 		<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
@@ -362,70 +403,33 @@ export const PresentationDeck: FC<{
 };
 //#endregion 🔖PresentationDeck
 
-//#region 🔖Shell
-const PresentationShellChrome: FC<{
-	readonly children: ReactNode;
-	readonly chrome: ElementsSurfaceChromeInput;
-}> = ({ children, chrome }) => {
-	useElementsSurfaceChrome(chrome);
-	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
-};
-
-const PresentationShellBare: FC<{ readonly children: ReactNode }> = ({ children }) => (
-	<div className="h-full w-full">{children}</div>
-);
-
-const PresentationShell: FC<{
-	readonly children: ReactNode;
-	readonly options?: PresentationMountOptions;
-}> = ({ children, options }) => {
-	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
-		}
-		const mq = window.matchMedia("(prefers-color-scheme: dark)");
-		const onThemeChange = (): void => {
-			syncRevealBackgroundKind(document.querySelector(".reveal"));
-		};
-		onThemeChange();
-		mq.addEventListener("change", onThemeChange);
-		return () => mq.removeEventListener("change", onThemeChange);
-	}, []);
-
-	const chrome = options?.surfaceChrome;
-	if (chrome === false) {
-		return <PresentationShellBare>{children}</PresentationShellBare>;
-	}
-	return (
-		<PresentationShellChrome chrome={chrome ?? DEFAULT_SURFACE_CHROME}>{children}</PresentationShellChrome>
-	);
-};
-//#endregion 🔖Shell
-
 //#region 🔖Mount
 let mountedRoot: Root | null = null;
+let surfaceChromeCleanup: (() => void) | null = null;
 
-/** @emoji 🚀 Mounts a declarative presentation into a DOM root via React + reveal.js. */
+/** @emoji 🚀 Mounts a declarative presentation into a DOM root via React + reveal.js (eg-ice-25 reveal wiring). */
 export function mountPresentation(
 	rootEl: HTMLElement,
 	presentation: Presentation,
 	options?: PresentationMountOptions,
 ): void {
+	surfaceChromeCleanup?.();
+	surfaceChromeCleanup = null;
+	const chrome = options?.surfaceChrome;
+	if (chrome !== false) {
+		surfaceChromeCleanup = applyElementsSurfaceChrome(chrome ?? DEFAULT_SURFACE_CHROME);
+	}
 	mountedRoot?.unmount();
 	mountedRoot = createRoot(rootEl);
-	mountedRoot.render(
-		<StrictMode>
-			<PresentationShell options={options}>
-				<PresentationDeck presentation={presentation} options={options} />
-			</PresentationShell>
-		</StrictMode>,
-	);
+	mountedRoot.render(<PresentationDeck presentation={presentation} options={options} />);
 }
 
 /** @emoji 🧹 Unmounts a presentation previously mounted with {@link mountPresentation}. */
 export function unmountPresentation(): void {
 	mountedRoot?.unmount();
 	mountedRoot = null;
+	surfaceChromeCleanup?.();
+	surfaceChromeCleanup = null;
 }
 //#endregion 🔖Mount
 
