@@ -15,17 +15,19 @@
 // type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
 // #region 🔌Adapters
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { register } from "node:module";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 // #endregion 🔌Adapters
 
-const __dirname = resolve(fileURLToPath(import.meta.url), "..");
-const loaderImportFlag = `--import ${pathToFileURL(resolve(__dirname, "pw-loader.mjs")).href}`;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+register(pathToFileURL(resolve(__dirname, "pw-loader.mjs")), pathToFileURL(__dirname));
+
 const prevNodeOpts = process.env.NODE_OPTIONS ?? "";
-process.env.NODE_OPTIONS = prevNodeOpts.includes("pw-loader.mjs")
-  ? prevNodeOpts
-  : `${prevNodeOpts} ${loaderImportFlag}`.trim();
+const nodeOptsParts = prevNodeOpts.split(/\s+/).filter(Boolean);
+if (!nodeOptsParts.includes("--no-strip-types")) nodeOptsParts.push("--no-strip-types");
+process.env.NODE_OPTIONS = nodeOptsParts.join(" ").trim();
 
 import { defineConfig, devices } from "@playwright/test";
 

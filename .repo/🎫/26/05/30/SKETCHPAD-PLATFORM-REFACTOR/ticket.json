@@ -1,7 +1,7 @@
 {
   "title": "Sketchpad Platform Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "Fixed sketchpad production build: moved cameraStateNearEqual/updatePuzzle3dCameraInFixture to @puzzle/3d/react (vitest no longer imports play harness → broken playground subpath). Sketchpad vite aliases for playground renderer puzzle/shell/boot subpaths. pw-loader resolve/path name clash fixed; playwright.config repoRoot + vite preview without cross-env. vite build OK; sketchpad 42/42 vitest. Playwright still fails loading @semio/js (declare fields in pw-loader) — follow-up.",
   "goal": "🎯r2602/🎯runningsketchpad",
@@ -31,6 +31,7 @@
     "⚪0b135944870543c38c918f82b181ce8a",
     "⚪ef1729d3255b460088b2e68a63584ed9",
     "⚪7619e7f023ca4ce790f014bf2e6e0e9c",
-    "⚪0147bdac0a3942c487a5840815bedc83"
+    "⚪0147bdac0a3942c487a5840815bedc83",
+    "⚪2686a158df4541ad91ac27ec101b8a06"
   ]
 }

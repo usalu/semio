@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle2d Live Peer Sync",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Restore commit-93 canvas speed while keeping commit-94 live cross-pane node-move/delete sync, by replacing per-frame full-scene WASM re-push on peer panes with lightweight incremental per-node position update in Rust/WASM BoardSession.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪887338089ca7486f83371483c95c03de"
+  ]
+}
