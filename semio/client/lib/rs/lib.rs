@@ -2659,6 +2659,16 @@ pub mod kit {
                 })
             }
 
+            /// 🧾 Insert a representation with caller-controlled external [`Id`] (JSON snapshot hydration).
+            pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, url: String) -> Arc<Self> {
+                Arc::new(Self {
+                    id,
+                    owner_type,
+                    url: RwLock::new(url),
+                    ..Default::default()
+                })
+            }
+
             pub async fn compute_hash(&self) -> String {
                 let url = self.url.read().await;
                 let name = self.name.read().await;
@@ -10222,7 +10232,50 @@ pub mod kit_backbone {
         ports_by_id
     }
 
-    /// @emoji 🔌 Hydrates one kit kind's ports, connectors, and port compatibility from projection JSON.
+    /// @emoji 📎 Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
+    pub(crate) async fn hydrate_kit_files_from_snapshot_value(
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        let mut files_slot = kit.files.write().await;
+        files_slot.clear();
+        let files_list = json
+            .get("files")
+            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .cloned()
+            .unwrap_or_default();
+        for f_json in &files_list {
+            let Some(fid) = crate::kit_backbone::json_entity_id_ref(f_json) else {
+                continue;
+            };
+            let url = f_json
+                .get("blob")
+                .and_then(|v| v.as_str())
+                .or_else(|| f_json.get("url").and_then(|v| v.as_str()))
+                .or_else(|| f_json.get("uri").and_then(|v| v.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let hash = f_json
+                .get("blobHash")
+                .and_then(|v| v.as_str())
+                .or_else(|| f_json.get("hash").and_then(|v| v.as_str()))
+                .unwrap_or("")
+                .to_string();
+            files_slot.push(crate::meta::File {
+                id: fid.into(),
+                url,
+                mime: f_json.get("mime").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                size: f_json.get("size").and_then(|v| v.as_i64()).map(|n| n as i32),
+                hash,
+                description: f_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                created: None,
+                updated: None,
+            });
+        }
+        Ok(())
+    }
+
+    /// @emoji 🔌 Hydrates one kit kind's ports, connectors, representations, and port compatibility from projection JSON.
     pub(crate) async fn hydrate_type_from_snapshot_value(
         ty: &std::sync::Arc<crate::kit::r#type::Type>,
         t_json: &crate::external_adapters::serde_json::Value,
@@ -10323,6 +10376,46 @@ pub mod kit_backbone {
             }
         }
         *ty.connectors.write().await = connectors;
+
+        let mut representations = Vec::new();
+        if let Some(reps_list) = t_json.get("representations").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+            for r_json in reps_list {
+                let Some(rid) = crate::kit_backbone::json_entity_id_ref(r_json) else {
+                    continue;
+                };
+                let rname = r_json
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| r_json.get("code").and_then(|v| v.as_str()))
+                    .unwrap_or(rid);
+                let url = r_json
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| r_json.get("uri").and_then(|v| v.as_str()))
+                    .unwrap_or("")
+                    .to_string();
+                let rep = crate::kit::r#type::Representation::new_with_external_id(owner.clone(), rid.into(), url).await;
+                *rep.name.write().await = rname.to_string();
+                if let Some(desc) = r_json.get("description").and_then(|v| v.as_str()) {
+                    *rep.description.write().await = desc.to_string();
+                }
+                if let Some(icon) = r_json.get("icon").and_then(|v| v.as_str()) {
+                    *rep.icon.write().await = icon.to_string();
+                }
+                if let Some(file_json) = r_json.get("file") {
+                    if let Some(fid) = crate::kit_backbone::json_entity_id_ref(file_json) {
+                        if let Some(kit_arc) = owner.upgrade().and_then(|ty_arc| ty_arc.owner_kit.upgrade()) {
+                            let files = kit_arc.files.read().await;
+                            if let Some(file) = files.iter().find(|f| f.id.as_str() == fid) {
+                                *rep.file.write().await = Some(file.clone());
+                            }
+                        }
+                    }
+                }
+                representations.push(rep);
+            }
+        }
+        *ty.representations.write().await = representations;
         ty.refresh_connector_child_weak_maps().await;
         Ok(())
     }
@@ -10364,6 +10457,8 @@ pub mod kit_backbone {
             *kit.version.write().await = Some(s.to_string());
         }
         *kit.snapshot_families_projection.write().await = json.get("families").cloned();
+
+        crate::kit_backbone::hydrate_kit_files_from_snapshot_value(kit, json).await?;
 
         {
             let mut tys = kit.types.write().await;
@@ -16593,6 +16688,92 @@ mod tests {
     }
 
     #[test]
+    fn install_projection_hydrates_type_representations_and_files() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-rep",
+                "name": "Rep Kit",
+                "files": {
+                    "items": [{
+                        "id": "f1",
+                        "blob": "data:model/gltf-binary;base64,AAAA"
+                    }]
+                },
+                "types": {
+                    "items": [{
+                        "id": "t1",
+                        "name": "Chair",
+                        "representations": {
+                            "items": [{
+                                "id": "r1",
+                                "name": "chair",
+                                "file": { "id": "f1" }
+                            }]
+                        }
+                    }]
+                },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            files { edges { node { id url } } }
+                                            types {
+                                                edges {
+                                                    node {
+                                                        id
+                                                        representations { edges { node { id name file { id } } } }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
+            let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+            let file_edges = kit_json["files"]["edges"].as_array().expect("file edges");
+            assert_eq!(file_edges.len(), 1);
+            assert_eq!(file_edges[0]["node"]["id"], "f1");
+            assert!(file_edges[0]["node"]["url"].as_str().unwrap_or("").starts_with("data:"));
+            let rep_edges = kit_json["types"]["edges"][0]["node"]["representations"]["edges"]
+                .as_array()
+                .expect("representation edges");
+            assert_eq!(rep_edges.len(), 1);
+            assert_eq!(rep_edges[0]["node"]["id"], "r1");
+            assert_eq!(rep_edges[0]["node"]["name"], "chair");
+            assert_eq!(rep_edges[0]["node"]["file"]["id"], "f1");
+        });
+    }
+
     fn hydrate_kit_family_ports_wire_connector_copatible_with_in_graphql() {
         block_on(async {
             let schema = crate::gql::build_schema().await;

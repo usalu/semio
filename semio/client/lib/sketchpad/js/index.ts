@@ -3758,6 +3758,26 @@ if (import.meta.vitest) {
 	});
 
 	describe("importKit", () => {
+		it("materializes type representations after projection install", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+			const bundleKit = sketchpadKitFromDecodedBundle(JSON.parse(readFileSync(fixturePath, "utf8")));
+			const bundleType = bundleKit?.types?.find((t) => (t.representations?.length ?? 0) > 0);
+			expect(bundleType).toBeDefined();
+			const bundleRepCount = bundleType ? sketchpadListTypeRepresentations(bundleType).length : 0;
+			expect(bundleRepCount).toBeGreaterThan(0);
+			const { kit, session } = await importKit(new TextEncoder().encode(readFileSync(fixturePath, "utf8")));
+			try {
+				const liveType = kit.types?.find((t) => t.id === bundleType!.id);
+				expect(liveType).toBeDefined();
+				expect(sketchpadListTypeRepresentations(liveType!)).toHaveLength(bundleRepCount);
+			} finally {
+				await session.dispose();
+			}
+		}, 120_000);
+
 		it("hydrates family ports into live kit and diagram compat edges", async () => {
 			const payload = JSON.stringify({
 				id: "kit-import-test",

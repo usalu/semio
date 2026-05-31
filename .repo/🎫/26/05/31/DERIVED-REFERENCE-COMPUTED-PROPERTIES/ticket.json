@@ -3,8 +3,10 @@
   "emoji": "🔗",
   "status": "open",
   "description": "Add computed derived-reference properties to semio kit graph: Type.files; Design.types/designs/files (direct) and allTypes/allDesigns/allFiles (transitive); implement Design.referencedBy.",
+  "summary": "Implemented derived reference computed properties on the semio kit graph. Rust store: Type.files from representations; Design.types/designs/files (direct one-hop over piece blueprints); Design.allTypes/allDesigns/allFiles (transitive closure with cycle guard and root-design exclusion); Design.referencedBy inverse across owner kit. Removed stub Design.references (renamed to designs). Updated golden and companion GraphQL SDL. Extended JS facade with matching accessors. Added Rust unit+GraphQL test and JS accessor install test. All 58 Rust tests and 14 JS vitest tests pass.",
   "goal": "🎯semio",
   "sessions": [
-    "⚪bf4b9f1fdfdf4e068a35176beb2cca99"
+    "⚪bf4b9f1fdfdf4e068a35176beb2cca99",
+    "⚪76d92179413940e0b87c9b5ab947dc79"
   ]
 }
