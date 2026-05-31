@@ -34,6 +34,7 @@ import {
   Button,
   IconSelector,
   useNativeDragAndDrop,
+  usePointerDrag,
   type ContextMenuItem,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
@@ -2254,19 +2255,15 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
     [onChange],
   );
 
-  const pointerController = reactHostPort.useMemo(
-    () =>
-      new PointerDragController<HTMLDivElement>({
-        onStart: (event) => {
-          event.preventDefault();
-          setFromClient(event.clientX, event.clientY);
-        },
-        onMove: (event) => {
-          setFromClient(event.clientX, event.clientY);
-        },
-      }),
-    [setFromClient],
-  );
+  const pointerDragProps = usePointerDrag<HTMLDivElement>({
+    onStart: (event) => {
+      event.preventDefault();
+      setFromClient(event.clientX, event.clientY);
+    },
+    onMove: (event) => {
+      setFromClient(event.clientX, event.clientY);
+    },
+  });
 
   const size = 88;
   const stroke = 3;
@@ -2282,7 +2279,7 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
         className={`border-element bg-muted/20 touch-none select-none rounded-full border ${angleUniform ? "" : "pointer-events-none opacity-40"}`}
         ref={ref}
         style={{ height: size, width: size }}
-        {...(angleUniform ? pointerController.getProps() : {})}
+        {...(angleUniform ? pointerDragProps : {})}
       >
         <svg aria-label="Angle t" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
           <circle cx={cx} cy={cy} fill="none" r={r} stroke="currentColor" strokeOpacity={0.35} strokeWidth={stroke} />
