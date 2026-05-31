@@ -436,27 +436,34 @@ export interface ContextMenuProps {
 }
 
 /**
- * 🧩 Right-click menu via Radix dropdown primitives; passes children through when `items` is empty.
+ * 🧩 Right-click host: always suppresses the native menu; opens the Radix menu only when `items` is non-empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const close = reactHostPort.useCallback(() => setOpen(false), []);
-  if (!items?.length) {
-    return <>{children}</>;
+  const hasItems = !!items?.length;
+  const host = (
+    <div
+      className="contents"
+      onContextMenu={(event) => {
+        event.preventDefault();
+        if (!hasItems) {
+          return;
+        }
+        setPoint({ x: event.clientX, y: event.clientY });
+        setOpen(true);
+      }}
+    >
+      {children}
+    </div>
+  );
+  if (!hasItems) {
+    return host;
   }
   return (
     <DropdownMenuPrimitive.Root modal={false} onOpenChange={setOpen} open={open}>
-      <div
-        className="contents"
-        onContextMenu={(event) => {
-          event.preventDefault();
-          setPoint({ x: event.clientX, y: event.clientY });
-          setOpen(true);
-        }}
-      >
-        {children}
-      </div>
+      {host}
       {renderContextMenuTrigger(point)}
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
@@ -23987,8 +23994,36 @@ export { Ui };
 // #endregion ⚙️Canvas
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+
+  describe("ContextMenu", () => {
+    it("prevents the native context menu when no items are registered", () => {
+      render(
+        <ContextMenu>
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      const target = screen.getByRole("button", { name: "Target" });
+      const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+      const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+      target.dispatchEvent(event);
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(screen.queryByRole("menu")).toBeNull();
+    });
+
+    it("opens the custom menu when items are registered", async () => {
+      render(
+        <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }));
+      await waitFor(() => {
+        expect(screen.getByRole("menuitem", { name: "Demo action" })).toBeTruthy();
+      });
+    });
+  });
 
   describe("Shell components", () => {
     it("Ui renders the active app body", () => {

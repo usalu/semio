@@ -3585,7 +3585,16 @@ if (import.meta.vitest) {
 				localStorage.setItem("semio.ui.compact", "false");
 			}
 			const wb = new Platform();
-			const app = new AppRuntime("kit", "Kit", undefined);
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.navbar-labels"),
+			]);
+			registerWindowBody("test.workbench-view.navbar-labels", () => <div>Main</div>);
 			attachTestPanelTabs(app);
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
