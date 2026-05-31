@@ -18,7 +18,7 @@ const RESOLVE_ALIASES = [
 	["@framework/core", resolvePath(repoRoot, "framework/core/index.ts")],
 	["@framework/platform/core", resolvePath(repoRoot, "framework/product/platform/core/index.ts")],
 	["@framework/platform/renderer/react", resolvePath(repoRoot, "framework/product/platform/renderer/react/index.tsx")],
-	["@framework/playground/core", resolvePath(repoRoot, "framework/product/playground/core/core.ts")],
+	["@framework/playground/core", resolvePath(repoRoot, "framework/product/playground/core/index.ts")],
 	["@framework/playground/renderer/react/puzzle/2d", resolvePath(repoRoot, "framework/product/playground/renderer/react/index.tsx")],
 	["@framework/playground/renderer/react/puzzle/3d", resolvePath(repoRoot, "framework/product/playground/renderer/react/index.tsx")],
 	["@framework/playground/renderer/react/puzzle/5d", resolvePath(repoRoot, "framework/product/playground/renderer/react/index.tsx")],

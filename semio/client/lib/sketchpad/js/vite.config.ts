@@ -209,7 +209,7 @@ export default defineConfig(async ({ mode }) => {
         { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
         { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
         { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
-        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/core.ts") },
+        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/index.ts") },
         {
           find: "@framework/playground/renderer/react/puzzle/2d",
           replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),

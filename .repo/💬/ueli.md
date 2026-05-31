@@ -2850,6 +2850,21 @@ The two specific implemtations must be used:
 
 ### 🎛️playground
 
+### 📽️presentation
+
+---
+
+
+
+---
+
+We are building a new framework to create presentations such as temp/eg-ice-25.
+It as again pure decarlative typescript, render-independant.
+Make sure to implement the first render in react that uses reveal.js.
+As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new mit-bestand/präsentation/33.projektetage  presentation. make sure to migrate it to have no react or reveal dependency and use the new framework.
+
+---
+
 ## 🧰repo
 
 ###

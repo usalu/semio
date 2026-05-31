@@ -17,7 +17,7 @@
     "types": ["react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@framework/playground/core": ["../../framework/product/playground/core/core.ts"],
+      "@framework/playground/core": ["../../framework/product/playground/core/index.ts"],
       "@framework/playground/renderer/react": ["../../framework/product/playground/renderer/react/index.tsx"],
       "@ui/react": ["../../../ui/react/index.tsx"],
       "@ui/react/*": ["../../../ui/react/*"]

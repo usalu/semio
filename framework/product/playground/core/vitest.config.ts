@@ -18,7 +18,7 @@ export default defineConfig({
 	},
 	test: {
 		environment: "node",
-		include: ["core.ts"],
+		include: ["index.ts"],
 		passWithNoTests: false,
 	},
 });

@@ -1,0 +1,10 @@
+{
+  "title": "Fix Playground Core Rename Paths",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "cad play 404: GET framework/product/playground/core/core.ts — file renamed to index.ts; update package exports and all vite/tsconfig aliases.",
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
+  "sessions": [
+    "⚪c852f57c20ba4cc2903be53833ee410a"
+  ]
+}

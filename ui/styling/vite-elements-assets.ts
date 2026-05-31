@@ -306,7 +306,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const uiAssetsRoot = resolve(repoRoot, "ui/assets");
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
-  const playgroundCore = resolve(repoRoot, "framework/product/playground/core/core.ts");
+  const playgroundCore = resolve(repoRoot, "framework/product/playground/core/index.ts");
   const platformCore = resolve(repoRoot, "framework/product/platform/core/index.ts");
   const platformRenderer = resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx");
   const frameworkCore = resolve(repoRoot, "framework/core/index.ts");
